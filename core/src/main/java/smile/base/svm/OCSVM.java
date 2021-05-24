@@ -84,16 +84,6 @@ public class OCSVM<T> {
     private double omin = Double.MAX_VALUE;
     private double omax = -Double.MAX_VALUE;
 
-    /** Returns true if the support vector violates KKT conditions. */
-    private boolean violateKKT(int i) {
-        return (O[i] - rho) * alpha[i] > 0.0 || (rho - O[i]) * (C - alpha[i]) > 0.0;
-    }
-
-    /** Returns true if the support vector is not bounded. */
-    private boolean unbounded(int i) {
-        return alpha[i] > 0 && alpha[i] < C;
-    }
-
     /**
      * Constructor.
      * @param kernel the kernel function.
@@ -179,6 +169,10 @@ public class OCSVM<T> {
         @SuppressWarnings("unchecked")
         T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
         double[] weight = new double[nsv];
+        // Since we want the final decision function to evaluate to 1 for points
+        // which lie on the margin, we need to subtract this tol from the offset rho.
+        // Note that in the paper, the decision function is w * x - rho. But in
+        // other SVM and KernelMachine class, we have w * x + b. So we set b = -rho.
         double b = -(rho - tol);
 
         for (int i = 0, j = 0; i < n; i++) {
@@ -204,46 +198,71 @@ public class OCSVM<T> {
 
         int n = x.length;
         for (int i = 0; i < n; i++) {
-            if (violateKKT(i)) {
-                double o = O[i];
-                if (o < omin) {
-                    svmin = i;
-                    omin = o;
-                }
+            double oi = O[i];
+            double ai = alpha[i];
+            if (oi < omin && ai < C) {
+                svmin = i;
+                omin = oi;
+            }
+            if (oi > omax && ai > 0) {
+                svmax = i;
+                omax = oi;
             }
         }
-
-        System.out.println("svmin = " + svmin);
-        if (svmin < 0) return;
-
-        for (int i = 0; i < n; i++) {
-            if (unbounded(i)) {
-                double o = O[i];
-                if (o > omax) {
-                    svmax = i;
-                    omax = o;
-                }
-            }
-        }
-/*
-        if (svmax < 0) {
-            for (int i = 0; i < n; i++) {
-                double o = O[i];
-                if (o > omax) {
-                    svmax = i;
-                    omax = o;
-                }
-            }
-        }*/
-        System.out.println("svmax = " + svmax);
     }
 
     /**
      * Sequential minimal optimization.
      */
     private boolean smo(double epsgr) {
-        int v1 = svmax;
-        int v2 = svmin;
+        int v1 = svmin;
+        int v2 = svmax;
+
+        // Second order working set selection.
+        int n = x.length;
+        if (v2 < 0) {
+            // determine imax
+            double O1 = O[v1];
+            double[] K1 = K[v1];
+            double k11 = K1[v1];
+            double best = 0.0;
+            for (int i = 0; i < n; i++) {
+                double Z = O[i] - O1;
+                double curv = k11 + K[i][i] - 2 * K1[i];
+                if (curv <= 0.0) curv = TAU;
+
+                double mu = Z / curv;
+                if (O[i] > O1 && alpha[i] > 0) {
+                    double gain = -Z * mu;
+                    if (gain < best) {
+                        best = gain;
+                        v2 = i;
+                    }
+                }
+            }
+        }
+
+        if (v1 < 0) {
+            // determine imin
+            double O2 = O[v2];
+            double[] K2 = K[v2];
+            double k22 = K2[v2];
+            double best = 0.0;
+            for (int i = 0; i < n; i++) {
+                double Z = O2 - O[i];
+                double curv = k22 + K[i][i] - 2.0 * K2[i];
+                if (curv <= 0.0) curv = TAU;
+
+                double mu = Z / curv;
+                if (O[i] < O2 && alpha[i] < C) {
+                    double gain = -Z * mu;
+                    if (gain < best) {
+                        best = gain;
+                        v1 = i;
+                    }
+                }
+            }
+        }
 
         if (v1 < 0 || v2 < 0) return false;
 
@@ -253,9 +272,8 @@ public class OCSVM<T> {
         double[] k2 = K[v2];
 
         // Determine curvature
-        double curv = k1[v1] + k2[v2] - 2 * k1[v2];
+        double curv = K[v1][v1] + K[v2][v2] - 2 * K[v1][v2];
         if (curv <= 0.0) curv = TAU;
-
         double delta = (O[v1] - O[v2]) / curv;
         double sum = alpha[v1] + alpha[v2];
         alpha[v2] += delta;
@@ -287,18 +305,11 @@ public class OCSVM<T> {
 
         double delta_alpha1 = alpha[v1] - old_alpha1;
         double delta_alpha2 = alpha[v2] - old_alpha2;
-
-        int n = x.length;
-        rho = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < n; i++) {
             O[i] += k1[i] * delta_alpha1 + k2[i] * delta_alpha2;
-
-            if (alpha[i] > 0 && rho < O[i]) {
-                rho = O[i];
-            }
         }
 
-        rho = (O[v1] + O[v2]) / 2;
+        rho = (omax + omin) / 2;
         // optimality test
         minmax();
         return omax - omin > epsgr;
