@@ -62,7 +62,7 @@ public class LASVM<T> implements Serializable {
     /**
      * Support vectors.
      */
-    private final ArrayList<SupportVector<T>> sv = new ArrayList<>();
+    private final ArrayList<SupportVector<T>> vectors = new ArrayList<>();
     /**
      * Threshold of decision function.
      */
@@ -159,24 +159,24 @@ public class LASVM<T> implements Serializable {
                 } while (gmax - gmin > 1000);
 
                 if (++iter % phase == 0) {
-                    logger.info("{} iterations, {} support vectors", iter, sv.size());
+                    logger.info("{} iterations, {} support vectors", iter, vectors.size());
                 }
             }
         }
 
         finish();
 
-        int n = sv.size();
+        int n = vectors.size();
         @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
+        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
         double[] alpha = new double[n];
         for (int i = 0; i < n; i++) {
-            SupportVector<T> v = sv.get(i);
-            vectors[i] = v.x;
+            SupportVector<T> v = vectors.get(i);
+            sv[i] = v.x;
             alpha[i] = v.alpha;
         }
 
-        return new KernelMachine<>(kernel, vectors, alpha, b);
+        return new KernelMachine<>(kernel, sv, alpha, b);
     }
 
     /**
@@ -198,7 +198,7 @@ public class LASVM<T> implements Serializable {
     }
 
     /**
-     * Find support vectors with smallest (of I_up) and largest (of I_down) gradients.
+     * Finds the support vectors with smallest (of I_up) and largest (of I_down) gradients.
      */
     private void minmax() {
         if (minmaxflag) return;
@@ -206,7 +206,7 @@ public class LASVM<T> implements Serializable {
         gmin = Double.MAX_VALUE;
         gmax = -Double.MAX_VALUE;
 
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             double gi = v.g;
             double ai = v.alpha;
             if (gi < gmin && ai > v.cmin) {
@@ -271,7 +271,7 @@ public class LASVM<T> implements Serializable {
             double km = v1.k;
             double gm = v1.g;
             double best = 0.0;
-            for (SupportVector<T> v : sv) {
+            for (SupportVector<T> v : vectors) {
                 double Z = v.g - gm;
                 double k = k(v1.i, v.i);
                 double curv = km + v.k - 2.0 * k;
@@ -293,7 +293,7 @@ public class LASVM<T> implements Serializable {
             double km = v2.k;
             double gm = v2.g;
             double best = 0.0;
-            for (SupportVector<T> v : sv) {
+            for (SupportVector<T> v : vectors) {
                 double Z = gm - v.g;
                 double k = k(v2.i, v.i);
                 double curv = km + v.k - 2.0 * k;
@@ -349,7 +349,7 @@ public class LASVM<T> implements Serializable {
         // Perform update
         v1.alpha -= step;
         v2.alpha += step;
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             v.g -= step * (k(v2.i, v.i) - k(v1.i, v.i));
         }
 
@@ -371,7 +371,7 @@ public class LASVM<T> implements Serializable {
         }
 
         // Bail out if already in expansion
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             if (v.x == x) return false;
         }
 
@@ -380,7 +380,7 @@ public class LASVM<T> implements Serializable {
 
         // Compute gradient
         double g = y;
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             // Parallel stream may cause unreproducible results due to
             // different numeric round-off because of different data
             // partitions (i.e. different number of cores/threads).
@@ -401,7 +401,7 @@ public class LASVM<T> implements Serializable {
 
         // Insert
         SupportVector<T> v = new SupportVector<>(i, x, y, 0.0, g, Cp, Cn, kernel.k(x, x));
-        sv.add(v);
+        vectors.add(v);
         K[i] = cache;
 
         // Process
@@ -430,16 +430,16 @@ public class LASVM<T> implements Serializable {
      * Call reprocess until converge.
      */
     private void finish() {
-        finish(tol, sv.size());
+        finish(tol, vectors.size());
 
         int bsv = 0;
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             if (v.alpha == v.cmin || v.alpha == v.cmax) {
                 bsv++;
             }
         }
 
-        logger.info("{} samples, {} support vectors, {} bounded", x.length, sv.size(), bsv);
+        logger.info("{} samples, {} support vectors, {} bounded", x.length, vectors.size(), bsv);
 
     }
 
@@ -470,7 +470,7 @@ public class LASVM<T> implements Serializable {
     private void evict() {
         minmax();
 
-        sv.removeIf(v -> {
+        vectors.removeIf(v -> {
             if (MathEx.isZero(v.alpha, 1E-4)) {
                 if ((v.g >= gmax && 0 >= v.cmax) || (v.g <= gmin && 0 <= v.cmin)) {
                     K[v.i] = null;
