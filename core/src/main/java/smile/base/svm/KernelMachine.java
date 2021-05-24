@@ -18,7 +18,6 @@
 package smile.base.svm;
 
 import java.io.Serializable;
-import smile.classification.SVM;
 import smile.math.kernel.MercerKernel;
 
 /**
@@ -125,14 +124,6 @@ public class KernelMachine<T> implements Serializable {
         }
 
         return f;
-    }
-
-    /**
-     * Convert the kernel machine to SVM instance.
-     * @return SVM.
-     */
-    public SVM<T> toSVM() {
-        return new SVM<>(kernel, vectors, w, b);
     }
 
     @Override

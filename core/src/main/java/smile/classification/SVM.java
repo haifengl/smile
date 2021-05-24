@@ -96,12 +96,12 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
     /**
      * Constructor.
      * @param kernel Kernel function.
-     * @param instances The instances in the kernel machine, e.g. support vectors.
+     * @param vectors The support vectors.
      * @param weight The weights of instances.
      * @param b The intercept;
      */
-    public SVM(MercerKernel<T> kernel, T[] instances, double[] weight, double b) {
-        super(kernel, instances, weight, b);
+    public SVM(MercerKernel<T> kernel, T[] vectors, double[] weight, double b) {
+        super(kernel, vectors, weight, b);
     }
 
     @Override
@@ -258,7 +258,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      */
     public static <T> SVM<T> fit(T[] x, int[] y, MercerKernel<T> kernel, double C, double tol, int epochs) {
         LASVM<T> lasvm = new LASVM<>(kernel, C, tol);
-        return lasvm.fit(x, y, epochs).toSVM();
+        KernelMachine<T> model = lasvm.fit(x, y, epochs);
+        return new SVM<>(model.kernel(), model.vectors(), model.weights(), model.intercept());
     }
 
     /**
