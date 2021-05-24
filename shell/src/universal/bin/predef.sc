@@ -45,13 +45,13 @@ import smile.json._
 import smile.interpolation._
 import smile.validation._
 import smile.validation.metric._
-import smile.anomaly._
+import smile.anomaly.IsolationForest
 import smile.association._
 import smile.base.cart.SplitRule
 import smile.base.mlp._
 import smile.base.rbf.RBF
 import smile.classification._
-import smile.regression.{lm, ridge, lasso, svr, gpr}
+import smile.regression.{lm, ridge, lasso, gpr}
 import smile.feature._
 import smile.clustering._
 import smile.vq._
