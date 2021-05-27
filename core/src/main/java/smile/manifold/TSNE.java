@@ -174,7 +174,10 @@ public class TSNE implements Serializable {
         update(iterations);
     }
 
-    /** Returns the cost function value. */
+    /**
+     * Returns the cost function value.
+     * @return the cost function value.
+     */
     public double cost() {
         return cost;
     }
