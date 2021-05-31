@@ -790,6 +790,38 @@ public class Matrix extends DMatrix {
     }
 
     /**
+     * A[i, i] += b
+     * @param b the operand.
+     * @return this matrix.
+     */
+    public Matrix addDiag(double b) {
+        int l = Math.min(m, n);
+        for (int i = 0; i < l; i++) {
+            A[index(i, i)] += b;
+        }
+
+        return this;
+    }
+
+    /**
+     * A[i, i] += b[i]
+     * @param b the operand.
+     * @return this matrix.
+     */
+    public Matrix addDiag(double[] b) {
+        int l = Math.min(m, n);
+        if (b.length != l) {
+            throw new IllegalArgumentException("Invalid diagonal array size: " + b.length);
+        }
+
+        for (int i = 0; i < l; i++) {
+            A[index(i, i)] += b[i];
+        }
+
+        return this;
+    }
+
+    /**
      * A += b
      * @param b the operand.
      * @return this matrix.
@@ -1609,7 +1641,7 @@ public class Matrix extends DMatrix {
      * @param beta the scalar beta.
      * @param y the operand.
      */
-    public void mv(Transpose trans, double alpha, DoubleBuffer x, double beta, DoubleBuffer y) {
+    private void mv(Transpose trans, double alpha, DoubleBuffer x, double beta, DoubleBuffer y) {
         DoubleBuffer A = DoubleBuffer.wrap(this.A);
         if (uplo != null) {
             if (diag != null) {
