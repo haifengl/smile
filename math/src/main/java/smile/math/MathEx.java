@@ -2732,7 +2732,7 @@ public class MathEx {
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return new Matrix(dist);
+        return Matrix.of(dist);
     }
 
     /**
@@ -2755,7 +2755,7 @@ public class MathEx {
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return new Matrix(dist);
+        return Matrix.of(dist);
     }
 
     /**
@@ -2778,7 +2778,7 @@ public class MathEx {
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return new Matrix(dist);
+        return Matrix.of(dist);
     }
 
     /**
@@ -2801,7 +2801,7 @@ public class MathEx {
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return new Matrix(dist);
+        return Matrix.of(dist);
     }
 
     /**

@@ -64,7 +64,7 @@ public class ARPACKTest {
     @Test
     public void testSA() {
         System.out.println("SA");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(LOWER);
         Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.SA, 2);
         assertEquals(eigenValues[1], eig.wr[0], 1E-4);
@@ -92,7 +92,7 @@ public class ARPACKTest {
     @Test
     public void testLA() {
         System.out.println("LA");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(LOWER);
         Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
@@ -223,7 +223,7 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 1;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A), k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A), k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
@@ -284,7 +284,7 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A), k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A), k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
@@ -344,7 +344,7 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A),k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A),k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
@@ -403,7 +403,7 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A),k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A),k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-5);
         }
