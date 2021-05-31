@@ -37,10 +37,6 @@ public class RMSProp implements Optimizer {
      */
     private final TimeFunction learningRate;
     /**
-     * The momentum factor.
-     */
-    private final TimeFunction momentum;
-    /**
      * The discounting factor for the history/coming gradient.
      */
     private final double rho;
@@ -51,40 +47,34 @@ public class RMSProp implements Optimizer {
 
     /**
      * Constructor.
+     */
+    public RMSProp() {
+        this(TimeFunction.constant(0.001));
+    }
+
+    /**
+     * Constructor.
      * @param learningRate the learning rate.
      */
     public RMSProp(TimeFunction learningRate) {
-        this(learningRate, null, 0.9, 1E-7);
+        this(learningRate, 0.9, 1E-6);
     }
 
     /**
      * Constructor.
      * @param learningRate the learning rate.
-     * @param rho the discounting factor for the history/coming gradient.
-     */
-    public RMSProp(TimeFunction learningRate, double rho) {
-        this(learningRate, null, rho, 1E-7);
-    }
-
-    /**
-     * Constructor.
-     * @param learningRate the learning rate.
-     * @param momentum the momentum.
      * @param rho the discounting factor for the history/coming gradient.
      * @param epsilon a small constant for numerical stability.
      */
-    public RMSProp(TimeFunction learningRate, TimeFunction momentum, double rho, double epsilon) {
+    public RMSProp(TimeFunction learningRate, double rho, double epsilon) {
         this.learningRate = learningRate;
-        this.momentum = momentum;
         this.rho = rho;
         this.epsilon = epsilon;
     }
 
     @Override
     public String toString() {
-        return momentum == null ?
-                String.format("RMSProp(%s, %f, %f)", learningRate, rho, epsilon) :
-                String.format("RMSProp(%s, %s, %f, %f)", learningRate, momentum, rho, epsilon);
+        return String.format("RMSProp(%s, %f, %f)", learningRate, rho, epsilon);
     }
 
     @Override
@@ -92,28 +82,42 @@ public class RMSProp implements Optimizer {
         Matrix weightGradient = layer.weightGradient.get();
         double[] biasGradient = layer.biasGradient.get();
 
-        // Instead of computing the average gradient explicitly,
-        // we scale down the learning rate by the number of samples.
-        double eta = learningRate.apply(t) / m;
+        // As gradient will be averaged and smoothed in RMSProp,
+        // we need to use the original learning rate.
+        double eta = learningRate.apply(t);
+        int p = layer.p;
         int n = layer.n;
 
-        if (momentum != null) {
-            double alpha = momentum.apply(t);
-            Matrix weightUpdate = layer.weightUpdate.get();
-            double[] biasUpdate = layer.biasUpdate.get();
+        weightGradient.div(m);
+        for (int i = 0; i < n; i++) {
+            biasGradient[i] /= m;
+        }
 
-            weightUpdate.add(alpha, eta, weightGradient);
-            for (int i = 0; i < n; i++) {
-                biasUpdate[i] = alpha * biasUpdate[i] + eta * biasGradient[i];
-            }
+        Matrix weightGradientMoment2 = layer.weightGradientMoment2.get();
+        double[] biasGradientMoment2 = layer.biasGradientMoment2.get();
 
-            layer.weight.add(1.0, weightUpdate);
-            MathEx.add(layer.bias, biasUpdate);
-        } else {
-            layer.weight.add(eta, weightGradient);
+        double rho1 = 1.0 - rho;
+        for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                layer.bias[i] += eta * biasGradient[i];
+                weightGradientMoment2.set(i, j, rho * weightGradientMoment2.get(i, j) + rho1 * MathEx.pow2(weightGradient.get(i, j)));
             }
+        }
+        for (int i = 0; i < n; i++) {
+            biasGradientMoment2[i] = rho * biasGradientMoment2[i] + rho1 * MathEx.pow2(biasGradient[i]);
+        }
+
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i < n; i++) {
+                weightGradient.div(i, j, Math.sqrt(epsilon + weightGradientMoment2.get(i, j)));
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            biasGradient[i] /= Math.sqrt(epsilon + biasGradientMoment2[i]);
+        }
+
+        layer.weight.add(eta, weightGradient);
+        for (int i = 0; i < n; i++) {
+            layer.bias[i] += eta * biasGradient[i];
         }
 
         weightGradient.fill(0.0);

@@ -39,6 +39,13 @@ public class SGD implements Optimizer {
 
     /**
      * Constructor.
+     */
+    public SGD() {
+        this(TimeFunction.constant(0.01));
+    }
+
+    /**
+     * Constructor.
      * @param learningRate the learning rate.
      */
     public SGD(TimeFunction learningRate) {
@@ -72,7 +79,12 @@ public class SGD implements Optimizer {
         double eta = learningRate.apply(t) / m;
         int n = layer.n;
 
-        if (momentum != null) {
+        if (momentum == null) {
+            layer.weight.add(eta, weightGradient);
+            for (int i = 0; i < n; i++) {
+                layer.bias[i] += eta * biasGradient[i];
+            }
+        } else {
             double alpha = momentum.apply(t);
             Matrix weightUpdate = layer.weightUpdate.get();
             double[] biasUpdate = layer.biasUpdate.get();
@@ -84,11 +96,6 @@ public class SGD implements Optimizer {
 
             layer.weight.add(1.0, weightUpdate);
             MathEx.add(layer.bias, biasUpdate);
-        } else {
-            layer.weight.add(eta, weightGradient);
-            for (int i = 0; i < n; i++) {
-                layer.bias[i] += eta * biasGradient[i];
-            }
         }
 
         weightGradient.fill(0.0);
