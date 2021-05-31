@@ -29,7 +29,7 @@ public interface Optimizer extends Serializable {
      * Updates a layer.
      * @param layer a neural network layer.
      * @param m the size of mini-batch.
-     * @param t the number of training iterations so far.
+     * @param t the time step, i.e. the number of training iterations so far.
      */
     void update(Layer layer, int m, int t);
 }
