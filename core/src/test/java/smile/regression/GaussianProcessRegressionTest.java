@@ -87,8 +87,8 @@ public class GaussianProcessRegressionTest {
         }
 
         double[][] samples = joint.sample(500);
-        System.out.format("samples = %s\n", new Matrix(samples).toString());
-        System.out.format("sample cov = %s\n", new Matrix(MathEx.cov(samples)).toString(true));
+        System.out.format("samples = %s\n", Matrix.of(samples).toString());
+        System.out.format("sample cov = %s\n", Matrix.of(MathEx.cov(samples)).toString(true));
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);

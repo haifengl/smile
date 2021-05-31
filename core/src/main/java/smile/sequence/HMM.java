@@ -352,7 +352,7 @@ public class HMM implements Serializable {
             MathEx.unitize1(b[i]);
         }
 
-        return new HMM(pi, new Matrix(a), new Matrix(b));
+        return new HMM(pi, Matrix.of(a), Matrix.of(b));
     }
 
     /**

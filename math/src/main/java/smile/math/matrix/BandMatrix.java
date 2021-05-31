@@ -481,9 +481,9 @@ public class BandMatrix extends DMatrix {
          * @return the solution vector.
          */
         public double[] solve(double[] b) {
-            double[] x = b.clone();
-            solve(new Matrix(x));
-            return x;
+            Matrix x = Matrix.column(b);
+            solve(x);
+            return x.A;
         }
 
         /**
@@ -509,7 +509,7 @@ public class BandMatrix extends DMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -602,9 +602,9 @@ public class BandMatrix extends DMatrix {
          * @return the solution vector.
          */
         public double[] solve(double[] b) {
-            double[] x = b.clone();
-            solve(new Matrix(x));
-            return x;
+            Matrix x = Matrix.column(b);
+            solve(x);
+            return x.A;
         }
 
         /**
@@ -617,7 +617,7 @@ public class BandMatrix extends DMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

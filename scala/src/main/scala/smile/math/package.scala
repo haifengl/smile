@@ -234,35 +234,35 @@ package object math {
   def diag(A: Matrix): Array[Double] = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]): Matrix.LU = new Matrix(A).lu(true)
+  def lu(A: Array[Array[Double]]): Matrix.LU = Matrix.of(A).lu(true)
   /** LU decomposition. */
   def lu(A: Matrix): Matrix.LU = A.lu(false)
   /** LU decomposition. */
   def lu(A: MatrixExpression): Matrix.LU = A.toMatrix.lu(true)
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]): Matrix.QR = new Matrix(A).qr(true)
+  def qr(A: Array[Array[Double]]): Matrix.QR = Matrix.of(A).qr(true)
   /** QR decomposition. */
   def qr(A: Matrix): Matrix.QR = A.qr(false)
   /** QR decomposition. */
   def qr(A: MatrixExpression): Matrix.QR = A.toMatrix.qr(true)
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]): Matrix.Cholesky =  new Matrix(A).cholesky(true)
+  def cholesky(A: Array[Array[Double]]): Matrix.Cholesky = Matrix.of(A).cholesky(true)
   /** Cholesky decomposition. */
   def cholesky(A: Matrix): Matrix.Cholesky = A.cholesky(false)
   /** Cholesky decomposition. */
   def cholesky(A: MatrixExpression): Matrix.Cholesky = A.toMatrix.cholesky(true)
 
   /** Returns eigen values. */
-  def eig(A: Array[Array[Double]]): Matrix.EVD = new Matrix(A).eigen(false, false, true)
+  def eig(A: Array[Array[Double]]): Matrix.EVD = Matrix.of(A).eigen(false, false, true)
   /** Returns eigen values. */
   def eig(A: Matrix): Matrix.EVD = A.eigen(false, false, false)
   /** Returns eigen values. */
   def eig(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, false, true)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]): Matrix.EVD = new Matrix(A).eigen(false, true, true)
+  def eigen(A: Array[Array[Double]]): Matrix.EVD = Matrix.of(A).eigen(false, true, true)
   /** Eigen decomposition. */
   def eigen(A: Matrix): Matrix.EVD = A.eigen(false, true, false)
   /** Eigen decomposition. */
@@ -292,7 +292,7 @@ package object math {
   }
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]): Matrix.SVD = new Matrix(A).svd(true, true)
+  def svd(A: Array[Array[Double]]): Matrix.SVD = Matrix.of(A).svd(true, true)
   /** SVD decomposition. */
   def svd(A: Matrix): Matrix.SVD = A.svd(true, false)
   /** SVD decomposition. */
