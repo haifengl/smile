@@ -585,8 +585,6 @@ public class Matrix extends DMatrix {
 
     /**
      * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
-     * The content of the submatrix will be that of this matrix. Changes to this
-     * matrix's content will be visible in the submatrix, and vice versa.
      *
      * @param i the beginning row, inclusive.
      * @param j the beginning column, inclusive,
@@ -723,31 +721,6 @@ public class Matrix extends DMatrix {
     @Override
     public double get(int i, int j) {
         return A[index(i, j)];
-    }
-
-    /**
-     * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
-     * The returned matrix doesn't share the storage with this matrix.
-     *
-     * @param i the beginning row, inclusive.
-     * @param j the beginning column, inclusive,
-     * @param k the ending row, inclusive.
-     * @param l the ending column, inclusive.
-     * @return the submatrix.
-     */
-    public Matrix get(int i, int j, int k, int l) {
-        if (i < 0 || i >= m || k < i || k >= m || j < 0 || j >= n || l < j || l >= n) {
-            throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
-        }
-
-        Matrix sub = new Matrix(k - i + 1, l - j + 1);
-        for (int jj = j; jj <= l; jj++) {
-            for (int ii = i; ii <= k; ii++) {
-                sub.set(ii - i, jj - j, get(ii, jj));
-            }
-        }
-
-        return sub;
     }
 
     @Override
@@ -2091,6 +2064,10 @@ public class Matrix extends DMatrix {
          * The right singular vectors V.
          */
         public final Matrix V;
+        /**
+         * The submatrix U[:, 1:r], where r is the rank of matrix.
+         */
+        private transient Matrix Ur;
 
         /**
          * Constructor.
@@ -2296,8 +2273,12 @@ public class Matrix extends DMatrix {
             }
 
             int r = rank();
+            if (Ur == null) {
+                Ur = r == U.ncol() ? U : U.submatrix(0, 0, m - 1, r - 1);
+            }
+
             double[] Utb = new double[s.length];
-            U.submatrix(0, 0, m-1, r-1).tv(b, Utb);
+            Ur.tv(b, Utb);
             for (int i = 0; i < r; i++) {
                 Utb[i] /= s[i];
             }
