@@ -19,7 +19,7 @@ package smile.math
 
 import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.matrix.Matrix
+import smile.math.matrix.{BigMatrix, FloatMatrix, Matrix}
 
 /**
  * Vector Expression.
@@ -931,7 +931,6 @@ private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: C
 
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
   def toMatrix: Matrix = Matrix.of(a)
-  def unary_~ : Matrix = Matrix.of(a)
 
   def nrow: Int = a.length
   def ncol: Int = a(0).length
@@ -986,7 +985,6 @@ private[math] case class PimpedDouble(a: Double) {
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
   def toMatrix: Matrix = Matrix.column(a)
-  def unary_~ : Matrix = Matrix.column(a)
 
   def += (b: Double): Array[Double] = a.mapInPlace(_ + b)
   def -= (b: Double): Array[Double] = a.mapInPlace(_ - b)
@@ -1012,29 +1010,74 @@ private[math] class PimpedDoubleArray(override val a: Array[Double]) extends Pim
   }
 }
 
-private[math] class PimpedMatrix(a: Matrix) {
-  def += (i: Int, j: Int, x: Double): Double = a.add(i, j, x)
-  def -= (i: Int, j: Int, x: Double): Double = a.sub(i, j, x)
-  def *= (i: Int, j: Int, x: Double): Double = a.mul(i, j, x)
-  def /= (i: Int, j: Int, x: Double): Double = a.div(i, j, x)
+private[math] class MatrixOps(a: Matrix) {
+  def apply(rows: Range, cols: Range): Matrix = a.submatrix(rows.toArray, cols.toArray)
+  def apply(topLeft: (Int, Int), bottomRight: (Int, Int)): Matrix =
+    a.submatrix(topLeft._1, topLeft._2, bottomRight._1, bottomRight._2)
 
   def += (b: Double): Matrix = a.add(b)
   def -= (b: Double): Matrix = a.sub(b)
   def *= (b: Double): Matrix = a.mul(b)
   def /= (b: Double): Matrix = a.div(b)
 
-  def += (b: Matrix): Matrix = a.add(1.0, b)
-  def -= (b: Matrix): Matrix = a.sub(1.0, b)
+  def += (b: Matrix): Matrix = a.add(b)
+  def -= (b: Matrix): Matrix = a.sub(b)
   /** Element-wise multiplication */
-  def *= (b: Matrix): Matrix = a.mul(1.0, b)
+  def *= (b: Matrix): Matrix = a.mul(b)
   /** Element-wise division */
-  def /= (b: Matrix): Matrix = a.div(1.0, b)
+  def /= (b: Matrix): Matrix = a.div(b)
 
   /** Solves A * x = b */
   def \ (b: Array[Double]): Array[Double] = {
     if (a.nrow == a.ncol)
-      lu(a).solve(b)
+      a.lu().solve(b)
     else
-      qr(a).solve(b)
+      a.qr().solve(b)
+  }
+}
+
+private[math] class BigMatrixOps(a: BigMatrix) {
+
+  def += (b: Double): BigMatrix = a.add(b)
+  def -= (b: Double): BigMatrix = a.sub(b)
+  def *= (b: Double): BigMatrix = a.mul(b)
+  def /= (b: Double): BigMatrix = a.div(b)
+
+  def += (b: BigMatrix): BigMatrix = a.add(b)
+  def -= (b: BigMatrix): BigMatrix = a.sub(b)
+  /** Element-wise multiplication */
+  def *= (b: BigMatrix): BigMatrix = a.mul(b)
+  /** Element-wise division */
+  def /= (b: BigMatrix): BigMatrix = a.div(b)
+
+  /** Solves A * x = b */
+  def \ (b: Array[Double]): Array[Double] = {
+    if (a.nrow == a.ncol)
+      a.lu().solve(b)
+    else
+      a.qr().solve(b)
+  }
+}
+
+private[math] class FloatMatrixOps(a: FloatMatrix) {
+
+  def += (b: Float): FloatMatrix = a.add(b)
+  def -= (b: Float): FloatMatrix = a.sub(b)
+  def *= (b: Float): FloatMatrix = a.mul(b)
+  def /= (b: Float): FloatMatrix = a.div(b)
+
+  def += (b: FloatMatrix): FloatMatrix = a.add(b)
+  def -= (b: FloatMatrix): FloatMatrix = a.sub(b)
+  /** Element-wise multiplication */
+  def *= (b: FloatMatrix): FloatMatrix = a.mul(b)
+  /** Element-wise division */
+  def /= (b: FloatMatrix): FloatMatrix = a.div(b)
+
+  /** Solves A * x = b */
+  def \ (b: Array[Float]): Array[Float] = {
+    if (a.nrow == a.ncol)
+      a.lu().solve(b)
+    else
+      a.qr().solve(b)
   }
 }
