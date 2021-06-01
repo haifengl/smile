@@ -266,7 +266,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         Matrix Kx = kernel.K(samples);
         Matrix Kt = kernel.K(samples, regressors);
 
-        Matrix Kv = Kt.transpose().clone();
+        Matrix Kv = Kt.transpose(false);
         cholesky.solve(Kv);
         Matrix cov = Kx.sub(Kt.mm(Kv));
         cov.mul(sd * sd);

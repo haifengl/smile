@@ -231,7 +231,7 @@ public class ICA implements Serializable {
     private static Matrix whiten(double[][] data) {
         // covariance matrix on centered data.
         double[] mean = MathEx.rowMeans(data);
-        Matrix X = new Matrix(data);
+        Matrix X = Matrix.of(data);
         int n = X.nrow();
         int m = X.ncol();
         for (int j = 0; j < m; j++) {

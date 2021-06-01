@@ -128,7 +128,7 @@ public class GHA implements LinearProjection, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = new Matrix(w);
+        projection = Matrix.of(w);
     }
 
     /**
