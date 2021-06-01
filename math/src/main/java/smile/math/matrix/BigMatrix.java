@@ -792,9 +792,8 @@ public class BigMatrix extends DMatrix {
     }
 
     @Override
-    public BigMatrix set(int i, int j, double x) {
+    public void set(int i, int j, double x) {
         A.put(index(i, j), x);
-        return this;
     }
 
     /**
@@ -802,15 +801,13 @@ public class BigMatrix extends DMatrix {
      * @param i the row index of left top corner of submatrix.
      * @param j the column index of left top corner of submatrix.
      * @param B the right-hand-side submatrix.
-     * @return this matrix.
      */
-    public BigMatrix set(int i, int j, BigMatrix B) {
+    public void set(int i, int j, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 set(i+ii, j+jj, B.get(ii, jj));
             }
         }
-        return this;
     }
 
     /**

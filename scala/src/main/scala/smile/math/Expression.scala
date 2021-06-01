@@ -931,7 +931,6 @@ private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: C
 
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
   def toMatrix: Matrix = Matrix.of(a)
-  def unary_~ : Matrix = Matrix.of(a)
 
   def nrow: Int = a.length
   def ncol: Int = a(0).length
@@ -986,7 +985,6 @@ private[math] case class PimpedDouble(a: Double) {
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
   def toMatrix: Matrix = Matrix.column(a)
-  def unary_~ : Matrix = Matrix.column(a)
 
   def += (b: Double): Array[Double] = a.mapInPlace(_ + b)
   def -= (b: Double): Array[Double] = a.mapInPlace(_ - b)
@@ -1013,10 +1011,9 @@ private[math] class PimpedDoubleArray(override val a: Array[Double]) extends Pim
 }
 
 private[math] class MatrixOps(a: Matrix) {
-  def += (i: Int, j: Int)(x: Double): Double = a.add(i, j, x)
-  def -= (i: Int, j: Int, x: Double): Double = a.sub(i, j, x)
-  def *= (i: Int, j: Int, x: Double): Double = a.mul(i, j, x)
-  def /= (i: Int, j: Int, x: Double): Double = a.div(i, j, x)
+  def apply(rows: Range, cols: Range): Matrix = a.submatrix(rows.toArray, cols.toArray)
+  def apply(topLeft: (Int, Int), bottomRight: (Int, Int)): Matrix =
+    a.submatrix(topLeft._1, topLeft._2, bottomRight._1, bottomRight._2)
 
   def += (b: Double): Matrix = a.add(b)
   def -= (b: Double): Matrix = a.sub(b)
@@ -1040,10 +1037,6 @@ private[math] class MatrixOps(a: Matrix) {
 }
 
 private[math] class BigMatrixOps(a: BigMatrix) {
-  def += (i: Int, j: Int, x: Double): Double = a.add(i, j, x)
-  def -= (i: Int, j: Int, x: Double): Double = a.sub(i, j, x)
-  def *= (i: Int, j: Int, x: Double): Double = a.mul(i, j, x)
-  def /= (i: Int, j: Int, x: Double): Double = a.div(i, j, x)
 
   def += (b: Double): BigMatrix = a.add(b)
   def -= (b: Double): BigMatrix = a.sub(b)
@@ -1067,10 +1060,6 @@ private[math] class BigMatrixOps(a: BigMatrix) {
 }
 
 private[math] class FloatMatrixOps(a: FloatMatrix) {
-  def += (i: Int, j: Int, x: Float): Float = a.add(i, j, x)
-  def -= (i: Int, j: Int, x: Float): Float = a.sub(i, j, x)
-  def *= (i: Int, j: Int, x: Float): Float = a.mul(i, j, x)
-  def /= (i: Int, j: Int, x: Float): Float = a.div(i, j, x)
 
   def += (b: Float): FloatMatrix = a.add(b)
   def -= (b: Float): FloatMatrix = a.sub(b)
