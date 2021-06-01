@@ -94,7 +94,7 @@ public class SGD implements Optimizer {
                 biasUpdate[i] = alpha * biasUpdate[i] + eta * biasGradient[i];
             }
 
-            layer.weight.add(1.0, weightUpdate);
+            layer.weight.add(weightUpdate);
             MathEx.add(layer.bias, biasUpdate);
         }
 

@@ -309,7 +309,7 @@ public abstract class Layer implements Serializable {
 
             weightUpdate.mul(momentum);
             weightUpdate.add(learningRate, outputGradient, x);
-            weight.add(1.0, weightUpdate);
+            weight.add(weightUpdate);
 
             for (int i = 0; i < n; i++) {
                 double b = momentum * biasUpdate[i] + learningRate * outputGradient[i];
@@ -403,7 +403,7 @@ public abstract class Layer implements Serializable {
                 biasUpdate[i] = momentum * biasUpdate[i] + eta * biasGradient[i];
             }
 
-            weight.add(1.0, weightUpdate);
+            weight.add(weightUpdate);
             MathEx.add(bias, biasUpdate);
         } else {
             weight.add(eta, weightGradient);
