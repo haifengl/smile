@@ -286,14 +286,12 @@ public class BandMatrix extends DMatrix {
     }
 
     @Override
-    public BandMatrix set(int i, int j, double x) {
+    public void set(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             AB[j * ld + ku + i - j] = x;
         } else {
             throw new UnsupportedOperationException(String.format("Set element at (%d, %d)", i, j));
         }
-
-        return this;
     }
 
     @Override
