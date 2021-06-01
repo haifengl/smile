@@ -69,7 +69,7 @@ public class GHATest {
 
         int k = 3;
         double[] mu = MathEx.colMeans(USArrests.x);
-        Matrix cov = new Matrix(MathEx.cov(USArrests.x));
+        Matrix cov = Matrix.of(MathEx.cov(USArrests.x));
         for (int i = 0; i < USArrests.x.length; i++) {
            MathEx.sub(USArrests.x[i], mu);
         }

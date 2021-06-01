@@ -203,7 +203,7 @@ public class ARPACK {
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(d, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        Matrix.EVD eig = new Matrix.EVD(d, new Matrix(n, nev, ldv, V));
         return eig.sort();
     }
 
@@ -407,7 +407,7 @@ public class ARPACK {
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, new Matrix(n, nev, ldv, V));
         return eig.sort();
     }
 

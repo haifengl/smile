@@ -136,7 +136,7 @@ public class SymmMatrixTest {
         };
         double[] b = {0.5f, 0.5f, 0.5f};
 
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         Matrix.LU lu = a.lu();
         double[] x = lu.solve(b);
 

@@ -43,7 +43,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class BigMatrix extends DMatrix {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
     /**
@@ -1239,9 +1239,48 @@ public class BigMatrix extends DMatrix {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
 
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                set(i, j, alpha * get(i, j) + beta * B.get(i, j));
+        if (!isSubmatrix() && !B.isSubmatrix() && layout() == B.layout()) {
+            long size = A.limit();
+            for (long i = 0; i < size; i++) {
+                double a = A.get(i);
+                double b = B.A.get(i);
+                A.put(i, alpha * a + beta * b);
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, alpha * get(i, j) + beta * B.get(i, j));
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Element-wise addition A = alpha * A + beta * B^2
+     * @param alpha the scalar alpha.
+     * @param beta the scalar beta.
+     * @param B the operand.
+     * @return this matrix.
+     */
+    public BigMatrix add2(double alpha, double beta, BigMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        if (!isSubmatrix() && !B.isSubmatrix() && layout() == B.layout()) {
+            long size = A.limit();
+            for (long i = 0; i < size; i++) {
+                double a = A.get(i);
+                double b = B.A.get(i);
+                A.put(i, alpha * a + beta * b * b);
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, alpha * get(i, j) + beta * B.get(i, j) * B.get(i, j));
+                }
             }
         }
 

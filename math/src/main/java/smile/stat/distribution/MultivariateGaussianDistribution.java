@@ -156,7 +156,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
             return new MultivariateGaussianDistribution(mu, variance);
         } else {
-            return new MultivariateGaussianDistribution(mu, new Matrix(MathEx.cov(data, mu)));
+            return new MultivariateGaussianDistribution(mu, Matrix.of(MathEx.cov(data, mu)));
         }
     }
 

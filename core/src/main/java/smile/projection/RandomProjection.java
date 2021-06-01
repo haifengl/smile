@@ -107,7 +107,7 @@ public class RandomProjection implements LinearProjection, Serializable {
             MathEx.unitize(projection[i]);
         }
 
-        return new RandomProjection(new Matrix(projection));
+        return new RandomProjection(Matrix.of(projection));
     }
 
     /**

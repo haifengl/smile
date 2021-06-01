@@ -133,7 +133,7 @@ public class BandMatrixTest {
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         Matrix.LU lu = a.lu();
         double[] x = lu.solve(b);
 

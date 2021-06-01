@@ -74,13 +74,21 @@ public abstract class Layer implements Serializable {
      */
     protected transient ThreadLocal<double[]> biasGradient;
     /**
-     * The accumulate weight gradient.
+     * The first moment of weight gradient.
      */
-    protected transient ThreadLocal<Matrix> rmsWeightGradient;
+    protected transient ThreadLocal<Matrix> weightGradientMoment1;
     /**
-     * The accumulate bias gradient.
+     * The second moment of weight gradient.
      */
-    protected transient ThreadLocal<double[]> rmsBiasGradient;
+    protected transient ThreadLocal<Matrix> weightGradientMoment2;
+    /**
+     * The first moment of bias gradient.
+     */
+    protected transient ThreadLocal<double[]> biasGradientMoment1;
+    /**
+     * The second moment of bias gradient.
+     */
+    protected transient ThreadLocal<double[]> biasGradientMoment2;
     /**
      * The weight update.
      */
@@ -185,8 +193,10 @@ public abstract class Layer implements Serializable {
         outputGradient = ThreadLocal.withInitial(() -> new double[n]);
         weightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
         biasGradient = ThreadLocal.withInitial(() -> new double[n]);
-        rmsWeightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
-        rmsBiasGradient = ThreadLocal.withInitial(() -> new double[n]);
+        weightGradientMoment1 = ThreadLocal.withInitial(() -> new Matrix(n, p));
+        weightGradientMoment2 = ThreadLocal.withInitial(() -> new Matrix(n, p));
+        biasGradientMoment1 = ThreadLocal.withInitial(() -> new double[n]);
+        biasGradientMoment2 = ThreadLocal.withInitial(() -> new double[n]);
         weightUpdate = ThreadLocal.withInitial(() -> new Matrix(n, p));
         biasUpdate = ThreadLocal.withInitial(() -> new double[n]);
 
@@ -361,8 +371,8 @@ public abstract class Layer implements Serializable {
                 biasGradient[i] /= m;
             }
 
-            Matrix rmsWeightGradient = this.rmsWeightGradient.get();
-            double[] rmsBiasGradient = this.rmsBiasGradient.get();
+            Matrix rmsWeightGradient = this.weightGradientMoment2.get();
+            double[] rmsBiasGradient = this.biasGradientMoment2.get();
 
             double rho1 = 1.0 - rho;
             for (int j = 0; j < p; j++) {

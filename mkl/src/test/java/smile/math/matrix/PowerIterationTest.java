@@ -69,7 +69,7 @@ public class PowerIterationTest {
         double[] v = new double[3];
         Arrays.fill(v, 1.0);
 
-        double eigenvalue = PowerIteration.eigen(new Matrix(A), v);
+        double eigenvalue = PowerIteration.eigen(Matrix.of(A), v);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -83,7 +83,7 @@ public class PowerIterationTest {
         }
 
         Arrays.fill(v, 1.0);
-        eigenvalue = PowerIteration.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
+        eigenvalue = PowerIteration.eigen(Matrix.of(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);

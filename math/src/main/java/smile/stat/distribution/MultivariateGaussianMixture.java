@@ -99,7 +99,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
             gaussian = new MultivariateGaussianDistribution(centroid, variance);
         } else {
-            cov = new Matrix(MathEx.cov(data, mu));
+            cov = Matrix.of(MathEx.cov(data, mu));
             gaussian = new MultivariateGaussianDistribution(centroid, cov);
         }
 
