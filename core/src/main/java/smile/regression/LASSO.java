@@ -494,15 +494,5 @@ public class LASSO {
         public void tv(double[] work, int inputOffset, int outputOffset) {
             throw new UnsupportedOperationException();
         }
-
-        @Override
-        public DMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
     }
 }
