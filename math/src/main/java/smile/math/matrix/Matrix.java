@@ -1697,28 +1697,44 @@ public class Matrix extends DMatrix {
     /**
      * Matrix-matrix multiplication.
      * <pre>{@code
+     *     C := A*B
+     * }</pre>
+     * @param transA normal, transpose, or conjugate transpose
+     *               operation on the matrix A.
+     * @param A the operand.
+     * @param transB normal, transpose, or conjugate transpose
+     *               operation on the matrix B.
+     * @param B the operand.
+     */
+    public void mm(Transpose transA, Matrix A, Transpose transB, Matrix B) {
+        mm(transA, A, transB, B, 1.0, 0.0);
+    }
+
+    /**
+     * Matrix-matrix multiplication.
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
      * }</pre>
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
+     * @param A the operand.
      * @param transB normal, transpose, or conjugate transpose
      *               operation on the matrix B.
-     * @param alpha the scalar alpha.
      * @param B the operand.
+     * @param alpha the scalar alpha.
      * @param beta the scalar beta.
-     * @param C the operand.
      */
-    public void mm(Transpose transA, Transpose transB, double alpha, Matrix B, double beta, Matrix C) {
-        if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
-            BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
-        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && layout() == C.layout()) {
-            BLAS.engine.symm(C.layout(), RIGHT, B.uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
+    public void mm(Transpose transA, Matrix A, Transpose transB, Matrix B, double alpha, double beta) {
+        if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == layout()) {
+            BLAS.engine.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
+            BLAS.engine.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
         } else {
-            if (C.layout() != layout()) transA = flip(transA);
-            if (C.layout() != B.layout()) transB = flip(transB);
-            int k = transA == NO_TRANSPOSE ? n : m;
+            if (layout() != A.layout()) transA = flip(transA);
+            if (layout() != B.layout()) transB = flip(transB);
+            int k = transA == NO_TRANSPOSE ? A.n : A.m;
 
-            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, C.ld);
+            BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         }
     }
 
@@ -1728,7 +1744,7 @@ public class Matrix extends DMatrix {
      */
     public Matrix ata() {
         Matrix C = new Matrix(n, n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0, this, 0.0, C);
+        C.mm(TRANSPOSE, this, NO_TRANSPOSE, this);
         C.uplo(LOWER);
         return C;
     }
@@ -1739,7 +1755,7 @@ public class Matrix extends DMatrix {
      */
     public Matrix aat() {
         Matrix C = new Matrix(m, m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0, this, 0.0, C);
+        C.mm(NO_TRANSPOSE, this, TRANSPOSE, this);
         C.uplo(LOWER);
         return C;
     }
@@ -1786,7 +1802,7 @@ public class Matrix extends DMatrix {
         }
 
         Matrix C = new Matrix(m, B.n);
-        mm(NO_TRANSPOSE, NO_TRANSPOSE, 1.0, B, 0.0, C);
+        C.mm(NO_TRANSPOSE, this, NO_TRANSPOSE, B);
         return C;
     }
 
@@ -1801,7 +1817,7 @@ public class Matrix extends DMatrix {
         }
 
         Matrix C = new Matrix(m, B.m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0, B, 0.0, C);
+        C.mm(NO_TRANSPOSE, this, TRANSPOSE, B);
         return C;
     }
 
@@ -1816,7 +1832,7 @@ public class Matrix extends DMatrix {
         }
 
         Matrix C = new Matrix(n, B.n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0, B, 0.0, C);
+        C.mm(TRANSPOSE, this, NO_TRANSPOSE, B);
         return C;
     }
 
@@ -1831,7 +1847,7 @@ public class Matrix extends DMatrix {
         }
 
         Matrix C = new Matrix(n, B.m);
-        mm(TRANSPOSE, TRANSPOSE, 1.0, B, 0.0, C);
+        C.mm(TRANSPOSE, this, TRANSPOSE, B);
         return C;
     }
 
