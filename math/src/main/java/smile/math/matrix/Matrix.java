@@ -751,15 +751,13 @@ public class Matrix extends DMatrix {
      * @param i the row index of left top corner of submatrix.
      * @param j the column index of left top corner of submatrix.
      * @param B the right-hand-side submatrix.
-     * @return this matrix.
      */
-    public Matrix set(int i, int j, Matrix B) {
+    public void set(int i, int j, Matrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 set(i+ii, j+jj, B.get(ii, jj));
             }
         }
-        return this;
     }
 
     /**
