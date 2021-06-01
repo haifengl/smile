@@ -32,7 +32,9 @@ package object math {
   implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
   implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
-  implicit def pimpMatrix(matrix: Matrix): PimpedMatrix = new PimpedMatrix(matrix)
+  implicit def pimpMatrix(matrix: Matrix): MatrixOps = new MatrixOps(matrix)
+  implicit def pimpMatrix(matrix: FloatMatrix): FloatMatrixOps = new FloatMatrixOps(matrix)
+  implicit def pimpMatrix(matrix: BigMatrix): BigMatrixOps = new BigMatrixOps(matrix)
 
   implicit def array2VectorExpression(x: Array[Double]): VectorLift = VectorLift(x)
   implicit def vectorExpression2Array(exp: VectorExpression): Array[Double] = exp.toArray
