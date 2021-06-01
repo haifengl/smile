@@ -524,33 +524,90 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Returns the i-th row.
+     * Returns the linearized index of matrix element.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the linearized index.
+     */
+    protected int index(int i , int j) {
+        return j * ld + i;
+    }
+
+    @Override
+    public double get(int i, int j) {
+        return A[index(i, j)];
+    }
+
+    @Override
+    public void set(int i, int j, double x) {
+        A[index(i, j)] = x;
+    }
+
+    /**
+     * Returns the matrix of selected rows and columns.
+     * Negative index -i means the i-th row/column from the end.
+     *
+     * @param rows the row indices.
+     * @param cols the column indices.
+     * @return the submatrix.
+     */
+    public Matrix get(int[] rows, int[] cols) {
+        Matrix sub = new Matrix(rows.length, cols.length);
+        for (int j = 0; j < cols.length; j++) {
+            int col = cols[j];
+            if (col < 0) col = n + col;
+            for (int i = 0; i < rows.length; i++) {
+                int row = rows[i];
+                if (row < 0) row = m + row;
+                sub.set(i, j, get(row, col));
+            }
+        }
+
+        return sub;
+    }
+
+    /**
+     * Returns the i-th row. Negative index -i means the i-th row from the end.
      * @param i the row index.
      * @return the row.
      */
     public double[] row(int i) {
         double[] x = new double[n];
+        if (i < 0) i = m + i;
 
-        for (int j = 0; j < n; j++) {
-            x[j] = get(i, j);
+        if (layout() == COL_MAJOR) {
+            for (int j = 0; j < n; j++) {
+                x[j] = get(i, j);
+            }
+        } else {
+            System.arraycopy(A, index(i, 0), x, 0, n);
         }
 
         return x;
     }
 
     /**
-     * Returns the j-th column.
+     * Returns the j-th column. Negative index -j means the j-th row from the end.
      * @param j the column index.
      * @return the column.
      */
     public double[] col(int j) {
         double[] x = new double[m];
-        System.arraycopy(A, index(0, j), x, 0, m);
+        if (j < 0) j = n + j;
+
+        if (layout() == COL_MAJOR) {
+            System.arraycopy(A, index(0, j), x, 0, m);
+        } else {
+            for (int i = 0; i < m; i++) {
+                x[i] = get(i, j);
+            }
+        }
+
         return x;
     }
 
     /**
-     * Returns the matrix of selected rows.
+     * Returns the matrix of selected rows. Negative index -i means the i-th row from the end.
      * @param rows the row indices.
      * @return the submatrix.
      */
@@ -559,8 +616,13 @@ public class Matrix extends DMatrix {
 
         for (int i = 0; i < rows.length; i++) {
             int row = rows[i];
-            for (int j = 0; j < n; j++) {
-                x.set(i, j, get(row, j));
+            if (row < 0)  row = m + row;
+            if (layout() == COL_MAJOR) {
+                for (int j = 0; j < n; j++) {
+                    x.set(i, j, get(row, j));
+                }
+            } else {
+                System.arraycopy(A, index(row, 0), x.A, x.index(i, 0), n);
             }
         }
 
@@ -577,28 +639,17 @@ public class Matrix extends DMatrix {
 
         for (int j = 0; j < cols.length; j++) {
             int col = cols[j];
-            System.arraycopy(A, index(0, col), x.A, index(0, j), m);
-        }
-
-        return x;
-    }
-
-    /**
-     * Returns the submatrix.
-     *
-     * @param rows the row indices.
-     * @param cols the column indices.
-     * @return the submatrix.
-     */
-    public Matrix submatrix(int[] rows, int[] cols) {
-        Matrix sub = new Matrix(rows.length, cols.length);
-        for (int j = 0; j < cols.length; j++) {
-            for (int i = 0; i < rows.length; i++) {
-                sub.set(i, j, get(rows[i], cols[j]));
+            if (col < 0)  col = n + col;
+            if (layout() == COL_MAJOR) {
+                System.arraycopy(A, index(0, col), x.A, x.index(0, j), m);
+            } else {
+                for (int i = 0; i < m; i++) {
+                    x.set(i, j, get(i, col));
+                }
             }
         }
 
-        return sub;
+        return x;
     }
 
     /**
@@ -727,40 +778,6 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Returns the linearized index of matrix element.
-     * @param i the row index.
-     * @param j the column index.
-     * @return the linearized index.
-     */
-    protected int index(int i , int j) {
-        return j * ld + i;
-    }
-
-    @Override
-    public double get(int i, int j) {
-        return A[index(i, j)];
-    }
-
-    @Override
-    public void set(int i, int j, double x) {
-        A[index(i, j)] = x;
-    }
-
-    /**
-     * Sets submatrix A[i,j] = B.
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param B the right-hand-side submatrix.
-     */
-    public void set(int i, int j, Matrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                set(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
-    }
-
-    /**
      * A[i,j] += b
      * @param i the row index.
      * @param j the column index.
@@ -886,69 +903,6 @@ public class Matrix extends DMatrix {
             A[i] /= b;
         }
 
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix addition A[i, j] += alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public Matrix add(int i, int j, double alpha, Matrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                add(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix subtraction A[i, j] -= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public Matrix sub(int i, int j, double alpha, Matrix B) {
-        return add(i, j, -alpha, B);
-    }
-
-    /**
-     * Element-wise submatrix multiplication A[i, j] *= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public Matrix mul(int i, int j, double alpha, Matrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                mul(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix division A[i, j] /= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public Matrix div(int i, int j, double alpha, Matrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                div(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
         return this;
     }
 
@@ -1216,7 +1170,7 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Element-wise division C = alpha * A / B
+     * Element-wise division C = A / (alpha * B)
      * @param alpha the scalar alpha.
      * @param A the operand.
      * @param B the operand.
@@ -1233,47 +1187,16 @@ public class Matrix extends DMatrix {
 
         if (layout() == A.layout() && layout() == B.layout() && ld == A.ld && ld == B.ld) {
             for (int i = 0; i < this.A.length; i++) {
-                this.A[i] = alpha * A.A[i] / B.A[i];
+                this.A[i] = A.A[i] / (alpha * B.A[i]);
             }
         } else {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    set(i, j, alpha * A.get(i, j) / B.get(i, j));
+                    set(i, j, A.get(i, j) / (alpha * B.get(i, j)));
                 }
             }
         }
 
-        return this;
-    }
-
-    /**
-     * A[i,j] = alpha * A[i,j] + beta
-     * @param i the row index.
-     * @param j the column index.
-     * @param alpha the scalar alpha.
-     * @param beta the operand.
-     * @return the updated A[i,j]
-     */
-    public double add(int i, int j, double alpha, double beta) {
-        int k = index(i, j);
-        return A[k] = alpha * A[k] + beta;
-    }
-
-    /**
-     * Element-wise submatrix addition A[i, j] = alpha * A[i, j] + beta * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param beta the scalar beta.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public Matrix add(int i, int j, double alpha, double beta, Matrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                add(i+ii, j+jj, alpha, beta * B.get(ii, jj));
-            }
-        }
         return this;
     }
 
