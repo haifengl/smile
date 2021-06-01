@@ -193,9 +193,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
         }
 
         Matrix M = loading.ata();
-        for (int i = 0; i < k; i++) {
-            M.add(i, i, noise);
-        }
+        M.addDiag(noise);
 
         Matrix.Cholesky chol = M.cholesky(true);
         Matrix Mi = chol.inverse();

@@ -398,9 +398,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         }
 
         Matrix K = kernel.K(x);
-        for (int i = 0; i < n; i++) {
-            K.add(i, i, noise);
-        }
+        K.addDiag(noise);
 
         Matrix.Cholesky cholesky = K.cholesky(true);
         double[] w = cholesky.solve(y);
@@ -574,9 +572,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         Matrix L = E.mm(UDUt);
 
         Matrix LtL = L.ata();
-        for (int i = 0; i < m; i++) {
-            LtL.add(i, i, noise);
-        }
+        LtL.addDiag(noise);
 
         Matrix.Cholesky chol = LtL.cholesky(true);
         Matrix invLtL = chol.inverse();
@@ -608,14 +604,12 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             double noise = params[params.length - 1];
 
             Matrix K = kernel.K(x);
-            int n = x.length;
-            for (int i = 0; i < n; i++) {
-                K.add(i, i, noise);
-            }
+            K.addDiag(noise);
 
             Matrix.Cholesky cholesky = K.cholesky(true);
             double[] w = cholesky.solve(y);
 
+            int n = x.length;
             double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
             return -L;
         }
@@ -627,11 +621,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
             Matrix[] K = kernel.KG(x);
             Matrix Ky = K[0];
-
-            int n = x.length;
-            for (int i = 0; i < n; i++) {
-                Ky.add(i, i, noise);
-            }
+            Ky.addDiag(noise);
 
             Matrix.Cholesky cholesky = Ky.cholesky(true);
             Matrix Kinv = cholesky.inverse();
@@ -644,6 +634,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
                 g[i-1] = -gi / 2;
             }
 
+            int n = x.length;
             double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
             return -L;
         }
