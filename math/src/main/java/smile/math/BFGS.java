@@ -857,7 +857,7 @@ public class BFGS {
             r[i] = g[fi] + (cauchy[fi] - x[fi]) * theta - wmc[fi];
         }
 
-        Matrix WZ = W.row(freeVar);
+        Matrix WZ = W.rows(freeVar);
         double[] v  = M.mv(WZ.tv(r));
         Matrix N = WZ.ata().mul(-thetaInverse);
         N = M.mm(N);

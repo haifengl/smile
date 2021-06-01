@@ -175,7 +175,7 @@ public class SymmMatrix extends DMatrix {
     }
 
     @Override
-    public SymmMatrix set(int i, int j, double x) {
+    public void set(int i, int j, double x) {
         if (uplo == LOWER) {
             if (j > i) {
                 int tmp = i;
@@ -191,8 +191,6 @@ public class SymmMatrix extends DMatrix {
             }
             AP[i + (j * (j+1) / 2)] = x;
         }
-
-        return this;
     }
 
     @Override

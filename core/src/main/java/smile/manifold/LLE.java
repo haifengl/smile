@@ -258,15 +258,5 @@ public class LLE implements Serializable {
         public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
             throw new UnsupportedOperationException();
         }
-
-        @Override
-        public DMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
     }
 }
