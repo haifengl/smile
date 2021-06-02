@@ -293,7 +293,7 @@ public class MatrixTest {
         };
         Matrix a = Matrix.of(A);
         Matrix b = Matrix.of(B);
-        a.sub(1.0, b);
+        a.sub(b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-7));
     }
 
