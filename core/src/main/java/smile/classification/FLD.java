@@ -214,7 +214,7 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
         }
 
         // Within class scatter
-        Matrix Sw = St.sub(1.0, Sb);
+        Matrix Sw = St.sub(Sb);
         Matrix SwInvSb = Sw.inverse().mm(Sb);
         Matrix.EVD evd = SwInvSb.eigen(false, true, true);
 
