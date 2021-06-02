@@ -28,6 +28,7 @@ import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
   * @author Haifeng Li
   */
 package object math {
+  implicit def pimpInt(x: Int): PimpedInt = PimpedInt(x)
   implicit def pimpDouble(x: Double): PimpedDouble = PimpedDouble(x)
   implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
   implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
