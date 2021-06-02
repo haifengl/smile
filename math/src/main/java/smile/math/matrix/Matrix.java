@@ -1007,24 +1007,24 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Element-wise addition A += alpha * B
-     * @param alpha the scalar alpha.
+     * Element-wise addition A += beta * B
+     * @param beta the scalar alpha.
      * @param B the operand.
      * @return this matrix.
      */
-    public Matrix add(double alpha, Matrix B) {
+    public Matrix add(double beta, Matrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         if (layout() == B.layout() && ld == B.ld) {
             for (int i = 0; i < A.length; i++) {
-                A[i] += alpha * B.A[i];
+                A[i] += beta * B.A[i];
             }
         } else {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    add(i, j, alpha * B.get(i, j));
+                    add(i, j, beta * B.get(i, j));
                 }
             }
         }
@@ -1034,12 +1034,12 @@ public class Matrix extends DMatrix {
 
     /**
      * Element-wise subtraction A -= alpha * B
-     * @param alpha the scalar alpha.
+     * @param beta the scalar alpha.
      * @param B the operand.
      * @return this matrix.
      */
-    public Matrix sub(double alpha, Matrix B) {
-        return add(-alpha, B);
+    public Matrix sub(double beta, Matrix B) {
+        return add(-beta, B);
     }
 
     /**
@@ -1710,26 +1710,27 @@ public class Matrix extends DMatrix {
      * @return the multiplication.
      */
     public static Matrix adb(Transpose transA, Matrix A, double[] D, Transpose transB, Matrix B) {
-        Matrix C;
+        Matrix AD;
+        int m = A.m, n = A.n;
         if (transA == NO_TRANSPOSE) {
-            C = new Matrix(A.m, A.n);
-            for (int j = 0; j < A.n; j++) {
+            AD = new Matrix(m, n);
+            for (int j = 0; j < n; j++) {
                 double dj = D[j];
-                for (int i = 0; i < A.m; i++) {
-                    C.set(i, j, dj * A.get(i, j));
+                for (int i = 0; i < m; i++) {
+                    AD.set(i, j, dj * A.get(i, j));
                 }
             }
         } else {
-            C = new Matrix(A.n, A.m);
-            for (int j = 0; j < A.m; j++) {
+            AD = new Matrix(n, m);
+            for (int j = 0; j < m; j++) {
                 double dj = D[j];
-                for (int i = 0; i < A.n; i++) {
-                    C.set(i, j, dj * A.get(j, i));
+                for (int i = 0; i < n; i++) {
+                    AD.set(i, j, dj * A.get(j, i));
                 }
             }
         }
 
-        return transB == NO_TRANSPOSE ? C.mm(B) : C.mt(B);
+        return transB == NO_TRANSPOSE ? AD.mm(B) : AD.mt(B);
     }
 
     /**
