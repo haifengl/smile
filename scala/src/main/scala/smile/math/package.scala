@@ -36,8 +36,6 @@ package object math {
   implicit def array2Matrix(data: Array[Double]): Matrix = Matrix.column(data)
   implicit def array2Matrix(data: Array[Array[Double]]): Matrix = Matrix.of(data)
   implicit def matrixOps(matrix: Matrix): MatrixOps = new MatrixOps(matrix)
-  implicit def matrixOps(matrix: FloatMatrix): FloatMatrixOps = new FloatMatrixOps(matrix)
-  implicit def matrixOps(matrix: BigMatrix): BigMatrixOps = new BigMatrixOps(matrix)
 
   implicit def array2VectorExpression(x: Array[Double]): VectorLift = VectorLift(x)
   implicit def vectorExpression2Array(exp: VectorExpression): Array[Double] = exp.toArray
