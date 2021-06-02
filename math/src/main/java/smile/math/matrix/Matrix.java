@@ -524,6 +524,46 @@ public class Matrix extends DMatrix {
     }
 
     /**
+     * Sets the matrix value. If the matrices have the same layout,
+     * this matrix will share the underlying storage with b.
+     * @param b the right hand side of assignment.
+     * @return this matrix.
+     */
+    public Matrix set(Matrix b) {
+        this.m = b.m;
+        this.n = b.n;
+        this.diag = b.diag;
+        this.uplo = b.uplo;
+
+        if (layout() == b.layout()) {
+            this.A = b.A;
+            this.ld = b.ld;
+        } else {
+            if (layout() == COL_MAJOR) {
+                this.ld = ld(m);
+                this.A = new double[ld * n];
+
+                for (int j = 0; j < n; j++) {
+                    for (int i = 0; i < m; i++) {
+                        set(i, j, get(i, j));
+                    }
+                }
+            } else {
+                this.ld = ld(n);
+                this.A = new double[ld * m];
+
+                for (int i = 0; i < m; i++) {
+                    for (int j = 0; j < n; j++) {
+                        set(i, j, get(i, j));
+                    }
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
      * Returns the linearized index of matrix element.
      * @param i the row index.
      * @param j the column index.
@@ -1507,9 +1547,10 @@ public class Matrix extends DMatrix {
      * @param transB normal, transpose, or conjugate transpose
      *               operation on the matrix B.
      * @param B the operand.
+     * @return this matrix.
      */
-    public void mm(Transpose transA, Matrix A, Transpose transB, Matrix B) {
-        mm(transA, A, transB, B, 1.0, 0.0);
+    public Matrix mm(Transpose transA, Matrix A, Transpose transB, Matrix B) {
+        return mm(transA, A, transB, B, 1.0, 0.0);
     }
 
     /**
@@ -1525,8 +1566,9 @@ public class Matrix extends DMatrix {
      * @param B the operand.
      * @param alpha the scalar alpha.
      * @param beta the scalar beta.
+     * @return this matrix.
      */
-    public void mm(Transpose transA, Matrix A, Transpose transB, Matrix B, double alpha, double beta) {
+    public Matrix mm(Transpose transA, Matrix A, Transpose transB, Matrix B, double alpha, double beta) {
         if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == layout()) {
             BLAS.engine.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
@@ -1538,6 +1580,7 @@ public class Matrix extends DMatrix {
 
             BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         }
+        return this;
     }
 
     /**
