@@ -28,8 +28,12 @@ import smile.math.matrix.Matrix
 sealed trait VectorExpression {
   def length: Int
   def apply(i: Int): Double
+  def apply(slice: Slice): Array[Double] = {
+    val vector = simplify
+    slice.toRange(length).map(vector.apply).toArray
+  }
 
-  def simplify: VectorExpression = this
+  def simplify: VectorExpression
   def toArray: Array[Double] = {
     val z = new Array[Double](length)
     for (i <- 0 until length) z(i) = apply(i)
@@ -68,157 +72,197 @@ sealed trait VectorExpression {
 case class VectorLift(x: Array[Double]) extends VectorExpression {
   override def length: Int = x.length
   override def apply(i: Int): Double = x(i)
+  override def simplify: VectorExpression = this
   override def toArray: Array[Double] = x
 }
 
 case class VectorAddValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorAddValue(x.simplify, y)
   override def apply(i: Int): Double = x(i) + y
 }
 
 case class VectorSubValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorSubValue(x.simplify, y)
   override def apply(i: Int): Double = x(i) - y
 }
 
 case class VectorMulValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorMulValue(x.simplify, y)
   override def apply(i: Int): Double = x(i) * y
 }
 
 case class VectorDivValue(x: VectorExpression, y: Double) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorDivValue(x.simplify, y)
   override def apply(i: Int): Double = x(i) / y
 }
 
 case class ValueAddVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = ValueAddVector(y, x.simplify)
   override def apply(i: Int): Double = y + x(i)
 }
 
 case class ValueSubVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = ValueSubVector(y, x.simplify)
   override def apply(i: Int): Double = y - x(i)
 }
 
 case class ValueMulVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = ValueMulVector(y, x.simplify)
   override def apply(i: Int): Double = y * x(i)
 }
 
 case class ValueDivVector(y: Double, x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = ValueDivVector(y, x.simplify)
   override def apply(i: Int): Double = y / x(i)
 }
 
 case class VectorAddVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorAddVector(x.simplify, y.simplify)
   override def apply(i: Int): Double = x(i) + y(i)
 }
 
 case class VectorSubVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorSubVector(x.simplify, y.simplify)
   override def apply(i: Int): Double = x(i) - y(i)
 }
 
 case class VectorMulVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorMulVector(x.simplify, y.simplify)
   override def apply(i: Int): Double = x(i) * y(i)
 }
 
 case class VectorDivVector(x: VectorExpression, y: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = VectorDivVector(x.simplify, y.simplify)
   override def apply(i: Int): Double = x(i) / y(i)
 }
 
 case class AbsVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = AbsVector(x.simplify)
   override def apply(i: Int): Double = Math.abs(x(i))
 }
 
 case class AcosVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = AcosVector(x.simplify)
   override def apply(i: Int): Double = Math.acos(x(i))
 }
 
 case class AsinVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = AsinVector(x.simplify)
   override def apply(i: Int): Double = Math.asin(x(i))
 }
 
 case class AtanVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = AtanVector(x.simplify)
   override def apply(i: Int): Double = Math.atan(x(i))
 }
 
 case class CbrtVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = CbrtVector(x.simplify)
   override def apply(i: Int): Double = Math.cbrt(x(i))
 }
 
 case class CeilVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = CeilVector(x.simplify)
   override def apply(i: Int): Double = Math.ceil(x(i))
 }
 
 case class ExpVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = ExpVector(x.simplify)
   override def apply(i: Int): Double = Math.exp(x(i))
 }
 
 case class Expm1Vector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = Expm1Vector(x.simplify)
   override def apply(i: Int): Double = Math.expm1(x(i))
 }
 
 case class FloorVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = FloorVector(x.simplify)
   override def apply(i: Int): Double = Math.floor(x(i))
 }
 
 case class LogVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = LogVector(x.simplify)
   override def apply(i: Int): Double = Math.log(x(i))
 }
 
 case class Log2Vector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = Log2Vector(x.simplify)
   override def apply(i: Int): Double = MathEx.log2(x(i))
 }
 
 case class Log10Vector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = Log10Vector(x.simplify)
   override def apply(i: Int): Double = Math.log10(x(i))
 }
 
 case class Log1pVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = Log1pVector(x.simplify)
   override def apply(i: Int): Double = Math.log1p(x(i))
 }
 
 case class RoundVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = RoundVector(x.simplify)
   override def apply(i: Int): Double = Math.round(x(i)).toDouble
 }
 
 case class SinVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = SinVector(x.simplify)
   override def apply(i: Int): Double = Math.sin(x(i))
 }
 
 case class SqrtVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = SqrtVector(x.simplify)
   override def apply(i: Int): Double = Math.sqrt(x(i))
 }
 
 case class TanVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = TanVector(x.simplify)
   override def apply(i: Int): Double = Math.tan(x(i))
 }
 
 case class TanhVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
+  override def simplify: VectorExpression = TanhVector(x.simplify)
   override def apply(i: Int): Double = Math.tanh(x(i))
+}
+
+case class Ax(A: MatrixExpression, x: VectorExpression) extends VectorExpression {
+  override def length: Int = A.nrow
+  override def simplify: VectorExpression = VectorLift(toArray)
+  override def apply(i: Int): Double = throw new UnsupportedOperationException("Call simplify first")
+  override lazy val toArray: Array[Double] = {
+    A.toMatrix.mv(x)
+  }
 }
 
 sealed trait MatrixExpression {
@@ -269,15 +313,6 @@ sealed trait MatrixExpression {
   def - (b: Double): MatrixSubValue = MatrixSubValue(this, b)
   def * (b: Double): MatrixMulValue = MatrixMulValue(this, b)
   def / (b: Double): MatrixDivValue = MatrixDivValue(this, b)
-}
-
-case class Ax(A: MatrixExpression, x: VectorExpression) extends VectorExpression {
-  override def length: Int = A.nrow
-  override def simplify: VectorExpression = VectorLift(toArray)
-  override def apply(i: Int): Double = throw new UnsupportedOperationException("Call simplify first")
-  override lazy val toArray: Array[Double] = {
-    A.toMatrix.mv(x)
-  }
 }
 
 case class MatrixLift(A: Matrix) extends MatrixExpression {
@@ -655,6 +690,26 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
   }
 }
 
+/** Python like slicing. */
+case class Slice(start: Int, end: Int, step: Int = 1) {
+  def ~ (step: Int): Slice = copy(step=step)
+
+  def toRange(length: Int): Range =
+    Range(index(start, length), index(end, length), step)
+
+  def toArray(length: Int): Array[Int] =
+    Range(index(start, length), index(end, length), step).toArray
+
+  private def index(i: Int, length: Int): Int =
+    if (i < 0) length + i else i
+}
+
+private[math] case class PimpedInt(a: Int) {
+  def ~ : Slice = Slice(a, -1)
+  def ~ (b: Int): Slice = Slice(a, b)
+  def unary_~ (b: Int): Slice = Slice(0, b)
+}
+
 private[math] case class PimpedDouble(a: Double) {
   def + (b: Array[Double]): ValueAddVector = ValueAddVector(a, b)
   def - (b: Array[Double]): ValueSubVector = ValueSubVector(a, b)
@@ -705,7 +760,18 @@ private[math] class PimpedDoubleArray(override val a: Array[Double]) extends Pim
 }
 
 private[math] class MatrixOps(a: Matrix) {
-  def apply(rows: Range, cols: Range): Matrix = a.get(rows.toArray, cols.toArray)
+  def apply(i: Slice, j: Slice): Matrix = (i, j) match {
+    case (Slice(0, -1, 1), Slice(0, -1, 1)) => a
+    case (Slice(0, -1, 1), _) => a.cols(j.toRange(a.ncol): _*)
+    case (_, Slice(0, -1, 1)) => a.rows(i.toRange(a.nrow): _*)
+    case (_, _) =>
+      val rows = i.toRange(a.nrow)
+      val cols = j.toRange(a.ncol)
+      val z = new Matrix(rows.length, cols.length)
+      for (j <- 0 until z.ncol) for (i <- 0 until z.nrow) z(i, j) = a.apply(i, j)
+      z
+  }
+
   def apply(topLeft: (Int, Int), bottomRight: (Int, Int)): Matrix =
     a.submatrix(topLeft._1, topLeft._2, bottomRight._1, bottomRight._2)
 
