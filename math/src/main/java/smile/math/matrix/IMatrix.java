@@ -182,7 +182,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         String newline = n < ncol() ? "  ...\n" : "\n";
 
         if (colNames != null) {
-            sb.append(rowNames == null ? "   " : "            ");
+            if (rowNames != null) sb.append("            ");
 
             for (int j = 0; j < n; j++) {
                 sb.append(String.format(" %12.12s", colNames[j]));
@@ -191,7 +191,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         }
 
         for (int i = 0; i < m; i++) {
-            sb.append(rowNames == null ? "   " : String.format("%-12.12s", rowNames[i]));
+            if (rowNames != null) sb.append(String.format("%-12.12s", rowNames[i]));
 
             for (int j = 0; j < n; j++) {
                 sb.append(String.format(" %12.12s", str(i, j)));
