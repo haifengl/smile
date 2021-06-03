@@ -60,7 +60,7 @@ public class BandMatrixTest {
         };
         float[] b = {0.5f, 0.5f, 0.5f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.LU lu = a.lu();
         float[] x = lu.solve(b);
 

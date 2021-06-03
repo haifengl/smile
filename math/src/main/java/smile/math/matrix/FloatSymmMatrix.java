@@ -19,7 +19,6 @@ package smile.math.matrix;
 
 import java.io.Serializable;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import static smile.math.blas.Layout.*;
@@ -175,7 +174,7 @@ public class FloatSymmMatrix extends SMatrix {
     }
 
     @Override
-    public FloatSymmMatrix set(int i, int j, float x) {
+    public void set(int i, int j, float x) {
         if (uplo == LOWER) {
             if (j > i) {
                 int tmp = i;
@@ -191,8 +190,6 @@ public class FloatSymmMatrix extends SMatrix {
             }
             AP[i + (j * (j+1) / 2)] = x;
         }
-
-        return this;
     }
 
     @Override
@@ -340,9 +337,9 @@ public class FloatSymmMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            float[] x = b.clone();
-            solve(new FloatMatrix(x));
-            return x;
+            FloatMatrix x = FloatMatrix.column(b);
+            solve(x);
+            return x.A;
         }
 
         /**
@@ -364,7 +361,7 @@ public class FloatSymmMatrix extends SMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.sptrs(lu.layout(), lu.uplo, lu.n, B.n, FloatBuffer.wrap(lu.AP), IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.sptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -457,9 +454,9 @@ public class FloatSymmMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            float[] x = b.clone();
-            solve(new FloatMatrix(x));
-            return x;
+            FloatMatrix x = FloatMatrix.column(b);
+            solve(x);
+            return x.A;
         }
 
         /**
@@ -472,7 +469,7 @@ public class FloatSymmMatrix extends SMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.n, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pptrs(lu.layout(), lu.uplo, lu.n, B.n, FloatBuffer.wrap(lu.AP), B.A, B.ld);
+            int info = LAPACK.engine.pptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

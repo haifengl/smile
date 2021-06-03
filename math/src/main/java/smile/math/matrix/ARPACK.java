@@ -17,10 +17,7 @@
 
 package smile.math.matrix;
 
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
-import static smile.math.blas.Layout.*;
 import static org.bytedeco.arpackng.global.arpack.*;
 
 /**
@@ -303,7 +300,7 @@ public class ARPACK {
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        FloatMatrix.EVD eig = new FloatMatrix.EVD(d, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(d, new FloatMatrix(n, nev, ldv, V));
         return eig.sort();
     }
 
@@ -511,7 +508,7 @@ public class ARPACK {
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, new FloatMatrix(n, nev, ldv, V));
         return eig.sort();
     }
 

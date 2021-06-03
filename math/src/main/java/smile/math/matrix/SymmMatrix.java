@@ -19,7 +19,6 @@ package smile.math.matrix;
 
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import static smile.math.blas.Layout.*;
