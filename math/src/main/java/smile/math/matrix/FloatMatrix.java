@@ -42,6 +42,30 @@ public class FloatMatrix extends SMatrix {
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
 
+    /** Row major matrix. */
+    private class RowMajor extends FloatMatrix {
+        /**
+         * Constructor.
+         * @param m the number of rows.
+         * @param n the number of columns.
+         * @param ld the leading dimension.
+         * @param A the matrix storage.
+         */
+        RowMajor(int m, int n, int ld, float[] A) {
+            super(m, n, ld, A);
+        }
+
+        @Override
+        public Layout layout() {
+            return ROW_MAJOR;
+        }
+
+        @Override
+        protected int index(int i, int j) {
+            return i * ld + j;
+        }
+    }
+
     /**
      * The matrix storage.
      */
@@ -788,17 +812,7 @@ public class FloatMatrix extends SMatrix {
             if (layout() == ROW_MAJOR) {
                 matrix = new FloatMatrix(n, m, ld, A);
             } else {
-                matrix = new FloatMatrix(n, m, ld, A) {
-                    @Override
-                    public Layout layout() {
-                        return ROW_MAJOR;
-                    }
-
-                    @Override
-                    protected int index(int i, int j) {
-                        return i * ld + j;
-                    }
-                };
+                matrix = new RowMajor(n, m, ld, A);
             }
         } else {
             matrix = new FloatMatrix(n, m);
