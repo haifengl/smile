@@ -42,6 +42,30 @@ public class Matrix extends DMatrix {
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
 
+    /** Row major matrix. */
+    private class RowMajor extends Matrix {
+        /**
+         * Constructor.
+         * @param m the number of rows.
+         * @param n the number of columns.
+         * @param ld the leading dimension.
+         * @param A the matrix storage.
+         */
+        RowMajor(int m, int n, int ld, double[] A) {
+            super(m, n, ld, A);
+        }
+
+        @Override
+        public Layout layout() {
+            return ROW_MAJOR;
+        }
+
+        @Override
+        protected int index(int i, int j) {
+            return i * ld + j;
+        }
+    }
+
     /**
      * The matrix storage.
      */
@@ -717,17 +741,7 @@ public class Matrix extends DMatrix {
             if (layout() == ROW_MAJOR) {
                 matrix = new Matrix(n, m, ld, A);
             } else {
-                matrix = new Matrix(n, m, ld, A) {
-                    @Override
-                    public Layout layout() {
-                        return ROW_MAJOR;
-                    }
-
-                    @Override
-                    protected int index(int i, int j) {
-                        return i * ld + j;
-                    }
-                };
+                matrix = new RowMajor(n, m, ld, A);
             }
         } else {
             matrix = new Matrix(n, m);
