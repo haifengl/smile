@@ -371,37 +371,6 @@ public class Matrix extends DMatrix {
         return toeplitz;
     }
 
-    /**
-     * Returns the optimal leading dimension. The present process have
-     * cascade caches. And read/write cache are 64 byte (multiple of 16
-     * for single precision) related on Intel CPUs. In order to avoid
-     * cache conflict, we expected the leading dimensions should be
-     * multiple of cache line (multiple of 16 for single precision),
-     * but not the power of 2, like not multiple of 256, not multiple
-     * of 128 etc.
-     * <p>
-     * To improve performance, ensure that the leading dimensions of
-     * the arrays are divisible by 64/element_size, where element_size
-     * is the number of bytes for the matrix elements (4 for
-     * single-precision real, 8 for double-precision real and
-     * single precision complex, and 16 for double-precision complex).
-     * <p>
-     * But as present processor use cache-cascading structure: set->cache
-     * line. In order to avoid the cache stall issue, we suggest to avoid
-     * leading dimension are multiples of 128, If ld % 128 = 0, then add
-     * 16 to the leading dimension.
-     * <p>
-     * Generally, set the leading dimension to the following integer expression:
-     * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
-     * where n is the matrix dimension along the leading dimension.
-     */
-    private static int ld(int n) {
-        int elementSize = 4;
-        if (n <= 256 / elementSize) return n;
-
-        return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
-    }
-
     @Override
     public int nrow() {
         return m;
