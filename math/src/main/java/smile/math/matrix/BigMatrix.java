@@ -46,6 +46,30 @@ public class BigMatrix extends DMatrix {
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
+    /** Row major matrix. */
+    private class RowMajor extends BigMatrix {
+        /**
+         * Constructor.
+         * @param m the number of rows.
+         * @param n the number of columns.
+         * @param ld the leading dimension.
+         * @param A the matrix storage.
+         */
+        RowMajor(int m, int n, int ld, DoublePointer A) {
+            super(m, n, ld, A);
+        }
+
+        @Override
+        public Layout layout() {
+            return ROW_MAJOR;
+        }
+
+        @Override
+        protected long index(int i, int j) {
+            return i * ld + j;
+        }
+    }
+
     /**
      * The matrix storage.
      */
@@ -96,65 +120,8 @@ public class BigMatrix extends DMatrix {
         this.n = n;
         this.ld = ld(m);
 
-        long size = ld * n;
-        A = new DoublePointer(size);
-        if (a == 0.0) {
-            DoublePointer.memset(A, 0, size);
-        } else {
-            for (long i = 0; i < size; i++) {
-                A.put(i, a);
-            }
-        }
-    }
-
-    /**
-     * Constructor.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param A the array of matrix.
-     */
-    public BigMatrix(int m, int n, double[][] A) {
-        this(m, n);
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                set(i, j, A[i][j]);
-            }
-        }
-    }
-
-    /**
-     * Constructor.
-     * @param A the array of matrix.
-     */
-    public BigMatrix(double[][] A) {
-        this(A.length, A[0].length, A);
-    }
-
-    /**
-     * Constructor of a column vector/matrix with given array as the internal storage.
-     * @param A The array of column vector.
-     */
-    public BigMatrix(double[] A) {
-        this(A, 0, A.length);
-    }
-
-    /**
-     * Constructor of a column vector/matrix with given array as the internal storage.
-     * @param A The array of column vector.
-     * @param offset The offset of the subarray to be used; must be non-negative and
-     *               no larger than array.length.
-     * @param length The length of the subarray to be used; must be non-negative and
-     *               no larger than array.length - offset.
-     */
-    public BigMatrix(double[] A, int offset, int length) {
-        this.m = length;
-        this.n = 1;
-        this.ld = length;
-        this.A = new DoublePointer(length);
-        for (int i = 0; i < length; i++) {
-            this.A.put(i, A[offset+i]);
-        }
+        A = new DoublePointer(ld * n);
+        fill(a);
     }
 
     /**
@@ -180,72 +147,70 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Creates a matrix.
-     * @param layout the matrix layout.
-     * @param m the number of rows.
-     * @param n the number of columns.
+     * Returns a matrix from a two-dimensional array.
+     * @param A the two-dimensional array.
      * @return the matrix.
      */
-    public static BigMatrix of(Layout layout, int m, int n) {
-        if (layout == COL_MAJOR) {
-            int ld = ld(m);
-            long size = ld * n;
-            return of(layout, m, n, ld, new DoublePointer(size));
-        } else {
-            int ld = ld(n);
-            long size = ld * m;
-            return of(layout, m, n, ld, new DoublePointer(size));
+    public static BigMatrix of(double[][] A) {
+        int m = A.length;
+        int n = A[0].length;
+        BigMatrix matrix = new BigMatrix(m, n);
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix.set(i, j, A[i][j]);
+            }
         }
+
+        return matrix;
     }
 
     /**
-     * Creates a matrix.
-     * @param layout the matrix layout.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param ld the leading dimension.
-     * @param A the matrix storage.
-     * @return the matrix.
+     * Returns a column vector/matrix.
+     * @param A the column vector.
+     * @return the column vector/matrix.
      */
-    public static BigMatrix of(Layout layout, int m, int n, int ld, DoublePointer A) {
-        if (layout == COL_MAJOR && ld < m) {
-            throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
-        }
-
-        if (layout == ROW_MAJOR && ld < n) {
-            throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
-        }
-
-        if (layout == COL_MAJOR) {
-            return new BigMatrix(m, n, ld, A);
-        } else {
-            return new BigMatrix(m, n, ld, A) {
-                @Override
-                public Layout layout() {
-                    return ROW_MAJOR;
-                }
-
-                @Override
-                protected long index(int i , int j) {
-                    return i * ld + j + A.position();
-                }
-
-                @Override
-                public BigMatrix transpose() {
-                    return new BigMatrix(n, m, ld, A);
-                }
-            };
-        }
+    public static BigMatrix column(double[] A) {
+        return column(A, 0, A.length);
     }
 
     /**
-     * Returns a random matrix of standard normal distribution.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @return the matrix.
+     * Returns a column vector/matrix.
+     * @param A the column vector.
+     * @param offset the offset of the subarray to be used; must be non-negative and
+     *               no larger than array.length.
+     * @param length the length of the subarray to be used; must be non-negative and
+     *               no larger than array.length - offset.
+     * @return the column vector/matrix.
      */
-    public static BigMatrix randn(int m, int n) {
-        return rand(m, n, GaussianDistribution.getInstance());
+    public static BigMatrix column(double[] A, int offset, int length) {
+        DoublePointer pointer = new DoublePointer(length);
+        pointer.put(A, offset, length);
+        return new BigMatrix(length, 1, length, pointer);
+    }
+
+    /**
+     * Returns a row vector/matrix.
+     * @param A the row vector.
+     * @return the row vector/matrix.
+     */
+    public static BigMatrix row(double[] A) {
+        return row(A, 0, A.length);
+    }
+
+    /**
+     * Returns a row vector/matrix.
+     * @param A the row vector.
+     * @param offset the offset of the subarray to be used; must be non-negative and
+     *               no larger than array.length.
+     * @param length the length of the subarray to be used; must be non-negative and
+     *               no larger than array.length - offset.
+     * @return the row vector/matrix.
+     */
+    public static BigMatrix row(double[] A, int offset, int length) {
+        DoublePointer pointer = new DoublePointer(length);
+        pointer.put(A, offset, length);
+        return new BigMatrix(1, length, 1, pointer);
     }
 
     /**
@@ -262,6 +227,35 @@ public class BigMatrix extends DMatrix {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 matrix.set(i, j, distribution.rand());
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Returns a random matrix of standard normal distribution.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return the matrix.
+     */
+    public static BigMatrix randn(int m, int n) {
+        return rand(m, n, GaussianDistribution.getInstance());
+    }
+
+    /**
+     * Returns a uniformly distributed random matrix in [0, 1).
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return the random matrix.
+     */
+    public static BigMatrix rand(int m, int n) {
+        BigMatrix matrix = new BigMatrix(m, n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, MathEx.random());
             }
         }
 
@@ -358,7 +352,7 @@ public class BigMatrix extends DMatrix {
      * @return the matrix.
      */
     public static BigMatrix diag(DoublePointer diag) {
-        int n = (int) diag.limit();
+        int n = (int) length(diag);
         BigMatrix D = new BigMatrix(n, n);
         for (int i = 0; i < n; i++) {
             D.set(i, i, diag.get(i));
@@ -421,37 +415,6 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Returns the optimal leading dimension. The present process have
-     * cascade caches. And read/write cache are 64 byte (multiple of 16
-     * for single precision) related on Intel CPUs. In order to avoid
-     * cache conflict, we expected the leading dimensions should be
-     * multiple of cache line (multiple of 16 for single precision),
-     * but not the power of 2, like not multiple of 256, not multiple
-     * of 128 etc.
-     * <p>
-     * To improve performance, ensure that the leading dimensions of
-     * the arrays are divisible by 64/element_size, where element_size
-     * is the number of bytes for the matrix elements (4 for
-     * single-precision real, 8 for double-precision real and
-     * single precision complex, and 16 for double-precision complex).
-     * <p>
-     * But as present processor use cache-cascading structure: set->cache
-     * line. In order to avoid the cache stall issue, we suggest to avoid
-     * leading dimension are multiples of 128, If ld % 128 = 0, then add
-     * 16 to the leading dimension.
-     * <p>
-     * Generally, set the leading dimension to the following integer expression:
-     * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
-     * where n is the matrix dimension along the leading dimension.
-     */
-    private static int ld(int n) {
-        int elementSize = 4;
-        if (n <= 256 / elementSize) return n;
-
-        return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
-    }
-
-    /**
      * Customized object serialization.
      * @param out the output stream.
      * @throws IOException when fails to write to the stream.
@@ -487,17 +450,17 @@ public class BigMatrix extends DMatrix {
         in.defaultReadObject();
 
         // read buffer data
-        this.A = new DoublePointer(new double[m * n]);
-
         if (layout() == COL_MAJOR) {
-            this.ld = m;
+            this.ld = ld(m);
+            this.A = new DoublePointer(ld * n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, in.readDouble());
                 }
             }
         } else {
-            this.ld = n;
+            this.ld = ld(n);
+            this.A = new DoublePointer(m * ld);
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     set(i, j, in.readDouble());
@@ -519,6 +482,16 @@ public class BigMatrix extends DMatrix {
     @Override
     public long size() {
         return m * n;
+    }
+
+    /** Returns the length of double array pointer. */
+    private static long length(DoublePointer A) {
+        return A.limit() - A.position();
+    }
+
+    /** Returns the byte length of double array pointer. */
+    private static long bytes(DoublePointer A) {
+        return A.sizeof() * (A.limit() - A.position());
     }
 
     /**
@@ -601,10 +574,17 @@ public class BigMatrix extends DMatrix {
     /** Returns a deep copy of matrix. */
     @Override
     public BigMatrix clone() {
-        BigMatrix matrix = new BigMatrix(m, n);
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                matrix.set(i, j, get(i, j));
+        BigMatrix matrix;
+        if (layout() == COL_MAJOR) {
+            DoublePointer pointer = new DoublePointer(length(A));
+            DoublePointer.memcpy(pointer, A, bytes(A));
+            matrix = new BigMatrix(m, n, ld, pointer);
+        } else {
+            matrix = new BigMatrix(m, n);
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    matrix.set(i, j, get(i, j));
+                }
             }
         }
 
@@ -631,12 +611,96 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Returns the i-th row.
+     * Sets the matrix value. If the matrices have the same layout,
+     * this matrix will share the underlying storage with b.
+     * @param b the right hand side of assignment.
+     * @return this matrix.
+     */
+    public BigMatrix set(BigMatrix b) {
+        this.m = b.m;
+        this.n = b.n;
+        this.diag = b.diag;
+        this.uplo = b.uplo;
+
+        if (layout() == b.layout()) {
+            this.A = b.A;
+            this.ld = b.ld;
+        } else {
+            if (layout() == COL_MAJOR) {
+                this.ld = ld(m);
+                this.A = new DoublePointer(ld * n);
+
+                for (int j = 0; j < n; j++) {
+                    for (int i = 0; i < m; i++) {
+                        set(i, j, get(i, j));
+                    }
+                }
+            } else {
+                this.ld = ld(n);
+                this.A = new DoublePointer(ld * m);
+
+                for (int i = 0; i < m; i++) {
+                    for (int j = 0; j < n; j++) {
+                        set(i, j, get(i, j));
+                    }
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Returns the linearized index of matrix element.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the linearized index.
+     */
+    protected long index(int i , int j) {
+        return j * ld + i;
+    }
+
+    @Override
+    public double get(int i, int j) {
+        return A.get(index(i, j));
+    }
+
+    @Override
+    public void set(int i, int j, double x) {
+        A.put(index(i, j), x);
+    }
+
+    /**
+     * Returns the matrix of selected rows and columns.
+     * Negative index -i means the i-th row/column from the end.
+     *
+     * @param rows the row indices.
+     * @param cols the column indices.
+     * @return the submatrix.
+     */
+    public BigMatrix get(int[] rows, int[] cols) {
+        BigMatrix sub = new BigMatrix(rows.length, cols.length);
+        for (int j = 0; j < cols.length; j++) {
+            int col = cols[j];
+            if (col < 0) col = n + col;
+            for (int i = 0; i < rows.length; i++) {
+                int row = rows[i];
+                if (row < 0) row = m + row;
+                sub.set(i, j, get(row, col));
+            }
+        }
+
+        return sub;
+    }
+
+    /**
+     * Returns the i-th row. Negative index -i means the i-th row from the end.
      * @param i the row index.
      * @return the row.
      */
     public double[] row(int i) {
         double[] x = new double[n];
+        if (i < 0) i = m + i;
 
         for (int j = 0; j < n; j++) {
             x[j] = get(i, j);
@@ -646,7 +710,7 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Returns the j-th column.
+     * Returns the j-th column. Negative index -j means the j-th row from the end.
      * @param j the column index.
      * @return the column.
      */
@@ -714,10 +778,13 @@ public class BigMatrix extends DMatrix {
 
         long offset = index(i, j);
         long length = index(k, l) - offset + 1;
-        DoublePointer B = A.getPointer(offset);
-        B.limit(length);
+        DoublePointer B = A.getPointer(offset).limit(length);
 
-        return of(layout(),k - i + 1, l - j + 1, ld, B);
+        if (layout() == COL_MAJOR) {
+            return new BigMatrix(k - i + 1, l - j + 1, ld, B);
+        } else {
+            return new RowMajor(k - i + 1, l - j + 1, ld, B);
+        }
     }
 
     /**
@@ -726,22 +793,56 @@ public class BigMatrix extends DMatrix {
      */
     public void fill(double x) {
         if (x == 0.0) {
-            DoublePointer.memset(A, 0, A.limit());
+            DoublePointer.memset(A, 0, bytes(A));
         } else {
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    set(i, j, x);
-                }
+            long length = length(A);
+            for (long i = 0; i < length; i++) {
+                A.put(i, x);
             }
         }
     }
 
     /**
-     * Returns the transpose of matrix.
+     * Returns the transpose of matrix. The transpose shares the storage
+     * with this matrix. Changes to this matrix's content will be visible
+     * in the transpose, and vice versa.
+     *
      * @return the transpose of matrix.
      */
     public BigMatrix transpose() {
-        return of(ROW_MAJOR, n, m, ld, A);
+        return transpose(true);
+    }
+
+    /**
+     * Returns the transpose of matrix.
+     * @param share if true, the transpose shares the storage with this matrix.
+     *              Changes to this matrix's content will be visible in the
+     *              transpose, and vice versa.
+     * @return the transpose of matrix.
+     */
+    public BigMatrix transpose(boolean share) {
+        BigMatrix matrix;
+        if (share) {
+            if (layout() == ROW_MAJOR) {
+                matrix = new BigMatrix(n, m, ld, A);
+            } else {
+                matrix = new RowMajor(n, m, ld, A);
+            }
+        } else {
+            matrix = new BigMatrix(n, m);
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
+                    matrix.set(i, j, get(j, i));
+                }
+            }
+        }
+
+        if (m == n) {
+            matrix.uplo(uplo);
+            matrix.triangular(diag);
+        }
+
+        return matrix;
     }
 
     @Override
@@ -750,7 +851,7 @@ public class BigMatrix extends DMatrix {
             return false;
         }
 
-        return equals((BigMatrix) o, 1E-7f);
+        return equals((BigMatrix) o, 1E-7);
     }
 
     /**
@@ -774,40 +875,6 @@ public class BigMatrix extends DMatrix {
         }
 
         return true;
-    }
-
-    /**
-     * Returns the linearized index of matrix element.
-     * @param i the row index.
-     * @param j the column index.
-     * @return the linearized index.
-     */
-    protected long index(int i , int j) {
-        return j * ld + i;
-    }
-
-    @Override
-    public double get(int i, int j) {
-        return A.get(index(i, j));
-    }
-
-    @Override
-    public void set(int i, int j, double x) {
-        A.put(index(i, j), x);
-    }
-
-    /**
-     * Sets submatrix A[i,j] = B.
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param B the right-hand-side submatrix.
-     */
-    public void set(int i, int j, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                set(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
     }
 
     /**
@@ -864,6 +931,40 @@ public class BigMatrix extends DMatrix {
         double y = A.get(k) / b;
         A.put(k, y);
         return y;
+    }
+
+    /**
+     * A[i, i] += b
+     * @param b the operand.
+     * @return this matrix.
+     */
+    public BigMatrix addDiag(double b) {
+        int l = Math.min(m, n);
+        for (int i = 0; i < l; i++) {
+            long k = index(i, i);
+            A.put(m, A.get(k) + b);
+        }
+
+        return this;
+    }
+
+    /**
+     * A[i, i] += b[i]
+     * @param b the operand.
+     * @return this matrix.
+     */
+    public BigMatrix addDiag(double[] b) {
+        int l = Math.min(m, n);
+        if (b.length != l) {
+            throw new IllegalArgumentException("Invalid diagonal array size: " + b.length);
+        }
+
+        for (int i = 0; i < l; i++) {
+            long k = index(i, i);
+            A.put(m, A.get(k) + b[i]);
+        }
+
+        return this;
     }
 
     /**
@@ -927,80 +1028,22 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Element-wise submatrix addition A[i, j] += alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public BigMatrix add(int i, int j, double alpha, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                add(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix subtraction A[i, j] -= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public BigMatrix sub(int i, int j, double alpha, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                sub(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix multiplication A[i, j] *= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public BigMatrix mul(int i, int j, double alpha, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                mul(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise submatrix division A[i, j] /= alpha * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public BigMatrix div(int i, int j, double alpha, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                div(i+ii, j+jj, alpha * B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /**
      * Element-wise addition A += B
      * @param B the operand.
      * @return this matrix.
      */
     public BigMatrix add(BigMatrix B) {
-        return add(1.0, B);
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                add(i, j, B.get(i, j));
+            }
+        }
+
+        return this;
     }
 
     /**
@@ -1009,7 +1052,17 @@ public class BigMatrix extends DMatrix {
      * @return this matrix.
      */
     public BigMatrix sub(BigMatrix B) {
-        return sub(1.0, B);
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sub(i, j, B.get(i, j));
+            }
+        }
+
+        return this;
     }
 
     /**
@@ -1018,7 +1071,17 @@ public class BigMatrix extends DMatrix {
      * @return this matrix.
      */
     public BigMatrix mul(BigMatrix B) {
-        return mul(1.0, B);
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                mul(i, j, B.get(i, j));
+            }
+        }
+
+        return this;
     }
 
     /**
@@ -1027,80 +1090,33 @@ public class BigMatrix extends DMatrix {
      * @return this matrix.
      */
     public BigMatrix div(BigMatrix B) {
-        return div(1.0, B);
-    }
-
-    /**
-     * Element-wise addition A += alpha * B
-     * @param alpha the scalar alpha.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix add(double alpha, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                add(i, j, alpha * B.get(i, j));
+                div(i, j, B.get(i, j));
             }
         }
+
         return this;
     }
 
     /**
-     * Element-wise subtraction A -= alpha * B
-     * @param alpha the scalar alpha.
+     * Element-wise addition A += beta * B
+     * @param beta the scalar alpha.
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix sub(double alpha, BigMatrix B) {
+    public BigMatrix add(double beta, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                sub(i, j, alpha * B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise multiplication A *= alpha * B
-     * @param alpha the scalar alpha.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix mul(double alpha, BigMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                mul(i, j, alpha * B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise division A /= alpha * B
-     * @param alpha the scalar alpha.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix div(double alpha, BigMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                div(i, j, alpha * B.get(i, j));
+                add(i, j, beta * B.get(i, j));
             }
         }
         return this;
@@ -1123,104 +1139,21 @@ public class BigMatrix extends DMatrix {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
 
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+        if (layout() == A.layout() && layout() == B.layout() && ld == A.ld && ld == B.ld) {
+            long size = length(this.A);
+            for (long i = 0; i < size; i++) {
+                double a = A.A.get(i);
+                double b = B.A.get(i);
+                this.A.put(i, alpha * a + beta * b);
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+                }
             }
         }
-        return this;
-    }
 
-    /**
-     * Element-wise subtraction C = alpha * A - beta * B
-     * @param alpha the scalar alpha.
-     * @param A the operand.
-     * @param beta the scalar beta.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix sub(double alpha, BigMatrix A, double beta, BigMatrix B) {
-        return add(alpha, A, -beta, B);
-    }
-
-    /**
-     * Element-wise multiplication C = alpha * A * B
-     * @param alpha the scalar alpha.
-     * @param A the operand.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix mul(double alpha, BigMatrix A, BigMatrix B) {
-        if (m != A.m || n != A.n) {
-            throw new IllegalArgumentException("Matrix A is not of same size.");
-        }
-
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix B is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                set(i, j, alpha * A.get(i, j) * B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Element-wise division C = alpha * A / B
-     * @param alpha the scalar alpha.
-     * @param A the operand.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public BigMatrix div(double alpha, BigMatrix A, BigMatrix B) {
-        if (m != A.m || n != A.n) {
-            throw new IllegalArgumentException("Matrix A is not of same size.");
-        }
-
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix B is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                set(i, j, alpha * A.get(i, j) / B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /**
-     * A[i,j] = alpha * A[i,j] + beta
-     * @param i the row index.
-     * @param j the column index.
-     * @param alpha the scalar alpha.
-     * @param beta the operand.
-     * @return the updated A[i,j]
-     */
-    public double add(int i, int j, double alpha, double beta) {
-        long k = index(i, j);
-        double y = alpha * A.get(k) + beta;
-        A.put(k, y);
-        return y;
-    }
-
-    /**
-     * Element-wise submatrix addition A[i, j] = alpha * A[i, j] + beta * B
-     * @param i the row index of left top corner of submatrix.
-     * @param j the column index of left top corner of submatrix.
-     * @param alpha the scalar alpha.
-     * @param beta the scalar beta.
-     * @param B the submatrix operand.
-     * @return this matrix.
-     */
-    public BigMatrix add(int i, int j, double alpha, double beta, BigMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                add(i+ii, j+jj, alpha, beta * B.get(ii, jj));
-            }
-        }
         return this;
     }
 
@@ -1236,8 +1169,8 @@ public class BigMatrix extends DMatrix {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
 
-        if (!isSubmatrix() && !B.isSubmatrix() && layout() == B.layout()) {
-            long size = A.limit();
+        if (layout() == B.layout() && ld == B.ld) {
+            long size = (int) length(A);
             for (long i = 0; i < size; i++) {
                 double a = A.get(i);
                 double b = B.A.get(i);
@@ -1266,8 +1199,8 @@ public class BigMatrix extends DMatrix {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
 
-        if (!isSubmatrix() && !B.isSubmatrix() && layout() == B.layout()) {
-            long size = A.limit();
+        if (layout() == B.layout() && ld == B.ld) {
+            long size = length(A);
             for (long i = 0; i < size; i++) {
                 double a = A.get(i);
                 double b = B.A.get(i);
@@ -1311,11 +1244,10 @@ public class BigMatrix extends DMatrix {
      * @return this matrix.
      */
     public BigMatrix replaceNaN(double x) {
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                if (Double.isNaN(get(i, j))) {
-                    set(i, j, x);
-                }
+        long length = length(A);
+        for (int i = 0; i < length; i++) {
+            if (Double.isNaN(A.get(i))) {
+                A.put(i, x);
             }
         }
 
@@ -1327,7 +1259,7 @@ public class BigMatrix extends DMatrix {
      * @return the sum of all elements.
      */
     public double sum() {
-        double s = 0.0f;
+        double s = 0.0;
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 s += get(i, j);
@@ -1342,9 +1274,9 @@ public class BigMatrix extends DMatrix {
      * @return L<sub>1</sub> matrix norm.
      */
     public double norm1() {
-        double f = 0.0f;
+        double f = 0.0;
         for (int j = 0; j < n; j++) {
-            double s = 0.0f;
+            double s = 0.0;
             for (int i = 0; i < m; i++) {
                 s += Math.abs(get(i, j));
             }
@@ -1416,15 +1348,8 @@ public class BigMatrix extends DMatrix {
             throw new IllegalArgumentException(String.format("Matrix: %d x %d, Vector: %d", m, n, x.length));
         }
 
-        int n = x.length;
-        double s = 0.0f;
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < n; i++) {
-                s += get(i, j) * x[i] * x[j];
-            }
-        }
-
-        return s;
+        double[] Ax = mv(x);
+        return MathEx.dot(x, Ax);
     }
 
     /**
@@ -1448,13 +1373,7 @@ public class BigMatrix extends DMatrix {
      * @return the mean of each row.
      */
     public double[] rowMeans() {
-        double[] x = new double[m];
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                x[i] += get(i, j);
-            }
-        }
+        double[] x = rowSums();
 
         for (int i = 0; i < m; i++) {
             x[i] /= n;
@@ -1528,8 +1447,8 @@ public class BigMatrix extends DMatrix {
         double[] x = new double[n];
 
         for (int j = 0; j < n; j++) {
-            double mu = 0.0f;
-            double sumsq = 0.0f;
+            double mu = 0.0;
+            double sumsq = 0.0;
             for (int i = 0; i < m; i++) {
                 double a = get(i, j);
                 mu += a;
@@ -1543,10 +1462,10 @@ public class BigMatrix extends DMatrix {
     }
 
     /**
-     * Centers and scales the columns of matrix.
+     * Standardizes the columns of matrix.
      * @return a new matrix with zero mean and unit variance for each column.
      */
-    public BigMatrix scale() {
+    public BigMatrix standardize() {
         double[] center = colMeans();
         double[] scale = colSds();
         return scale(center, scale);
@@ -1627,7 +1546,7 @@ public class BigMatrix extends DMatrix {
      * @param beta the scalar beta.
      * @param y the operand.
      */
-    public void mv(Transpose trans, double alpha, DoublePointer x, double beta, DoublePointer y) {
+    private void mv(Transpose trans, double alpha, DoublePointer x, double beta, DoublePointer y) {
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
@@ -1656,7 +1575,7 @@ public class BigMatrix extends DMatrix {
         DoublePointer pointer = new DoublePointer(work);
         DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
         DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
-        mv(NO_TRANSPOSE, 1.0f, xb, 0.0f, yb);
+        mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
         pointer.get(work);
     }
 
@@ -1665,13 +1584,25 @@ public class BigMatrix extends DMatrix {
         DoublePointer pointer = new DoublePointer(work);
         DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
         DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
-        mv(TRANSPOSE, 1.0f, xb, 0.0f, yb);
+        mv(TRANSPOSE, 1.0, xb, 0.0, yb);
         pointer.get(work);
     }
 
-    /** Flips the transpose operation. */
-    private Transpose flip(Transpose trans) {
-        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
+    /**
+     * Matrix-matrix multiplication.
+     * <pre>{@code
+     *     C := A*B
+     * }</pre>
+     * @param transA normal, transpose, or conjugate transpose
+     *               operation on the matrix A.
+     * @param A the operand.
+     * @param transB normal, transpose, or conjugate transpose
+     *               operation on the matrix B.
+     * @param B the operand.
+     * @return this matrix.
+     */
+    public BigMatrix mm(Transpose transA, BigMatrix A, Transpose transB, BigMatrix B) {
+        return mm(transA, A, transB, B, 1.0, 0.0);
     }
 
     /**
@@ -1681,25 +1612,27 @@ public class BigMatrix extends DMatrix {
      * }</pre>
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
+     * @param A the operand.
      * @param transB normal, transpose, or conjugate transpose
      *               operation on the matrix B.
-     * @param alpha the scalar alpha.
      * @param B the operand.
+     * @param alpha the scalar alpha.
      * @param beta the scalar beta.
-     * @param C the operand.
+     * @return this matrix.
      */
-    public void mm(Transpose transA, Transpose transB, double alpha, BigMatrix B, double beta, BigMatrix C) {
-        if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
-            BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
-        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && layout() == C.layout()) {
-            BLAS.engine.symm(C.layout(), RIGHT, B.uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
+    public BigMatrix mm(Transpose transA, BigMatrix A, Transpose transB, BigMatrix B, double alpha, double beta) {
+        if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == layout()) {
+            BLAS.engine.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
+            BLAS.engine.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
         } else {
-            if (C.layout() != layout()) transA = flip(transA);
-            if (C.layout() != B.layout()) transB = flip(transB);
-            int k = transA == NO_TRANSPOSE ? n : m;
+            if (layout() != A.layout()) transA = flip(transA);
+            if (layout() != B.layout()) transB = flip(transB);
+            int k = transA == NO_TRANSPOSE ? A.n : A.m;
 
-            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, C.ld);
+            BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         }
+        return this;
     }
 
     /**
@@ -1708,7 +1641,7 @@ public class BigMatrix extends DMatrix {
      */
     public BigMatrix ata() {
         BigMatrix C = new BigMatrix(n, n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, this, 0.0f, C);
+        C.mm(TRANSPOSE, this, NO_TRANSPOSE, this);
         C.uplo(LOWER);
         return C;
     }
@@ -1719,7 +1652,7 @@ public class BigMatrix extends DMatrix {
      */
     public BigMatrix aat() {
         BigMatrix C = new BigMatrix(m, m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, this, 0.0f, C);
+        C.mm(NO_TRANSPOSE, this, TRANSPOSE, this);
         C.uplo(LOWER);
         return C;
     }
@@ -1728,31 +1661,35 @@ public class BigMatrix extends DMatrix {
      * Returns {@code A * D * B}, where D is a diagonal matrix.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
+     * @param B the operand.
+     * @param D the diagonal matrix.
      * @param transB normal, transpose, or conjugate transpose
      *               operation on the matrix B.
      * @param B the operand.
-     * @param diag the diagonal matrix.
      * @return the multiplication.
      */
-    public BigMatrix adb(Transpose transA, Transpose transB, BigMatrix B, double[] diag) {
-        BigMatrix C;
+    public static BigMatrix adb(Transpose transA, BigMatrix A, double[] D, Transpose transB, BigMatrix B) {
+        BigMatrix AD;
+        int m = A.m, n = A.n;
         if (transA == NO_TRANSPOSE) {
-            C = new BigMatrix(m, n);
+            AD = new BigMatrix(m, n);
             for (int j = 0; j < n; j++) {
+                double dj = D[j];
                 for (int i = 0; i < m; i++) {
-                    C.set(i, j, diag[j] * get(i, j));
+                    AD.set(i, j, dj * A.get(i, j));
                 }
             }
         } else {
-            C = new BigMatrix(n, m);
+            AD = new BigMatrix(n, m);
             for (int j = 0; j < m; j++) {
+                double dj = D[j];
                 for (int i = 0; i < n; i++) {
-                    C.set(i, j, diag[j] * get(j, i));
+                    AD.set(i, j, dj * A.get(j, i));
                 }
             }
         }
 
-        return transB == NO_TRANSPOSE ? C.mm(B) : C.mt(B);
+        return transB == NO_TRANSPOSE ? AD.mm(B) : AD.mt(B);
     }
 
     /**
@@ -1766,7 +1703,7 @@ public class BigMatrix extends DMatrix {
         }
 
         BigMatrix C = new BigMatrix(m, B.n);
-        mm(NO_TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
+        C.mm(NO_TRANSPOSE, this, NO_TRANSPOSE, B);
         return C;
     }
 
@@ -1781,7 +1718,7 @@ public class BigMatrix extends DMatrix {
         }
 
         BigMatrix C = new BigMatrix(m, B.m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
+        C.mm(NO_TRANSPOSE, this, TRANSPOSE, B);
         return C;
     }
 
@@ -1796,7 +1733,7 @@ public class BigMatrix extends DMatrix {
         }
 
         BigMatrix C = new BigMatrix(n, B.n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
+        C.mm(TRANSPOSE, this, NO_TRANSPOSE, B);
         return C;
     }
 
@@ -1811,7 +1748,7 @@ public class BigMatrix extends DMatrix {
         }
 
         BigMatrix C = new BigMatrix(n, B.m);
-        mm(TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
+        C.mm(TRANSPOSE, this, TRANSPOSE, B);
         return C;
     }
 
@@ -2112,8 +2049,8 @@ public class BigMatrix extends DMatrix {
         public BigMatrix diag() {
             BigMatrix S = new BigMatrix(U.m, V.m);
 
-            long limit = s.limit();
-            for (int i = 0; i < limit; i++) {
+            long length = length(s);
+            for (int i = 0; i < length; i++) {
                 S.set(i, i, s.get(i));
             }
 
@@ -2143,15 +2080,15 @@ public class BigMatrix extends DMatrix {
          * @return the effective numerical matrix rank.
          */
         public int rank() {
-            if (s.limit() != Math.min(m, n)) {
+            if (length(s) != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
             int r = 0;
             double tol = rcond();
 
-            long limit = s.limit();
-            for (int i = 0; i < limit; i++) {
+            long length = length(s);
+            for (int i = 0; i < length; i++) {
                 double si = s.get(i);
                 if (si > tol) {
                     r++;
@@ -2188,11 +2125,11 @@ public class BigMatrix extends DMatrix {
          */
         public double condition() {
             int k = Math.min(m, n);
-            if (s.limit() != k) {
+            if (length(s) != k) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
-            return (s.get(0) <= 0.0f || s.get(k-1) <= 0.0f) ? Double.POSITIVE_INFINITY : s.get(0) / s.get(k-1);
+            return (s.get(0) <= 0.0 || s.get(k-1) <= 0.0) ? Double.POSITIVE_INFINITY : s.get(0) / s.get(k-1);
         }
 
         /**
@@ -2201,7 +2138,7 @@ public class BigMatrix extends DMatrix {
          * @return the range space span matrix.
          */
         public BigMatrix range() {
-            if (s.limit() != Math.min(m, n)) {
+            if (length(s) != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
@@ -2231,7 +2168,7 @@ public class BigMatrix extends DMatrix {
          * @return the null space span matrix.
          */
         public BigMatrix nullspace() {
-            if (s.limit() != Math.min(m, n)) {
+            if (length(s) != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
@@ -2259,14 +2196,14 @@ public class BigMatrix extends DMatrix {
          * @return the pseudo inverse.
          */
         public BigMatrix pinv() {
-            int k = (int) s.limit();
+            int k = (int) length(s);
             double[] sigma = new double[k];
             int r = rank();
             for (int i = 0; i < r; i++) {
-                sigma[i] = 1.0f / s.get(i);
+                sigma[i] = 1.0 / s.get(i);
             }
 
-            return V.adb(NO_TRANSPOSE, TRANSPOSE, U, sigma);
+            return adb(NO_TRANSPOSE, V, sigma, TRANSPOSE, U);
         }
 
         /**
@@ -2285,7 +2222,7 @@ public class BigMatrix extends DMatrix {
             }
 
             int r = rank();
-            double[] Utb = new double[(int) s.limit()];
+            double[] Utb = new double[(int) length(s)];
             U.submatrix(0, 0, m-1, r-1).tv(b, Utb);
             for (int i = 0; i < r; i++) {
                 Utb[i] /= s.get(i);
@@ -2416,7 +2353,7 @@ public class BigMatrix extends DMatrix {
             BigMatrix D = BigMatrix.diag(wr);
 
             if (wi != null) {
-                int n = (int) wr.limit();
+                int n = (int) length(wr);
                 for (int i = 0; i < n; i++) {
                     if (wi.get(i) > 0) {
                         D.set(i, i + 1, wi.get(i));
@@ -2435,7 +2372,7 @@ public class BigMatrix extends DMatrix {
          * @return sorted eigen decomposition.
          */
         public EVD sort() {
-            int n = (int) wr.limit();
+            int n = (int) length(wr);
             double[] w = new double[n];
             if (wi != null) {
                 for (int i = 0; i < n; i++) {
@@ -2584,8 +2521,9 @@ public class BigMatrix extends DMatrix {
          * @return the solution vector.
          */
         public double[] solve(double[] b) {
-            BigMatrix x = new BigMatrix(b);
+            BigMatrix x = BigMatrix.column(b);
             solve(x);
+
             double[] y = new double[b.length];
             x.A.get(y);
             return y;
@@ -2708,8 +2646,9 @@ public class BigMatrix extends DMatrix {
          * @return the solution vector.
          */
         public double[] solve(double[] b) {
-            BigMatrix x = new BigMatrix(b);
+            BigMatrix x = BigMatrix.column(b);
             solve(x);
+
             double[] y = new double[b.length];
             x.A.get(y);
             return y;
@@ -2826,8 +2765,9 @@ public class BigMatrix extends DMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.m, qr.n, b.length));
             }
 
-            BigMatrix x = new BigMatrix(b);
+            BigMatrix x = BigMatrix.column(b);
             solve(x);
+
             double[] y = new double[qr.n];
             x.A.get(y);
             return y;
