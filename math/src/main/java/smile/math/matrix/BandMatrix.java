@@ -463,7 +463,7 @@ public class BandMatrix extends DMatrix {
         }
 
         /**
-         * Returns the inverse of matrix. For pseudo inverse, use QRDecomposition.
+         * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
         public Matrix inverse() {
