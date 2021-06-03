@@ -48,7 +48,7 @@ public class BigMatrixTest {
             {0.12, 0.39, 0.73f}
     };
 
-    BigMatrix matrix = new BigMatrix(A);
+    BigMatrix matrix = BigMatrix.of(A);
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -99,7 +99,7 @@ public class BigMatrixTest {
         };
         double[] r = {-0.06067647, -0.12325383, 0.56076753f};
 
-        double[] result = new BigMatrix(A).colMeans();
+        double[] result = BigMatrix.of(A).colMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -115,7 +115,7 @@ public class BigMatrixTest {
         };
         double[] r = {0.4938100, -0.2617642, 0.1447914f};
 
-        double[] result = new BigMatrix(A).rowMeans();
+        double[] result = BigMatrix.of(A).rowMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -273,8 +273,8 @@ public class BigMatrixTest {
                 { 0.1051570, 0,  0.1051570f},
                 {-0.0151015, 0, -0.0151015f}
         };
-        BigMatrix a = new BigMatrix(A);
-        BigMatrix b = new BigMatrix(B);
+        BigMatrix a = BigMatrix.of(A);
+        BigMatrix b = BigMatrix.of(B);
         a.add(1.0, b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-7));
     }
@@ -297,9 +297,9 @@ public class BigMatrixTest {
                 {-0.6349342, -1.7808990,  0.6349342f},
                 {-1.2632161,  0.8989516,  1.2632161f}
         };
-        BigMatrix a = new BigMatrix(A);
-        BigMatrix b = new BigMatrix(B);
-        a.sub(1.0, b);
+        BigMatrix a = BigMatrix.of(A);
+        BigMatrix b = BigMatrix.of(B);
+        a.sub(b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-7));
     }
 
@@ -332,8 +332,8 @@ public class BigMatrixTest {
                 {1.0000,  0.0000, 0.0000f}
         };
 
-        BigMatrix a = new BigMatrix(A);
-        BigMatrix b = new BigMatrix(B);
+        BigMatrix a = BigMatrix.of(A);
+        BigMatrix b = BigMatrix.of(B);
         double[][] F = b.mm(a).transpose().toArray();
 
         assertTrue(MathEx.equals(a.mm(b).toArray(),   C, 1E-7));
@@ -354,7 +354,7 @@ public class BigMatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         BigMatrix.LU lu = a.lu();
         double[] x2 = lu.solve(b);
         assertEquals(x.length, x2.length);
@@ -373,7 +373,7 @@ public class BigMatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        BigMatrix X2 = new BigMatrix(B);
+        BigMatrix X2 = BigMatrix.of(B);
         lu.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -396,7 +396,7 @@ public class BigMatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         BigMatrix.QR qr = a.qr();
         double[] x2 = qr.solve(b);
         assertEquals(x.length, x2.length);
@@ -415,7 +415,7 @@ public class BigMatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        BigMatrix X2 = new BigMatrix(B);
+        BigMatrix X2 = BigMatrix.of(B);
         qr.solve(X2);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {
@@ -437,7 +437,7 @@ public class BigMatrixTest {
                 {0.7378648, -0.01957401, 0.5051459f}
         };
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         a.uplo(UPLO.LOWER);
         BigMatrix.Cholesky cholesky = a.cholesky();
         for (int i = 0; i < a.nrow(); i++) {
@@ -466,7 +466,7 @@ public class BigMatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        BigMatrix X2 = new BigMatrix(B);
+        BigMatrix X2 = BigMatrix.of(B);
         cholesky.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -492,7 +492,7 @@ public class BigMatrixTest {
         };
         double[] eigenValues = {1.7498382, 0.3165784, 0.1335834f};
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         a.uplo(UPLO.LOWER);
         BigMatrix.EVD eig = a.eigen().sort();
         for (int i = 0; i < eigenValues.length; i++) {
@@ -532,7 +532,7 @@ public class BigMatrixTest {
         double[] eigenValues = {1.79171122, 0.31908143, 0.08920735f};
 
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         BigMatrix.EVD eig = a.eigen().sort();
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr.get(i), 1E-7);
@@ -581,7 +581,7 @@ public class BigMatrixTest {
                 {0.6240573, -0.44947578, -0.6391588f}
         };
 
-        BigMatrix matrix = new BigMatrix(A);
+        BigMatrix matrix = BigMatrix.of(A);
         matrix.uplo(UPLO.LOWER);
         BigMatrix.SVD svd = matrix.svd();
         for (int i = 0; i < s.length; i++) {
@@ -640,7 +640,7 @@ public class BigMatrixTest {
                 {-0.5156083, -0.36573746, -0.47613340,  0.41342817, -0.2659765,  0.1654796, -0.32346758f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-7);
         }
@@ -696,7 +696,7 @@ public class BigMatrixTest {
                 { 0.06127719,  0.230326187,  0.04693098, -0.3300697,  0.825499232, -0.3880689f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-7);
         }
@@ -751,7 +751,7 @@ public class BigMatrixTest {
                 { 0.82502638, -0.400562630,  0.30810911, -0.1797507,  0.1778750f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-7);
         }
@@ -805,7 +805,7 @@ public class BigMatrixTest {
                 { 0.1873664, -0.7026270, -0.07117046,  0.6827473f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-7);
         }
@@ -860,7 +860,7 @@ public class BigMatrixTest {
                 {-0.5443460,  0.37590198,  0.55072289, -0.2115256, -0.2675392, -0.003003781f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-7);
         }
@@ -911,7 +911,7 @@ public class BigMatrixTest {
                 {-0.4720051, -0.2247534,  0.42477493, -0.36219292, -0.4534882f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-6);
         }
@@ -960,7 +960,7 @@ public class BigMatrixTest {
                 { 0.32967585,  0.18412070, -0.02567023,  0.2254902f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-6);
         }
@@ -1024,7 +1024,7 @@ public class BigMatrixTest {
                 {-0.406678,  -0.10893,    0.492444,  0.0123293,   0.270696, -0.0538747, -0.0538747, -0.165339, -0.579426, -0.225424,  0.231961,     0.182535f}
         };
 
-        BigMatrix.SVD svd = new BigMatrix(A).svd();
+        BigMatrix.SVD svd = BigMatrix.of(A).svd();
         for (int i = 0; i < s.length; i++) {
             assertEquals(s[i], svd.s.get(i), 1E-5);
         }
@@ -1064,7 +1064,7 @@ public class BigMatrixTest {
                 {0, 0, 0, 0, 0, 0, 0, 1, 1}
         };
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         BigMatrix pinv = a.svd().pinv();
 
         BigMatrix x = pinv.mm(a).mm(pinv);
@@ -1085,7 +1085,7 @@ public class BigMatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        BigMatrix a = new BigMatrix(A);
+        BigMatrix a = BigMatrix.of(A);
         BigMatrix.SVD svd = a.svd();
         double[] x2 = svd.solve(b);
         assertEquals(x.length, x2.length);
