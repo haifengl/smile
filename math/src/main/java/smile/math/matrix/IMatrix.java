@@ -17,7 +17,12 @@
 
 package smile.math.matrix;
 
+import smile.math.blas.Transpose;
+
 import java.io.Serializable;
+
+import static smile.math.blas.Transpose.NO_TRANSPOSE;
+import static smile.math.blas.Transpose.TRANSPOSE;
 
 /**
  * An abstract interface of matrix. The most important method is the matrix vector
@@ -287,5 +292,10 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         if (n <= 256 / elementSize) return n;
 
         return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
+    }
+
+    /** Flips the transpose operation. */
+    static Transpose flip(Transpose trans) {
+        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
     }
 }

@@ -781,18 +781,10 @@ public class Matrix extends DMatrix {
             return false;
         }
 
-        if (layout() == o.layout() && ld == o.ld) {
-            for (int i = 0; i < A.length; i++) {
-                if (!MathEx.isZero(A[i] - o.A[i], epsilon)) {
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                if (!MathEx.isZero(get(i, j) - o.get(i, j), epsilon)) {
                     return false;
-                }
-            }
-        } else {
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    if (!MathEx.isZero(get(i, j) - o.get(i, j), epsilon)) {
-                        return false;
-                    }
                 }
             }
         }
@@ -1056,38 +1048,6 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Element-wise addition C = alpha * A + beta * B
-     * @param alpha the scalar alpha.
-     * @param A the operand.
-     * @param beta the scalar beta.
-     * @param B the operand.
-     * @return this matrix.
-     */
-    public Matrix add(double alpha, Matrix A, double beta, Matrix B) {
-        if (m != A.m || n != A.n) {
-            throw new IllegalArgumentException("Matrix A is not of same size.");
-        }
-
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix B is not of same size.");
-        }
-
-        if (layout() == A.layout() && layout() == B.layout() && ld == A.ld && ld == B.ld) {
-            for (int i = 0; i < this.A.length; i++) {
-                this.A[i] = alpha * A.A[i] + beta * B.A[i];
-            }
-        } else {
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
-                }
-            }
-        }
-
-        return this;
-    }
-
-    /**
      * Element-wise addition A = alpha * A + beta * B
      * @param alpha the scalar alpha.
      * @param beta the scalar beta.
@@ -1134,6 +1094,38 @@ public class Matrix extends DMatrix {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, alpha * get(i, j) + beta * B.get(i, j) * B.get(i, j));
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Element-wise addition C = alpha * A + beta * B
+     * @param alpha the scalar alpha.
+     * @param A the operand.
+     * @param beta the scalar beta.
+     * @param B the operand.
+     * @return this matrix.
+     */
+    public Matrix add(double alpha, Matrix A, double beta, Matrix B) {
+        if (m != A.m || n != A.n) {
+            throw new IllegalArgumentException("Matrix A is not of same size.");
+        }
+
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        if (layout() == A.layout() && layout() == B.layout() && ld == A.ld && ld == B.ld) {
+            for (int i = 0; i < this.A.length; i++) {
+                this.A[i] = alpha * A.A[i] + beta * B.A[i];
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
                 }
             }
         }
@@ -1512,11 +1504,6 @@ public class Matrix extends DMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
         mv(TRANSPOSE, 1.0, xb, 0.0, yb);
-    }
-
-    /** Flips the transpose operation. */
-    private Transpose flip(Transpose trans) {
-        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
     }
 
     /**
