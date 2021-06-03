@@ -44,7 +44,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * @param x the matrix cell value.
      * @return this matrix.
      */
-    public abstract SMatrix set(int i, int j, float x);
+    public abstract void set(int i, int j, float x);
 
     /**
      * Sets {@code A[i,j] = x} for Scala users.
@@ -53,8 +53,8 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * @param x the matrix cell value.
      * @return this matrix.
      */
-    public SMatrix update(int i, int j, float x) {
-        return set(i, j, x);
+    public void update(int i, int j, float x) {
+        set(i, j, x);
     }
 
     /**
@@ -433,7 +433,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
             }
 
             @Override
-            public SMatrix set(int i, int j, float x) {
+            public void set(int i, int j, float x) {
                 throw new UnsupportedOperationException();
             }
         };
