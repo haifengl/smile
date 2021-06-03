@@ -851,7 +851,7 @@ public class BigMatrix extends DMatrix {
             return false;
         }
 
-        return equals((BigMatrix) o, 1E-7);
+        return equals((BigMatrix) o, 1E-10);
     }
 
     /**

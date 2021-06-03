@@ -766,7 +766,7 @@ public class Matrix extends DMatrix {
             return false;
         }
 
-        return equals((Matrix) o, 1E-7);
+        return equals((Matrix) o, 1E-10);
     }
 
     /**
