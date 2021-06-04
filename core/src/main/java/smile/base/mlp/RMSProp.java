@@ -97,27 +97,20 @@ public class RMSProp implements Optimizer {
         double[] biasGradientMoment2 = layer.biasGradientMoment2.get();
 
         double rho1 = 1.0 - rho;
+        weightGradientMoment2.add2(rho, rho1, weightGradient);
+        for (int i = 0; i < n; i++) {
+            biasGradientMoment2[i] = rho * biasGradientMoment2[i] + rho1 * biasGradient[i] * biasGradient[i];
+        }
+
+        Matrix weight = layer.weight;
+        double[] bias = layer.bias;
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                weightGradientMoment2.set(i, j, rho * weightGradientMoment2.get(i, j) + rho1 * MathEx.pow2(weightGradient.get(i, j)));
+                weight.add(i, j, eta * weightGradient.get(i, j) / Math.sqrt(epsilon + weightGradientMoment2.get(i, j)));
             }
         }
         for (int i = 0; i < n; i++) {
-            biasGradientMoment2[i] = rho * biasGradientMoment2[i] + rho1 * MathEx.pow2(biasGradient[i]);
-        }
-
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                weightGradient.div(i, j, Math.sqrt(epsilon + weightGradientMoment2.get(i, j)));
-            }
-        }
-        for (int i = 0; i < n; i++) {
-            biasGradient[i] /= Math.sqrt(epsilon + biasGradientMoment2[i]);
-        }
-
-        layer.weight.add(eta, weightGradient);
-        for (int i = 0; i < n; i++) {
-            layer.bias[i] += eta * biasGradient[i];
+            bias[i] += eta * biasGradient[i] / Math.sqrt(epsilon + biasGradientMoment2[i]);
         }
 
         weightGradient.fill(0.0);
