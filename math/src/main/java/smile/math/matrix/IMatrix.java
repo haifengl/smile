@@ -17,7 +17,12 @@
 
 package smile.math.matrix;
 
+import smile.math.blas.Transpose;
+
 import java.io.Serializable;
+
+import static smile.math.blas.Transpose.NO_TRANSPOSE;
+import static smile.math.blas.Transpose.TRANSPOSE;
 
 /**
  * An abstract interface of matrix. The most important method is the matrix vector
@@ -182,7 +187,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         String newline = n < ncol() ? "  ...\n" : "\n";
 
         if (colNames != null) {
-            sb.append(rowNames == null ? "   " : "            ");
+            if (rowNames != null) sb.append("            ");
 
             for (int j = 0; j < n; j++) {
                 sb.append(String.format(" %12.12s", colNames[j]));
@@ -191,7 +196,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         }
 
         for (int i = 0; i < m; i++) {
-            sb.append(rowNames == null ? "   " : String.format("%-12.12s", rowNames[i]));
+            if (rowNames != null) sb.append(String.format("%-12.12s", rowNames[i]));
 
             for (int j = 0; j < n; j++) {
                 sb.append(String.format(" %12.12s", str(i, j)));
@@ -257,4 +262,40 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * @param outputOffset the offset of output vector in workspace.
      */
     public abstract void tv(T work, int inputOffset, int outputOffset);
+
+    /**
+     * Returns the optimal leading dimension. The present process have
+     * cascade caches. And read/write cache are 64 byte (multiple of 16
+     * for single precision) related on Intel CPUs. In order to avoid
+     * cache conflict, we expected the leading dimensions should be
+     * multiple of cache line (multiple of 16 for single precision),
+     * but not the power of 2, like not multiple of 256, not multiple
+     * of 128 etc.
+     * <p>
+     * To improve performance, ensure that the leading dimensions of
+     * the arrays are divisible by 64/element_size, where element_size
+     * is the number of bytes for the matrix elements (4 for
+     * single-precision real, 8 for double-precision real and
+     * single precision complex, and 16 for double-precision complex).
+     * <p>
+     * But as present processor use cache-cascading structure: set->cache
+     * line. In order to avoid the cache stall issue, we suggest to avoid
+     * leading dimension are multiples of 128, If ld % 128 = 0, then add
+     * 16 to the leading dimension.
+     * <p>
+     * Generally, set the leading dimension to the following integer expression:
+     * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
+     * where n is the matrix dimension along the leading dimension.
+     */
+    static int ld(int n) {
+        int elementSize = 4;
+        if (n <= 256 / elementSize) return n;
+
+        return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
+    }
+
+    /** Flips the transpose operation. */
+    static Transpose flip(Transpose trans) {
+        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
+    }
 }

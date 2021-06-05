@@ -69,7 +69,10 @@ public class DateFeatureTest {
                 {2001.0, 5.0, 3.0, 4.0, 12.0, 59.0, 55.0},
         };
 
-        Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
+        Formula formula = Formula.rhs(date("timestamp",
+                DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH,
+                DateFeature.DAY_OF_WEEK, DateFeature.HOUR, DateFeature.MINUTE,
+                DateFeature.SECOND));
         DataFrame output = formula.frame(Date.data);
         assertEquals(output.ncol(), 7);
 

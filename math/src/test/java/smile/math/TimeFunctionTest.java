@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.sql.Time;
+
 import static org.junit.Assert.*;
 
 /**
@@ -95,7 +97,7 @@ public class TimeFunctionTest {
     @Test
     public void testPolynomial() {
         System.out.println("Polynomial");
-        TimeFunction t = TimeFunction.polynomial(0.1, 9, 0.01, true, 1);
+        TimeFunction t = TimeFunction.polynomial(1, 0.1, 9, 0.01, true);
         assertEquals(0.1, t.apply(0), 1E-7);
         assertEquals(0.09, t.apply(1), 1E-7);
         assertEquals(0.08, t.apply(2), 1E-7);
@@ -214,5 +216,38 @@ public class TimeFunctionTest {
         assertEquals(0.0818579, t.apply(19), 1E-7);
         assertEquals(0.081, t.apply(20), 1E-7);
         assertEquals(0.0801511, t.apply(21), 1E-7);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testParse() {
+        System.out.println("parse");
+        System.out.println(TimeFunction.of("0.01"));
+        System.out.println(TimeFunction.of("piecewise([5, 10], [0.1, 0.01, 0.001])"));
+        System.out.println(TimeFunction.of("linear(0.1, 9, 0.01)"));
+        System.out.println(TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01)"));
+        System.out.println(TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01, true)"));
+        System.out.println(TimeFunction.of("inverse(0.1, 10, 0.1)"));
+        System.out.println(TimeFunction.of("inverse(0.1, 10, 0.1, true)"));
+        System.out.println(TimeFunction.of("exp(0.1, 10, 0.9)"));
+        System.out.println(TimeFunction.of("exp(0.1, 10, 0.9, false)"));
+    }
+
+    @Test(expected = Test.None.class)
+    public void testParseToString() {
+        System.out.println("parse");
+        int[] boundaries = {5, 10};
+        double[] values = {0.1, 0.01, 0.001};
+
+        TimeFunction.of(TimeFunction.constant(0.01).toString());
+        TimeFunction.of(TimeFunction.piecewise(boundaries, values).toString());
+        TimeFunction.of(TimeFunction.linear(0.1, 9, 0.01).toString());
+        TimeFunction.of(TimeFunction.polynomial(2, 0.1, 9, 0.01).toString());
+        TimeFunction.of(TimeFunction.polynomial(2, 0.1, 9, 0.01, true).toString());
+        TimeFunction.of(TimeFunction.inverse(0.1, 10).toString());
+        TimeFunction.of(TimeFunction.inverse(0.1, 10, 0.1).toString());
+        TimeFunction.of(TimeFunction.inverse(0.1, 10, 0.1, true).toString());
+        TimeFunction.of(TimeFunction.exp(0.1, 10).toString());
+        TimeFunction.of(TimeFunction.exp(0.1, 10, 0.9).toString());
+        TimeFunction.of(TimeFunction.exp(0.1, 10, 0.9, false).toString());
     }
 }

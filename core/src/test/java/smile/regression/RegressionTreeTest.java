@@ -103,15 +103,47 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testAll() {
+    public void testCPU() {
         test("CPU", CPU.formula, CPU.data, 74.3149);
+    }
+
+    @Test
+    public void test2DPlanes() {
         test("2dplanes", Planes.formula, Planes.data, 1.1164);
+    }
+
+    @Test
+    public void testAbalone() {
         test("abalone", Abalone.formula, Abalone.train, 2.5834);
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.1093);
+    }
+
+    @Test
+    public void testAutoMPG() {
         test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8138);
+    }
+
+    @Test
+    public void testCalHousing() {
         test("cal_housing", CalHousing.formula, CalHousing.data, 59944.8076);
+    }
+
+    @Test
+    public void testPuma8nh() {
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9117);
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);
     }
 

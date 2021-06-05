@@ -174,8 +174,8 @@ package object regression {
     *
     * @return SVR model.
     */
-  def svr[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time("SVR") {
-    SVR.fit(x, y, kernel, eps, C, tol)
+  def svm[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time("SVR") {
+    SVM.fit(x, y, kernel, eps, C, tol)
   }
 
   /** Regression tree. A classification/regression tree can be learned by

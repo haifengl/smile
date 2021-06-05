@@ -27,7 +27,6 @@ import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
-import smile.util.IntSet;
 
 /**
  * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
@@ -69,7 +68,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class KNN<T> implements SoftClassifier<T> {
+public class KNN<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -84,10 +83,6 @@ public class KNN<T> implements SoftClassifier<T> {
      * The number of neighbors for decision.
      */
     private final int k;
-    /**
-     * The class labels.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -96,10 +91,10 @@ public class KNN<T> implements SoftClassifier<T> {
      * @param k the number of neighbors for classification.
      */
     public KNN(KNNSearch<T, T> knn, int[] y, int k) {
+        super(y);
         this.knn = knn;
         this.k = k;
         this.y = y;
-        labels = ClassLabels.fit(y).labels;
     }
 
     /**
@@ -188,10 +183,10 @@ public class KNN<T> implements SoftClassifier<T> {
             return y[neighbors[0].index];
         }
 
-        int[] count = new int[labels.size()];
+        int[] count = new int[classes.size()];
         for (Neighbor<T,T> neighbor : neighbors) {
             if (neighbor != null) {
-                count[labels.indexOf(y[neighbor.index])]++;
+                count[classes.indexOf(y[neighbor.index])]++;
             }
         }
 
@@ -200,7 +195,12 @@ public class KNN<T> implements SoftClassifier<T> {
             throw new IllegalStateException("No neighbor found.");
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
@@ -212,13 +212,13 @@ public class KNN<T> implements SoftClassifier<T> {
             }
 
             Arrays.fill(posteriori, 0.0);
-            posteriori[labels.indexOf(y[neighbors[0].index])] = 1.0;
+            posteriori[classes.indexOf(y[neighbors[0].index])] = 1.0;
             return y[neighbors[0].index];
         }
 
-        int[] count = new int[labels.size()];
+        int[] count = new int[classes.size()];
         for (int i = 0; i < k; i++) {
-            count[labels.indexOf(y[neighbors[i].index])]++;
+            count[classes.indexOf(y[neighbors[i].index])]++;
         }
 
         int y = MathEx.whichMax(count);
@@ -230,6 +230,6 @@ public class KNN<T> implements SoftClassifier<T> {
             posteriori[i] = (double) count[i] / k;
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 }

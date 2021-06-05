@@ -102,17 +102,20 @@ public class FormulaTest {
         System.out.println("toString");
         Formula formula = Formula.lhs("salary");
         assertEquals("salary ~ .", formula.toString());
+        assertEquals(formula, Formula.of(formula.toString()));
 
         formula = Formula.rhs($("salary"));
         assertEquals(" ~ salary", formula.toString());
+        assertEquals(formula, Formula.of(formula.toString()));
 
         formula = Formula.of("salary", dot(), cross("a", "b", "c") , delete("d"));
         assertEquals("salary ~ . + (a x b x c) - d", formula.toString());
+        assertEquals(formula, Formula.of(formula.toString()));
     }
 
     @Test
-    public void testAll() {
-        System.out.println("all");
+    public void testDot() {
+        System.out.println("dot operator");
         Formula formula = Formula.of("salary", dot(), log("age"), $("gender"));
         assertEquals("salary ~ . + log(age) + gender", formula.toString());
 

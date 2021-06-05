@@ -61,7 +61,7 @@ import smile.math.matrix.Matrix;
  * the same solution. If we center the columns of <code>X</code>, then
  * the intercept estimate ends up just being the mean of <code>y</code>.
  * <p>
- * Ridge regression doesn’t set coefficients exactly to zero unless
+ * Ridge regression does not set coefficients exactly to zero unless
  * <code>&lambda; = &infin;</code>, in which case they’re all zero.
  * Hence ridge regression cannot perform variable selection, and
  * even though it performs well in terms of prediction accuracy,
@@ -92,11 +92,11 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.ridge.lambda", "1"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.ridge.lambda", "1"));
         return fit(formula, data, lambda);
     }
 
@@ -202,9 +202,7 @@ public class RidgeRegression {
 
         Matrix XtX = XtW.mm(scaledX);
         XtX.uplo(UPLO.LOWER);
-        for (int i = 0; i < p; i++) {
-            XtX.add(i, i, lambda[i]);
-        }
+        XtX.addDiag(lambda);
         Matrix.Cholesky cholesky = XtX.cholesky(true);
 
         double[] w = cholesky.solve(scaledY);

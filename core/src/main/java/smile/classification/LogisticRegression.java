@@ -20,9 +20,6 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
@@ -78,7 +75,7 @@ import smile.validation.ModelSelection;
  * 
  * @author Haifeng Li
  */
-public abstract class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
+public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -107,11 +104,6 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     double eta = 0.1;
 
     /**
-     * The class label encoder.
-     */
-    final IntSet labels;
-
-    /**
      * Constructor.
      * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
@@ -121,11 +113,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param labels the class label encoder.
      */
     public LogisticRegression(int p, double L, double lambda, IntSet labels) {
+        super(labels);
         this.k = labels.size();
         this.p = p;
         this.L = L;
         this.lambda = lambda;
-        this.labels = labels;
     }
 
     /** Binomial logistic regression. The dependent variable is nominal of two levels. */
@@ -160,9 +152,14 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         @Override
+        public double score(double[] x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
         public int predict(double[] x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -180,7 +177,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             posteriori[0] = 1.0 - f;
             posteriori[1] = f;
 
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -189,11 +186,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                 throw new IllegalArgumentException("Invalid input vector size: " + x.length);
             }
 
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             // calculate gradient for incoming data
             double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
+            double err = y - MathEx.sigmoid(wx);
 
             // update the weights
             w[p] += eta * err;
@@ -263,7 +260,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             }
 
             MathEx.softmax(posteriori);
-            return labels.valueOf(MathEx.whichMax(posteriori));
+            return classes.valueOf(MathEx.whichMax(posteriori));
         }
 
         @Override
@@ -272,7 +269,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                 throw new IllegalArgumentException("Invalid input vector size: " + x.length);
             }
 
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             double[] prob = new double[k];
             for (int j = 0; j < k-1; j++) {
@@ -302,32 +299,6 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
     /**
      * Fits binomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static Binomial binomial(Formula formula, DataFrame data) {
-        return binomial(formula, data, new Properties());
-    }
-
-    /**
-     * Fits binomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static Binomial binomial(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return binomial(x, y, prop);
-    }
-
-    /**
-     * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
      * @return the model.
@@ -340,13 +311,13 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Binomial binomial(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -392,35 +363,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         double[] w = new double[p + 1];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
-        Binomial model = new Binomial(w, L, lambda, codec.labels);
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static Multinomial multinomial(Formula formula, DataFrame data) {
-        return multinomial(formula, data, new Properties());
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static Multinomial multinomial(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return multinomial(x, y, prop);
     }
 
     /**
@@ -437,13 +382,13 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -496,35 +441,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
-    }
-
-    /**
-     * Fits logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static LogisticRegression fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static LogisticRegression fit(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
     }
 
     /**
@@ -541,13 +460,13 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LogisticRegression fit(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logistic.max.iterations", "500"));
+    public static LogisticRegression fit(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 
@@ -559,7 +478,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
+     * @param tol the tolerance to stop iterations.
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
@@ -650,7 +569,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     double[] xi = x[i];
                     double wx = dot(xi, w);
-                    double err = y[i] - MathEx.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (int j = 0; j < p; j++) {
                         gradient[j] -= err * xi[j];
                     }
@@ -853,6 +772,16 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         return dot;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**

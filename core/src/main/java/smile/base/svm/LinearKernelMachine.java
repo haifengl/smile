@@ -62,13 +62,13 @@ public class LinearKernelMachine implements Serializable {
             throw new IllegalArgumentException("Not a linear kernel");
         }
 
-        int n = kernelMachine.instances.length;
-        int p = kernelMachine.instances[0].length;
+        int n = kernelMachine.vectors.length;
+        int p = kernelMachine.vectors[0].length;
         double[] w = new double[p];
 
         for (int i = 0; i < n; i++) {
             double alpha = kernelMachine.w[i];
-            double[] x = kernelMachine.instances[i];
+            double[] x = kernelMachine.vectors[i];
             for (int j = 0; j < p; j++) {
                 w[j] += alpha * x[j];
             }
@@ -91,7 +91,7 @@ public class LinearKernelMachine implements Serializable {
         double[] w = new double[p];
         double[] alpha = kernelMachine.w;
 
-        for (int[] x : kernelMachine.instances) {
+        for (int[] x : kernelMachine.vectors) {
             for (int i : x) {
                 w[i] += alpha[i];
             }
@@ -114,7 +114,7 @@ public class LinearKernelMachine implements Serializable {
         double[] w = new double[p];
         double[] alpha = kernelMachine.w;
 
-        for (SparseArray x : kernelMachine.instances) {
+        for (SparseArray x : kernelMachine.vectors) {
             for (SparseArray.Entry e : x) {
                 w[e.i] += alpha[e.i] * e.x;
             }

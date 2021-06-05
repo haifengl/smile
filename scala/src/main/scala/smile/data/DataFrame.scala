@@ -68,7 +68,7 @@ case class DataFrameOps(data: DataFrame) {
     val l = new scala.collection.mutable.ArrayBuffer[Int]
     val r = new scala.collection.mutable.ArrayBuffer[Int]
     IntStream.range(0, data.size).forEach { i =>
-      if (p(data(i))) l :+ i else r :+ i
+      if (p(data(i))) l += i else r += i
     }
     (data.of(l.toArray: _*), data.of(r.toArray: _*))
   }

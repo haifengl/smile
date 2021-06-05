@@ -155,6 +155,20 @@ object read {
     }
   }
 
+  /**
+    * Reads a data file. Infers the data format by the file name extension.
+    * @param path the input file path.
+    * @param format the optional file format specification. For csv files,
+    *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+    *               For json files, it is the file mode (single-line or
+    *               multi-line). For avro files, it is the path to the schema
+    *               file.
+    * @return the data frame.
+    */
+  def data(path: String, format: String = null): DataFrame = {
+    Read.data(path, format)
+  }
+
   /** Reads a JDBC query result to a data frame. */
   def jdbc(rs: ResultSet): DataFrame = {
     DataFrame.of(rs)

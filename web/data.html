@@ -943,7 +943,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.parquet("data/parquet/userdata1.parquet")
+    smile> val df = read.parquet("data/kylo/userdata1.parquet")
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -963,7 +963,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var df = Read.parquet("data/parquet/userdata1.parquet")
+    jshell> var df = Read.parquet("data/kylo/userdata1.parquet")
     df ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -983,7 +983,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="tab-pane" id="kotlin_8">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> val df = read.parquet("data/parquet/userdata1.parquet")
+    >>> val df = read.parquet("data/kylo/userdata1.parquet")
     >>> df
     res100: smile.data.DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1024,7 +1024,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.avro(Paths.getTestData("avro/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
+    smile> val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1044,7 +1044,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), smile.util.Paths.getTestData("avro/userdata.avsc"))
+    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     avrodf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1064,7 +1064,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="tab-pane" id="kotlin_9">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> val avrodf = read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), smile.util.Paths.getTestData("avro/userdata.avsc"))
+    >>> val avrodf = read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     >>> avrodf
     res104: smile.data.DataFrame = [registration_dttm: String, id: long, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: Long, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1862,7 +1862,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     </pre>
     <p>These header lines will be ignored.</p>
 
-    <p>The sample data <code>data/text/kos.txt</code> is in the coordinate format.</p>
+    <p>The sample data <code>data/sparse/kos.txt</code> is in the coordinate format.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
@@ -1873,7 +1873,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane active" id="scala_19">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc
     </code></pre>
             </div>
@@ -1881,7 +1881,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var kos = SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    jshell> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos ==> smile.data.SparseDatasetImpl@4d826d77
           </code></pre>
             </div>
@@ -1889,7 +1889,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
             <div class="tab-pane" id="kotlin_19">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    >>> SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     res123: smile.data.SparseDataset! = smile.data.SparseDatasetImpl@485b4fd0
     </code></pre>
     </div>
@@ -2031,7 +2031,7 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
         <div class="tab-pane active" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
+    smile> val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
     vertices: Array[Array[Double]] = Array(
       Array(40.6266, 28.3457, -1.10804),
       Array(40.0714, 30.4443, -1.10804),

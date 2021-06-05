@@ -60,7 +60,7 @@ public class GLMTest {
         System.out.println(model);
 
         assertEquals(1571.5448, model.deviance(), 1E-4);
-        assertEquals(-785.7724, model.loglikelihood(), 1E-4);
+        assertEquals(-785.7724, model.logLikelihood(), 1E-4);
         assertEquals(1579.5448, model.AIC(), 1E-4);
         assertEquals(1608.3862, model.BIC(), 1E-4);
 

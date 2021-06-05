@@ -78,7 +78,7 @@ public class TSNE implements Serializable {
     /**
      * The number of iterations so far.
      */
-    private int totalIter = 1;
+    private int totalIter = 0;
     /**
      * The momentum factor.
      */
@@ -105,6 +105,8 @@ public class TSNE implements Serializable {
     private final double[][] Q;
     /** The sum of Q matrix. */
     private double Qsum;
+    /** The cost function value. */
+    private double cost;
 
     /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
@@ -173,6 +175,14 @@ public class TSNE implements Serializable {
     }
 
     /**
+     * Returns the cost function value.
+     * @return the cost function value.
+     */
+    public double cost() {
+        return cost;
+    }
+
+    /**
      * Performs additional iterations.
      * @param iterations the number of iterations.
      */
@@ -212,19 +222,8 @@ public class TSNE implements Serializable {
 
             // Compute current value of cost function
             if (iter % 100 == 0)   {
-                double C = IntStream.range(0, n).parallel().mapToDouble(i -> {
-                    double[] Pi = P[i];
-                    double[] Qi = Q[i];
-                    double Ci = 0.0;
-                    for (int j = 0; j < i; j++) {
-                        double p = Pi[j];
-                        double q = Qi[j] / Qsum;
-                        if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
-                        Ci += p * MathEx.log2(p / q);
-                    }
-                    return Ci;
-                }).sum();
-                logger.info("Error after {} iterations: {}", totalIter, 2 * C);
+                cost = computeCost(P, Q);
+                logger.info("Error after {} iterations: {}", iter, cost);
             }
         }
 
@@ -236,6 +235,11 @@ public class TSNE implements Serializable {
                 Yi[j] -= colMeans[j];
             }
         });
+
+        if (iterations % 100 != 0)   {
+            cost = computeCost(P, Q);
+            logger.info("Error after {} iterations: {}", iterations, cost);
+        }
     }
 
     /** Computes the gradients and updates the coordinates. */
@@ -334,21 +338,44 @@ public class TSNE implements Serializable {
     }
 
     /**
-     * Compute the Q matrix.
+     * Computes the Q matrix.
      */
-    private double computeQ(double[][] x, double[][] Q) {
-        int n = x.length;
+    private double computeQ(double[][] Y, double[][] Q) {
+        int n = Y.length;
 
-        return IntStream.range(0, n).parallel().mapToDouble(i -> {
-            double[] xi = x[i];
+        // DoubleStream.sum is unreproducible across machines
+        // due to scheduling randomness. Therefore, we accumulate the
+        // row sum and then compute the overall sum.
+        double[] rowSum = IntStream.range(0, n).parallel().mapToDouble(i -> {
+            double[] Yi = Y[i];
             double[] Qi = Q[i];
             double sum = 0.0;
             for (int j = 0; j < n; j++) {
-                double q = 1.0 / (1.0 + MathEx.squaredDistance(xi, x[j]));
+                double q = 1.0 / (1.0 + MathEx.squaredDistance(Yi, Y[j]));
                 Qi[j] = q;
                 sum += q;
             }
             return sum;
+        }).toArray();
+
+        return MathEx.sum(rowSum);
+    }
+
+    /**
+     * Computes the cost function.
+     */
+    private double computeCost(double[][] P, double[][] Q) {
+        return 2 * IntStream.range(0, Q.length).parallel().mapToDouble(i -> {
+            double[] Pi = P[i];
+            double[] Qi = Q[i];
+            double C = 0.0;
+            for (int j = 0; j < i; j++) {
+                double p = Pi[j];
+                double q = Qi[j] / Qsum;
+                if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
+                C += p * MathEx.log2(p / q);
+            }
+            return C;
         }).sum();
     }
 }

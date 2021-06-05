@@ -397,7 +397,7 @@ package object classification {
           learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
           momentum: TimeFunction = TimeFunction.constant(0.0),
           weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP = time("Multi-layer Perceptron Neural Network") {
-    val net = new MLP(x(0).length, builders: _*)
+    val net = new MLP(builders: _*)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
     net.setWeightDecay(weightDecay)
@@ -923,11 +923,11 @@ package object classification {
   def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {
     val p = x(0).length
     val k = MathEx.max(y) + 1
-    val labels = ClassLabels.fit(y).labels
+    val classes = ClassLabels.fit(y).classes
     val naive = if (priori == null)
-      new DiscreteNaiveBayes(model, k, p, sigma, labels)
+      new DiscreteNaiveBayes(model, k, p, sigma, classes)
     else
-      new DiscreteNaiveBayes(model, priori, p, sigma, labels)
+      new DiscreteNaiveBayes(model, priori, p, sigma, classes)
     naive.update(x, y)
     naive
   }

@@ -41,7 +41,7 @@ public class ParquetTest {
 
     public ParquetTest() {
         try {
-            df = Parquet.read(Paths.getTestData("parquet/userdata1.parquet"));
+            df = Parquet.read(Paths.getTestData("kylo/userdata1.parquet"));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

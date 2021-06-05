@@ -19,6 +19,7 @@ package smile.math.blas;
 
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
+import org.bytedeco.javacpp.DoublePointer;
 
 /**
  * Basic Linear Algebra Subprograms. BLAS is a specification that prescribes
@@ -624,6 +625,43 @@ public interface BLAS {
      *            of a larger matrix.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
      *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
+     * @param incx the increment for the elements of x, which must not be zero.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *           when {@code trans = 'N' or 'n'} and
+     *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
+     * @param incy the increment for the elements of y, which must not be zero.
+     */
+    void gemv(Layout layout, Transpose trans, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy);
+
+    /**
+     * Performs the matrix-vector operation.
+     * <pre>{@code
+     *     y := alpha*A*x + beta*y
+     * }</pre>
+     * or
+     * <pre>{@code
+     *     y := alpha*A'*x + beta*y
+     * }</pre>
+     * where alpha and beta are scalars, x and y are vectors and A is an m by
+     * n matrix.
+     *
+     * @param layout matrix layout.
+     * @param trans normal, transpose, or conjugate transpose
+     *              operation on the matrix.
+     * @param m the number of rows of the matrix A.
+     * @param n the number of columns of the matrix A.
+     * @param alpha the scalar alpha.
+     * @param A the leading m by n part of the array A must contain
+     *          the matrix of coefficients.
+     * @param lda the leading dimension of A as declared in the caller.
+     *            LDA must be at least max(1, m). The leading dimension
+     *            parameter allows use of BLAS/LAPACK routines on a submatrix
+     *            of a larger matrix.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1)*abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
@@ -727,6 +765,34 @@ public interface BLAS {
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void symv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
+
+    /**
+     * Performs the matrix-vector operation using a symmetric matrix.
+     * <pre>{@code
+     *     y := alpha*A*x + beta*y
+     * }</pre>
+     * or
+     * <pre>{@code
+     *     y := alpha*A'*x + beta*y
+     * }</pre>
+     * where alpha and beta are scalars, x and y are vectors and A is an m by
+     * n matrix.
+     *
+     * @param layout matrix layout.
+     * @param uplo the upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     * @param n the number of rows/columns of the symmetric matrix A.
+     * @param alpha the scalar alpha.
+     * @param A the symmetric matrix.
+     * @param lda the leading dimension of A as declared in the caller.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
+     * @param incx the increment for the elements of x, which must not be zero.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
+     * @param incy the increment for the elements of y, which must not be zero.
+     */
+    void symv(Layout layout, UPLO uplo, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy);
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
@@ -943,6 +1009,32 @@ public interface BLAS {
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, int lda, DoubleBuffer x, int incx);
+
+    /**
+     * Performs the matrix-vector operation using a triangular matrix.
+     * <pre>{@code
+     *     x := A*x
+     * }</pre>
+     * or
+     * <pre>{@code
+     *     x := A'*x
+     * }</pre>
+     *
+     * @param layout matrix layout.
+     * @param uplo the upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     * @param trans normal, transpose, or conjugate transpose
+     *              operation on the matrix.
+     * @param diag unit diagonal or not.
+     * @param n the number of rows/columns of the triangular matrix A.
+     * @param A the symmetric matrix.
+     * @param lda the leading dimension of A as declared in the caller.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
+     * @param incx the increment for the elements of x, which must not be zero.
+     */
+    void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoublePointer A, int lda, DoublePointer x, int incx);
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
@@ -1411,6 +1503,29 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
+    void ger(Layout layout, int m, int n, double alpha, DoublePointer x, int incx, DoublePointer y, int incy, DoublePointer A, int lda);
+
+    /**
+     * Performs the rank-1 update operation.
+     * <pre>{@code
+     *     A := A + alpha*x*y'
+     * }</pre>
+     *
+     * @param layout matrix layout.
+     * @param m the number of rows of the matrix A.
+     * @param n the number of columns of the matrix A.
+     * @param alpha the scalar alpha.
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
+     * @param incx the increment for the elements of x, which must not be zero.
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
+     * @param incy the increment for the elements of y, which must not be zero.
+     * @param A the leading m by n part of the array A must contain
+     *          the matrix of coefficients.
+     * @param lda the leading dimension of A as declared in the caller.
+     *            LDA must be at least max(1, m). The leading dimension
+     *            parameter allows use of BLAS/LAPACK routines on a submatrix
+     *            of a larger matrix.
+     */
     void ger(Layout layout, int m, int n, float alpha, float[] x, int incx, float[] y, int incy, float[] A, int lda);
 
     /**
@@ -1479,6 +1594,28 @@ public interface BLAS {
      *            of a larger matrix.
      */
     void syr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A, int lda);
+
+    /**
+     * Performs the rank-1 update operation to symmetric matrix.
+     * <pre>{@code
+     *     A := A + alpha*x*x'
+     * }</pre>
+     *
+     * @param layout matrix layout.
+     * @param uplo the upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     * @param n the number of columns of the matrix A.
+     * @param alpha the scalar alpha.
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
+     * @param incx the increment for the elements of x, which must not be zero.
+     * @param A the leading n by n part of the array A must contain
+     *          the matrix of coefficients.
+     * @param lda the leading dimension of A as declared in the caller.
+     *            LDA must be at least max(1, m). The leading dimension
+     *            parameter allows use of BLAS/LAPACK routines on a submatrix
+     *            of a larger matrix.
+     */
+    void syr(Layout layout, UPLO uplo, int n, double alpha, DoublePointer x, int incx, DoublePointer A, int lda);
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
@@ -1670,6 +1807,32 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
+    void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc);
+
+    /**
+     * Performs the matrix-matrix operation.
+     * <pre>{@code
+     *     C := alpha*A*B + beta*C
+     * }</pre>
+     *
+     * @param layout matrix layout.
+     * @param transA normal, transpose, or conjugate transpose
+     *               operation on the matrix A.
+     * @param transB normal, transpose, or conjugate transpose
+     *               operation on the matrix B.
+     * @param m the number of rows of the matrix C.
+     * @param n the number of columns of the matrix C.
+     * @param k the number of columns of the matrix op(A).
+     * @param alpha the scalar alpha.
+     * @param A the matrix A.
+     * @param lda the leading dimension of A as declared in the caller.
+     * @param B the matrix B.
+     * @param ldb the leading dimension of B as declared in the caller.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param C the matrix C.
+     * @param ldc the leading dimension of C as declared in the caller.
+     */
     void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, float alpha, float[] A, int lda, float[] B, int ldb, float beta, float[] C, int ldc);
 
     /**
@@ -1755,6 +1918,35 @@ public interface BLAS {
      * @param ldc the leading dimension of C as declared in the caller.
      */
     void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, double beta, DoubleBuffer C, int ldc);
+
+    /**
+     * Performs the matrix-matrix operation where the matrix A is symmetric.
+     * <pre>{@code
+     *     C := alpha*A*B + beta*C
+     * }</pre>
+     * or
+     * <pre>{@code
+     *     C := alpha*B*A + beta*C
+     * }</pre>
+     *
+     * @param layout matrix layout.
+     * @param side  {@code C := alpha*A*B + beta*C} if side is left or
+     *              {@code C := alpha*B*A + beta*C} if side is right.
+     * @param uplo the upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     * @param m the number of rows of the matrix C.
+     * @param n the number of columns of the matrix C.
+     * @param alpha the scalar alpha.
+     * @param A the matrix A.
+     * @param lda the leading dimension of A as declared in the caller.
+     * @param B the matrix B.
+     * @param ldb the leading dimension of B as declared in the caller.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param C the matrix C.
+     * @param ldc the leading dimension of C as declared in the caller.
+     */
+    void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc);
 
     /**
      * Performs the matrix-matrix operation where one input matrix is symmetric.

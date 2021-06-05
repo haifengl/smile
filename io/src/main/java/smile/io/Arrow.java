@@ -1160,7 +1160,7 @@ public class Arrow {
             case Char:
                 return new Field(field.name, new FieldType(false, new ArrowType.Int(16, false), null), null);
             case Decimal:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Decimal(28, 10)), null);
+                return new Field(field.name, FieldType.nullable(new ArrowType.Decimal(28, 10, 128)), null);
             case String:
                 return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
             case Date:

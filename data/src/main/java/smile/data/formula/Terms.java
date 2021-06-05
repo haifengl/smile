@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -39,6 +42,8 @@ public interface Terms {
      * @return the term.
      */
     static Term $(String x) {
+        x = x.trim();
+
         switch (x) {
             case ".":
                 return new Dot();
@@ -46,9 +51,152 @@ public interface Terms {
                 return new Intercept(false);
             case "1":
                 return new Intercept(true);
-            default:
-                return new Variable(x);
         }
+
+        String[] tokens = x.split(":");
+        if (tokens.length > 1) {
+            for (int i = 0; i < tokens.length; i++) {
+                tokens[i] = tokens[i].trim();
+            }
+            return interact(tokens);
+        }
+
+        if (x.startsWith("(") && x.endsWith(")")) {
+            String y = x.substring(1, x.length() - 1);
+            tokens = y.split("[+]", 2);
+            if (tokens.length == 2) {
+                return add(tokens[0], tokens[1]);
+            }
+            tokens = y.split("[-]", 2);
+            if (tokens.length == 2) {
+                return sub(tokens[0], tokens[1]);
+            }
+            tokens = y.split("[*]", 2);
+            if (tokens.length == 2) {
+                return mul(tokens[0], tokens[1]);
+            }
+            tokens = y.split("[/]", 2);
+            if (tokens.length == 2) {
+                return div(tokens[0], tokens[1]);
+            }
+        }
+
+        Pattern regex = Pattern.compile("\\)(^(\\d+))?$");
+        Matcher matcher = regex.matcher(x);
+        if (x.startsWith("(") && matcher.find()) {
+            String y = x.substring(1, matcher.start());
+            tokens = y.split(" x ");
+            if (tokens.length > 1) {
+                for (int i = 0; i < tokens.length; i++) {
+                    tokens[i] = tokens[i].trim();
+                    System.out.print(tokens[i]+" ");
+                }
+                System.out.println();
+                String rank = matcher.group(2);
+                return cross(rank == null ? tokens.length : Integer.parseInt(rank), tokens);
+            }
+        }
+
+        if (x.startsWith("abs(") && x.endsWith(")")) {
+            return abs(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("ceil(") && x.endsWith(")")) {
+            return ceil(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("floor(") && x.endsWith(")")) {
+            return floor(x.substring(6, x.length()-1));
+        }
+
+        if (x.startsWith("round(") && x.endsWith(")")) {
+            return round(x.substring(6, x.length()-1));
+        }
+
+        if (x.startsWith("rint(") && x.endsWith(")")) {
+            return rint(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("exp(") && x.endsWith(")")) {
+            return exp(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("expm1(") && x.endsWith(")")) {
+            return expm1(x.substring(6, x.length()-1));
+        }
+
+        if (x.startsWith("log(") && x.endsWith(")")) {
+            return log(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("log1p(") && x.endsWith(")")) {
+            return log1p(x.substring(6, x.length()-1));
+        }
+
+        if (x.startsWith("log2(") && x.endsWith(")")) {
+            return log2(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("log10(") && x.endsWith(")")) {
+            return log10(x.substring(6, x.length()-1));
+        }
+
+        if (x.startsWith("signum(") && x.endsWith(")")) {
+            return signum(x.substring(7, x.length()-1));
+        }
+
+        if (x.startsWith("sign(") && x.endsWith(")")) {
+            return sign(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("sqrt(") && x.endsWith(")")) {
+            return sqrt(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("cbrt(") && x.endsWith(")")) {
+            return cbrt(x.substring(5, x.length()-1));
+        }
+        if (x.startsWith("sin(") && x.endsWith(")")) {
+            return sin(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("cos(") && x.endsWith(")")) {
+            return cos(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("tan(") && x.endsWith(")")) {
+            return tan(x.substring(4, x.length()-1));
+        }
+
+        if (x.startsWith("asin(") && x.endsWith(")")) {
+            return asin(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("acos(") && x.endsWith(")")) {
+            return acos(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("atan(") && x.endsWith(")")) {
+            return atan(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("sinh(") && x.endsWith(")")) {
+            return sinh(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("cosh(") && x.endsWith(")")) {
+            return cosh(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("tanh(") && x.endsWith(")")) {
+            return tanh(x.substring(5, x.length()-1));
+        }
+
+        if (x.startsWith("ulp(") && x.endsWith(")")) {
+            return ulp(x.substring(4, x.length()-1));
+        }
+
+        return new Variable(x);
     }
 
     /**

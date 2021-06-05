@@ -60,7 +60,7 @@ public class BandMatrixTest {
         };
         float[] b = {0.5f, 0.5f, 0.5f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.LU lu = a.lu();
         float[] x = lu.solve(b);
 
@@ -106,7 +106,7 @@ public class BandMatrixTest {
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
 
         // Lower band matrix
@@ -119,7 +119,7 @@ public class BandMatrixTest {
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
     }
 
@@ -133,7 +133,7 @@ public class BandMatrixTest {
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         Matrix.LU lu = a.lu();
         double[] x = lu.solve(b);
 

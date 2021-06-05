@@ -104,7 +104,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
         }
 
         int n = data.length;
-        int d = 1 + Arrays.stream(data).flatMap(s -> s.stream()).mapToInt(e -> e.i).max().orElse(0);
+        int d = 1 + Arrays.stream(data).flatMap(SparseArray::stream).mapToInt(e -> e.i).max().orElse(0);
 
         int[] y = new int[n];
         SparseArray[] medoids = new SparseArray[k];

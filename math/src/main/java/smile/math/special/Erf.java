@@ -94,7 +94,7 @@ public class Erf {
     private static double erfccheb(double z) {
         double t, ty, tmp, d = 0., dd = 0.;
         if (z < 0.) {
-            throw new IllegalArgumentException("erfccheb requires nonnegative argument");
+            throw new IllegalArgumentException("erfccheb requires non-negative argument");
         }
         t = 2. / (2. + z);
         ty = 4. * t - 2.;

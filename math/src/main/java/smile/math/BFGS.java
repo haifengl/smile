@@ -22,7 +22,6 @@ import java.util.Arrays;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
-import smile.util.Strings;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -418,7 +417,7 @@ public class BFGS {
      *      f(x+stp*s) - f(x) - ftol*stp*(gradf(x)'s).
      * }</pre>
      * If a step is obtained for which the modified function
-     * has a nonpositive function value and nonnegative derivative,
+     * has a nonpositive function value and non-negative derivative,
      * then the interval of uncertainty is chosen so that it
      * contains a minimizer of {@code f(x+stp*s)}.
      * <p>
@@ -739,7 +738,7 @@ public class BFGS {
                 M = M.inverse();
             }
 
-            logger.debug("L-BFGS-B iteration {} moves from {} to {} where f(x) = {}", iter, Strings.toString(x_old), Strings.toString(x), f);
+            logger.debug("L-BFGS-B iteration {} moves from {} to {} where f(x) = {}", iter, Arrays.toString(x_old), Arrays.toString(x), f);
 
             if (abs(f_old - f) < TOLF) {
                 logger.info(String.format("L-BFGS-B converges on f(x) after %d iterations: %.5f", iter, f));
@@ -858,14 +857,11 @@ public class BFGS {
             r[i] = g[fi] + (cauchy[fi] - x[fi]) * theta - wmc[fi];
         }
 
-        Matrix WZ = W.row(freeVar);
+        Matrix WZ = W.rows(freeVar);
         double[] v  = M.mv(WZ.tv(r));
         Matrix N = WZ.ata().mul(-thetaInverse);
         N = M.mm(N);
-        int n1 = N.nrow();
-        for (int i = 0; i < n1; i++) {
-            N.add(i, i, 1.0);
-        }
+        N.addDiag(1.0);
 
         Matrix.LU lu = N.lu();
         v = lu.solve(v);

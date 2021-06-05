@@ -154,7 +154,7 @@ public interface Sequence {
 
             @Override
             public String toString() {
-                return smile.util.Strings.toString(data);
+                return Arrays.toString(data);
             }
         };
     }

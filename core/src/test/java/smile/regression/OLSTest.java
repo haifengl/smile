@@ -102,9 +102,6 @@ public class OLSTest {
         smile.data.Serialize.read(temp);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void testCPU() {
         System.out.println("CPU");
@@ -120,9 +117,6 @@ public class OLSTest {
         assertEquals(51.0009, result.avg.rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void testProstate() {
         System.out.println("Prostate");

@@ -141,7 +141,7 @@ public class SOM implements VectorQuantizer {
      */
     private final Neighborhood theta;
     /**
-     * The threshold to update neuron if alpha * theta > eps.
+     * The threshold to update neuron if {@code alpha * theta > eps}.
      */
     private final double tol = 1E-5;
     /**

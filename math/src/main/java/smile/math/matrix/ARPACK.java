@@ -17,10 +17,7 @@
 
 package smile.math.matrix;
 
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
-import static smile.math.blas.Layout.*;
 import static org.bytedeco.arpackng.global.arpack.*;
 
 /**
@@ -182,7 +179,7 @@ public class ARPACK {
         double[] d = new double[ncv * 2];
         int[] select = new int[ncv];
         double sigma = 0.0;
-        boolean rvec = true;
+        int rvec = 1;
 
         dseupd_c(rvec, howmny, select, d, V, ldv, sigma,
                  bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -203,7 +200,7 @@ public class ARPACK {
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(d, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        Matrix.EVD eig = new Matrix.EVD(d, new Matrix(n, nev, ldv, V));
         return eig.sort();
     }
 
@@ -282,7 +279,7 @@ public class ARPACK {
         float[] d = new float[ncv * 2];
         int[] select = new int[ncv];
         float sigma = 0.0f;
-        boolean rvec = true;
+        int rvec = 1;
 
         sseupd_c(rvec, howmny, select, d, V, ldv, sigma,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -303,7 +300,7 @@ public class ARPACK {
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        FloatMatrix.EVD eig = new FloatMatrix.EVD(d, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(d, new FloatMatrix(n, nev, ldv, V));
         return eig.sort();
     }
 
@@ -385,7 +382,7 @@ public class ARPACK {
         int[] select = new int[ncv];
         double sigmar = 0.0;
         double sigmai = 0.0;
-        boolean rvec = true;
+        int rvec = 1;
 
         dneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -407,7 +404,7 @@ public class ARPACK {
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, new Matrix(n, nev, ldv, V));
         return eig.sort();
     }
 
@@ -489,7 +486,7 @@ public class ARPACK {
         int[] select = new int[ncv];
         float sigmar = 0.0f;
         float sigmai = 0.0f;
-        boolean rvec = true;
+        int rvec = 1;
 
         sneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -511,7 +508,7 @@ public class ARPACK {
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
-        FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, new FloatMatrix(n, nev, ldv, V));
         return eig.sort();
     }
 

@@ -18,9 +18,6 @@
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
@@ -59,7 +56,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class LDA implements SoftClassifier<double[]> {
+public class LDA extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -92,10 +89,6 @@ public class LDA implements SoftClassifier<double[]> {
      * matrix is spherical.
      */
     private final Matrix scaling;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -117,13 +110,13 @@ public class LDA implements SoftClassifier<double[]> {
      * @param labels the class label encoder.
      */
     public LDA(double[] priori, double[][] mu, double[] eigen, Matrix scaling, IntSet labels) {
+        super(labels);
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
         this.mu = mu;
         this.eigen = eigen;
         this.scaling = scaling;
-        this.labels = labels;
 
         logppriori = new double[k];
         for (int i = 0; i < k; i++) {
@@ -132,32 +125,7 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static LDA fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static LDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
-    }
-
-    /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @return the model.
@@ -167,20 +135,20 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LDA fit(double[][] x, int[] y, Properties prop) {
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.parseDouble(prop.getProperty("smile.lda.tolerance", "1E-4"));
+    public static LDA fit(double[][] x, int[] y, Properties params) {
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.lda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.lda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param priori the priori probability of each class. If null, it will be
@@ -218,6 +186,11 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
     public int predict(double[] x, double[] posteriori) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
@@ -242,6 +215,6 @@ public class LDA implements SoftClassifier<double[]> {
             posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        return labels.valueOf(MathEx.softmax(posteriori));
+        return classes.valueOf(MathEx.softmax(posteriori));
     }
 }

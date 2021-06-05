@@ -18,10 +18,16 @@
 package smile.math.kernel;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.function.ToDoubleBiFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.SparseArray;
+import static smile.util.Regex.INTEGER_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -37,7 +43,7 @@ import smile.math.matrix.Matrix;
  * <p>
  * Positive definiteness in the context of kernel functions also implies that
  * a kernel matrix created using a particular kernel is positive semi-definite.
- * A matrix is positive semi-definite if its associated eigenvalues are nonnegative.
+ * A matrix is positive semi-definite if its associated eigenvalues are non-negative.
  * <p>
  * We can combine or modify existing kernel functions to make new one.
  * For example, the sum of two kernels is a kernel. The product of two kernels
@@ -179,4 +185,230 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @return the upper bound of hyperparameters.
      */
     double[] hi();
+
+    /**
+     * Returns a kernel function.
+     * @param kernel the kernel function string representation.
+     * @return the kernel function.
+     */
+    static MercerKernel<double[]> of(String kernel) {
+        kernel = kernel.trim().toLowerCase(Locale.ROOT);
+
+        Pattern linear = Pattern.compile(
+                String.format("linear(?:kernel)?(?:\\(\\))?"));
+        Matcher m = linear.matcher(kernel);
+        if (m.matches()) {
+            return new LinearKernel();
+        }
+
+        Pattern polynomial = Pattern.compile(
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        m = polynomial.matcher(kernel);
+        if (m.matches()) {
+            int degree = Integer.parseInt(m.group(1));
+            double scale = Double.parseDouble(m.group(2));
+            double offset = Double.parseDouble(m.group(3));
+            return new PolynomialKernel(degree, scale, offset);
+        }
+
+        Pattern gaussian = Pattern.compile(
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = gaussian.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new GaussianKernel(sigma);
+        }
+
+        Pattern matern = Pattern.compile(
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = matern.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            double nu = Double.parseDouble(m.group(2));
+            return new MaternKernel(sigma, nu);
+        }
+
+        Pattern laplacian = Pattern.compile(
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = laplacian.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            return new LaplacianKernel(scale);
+        }
+
+        Pattern tanh = Pattern.compile(
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = tanh.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            double offset = Double.parseDouble(m.group(2));
+            return new HyperbolicTangentKernel(scale, offset);
+        }
+
+        Pattern tps = Pattern.compile(
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = tps.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new ThinPlateSplineKernel(sigma);
+        }
+
+        Pattern pearson = Pattern.compile(
+                String.format("pearson(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = pearson.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            double omega = Double.parseDouble(m.group(2));
+            return new PearsonKernel(sigma, omega);
+        }
+
+        Pattern hellinger = Pattern.compile(
+                String.format("hellinger(?:kernel)?(?:\\(\\))?"));
+        m = hellinger.matcher(kernel);
+        if (m.matches()) {
+            return new HellingerKernel();
+        }
+
+        throw new IllegalArgumentException("Unknown kernel: " + kernel);
+    }
+
+    /**
+     * Returns a sparse kernel function.
+     * @param kernel the kernel function string representation.
+     * @return the kernel function.
+     */
+    static MercerKernel<SparseArray> sparse(String kernel) {
+        kernel = kernel.trim();
+
+        Pattern linear = Pattern.compile(
+                String.format("linear(?:kernel)?(?:\\(\\))?"));
+        Matcher m = linear.matcher(kernel);
+        if (m.matches()) {
+            return new SparseLinearKernel();
+        }
+
+        Pattern polynomial = Pattern.compile(
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        m = polynomial.matcher(kernel);
+        if (m.matches()) {
+            int degree = Integer.parseInt(m.group(1));
+            double scale = Double.parseDouble(m.group(2));
+            double offset = Double.parseDouble(m.group(3));
+            return new SparsePolynomialKernel(degree, scale, offset);
+        }
+
+        Pattern gaussian = Pattern.compile(
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = gaussian.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new SparseGaussianKernel(sigma);
+        }
+
+        Pattern matern = Pattern.compile(
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = matern.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            double nu = Double.parseDouble(m.group(2));
+            return new SparseMaternKernel(sigma, nu);
+        }
+
+        Pattern laplacian = Pattern.compile(
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = laplacian.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            return new SparseLaplacianKernel(scale);
+        }
+
+        Pattern tanh = Pattern.compile(
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = tanh.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            double offset = Double.parseDouble(m.group(2));
+            return new SparseHyperbolicTangentKernel(scale, offset);
+        }
+
+        Pattern tps = Pattern.compile(
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = tps.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new SparseThinPlateSplineKernel(sigma);
+        }
+
+        throw new IllegalArgumentException("Unknown kernel: " + kernel);
+    }
+
+    /**
+     * Returns a binary sparse kernel function.
+     * @param kernel the kernel function string representation.
+     * @return the kernel function.
+     */
+    static MercerKernel<int[]> binary(String kernel) {
+        kernel = kernel.trim();
+
+        Pattern linear = Pattern.compile(
+                String.format("linear(?:kernel)?(?:\\(\\))?"));
+        Matcher m = linear.matcher(kernel);
+        if (m.matches()) {
+            return new BinarySparseLinearKernel();
+        }
+
+        Pattern polynomial = Pattern.compile(
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        m = polynomial.matcher(kernel);
+        if (m.matches()) {
+            int degree = Integer.parseInt(m.group(1));
+            double scale = Double.parseDouble(m.group(2));
+            double offset = Double.parseDouble(m.group(3));
+            return new BinarySparsePolynomialKernel(degree, scale, offset);
+        }
+
+        Pattern gaussian = Pattern.compile(
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = gaussian.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new BinarySparseGaussianKernel(sigma);
+        }
+
+        Pattern matern = Pattern.compile(
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = matern.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            double nu = Double.parseDouble(m.group(2));
+            return new BinarySparseMaternKernel(sigma, nu);
+        }
+
+        Pattern laplacian = Pattern.compile(
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = laplacian.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            return new BinarySparseLaplacianKernel(scale);
+        }
+
+        Pattern tanh = Pattern.compile(
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = tanh.matcher(kernel);
+        if (m.matches()) {
+            double scale = Double.parseDouble(m.group(1));
+            double offset = Double.parseDouble(m.group(2));
+            return new BinarySparseHyperbolicTangentKernel(scale, offset);
+        }
+
+        Pattern tps = Pattern.compile(
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
+        m = tps.matcher(kernel);
+        if (m.matches()) {
+            double sigma = Double.parseDouble(m.group(1));
+            return new BinarySparseThinPlateSplineKernel(sigma);
+        }
+
+        throw new IllegalArgumentException("Unknown kernel: " + kernel);
+    }
 }

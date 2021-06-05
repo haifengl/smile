@@ -371,7 +371,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     }
 
     @Override
-    public FloatSparseMatrix set(int i, int j, float x) {
+    public void set(int i, int j, float x) {
         throw new UnsupportedOperationException();
     }
 

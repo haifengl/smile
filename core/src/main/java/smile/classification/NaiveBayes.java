@@ -50,7 +50,7 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class NaiveBayes implements SoftClassifier<double[]> {
+public class NaiveBayes extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -69,10 +69,6 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * The conditional distribution for general purpose naive Bayes classifier.
      */
     private final Distribution[][] prob;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor of general naive Bayes classifier.
@@ -96,6 +92,8 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * @param labels the class label encoder.
      */
     public NaiveBayes(double[] priori, Distribution[][] condprob, IntSet labels) {
+        super(labels);
+
         if (priori.length != condprob.length) {
             throw new IllegalArgumentException("The number of priori probabilities and that of the classes are not same.");
         }
@@ -116,7 +114,6 @@ public class NaiveBayes implements SoftClassifier<double[]> {
         this.p = condprob[0].length;
         this.priori = priori;
         this.prob = condprob;
-        this.labels = labels;
     }
 
     /**
@@ -136,6 +133,11 @@ public class NaiveBayes implements SoftClassifier<double[]> {
     @Override
     public int predict(double[] x) {
         return predict(x, new double[k]);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     /**
@@ -172,6 +174,6 @@ public class NaiveBayes implements SoftClassifier<double[]> {
             posteriori[i] /= Z;
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

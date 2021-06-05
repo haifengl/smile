@@ -260,7 +260,7 @@ public interface Hypothesis {
          * integers, returns Chi-square test for independence. The rows of contingency table
          * are labels by the values of one nominal variable, the columns are labels
          * by the values of the other nominal variable, and whose entries are
-         * nonnegative integers giving the number of observed events for each
+         * non-negative integers giving the number of observed events for each
          * combination of row and column. Continuity correction
          * will be applied when computing the test statistic for 2x2 tables: one half
          * is subtracted from all |O-E| differences. The correlation coefficient is

@@ -21,6 +21,8 @@ import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import smile.math.blas.*;
+import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.IntPointer;
 import static org.bytedeco.mkl.global.mkl_rt.*;
 
 /**
@@ -110,6 +112,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void gemv(Layout layout, Transpose trans, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy) {
+        cblas_dgemv(layout.blas(), trans.blas(), m, n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void gemv(Layout layout, Transpose trans, int m, int n, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy) {
         cblas_sgemv(layout.blas(), trans.blas(), m, n, alpha, A, lda, x, incx, beta, y, incy);
     }
@@ -126,6 +133,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public void symv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dsymv(layout.blas(), uplo.blas(), n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void symv(Layout layout, UPLO uplo, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy) {
         cblas_dsymv(layout.blas(), uplo.blas(), n, alpha, A, lda, x, incx, beta, y, incy);
     }
 
@@ -166,6 +178,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, int lda, DoubleBuffer x, int incx) {
+        cblas_dtrmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A, lda, x, incx);
+    }
+
+    @Override
+    public void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoublePointer A, int lda, DoublePointer x, int incx) {
         cblas_dtrmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A, lda, x, incx);
     }
 
@@ -250,6 +267,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void ger(Layout layout, int m, int n, double alpha, DoublePointer x, int incx, DoublePointer y, int incy, DoublePointer A, int lda) {
+        cblas_dger(layout.blas(), m, n, alpha, x, incx, y, incy, A, lda);
+    }
+
+    @Override
     public void ger(Layout layout, int m, int n, float alpha, float[] x, int incx, float[] y, int incy, float[] A, int lda) {
         cblas_sger(layout.blas(), m, n, alpha, x, incx, y, incy, A, lda);
     }
@@ -266,6 +288,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public void syr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A, int lda) {
+        cblas_dsyr(layout.blas(), uplo.blas(), n, alpha, x, incx, A, lda);
+    }
+
+    @Override
+    public void syr(Layout layout, UPLO uplo, int n, double alpha, DoublePointer x, int incx, DoublePointer A, int lda) {
         cblas_dsyr(layout.blas(), uplo.blas(), n, alpha, x, incx, A, lda);
     }
 
@@ -310,6 +337,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc) {
+        cblas_dgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
     public void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, float alpha, float[] A, int lda, float[] B, int ldb, float beta, float[] C, int ldc) {
         cblas_sgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     }
@@ -326,6 +358,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, double beta, DoubleBuffer C, int ldc) {
+        cblas_dsymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
+    public void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc) {
         cblas_dsymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
     }
 
@@ -350,6 +387,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int gesv(Layout layout, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb) {
+        return LAPACKE_dgesv(layout.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
     public int gesv(Layout layout, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
         return LAPACKE_sgesv(layout.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
     }
@@ -366,6 +408,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public int sysv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        return LAPACKE_dsysv(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int sysv(Layout layout, UPLO uplo, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb) {
         return LAPACKE_dsysv(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
     }
 
@@ -590,6 +637,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, DoublePointer A, int lda, DoublePointer wr, DoublePointer wi, DoublePointer Vl, int ldvl, DoublePointer Vr, int ldvr) {
+        return LAPACKE_dgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A, lda, wr, wi, Vl, ldvl, Vr, ldvr);
+    }
+
+    @Override
     public int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, float[] A, int lda, float[] wr, float[] wi, float[] Vl, int ldvl, float[] Vr, int ldvr) {
         return LAPACKE_sgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A, lda, wr, wi, Vl, ldvl, Vr, ldvr);
     }
@@ -626,6 +678,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, DoubleBuffer A, int lda, DoubleBuffer w) {
+        return LAPACKE_dsyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A, lda, w);
+    }
+
+    @Override
+    public int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, DoublePointer A, int lda, DoublePointer w) {
         return LAPACKE_dsyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A, lda, w);
     }
 
@@ -690,6 +747,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int gesdd(Layout layout, SVDJob jobz, int m, int n, DoublePointer A, int lda, DoublePointer s, DoublePointer U, int ldu, DoublePointer VT, int ldvt) {
+        return LAPACKE_dgesdd(layout.lapack(), jobz.lapack(), m, n, A, lda, s, U, ldu, VT, ldvt);
+    }
+
+    @Override
     public int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt) {
         return LAPACKE_sgesdd(layout.lapack(), jobz.lapack(), m, n, A, lda, s, U, ldu, VT, ldvt);
     }
@@ -700,12 +762,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+        return LAPACKE_dgetrf(layout.lapack(), m, n, A, lda, ipiv);
+    }
+
+    @Override
     public int getrf(Layout layout, int m, int n, DoubleBuffer A, int lda, IntBuffer ipiv) {
         return LAPACKE_dgetrf(layout.lapack(), m, n, A, lda, ipiv);
     }
 
     @Override
-    public int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+    public int getrf(Layout layout, int m, int n, DoublePointer A, int lda, IntPointer ipiv) {
         return LAPACKE_dgetrf(layout.lapack(), m, n, A, lda, ipiv);
     }
 
@@ -790,6 +857,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int getrs(Layout layout, Transpose trans, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb) {
+        return LAPACKE_dgetrs(layout.lapack(), trans.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
     public int getrs(Layout layout, Transpose trans, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
         return LAPACKE_sgetrs(layout.lapack(), trans.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
     }
@@ -846,6 +918,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public int potrf(Layout layout, UPLO uplo, int n, DoubleBuffer A, int lda) {
+        return LAPACKE_dpotrf(layout.lapack(), uplo.lapack(), n, A, lda);
+    }
+
+    @Override
+    public int potrf(Layout layout, UPLO uplo, int n, DoublePointer A, int lda) {
         return LAPACKE_dpotrf(layout.lapack(), uplo.lapack(), n, A, lda);
     }
 
@@ -930,6 +1007,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int potrs(Layout layout, UPLO uplo, int n, int nrhs, DoublePointer A, int lda, DoublePointer B, int ldb) {
+        return LAPACKE_dpotrs(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
     public int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
         return LAPACKE_spotrs(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, B, ldb);
     }
@@ -990,6 +1072,11 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int geqrf(Layout layout, int m, int n, DoublePointer A, int lda, DoublePointer tau) {
+        return LAPACKE_dgeqrf(layout.lapack(), m, n, A, lda, tau);
+    }
+
+    @Override
     public int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau) {
         return LAPACKE_sgeqrf(layout.lapack(), m, n, A, lda, tau);
     }
@@ -1000,11 +1087,42 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public int orgqr(Layout layout, int m, int n, int k, double[] A, int lda, double[] tau) {
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
+    public int orgqr(Layout layout, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau) {
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
+    public int orgqr(Layout layout, int m, int n, int k, DoublePointer A, int lda, DoublePointer tau) {
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
+    public int orgqr(Layout layout, int m, int n, int k, float[] A, int lda, float[] tau) {
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
+    public int orgqr(Layout layout, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau) {
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
     public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc) {
         return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A, lda, tau, C, ldc);
     }
+
     @Override
     public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau, DoubleBuffer C, int ldc) {
+        return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A, lda, tau, C, ldc);
+    }
+
+    @Override
+    public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, DoublePointer A, int lda, DoublePointer tau, DoublePointer C, int ldc) {
         return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A, lda, tau, C, ldc);
     }
 
@@ -1025,6 +1143,11 @@ public class MKL implements BLAS, LAPACK {
 
     @Override
     public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb) {
+        return LAPACKE_dtrtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, DoublePointer A, int lda, DoublePointer B, int ldb) {
         return LAPACKE_dtrtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A, lda, B, ldb);
     }
 

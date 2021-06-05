@@ -56,7 +56,7 @@ public interface Node extends Serializable {
      * Returns the number of leaf nodes in the subtree.
      * @return the number of leaf nodes in the subtree.
      */
-    int leafs();
+    int leaves();
 
     /**
      * Returns the maximum depth of the tree -- the number of

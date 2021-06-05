@@ -1,6 +1,8 @@
 name := "smile-shell"
 
-mainClass in Compile := Some("smile.shell.Main")
+Compile / mainClass := Some("smile.shell.Main")
+// workaround the class loader failure with reflection
+Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
 
 // native packager
 enablePlugins(JavaAppPackaging)
@@ -17,30 +19,20 @@ packageDescription :=
     |""".stripMargin
 
 // Filter data files in universal
-mappings in Universal := {
+Universal / mappings := {
   // universalMappings: Seq[(File,String)]
-  val universalMappings = (mappings in Universal).value
+  val universalMappings = (Universal / mappings).value
 
   // removing means filtering
   universalMappings filter {
-    case (file, name) => !name.startsWith("data/airline") &&
-                         !name.startsWith("data/arrow") &&
-                         !name.startsWith("data/avro") &&
-                         !name.startsWith("data/csv") &&
-                         !name.startsWith("data/json") &&
+    case (file, name) => !name.startsWith("data/kylo") &&
                          !name.startsWith("data/matrix") &&
-                         !name.startsWith("data/microarray") &&
-                         !name.startsWith("data/msrp") &&
-                         !name.startsWith("data/neighbor") &&
                          !name.startsWith("data/nlp") &&
-                         !name.startsWith("data/npr") &&
-                         !name.startsWith("data/parquet") &&
                          !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sparse") &&
                          !name.startsWith("data/sqlite") &&
-                         !name.startsWith("data/text") &&
                          !name.startsWith("data/transaction") &&
-                         !name.startsWith("data/weka/regression") &&
-                         !name.startsWith("data/wireframe")
+                         !name.startsWith("data/wavefront")
   }
 }
 
@@ -74,9 +66,15 @@ buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-compiler" % "2.12.12",
+  "com.github.scopt" %% "scopt" % "4.0.1",
+  "org.scala-lang" % "scala-compiler" % "2.12.14",
   "org.slf4j" % "slf4j-simple" % "1.7.30",
-  "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.10-1.5.4" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.14",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.14",
+  "com.typesafe.akka" %% "akka-http" % "10.2.4",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.4",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "3.0.1",
+  "org.bytedeco" % "javacpp"   % "1.5.5"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.13-1.5.5" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.5"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
 )

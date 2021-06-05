@@ -33,37 +33,33 @@ package smile.math.random;
  * @author Haifeng Li
  */
 public class MersenneTwister64 implements RandomNumberGenerator {
-    private static final int NN = 312;
-
-    private static final int MM = 156;
-
-    private static final long MATRIX_A = 0xB5026F5AA96619E9L;
+    /** Size of the bytes pool. */
+    private static final int N = 312;
+    /** Period second parameter. */
+    private static final int M = 156;
+    /** Mask: Most significant 33 bits */
+    private static final long UPPER_MASK = 0xFFFFFFFF80000000L;
+    /** Mask: Least significant 31 bits */
+    private static final long LOWER_MASK = 0x7FFFFFFFL;
+    /** X * MATRIX_A for X = {0, 1}. */
+    private static final long[] MAGIC = {0L, 0xB5026F5AA96619E9L};
+    /** The default seed. */
+    private final static long MAGIC_SEED = (180927757L << 32) | 976716835L;
+    /** The factors used in state initialization. */
+    private final static long MAGIC_FACTOR1 = 6364136223846793005L;
+    private final static long MAGIC_FACTOR2 = 3935559000370003845L;
+    private final static long MAGIC_FACTOR3 = 2862933555777941757L;
+    /** Internal state */
+    private final long[] mt = new long[N];
+    /** Current index in the bytes pool. */
+    private int mti;
 
     /**
-     * Mask: Most significant 33 bits
-     */
-    private static final long UM = 0xFFFFFFFF80000000L;
-
-    /**
-     * Mask: Least significant 31 bits
-     */
-    private static final long LM = 0x7FFFFFFFL;
-
-    private static final long[] mag01 = {0L, MATRIX_A};
-
-    private final long[] mt = new long[NN];
-
-    private int mti = NN + 1;
-
-    /**
-     * Internal to hold 64 bits, that might
+     * Internal state to hold 64 bits, that might
      * used to generate two 32 bit values.
      */
     private long bits64;
     private boolean bitState = true;
-
-    private final static long MAGIC_SEED = (180927757L << 32) | 976716835L;
-    private final static long MAGIC_FACTOR1 = 6364136223846793005L;
 
     /**
      * Constructor.
@@ -84,9 +80,48 @@ public class MersenneTwister64 implements RandomNumberGenerator {
     @Override
     public void setSeed(long seed) {
         mt[0] = seed;
-        for (mti = 1; mti < NN; mti++) {
+        for (mti = 1; mti < N; mti++) {
             mt[mti] = (MAGIC_FACTOR1 * (mt[mti - 1] ^ (mt[mti - 1] >>> 62)) + mti);
         }
+    }
+
+    /**
+     * Sets the seed of random numbers.
+     * @param seed the seed of random numbers.
+     */
+    public void setSeed(long[] seed) {
+        setSeed(MAGIC_SEED);
+
+        if (seed == null || seed.length == 0) {
+            return;
+        }
+
+        int i = 1, j = 0;
+        for (int k = Math.max(N, seed.length); k != 0; k--) {
+            final long mm1 = mt[i - 1];
+            mt[i] = (mt[i] ^ ((mm1 ^ (mm1 >>> 62)) * MAGIC_FACTOR2)) + seed[j] + j; // non linear
+            i++;
+            j++;
+            if (i >= N) {
+                mt[0] = mt[N - 1];
+                i = 1;
+            }
+            if (j >= seed.length) {
+                j = 0;
+            }
+        }
+
+        for (int k = N - 1; k != 0; k--) {
+            final long mm1 = mt[i - 1];
+            mt[i] = (mt[i] ^ ((mm1 ^ (mm1 >>> 62)) * MAGIC_FACTOR3)) - i; // non linear
+            i++;
+            if (i >= N) {
+                mt[0] = mt[N - 1];
+                i = 1;
+            }
+        }
+
+        mt[0] = 0x8000000000000000L; // MSB is 1; assuring non-zero initial array
     }
 
     @Override
@@ -144,18 +179,18 @@ public class MersenneTwister64 implements RandomNumberGenerator {
         int i;
         long x;
 
-        if (mti >= NN) { /* generate NN words at one time */
-            for (i = 0; i < NN - MM; i++) {
-                x = (mt[i] & UM) | (mt[i + 1] & LM);
-                mt[i] = mt[i + MM] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+        if (mti >= N) { /* generate NN words at one time */
+            for (i = 0; i < N - M; i++) {
+                x = (mt[i] & UPPER_MASK) | (mt[i + 1] & LOWER_MASK);
+                mt[i] = mt[i + M] ^ (x >>> 1) ^ MAGIC[(int) (x & 1L)];
             }
 
-            for (; i < NN - 1; i++) {
-                x = (mt[i] & UM) | (mt[i + 1] & LM);
-                mt[i] = mt[i + (MM - NN)] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+            for (; i < N - 1; i++) {
+                x = (mt[i] & UPPER_MASK) | (mt[i + 1] & LOWER_MASK);
+                mt[i] = mt[i + (M - N)] ^ (x >>> 1) ^ MAGIC[(int) (x & 1L)];
             }
-            x = (mt[NN - 1] & UM) | (mt[0] & LM);
-            mt[NN - 1] = mt[MM - 1] ^ (x >>> 1) ^ mag01[(int) (x & 1L)];
+            x = (mt[N - 1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+            mt[N - 1] = mt[M - 1] ^ (x >>> 1) ^ MAGIC[(int) (x & 1L)];
 
             mti = 0;
         }

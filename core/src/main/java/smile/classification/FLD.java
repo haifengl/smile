@@ -18,9 +18,6 @@
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.projection.Projection;
@@ -64,7 +61,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class FLD implements Classifier<double[]>, Projection<double[]> {
+public class FLD extends AbstractClassifier<double[]> implements Projection<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -87,10 +84,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * Projected class mean vectors.
      */
     private final double[][] mu;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -110,10 +103,10 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param labels the class label encoder.
      */
     public FLD(double[] mean, double[][] mu, Matrix scaling, IntSet labels) {
+        super(labels);
         this.k = mu.length;
         this.p = mean.length;
         this.scaling = scaling;
-        this.labels = labels;
 
         int L = scaling.ncol();
         this.mean = new double[L];
@@ -126,34 +119,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     }
 
     /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model
-     */
-    public static FLD fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model
-     */
-    public static FLD fit(Formula formula, DataFrame data, Properties prop) {
-        int L = Integer.parseInt(prop.getProperty("smile.fld.dimension", "-1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.fld.tolerance", "1E-4"));
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, L, tol);
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @return the model
@@ -163,7 +129,20 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     }
 
     /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model
+     */
+    public static FLD fit (double[][] x, int[] y, Properties params) {
+        int L = Integer.parseInt(params.getProperty("smile.fisher.dimension", "-1"));
+        double tol = Double.parseDouble(params.getProperty("smile.fisher.tolerance", "1E-4"));
+        return fit(x, y, L, tol);
+    }
+
+    /**
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @param L the dimensionality of mapped space.
@@ -235,7 +214,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         // Within class scatter
-        Matrix Sw = St.sub(1.0, Sb);
+        Matrix Sw = St.sub(Sb);
         Matrix SwInvSb = Sw.inverse().mm(Sb);
         Matrix.EVD evd = SwInvSb.eigen(false, true, true);
 
@@ -341,7 +320,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 
     @Override

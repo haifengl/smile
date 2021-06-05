@@ -23,13 +23,13 @@ package smile.math.random;
  * by Makoto Matsumoto and Takuji Nishimura (<a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">
  * http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html</a>).
  * <p>
- * As a subclass of java.util.Random this class provides a single canonical method
- * next() for generating bits in the pseudo random number sequence. Anyone using
- * this class should invoke the public inherited methods (nextInt(), nextFloat
- * etc.) to obtain values as normal. This class should provide a drop-in
- * replacement for the standard implementation of java.util.Random with the
- * additional advantage of having a far longer period and the ability to use a
- * far larger seed value.
+ * As a subclass of java.util.Random this class provides a single canonical
+ * method {@code next()} for generating bits in the pseudo random
+ * number sequence. The user should invoke the public inherited methods
+ * ({@code nextInt()}, {@code nextFloat()} etc.) to obtain values
+ * as usual. This class should provide a drop-in replacement for the standard
+ * implementation of {@code java.util.Random} with the additional advantage
+ * of having a far longer period and the ability to use a far larger seed value.
  *
  * <h2>References</h2>
  * <ol>
@@ -42,24 +42,27 @@ package smile.math.random;
  * @author Haifeng Li
  */
 public class MersenneTwister implements RandomNumberGenerator {
-
-    // Constants used in the original C implementation
+    /** Mask: Most significant 17 bits */
     private final static int UPPER_MASK = 0x80000000;
+    /** Mask: Least significant 15 bits */
     private final static int LOWER_MASK = 0x7fffffff;
+    /** Size of the bytes pool. */
     private final static int N = 624;
+    /** Period second parameter. */
     private final static int M = 397;
     private final static int[] MAGIC = {0x0, 0x9908b0df};
+    /** The factors used in state initialization. */
     private final static int MAGIC_FACTOR1 = 1812433253;
-    //private final static int MAGIC_FACTOR2 = 1664525;
-    //private final static int MAGIC_FACTOR3 = 1566083941;
+    private final static int MAGIC_FACTOR2 = 1664525;
+    private final static int MAGIC_FACTOR3 = 1566083941;
     private final static int MAGIC_MASK1 = 0x9d2c5680;
     private final static int MAGIC_MASK2 = 0xefc60000;
+    /** The default seed. */
     private final static int MAGIC_SEED = 19650218;
-    // The seed used in the paper.
-    //private final static int DEFAULT_SEED = 5489;
-    // Internal state
-    private final transient int[] mt = new int[N];
-    private transient int mti;
+    /** Internal state */
+    private final int[] mt = new int[N];
+    /** Current index in the internal state. */
+    private int mti;
 
     /**
      * Constructor.
@@ -86,7 +89,9 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     @Override
     public void setSeed(long seed) {
-        setSeed((int) (seed % UniversalGenerator.BIG_PRIME));
+        // Integer.MAX_VALUE (2,147,483,647) is the 8th Mersenne prime.
+        // Therefore, it is good as a modulus for RNGs.
+        setSeed((int) (seed % Integer.MAX_VALUE));
     }
 
     /**
@@ -98,6 +103,42 @@ public class MersenneTwister implements RandomNumberGenerator {
         for (mti = 1; mti < N; mti++) {
             mt[mti] = (MAGIC_FACTOR1 * (mt[mti - 1] ^ (mt[mti - 1] >>> 30)) + mti);
         }
+    }
+
+    /**
+     * Sets the seed of random numbers.
+     * @param seed the seed of random numbers.
+     */
+    public void setSeed(int[] seed) {
+        setSeed(MAGIC_SEED);
+
+        if (seed == null || seed.length == 0) {
+            return;
+        }
+
+        int i = 1, j = 0;
+        for (int k = Math.max(N, seed.length); k > 0; k--) {
+            mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >>> 30)) * MAGIC_FACTOR2)) + seed[j] + j;
+            i++;
+            j++;
+            if (i >= N) {
+                mt[0] = mt[N - 1];
+                i = 1;
+            }
+            if (j >= seed.length) {
+                j = 0;
+            }
+        }
+
+        for (int k = N - 1; k > 0; k--) {
+            mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >>> 30)) * MAGIC_FACTOR3)) - i;
+            i++;
+            if (i >= N) {
+                mt[0] = mt[N - 1];
+                i = 1;
+            }
+        }
+        mt[0] |= UPPER_MASK; // MSB is 1; assuring non-zero initial array
     }
 
     @Override
@@ -122,8 +163,8 @@ public class MersenneTwister implements RandomNumberGenerator {
     public int nextInt() {
         int x, i;
         
-        if (mti >= N) {             // generate N words at one time
-
+        if (mti >= N) {
+            // generate N words at one time
             for (i = 0; i < N - M; i++) {
                 x = (mt[i] & UPPER_MASK) | (mt[i + 1] & LOWER_MASK);
                 mt[i] = mt[i + M] ^ (x >>> 1) ^ MAGIC[x & 0x1];

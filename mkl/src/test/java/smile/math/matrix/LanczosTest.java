@@ -65,7 +65,7 @@ public class LanczosTest {
     @Test
     public void testLanczos() {
         System.out.println("eigen");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 3);
         assertTrue(MathEx.equals(eigenValues, result.wr, 1E-7));
@@ -82,7 +82,7 @@ public class LanczosTest {
     @Test
     public void testEigen1() {
         System.out.println("eigen1");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 1);
         assertEquals(eigenValues[0], result.wr[0], 1E-4);
@@ -99,7 +99,7 @@ public class LanczosTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 6);
         assertEquals(2.0, result.wr[0], 1E-4);

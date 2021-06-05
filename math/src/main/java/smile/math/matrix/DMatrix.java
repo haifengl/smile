@@ -42,19 +42,19 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
-     * @return this matrix.
      */
-    public abstract DMatrix set(int i, int j, double x);
+    public void set(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sets {@code A[i, j] = x} for Scala users.
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
-     * @return this matrix.
      */
-    public DMatrix update(int i, int j, double x) {
-        return set(i, j, x);
+    public void update(int i, int j, double x) {
+        set(i, j, x);
     }
 
     /**
@@ -63,7 +63,9 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param j the column index.
      * @return the matrix cell value.
      */
-    public abstract double get(int i, int j);
+    public double get(int i, int j) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns {@code A[i, j]} for Scala users.
@@ -433,7 +435,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
             }
 
             @Override
-            public DMatrix set(int i, int j, double x) {
+            public void set(int i, int j, double x) {
                 throw new UnsupportedOperationException();
             }
         };

@@ -181,10 +181,8 @@ public class Graphics {
      * Clear the restriction of the draw area.
      */
     public void clearClip() {
-        if (originalClip != null) {
-            g2d.setClip(originalClip);
-            originalClip = null;
-        }
+        g2d.setClip(originalClip);
+        originalClip = null;
     }
 
     /**

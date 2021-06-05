@@ -120,7 +120,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
-        Matrix.SVD svd = new Matrix(data).svd(true, true);
+        Matrix.SVD svd = Matrix.of(data).svd(true, true);
 
         int d = data[0].length;
 

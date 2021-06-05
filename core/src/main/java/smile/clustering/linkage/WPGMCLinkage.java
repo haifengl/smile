@@ -51,7 +51,7 @@ public class WPGMCLinkage extends Linkage {
         init();
     }
 
-    /** Intialize proximity. */
+    /** Initialize proximity. */
     private void init() {
         for (int i = 0; i < proximity.length; i++) {
             proximity[i] *= proximity[i];

@@ -17,10 +17,9 @@
 
 package smile.feature;
 
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
+import smile.sort.IQAgent;
 
 /**
  * Robustly standardizes numeric feature by subtracting
@@ -33,6 +32,15 @@ public class RobustStandardizer extends Standardizer {
 
     /**
      * Constructor.
+     * @param median median.
+     * @param iqr IQR.
+     */
+    public RobustStandardizer(double[] median, double[] iqr) {
+        super(median, iqr);
+    }
+
+    /**
+     * Constructor.
      * @param schema the schema of data.
      * @param median median.
      * @param iqr IQR.
@@ -42,7 +50,7 @@ public class RobustStandardizer extends Standardizer {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
      * @return the model.
      */
@@ -52,15 +60,17 @@ public class RobustStandardizer extends Standardizer {
         }
 
         StructType schema = data.schema();
-        double[] median = new double[schema.length()];
-        double[] iqr = new double[schema.length()];
+        int p = schema.length();
+        double[] median = new double[p];
+        double[] iqr = new double[p];
 
-        for (int i = 0; i < median.length; i++) {
+        for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
-                final int col = i;
-                final smile.sort.IQAgent agent = new smile.sort.IQAgent();
-                // IQAgent is stateful and thus should not be used with parallel stream
-                data.stream().sequential().forEach(t -> agent.add(t.getDouble(col)));
+                IQAgent agent = new IQAgent();
+                double[] x = data.column(i).toDoubleArray();
+                for (double xi : x) {
+                    agent.add(xi);
+                }
                 median[i] = agent.quantile(0.5);
                 iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
             }
@@ -70,18 +80,32 @@ public class RobustStandardizer extends Standardizer {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
      * @return the model.
      */
     public static RobustStandardizer fit(double[][] data) {
-        return fit(DataFrame.of(data));
-    }
+        int p = data[0].length;
+        double[] median = new double[p];
+        double[] iqr = new double[p];
 
-    @Override
-    public String toString() {
-        return IntStream.range(0, mu.length)
-                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i]))
-                .collect(Collectors.joining(",", "RobustStandardizer(", ")"));
+        IQAgent[] agents = new IQAgent[p];
+        for (int i = 0; i < p; i++) {
+            agents[i] = new IQAgent();
+        }
+
+        for (double[] x : data) {
+            for (int i = 0; i < p; i++) {
+                agents[i].add(x[i]);
+            }
+        }
+
+        for (int i = 0; i < p; i++) {
+            IQAgent agent = agents[i];
+            median[i] = agent.quantile(0.5);
+            iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
+        }
+
+        return new RobustStandardizer(median, iqr);
     }
 }

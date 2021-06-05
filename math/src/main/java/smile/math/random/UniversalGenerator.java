@@ -25,24 +25,21 @@ package smile.math.random;
  * for random number generators and has a period of 2<sup>144</sup>. It is
  * completely portable (gives bit identical results on all machines with at
  * least 24-bit mantissas in the floating point representation).
- * 
+ *
  * @author Haifeng Li
  */
 public class UniversalGenerator implements RandomNumberGenerator {
 
     /**
-     * Default seed.  <CODE>DEFAULT_RANDOM_SEED=54217137</CODE>
+     * Default seed.
      */
-    private static final int DEFAULT_RANDOM_SEED = 54217137;
+    private static final int DEFAULT_SEED = 54217137;
     /**
-     * The 46,009,220nd prime number,
-     * The largest prime less than 9*10<SUP>8</SUP>.  Used as a modulus
-     * because this version of <TT>random()</TT> needs a seed between 0
-     * and 9*10<SUP>8</SUP> and <CODE>BIG_PRIME</CODE> isn't commensurate
-     * with any regular period.
-     * <CODE>BIG_PRIME = 899999963</CODE>
+     * The 46,009,220nd prime number, the largest prime less than {@code 9E8}.
+     * It may be used as a modulus for RNGs because this RNG needs a seed between 0
+     * and {@code 9E8} and BIG_PRIME isn't commensurate with any regular period.
      */
-    static final int BIG_PRIME = 899999963;
+    private static final int BIG_PRIME = 899999963;
     private double c;
     private double cd;
     private double cm;
@@ -53,7 +50,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
      * Initialize Random with default seed.
      */
     public UniversalGenerator() {
-        setSeed(DEFAULT_RANDOM_SEED);
+        setSeed(DEFAULT_SEED);
     }
 
     /**
@@ -149,7 +146,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
         return uni;
     }
-    
+
     @Override
     public void nextDoubles(double[] d) {
         int n = d.length;
@@ -184,23 +181,23 @@ public class UniversalGenerator implements RandomNumberGenerator {
     public int next(int numbits) {
         return nextInt() >>> (32 - numbits);
     }
-    
+
     @Override
     public int nextInt() {
-        return (int) Math.floor(Integer.MAX_VALUE * (2 * nextDouble() - 1.0));        
+        return (int) Math.floor(Integer.MAX_VALUE * (2 * nextDouble() - 1.0));
     }
-    
+
     @Override
     public int nextInt(int n) {
         if (n <= 0) {
             throw new IllegalArgumentException("n must be positive");
         }
-        
+
         return (int) (nextDouble() * n);
     }
-    
+
     @Override
     public long nextLong() {
-        return (long) Math.floor(Long.MAX_VALUE * (2 * nextDouble() - 1.0));        
+        return (long) Math.floor(Long.MAX_VALUE * (2 * nextDouble() - 1.0));
     }
 }

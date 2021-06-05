@@ -176,26 +176,24 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
 
         cov.uplo(UPLO.LOWER);
         Matrix.EVD eigen = cov.eigen(false, true, true).sort();
-        double[] evalues = eigen.wr;
-        Matrix evectors = eigen.Vr;
+        double[] eigvalues = eigen.wr;
+        Matrix eigvectors = eigen.Vr;
 
         double noise = 0.0;
         for (int i = k; i < n; i++) {
-            noise += evalues[i];
+            noise += eigvalues[i];
         }
         noise /= (n - k);
 
         Matrix loading = new Matrix(n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading.set(i, j, evectors.get(i, j) * Math.sqrt(evalues[j] - noise));
+                loading.set(i, j, eigvectors.get(i, j) * Math.sqrt(eigvalues[j] - noise));
             }
         }
 
         Matrix M = loading.ata();
-        for (int i = 0; i < k; i++) {
-            M.add(i, i, noise);
-        }
+        M.addDiag(noise);
 
         Matrix.Cholesky chol = M.cholesky(true);
         Matrix Mi = chol.inverse();

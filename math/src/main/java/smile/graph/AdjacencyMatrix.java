@@ -654,6 +654,6 @@ public class AdjacencyMatrix implements Graph, Serializable {
 
     @Override
     public Matrix toMatrix() {
-        return new Matrix(graph);
+        return Matrix.of(graph);
     }
 }

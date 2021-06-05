@@ -125,7 +125,7 @@ public class ARM implements Iterable<AssociationRule> {
 
     /**
      * Generates association rules from a T-tree.
-     * @param itemset the label for a T-tree node as generated sofar.
+     * @param itemset the label for a T-tree node as generated so far.
      * @param size the size of the current array level in the T-tree.
      * @param node the current node in the T-tree.
      */
@@ -185,7 +185,7 @@ public class ARM implements Iterable<AssociationRule> {
             return null;
         }
 
-        // Otherwsise define combination array and determine complement
+        // Otherwise define combination array and determine complement
         int[] complement = new int[size];
         int index = 0;
         for (int item : fullset) {
@@ -220,7 +220,7 @@ public class ARM implements Iterable<AssociationRule> {
      * @param set the input item set.
      * @param inputIndex the index within the input set marking current
      * element under consideration (0 at start).
-     * @param sofar the current combination determined sofar during the
+     * @param sofar the current combination determined so far during the
      * recursion (null at start).
      * @param sets the power set to store all combinations when recursion ends.
      * @param outputIndex the current location in the output set.

@@ -73,8 +73,9 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
      * @return the distribution.
      */
     public static MultivariateGaussianMixture fit(int k, double[][] data, boolean diagonal) {
-        if (k < 2)
+        if (k < 2) {
             throw new IllegalArgumentException("Invalid number of components in the mixture.");
+        }
 
         int n = data.length;
         int d = data[0].length;
@@ -98,7 +99,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
             gaussian = new MultivariateGaussianDistribution(centroid, variance);
         } else {
-            cov = new Matrix(MathEx.cov(data, mu));
+            cov = Matrix.of(MathEx.cov(data, mu));
             gaussian = new MultivariateGaussianDistribution(centroid, cov);
         }
 
@@ -159,8 +160,9 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
      * @return the distribution.
      */
     public static MultivariateGaussianMixture fit(double[][] data, boolean diagonal) {
-        if (data.length < 20)
+        if (data.length < 20) {
             throw new IllegalArgumentException("Too few samples.");
+        }
 
         MultivariateGaussianMixture mixture = new MultivariateGaussianMixture(new Component(1.0, MultivariateGaussianDistribution.fit(data, diagonal)));
         double bic = mixture.bic(data);
