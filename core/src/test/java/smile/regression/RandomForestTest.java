@@ -103,10 +103,10 @@ public class RandomForestTest {
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
-        assertEquals(6595.3241,  importance[1], 1E-4);
-        assertEquals(10242.6828, importance[2], 1E-4);
-        assertEquals(34755.6754, importance[3], 1E-4);
-        assertEquals(31075.0867, importance[4], 1E-4);
+        assertEquals( 6578.6575, importance[1], 1E-4);
+        assertEquals(10270.8817, importance[2], 1E-4);
+        assertEquals(36150.0766, importance[3], 1E-4);
+        assertEquals(30099.2985, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
         System.out.println("----- Progressive RMSE -----");
@@ -119,7 +119,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(2.710121445970332, metrics.rmse, 1E-4);
+        assertEquals(2.7062, metrics.rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -144,15 +144,47 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testAll() {
-        test("CPU", CPU.formula, CPU.data, 69.3312);
-        test("2dplanes", Planes.formula, Planes.data, 1.3574);
-        test("abalone", Abalone.formula, Abalone.train, 2.1888);
+    public void testCPU() {
+        test("CPU", CPU.formula, CPU.data, 69.0170);
+    }
+
+    @Test
+    public void test2DPlanes() {
+        test("2dplanes", Planes.formula, Planes.data, 1.3581);
+    }
+
+    @Test
+    public void testAbalone() {
+        test("abalone", Abalone.formula, Abalone.train, 2.1889);
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5620);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 58550.8159);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3147);
+    }
+
+    @Test
+    public void testAutoMPG() {
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5588);
+    }
+
+    @Test
+    public void testCalHousing() {
+        test("cal_housing", CalHousing.formula, CalHousing.data, 58605.0710);
+    }
+
+    @Test
+    public void testPuma8nh() {
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3145);
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
@@ -194,8 +226,8 @@ public class RandomForestTest {
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);
         assertEquals(2.0858, rmse1, 1E-4);
-        assertEquals(2.0630, rmse2, 1E-4);
-        assertEquals(2.0691, rmse,  1E-4);
+        assertEquals(2.0633, rmse2, 1E-4);
+        assertEquals(2.0693, rmse,  1E-4);
     }
 
     @Test

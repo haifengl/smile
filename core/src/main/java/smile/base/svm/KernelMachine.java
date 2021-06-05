@@ -18,7 +18,6 @@
 package smile.base.svm;
 
 import java.io.Serializable;
-import smile.classification.SVM;
 import smile.math.kernel.MercerKernel;
 
 /**
@@ -46,7 +45,7 @@ public class KernelMachine<T> implements Serializable {
     /**
      * The support vectors (or control points).
      */
-    T[] instances;
+    T[] vectors;
     /**
      * The linear weights.
      */
@@ -59,23 +58,23 @@ public class KernelMachine<T> implements Serializable {
     /**
      * Constructor.
      * @param kernel Kernel function.
-     * @param instances The instances in the kernel machine, e.g. support vectors.
+     * @param vectors The instances in the kernel machine, e.g. support vectors.
      * @param weight The weights of instances.
      */
-    public KernelMachine(MercerKernel<T> kernel, T[] instances, double[] weight) {
-        this(kernel, instances, weight, 0.0);
+    public KernelMachine(MercerKernel<T> kernel, T[] vectors, double[] weight) {
+        this(kernel, vectors, weight, 0.0);
     }
 
     /**
      * Constructor.
      * @param kernel Kernel function.
-     * @param instances The instances in the kernel machine, e.g. support vectors.
+     * @param vectors The instances in the kernel machine, e.g. support vectors.
      * @param weight The weights of instances.
      * @param b The intercept;
      */
-    public KernelMachine(MercerKernel<T> kernel, T[] instances, double[] weight, double b) {
+    public KernelMachine(MercerKernel<T> kernel, T[] vectors, double[] weight, double b) {
         this.kernel = kernel;
-        this.instances = instances;
+        this.vectors = vectors;
         this.w = weight;
         this.b = b;
     }
@@ -89,11 +88,11 @@ public class KernelMachine<T> implements Serializable {
     }
 
     /**
-     * Returns the instances of kernel machines.
-     * @return the instances of kernel machines.
+     * Returns the support vectors of kernel machines.
+     * @return the support vectors of kernel machines.
      */
-    public T[] instances() {
-        return instances;
+    public T[] vectors() {
+        return vectors;
     }
 
     /**
@@ -120,23 +119,15 @@ public class KernelMachine<T> implements Serializable {
     public double score(T x) {
         double f = b;
 
-        for (int i = 0; i < instances.length; i++) {
-            f += w[i] * kernel.k(x, instances[i]);
+        for (int i = 0; i < vectors.length; i++) {
+            f += w[i] * kernel.k(x, vectors[i]);
         }
 
         return f;
     }
 
-    /**
-     * Convert the kernel machine to SVM instance.
-     * @return SVM.
-     */
-    public SVM<T> toSVM() {
-        return new SVM<>(kernel, instances, w, b);
-    }
-
     @Override
     public String toString() {
-        return String.format("Kernel Machine (%s): %d vectors, intercept = %.4f", kernel, instances.length, b);
+        return String.format("Kernel Machine (%s): %d vectors, intercept = %.4f", kernel, vectors.length, b);
     }
 }

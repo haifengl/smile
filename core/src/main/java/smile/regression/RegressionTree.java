@@ -77,7 +77,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends CART implements DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
@@ -126,7 +126,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         RegressionNode node = (RegressionNode) leaf;
-        BaseVector xj = x.column(j);
+        BaseVector<?, ?, ?> xj = x.column(j);
 
         double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
@@ -229,7 +229,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * Constructor. Learns a regression tree for AdaBoost and Random Forest.
+     * Constructor. Fits a regression tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param loss the loss function.
      * @param response the metadata of response variable.
@@ -274,7 +274,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @return the model.
@@ -284,7 +284,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.node.size</code>
@@ -292,18 +292,18 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.cart.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
+    public static RegressionTree fit(Formula formula, DataFrame data, Properties params) {
+        int maxDepth = Integer.parseInt(params.getProperty("smile.cart.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.cart.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.cart.node_size", "5"));
         return fit(formula, data, maxDepth, maxNodes, nodeSize);
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param maxDepth the maximum depth of the tree.
@@ -314,7 +314,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
         return tree;

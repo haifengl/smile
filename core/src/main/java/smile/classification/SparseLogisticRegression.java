@@ -36,7 +36,7 @@ import smile.validation.ModelSelection;
  *
  * @author Haifeng Li
  */
-public abstract class SparseLogisticRegression implements SoftClassifier<SparseArray>, OnlineClassifier<SparseArray> {
+public abstract class SparseLogisticRegression extends AbstractClassifier<SparseArray> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -65,11 +65,6 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
     double eta = 0.1;
 
     /**
-     * The class label encoder.
-     */
-    final IntSet labels;
-
-    /**
      * Constructor.
      * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
@@ -79,11 +74,11 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * @param labels the class label encoder.
      */
     public SparseLogisticRegression(int p, double L, double lambda, IntSet labels) {
+        super(labels);
         this.k = labels.size();
         this.p = p;
         this.L = L;
         this.lambda = lambda;
-        this.labels = labels;
     }
 
     /** Binomial logistic regression. The dependent variable is nominal of two levels. */
@@ -118,9 +113,14 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
         }
 
         @Override
+        public double score(SparseArray x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
         public int predict(SparseArray x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -134,16 +134,16 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             posteriori[0] = 1.0 - f;
             posteriori[1] = f;
 
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
         public void update(SparseArray x, int y) {
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             // calculate gradient for incoming data
             double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
+            double err = y - MathEx.sigmoid(wx);
 
             // update the weights
             w[p] += eta * err;
@@ -209,12 +209,12 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             }
 
             MathEx.softmax(posteriori);
-            return labels.valueOf(MathEx.whichMax(posteriori));
+            return classes.valueOf(MathEx.whichMax(posteriori));
         }
 
         @Override
         public void update(SparseArray x, int y) {
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             double[] prob = new double[k];
             for (int j = 0; j < k-1; j++) {
@@ -256,13 +256,13 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Binomial binomial(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -308,7 +308,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
         double[] w = new double[p + 1];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
-        Binomial model = new Binomial(w, L, lambda, codec.labels);
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.size());
         return model;
     }
@@ -327,13 +327,13 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Multinomial multinomial(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -386,7 +386,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.size());
         return model;
     }
@@ -405,13 +405,13 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logistic.max.iterations", "500"));
+    public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 
@@ -514,7 +514,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     SparseArray xi = x.get(i);
                     double wx = dot(xi, w);
-                    double err = y[i] - MathEx.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (SparseArray.Entry e : xi) {
                         gradient[e.i] -= err * e.x;
                     }
@@ -719,6 +719,16 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
         }
 
         return dot;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**

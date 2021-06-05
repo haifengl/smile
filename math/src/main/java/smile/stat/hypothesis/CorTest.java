@@ -38,7 +38,7 @@ import smile.sort.QuickSort;
  * test for independence. For any pair of nominal variables, the data can be
  * displayed as a contingency table, whose rows are labels by the values of one
  * nominal variable, whose columns are labels by the values of the other nominal
- * variable, and whose entries are nonnegative integers giving the number of
+ * variable, and whose entries are non-negative integers giving the number of
  * observed events for each combination of row and column.
  * 
  * @author Haifeng Li

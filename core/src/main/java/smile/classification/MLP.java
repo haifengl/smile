@@ -19,9 +19,12 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Properties;
+
 import smile.base.mlp.*;
 import smile.math.MathEx;
 import smile.util.IntSet;
+import smile.util.Strings;
 
 /**
  * Fully connected multilayer perceptron neural network for classification.
@@ -104,8 +107,9 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
+public class MLP extends MultilayerPerceptron implements Classifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
     /**
      * The number of classes.
@@ -114,39 +118,38 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     /**
      * The class label encoder.
      */
-    private final IntSet labels;
+    private final IntSet classes;
 
     /**
      * Constructor.
      *
-     * @param p the number of variables in input layer.
      * @param builders the builders of layers from bottom to top.
      */
-    public MLP(int p, LayerBuilder... builders) {
-        super(net(p, builders));
+    public MLP(LayerBuilder... builders) {
+        super(net(builders));
 
         int outSize = output.getOutputSize();
         this.k = outSize == 1 ? 2 : outSize;
-        this.labels = IntSet.of(k);
+        this.classes = IntSet.of(k);
     }
 
     /**
      * Constructor.
      *
-     * @param labels the class label encoder.
-     * @param p the number of variables in input layer.
+     * @param classes the class labels.
      * @param builders the builders of layers from bottom to top.
      */
-    public MLP(IntSet labels, int p, LayerBuilder... builders) {
-        super(net(p, builders));
+    public MLP(IntSet classes, LayerBuilder... builders) {
+        super(net(builders));
 
         int outSize = output.getOutputSize();
         this.k = outSize == 1 ? 2 : outSize;
-        this.labels = labels;
+        this.classes = classes;
     }
 
     /** Builds the layers. */
-    private static Layer[] net(int p, LayerBuilder... builders) {
+    private static Layer[] net(LayerBuilder... builders) {
+        int p = 0;
         int l = builders.length;
         Layer[] net = new Layer[l];
 
@@ -159,8 +162,18 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     }
 
     @Override
+    public int numClasses() {
+        return classes.size();
+    }
+
+    @Override
+    public int[] classes() {
+        return classes.values;
+    }
+
+    @Override
     public int predict(double[] x, double[] posteriori) {
-        propagate(x);
+        propagate(x, false);
 
         int n = output.getOutputSize();
         if (n == 1 && k == 2) {
@@ -170,27 +183,37 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
             System.arraycopy(output.output(), 0, posteriori, 0, n);
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     @Override
     public int predict(double[] x) {
-        propagate(x);
+        propagate(x, false);
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
-            return labels.valueOf(output.output()[0] > 0.5 ? 1 : 0);
+            return classes.valueOf(output.output()[0] > 0.5 ? 1 : 0);
         } else {
-            return labels.valueOf(MathEx.whichMax(output.output()));
+            return classes.valueOf(MathEx.whichMax(output.output()));
         }
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, int y) {
-        propagate(x);
-        setTarget(labels.indexOf(y));
-        backpropagate(x, true);
+        propagate(x, true);
+        setTarget(classes.indexOf(y));
+        backpropagate(true);
         t++;
     }
 
@@ -198,16 +221,16 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     @Override
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {
-            propagate(x[i]);
-            setTarget(labels.indexOf(y[i]));
-            backpropagate(x[i], false);
+            propagate(x[i], true);
+            setTarget(classes.indexOf(y[i]));
+            backpropagate(false);
         }
 
         update(x.length);
         t++;
     }
 
-    /** Sets the target vector. */
+    /** Sets the network target vector. */
     private void setTarget(int y) {
         int n = output.getOutputSize();
 
@@ -221,5 +244,46 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
             Arrays.fill(target, f);
             target[y] = t;
         }
+    }
+
+    /**
+     * Fits a MLP model.
+     * @param x the training dataset.
+     * @param y the training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static MLP fit(double[][] x, int[] y, Properties params) {
+        int p = x[0].length;
+        int k = MathEx.max(y) + 1;
+
+        LayerBuilder[] layers = Layer.of(k, p, params.getProperty("smile.mlp.layers", "ReLU(100)"));
+        MLP model = new MLP(layers);
+        model.setParameters(params);
+
+        int epochs = Integer.parseInt(params.getProperty("smile.mlp.epochs", "100"));
+        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "32"));
+        double[][] batchx = new double[batch][];
+        int[] batchy = new int[batch];
+        for (int epoch = 1; epoch <= epochs; epoch++) {
+            logger.info("{} epoch", Strings.ordinal(epoch));
+            int[] permutation = MathEx.permutate(x.length);
+            for (int i = 0; i < x.length; i += batch) {
+                int size = Math.min(batch, x.length - i);
+                for (int j = 0; j < size; j++) {
+                    int index = permutation[i + j];
+                    batchx[j] = x[index];
+                    batchy[j] = y[index];
+                }
+
+                if (size < batch) {
+                    model.update(Arrays.copyOf(batchx, size), Arrays.copyOf(batchy, size));
+                } else {
+                    model.update(batchx, batchy);
+                }
+            }
+        }
+
+        return model;
     }
 }

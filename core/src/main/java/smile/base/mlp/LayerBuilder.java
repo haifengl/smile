@@ -25,14 +25,18 @@ package smile.base.mlp;
 public abstract class LayerBuilder {
 
     /** The number of neurons. */
-    protected int n;
+    protected final int neurons;
+    /** The dropout rate. */
+    protected final double dropout;
 
     /**
      * Constructor.
-     * @param n the number of neurons.
+     * @param neurons the number of neurons.
+     * @param dropout the dropout rate.
      */
-    public LayerBuilder(int n) {
-        this.n = n;
+    public LayerBuilder(int neurons, double dropout) {
+        this.neurons = neurons;
+        this.dropout = dropout;
     }
 
     /**
@@ -40,14 +44,14 @@ public abstract class LayerBuilder {
      * @return the number of neurons.
      */
     public int neurons() {
-        return n;
+        return neurons;
     }
 
     /**
-     * Creates a hidden layer.
+     * Builds a layer.
      *
      * @param p the number of input variables (not including bias value).
-     * @return a hidden layer.
+     * @return a layer.
      */
     public abstract Layer build(int p);
 }

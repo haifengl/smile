@@ -36,8 +36,8 @@ public class ClassLabels implements Serializable {
 
     /** The number of classes. */
     public final int k;
-    /** The class labels. If the class labels are already in [0, k), this is empty. */
-    public final IntSet labels;
+    /** The class labels. */
+    public final IntSet classes;
     /** The sample class id in [0, k). */
     public final int[] y;
     /** The number of samples per classes. */
@@ -49,12 +49,12 @@ public class ClassLabels implements Serializable {
      * Constructor.
      * @param k The number of classes.
      * @param y The sample class id in [0, k).
-     * @param labels the class label encoder.
+     * @param classes the class label encoder.
      */
-    public ClassLabels(int k, int[] y, IntSet labels) {
+    public ClassLabels(int k, int[] y, IntSet classes) {
         this.k = k;
         this.y = y;
-        this.labels = labels;
+        this.classes = classes;
         this.ni = count(y, k);
 
         priori = new double[k];
@@ -65,13 +65,13 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Returns the nominal scale for the class labels.
-     * @return the nominal scale for the class labels.
+     * Returns the nominal scale of the class labels.
+     * @return the nominal scale of the class labels.
      */
     public NominalScale scale() {
-        String[] values = new String[labels.size()];
-        for (int i = 0; i < labels.size(); i++) {
-            values[i] = String.valueOf(labels.valueOf(i));
+        String[] values = new String[classes.size()];
+        for (int i = 0; i < classes.size(); i++) {
+            values[i] = String.valueOf(classes.valueOf(i));
         }
         return new NominalScale(values);
     }
@@ -84,13 +84,13 @@ public class ClassLabels implements Serializable {
     public int[] indexOf(int[] y) {
         int[] x = new int[y.length];
         for (int i = 0; i < y.length; i++) {
-            x[i] = labels.indexOf(y[i]);
+            x[i] = classes.indexOf(y[i]);
         }
         return x;
     }
 
     /**
-     * Learns the class label mapping from samples.
+     * Fits the class label mapping.
      * @param y the sample labels.
      * @return the class label mapping.
      */
@@ -112,11 +112,11 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Learns the class label mapping from samples.
+     * Fits the class label mapping.
      * @param response the sample labels.
      * @return the class label mapping.
      */
-    public static ClassLabels fit(BaseVector response) {
+    public static ClassLabels fit(BaseVector<?, ?, ?> response) {
         int[] y = response.toIntArray();
 
         Measure measure = response.measure();

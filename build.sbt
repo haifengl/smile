@@ -2,18 +2,18 @@ name := "smile"
 
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
-  mappings in (Compile, packageDoc) := Seq(),
+  Compile / packageDoc / mappings := Seq(),
   // skip javadoc and scaladoc for publishLocal
-  publishArtifact in (Compile, packageDoc) := false,
+  Compile / packageDoc / publishArtifact := false,
   // always set scala version including Java only modules
-  scalaVersion := "2.12.13",
+  scalaVersion := "2.12.14",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.6.1",
+  version := "3.0.0",
 
-  parallelExecution in Test := false,
+  Test / parallelExecution := false,
   autoAPIMappings := true,
 
   publishTo := {
@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
   pomExtra := (
@@ -52,13 +52,13 @@ lazy val commonSettings = Seq(
 lazy val javaSettings = commonSettings ++ Seq(
   crossPaths := false,
   autoScalaLibrary := false,
-  javacOptions in (Compile, compile) ++= Seq(
+  Compile / compile / javacOptions ++= Seq(
     "-encoding", "UTF8",
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked"
   ),
-  javacOptions in (Compile, doc) ++= Seq(
+  Compile / doc / javacOptions ++= Seq(
     "-Xdoclint:none",
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
@@ -66,27 +66,27 @@ lazy val javaSettings = commonSettings ++ Seq(
     ),
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
-    "junit" % "junit" % "4.13.1" % "test",
+    "junit" % "junit" % "4.13.2" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep")
   ),
-  testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
+  Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 )
 
 lazy val java8Settings = javaSettings ++ Seq(
-  javacOptions in (Compile, compile) ++= Seq(
+  Compile / compile / javacOptions ++= Seq(
     "-source", "1.8",
     "-target", "1.8"
   ),
 )
 
-lazy val java15Settings = javaSettings ++ Seq(
-  javacOptions in (Compile, compile) ++= Seq(
-    "-source", "15",
-    "-target", "15",
+lazy val java17Settings = javaSettings ++ Seq(
+  Compile / compile / javacOptions ++= Seq(
+    "-source", "17",
+    "-target", "17",
     "--enable-preview",
     "-Xlint:preview"
   ),
-  javacOptions in (Compile, doc) ++= Seq(
+  Compile / doc / javacOptions ++= Seq(
     "--enable-preview"
   )
 )
@@ -101,19 +101,24 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-encoding", "utf8",
     "-target:jvm-1.8"
   ),
-  scalacOptions in (Compile, doc) ++= Seq(
+  Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-implicits"
-  )
+  ),
+  libraryDependencies ++= Seq(
+    "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
+    "org.specs2" %% "specs2-core" % "4.12.0" % "test"
+  ),
 )
 
 lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
   .settings(
-    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell, plot)
+    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
-  .aggregate(core, data, io, math, mkl, nlp, plot, json, demo, scala, spark, shell)
+  .aggregate(core, data, io, math, mkl, nlp, plot, json, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(java8Settings: _*)
 
@@ -145,11 +150,6 @@ lazy val plot = project.in(file("plot"))
   .settings(java8Settings: _*)
   .dependsOn(core)
 
-lazy val demo = project.in(file("demo"))
-  .settings(java8Settings: _*)
-  .settings(publish / skip := true)
-  .dependsOn(core, io, plot)
-
 lazy val json = project.in(file("json")).settings(scalaSettings: _*)
 
 lazy val scala = project.in(file("scala"))
@@ -163,4 +163,4 @@ lazy val spark = project.in(file("spark"))
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
-  .dependsOn(demo, scala)
+  .dependsOn(scala)

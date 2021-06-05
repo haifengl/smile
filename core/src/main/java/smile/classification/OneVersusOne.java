@@ -19,6 +19,8 @@ package smile.classification;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
+
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
@@ -44,7 +46,7 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class OneVersusOne<T> implements SoftClassifier<T> {
+public class OneVersusOne<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusOne.class);
 
@@ -54,8 +56,6 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
     private final Classifier<T>[][] classifiers;
     /** The binary classifier. */
     private final PlattScaling[][] platt;
-    /** The class label encoder. */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -75,10 +75,10 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param labels the class label encoder.
      */
     public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platt, IntSet labels) {
+        super(labels);
         this.classifiers = classifiers;
         this.platt = platt;
         this.k = classifiers.length;
-        this.labels = labels;
     }
 
     /**
@@ -116,52 +116,47 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
             throw new IllegalArgumentException(String.format("Only %d classes", k));
         }
 
-        // sample size per class.
-        int[] ni = codec.ni;
-        y = codec.y;
+        int[] ni = codec.ni; // sample size per class.
+        int[] labels = codec.y;
 
         Classifier<T>[][] classifiers = new Classifier[k][];
-        PlattScaling[][] platts = null;
+        PlattScaling[][] platts = new PlattScaling[k][];
         for (int i = 1; i < k; i++) {
             classifiers[i] = new Classifier[i];
-            for (int j = 0; j < i; j++) {
-                int n = ni[i] + ni[j];
-
-                @SuppressWarnings("unchecked")
-                T[] xij = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
-                int[] yij = new int[n];
-
-                for (int l = 0, q = 0; l < y.length; l++) {
-                    if (y[l] == i) {
-                        xij[q] = x[l];
-                        yij[q] = pos;
-                        q++;
-                    } else if (y[l] == j) {
-                        xij[q] = x[l];
-                        yij[q] = neg;
-                        q++;
-                    }
-                }
-
-                classifiers[i][j] = trainer.apply(xij, yij);
-
-                if (j == 0 && i == 1) {
-                    try {
-                        classifiers[i][j].score(xij[0]);
-                        platts = new PlattScaling[k][];
-                    } catch (UnsupportedOperationException ex) {
-                        logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
-                    }
-                }
-
-                if (platts != null) {
-                    if (platts[i] == null) platts[i] = new PlattScaling[i];
-                    platts[i][j] = PlattScaling.fit(classifiers[i][j], xij, yij);
-                }
-            }
+            platts[i] = new PlattScaling[i];
         }
 
-        return new OneVersusOne<>(classifiers, platts);
+        IntStream.range(0, k * (k - 1) / 2).parallel().forEach(index -> {
+            int j = k - 2 - (int) Math.floor(Math.sqrt(-8*index + 4*k*(k-1)-7)/2.0 - 0.5);
+            int i = index + j + 1 - k*(k-1)/2 + (k-j)*((k-j)-1)/2;
+            int n = ni[i] + ni[j];
+
+            @SuppressWarnings("unchecked")
+            T[] xij = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
+            int[] yij = new int[n];
+
+            for (int l = 0, q = 0; l < labels.length; l++) {
+                if (labels[l] == i) {
+                    xij[q] = x[l];
+                    yij[q] = pos;
+                    q++;
+                } else if (labels[l] == j) {
+                    xij[q] = x[l];
+                    yij[q] = neg;
+                    q++;
+                }
+            }
+
+            classifiers[i][j] = trainer.apply(xij, yij);
+
+            try {
+                platts[i][j] = PlattScaling.fit(classifiers[i][j], xij, yij);
+            } catch (UnsupportedOperationException ex) {
+                logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
+            }
+        });
+
+        return new OneVersusOne<>(classifiers, platts[1][0] == null ? null : platts);
     }
 
     /**
@@ -171,17 +166,26 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param trainer the lambda to train binary classifiers.
      * @return the model.
      */
-    @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();
         OneVersusOne<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
             DataFrame df = DataFrame.of(Arrays.asList(rows));
-            return (Classifier<Tuple>) trainer.apply(formula, df);
+            return trainer.apply(formula, df);
         });
 
         StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
+            @Override
+            public int numClasses() {
+                return model.numClasses();
+            }
+
+            @Override
+            public int[] classes() {
+                return model.classes();
+            }
+
             @Override
             public int predict(Tuple x) {
                 return model.predict(x);
@@ -214,7 +218,12 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
             }
         }
 
-        return labels.valueOf(MathEx.whichMax(count));
+        return classes.valueOf(MathEx.whichMax(count));
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     /**
@@ -237,7 +246,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         }
 
         coupling(r, posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**

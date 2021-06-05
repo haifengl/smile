@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,9 +26,6 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-
-import java.util.Arrays;
-
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
@@ -50,7 +48,7 @@ public class FloatMatrixTest {
             {0.12f, 0.39f, 0.73f}
     };
 
-    FloatMatrix matrix = new FloatMatrix(A);
+    FloatMatrix matrix = FloatMatrix.of(A);
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -101,7 +99,7 @@ public class FloatMatrixTest {
         };
         float[] r = {-0.06067647f, -0.12325383f, 0.56076753f};
 
-        float[] result = new FloatMatrix(A).colMeans();
+        float[] result = FloatMatrix.of(A).colMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7f);
         }
@@ -117,7 +115,7 @@ public class FloatMatrixTest {
         };
         float[] r = {0.4938100f, -0.2617642f, 0.1447914f};
 
-        float[] result = new FloatMatrix(A).rowMeans();
+        float[] result = FloatMatrix.of(A).rowMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7f);
         }
@@ -128,7 +126,6 @@ public class FloatMatrixTest {
         FloatMatrix t = matrix.transpose();
         assertEquals(Layout.COL_MAJOR, matrix.layout());
         assertEquals(Layout.ROW_MAJOR, t.layout());
-        assertFalse(t.isSubmatrix());
         assertEquals(3, t.nrow());
         assertEquals(3, t.ncol());
 
@@ -143,15 +140,12 @@ public class FloatMatrixTest {
     @Test
     public void testSubmatrix() {
         FloatMatrix sub = matrix.submatrix(0, 1, 2, 2);
-        assertFalse(matrix.isSubmatrix());
-        assertTrue(sub.isSubmatrix());
         assertEquals(3, sub.nrow());
         assertEquals(2, sub.ncol());
         assertEquals(0.4f, sub.get(0,0), 1E-6f);
         assertEquals(0.8f, sub.get(2,1), 1E-6f);
 
         FloatMatrix sub2 = sub.submatrix(0, 0, 1, 1);
-        assertTrue(sub2.isSubmatrix());
         assertEquals(2, sub2.nrow());
         assertEquals(2, sub2.ncol());
         assertEquals(0.4f, sub.get(0,0), 1E-6f);
@@ -273,8 +267,8 @@ public class FloatMatrixTest {
                 { 0.1051570f, 0f,  0.1051570f},
                 {-0.0151015f, 0f, -0.0151015f}
         };
-        FloatMatrix a = new FloatMatrix(A);
-        FloatMatrix b = new FloatMatrix(B);
+        FloatMatrix a = FloatMatrix.of(A);
+        FloatMatrix b = FloatMatrix.of(B);
         a.add(1.0f, b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
     }
@@ -297,9 +291,9 @@ public class FloatMatrixTest {
                 {-0.6349342f, -1.7808990f,  0.6349342f},
                 {-1.2632161f,  0.8989516f,  1.2632161f}
         };
-        FloatMatrix a = new FloatMatrix(A);
-        FloatMatrix b = new FloatMatrix(B);
-        a.sub(1.0f, b);
+        FloatMatrix a = FloatMatrix.of(A);
+        FloatMatrix b = FloatMatrix.of(B);
+        a.sub(b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
     }
 
@@ -332,8 +326,8 @@ public class FloatMatrixTest {
                 {1.0000f,  0.0000f, 0.0000f}
         };
 
-        FloatMatrix a = new FloatMatrix(A);
-        FloatMatrix b = new FloatMatrix(B);
+        FloatMatrix a = FloatMatrix.of(A);
+        FloatMatrix b = FloatMatrix.of(B);
         float[][] F = b.mm(a).transpose().toArray();
 
         assertTrue(MathEx.equals(a.mm(b).toArray(),   C, 1E-6f));
@@ -354,7 +348,7 @@ public class FloatMatrixTest {
         float[] b = {0.5f, 0.5f, 0.5f};
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.LU lu = a.lu();
         float[] x2 = lu.solve(b);
         assertEquals(x.length, x2.length);
@@ -373,7 +367,7 @@ public class FloatMatrixTest {
                 { 0.4729730f,  0.6621622f}
         };
 
-        FloatMatrix X2 = new FloatMatrix(B);
+        FloatMatrix X2 = FloatMatrix.of(B);
         lu.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -396,7 +390,7 @@ public class FloatMatrixTest {
         float[] b = {0.5f, 0.5f, 0.5f};
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.QR qr = a.qr();
         float[] x2 = qr.solve(b);
         assertEquals(x.length, x2.length);
@@ -415,7 +409,7 @@ public class FloatMatrixTest {
                 { 0.4729730f,  0.6621622f}
         };
 
-        FloatMatrix X2 = new FloatMatrix(B);
+        FloatMatrix X2 = FloatMatrix.of(B);
         qr.solve(X2);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {
@@ -437,7 +431,7 @@ public class FloatMatrixTest {
                 {0.7378648f, -0.01957401f, 0.5051459f}
         };
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         a.uplo(UPLO.LOWER);
         FloatMatrix.Cholesky cholesky = a.cholesky();
         for (int i = 0; i < a.nrow(); i++) {
@@ -466,7 +460,7 @@ public class FloatMatrixTest {
                 { 0.4729730f,  0.6621622f}
         };
 
-        FloatMatrix X2 = new FloatMatrix(B);
+        FloatMatrix X2 = FloatMatrix.of(B);
         cholesky.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -492,10 +486,10 @@ public class FloatMatrixTest {
         };
         float[] eigenValues = {1.7498382f, 0.3165784f, 0.1335834f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         a.uplo(UPLO.LOWER);
         FloatMatrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-6f));
+        assertArrayEquals(eigenValues, eig.wr, 1E-6f);
 
         assertEquals(eigenVectors.length, eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -530,9 +524,9 @@ public class FloatMatrixTest {
         float[] eigenValues = {1.79171122f, 0.31908143f, 0.08920735f};
 
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-6f));
+        assertArrayEquals(eigenValues, eig.wr, 1E-6f);
 
         assertEquals(eigenVectors.length,    eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -553,7 +547,7 @@ public class FloatMatrixTest {
         assertNull(eig.Vl);
         assertNull(eig.Vr);
     }
-
+    
     @Test
     public void testSVD1() {
         System.out.println("SVD symm");
@@ -577,10 +571,10 @@ public class FloatMatrixTest {
                 {0.6240573f, -0.44947578f, -0.6391588f}
         };
 
-        FloatMatrix matrix = new FloatMatrix(A);
+        FloatMatrix matrix = FloatMatrix.of(A);
         matrix.uplo(UPLO.LOWER);
         FloatMatrix.SVD svd = matrix.svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -634,8 +628,8 @@ public class FloatMatrixTest {
                 {-0.5156083f, -0.36573746f, -0.47613340f,  0.41342817f, -0.2659765f,  0.1654796f, -0.32346758f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-4f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-4f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -688,8 +682,8 @@ public class FloatMatrixTest {
                 { 0.06127719f,  0.230326187f,  0.04693098f, -0.3300697f,  0.825499232f, -0.3880689f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -741,8 +735,8 @@ public class FloatMatrixTest {
                 { 0.82502638f, -0.400562630f,  0.30810911f, -0.1797507f,  0.1778750f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-4f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-4f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -793,8 +787,8 @@ public class FloatMatrixTest {
                 { 0.1873664f, -0.7026270f, -0.07117046f,  0.6827473f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-5f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-5f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -846,8 +840,8 @@ public class FloatMatrixTest {
                 {-0.5443460f,  0.37590198f,  0.55072289f, -0.2115256f, -0.2675392f, -0.003003781f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -895,8 +889,8 @@ public class FloatMatrixTest {
                 {-0.4720051f, -0.2247534f,  0.42477493f, -0.36219292f, -0.4534882f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -942,8 +936,8 @@ public class FloatMatrixTest {
                 { 0.32967585f,  0.18412070f, -0.02567023f,  0.2254902f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -1004,8 +998,8 @@ public class FloatMatrixTest {
                 {-0.406678f,  -0.10893f,    0.492444f,  0.0123293f,   0.270696f, -0.0538747f, -0.0538747f, -0.165339f, -0.579426f, -0.225424f,  0.231961f,     0.182535f}
         };
 
-        FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-5f));
+        FloatMatrix.SVD svd = FloatMatrix.of(A).svd();
+        assertArrayEquals(s, svd.s, 1E-5f);
 
         assertEquals(Ut[0].length, svd.U.nrow());
         assertEquals(Ut.length, svd.U.ncol());
@@ -1042,7 +1036,7 @@ public class FloatMatrixTest {
                 {0, 0, 0, 0, 0, 0, 0, 1, 1}
         };
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix pinv = a.svd().pinv();
 
         FloatMatrix x = pinv.mm(a).mm(pinv);
@@ -1056,14 +1050,14 @@ public class FloatMatrixTest {
     public void testSVDSolve() {
         System.out.println("SVD solve");
         float[][] A = {
-                {0.9000f, 0.4000f, 0.7000f},
-                {0.4000f, 0.5000f, 0.3000f},
-                {0.7000f, 0.3000f, 0.8000f}
+            {0.9000f, 0.4000f, 0.7000f},
+            {0.4000f, 0.5000f, 0.3000f},
+            {0.7000f, 0.3000f, 0.8000f}
         };
         float[] b = {0.5f, 0.5f, 0.5f};
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
 
-        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix a = FloatMatrix.of(A);
         FloatMatrix.SVD svd = a.svd();
         float[] x2 = svd.solve(b);
         assertEquals(x.length, x2.length);

@@ -38,11 +38,4 @@ package object shell {
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion} built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
-
-  /** Show demo window */
-  def demo(): Unit = {
-    javax.swing.SwingUtilities.invokeLater(() => {
-      smile.demo.SmileDemo.createAndShowGUI(false)
-    })
-  }
 }

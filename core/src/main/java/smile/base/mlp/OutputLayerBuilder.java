@@ -25,29 +25,29 @@ package smile.base.mlp;
 public class OutputLayerBuilder extends LayerBuilder {
 
     /** The output function. */
-    private final OutputFunction f;
+    private final OutputFunction output;
     /** The cost function. */
     private final Cost cost;
 
     /**
      * Constructor.
-     * @param n the number of neurons.
-     * @param f the activation function.
+     * @param neurons the number of neurons.
+     * @param output the output function.
      * @param cost the cost function.
      */
-    public OutputLayerBuilder(int n, OutputFunction f, Cost cost) {
-        super(n);
-        this.f = f;
+    public OutputLayerBuilder(int neurons, OutputFunction output, Cost cost) {
+        super(neurons, 0.0); // no dropout in output layer
+        this.output = output;
         this.cost = cost;
     }
 
     @Override
     public String toString() {
-        return String.format("%s(%d) | %s", f.name(), n, cost);
+        return String.format("%s(%d) | %s", output.name(), neurons, cost);
     }
 
     @Override
     public OutputLayer build(int p) {
-        return new OutputLayer(n, p, f, cost);
+        return new OutputLayer(neurons, p, output, cost);
     }
 }

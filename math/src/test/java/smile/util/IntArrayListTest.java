@@ -45,11 +45,8 @@ public class IntArrayListTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of all methods, of class IntArrayList.
-     */
     @Test
-    public void testAll() {
+    public void test() {
         System.out.println("IntArrayList");
         IntArrayList a = new IntArrayList();
         assertTrue(a.isEmpty());

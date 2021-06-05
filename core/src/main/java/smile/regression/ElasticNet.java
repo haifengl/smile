@@ -51,31 +51,31 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda1"));
-        double lambda2 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda2"));
-        double tol = Double.parseDouble(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda1 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda1"));
+        double lambda2 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda2"));
+        double tol = Double.parseDouble(params.getProperty("smile.elastic_net.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 
     /**
      * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda1</code> is the shrinkage/regularization parameter for L1
-     * <li><code>lambda2</code> is the shrinkage/regularization parameter for L2
+     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
+     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
      * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the shrinkage/regularization parameter for L1
-     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param lambda1 the L1 shrinkage/regularization parameter
+     * @param lambda2 the L2 shrinkage/regularization parameter
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
@@ -85,17 +85,17 @@ public class ElasticNet {
     /**
      * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda1</code> is the shrinkage/regularization parameter for L1
-     * <li><code>lambda2</code> is the shrinkage/regularization parameter for L2
+     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
+     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
      * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the shrinkage/regularization parameter for L1
-     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param lambda1 the L1 shrinkage/regularization parameter
+     * @param lambda2 the L2 shrinkage/regularization parameter
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
      * @return the model.

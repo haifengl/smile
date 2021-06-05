@@ -51,11 +51,8 @@ public class ComplexTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of all methods, of class Complex.
-     */
     @Test
-    public void testAll() {
+    public void test() {
         System.out.println("Complex");
         System.out.println("a = " + a);
         System.out.println("b = " + b);

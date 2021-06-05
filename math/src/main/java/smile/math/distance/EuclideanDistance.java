@@ -49,7 +49,7 @@ public class EuclideanDistance implements Metric<double[]> {
     public EuclideanDistance(double[] weight) {
         for (double w : weight) {
             if (w < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
+                throw new IllegalArgumentException(String.format("Weight has to be non-negative: %f", w));
             }
         }
 

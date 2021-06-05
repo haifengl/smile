@@ -17,7 +17,7 @@
 
 package smile.math;
 
-import smile.util.Strings;
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -92,7 +92,7 @@ public class BFGSTest {
         }
 
         double result = BFGS.minimize(func, x, 1E-5, 500);
-        System.out.println(Strings.toString(x));
+        System.out.println(Arrays.toString(x));
         assertEquals(3.448974035627997E-10, result, 1E-15);
     }
 
@@ -110,7 +110,7 @@ public class BFGSTest {
         }
 
         double result = BFGS.minimize(func, 5, x, 1E-5, 500);
-        System.out.println(Strings.toString(x));
+        System.out.println(Arrays.toString(x));
         assertEquals(2.2877072513327043E-15, result, 1E-15);
     }
 
@@ -135,7 +135,7 @@ public class BFGSTest {
         }
 
         double result = BFGS.minimize(func, 5, x, l, u, 1E-8, 500);
-        System.out.println(Strings.toString(x));
+        System.out.println(Arrays.toString(x));
         assertEquals(2050, result, 1E-7);
     }
 

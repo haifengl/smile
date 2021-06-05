@@ -19,6 +19,8 @@ package smile.classification;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
+
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -49,7 +51,7 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class OneVersusRest<T> implements SoftClassifier<T> {
+public class OneVersusRest<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusRest.class);
 
@@ -59,8 +61,6 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
     private final Classifier<T>[] classifiers;
     /** The probability estimation by Platt scaling. */
     private final PlattScaling[] platt;
-    /** The class label encoder. */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -78,10 +78,10 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param labels the class label encoder.
      */
     public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platt, IntSet labels) {
+        super(labels);
         this.classifiers = classifiers;
         this.platt = platt;
         this. k = classifiers.length;
-        this.labels = labels;
     }
 
     /**
@@ -120,33 +120,26 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         }
 
         int n = x.length;
-        y = codec.y;
+        int[] labels = codec.y;
 
         Classifier<T>[] classifiers = new Classifier[k];
-        PlattScaling[] platts = null;
-        for (int i = 0; i < k; i++) {
+        PlattScaling[] platts = new PlattScaling[k];
+        IntStream.range(0, k).parallel().forEach(i -> {
             int[] yi = new int[n];
             for (int j = 0; j < n; j++) {
-                yi[j] = y[j] == i ? pos : neg;
+                yi[j] = labels[j] == i ? pos : neg;
             }
 
             classifiers[i] = trainer.apply(x, yi);
 
-            if (i == 0) {
-                try {
-                    classifiers[0].score(x[0]);
-                    platts = new PlattScaling[k];
-                } catch (UnsupportedOperationException ex) {
-                    logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
-                }
-            }
-
-            if (platts != null) {
+            try {
                 platts[i] = PlattScaling.fit(classifiers[i], x, yi);
+            } catch (UnsupportedOperationException ex) {
+                logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
             }
-        }
+        });
 
-        return new OneVersusRest<>(classifiers, platts);
+        return new OneVersusRest<>(classifiers, platts[0] == null ? null : platts);
     }
 
     /**
@@ -156,17 +149,26 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param trainer the lambda to train binary classifiers.
      * @return the model.
      */
-    @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();
         OneVersusRest<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
             DataFrame df = DataFrame.of(Arrays.asList(rows));
-            return (Classifier<Tuple>) trainer.apply(formula, df);
+            return trainer.apply(formula, df);
         });
 
         StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
+            @Override
+            public int numClasses() {
+                return model.numClasses();
+            }
+
+            @Override
+            public int[] classes() {
+                return model.classes();
+            }
+
             @Override
             public int predict(Tuple x) {
                 return model.predict(x);
@@ -196,7 +198,12 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
@@ -210,6 +217,6 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         }
 
         MathEx.unitize1(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

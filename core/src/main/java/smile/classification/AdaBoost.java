@@ -62,7 +62,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, TreeSHAP {
+public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
 
@@ -95,10 +95,6 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * importance measure.
      */
     private final double[] importance;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -126,13 +122,13 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param labels the class label encoder.
      */
     public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = k;
         this.trees = trees;
         this.alpha = alpha;
         this.error = error;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**
@@ -151,14 +147,14 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.adaboost.trees", "500"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.adaboost.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.adaboost.max.nodes", "6"));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.adaboost.node.size", "1"));
+    public static AdaBoost fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.adaboost.trees", "500"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.adaboost.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.adaboost.max_nodes", "6"));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.adaboost.node_size", "1"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
     }
 
@@ -181,7 +177,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         ClassLabels codec = ClassLabels.fit(y);
         int[][] order = CART.order(x);
@@ -260,7 +256,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             }
         }
 
-        return new AdaBoost(formula, k, trees, alpha, error, importance, codec.labels);
+        return new AdaBoost(formula, k, trees, alpha, error, importance, codec.classes);
     }
 
     @Override
@@ -326,7 +322,12 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             error = Arrays.copyOf(error, ntrees);
         }
     }
-    
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     @Override
     public int predict(Tuple x) {
         Tuple xt = formula.x(x);
@@ -336,9 +337,9 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             y[trees[i].predict(xt)] += alpha[i];
         }
             
-        return labels.valueOf(MathEx.whichMax(y));
+        return classes.valueOf(MathEx.whichMax(y));
     }
-    
+
     /**
      * Predicts the class label of an instance and also calculate a posteriori
      * probabilities. Not supported.
@@ -357,7 +358,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             posteriori[i] /= sum;
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
     
     /**

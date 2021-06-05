@@ -75,7 +75,7 @@ import smile.validation.metric.Error;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier, TreeSHAP {
+public class RandomForest extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
@@ -133,11 +133,6 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     private final double[] importance;
 
     /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
-
-    /**
      * Constructor.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -161,12 +156,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @param labels the class label encoder.
      */
     public RandomForest(Formula formula, int k, Model[] models, ClassificationMetrics metrics, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = k;
         this.models = models;
         this.metrics = metrics;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**
@@ -185,18 +180,18 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.parseInt(prop.getProperty("smile.random.forest.mtry", "0"));
-        SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.random.forest.split.rule", "GINI"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.random.forest.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.random.forest.node.size", "5"));
-        double subsample = Double.parseDouble(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
-        int[] classWeight = Strings.parseIntArray(prop.getProperty("smile.random.forest.class.weight"));
+    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
+        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
+        SplitRule rule = SplitRule.valueOf(params.getProperty("smile.random_forest.split_rule", "GINI"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
+        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
+        int[] classWeight = Strings.parseIntArray(params.getProperty("smile.random_forest.class_weight"));
         return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, null);
     }
 
@@ -208,7 +203,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the
      *             decision at a node of the tree. floor(sqrt(p)) generally
-     *             gives good performance, where p is the number of variables
+     *             gives good performance, where p is the number of variables.
      * @param rule Decision tree split rule.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -297,7 +292,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
@@ -423,9 +418,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             }
 
             if (noob != 0) {
-                logger.info("Random forest tree OOB metrics: {}", metrics);
+                logger.info("Decision tree OOB accuracy: {}", String.format("%.2f%%", 100*metrics.accuracy));
             } else {
-                logger.error("Random forest has a tree trained without OOB samples.");
+                logger.error("Decision tree trained without OOB samples.");
             }
 
             return new Model(tree, metrics);
@@ -447,7 +442,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
                 Accuracy.of(codec.y, vote)
         );
 
-        return new RandomForest(formula, k, models, metrics, importance(models), codec.labels);
+        return new RandomForest(formula, k, models, metrics, importance(models), codec.classes);
     }
 
     /** Calculate the importance of the whole forest. */
@@ -497,11 +492,11 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     public double[] importance() {
         return importance;
     }
-    
+
     /**
      * Returns the number of trees in the model.
      * 
-     * @return the number of trees in the model 
+     * @return the number of trees in the model.
      */
     public int size() {
         return models.length;
@@ -542,7 +537,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
         // The OOB metrics are still the old one
         // as we don't access to the training data here.
-        return new RandomForest(formula, k, Arrays.copyOf(models, ntrees), metrics, importance(models), labels);
+        return new RandomForest(formula, k, Arrays.copyOf(models, ntrees), metrics, importance(models), classes);
     }
 
     /**
@@ -581,7 +576,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             mergedImportance[i] += other.importance[i];
         }
 
-        return new RandomForest(formula, k, forest, mergedMetrics, mergedImportance, labels);
+        return new RandomForest(formula, k, forest, mergedMetrics, mergedImportance, classes);
     }
 
     @Override
@@ -593,9 +588,14 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             y[model.tree.predict(xt)]++;
         }
         
-        return labels.valueOf(MathEx.whichMax(y));
+        return classes.valueOf(MathEx.whichMax(y));
     }
-    
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     @Override
     public int predict(Tuple x, double[] posteriori) {
         if (posteriori.length != k) {
@@ -614,7 +614,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         }
 
         MathEx.unitize1(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**
@@ -636,7 +636,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         }
 
         MathEx.unitize1(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**
@@ -672,11 +672,11 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      */
     public RandomForest prune(DataFrame test) {
         Model[] forest = Arrays.stream(models).parallel()
-                .map(model -> new Model(model.tree.prune(test, formula, labels), model.metrics))
+                .map(model -> new Model(model.tree.prune(test, formula, classes), model.metrics))
                 .toArray(Model[]::new);
 
         // The tree weight and OOB metrics are still the old one
         // as we don't access to the training data here.
-        return new RandomForest(formula, k, forest, metrics, importance(forest), labels);
+        return new RandomForest(formula, k, forest, metrics, importance(forest), classes);
     }
 }

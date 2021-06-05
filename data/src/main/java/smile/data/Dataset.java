@@ -155,7 +155,7 @@ public interface Dataset<T> {
                         return c1;
                     },
                     // finisher
-                    (container) -> new Matrix(container.toArray(new double[container.size()][]))
+                    (container) -> Matrix.of(container.toArray(new double[container.size()][]))
             );
         }
     }

@@ -138,7 +138,7 @@ public class PCA implements LinearProjection, Serializable {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix X = new Matrix(data);
+        Matrix X = Matrix.of(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 X.sub(i, j, mu[j]);
@@ -197,7 +197,7 @@ public class PCA implements LinearProjection, Serializable {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix x = new Matrix(data);
+        Matrix x = Matrix.of(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 x.sub(i, j, mu[j]);

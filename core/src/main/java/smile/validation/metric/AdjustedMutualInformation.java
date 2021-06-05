@@ -161,19 +161,15 @@ public class AdjustedMutualInformation implements ClusteringMetric {
 
     /** Calculates the expected value of mutual information. */
     private static double E(int n, int[] a, int[] b) {
-        int n1 = a.length;
-        int n2 = b.length;
         double N = n;
         double E = 0.0;
-        for (int i = 0; i < n1; i++) {
-            int ai = a[i];
-            for (int j = 0; j < n2; j++) {
-                int bj = b[j];
+        for (int ai : a) {
+            for (int bj : b) {
                 int begin = Math.max(1, ai + bj - n);
                 int end = Math.min(ai, bj);
                 for (int nij = begin; nij <= end; nij++) {
-                    E += ((double) nij / N) * log(((double) nij * N) / (ai * bj))
-                        * exp((lfactorial(ai) + lfactorial(bj) + lfactorial(n - ai) + lfactorial(n - bj))
+                    E += (nij / N) * log((nij * N) / (ai * bj))
+                            * exp((lfactorial(ai) + lfactorial(bj) + lfactorial(n - ai) + lfactorial(n - bj))
                             - (lfactorial(n) + lfactorial(nij) + lfactorial(ai - nij) + lfactorial(bj - nij) + lfactorial(n - ai - bj + nij)));
                 }
             }

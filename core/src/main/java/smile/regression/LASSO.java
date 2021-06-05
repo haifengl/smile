@@ -88,18 +88,18 @@ public class LASSO {
      * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
      * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>smile.lasso.max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.lasso.lambda", "1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.lasso.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.iterations", "1000"));
         return fit(formula, data, lambda, tol, maxIter);
     }
 
@@ -121,7 +121,7 @@ public class LASSO {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param tol the tolerance to stop iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
      * @return the model.
      */
@@ -410,11 +410,6 @@ public class LASSO {
 
         /**
          * Constructor.
-         * @param A
-         * @param d1
-         * @param d2
-         * @param prb
-         * @param prs
          */
         PCG(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;
@@ -497,16 +492,6 @@ public class LASSO {
 
         @Override
         public void tv(double[] work, int inputOffset, int outputOffset) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
             throw new UnsupportedOperationException();
         }
     }

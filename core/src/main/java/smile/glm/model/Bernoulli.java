@@ -81,7 +81,7 @@ public interface Bernoulli {
             }
 
             @Override
-            public double loglikelihood(double[] y, double[] mu) {
+            public double logLikelihood(double[] y, double[] mu) {
                 return IntStream.range(0, y.length).mapToDouble(i -> y[i] == 0.0 ? Math.log(1 - mu[i]) : Math.log(mu[i])).sum();
             }
         };

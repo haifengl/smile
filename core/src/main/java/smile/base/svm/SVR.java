@@ -24,10 +24,10 @@ import smile.math.kernel.MercerKernel;
 import smile.regression.KernelMachine;
 
 /**
- * Epsilon support vector regression. Like SVMs for classification, the model produced
- * by SVR depends only on a subset of the training data, because the cost
- * function ignores any training data close to the model prediction (within
- * a threshold &epsilon;).
+ * Epsilon support vector regression. Like SVMs for classification, the model
+ * produced by SVR depends only on a subset of the training data, because
+ * the cost function ignores any training data close to the model prediction
+ * (within a threshold &epsilon;).
  *
  * <h2>References</h2>
  * <ol>
@@ -70,7 +70,7 @@ public class SVR<T> {
     /**
      * Support vectors.
      */
-    private List<SupportVector> sv;
+    private List<SupportVector> vectors;
     /**
      * Threshold of decision function.
      */
@@ -111,7 +111,7 @@ public class SVR<T> {
          */
         double[] alpha = new double[2];
         /**
-         * Gradient y - K&alpha;.
+         * Gradient y - Ki * alpha.
          */
         double[] g = new double[2];
         /**
@@ -161,7 +161,7 @@ public class SVR<T> {
     }
 
     /**
-     * Fits a epsilon support vector regression model.
+     * Fits an epsilon support vector regression model.
      * @param x training instances.
      * @param y response variable.
      * @return the model.
@@ -175,9 +175,9 @@ public class SVR<T> {
         K = new double[n][];
 
         // Initialize support vectors.
-        sv = new ArrayList<>(n);
+        vectors = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            sv.add(new SupportVector(i, x[i], y[i]));
+            vectors.add(new SupportVector(i, x[i], y[i]));
         }
 
         minmax();
@@ -192,9 +192,9 @@ public class SVR<T> {
         int bsv = 0;
 
         for (int i = 0; i < n; i++) {
-            SupportVector v = sv.get(i);
+            SupportVector v = vectors.get(i);
             if (v.alpha[0] == v.alpha[1]) {
-                sv.set(i, null);
+                vectors.set(i, null);
             } else {
                 nsv++;
                 if (v.alpha[0] == C || v.alpha[1] == C) {
@@ -205,19 +205,19 @@ public class SVR<T> {
 
         double[] alpha = new double[nsv];
         @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
+        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
 
         int i = 0;
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             if (v != null) {
-                vectors[i] = v.x;
+                sv[i] = v.x;
                 alpha[i++] = v.alpha[1] - v.alpha[0];
             }
         }
 
         logger.info("{} samples, {} support vectors, {} bounded", n, nsv, bsv);
 
-        return new KernelMachine<>(kernel, vectors, alpha, b);
+        return new KernelMachine<>(kernel, sv, alpha, b);
     }
 
     /**
@@ -227,7 +227,7 @@ public class SVR<T> {
         gmin = Double.MAX_VALUE;
         gmax = -Double.MAX_VALUE;
 
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             double g = -v.g[0];
             double a = v.alpha[0];
             if (g < gmin && a > 0.0) {
@@ -257,13 +257,13 @@ public class SVR<T> {
     }
 
     /**
-     * Calculate the row of kernel matrix for a vector i.
+     * Computes the row of kernel matrix for a vector i.
      * @param v data vector to evaluate kernel matrix.
      */
     private double[] gram(SupportVector v) {
         if (K[v.i] == null) {
-            double[] ki = new double[sv.size()];
-            sv.stream().parallel().forEach(vi -> ki[vi.i] = kernel.k(v.x, vi.x));
+            double[] ki = new double[vectors.size()];
+            vectors.stream().parallel().forEach(vi -> ki[vi.i] = kernel.k(v.x, vi.x));
             K[v.i] = ki;
         }
         return K[v.i];
@@ -286,7 +286,7 @@ public class SVR<T> {
         // Second order working set selection.
         double best = 0.0;
         double gi = i == 0 ? -v1.g[0] : v1.g[1];
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             double curv = v1.k + v.k - 2 * k1[v.i];
             if (curv <= 0.0) curv = TAU;
 
@@ -389,7 +389,7 @@ public class SVR<T> {
 
         int si = 2 * i - 1;
         int sj = 2 * j - 1;
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             v.g[0] -= si * k1[v.i] * delta_alpha_i + sj * k2[v.i] * delta_alpha_j;
             v.g[1] += si * k1[v.i] * delta_alpha_i + sj * k2[v.i] * delta_alpha_j;
         }

@@ -84,7 +84,7 @@ public interface Loss {
         /**
          * Huber loss function for M-regression, which attempts resistance to
          * long-tailed error distributions and outliers while maintaining high
-         * efficency for normally distributed errors.
+         * efficiency for normally distributed errors.
          */
         Huber
     }

@@ -19,8 +19,6 @@ package smile.util;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import smile.math.MathEx;
 
 /**
@@ -30,7 +28,7 @@ import smile.math.MathEx;
  */
 public interface Strings {
     /** Decimal format for floating numbers. */
-    DecimalFormat decimal = new DecimalFormat("#.####");
+    DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.####");
 
     /**
      * Returns true if the string is null or empty.
@@ -39,6 +37,77 @@ public interface Strings {
      */
     static boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    /**
+     * Unescapes a string that contains standard Java escape sequences.
+     * @param s the string.
+     * @return the translated string.
+     */
+    static String unescape(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch == '\\') {
+                char nextChar = (i == s.length() - 1) ? '\\' : s.charAt(i + 1);
+                // Octal escape?
+                if (nextChar >= '0' && nextChar <= '7') {
+                    String code = String.valueOf(nextChar);
+                    i++;
+                    if ((i < s.length() - 1) && s.charAt(i + 1) >= '0' && s.charAt(i + 1) <= '7') {
+                        code += s.charAt(i + 1);
+                        i++;
+                        if ((i < s.length() - 1) && s.charAt(i + 1) >= '0' && s.charAt(i + 1) <= '7') {
+                            code += s.charAt(i + 1);
+                            i++;
+                        }
+                    }
+                    sb.append((char) Integer.parseInt(code, 8));
+                    continue;
+                }
+
+                switch (nextChar) {
+                    case '\\':
+                        ch = '\\';
+                        break;
+                    case 'b':
+                        ch = '\b';
+                        break;
+                    case 'f':
+                        ch = '\f';
+                        break;
+                    case 'n':
+                        ch = '\n';
+                        break;
+                    case 'r':
+                        ch = '\r';
+                        break;
+                    case 't':
+                        ch = '\t';
+                        break;
+                    case '\"':
+                        ch = '\"';
+                        break;
+                    case '\'':
+                        ch = '\'';
+                        break;
+                    // Hex Unicode: u????
+                    case 'u':
+                        if (i >= s.length() - 5) {
+                            ch = 'u';
+                            break;
+                        }
+                        int code = Integer.parseInt(s.substring(i+2, i+6), 16);
+                        sb.append(Character.toChars(code));
+                        i += 5;
+                        continue;
+                }
+                i++;
+            }
+            sb.append(ch);
+        }
+        return sb.toString();
     }
 
     /**
@@ -132,7 +201,7 @@ public interface Strings {
 
         float ax = Math.abs(x);
         if (ax >= 1E-3f && ax < 1E7f) {
-            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
         }
 
         return String.format("%.4e", x);
@@ -160,41 +229,14 @@ public interface Strings {
 
         double ax = Math.abs(x);
         if (ax >= 1E-3 && ax < 1E7) {
-            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
         }
 
         return String.format("%.4e", x);
     }
 
     /**
-     * Returns the string representation of array in format '[1, 2, 3]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(int[] a) {
-        return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(float[] a) {
-        return IntStream.range(0, a.length).mapToObj(i -> format(a[i])).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(double[] a) {
-        return Arrays.stream(a).mapToObj(Strings::format).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Parses a double array in format '[1.0, 2.0, 3.0]'.
+     * Parses an integer array in format '[1, 2, 3]'.
      * Returns null if s is null or empty.
      * @param s the string.
      * @return the array.
@@ -202,7 +244,12 @@ public interface Strings {
     static int[] parseIntArray(String s) {
         if (isNullOrEmpty(s)) return null;
 
-        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        s = s.trim();
+        if (!s.startsWith("[") || !s.endsWith("]")) {
+            throw new IllegalArgumentException("Invalid string: " + s);
+        }
+
+        String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToInt(Integer::parseInt).toArray();
     }
 
@@ -215,7 +262,12 @@ public interface Strings {
     static double[] parseDoubleArray(String s) {
         if (isNullOrEmpty(s)) return null;
 
-        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        s = s.trim();
+        if (!s.startsWith("[") || !s.endsWith("]")) {
+            throw new IllegalArgumentException("Invalid string: " + s);
+        }
+
+        String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToDouble(Double::parseDouble).toArray();
     }
 }

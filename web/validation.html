@@ -124,8 +124,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toyTrain = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
-    val toyTest = read.csv("data/classification/toy/toy-test.txt", delimiter='\t', header=false)
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
 
     val x = toyTrain.select(1, 2).toArray
     val y = toyTrain.column(0).toIntArray
@@ -171,8 +171,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var toyTrain = Read.csv("data/classification/toy/toy-train.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
-    var toyTest = Read.csv("data/classification/toy/toy-test.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var toyTrain = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var toyTest = Read.csv("data/classification/toy20000.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
 
     var x = toyTrain.select(1, 2).toArray();
     var y = toyTrain.column(0).toIntArray();
@@ -362,8 +362,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toyTrain = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
-    val toyTest = read.csv("data/classification/toy/toy-test.txt", delimiter='\t', header=false)
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
 
     val x = toyTrain.select(1, 2).toArray
     val y = toyTrain.column(0).toIntArray

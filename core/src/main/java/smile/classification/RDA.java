@@ -18,9 +18,6 @@
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
 import smile.util.Strings;
@@ -69,46 +66,21 @@ public class RDA extends QDA {
     }
 
     /**
-     * Learns regularized discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static RDA fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learns regularized discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static RDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
-    }
-
-    /**
-     * Learns regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RDA fit(double[][] x, int[] y, Properties prop) {
-        double alpha = Double.parseDouble(prop.getProperty("smile.rda.alpha", "0.9"));
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.rda.priori"));
-        double tol = Double.parseDouble(prop.getProperty("smile.rda.tolerance", "1E-4"));
+    public static RDA fit(double[][] x, int[] y, Properties params) {
+        double alpha = Double.parseDouble(params.getProperty("smile.rda.alpha", "0.9"));
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.rda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.rda.tolerance", "1E-4"));
         return fit(x, y, alpha, priori, tol);
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models
@@ -120,7 +92,7 @@ public class RDA extends QDA {
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models

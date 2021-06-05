@@ -19,6 +19,11 @@ package smile.math;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import static smile.util.Regex.BOOLEAN_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * A time-dependent function. When training a neural network model,
@@ -51,7 +56,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("Constant(%f)", alpha);
+                return String.format("%f", alpha);
             }
         };
     }
@@ -81,7 +86,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("PiecewiseConstant(%s, %s)", Arrays.toString(boundaries), Arrays.toString(values));
+                return String.format("Piecewise(%s, %s)", Arrays.toString(boundaries), Arrays.toString(values));
             }
         };
     }
@@ -108,7 +113,26 @@ public interface TimeFunction extends Serializable {
      * @return the linear learning rate function.
      */
     static TimeFunction linear(double initLearningRate, double decaySteps, double endLearningRate) {
-        return polynomial(initLearningRate, decaySteps, endLearningRate, false, 1.0);
+        return polynomial(1.0, initLearningRate, decaySteps, endLearningRate, false);
+    }
+
+    /**
+     * Returns the polynomial learning rate decay function that starts with
+     * an initial learning rate and reach an end learning rate in the given
+     * decay steps, without cycling.
+     *
+     * It is commonly observed that a monotonically decreasing learning rate,
+     * whose degree of change is carefully chosen, results in a better performing
+     * model.
+     *
+     * @param degree the degree of the polynomial.
+     * @param initLearningRate the initial learning rate.
+     * @param decaySteps the decay steps.
+     * @param endLearningRate the end learning rate.
+     * @return the polynomial learning rate function.
+     */
+    static TimeFunction polynomial(double degree, double initLearningRate, double decaySteps, double endLearningRate) {
+        return polynomial(degree, initLearningRate, decaySteps, endLearningRate, false);
     }
 
     /**
@@ -120,29 +144,33 @@ public interface TimeFunction extends Serializable {
      * whose degree of change is carefully chosen, results in a better performing
      * model.
      *
+     * @param degree the degree of the polynomial.
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.
      * @param endLearningRate the end learning rate.
      * @param cycle the flag whether or not it should cycle beyond decaySteps.
-     * @param power the power of the polynomial.
      * @return the polynomial learning rate function.
      */
-    static TimeFunction polynomial(double initLearningRate, double decaySteps, double endLearningRate, boolean cycle, double power) {
+    static TimeFunction polynomial(double degree, double initLearningRate, double decaySteps, double endLearningRate, boolean cycle) {
         return new TimeFunction() {
             @Override
             public double apply(int t) {
                 if (cycle) {
                     double T = decaySteps * Math.max(1, Math.ceil(t / decaySteps));
-                    return ((initLearningRate - endLearningRate) * Math.pow(1 - t / T, power)) + endLearningRate;
+                    return ((initLearningRate - endLearningRate) * Math.pow(1 - t / T, degree)) + endLearningRate;
                 } else {
                     double steps = Math.min(t, decaySteps);
-                    return ((initLearningRate - endLearningRate) * Math.pow(1 - steps / decaySteps, power)) + endLearningRate;
+                    return ((initLearningRate - endLearningRate) * Math.pow(1 - steps / decaySteps, degree)) + endLearningRate;
                 }
             }
 
             @Override
             public String toString() {
-                return String.format("PolynomialDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f, cycle = %s, power = %f)", initLearningRate, decaySteps, endLearningRate, cycle, power);
+                if (degree == 1.0) {
+                    return String.format("LinearDecay(%f, %.0f, %f)", initLearningRate, decaySteps, endLearningRate);
+                } else {
+                    return String.format("PolynomialDecay(%f, %f, %.0f, %f, %s)", degree, initLearningRate, decaySteps, endLearningRate, cycle);
+                }
             }
         };
     }
@@ -165,7 +193,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decaySteps = %.0f)", initLearningRate, decaySteps);
+                return String.format("InverseTimeDecay(%f, %.0f)", initLearningRate, decaySteps);
             }
         };
     }
@@ -207,7 +235,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("InverseTimeDecay(%f, %.0f, %f, %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
     }
@@ -230,7 +258,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f)", initLearningRate, decaySteps);
+                return String.format("ExponentialDecay(%f, %.0f)", initLearningRate, decaySteps);
             }
         };
     }
@@ -254,7 +282,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f)", initLearningRate, decaySteps, endLearningRate);
+                return String.format("ExponentialDecay(%f, %.0f, %f)", initLearningRate, decaySteps, endLearningRate);
             }
         };
     }
@@ -283,8 +311,82 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("ExponentialDecay(%f, %.0f, %f, %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
+    }
+
+    /**
+     * Parses a time function.
+     *
+     * @param time the time function representation.
+     * @return the time function.
+     */
+    static TimeFunction of(String time) {
+        time = time.trim().toLowerCase(Locale.ROOT);
+
+        Pattern linear = Pattern.compile(String.format("linear(?:decay)?\\((%s),\\s*(%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        Matcher m = linear.matcher(time);
+        if (m.matches()) {
+            double initLearningRate = Double.parseDouble(m.group(1));
+            double decaySteps = Double.parseDouble(m.group(2));
+            double endLearningRate = Double.parseDouble(m.group(3));
+            return linear(initLearningRate, decaySteps, endLearningRate);
+        }
+
+        Pattern polynomial = Pattern.compile(String.format("polynomial(?:decay)?\\((%s),\\s*(%s),\\s*(%s),\\s*(%s)(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        m = polynomial.matcher(time);
+        if (m.matches()) {
+            double degree = Double.parseDouble(m.group(1));
+            double initLearningRate = Double.parseDouble(m.group(2));
+            double decaySteps = Double.parseDouble(m.group(3));
+            double endLearningRate = Double.parseDouble(m.group(4));
+            boolean cycle = m.group(5) == null ? false : m.group(6).equals("true");
+            return polynomial(degree, initLearningRate, decaySteps, endLearningRate, cycle);
+        }
+
+        if (time.startsWith("piecewise([") && time.endsWith("])")) {
+            String[] tokens = time.substring(11, time.length()-2).split("\\],\\s*\\[");
+            if (tokens.length == 2) {
+                int[] boundaries = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
+                double[] values = Arrays.stream(tokens[1].split(",\\s*")).mapToDouble(Double::parseDouble).toArray();
+                return piecewise(boundaries, values);
+            }
+        }
+
+        Pattern inverse = Pattern.compile(String.format("inverse(?:timedecay)?\\((%s),\\s*(%s)(,\\s*(%s))?(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        m = inverse.matcher(time);
+        if (m.matches()) {
+            double initLearningRate = Double.parseDouble(m.group(1));
+            double decaySteps = Double.parseDouble(m.group(2));
+            if (m.group(3) == null) {
+                return inverse(initLearningRate, decaySteps);
+            } else {
+                double endLearningRate = Double.parseDouble(m.group(4));
+                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
+            }
+        }
+
+        Pattern exp = Pattern.compile(String.format("exp(?:onentialdecay)?\\((%s),\\s*(%s)(,\\s*(%s))?(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        m = exp.matcher(time);
+        if (m.matches()) {
+            double initLearningRate = Double.parseDouble(m.group(1));
+            double decaySteps = Double.parseDouble(m.group(2));
+            if (m.group(3) == null) {
+                return exp(initLearningRate, decaySteps);
+            } else {
+                double endLearningRate = Double.parseDouble(m.group(4));
+                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                return exp(initLearningRate, decaySteps, endLearningRate, staircase);
+            }
+        }
+
+        try {
+            double alpha = Double.parseDouble(time);
+            return constant(alpha);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Unknown time function: " + time);
+        }
     }
 }

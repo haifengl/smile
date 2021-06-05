@@ -74,8 +74,9 @@ import smile.validation.metric.*;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
+public class RandomForest implements DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
     /**
      * The base model.
@@ -134,7 +135,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -145,25 +146,25 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.parseInt(prop.getProperty("smile.random.forest.mtry", "0"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.random.forest.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.random.forest.node.size", "5"));
-        double subsample = Double.parseDouble(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
+        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
+        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -184,7 +185,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -212,7 +213,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector response = formula.y(data);
+        BaseVector<?, ?, ?> response = formula.y(data);
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
@@ -288,6 +289,12 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
                     MAD.of(truth, predict),
                     R2.of(truth, predict)
             );
+
+            if (noob != 0) {
+                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2));
+            } else {
+                logger.error("Regression tree trained without OOB samples.");
+            }
 
             return new Model(tree, metrics);
         }).toArray(Model[]::new);

@@ -94,8 +94,7 @@ public class AdjustedRandIndex implements ClusteringMetric {
         double rand4 = (rand2a + rand2b) / 2;
         double randD = rand4 - rand3;
 
-        double rand = rand_N / randD;
-        return rand;
+        return rand_N / randD;
     }
 
     @Override

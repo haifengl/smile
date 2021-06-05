@@ -130,7 +130,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
 
     /**
      * Returns the logarithm probability of an observation sequence.
-     * A scaling procedure is used in order to avoid underflows when
+     * A scaling procedure is used in order to avoid underflow when
      * computing the probability of long sequences.
      *
      * @param o an observation sequence.

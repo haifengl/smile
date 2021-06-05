@@ -101,7 +101,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFrameClassifier {
+public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -113,9 +113,9 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      */
     private final int k;
     /**
-     * The class label encoder.
+     * The class labels.
      */
-    private IntSet labels;
+    private IntSet classes;
 
     /** The dependent variable. */
     private transient int[] y;
@@ -137,7 +137,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         DecisionNode node = (DecisionNode) leaf;
-        BaseVector xj = x.column(j);
+        BaseVector<?, ?, ?> xj = x.column(j);
         int[] falseCount = new int[k];
 
         Split split = null;
@@ -240,7 +240,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /**
-     * Constructor. Learns a classification tree for AdaBoost and Random Forest.
+     * Constructor. Fits a classification tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
      * @param response the metadata of response variable.
@@ -294,7 +294,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @return the model.
@@ -304,7 +304,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.split.rule</code>
@@ -313,19 +313,19 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static DecisionTree fit(Formula formula, DataFrame data, Properties prop) {
-        SplitRule rule = SplitRule.valueOf(prop.getProperty("smile.cart.split.rule", "GINI"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.cart.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
+    public static DecisionTree fit(Formula formula, DataFrame data, Properties params) {
+        SplitRule rule = SplitRule.valueOf(params.getProperty("smile.cart.split_rule", "GINI"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.cart.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.cart.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.cart.node_size", "5"));
         return fit(formula, data, rule, maxDepth, maxNodes, nodeSize);
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param rule the splitting rule.
@@ -337,20 +337,35 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
         DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
-        tree.labels = codec.labels;
+        tree.classes = codec.classes;
         return tree;
+    }
+
+    @Override
+    public int numClasses() {
+        return classes.size();
+    }
+
+    @Override
+    public int[] classes() {
+        return classes.values;
     }
 
     @Override
     public int predict(Tuple x) {
         DecisionNode leaf = (DecisionNode) root.predict(predictors(x));
         int y = leaf.output();
-        return labels == null ? y : labels.valueOf(y);
+        return classes == null ? y : classes.valueOf(y);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     /**
@@ -364,7 +379,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         DecisionNode leaf = (DecisionNode) root.predict(predictors(x));
         leaf.posteriori(posteriori);
         int y = leaf.output();
-        return labels == null ? y : labels.valueOf(y);
+        return classes == null ? y : classes.valueOf(y);
     }
 
     /** Returns null if the tree is part of ensemble algorithm. */
@@ -379,11 +394,11 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /** Private constructor for prune(). */
-    private DecisionTree(Formula formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, IntSet labels) {
+    private DecisionTree(Formula formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, IntSet classes) {
         super(formula, schema, response, root, importance);
         this.k = k;
         this.rule = rule;
-        this.labels = labels;
+        this.classes = classes;
     }
 
     /**
@@ -392,7 +407,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @return a new pruned tree.
      */
     public DecisionTree prune(DataFrame test) {
-        return prune(test, formula, labels);
+        return prune(test, formula, classes);
     }
 
     /**
@@ -400,10 +415,10 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param test the test data set to evaluate the errors of nodes.
      * @return a new pruned tree.
      */
-    DecisionTree prune(DataFrame test, Formula formula, IntSet labels) {
+    DecisionTree prune(DataFrame test, Formula formula, IntSet classes) {
         double[] imp = importance.clone();
-        Prune prune = prune(root, test.stream().collect(Collectors.toList()), imp, formula, labels);
-        return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.labels);
+        Prune prune = prune(root, test.stream().collect(Collectors.toList()), imp, formula, classes);
+        return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.classes);
     }
 
     /** The result of pruning a subtree. */

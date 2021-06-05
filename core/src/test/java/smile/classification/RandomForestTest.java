@@ -129,7 +129,7 @@ public class RandomForestTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(0.9533, metrics.accuracy, 1E-4);
+        assertEquals(0.9467, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(0.9709, result.avg.accuracy, 1E-4);
+        assertEquals(0.9706, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class RandomForestTest {
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(152, error);
+        assertEquals(150, error);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
@@ -247,9 +247,9 @@ public class RandomForestTest {
         System.out.format("Forest 1 Error = %d%n", error1);
         System.out.format("Forest 2 Error = %d%n", error2);
         System.out.format("Merged   Error = %d%n", error);
-        assertEquals(34, error1);
-        assertEquals(34, error2);
-        assertEquals(34, error);
+        assertEquals(33, error1);
+        assertEquals(33, error2);
+        assertEquals(33, error);
     }
 
     @Test
@@ -268,7 +268,7 @@ public class RandomForestTest {
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(118, error);
+        assertEquals(115, error);
 
         RandomForest lean = model.prune(USPS.test);
 
@@ -282,13 +282,13 @@ public class RandomForestTest {
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
-        assertEquals(118, error);
+        assertEquals(115, error);
 
         prediction = lean.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
-        assertEquals(86, error);
+        assertEquals(87, error);
     }
 
     @Test

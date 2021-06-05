@@ -25,25 +25,26 @@ package smile.base.mlp;
 public class HiddenLayerBuilder extends LayerBuilder {
 
     /** The activation function. */
-    private final ActivationFunction f;
+    private final ActivationFunction activation;
 
     /**
      * Constructor.
-     * @param n the number of neurons.
-     * @param f the activation function.
+     * @param neurons the number of neurons.
+     * @param dropout the dropout rate.
+     * @param activation the activation function.
      */
-    public HiddenLayerBuilder(int n, ActivationFunction f) {
-        super(n);
-        this.f = f;
+    public HiddenLayerBuilder(int neurons, double dropout, ActivationFunction activation) {
+        super(neurons, dropout);
+        this.activation = activation;
     }
 
     @Override
     public String toString() {
-        return String.format("%s(%d)", f.name(), n);
+        return String.format("%s(%d)", activation.name(), neurons);
     }
 
     @Override
     public HiddenLayer build(int p) {
-        return new HiddenLayer(n, p, f);
+        return new HiddenLayer(neurons, p, activation);
     }
 }

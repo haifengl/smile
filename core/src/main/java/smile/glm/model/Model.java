@@ -107,7 +107,7 @@ public interface Model extends Serializable {
      * @param mu the mean of the distribution function.
      * @return the log-likelihood.
      */
-    double loglikelihood(double[] y, double[] mu);
+    double logLikelihood(double[] y, double[] mu);
 
     /**
      * The function to estimates the starting value of mean given y.

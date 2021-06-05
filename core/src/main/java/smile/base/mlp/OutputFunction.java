@@ -58,7 +58,7 @@ public enum OutputFunction {
         @Override
         public void f(double[] x) {
             for (int i = 0; i < x.length; i++) {
-                x[i] = MathEx.logistic(x[i]);
+                x[i] = MathEx.sigmoid(x[i]);
             }
         }
 

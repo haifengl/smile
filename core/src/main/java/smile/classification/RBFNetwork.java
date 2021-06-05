@@ -23,6 +23,8 @@ import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.IntSet;
 
+import java.util.Properties;
+
 /**
  * Radial basis function networks. A radial basis function network is an
  * artificial neural network that uses radial basis functions as activation
@@ -87,7 +89,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T> {
+public class RBFNetwork<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -106,10 +108,6 @@ public class RBFNetwork<T> implements Classifier<T> {
      * True to fit a normalized RBF network.
      */
     private final boolean normalized;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -131,11 +129,11 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param labels the class label encoder.
      */
     public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
+        super(labels);
         this.k = k;
         this.rbf = rbf;
         this.w = w;
         this.normalized = normalized;
-        this.labels = labels;
     }
 
     /**
@@ -193,7 +191,20 @@ public class RBFNetwork<T> implements Classifier<T> {
         Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.classes);
+    }
+
+    /**
+     * Fits a RBF network.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {
+        int neurons = Integer.parseInt(params.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.rbf.normalize", "false"));
+        return RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize);
     }
 
     /**
@@ -216,6 +227,6 @@ public class RBFNetwork<T> implements Classifier<T> {
         double[] sumw = new double[k];
         w.tv(f, sumw);
 
-        return labels.valueOf(MathEx.whichMax(sumw));
+        return classes.valueOf(MathEx.whichMax(sumw));
     }
 }

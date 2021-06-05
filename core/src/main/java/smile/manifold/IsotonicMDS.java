@@ -24,7 +24,7 @@ import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
 
 /**
- * Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
+ * Kruskal's non-metric MDS. In non-metric MDS, only the rank order of entries
  * in the proximity matrix (not the actual dissimilarities) is assumed to
  * contain the significant information. Hence, the distances of the final
  * configuration should as far as possible be in the same rank order as the
@@ -59,7 +59,7 @@ public class IsotonicMDS {
 
     /**
      * Fits Kruskal's non-metric MDS with default k = 2, tolerance = 1E-4 and maxIter = 200.
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @return the model.
      */
@@ -69,7 +69,7 @@ public class IsotonicMDS {
 
     /**
      * Fits Kruskal's non-metric MDS.
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
      * @return the model.
@@ -81,23 +81,23 @@ public class IsotonicMDS {
     /**
      * Fits Kruskal's non-metric MDS.
      *
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity, Properties prop) {
-        int k = Integer.parseInt(prop.getProperty("smile.isotonic.mds.k", "2"));
-        double tol = Double.parseDouble(prop.getProperty("smile.isotonic.mds.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.isotonic.mds.max.iterations", "200"));
+    public static IsotonicMDS of(double[][] proximity, Properties params) {
+        int k = Integer.parseInt(params.getProperty("smile.isotonic_mds.k", "2"));
+        double tol = Double.parseDouble(params.getProperty("smile.isotonic_mds.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.isotonic_mds.iterations", "200"));
         return of(proximity, k, tol, maxIter);
     }
 
     /**
      * Fits Kruskal's non-metric MDS.
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
      * @param tol the tolerance for stopping iterations.
@@ -105,14 +105,12 @@ public class IsotonicMDS {
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
-        Properties prop = new Properties();
-        prop.setProperty("smile.mds.k", String.valueOf(k));
-        return of(proximity, MDS.of(proximity, prop).coordinates, tol, maxIter);
+        return of(proximity, MDS.of(proximity, k).coordinates, tol, maxIter);
     }
 
     /**
      * Fits Kruskal's non-metric MDS.
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      * size is the projection dimension.

@@ -27,7 +27,7 @@
  * Positive definiteness in the context of kernel functions also implies that
  * a kernel matrix created using a particular kernel is positive semi-definite.
  * A matrix is positive semi-definite if its associated eigenvalues are
- * nonnegative.
+ * non-negative.
  *
  * @author Haifeng Li
  */
