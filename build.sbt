@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   // skip javadoc and scaladoc for publishLocal
   Compile / packageDoc / publishArtifact := false,
   // always set scala version including Java only modules
-  scalaVersion := "2.13.5",
+  scalaVersion := "2.13.6",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -108,7 +108,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
-    "org.specs2" %% "specs2-core" % "4.11.0" % "test"
+    "org.specs2" %% "specs2-core" % "4.12.0" % "test"
   ),
 )
 
