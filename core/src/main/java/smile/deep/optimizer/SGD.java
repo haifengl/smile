@@ -15,9 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.base.mlp;
+package smile.base.mlp.optimizer;
 
 import java.util.Arrays;
+import smile.base.mlp.Layer;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
