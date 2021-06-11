@@ -167,8 +167,8 @@ public class DecisionNode extends LeafNode {
 
     /**
      * Returns the class probability.
-     * @param prob the output variable of postieriori probabilities.
-     * @return the postieriori probabilities.
+     * @param prob the output variable of posteriori probabilities.
+     * @return the posteriori probabilities.
      */
     public double[] posteriori(double[] prob) {
         return posteriori(count, prob);
@@ -177,8 +177,8 @@ public class DecisionNode extends LeafNode {
     /**
      * Returns the class probability.
      * @param count the input variable of the number of samples per class.
-     * @param prob the output variable of postieriori probabilities.
-     * @return the postieriori probabilities.
+     * @param prob the output variable of posteriori probabilities.
+     * @return the posteriori probabilities.
      */
     public static double[] posteriori(int[] count, double[] prob) {
         int k = count.length;
@@ -192,7 +192,7 @@ public class DecisionNode extends LeafNode {
     /**
      * Returns the deviance of node.
      * @param count the input variable of the number of samples per class.
-     * @param prob the output variable of postieriori probabilities.
+     * @param prob the output variable of posteriori probabilities.
      * @return the deviance of node.
      */
     public static double deviance(int[] count, double[] prob) {
