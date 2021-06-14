@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -35,7 +35,7 @@ import static smile.math.blas.Transpose.TRANSPOSE;
  *
  * @author Haifeng Li
  */
-public class FloatSparseMatrixTest {
+public class SparseMatrixTest {
 
     float[][] A = {
             {0.9000f, 0.4000f, 0.0000f},
@@ -49,9 +49,9 @@ public class FloatSparseMatrixTest {
             {0.12f, 0.39f, 0.73f}
     };
 
-    FloatSparseMatrix sparse = new FloatSparseMatrix(A, 1E-6f);
+    SparseMatrix sparse = new SparseMatrix(A, 1E-6f);
 
-    public FloatSparseMatrixTest() {
+    public SparseMatrixTest() {
     }
 
     @BeforeClass
@@ -166,7 +166,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMm() {
         System.out.println("mm");
-        FloatSparseMatrix c = sparse.mm(sparse);
+        SparseMatrix c = sparse.mm(sparse);
         assertEquals(3, c.nrow());
         assertEquals(3, c.ncol());
         assertEquals(9, c.size());
@@ -180,7 +180,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testAAT() {
         System.out.println("AAT");
-        FloatSparseMatrix c = sparse.aat();
+        SparseMatrix c = sparse.aat();
         assertEquals(3, c.nrow());
         assertEquals(3, c.ncol());
         assertEquals(9, c.size());
@@ -210,12 +210,12 @@ public class FloatSparseMatrixTest {
             d[row][col] = (float) rand.nextGaussian() + 10;
         }
 
-        // now that we have the data, we can to the actual FloatSparseMatrix part
-        FloatSparseMatrix m = new FloatSparseMatrix(d, 1e-7f);
+        // now that we have the data, we can to the actual SparseMatrix part
+        SparseMatrix m = new SparseMatrix(d, 1e-7f);
 
         // verify all values and the number of non-zeros
         AtomicInteger k = new AtomicInteger(0);
-        for (FloatSparseMatrix.Entry e : m) {
+        for (SparseMatrix.Entry e : m) {
             assertEquals(d[e.i][e.j], e.x, 0.0);
             assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0.0);
             k.incrementAndGet();
@@ -267,7 +267,7 @@ public class FloatSparseMatrixTest {
             } while (d[row][col] != 0);
             d[row][col] = (float) rand.nextGaussian();
         }
-        FloatSparseMatrix m = new FloatSparseMatrix(d, 1e-7f);
+        SparseMatrix m = new SparseMatrix(d, 1e-7f);
 
         double t0 = System.nanoTime() / 1e9;
         float[] sum1 = new float[2000];
@@ -297,7 +297,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testText() throws Exception {
         System.out.println("text");
-        FloatSparseMatrix data = FloatSparseMatrix.text(smile.util.Paths.getTestData("matrix/08blocks.txt"));
+        SparseMatrix data = SparseMatrix.text(smile.util.Paths.getTestData("matrix/08blocks.txt"));
         assertEquals(592, data.size());
         assertEquals(300, data.nrow());
         assertEquals(300, data.ncol());
@@ -310,7 +310,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testHarwell() throws Exception {
         System.out.println("HB exchange format");
-        FloatSparseMatrix data = FloatSparseMatrix.harwell(smile.util.Paths.getTestData("matrix/5by5_rua.hb"));
+        SparseMatrix data = SparseMatrix.harwell(smile.util.Paths.getTestData("matrix/5by5_rua.hb"));
         assertEquals(13, data.size());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
@@ -323,7 +323,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMatrixMarket08blocks() throws Exception {
         System.out.println("market 08blocks");
-        FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/08blocks.mtx"));
+        SparseMatrix data = (SparseMatrix) IMatrix.market(smile.util.Paths.getTestData("matrix/08blocks.mtx"));
         assertEquals(592, data.size());
         assertEquals(300, data.nrow());
         assertEquals(300, data.ncol());
@@ -336,7 +336,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMatrixMarketGr900() throws Exception {
         System.out.println("market gr900");
-        FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/gr_900_900_crg.mm"));
+        SparseMatrix data = (SparseMatrix) IMatrix.market(smile.util.Paths.getTestData("matrix/gr_900_900_crg.mm"));
         //assertEquals(true, data.isSymmetric());
         assertEquals(8644, data.size());
         assertEquals(900, data.nrow());
@@ -355,7 +355,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMatrixMarketCrk() throws Exception {
         System.out.println("market crk");
-        FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crk.mm"));
+        SparseMatrix data = (SparseMatrix) IMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crk.mm"));
         assertEquals(8, data.size());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
@@ -377,7 +377,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMatrixMarketCrs() throws Exception {
         System.out.println("market crs");
-        FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crs.mm"));
+        SparseMatrix data = (SparseMatrix) IMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crs.mm"));
         assertEquals(18, data.size());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
@@ -396,7 +396,7 @@ public class FloatSparseMatrixTest {
     @Test
     public void testMatrixMarketDense() throws Exception {
         System.out.println("market dense");
-        FloatMatrix data = (FloatMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_10_01.mm"));
+        Matrix data = (Matrix) IMatrix.market(smile.util.Paths.getTestData("matrix/m_10_01.mm"));
         assertFalse(data.isSymmetric());
         assertEquals(10, data.nrow());
         assertEquals(1, data.ncol());

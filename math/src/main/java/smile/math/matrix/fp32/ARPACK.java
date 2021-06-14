@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import java.util.Arrays;
 import static org.bytedeco.arpackng.global.arpack.*;
@@ -105,19 +105,19 @@ public class ARPACK {
     }
 
     /**
-     * Computes NEV eigenvalues of a symmetric double precision matrix.
+     * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD syev(DMatrix A, SymmOption which, int nev) {
-        return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
+    public static Matrix.EVD syev(IMatrix A, SymmOption which, int nev) {
+        return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6f);
     }
 
     /**
-     * Computes NEV eigenvalues of a symmetric double precision matrix.
+     * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
@@ -126,7 +126,7 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD syev(DMatrix A, SymmOption which, int nev, int ncv, double tol) {
+    public static Matrix.EVD syev(IMatrix A, SymmOption which, int nev, int ncv, float tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -134,14 +134,14 @@ public class ARPACK {
         int n = A.nrow();
 
         if (nev <= 0 || nev >= n) {
-            throw new IllegalArgumentException("Invalid NEV parameter k: " + nev);
+            throw new IllegalArgumentException("Invalid NEV: " + nev);
         }
 
         int[] ido = {0};
         int[] info = {0};
         byte[] bmat = {'I'}; // standard eigenvalue problem
         String swhich = which.name();
-        byte[] bwhich = {(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
+        byte[] bwhich = swhich.getBytes();//{(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
 
         int[] iparam = new int[11];
         iparam[0] = 1;
@@ -150,20 +150,20 @@ public class ARPACK {
 
         int[] ipntr = new int[11];
         // Arnoldi reverse communication
-        double[] workd = new double[3 * n];
+        float[] workd = new float[3 * n];
         // private work array
-        double[] workl = new double[ncv * (ncv + 8)];
+        float[] workl = new float[ncv * (ncv + 8)];
 
         // used for initial residual (if info != 0)
         // and eventually the output residual
-        double[] resid = new double[n];
+        float[] resid = new float[n];
         // Lanczos basis vectors
-        double[] V = new double[n * ncv];
+        float[] V = new float[n * ncv];
         int ldv = n;
 
         do {
-            dsaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                     workd, workl, workl.length, info);
+            ssaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                    workd, workl, workl.length, info);
 
             if (ido[0] == -1 || ido[0] == 1) {
                 A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
@@ -176,14 +176,14 @@ public class ARPACK {
 
         info[0] = 0;
         byte[] howmny = {'A'};
-        double[] d = new double[ncv * 2];
+        float[] d = new float[ncv * 2];
         int[] select = new int[ncv];
-        double sigma = 0.0;
+        float sigma = 0.0f;
         int rvec = 1;
 
-        dseupd_c(rvec, howmny, select, d, V, ldv, sigma,
-                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                 workd, workl, workl.length, info);
+        sseupd_c(rvec, howmny, select, d, V, ldv, sigma,
+                bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                workd, workl, workl.length, info);
 
         if (info[0] != 0) {
             String error = "ARPACK DSEUPD error code: " + info[0];
@@ -205,19 +205,19 @@ public class ARPACK {
     }
 
     /**
-     * Computes NEV eigenvalues of an asymmetric double precision matrix.
+     * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev) {
-        return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
+    public static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev) {
+        return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6f);
     }
 
     /**
-     * Computes NEV eigenvalues of an asymmetric double precision matrix.
+     * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
@@ -226,7 +226,7 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev, int ncv, double tol) {
+    public static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev, int ncv, float tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -250,20 +250,20 @@ public class ARPACK {
 
         int[] ipntr = new int[14];
         // Arnoldi reverse communication
-        double[] workd = new double[3 * n];
-        double[] workev = new double[3 * ncv];
+        float[] workd = new float[3 * n];
+        float[] workev = new float[3 * ncv];
         // private work array
-        double[] workl = new double[3*ncv*ncv + 6*ncv];
+        float[] workl = new float[3*ncv*ncv + 6*ncv];
 
         // used for initial residual (if info != 0)
         // and eventually the output residual
-        double[] resid = new double[n];
+        float[] resid = new float[n];
         // Lanczos basis vectors
-        double[] V = new double[n * ncv];
+        float[] V = new float[n * ncv];
         int ldv = n;
 
         do {
-            dnaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+            snaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
                     workd, workl, workl.length, info);
 
             if (ido[0] == -1 || ido[0] == 1) {
@@ -277,14 +277,14 @@ public class ARPACK {
 
         info[0] = 0;
         byte[] howmny = {'A'};
-        double[] wr = new double[ncv * 2];
-        double[] wi = new double[ncv * 2];
+        float[] wr = new float[ncv * 2];
+        float[] wi = new float[ncv * 2];
         int[] select = new int[ncv];
-        double sigmar = 0.0;
-        double sigmai = 0.0;
+        float sigmar = 0.0f;
+        float sigmai = 0.0f;
         int rvec = 1;
 
-        dneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
+        sneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
                 workd, workl, workl.length, info);
 
@@ -315,8 +315,8 @@ public class ARPACK {
      * @param k the number of singular triples to compute.
      * @return the singular value decomposition.
      */
-    public static Matrix.SVD svd(DMatrix A, int k) {
-        return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6);
+    public static Matrix.SVD svd(IMatrix A, int k) {
+        return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6f);
     }
 
     /**
@@ -328,23 +328,23 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the singular value decomposition.
      */
-    public static Matrix.SVD svd(DMatrix A, int k, int ncv, double tol) {
+    public static Matrix.SVD svd(IMatrix A, int k, int ncv, float tol) {
         int m = A.nrow();
         int n = A.ncol();
 
-        DMatrix ata = A.square();
+        IMatrix ata = A.square();
         Matrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
 
-        double[] s = eigen.wr;
+        float[] s = eigen.wr;
         for (int i = 0; i < s.length; i++) {
-            s[i] = Math.sqrt(s[i]);
+            s[i] = (float) Math.sqrt(s[i]);
         }
 
         if (m >= n) {
             Matrix V = eigen.Vr;
 
-            double[] Av = new double[m];
-            double[] v = new double[n];
+            float[] Av = new float[m];
+            float[] v = new float[n];
             Matrix U = new Matrix(m, s.length);
             for (int j = 0; j < s.length; j++) {
                 for (int i = 0; i < n; i++) {
@@ -362,8 +362,8 @@ public class ARPACK {
         } else {
             Matrix U = eigen.Vr;
 
-            double[] Atu = new double[n];
-            double[] u = new double[m];
+            float[] Atu = new float[n];
+            float[] u = new float[m];
             Matrix V = new Matrix(n, s.length);
             for (int j = 0; j < s.length; j++) {
                 for (int i = 0; i < m; i++) {

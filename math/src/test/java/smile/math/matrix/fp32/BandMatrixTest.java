@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -51,18 +51,18 @@ public class BandMatrixTest {
     }
 
     @Test
-    public void test() {
-        System.out.println("BandMatrix");
-        double[][] A = {
-            {0.9000, 0.4000, 0.0000},
-            {0.4000, 0.5000, 0.3000},
-            {0.0000, 0.3000, 0.8000}
+    public void testFloatBandMatrix() {
+        System.out.println("FloatBandMatrix");
+        float[][] A = {
+            {0.9000f, 0.4000f, 0.0000f},
+            {0.4000f, 0.5000f, 0.3000f},
+            {0.0000f, 0.3000f, 0.8000f}
         };
-        double[] b = {0.5, 0.5, 0.5};
+        float[] b = {0.5f, 0.5f, 0.5f};
 
         Matrix a = Matrix.of(A);
         Matrix.LU lu = a.lu();
-        double[] x = lu.solve(b);
+        float[] x = lu.solve(b);
 
         BandMatrix band = new BandMatrix(3, 3, 1, 1);
         for (int i = 0; i < A.length; i++) {
@@ -73,8 +73,8 @@ public class BandMatrixTest {
             }
         }
 
-        double[] y = a.mv(x);
-        double[] y2 = band.mv(x);
+        float[] y = a.mv(x);
+        float[] y2 = band.mv(x);
         for (int i = 0; i < y.length; i++) {
             assertEquals(y[i], y2[i], 1E-7f);
         }
@@ -86,7 +86,7 @@ public class BandMatrixTest {
         }
 
         BandMatrix.LU bandlu = band.lu();
-        double[] lux = bandlu.solve(b);
+        float[] lux = bandlu.solve(b);
 
         // determinant
         assertEquals(lu.det(), bandlu.det(), 1E-7f);
@@ -99,7 +99,7 @@ public class BandMatrixTest {
         // Upper band matrix
         band.uplo(UPLO.UPPER);
         BandMatrix.Cholesky cholesky = band.cholesky();
-        double[] choleskyx = cholesky.solve(b);
+        float[] choleskyx = cholesky.solve(b);
 
         // determinant
         assertEquals(lu.det(), cholesky.det(), 1E-7f);
