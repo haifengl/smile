@@ -17,10 +17,8 @@
 
 package smile.math.matrix;
 
-import smile.math.blas.Transpose;
-
 import java.io.Serializable;
-
+import smile.math.blas.Transpose;
 import static smile.math.blas.Transpose.NO_TRANSPOSE;
 import static smile.math.blas.Transpose.TRANSPOSE;
 
