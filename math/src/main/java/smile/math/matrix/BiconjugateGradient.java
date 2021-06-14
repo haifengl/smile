@@ -55,7 +55,7 @@ public class BiconjugateGradient {
      * @param A the matrix.
      * @return the preconditioner matrix.
      */
-    public static Preconditioner Jacobi(DMatrix A) {
+    public static Preconditioner Jacobi(IMatrix A) {
         return (b, x) -> {
                 double[] diag = A.diag();
                 int n = diag.length;
@@ -75,7 +75,7 @@ public class BiconjugateGradient {
      * (or all zeros). On output, x is reset to the improved solution.
      * @return the estimated error.
      */
-    public static double solve(DMatrix A, double[] b, double[] x) {
+    public static double solve(IMatrix A, double[] b, double[] x) {
         return solve(A, b, x, Jacobi(A), 1E-6, 1, 2 * Math.max(A.nrow(), A.ncol()));
     }
 
@@ -100,7 +100,7 @@ public class BiconjugateGradient {
      * @param maxIter The maximum number of iterations.
      * @return the estimated error.
      */
-    public static double solve(DMatrix A, double[] b, double[] x, Preconditioner preconditioner, double tol, int itol, int maxIter) {
+    public static double solve(IMatrix A, double[] b, double[] x, Preconditioner preconditioner, double tol, int itol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }

@@ -43,7 +43,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @return eigen value decomposition.
      */
-    public static Matrix.EVD eigen(DMatrix A, int k) {
+    public static Matrix.EVD eigen(IMatrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrow());
     }
 
@@ -58,7 +58,7 @@ public class Lanczos {
      * @param maxIter Maximum number of iterations.
      * @return eigen value decomposition.
      */
-    public static Matrix.EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
+    public static Matrix.EVD eigen(IMatrix A, int k, double kappa, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -316,7 +316,7 @@ public class Lanczos {
      * of operator can be found.
      * @param step starting index for a Lanczos run
      */
-    private static double startv(DMatrix A, double[][] q, double[][] wptr, int step) {
+    private static double startv(IMatrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];

@@ -40,7 +40,7 @@ public class PowerIteration {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    public static double eigen(DMatrix A, double[] v) {
+    public static double eigen(IMatrix A, double[] v) {
         return eigen(A, v, 0.0f, Math.max(1.0E-6, A.nrow() * MathEx.EPSILON), Math.max(20, 2 * A.nrow()));
     }
 
@@ -68,7 +68,7 @@ public class PowerIteration {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(DMatrix A, double[] v, double p, double tol, int maxIter) {
+    public static double eigen(IMatrix A, double[] v, double p, double tol, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -111,7 +111,7 @@ public class PowerIteration {
      * Calculate and normalize y = (A - pI) x.
      * Returns the largest element of y in magnitude.
      */
-    private static double ax(DMatrix A, double[] x, double[] y, double p) {
+    private static double ax(IMatrix A, double[] x, double[] y, double p) {
         A.mv(x, y);
 
         if (p != 0.0) {

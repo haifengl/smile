@@ -29,7 +29,7 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class SymmMatrix extends DMatrix {
+public class SymmMatrix extends IMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SymmMatrix.class);
 

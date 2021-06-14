@@ -24,7 +24,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
-import smile.math.matrix.DMatrix;
+import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.BiconjugateGradient;
 import smile.math.matrix.BiconjugateGradient.Preconditioner;
@@ -388,7 +388,7 @@ public class LASSO {
     /**
      * Preconditioned conjugate gradients matrix.
      */
-    static class PCG extends DMatrix implements Preconditioner {
+    static class PCG extends IMatrix implements Preconditioner {
         /** The design matrix. */
         Matrix A;
         /** A' * A */

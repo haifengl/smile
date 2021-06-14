@@ -18,7 +18,7 @@
 package smile.graph;
 
 import java.util.Collection;
-import smile.math.matrix.DMatrix;
+import smile.math.matrix.IMatrix;
 
 /**
  * A graph is an abstract representation of a set of objects where some pairs
@@ -296,7 +296,7 @@ public interface Graph {
      * Returns the (dense or sparse) matrix representation of the graph.
      * @return the matrix representation of the graph.
      */
-    DMatrix toMatrix();
+    IMatrix toMatrix();
 }
 
 

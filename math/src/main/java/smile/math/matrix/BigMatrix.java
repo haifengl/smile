@@ -42,12 +42,12 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class BigMatrix extends DMatrix {
+public class BigMatrix extends IMatrix {
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
     /** Row major matrix. */
-    private class RowMajor extends BigMatrix {
+    private static class RowMajor extends BigMatrix {
         /**
          * Constructor.
          * @param m the number of rows.
