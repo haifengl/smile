@@ -27,7 +27,7 @@ import smile.math.blas.Transpose;
 import smile.math.matrix.DMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.BiconjugateGradient;
-import smile.math.matrix.Preconditioner;
+import smile.math.matrix.BiconjugateGradient.Preconditioner;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
