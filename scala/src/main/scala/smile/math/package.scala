@@ -272,7 +272,7 @@ package object math {
   /** Eigen decomposition. */
   def eigen(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, true, true)
   /** Returns k largest eigenvectors. */
-  def eigen(A: DMatrix, k: Int): Matrix.EVD = A match {
+  def eigen(A: IMatrix, k: Int): Matrix.EVD = A match {
     case a: Matrix =>
       if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
       else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
@@ -290,7 +290,7 @@ package object math {
   /** SVD decomposition. */
   def svd(A: MatrixExpression): Matrix.SVD = A.toMatrix.svd(true, true)
   /** Returns k largest singular vectors. */
-  def svd(A: DMatrix, k: Int): Matrix.SVD = ARPACK.svd(A, k)
+  def svd(A: IMatrix, k: Int): Matrix.SVD = ARPACK.svd(A, k)
 
   /** Returns the determinant of matrix. */
   def det(A: Matrix): Double = lu(A).det()

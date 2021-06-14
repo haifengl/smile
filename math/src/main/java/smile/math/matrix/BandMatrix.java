@@ -67,7 +67,7 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class BandMatrix extends DMatrix {
+public class BandMatrix extends IMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 

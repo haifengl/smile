@@ -61,7 +61,7 @@ import static java.util.Spliterator.*;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry> {
+public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
     private static final long serialVersionUID = 2L;
 

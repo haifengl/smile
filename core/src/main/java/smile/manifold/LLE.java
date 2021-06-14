@@ -23,7 +23,7 @@ import smile.graph.AdjacencyList;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.math.matrix.ARPACK;
-import smile.math.matrix.DMatrix;
+import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 
@@ -204,8 +204,7 @@ public class LLE implements Serializable {
      * we have M * v = v - W * v - W' * v + W' * W * v. As W is sparse and we can
      * compute only W * v and W' * v efficiently.
      */
-    private static class M extends DMatrix {
-
+    private static class M extends IMatrix {
         SparseMatrix Wt;
         double[] x;
         double[] Wx;

@@ -43,7 +43,7 @@ public class Matrix extends IMatrix {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
 
     /** Row major matrix. */
-    private class RowMajor extends Matrix {
+    private static class RowMajor extends Matrix {
         /**
          * Constructor.
          * @param m the number of rows.
