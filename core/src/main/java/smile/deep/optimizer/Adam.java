@@ -96,6 +96,7 @@ public class Adam implements Optimizer {
 
     @Override
     public void update(Layer layer, int m, int t) {
+        /*
         Matrix weightGradient = layer.weightGradient.get();
         double[] biasGradient = layer.biasGradient.get();
 
@@ -141,5 +142,7 @@ public class Adam implements Optimizer {
 
         weightGradient.fill(0.0);
         Arrays.fill(biasGradient, 0.0);
+
+         */
     }
 }

@@ -79,6 +79,7 @@ public class RMSProp implements Optimizer {
 
     @Override
     public void update(Layer layer, int m, int t) {
+        /*
         Matrix weightGradient = layer.weightGradient.get();
         double[] biasGradient = layer.biasGradient.get();
 
@@ -115,5 +116,7 @@ public class RMSProp implements Optimizer {
 
         weightGradient.fill(0.0);
         Arrays.fill(biasGradient, 0.0);
+
+         */
     }
 }
