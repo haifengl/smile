@@ -283,18 +283,6 @@ package object math {
     case a => ARPACK.eigen(a, ARPACK.AsymmOption.LM, k)
   }
 
-  /** Returns k largest eigenvectors. */
-  def eigen(A: SMatrix, k: Int): FloatMatrix.EVD = A match {
-    case a: FloatMatrix =>
-      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
-      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
-    case a: FloatBandMatrix =>
-      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
-      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
-    case a: FloatSymmMatrix => ARPACK.syev(a, ARPACK.SymmOption.LA, k)
-    case a => ARPACK.eigen(a, ARPACK.AsymmOption.LM, k)
-  }
-
   /** SVD decomposition. */
   def svd(A: Array[Array[Double]]): Matrix.SVD = Matrix.of(A).svd(true, true)
   /** SVD decomposition. */
@@ -303,8 +291,6 @@ package object math {
   def svd(A: MatrixExpression): Matrix.SVD = A.toMatrix.svd(true, true)
   /** Returns k largest singular vectors. */
   def svd(A: DMatrix, k: Int): Matrix.SVD = ARPACK.svd(A, k)
-  /** Returns k largest singular vectors. */
-  def svd(A: SMatrix, k: Int): FloatMatrix.SVD = ARPACK.svd(A, k)
 
   /** Returns the determinant of matrix. */
   def det(A: Matrix): Double = lu(A).det()

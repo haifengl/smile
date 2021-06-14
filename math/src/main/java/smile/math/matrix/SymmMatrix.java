@@ -25,7 +25,7 @@ import static smile.math.blas.Layout.*;
 import static smile.math.blas.UPLO.*;
 
 /**
- * They symmetric matrix in packed storage.
+ * The symmetric matrix in packed storage.
  *
  * @author Haifeng Li
  */

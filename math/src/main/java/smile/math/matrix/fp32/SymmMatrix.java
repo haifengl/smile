@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import java.io.Serializable;
 import java.nio.FloatBuffer;
@@ -25,13 +25,13 @@ import static smile.math.blas.Layout.*;
 import static smile.math.blas.UPLO.*;
 
 /**
- * They symmetric matrix in packed storage.
+ * The symmetric matrix in packed storage.
  *
  * @author Haifeng Li
  */
-public class FloatSymmMatrix extends SMatrix {
+public class SymmMatrix extends IMatrix {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatSymmMatrix.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SymmMatrix.class);
 
     /**
      * The packed matrix storage.
@@ -51,7 +51,7 @@ public class FloatSymmMatrix extends SMatrix {
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param n the dimension of matrix.
      */
-    public FloatSymmMatrix(UPLO uplo, int n) {
+    public SymmMatrix(UPLO uplo, int n) {
         if (uplo == null) {
             throw new NullPointerException("UPLO is null");
         }
@@ -66,7 +66,7 @@ public class FloatSymmMatrix extends SMatrix {
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param AP the symmetric matrix.
      */
-    public FloatSymmMatrix(UPLO uplo, float[][] AP) {
+    public SymmMatrix(UPLO uplo, float[][] AP) {
         this(uplo, AP.length);
 
         if (uplo == LOWER) {
@@ -85,8 +85,8 @@ public class FloatSymmMatrix extends SMatrix {
     }
 
     @Override
-    public FloatSymmMatrix clone() {
-        FloatSymmMatrix matrix = new FloatSymmMatrix(uplo, n);
+    public SymmMatrix clone() {
+        SymmMatrix matrix = new SymmMatrix(uplo, n);
         System.arraycopy(AP, 0, matrix.AP, 0, AP.length);
         return matrix;
     }
@@ -124,11 +124,11 @@ public class FloatSymmMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FloatSymmMatrix)) {
+        if (!(o instanceof SymmMatrix)) {
             return false;
         }
 
-        return equals((FloatSymmMatrix) o, 1E-7f);
+        return equals((SymmMatrix) o, 1E-7f);
     }
 
     /**
@@ -138,7 +138,7 @@ public class FloatSymmMatrix extends SMatrix {
      * @param epsilon a number close to zero.
      * @return true if two matrices equal in given precision.
      */
-    public boolean equals(FloatSymmMatrix o, float epsilon) {
+    public boolean equals(SymmMatrix o, float epsilon) {
         if (n != o.n) {
             return false;
         }
@@ -214,7 +214,7 @@ public class FloatSymmMatrix extends SMatrix {
      * @return Bunch-Kaufman decomposition.
      */
     public BunchKaufman bk() {
-        FloatSymmMatrix lu = clone();
+        SymmMatrix lu = clone();
         int[] ipiv = new int[n];
         int info = LAPACK.engine.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
         if (info < 0) {
@@ -236,7 +236,7 @@ public class FloatSymmMatrix extends SMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatSymmMatrix lu = clone();
+        SymmMatrix lu = clone();
         int info = LAPACK.engine.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
         if (info != 0) {
             logger.error("LAPACK PPTRF error code: {}", info);
@@ -264,7 +264,7 @@ public class FloatSymmMatrix extends SMatrix {
         /**
          * The Bunch–Kaufman decomposition.
          */
-        public final FloatSymmMatrix lu;
+        public final SymmMatrix lu;
 
         /**
          * The pivot vector.
@@ -286,7 +286,7 @@ public class FloatSymmMatrix extends SMatrix {
          * @param ipiv the pivot vector.
          * @param info {@code info > 0} if the matrix is singular.
          */
-        public BunchKaufman(FloatSymmMatrix lu, int[] ipiv, int info) {
+        public BunchKaufman(SymmMatrix lu, int[] ipiv, int info) {
             this.lu = lu;
             this.ipiv = ipiv;
             this.info = info;
@@ -324,8 +324,8 @@ public class FloatSymmMatrix extends SMatrix {
          * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -337,7 +337,7 @@ public class FloatSymmMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            FloatMatrix x = FloatMatrix.column(b);
+            Matrix x = Matrix.column(b);
             solve(x);
             return x.A;
         }
@@ -348,7 +348,7 @@ public class FloatSymmMatrix extends SMatrix {
          *          On output, B will be overwritten with the solution matrix.
          * @throws RuntimeException when the matrix is singular.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(Matrix B) {
             if (B.m != lu.n) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.n, lu.n, B.m, B.n));
             }
@@ -397,14 +397,14 @@ public class FloatSymmMatrix extends SMatrix {
         /**
          * The Cholesky decomposition.
          */
-        public final FloatSymmMatrix lu;
+        public final SymmMatrix lu;
 
         /**
          * Constructor.
          * @param lu the lower/upper triangular part of matrix contains the Cholesky
          *           factorization.
          */
-        public Cholesky(FloatSymmMatrix lu) {
+        public Cholesky(SymmMatrix lu) {
             if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
@@ -442,8 +442,8 @@ public class FloatSymmMatrix extends SMatrix {
          * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -454,7 +454,7 @@ public class FloatSymmMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            FloatMatrix x = FloatMatrix.column(b);
+            Matrix x = Matrix.column(b);
             solve(x);
             return x.A;
         }
@@ -464,7 +464,7 @@ public class FloatSymmMatrix extends SMatrix {
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(Matrix B) {
             if (B.m != lu.n) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.n, lu.n, B.m, B.n));
             }

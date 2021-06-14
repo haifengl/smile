@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import java.io.Serializable;
 import java.nio.FloatBuffer;
@@ -66,9 +66,9 @@ import static smile.math.blas.UPLO.*;
  * 
  * @author Haifeng Li
  */
-public class FloatBandMatrix extends SMatrix {
+public class BandMatrix extends IMatrix {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatBandMatrix.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
     /**
      * The band matrix storage.
@@ -106,7 +106,7 @@ public class FloatBandMatrix extends SMatrix {
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
      */
-    public FloatBandMatrix(int m, int n, int kl, int ku) {
+    public BandMatrix(int m, int n, int kl, int ku) {
         if (m <= 0 || n <= 0) {
             throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
         }
@@ -140,7 +140,7 @@ public class FloatBandMatrix extends SMatrix {
      * @param AB the band matrix. A[i, j] is stored in {@code AB[ku+i-j, j]}
      *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
      */
-    public FloatBandMatrix(int m, int n, int kl, int ku, float[][] AB) {
+    public BandMatrix(int m, int n, int kl, int ku, float[][] AB) {
         this(m, n, kl, ku);
 
         for (int j = 0; j < n; j++) {
@@ -151,8 +151,8 @@ public class FloatBandMatrix extends SMatrix {
     }
 
     @Override
-    public FloatBandMatrix clone() {
-        FloatBandMatrix matrix = new FloatBandMatrix(m, n, kl, ku);
+    public BandMatrix clone() {
+        BandMatrix matrix = new BandMatrix(m, n, kl, ku);
         System.arraycopy(AB, 0, matrix.AB, 0, AB.length);
 
         if (m == n && kl == ku) {
@@ -222,7 +222,7 @@ public class FloatBandMatrix extends SMatrix {
      * @param uplo the format of symmetric band matrix.
      * @return this matrix.
      */
-    public FloatBandMatrix uplo(UPLO uplo) {
+    public BandMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -245,11 +245,11 @@ public class FloatBandMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FloatBandMatrix)) {
+        if (!(o instanceof BandMatrix)) {
             return false;
         }
 
-        return equals((FloatBandMatrix) o, 1E-7f);
+        return equals((BandMatrix) o, 1E-7f);
     }
 
     /**
@@ -259,7 +259,7 @@ public class FloatBandMatrix extends SMatrix {
      * @param epsilon a number close to zero.
      * @return true if two matrices equal in given precision.
      */
-    public boolean equals(FloatBandMatrix o, float epsilon) {
+    public boolean equals(BandMatrix o, float epsilon) {
         if (m != o.m || n != o.n) {
             return false;
         }
@@ -329,7 +329,7 @@ public class FloatBandMatrix extends SMatrix {
      * @return LU decomposition.
      */
     public LU lu() {
-        FloatBandMatrix lu = new FloatBandMatrix(m, n, 2*kl, ku);
+        BandMatrix lu = new BandMatrix(m, n, 2*kl, ku);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < ld; i++) {
                 lu.AB[j * lu.ld + kl + i] = AB[j * ld + i];
@@ -356,7 +356,7 @@ public class FloatBandMatrix extends SMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatBandMatrix lu = new FloatBandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
+        BandMatrix lu = new BandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
         lu.uplo = uplo;
         if (uplo == UPLO.LOWER) {
             for (int j = 0; j < n; j++) {
@@ -399,7 +399,7 @@ public class FloatBandMatrix extends SMatrix {
         /**
          * The LU decomposition.
          */
-        public final FloatBandMatrix lu;
+        public final BandMatrix lu;
 
         /**
          * The pivot vector.
@@ -421,7 +421,7 @@ public class FloatBandMatrix extends SMatrix {
          * @param ipiv the pivot vector.
          * @param info {@code info > 0} if the matrix is singular.
          */
-        public LU(FloatBandMatrix lu, int[] ipiv, int info) {
+        public LU(BandMatrix lu, int[] ipiv, int info) {
             this.lu = lu;
             this.ipiv = ipiv;
             this.info = info;
@@ -465,8 +465,8 @@ public class FloatBandMatrix extends SMatrix {
          * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -478,7 +478,7 @@ public class FloatBandMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            FloatMatrix x = FloatMatrix.column(b);
+            Matrix x = Matrix.column(b);
             solve(x);
             return x.A;
         }
@@ -489,7 +489,7 @@ public class FloatBandMatrix extends SMatrix {
          *          On output, B will be overwritten with the solution matrix.
          * @throws RuntimeException when the matrix is singular.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(Matrix B) {
             if (lu.m != lu.n) {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
             }
@@ -542,14 +542,14 @@ public class FloatBandMatrix extends SMatrix {
         /**
          * The Cholesky decomposition.
          */
-        public final FloatBandMatrix lu;
+        public final BandMatrix lu;
 
         /**
          * Constructor.
          * @param lu the lower/upper triangular part of matrix contains the Cholesky
          *           factorization.
          */
-        public Cholesky(FloatBandMatrix lu) {
+        public Cholesky(BandMatrix lu) {
             if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
@@ -587,8 +587,8 @@ public class FloatBandMatrix extends SMatrix {
          * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -599,7 +599,7 @@ public class FloatBandMatrix extends SMatrix {
          * @return the solution vector.
          */
         public float[] solve(float[] b) {
-            FloatMatrix x = FloatMatrix.column(b);
+            Matrix x = Matrix.column(b);
             solve(x);
             return x.A;
         }
@@ -609,7 +609,7 @@ public class FloatBandMatrix extends SMatrix {
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(Matrix B) {
             if (B.m != lu.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }

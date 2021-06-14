@@ -15,10 +15,11 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.matrix;
+package smile.math.matrix.fp32;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -36,7 +37,296 @@ import static smile.math.blas.UPLO.LOWER;
  *
  * @author Haifeng Li
  */
-public abstract class SMatrix extends IMatrix<float[]> {
+public abstract class IMatrix implements Cloneable, Serializable {
+    /**
+     * The row names.
+     */
+    private String[] rowNames;
+    /**
+     * The column names.
+     */
+    private String[] colNames;
+
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
+    public abstract int nrow();
+
+    /**
+     * Returns the number of columns.
+     * @return the number of columns.
+     */
+    public abstract int ncol();
+
+    /**
+     * Returns the number of stored matrix elements. For conventional matrix,
+     * it is simplify nrow * ncol. But it is usually much less for band,
+     * packed or sparse matrix.
+     * @return the number of stored matrix elements.
+     */
+    public abstract long size();
+
+    /**
+     * Returns the row names.
+     * @return the row names.
+     */
+    public String[] rowNames() {
+        return rowNames;
+    }
+
+    /**
+     * Sets the row names.
+     * @param names the row names.
+     */
+    public void rowNames(String[] names) {
+        if (names != null && names.length != nrow()) {
+            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrow()));
+        }
+        rowNames = names;
+    }
+
+    /**
+     * Returns the name of i-th row.
+     * @param i the row index.
+     * @return the name of i-th row.
+     */
+    public String rowName(int i) {
+        return rowNames[i];
+    }
+
+    /**
+     * Returns the column names.
+     * @return the column names.
+     */
+    public String[] colNames() {
+        return colNames;
+    }
+
+    /**
+     * Sets the column names.
+     * @param names the column names.
+     */
+    public void colNames(String[] names) {
+        if (names != null && names.length != ncol()) {
+            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncol()));
+        }
+        colNames = names;
+    }
+
+    /**
+     * Returns the name of i-th column.
+     * @param i the column index.
+     * @return the name of i-th column.
+     */
+    public String colName(int i) {
+        return colNames[i];
+    }
+
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise,
+     *             print only top left 7 x 7 submatrix.
+     * @return the string representation of matrix.
+     */
+    public String toString(boolean full) {
+        return full ? toString(nrow(), ncol()) : toString(7, 7);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param m the number of rows to print.
+     * @param n the number of columns to print.
+     * @return the string representation of matrix.
+     */
+    public String toString(int m, int n) {
+        StringBuilder sb = new StringBuilder(nrow() + " x " + ncol() + "\n");
+        m = Math.min(m, nrow());
+        n = Math.min(n, ncol());
+
+        String newline = n < ncol() ? "  ...\n" : "\n";
+
+        if (colNames != null) {
+            if (rowNames != null) sb.append("            ");
+
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format(" %12.12s", colNames[j]));
+            }
+            sb.append(newline);
+        }
+
+        for (int i = 0; i < m; i++) {
+            if (rowNames != null) sb.append(String.format("%-12.12s", rowNames[i]));
+
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format(" %12.12s", str(i, j)));
+            }
+            sb.append(newline);
+        }
+
+        if (m < nrow()) {
+            sb.append("  ...\n");
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns the string representation of <code>A[i, j]</code>.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the string representation of <code>A[i, j]</code>.
+     */
+    String str(int i, int j) {
+        return smile.util.Strings.format(get(i, j), true);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre>{@code
+     *     y = alpha * op(A) * x + beta * y
+     * }</pre>
+     * where op is the transpose operation.
+     *
+     * @param trans normal, transpose, or conjugate transpose
+     *              operation on the matrix.
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
+     */
+    public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
+
+    /**
+     * Returns the matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
+     */
+    public float[] mv(float[] x) {
+        float[] y = new float[nrow()];
+        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
+        return y;
+    }
+
+    /**
+     * Matrix-vector multiplication {@code y = A * x}.
+     * @param x the input vector.
+     * @param y the output vector.
+     */
+    public void mv(float[] x, float[] y) {
+        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre>{@code
+     *     y = alpha * A * x + beta * y
+     * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
+     */
+    public void mv(float alpha, float[] x, float beta, float[] y) {
+        mv(NO_TRANSPOSE, alpha, x, beta, y);
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param work the workspace for both input and output vector.
+     * @param inputOffset the offset of input vector in workspace.
+     * @param outputOffset the offset of output vector in workspace.
+     */
+    public abstract void mv(float[] work, int inputOffset, int outputOffset);
+
+    /**
+     * Returns Matrix-vector multiplication {@code A' * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A' * x}.
+     */
+    public float[] tv(float[] x) {
+        float[] y = new float[ncol()];
+        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
+        return y;
+    }
+
+    /**
+     * Matrix-vector multiplication {@code y = A' * x}.
+     * @param x the input vector.
+     * @param y the output vector.
+     */
+    public void tv(float[] x, float[] y) {
+        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre>{@code
+     *     y = alpha * A' * x + beta * y
+     * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
+     */
+    public void tv(float alpha, float[] x, float beta, float[] y) {
+        mv(TRANSPOSE, alpha, x, beta, y);
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A' * x}.
+     * @param work the workspace for both input and output vector.
+     * @param inputOffset the offset of input vector in workspace.
+     * @param outputOffset the offset of output vector in workspace.
+     */
+    public abstract void tv(float[] work, int inputOffset, int outputOffset);
+
+    /**
+     * Returns the optimal leading dimension. The present process have
+     * cascade caches. And read/write cache are 64 byte (multiple of 16
+     * for single precision) related on Intel CPUs. In order to avoid
+     * cache conflict, we expected the leading dimensions should be
+     * multiple of cache line (multiple of 16 for single precision),
+     * but not the power of 2, like not multiple of 256, not multiple
+     * of 128 etc.
+     * <p>
+     * To improve performance, ensure that the leading dimensions of
+     * the arrays are divisible by 64/element_size, where element_size
+     * is the number of bytes for the matrix elements (4 for
+     * single-precision real, 8 for double-precision real and
+     * single precision complex, and 16 for double-precision complex).
+     * <p>
+     * But as present processor use cache-cascading structure: set->cache
+     * line. In order to avoid the cache stall issue, we suggest to avoid
+     * leading dimension are multiples of 128, If ld % 128 = 0, then add
+     * 16 to the leading dimension.
+     * <p>
+     * Generally, set the leading dimension to the following integer expression:
+     * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
+     * where n is the matrix dimension along the leading dimension.
+     */
+    static int ld(int n) {
+        int elementSize = 4;
+        if (n <= 256 / elementSize) return n;
+
+        return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
+    }
+
+    /** Flips the transpose operation. */
+    static Transpose flip(Transpose trans) {
+        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
+    }
+
     /**
      * Sets {@code A[i,j] = x}.
      * @param i the row index.
@@ -75,11 +365,6 @@ public abstract class SMatrix extends IMatrix<float[]> {
         return get(i, j);
     }
 
-    @Override
-    String str(int i, int j) {
-        return smile.util.Strings.format(get(i, j), true);
-    }
-
     /**
      * Returns the diagonal elements.
      * @return the diagonal elements.
@@ -111,79 +396,6 @@ public abstract class SMatrix extends IMatrix<float[]> {
     }
 
     /**
-     * Matrix-vector multiplication.
-     * <pre>{@code
-     *     y = alpha * op(A) * x + beta * y
-     * }</pre>
-     * where op is the transpose operation.
-     *
-     * @param trans normal, transpose, or conjugate transpose
-     *              operation on the matrix.
-     * @param alpha the scalar alpha.
-     * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
-     * @param y  the input and output vector.
-     */
-    public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
-
-    @Override
-    public float[] mv(float[] x) {
-        float[] y = new float[nrow()];
-        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
-        return y;
-    }
-
-    @Override
-    public void mv(float[] x, float[] y) {
-        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
-    }
-
-    /**
-     * Matrix-vector multiplication.
-     * <pre>{@code
-     *     y = alpha * A * x + beta * y
-     * }</pre>
-     *
-     * @param alpha the scalar alpha.
-     * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
-     * @param y  the input and output vector.
-     */
-    public void mv(float alpha, float[] x, float beta, float[] y) {
-        mv(NO_TRANSPOSE, alpha, x, beta, y);
-    }
-
-    @Override
-    public float[] tv(float[] x) {
-        float[] y = new float[ncol()];
-        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
-        return y;
-    }
-
-    @Override
-    public void tv(float[] x, float[] y) {
-        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
-    }
-
-    /**
-     * Matrix-vector multiplication.
-     * <pre>{@code
-     *     y = alpha * A' * x + beta * y
-     * }</pre>
-     *
-     * @param alpha the scalar alpha.
-     * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
-     * @param y  the input and output vector.
-     */
-    public void tv(float alpha, float[] x, float beta, float[] y) {
-        mv(TRANSPOSE, alpha, x, beta, y);
-    }
-
-    /**
      * Reads a matrix from a Matrix Market File Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
@@ -195,7 +407,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * @throws ParseException  when fails to parse the file.
      * @return a dense or sparse matrix.
      */
-    public static SMatrix market(Path path) throws IOException, ParseException {
+    public static IMatrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
              Scanner scanner = new Scanner(reader)) {
 
@@ -237,7 +449,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
                 int nrow = s.nextInt();
                 int ncol = s.nextInt();
 
-                FloatMatrix matrix = new FloatMatrix(nrow, ncol);
+                Matrix matrix = new Matrix(nrow, ncol);
                 for (int j = 0; j < ncol; j++) {
                     for (int i = 0; i < nrow; i++) {
                         float x = scanner.nextFloat();
@@ -264,7 +476,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
                         throw new IllegalStateException(String.format("Symmetric matrix is not square: %d != %d", nrow, ncol));
                     }
 
-                    FloatSymmMatrix matrix = new FloatSymmMatrix(LOWER, nrow);
+                    SymmMatrix matrix = new SymmMatrix(LOWER, nrow);
                     for (int k = 0; k < nz; k++) {
                         String[] tokens = scanner.nextLine().trim().split("\\s+");
                         if (tokens.length != 3) {
@@ -284,7 +496,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
                         throw new IllegalStateException(String.format("Skew-symmetric matrix is not square: %d != %d", nrow, ncol));
                     }
 
-                    FloatMatrix matrix = new FloatMatrix(nrow, ncol);
+                    Matrix matrix = new Matrix(nrow, ncol);
                     for (int k = 0; k < nz; k++) {
                         String[] tokens = scanner.nextLine().trim().split("\\s+");
                         if (tokens.length != 3) {
@@ -357,7 +569,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
                     }
                 }
 
-                return new FloatSparseMatrix(nrow, ncol, x, rowIndex, colIndex);
+                return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);
 
             }
 
@@ -370,10 +582,10 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * For SVD, we compute eigenvalue decomposition of A' * A
      * when m >= n, or that of A * A' when m < n.
      */
-    SMatrix square() {
-        SMatrix A = this;
+    IMatrix square() {
+        IMatrix A = this;
 
-        return new SMatrix() {
+        return new IMatrix() {
             /**
              * The larger dimension of A.
              */
