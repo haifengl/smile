@@ -225,10 +225,10 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Returns the string representation of <code>A[i, j]</code>.
+     * Returns the string representation of <code>A[i,j]</code>.
      * @param i the row index.
      * @param j the column index.
-     * @return the string representation of <code>A[i, j]</code>.
+     * @return the string representation of <code>A[i,j]</code>.
      */
     private String str(int i, int j) {
         return smile.util.Strings.format(get(i, j), true);
@@ -396,7 +396,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Returns {@code A[i, j]}.
+     * Returns {@code A[i,j]}.
      * @param i the row index.
      * @param j the column index.
      * @return the matrix cell value.
@@ -406,7 +406,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Returns {@code A[i, j]}. For Scala users.
+     * Returns {@code A[i,j]}. For Scala users.
      * @param i the row index.
      * @param j the column index.
      * @return the matrix cell value.
@@ -731,66 +731,93 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
+     * The square matrix of A' * A or A * A', whichever is smaller.
+     * For SVD, we compute eigenvalue decomposition of A' * A
+     * when m >= n, or that of A * A' when m < n.
+     */
+    static class Square extends IMatrix {
+        /**
+         * The base matrix.
+         */
+        private final IMatrix A;
+        /**
+         * The larger dimension of A.
+         */
+        private final int m;
+        /**
+         * The smaller dimension of A.
+         */
+        private final int n;
+        /**
+         * Workspace for A * x
+         */
+        private final float[] Ax;
+
+        /**
+         * Constructor.
+         * @param A the base matrix.
+         */
+        public Square(IMatrix A) {
+            this.A = A;
+            this.m = Math.max(A.nrow(), A.ncol());
+            this.n = Math.min(A.nrow(), A.ncol());
+            this.Ax = new float[m + n];
+        }
+
+        @Override
+        public int nrow() {
+            return n;
+        }
+
+        @Override
+        public int ncol() {
+            return n;
+        }
+
+        @Override
+        public long size() {
+            return m + n;
+        }
+
+        @Override
+        public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
+            if (A.nrow() >= A.ncol()) {
+                A.mv(x, Ax);
+                A.tv(alpha, Ax, beta, y);
+            } else {
+                A.tv(x, Ax);
+                A.mv(alpha, Ax, beta, y);
+            }
+        }
+
+        @Override
+        public void mv(float[] work, int inputOffset, int outputOffset) {
+            System.arraycopy(work, inputOffset, Ax, 0, n);
+
+            if (A.nrow() >= A.ncol()) {
+                A.mv(Ax, 0, n);
+                A.tv(Ax, n, 0);
+            } else {
+                A.tv(Ax, 0, n);
+                A.mv(Ax, n, 0);
+            }
+
+            System.arraycopy(Ax, 0, work, outputOffset, n);
+        }
+
+        @Override
+        public void tv(float[] work, int inputOffset, int outputOffset) {
+            // The square matrix (AA' or A'A) is symmetric.
+            mv(work, inputOffset, outputOffset);
+        }
+    }
+
+    /**
      * Returns the matrix of A' * A or A * A', whichever is smaller.
      * For SVD, we compute eigenvalue decomposition of A' * A
      * when m >= n, or that of A * A' when m < n.
      */
-    IMatrix square() {
-        IMatrix A = this;
-
-        return new IMatrix() {
-            /**
-             * The larger dimension of A.
-             */
-            private final int m = Math.max(A.nrow(), A.ncol());
-            /**
-             * The smaller dimension of A.
-             */
-            private final int n = Math.min(A.nrow(), A.ncol());
-            /**
-             * Workspace for A * x
-             */
-            private final float[] Ax = new float[m + n];
-
-            @Override
-            public int nrow() {
-                return n;
-            }
-
-            @Override
-            public int ncol() {
-                return n;
-            }
-
-            @Override
-            public long size() {
-                return m + n;
-            }
-
-            @Override
-            public void mv(float[] work, int inputOffset, int outputOffset) {
-                System.arraycopy(work, inputOffset, Ax, 0, n);
-
-                if (A.nrow() >= A.ncol()) {
-                    A.mv(Ax, 0, n);
-                    A.tv(Ax, n, 0);
-                } else {
-                    A.tv(Ax, 0, n);
-                    A.mv(Ax, n, 0);
-                }
-
-                System.arraycopy(Ax, 0, work, outputOffset, n);
-            }
-
-            @Override
-            public void tv(float[] work, int inputOffset, int outputOffset) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
-                throw new UnsupportedOperationException();
-            }
-        };
+    public IMatrix square() {
+        return new IMatrix.Square(this);
     }
 }
