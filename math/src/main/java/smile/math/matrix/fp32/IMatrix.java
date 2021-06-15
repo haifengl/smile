@@ -27,17 +27,65 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.util.SparseArray;
-import static smile.math.blas.Transpose.*;
+
+import static smile.math.blas.Transpose.NO_TRANSPOSE;
+import static smile.math.blas.Transpose.TRANSPOSE;
 import static smile.math.blas.UPLO.LOWER;
 
 /**
- * Single precision matrix base class.
+ * Matrix base class. The most important method is the matrix vector
+ * multiplication, which is the only operation needed in many iterative matrix
+ * algorithms, e.g. biconjugate gradient method for solving linear equations and
+ * power iteration and Lanczos algorithm for eigen decomposition, which are
+ * usually very efficient for very large and sparse matrices.
+ * <p>
+ * A matrix is a rectangular array of numbers. An item in a matrix is called
+ * an entry or an element. Entries are often denoted by a variable with two
+ * subscripts. Matrices of the same size can be added and subtracted entrywise
+ * and matrices of compatible size can be multiplied. These operations have
+ * many of the properties of ordinary arithmetic, except that matrix
+ * multiplication is not commutative, that is, AB and BA are not equal in
+ * general.
+ * <p>
+ * Matrices are a key tool in linear algebra. One use of matrices is to
+ * represent linear transformations and matrix multiplication corresponds
+ * to composition of linear transformations. Matrices can also keep track of
+ * the coefficients in a system of linear equations. For a square matrix,
+ * the determinant and inverse matrix (when it exists) govern the behavior
+ * of solutions to the corresponding system of linear equations, and
+ * eigenvalues and eigenvectors provide insight into the geometry of
+ * the associated linear transformation.
+ * <p>
+ * There are several methods to render matrices into a more easily accessible
+ * form. They are generally referred to as matrix transformation or matrix
+ * decomposition techniques. The interest of all these decomposition techniques
+ * is that they preserve certain properties of the matrices in question, such
+ * as determinant, rank or inverse, so that these quantities can be calculated
+ * after applying the transformation, or that certain matrix operations are
+ * algorithmically easier to carry out for some types of matrices.
+ * <p>
+ * The LU decomposition factors matrices as a product of lower (L) and an upper
+ * triangular matrices (U). Once this decomposition is calculated, linear
+ * systems can be solved more efficiently, by a simple technique called
+ * forward and back substitution. Likewise, inverses of triangular matrices
+ * are algorithmically easier to calculate. The QR decomposition factors matrices
+ * as a product of an orthogonal (Q) and a right triangular matrix (R). QR decomposition
+ * is often used to solve the linear least squares problem, and is the basis for
+ * a particular eigenvalue algorithm, the QR algorithm. Singular value decomposition
+ * expresses any matrix A as a product UDV', where U and V are unitary matrices
+ * and D is a diagonal matrix. The eigendecomposition or diagonalization
+ * expresses A as a product VDV<sup>-1</sup>, where D is a diagonal matrix and
+ * V is a suitable invertible matrix. If A can be written in this form, it is
+ * called diagonalizable.
  *
  * @author Haifeng Li
  */
 public abstract class IMatrix implements Cloneable, Serializable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IMatrix.class);
+
     /**
      * The row names.
      */
@@ -182,7 +230,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param j the column index.
      * @return the string representation of <code>A[i, j]</code>.
      */
-    String str(int i, int j) {
+    private String str(int i, int j) {
         return smile.util.Strings.format(get(i, j), true);
     }
 
@@ -332,16 +380,16 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
-     * @return this matrix.
      */
-    public abstract void set(int i, int j, float x);
+    public void set(int i, int j, float x) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sets {@code A[i,j] = x} for Scala users.
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
-     * @return this matrix.
      */
     public void update(int i, int j, float x) {
         set(i, j, x);
@@ -353,7 +401,9 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param j the column index.
      * @return the matrix cell value.
      */
-    public abstract float get(int i, int j);
+    public float get(int i, int j) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns {@code A[i, j]}. For Scala users.
@@ -393,6 +443,109 @@ public abstract class IMatrix implements Cloneable, Serializable {
         }
 
         return t;
+    }
+
+    /**
+     * Returns the largest eigen pair of matrix with the power iteration
+     * under the assumptions A has an eigenvalue that is strictly greater
+     * in magnitude than its other eigenvalues and the starting
+     * vector has a nonzero component in the direction of an eigenvector
+     * associated with the dominant eigenvalue.
+     * @param v on input, it is the non-zero initial guess of the eigen vector.
+     * On output, it is the eigen vector corresponding largest eigen value.
+     * @return the largest eigen value.
+     */
+    public double eigen(float[] v) {
+        return eigen(v, 0.0f, Math.max(1.0E-6f, nrow() * MathEx.FLOAT_EPSILON), Math.max(20, 2 * nrow()));
+    }
+
+    /**
+     * Returns the largest eigen pair of matrix with the power iteration
+     * under the assumptions A has an eigenvalue that is strictly greater
+     * in magnitude than its other eigenvalues and the starting
+     * vector has a nonzero component in the direction of an eigenvector
+     * associated with the dominant eigenvalue.
+     * @param v on input, it is the non-zero initial guess of the eigen vector.
+     * On output, it is the eigen vector corresponding largest eigen value.
+     * @param p the origin in the shifting power method. A - pI will be
+     * used in the iteration to accelerate the method. p should be such that
+     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
+     * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
+     * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
+     * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue
+     * in magnitude. Good estimates of &lambda;<sub>2</sub> are more difficult
+     * to compute. However, if &mu; is an approximation to largest eigenvector,
+     * then using any x<sub>0</sub> such that x<sub>0</sub>*&mu; = 0 as the initial
+     * vector for a few iterations may yield a reasonable estimate of &lambda;<sub>2</sub>.
+     * @param tol the desired convergence tolerance.
+     * @param maxIter the maximum number of iterations in case that the algorithm
+     * does not converge.
+     * @return the largest eigen value.
+     */
+    public double eigen(float[] v, float p, float tol, int maxIter) {
+        if (nrow() != ncol()) {
+            throw new IllegalArgumentException("Matrix is not square.");
+        }
+
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
+        int n = nrow();
+        tol = Math.max(tol, MathEx.FLOAT_EPSILON * n);
+
+        float[] z = new float[n];
+        double lambda = power(v, z, p);
+
+        for (int iter = 1; iter <= maxIter; iter++) {
+            double l = lambda;
+            lambda = power(v, z, p);
+
+            double eps = Math.abs(lambda - l);
+            if (iter % 10 == 0) {
+                logger.trace(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
+            }
+
+            if (eps < tol) {
+                logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
+                return lambda + p;
+            }
+        }
+
+        logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", maxIter, lambda + p));
+        logger.error("Power iteration exceeded the maximum number of iterations.");
+        return lambda + p;
+    }
+
+    /**
+     * Calculate and normalize y = (A - pI) x.
+     * Returns the largest element of y in magnitude.
+     */
+    private double power(float[] x, float[] y, float p) {
+        mv(x, y);
+
+        if (p != 0.0f) {
+            for (int i = 0; i < y.length; i++) {
+                y[i] -= p * x[i];
+            }
+        }
+
+        float lambda = y[0];
+        for (int i = 1; i < y.length; i++) {
+            if (Math.abs(y[i]) > Math.abs(lambda)) {
+                lambda = y[i];
+            }
+        }
+
+        for (int i = 0; i < y.length; i++) {
+            x[i] = y[i] / lambda;
+        }
+
+        return lambda;
     }
 
     /**
@@ -636,16 +789,6 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
             @Override
             public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public float get(int i, int j) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void set(int i, int j, float x) {
                 throw new UnsupportedOperationException();
             }
         };

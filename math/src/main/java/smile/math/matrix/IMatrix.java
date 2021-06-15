@@ -36,7 +36,7 @@ import static smile.math.blas.Transpose.TRANSPOSE;
 import static smile.math.blas.UPLO.LOWER;
 
 /**
- * An abstract interface of matrix. The most important method is the matrix vector
+ * Matrix base class. The most important method is the matrix vector
  * multiplication, which is the only operation needed in many iterative matrix
  * algorithms, e.g. biconjugate gradient method for solving linear equations and
  * power iteration and Lanczos algorithm for eigen decomposition, which are
@@ -230,7 +230,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param j the column index.
      * @return the string representation of <code>A[i, j]</code>.
      */
-    String str(int i, int j) {
+    private String str(int i, int j) {
         return smile.util.Strings.format(get(i, j), true);
     }
 
@@ -272,14 +272,6 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Matrix-vector multiplication {@code A * x}.
-     * @param work the workspace for both input and output vector.
-     * @param inputOffset the offset of input vector in workspace.
-     * @param outputOffset the offset of output vector in workspace.
-     */
-    public abstract void mv(double[] work, int inputOffset, int outputOffset);
-
-    /**
      * Matrix-vector multiplication.
      * <pre>{@code
      *     y = alpha * A * x + beta * y
@@ -294,6 +286,14 @@ public abstract class IMatrix implements Cloneable, Serializable {
     public void mv(double alpha, double[] x, double beta, double[] y) {
         mv(NO_TRANSPOSE, alpha, x, beta, y);
     }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param work the workspace for both input and output vector.
+     * @param inputOffset the offset of input vector in workspace.
+     * @param outputOffset the offset of output vector in workspace.
+     */
+    public abstract void mv(double[] work, int inputOffset, int outputOffset);
 
     /**
      * Returns Matrix-vector multiplication {@code A' * x}.
@@ -376,7 +376,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Sets {@code A[i, j] = x}.
+     * Sets {@code A[i,j] = x}.
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
@@ -386,7 +386,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Sets {@code A[i, j] = x} for Scala users.
+     * Sets {@code A[i,j] = x} for Scala users.
      * @param i the row index.
      * @param j the column index.
      * @param x the matrix cell value.
@@ -789,16 +789,6 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
             @Override
             public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public double get(int i, int j) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void set(int i, int j, double x) {
                 throw new UnsupportedOperationException();
             }
         };
