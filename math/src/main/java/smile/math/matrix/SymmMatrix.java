@@ -201,7 +201,7 @@ public class SymmMatrix extends IMatrix {
     public void mv(double[] work, int inputOffset, int outputOffset) {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
-        BLAS.engine.spmv(layout(), uplo, n, 1.0f, DoubleBuffer.wrap(AP), xb, 1, 0.0f, yb, 1);
+        BLAS.engine.spmv(layout(), uplo, n, 1.0, DoubleBuffer.wrap(AP), xb, 1, 0.0, yb, 1);
     }
 
     @Override
