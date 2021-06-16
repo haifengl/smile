@@ -26,8 +26,6 @@ import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.BiconjugateGradient;
-import smile.math.matrix.BiconjugateGradient.Preconditioner;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -313,7 +311,7 @@ public class LASSO {
             }
 
             // preconditioned conjugate gradient
-            double error = BiconjugateGradient.solve(pcg, grad, dxu, pcg, pcgtol, 1, pcgmaxi);
+            double error = pcg.solve(grad, dxu, pcg, pcgtol, 1, pcgmaxi);
             if (error > pcgtol) {
                 pitr = pcgmaxi;
             }
@@ -388,7 +386,7 @@ public class LASSO {
     /**
      * Preconditioned conjugate gradients matrix.
      */
-    static class PCG extends IMatrix implements Preconditioner {
+    static class PCG extends IMatrix implements IMatrix.Preconditioner {
         /** The design matrix. */
         Matrix A;
         /** A' * A */
@@ -470,7 +468,7 @@ public class LASSO {
         }
 
         @Override
-        public void solve(double[] b, double[] x) {
+        public void asolve(double[] b, double[] x) {
             // COMPUTE P^{-1}X (PCG)
             // y = P^{-1} * x
             for (int i = 0; i < p; i++) {

@@ -820,4 +820,212 @@ public abstract class IMatrix implements Cloneable, Serializable {
     public IMatrix square() {
         return new IMatrix.Square(this);
     }
+    /**
+     * The preconditioner matrix. A preconditioner P of a matrix A is a matrix
+     * such that P<sup>-1</sup>A has a smaller condition number than A.
+     * Preconditioners are useful in iterative methods to solve a linear
+     * system A * x = b since the rate of convergence for most iterative
+     * linear solvers increases because the condition number of a matrix
+     * decreases as a result of preconditioning. Preconditioned iterative
+     * solvers typically outperform direct solvers for large, especially
+     * for sparse, matrices.
+     * <p>
+     * The preconditioner matrix P is close to A and should be easy to
+     * solve for linear systems. The preconditioner matrix could be as
+     * simple as the trivial diagonal part of A in some cases.
+     */
+    public interface Preconditioner {
+        /**
+         * Solve P * x = b for the preconditioner matrix P.
+         *
+         * @param b the right hand side of linear system.
+         * @param x the output solution vector.
+         */
+        void asolve(float[] b, float[] x);
+    }
+
+    /**
+     * Returns a simple Jacobi preconditioner matrix that is the
+     * trivial diagonal part of A in some cases.
+     * @return the preconditioner matrix.
+     */
+    public Preconditioner Jacobi() {
+        float[] diag = diag();
+        return (b, x) -> {
+            int n = diag.length;
+
+            for (int i = 0; i < n; i++) {
+                x[i] = diag[i] != 0.0 ? b[i] / diag[i] : b[i];
+            }
+        };
+    }
+
+    /**
+     * Solves A * x = b by iterative biconjugate gradient method with Jacobi
+     * preconditioner matrix.
+     *
+     * @param b the right hand side of linear equations.
+     * @param x on input, x should be set to an initial guess of the solution
+     * (or all zeros). On output, x is reset to the improved solution.
+     * @return the estimated error.
+     */
+    public double solve(float[] b, float[] x) {
+        return solve(b, x, Jacobi(), 1E-6f, 1, 2 * Math.max(nrow(), ncol()));
+    }
+
+    /**
+     * Solves A * x = b by iterative biconjugate gradient method.
+     *
+     * @param b the right hand side of linear equations.
+     * @param x on input, x should be set to an initial guess of the solution
+     * (or all zeros). On output, x is reset to the improved solution.
+     * @param P The preconditioner matrix.
+     * @param tol The desired convergence tolerance.
+     * @param itol Which convergence test is applied.
+     *             If itol = 1, iteration stops when |Ax - b| / |b| is less
+     *             than the parameter tolerance.
+     *             If itol = 2, the stop criterion is that |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b|
+     *             is less than tolerance.
+     *             If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
+     *             tolerance.
+     *             The setting of tol = 4 is same as tol = 3 except that the
+     *             L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
+     * @param maxIter The maximum number of iterations.
+     * @return the estimated error.
+     */
+    public double solve(float[] b, float[] x, Preconditioner P, float tol, int itol, int maxIter) {
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (itol < 1 || itol > 4) {
+            throw new IllegalArgumentException("Invalid itol: " + itol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum iterations: " + maxIter);
+        }
+
+        float err = 0.0f;
+        float ak, akden, bk, bkden = 1.0f, bknum, bnrm, dxnrm, xnrm, zm1nrm, znrm = 0.0f;
+        int j, n = b.length;
+
+        float[] p = new float[n];
+        float[] pp = new float[n];
+        float[] r = new float[n];
+        float[] rr = new float[n];
+        float[] z = new float[n];
+        float[] zz = new float[n];
+
+        mv(x, r);
+        for (j = 0; j < n; j++) {
+            r[j] = b[j] - r[j];
+            rr[j] = r[j];
+        }
+
+        if (itol == 1) {
+            bnrm = norm(b, itol);
+            P.asolve(r, z);
+        } else if (itol == 2) {
+            P.asolve(b, z);
+            bnrm = norm(z, itol);
+            P.asolve(r, z);
+        } else if (itol == 3 || itol == 4) {
+            P.asolve(b, z);
+            bnrm = norm(z, itol);
+            P.asolve(r, z);
+            znrm = norm(z, itol);
+        } else {
+            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
+        }
+
+        for (int iter = 1; iter <= maxIter; iter++) {
+            P.asolve(rr, zz);
+            for (bknum = 0.0f, j = 0; j < n; j++) {
+                bknum += z[j] * rr[j];
+            }
+            if (iter == 1) {
+                for (j = 0; j < n; j++) {
+                    p[j] = z[j];
+                    pp[j] = zz[j];
+                }
+            } else {
+                bk = bknum / bkden;
+                for (j = 0; j < n; j++) {
+                    p[j] = bk * p[j] + z[j];
+                    pp[j] = bk * pp[j] + zz[j];
+                }
+            }
+            bkden = bknum;
+            mv(p, z);
+            for (akden = 0.0f, j = 0; j < n; j++) {
+                akden += z[j] * pp[j];
+            }
+            ak = bknum / akden;
+            tv(pp, zz);
+            for (j = 0; j < n; j++) {
+                x[j] += ak * p[j];
+                r[j] -= ak * z[j];
+                rr[j] -= ak * zz[j];
+            }
+            P.asolve(r, z);
+            if (itol == 1) {
+                err = norm(r, itol) / bnrm;
+            } else if (itol == 2) {
+                err = norm(z, itol) / bnrm;
+            } else if (itol == 3 || itol == 4) {
+                zm1nrm = znrm;
+                znrm = norm(z, itol);
+                if (Math.abs(zm1nrm - znrm) > MathEx.EPSILON * znrm) {
+                    dxnrm = Math.abs(ak) * norm(p, itol);
+                    err = znrm / Math.abs(zm1nrm - znrm) * dxnrm;
+                } else {
+                    err = znrm / bnrm;
+                    continue;
+                }
+                xnrm = norm(x, itol);
+                if (err <= 0.5 * xnrm) {
+                    err /= xnrm;
+                } else {
+                    err = znrm / bnrm;
+                    continue;
+                }
+            }
+
+            if (iter % 10 == 0) {
+                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
+            }
+
+            if (err <= tol) {
+                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
+                break;
+            }
+        }
+
+        return err;
+    }
+
+    /**
+     * Computes L2 or L-infinity norms for a vector x, as signaled by itol.
+     */
+    private static float norm(float[] x, int itol) {
+        int n = x.length;
+
+        if (itol <= 3) {
+            float ans = 0.0f;
+            for (double v : x) {
+                ans += v * v;
+            }
+            return (float) Math.sqrt(ans);
+        } else {
+            int isamax = 0;
+            for (int i = 0; i < n; i++) {
+                if (Math.abs(x[i]) > Math.abs(x[isamax])) {
+                    isamax = i;
+                }
+            }
+
+            return Math.abs(x[isamax]);
+        }
+    }
 }
