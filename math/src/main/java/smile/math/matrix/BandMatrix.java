@@ -19,7 +19,6 @@ package smile.math.matrix;
 
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import static smile.math.blas.Layout.*;
@@ -94,7 +93,7 @@ public class BandMatrix extends IMatrix {
     /**
      * The leading dimension.
      */
-    transient int ld;
+    final int ld;
     /**
      * The upper or lower triangle of the symmetric band matrix.
      */
@@ -138,7 +137,7 @@ public class BandMatrix extends IMatrix {
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
-     * @param AB the band matrix. A[i, j] is stored in {@code AB[ku+i-j, j]}
+     * @param AB the band matrix. A[i,j] is stored in {@code AB[ku+i-j, j]}
      *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
      */
     public BandMatrix(int m, int n, int kl, int ku, double[][] AB) {
@@ -281,7 +280,7 @@ public class BandMatrix extends IMatrix {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             return AB[j * ld + ku + i - j];
         } else {
-            return 0.0f;
+            return 0.0;
         }
     }
 
@@ -308,9 +307,9 @@ public class BandMatrix extends IMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         }
     }
 
@@ -319,9 +318,9 @@ public class BandMatrix extends IMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         }
     }
 

@@ -776,7 +776,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
         @Override
         public long size() {
-            return m + n;
+            return A.size();
         }
 
         @Override

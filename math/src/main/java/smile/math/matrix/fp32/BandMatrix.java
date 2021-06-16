@@ -93,7 +93,7 @@ public class BandMatrix extends IMatrix {
     /**
      * The leading dimension.
      */
-    transient int ld;
+    final int ld;
     /**
      * The upper or lower triangle of the symmetric band matrix.
      */
@@ -137,7 +137,7 @@ public class BandMatrix extends IMatrix {
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
-     * @param AB the band matrix. A[i, j] is stored in {@code AB[ku+i-j, j]}
+     * @param AB the band matrix. A[i,j] is stored in {@code AB[ku+i-j, j]}
      *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
      */
     public BandMatrix(int m, int n, int kl, int ku, float[][] AB) {
