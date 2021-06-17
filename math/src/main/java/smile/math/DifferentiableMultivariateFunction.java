@@ -40,8 +40,9 @@ public interface DifferentiableMultivariateFunction extends MultivariateFunction
         double fx = f(x);
 
         int n = x.length;
-        double[] xh = x.clone();
+        double[] xh = new double[n];
         for (int i = 0; i < n; i++) {
+            System.arraycopy(x, 0, xh, 0, n);
             double xi = x[i];
             double h = EPSILON * Math.abs(xi);
             if (h == 0.0) {
