@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.github.haifengl"
-version = "2.6.1"
+version = "3.0.0"
 
 repositories {
     mavenCentral()
@@ -26,9 +26,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:2.6.1")
-    api("com.github.haifengl:smile-nlp:2.6.1")
-    api("com.github.haifengl:smile-io:2.6.1")
+    api("com.github.haifengl:smile-core:3.0.0")
+    api("com.github.haifengl:smile-nlp:3.0.0")
+    api("com.github.haifengl:smile-io:3.0.0")
 }
 
 // Copy jar to shell lib
@@ -95,8 +95,8 @@ publishing {
                 url.set("https://haifengl.github.io//")
                 licenses {
                     license {
-                        name.set("GNU Lesser General Public License, Version 3")
-                        url.set("https://opensource.org/licenses/LGPL-3.0")
+                        name.set("GNU General Public License, Version 3")
+                        url.set("https://opensource.org/licenses/GPL-3.0")
                     }
                 }
                 developers {
