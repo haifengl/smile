@@ -18,8 +18,11 @@
 package smile.classification;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.IntStream;
+
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -97,12 +100,13 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
         // it is different from that of training data.
         formula().bind(data.schema());
 
+        int n = data.size();
         int k = numClasses();
-        return data.stream().mapToInt(xi -> {
-            double[] prob = new double[k];
-            posteriori.add(prob);
-            return predict(xi, prob);
-        }).toArray();
+        double[][] prob = new double[n][k];
+        Collections.addAll(posteriori, prob);
+        return IntStream.range(0, n).parallel()
+                .map(i -> predict(data.get(i), prob[i]))
+                .toArray();
     }
 
     /**
