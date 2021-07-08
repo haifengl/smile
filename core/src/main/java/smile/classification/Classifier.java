@@ -19,10 +19,13 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
+
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.math.MathEx;
@@ -182,16 +185,10 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @return the predicted class labels.
      */
     default int[] predict(T[] x, double[][] posteriori) {
-        int k = numClasses();
         int n = x.length;
-        int[] y = new int[n];
-        for (int i = 0; i < n; i++) {
-            if (posteriori[i] == null) {
-                posteriori[i] = new double[k];
-            }
-            y[i] = predict(x[i], posteriori[i]);
-        }
-        return y;
+        return IntStream.range(0, n).parallel()
+                .map(i -> predict(x[i], posteriori[i]))
+                .toArray();
     }
 
     /**
@@ -202,12 +199,13 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @return the predicted class labels.
      */
     default int[] predict(List<T> x, List<double[]> posteriori) {
+        int n = x.size();
         int k = numClasses();
-        return x.stream().mapToInt(xi -> {
-            double[] prob = new double[k];
-            posteriori.add(prob);
-            return predict(xi, prob);
-        }).toArray();
+        double[][] prob = new double[n][k];
+        Collections.addAll(posteriori, prob);
+        return IntStream.range(0, n).parallel()
+                .map(i -> predict(x.get(i), prob[i]))
+                .toArray();
     }
 
     /**
@@ -218,12 +216,13 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @return the predicted class labels.
      */
     default int[] predict(Dataset<T> x, List<double[]> posteriori) {
+        int n = x.size();
         int k = numClasses();
-        return x.stream().mapToInt(xi -> {
-            double[] prob = new double[k];
-            posteriori.add(prob);
-            return predict(xi, prob);
-        }).toArray();
+        double[][] prob = new double[n][k];
+        Collections.addAll(posteriori, prob);
+        return IntStream.range(0, n).parallel()
+                .map(i -> predict(x.get(i), prob[i]))
+                .toArray();
     }
 
     /**
