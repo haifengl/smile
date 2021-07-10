@@ -103,13 +103,13 @@ public class ClassificationValidation<M> implements Serializable {
      * @return the validation results.
      */
     public static <T, M extends Classifier<T>> ClassificationValidation<M> of(T[] x, int[] y, T[] testx, int[] testy, BiFunction<T[], int[], M> trainer) {
-        int k = MathEx.unique(y).length;
         long start = System.nanoTime();
         M model = trainer.apply(x, y);
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
         if (model.soft()) {
+            int k = model.numClasses();
             double[][] posteriori = new double[testx.length][k];
             int[] prediction = model.predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
@@ -161,7 +161,6 @@ public class ClassificationValidation<M> implements Serializable {
         int[] y = formula.y(train).toIntArray();
         int[] testy = formula.y(test).toIntArray();
 
-        int k = MathEx.unique(y).length;
         long start = System.nanoTime();
         M model = trainer.apply(formula, train);
         double fitTime = (System.nanoTime() - start) / 1E6;
@@ -169,6 +168,7 @@ public class ClassificationValidation<M> implements Serializable {
         int n = test.nrow();
         int[] prediction = new int[n];
         if (model.soft()) {
+            int k = model.numClasses();
             double[][] posteriori = new double[n][k];
             start = System.nanoTime();
             for (int i = 0; i < n; i++) {
