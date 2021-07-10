@@ -61,7 +61,7 @@ public class BM25Test {
         int N = 10000000;
         int n = 1000;
         BM25 instance = new BM25(2.0, 0.75, 0.0);
-        double expResult = 18.419481;
+        double expResult = 18.419681;
         double result = instance.score(freq, docSize, avgDocSize, N, n);
         assertEquals(expResult, result, 1E-6);
     }
