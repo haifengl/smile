@@ -147,7 +147,7 @@ public class BM25 implements RelevanceRanker {
         }
         
         tf = tf / (kf + tf);
-        double idf = Math.log((N - n + 0.5) / (n + 0.5));
+        double idf = Math.log((N - n + 0.5) / (n + 0.5) + 1);
 
         return (tf + delta) * idf;
     }
@@ -163,7 +163,7 @@ public class BM25 implements RelevanceRanker {
         if (freq <= 0) return 0.0;
 
         double tf = (k1 + 1) * freq / (freq + k1);
-        double idf = Math.log((N - n + 0.5) / (n + 0.5));
+        double idf = Math.log((N - n + 0.5) / (n + 0.5) + 1);
 
         return (tf + delta) * idf;
     }
@@ -181,7 +181,7 @@ public class BM25 implements RelevanceRanker {
         if (freq <= 0) return 0.0;
 
         double tf = freq * (k1 + 1) / (freq + k1 * (1 - b + b * docSize / avgDocSize));
-        double idf = Math.log((N - n + 0.5) / (n + 0.5));
+        double idf = Math.log((N - n + 0.5) / (n + 0.5) + 1);
 
         return (tf + delta) * idf;
     }
