@@ -26,10 +26,9 @@ import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.classification.RandomForest
 import smile.data.DataFrame
 import smile.data.formula.Formula
+import smile.hpo.Hyperparameters
 import smile.io.Read
 import smile.util.Paths
-import smile.validation.Hyperparameters
-import smile.validation.metric.{Accuracy, Precision, Recall}
 
 class HpoSpec extends Specification with BeforeAll with AfterAll{
 
