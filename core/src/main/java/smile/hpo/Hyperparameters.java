@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.validation;
+package smile.hpo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import smile.math.MathEx;
 
 /**
- * Hyperparameter tuning. A hyperparameter is a parameter whose value is set
+ * Hyperparameter configuration. A hyperparameter is a parameter whose value is set
  * before the learning process begins. By contrast, the values of other
  * parameters are derived via training.
  * <p>
