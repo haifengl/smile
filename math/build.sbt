@@ -1,7 +1,7 @@
 name := "smile-math"
 
 libraryDependencies ++= Seq(
-  "org.slf4j" % "slf4j-api" % "1.7.30",
+  "org.slf4j"    % "slf4j-api" % "1.7.32",
   "org.bytedeco" % "javacpp"   % "1.5.5",
   "org.bytedeco" % "openblas"  % "0.3.13-1.5.5",
   "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.5",
