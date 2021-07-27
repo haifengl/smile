@@ -556,11 +556,11 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         Arrays.sort(neighbors);
 
-        MathEx.reverse(neighbors);
-
         if (neighbors.length > k) {
             neighbors = Arrays.copyOf(neighbors, k);
         }
+
+        MathEx.reverse(neighbors);
 
         return neighbors;
     }
