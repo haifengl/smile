@@ -30,7 +30,8 @@ import smile.util.IntSet;
  */
 public interface Sampling {
     /**
-     * Random sampling. All samples have an equal probability of being selected.
+     * Simple random sampling. All samples have an equal probability
+     * of being selected.
      *
      * @param n the size of samples.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
@@ -57,7 +58,8 @@ public interface Sampling {
      * array. Each row is the sample indices of stratum.
      *
      * @param category the strata labels.
-     * @return the strata
+     * @return the strata of samples as a two-dimensional array.
+     *         Each row is the sample indices of stratum.
      */
     static int[][] strata(int[] category) {
         int[] unique = MathEx.unique(category);
@@ -94,10 +96,17 @@ public interface Sampling {
     }
 
     /**
-     * Stratified sampling. When the population embraces a number of
-     * distinct categories, the frame can be organized by these categories
-     * into separate strata. Each stratum is then sampled as an independent
-     * sub-population, out of which individual elements can be randomly selected.
+     * Stratified sampling from a population which can be partitioned
+     * into subpopulations. In statistical surveys, when subpopulations
+     * within an overall population vary, it could be advantageous to
+     * sample each subpopulation (stratum) independently.
+     * <p>
+     * Stratification is the process of dividing members of the population
+     * into homogeneous subgroups before sampling. The strata should define
+     * a partition of the population. That is, it should be collectively
+     * exhaustive and mutually exclusive: every element in the population
+     * must be assigned to one and only one stratum. Then simple random
+     * sampling is applied within each stratum.
      *
      * @param category the strata labels.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
@@ -140,5 +149,52 @@ public interface Sampling {
             }
             return samples;
         }
+    }
+
+    /**
+     * Latin hypercube sampling. LHS generates a near-random sample of
+     * parameter values from a multidimensional distribution. The sampling
+     * method is often used to construct Monte Carlo simulation.
+     * <p>
+     * A Latin hypercube is an n-by-d matrix, each column of which is a
+     * permutation of 1, 2, ..., n. When sampling a function of d variables,
+     * the range of each variable is divided into n equally probable intervals.
+     * n sample points are then placed to satisfy the Latin hypercube
+     * requirements; this forces the number of divisions, n, to be equal for
+     * each variable.
+     * <p>
+     * This sampling scheme does not require more samples for more dimensions
+     * (variables); this independence is one of the main advantages of this
+     * sampling scheme. Another advantage is that random samples can be taken
+     * one at a time, remembering which samples were taken so far.
+     * <p>
+     * Because the component samples are randomly paired, an LHS is not unique;
+     * there are (d!)<sup>n-1</sup> possible combinations. With this in mind,
+     * improved LHS algorithms iterate to determine optimal pairings according
+     * to some specified criteria - such as reduced correlation among the terms
+     * or enhanced space-filling properties.
+     * <p>
+     * A randomly generated Latin Hypercube may be quite structured: the design
+     * may not have good univariate projection uniformity or the different
+     * columns might be highly correlated. Several criteria such as maximin
+     * distance and minimum correlation have been proposed to address these
+     * issues.
+     *
+     * @param n the number of divisions, also the number of samples.
+     * @param d the dimensionality, i.e. the number of variables.
+     * @return Latin hypercube of n-by-d matrix.
+     */
+    static int[][] latin(int n, int d) {
+        int[][] hypercube = new int[n][d];
+        int[] intervals = MathEx.permutate(n);
+        for (int j = 0; j < d; j++) {
+            for (int i = 0; i < n; i++) {
+                hypercube[i][j] = intervals[i];
+            }
+
+            MathEx.permutate(intervals);
+        }
+
+        return hypercube;
     }
 }
