@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile
+package smile.feature
 
 import smile.math.kernel.MercerKernel
 import smile.math.TimeFunction
@@ -87,7 +87,7 @@ import smile.util.time
   *
   * @author Haifeng Li
   */
-package object projection {
+package object extraction {
   /** Principal component analysis. PCA is an orthogonal
     * linear transformation that transforms a number of possibly correlated
     * variables into a smaller number of uncorrelated variables called principal

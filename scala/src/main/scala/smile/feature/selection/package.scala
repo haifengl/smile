@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile
+package smile.feature
 
 import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula.Formula
@@ -54,7 +54,7 @@ import smile.feature.selection.{SignalNoiseRatio, SumSquaresRatio}
   *
   * @author Haifeng Li
   */
-package object feature {
+package object selection {
   /** The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
     * which can be used as a feature selection criterion for binary classification
     * problems. S2N is defined as |&mu;<sub>1</sub> - &mu;<sub>2</sub>| / (&sigma;<sub>1</sub> + &sigma;<sub>2</sub>),

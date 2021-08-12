@@ -18,11 +18,11 @@
 package smile.plot
 
 import java.awt.Color
-import smile.data.DataFrame
 import smile.clustering.HierarchicalClustering
+import smile.data.DataFrame
+import smile.feature.extraction.PCA
 import smile.math.matrix.SparseMatrix
 import smile.stat.distribution.{DiscreteDistribution, Distribution}
-import smile.projection.PCA
 
 /** Swing based data visualization.
   *

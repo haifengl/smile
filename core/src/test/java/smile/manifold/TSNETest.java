@@ -23,14 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.MNIST;
-import smile.io.Read;
 import smile.math.MathEx;
-import smile.projection.PCA;
-import smile.util.Paths;
-import org.apache.commons.csv.CSVFormat;
-
-import java.util.Arrays;
-
+import smile.feature.extraction.PCA;
 import static org.junit.Assert.*;
 
 /**

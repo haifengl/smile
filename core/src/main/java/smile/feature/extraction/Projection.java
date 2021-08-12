@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.projection;
+package smile.feature.extraction;
 
 /**
  * A projection is a kind of feature extraction technique that transforms data

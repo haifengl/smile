@@ -19,8 +19,7 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Optional;
-
-import smile.projection.PCA;
+import smile.feature.extraction.PCA;
 
 /**
  * In multivariate statistics, a scree plot is a line plot of the eigenvalues

@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.projection.ica;
+package smile.feature.extraction.ica;
 
 import smile.math.DifferentiableFunction;
 
