@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.selection;
 
 /**
  * Univariate feature ranking metric.
@@ -34,5 +34,4 @@ public interface FeatureRanking {
      * @return the metric values of each feature, in the ascending order of unique labels.
      */
     double[] rank(double[][] x, int[] y);
-    
 }
