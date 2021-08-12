@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.selection;
 
 import smile.classification.LDA;
 import smile.data.Iris;

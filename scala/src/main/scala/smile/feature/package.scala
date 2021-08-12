@@ -19,6 +19,7 @@ package smile
 
 import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula.Formula
+import smile.feature.selection.{SignalNoiseRatio, SumSquaresRatio}
 
 /** Feature generation, normalization and selection.
   *
