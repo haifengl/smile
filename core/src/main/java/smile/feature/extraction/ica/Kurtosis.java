@@ -15,16 +15,30 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+package smile.feature.extraction.ica;
+
+import smile.math.DifferentiableFunction;
+
 /**
- * The contrast functions in FastICA. Using maximum entropy approximations of
- * differential entropy, FastICA introduce a family of new contrast (objective)
- * functions for ICA. These contrast functions enable both the estimation of
- * the whole decomposition by minimizing mutual information, and estimation
- * of individual independent components as projection pursuit directions.
- * <p>
- * The contrast functions must be a non-quadratic non-linear function
- * that has second-order derivative.
+ * The kurtosis of the probability density function of a signal.
+ * Note that kurtosis is very sensitive to outliers.
  *
  * @author Haifeng Li
  */
-package smile.projection.ica;
+public class Kurtosis implements DifferentiableFunction {
+
+    @Override
+    public double f(double x) {
+        return 0.25 * x * x * x * x;
+    }
+
+    @Override
+    public double g(double x) {
+        return x * x * x;
+    }
+
+    @Override
+    public double g2(double x) {
+        return 3 * x * x;
+    }
+}

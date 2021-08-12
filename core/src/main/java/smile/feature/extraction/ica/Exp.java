@@ -15,30 +15,31 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.projection.ica;
+package smile.feature.extraction.ica;
 
 import smile.math.DifferentiableFunction;
 
 /**
- * The kurtosis of the probability density function of a signal.
- * Note that kurtosis is very sensitive to outliers.
+ * The contrast function when the independent components are highly
+ * super-Gaussian, or when robustness is very important.
  *
  * @author Haifeng Li
  */
-public class Kurtosis implements DifferentiableFunction {
+public class Exp implements DifferentiableFunction {
 
     @Override
     public double f(double x) {
-        return 0.25 * x * x * x * x;
+        return -Math.exp(-0.5 * x * x);
     }
 
     @Override
     public double g(double x) {
-        return x * x * x;
+        return x * Math.exp(-0.5 * x * x);
     }
 
     @Override
     public double g2(double x) {
-        return 3 * x * x;
+        double x2 = x * x;
+        return (1 - x2) * Math.exp(-0.5 * x2);
     }
 }

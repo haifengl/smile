@@ -77,9 +77,9 @@
  * use of autoencoders, a special kind of feed-forward neural networks with
  * a bottle-neck hidden layer. The training of deep encoders is typically
  * performed using a greedy layer-wise pre-training (e.g., using a stack of
- * Restricted Boltzmann machines) that is followed by a finetuning stage based
+ * Restricted Boltzmann machines) that is followed by a fine tuning stage based
  * on backpropagation.
  *
  * @author Haifeng Li
  */
-package smile.projection;
+package smile.feature.extraction;

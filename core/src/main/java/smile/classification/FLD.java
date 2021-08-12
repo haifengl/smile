@@ -20,7 +20,7 @@ package smile.classification;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.projection.Projection;
+import smile.feature.extraction.Projection;
 import smile.sort.QuickSort;
 import smile.util.IntSet;
 
@@ -57,7 +57,7 @@ import smile.util.IntSet;
  * </ol>
  *
  * @see LDA
- * @see smile.projection.PCA
+ * @see smile.feature.extraction.PCA
  * 
  * @author Haifeng Li
  */
