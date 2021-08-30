@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -169,5 +171,21 @@ public class BinomialDistributionTest {
         assertEquals(30, instance.quantile(0.5), 1E-7);
         assertEquals(36, instance.quantile(0.9), 1E-7);
         assertEquals(100, instance.quantile(1.0), 1E-7);
+    }
+
+    @Test
+    public void testRand() {
+        System.out.println("rand");
+        MathEx.setSeed(19650218);
+        BinomialDistribution instance = new BinomialDistribution(1000, 0.99);
+        assertEquals(986, instance.rand(), 1E-7);
+    }
+
+    @Test(expected = ArithmeticException.class)
+    public void testRandOverflow() {
+        System.out.println("rand overflow");
+        MathEx.setSeed(19650218);
+        BinomialDistribution instance = new BinomialDistribution(1000, 0.999000999000999);
+        assertEquals(1000, instance.rand(), 1E-7);
     }
 }
