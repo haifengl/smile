@@ -201,10 +201,8 @@ public class BinomialDistribution extends DiscreteDistribution {
             return PoissonDistribution.tinyLambdaRand(np);
         }
 
-        boolean inv = false;                // invert
-        if (p > 0.5) {                      // faster calculation by inversion
-            inv = true;
-        }
+        // faster calculation by inversion
+        boolean inv = p > 0.5 ? true : false;
 
         if (np < 55) {
             // inversion method, using chop-down search from 0
@@ -267,6 +265,13 @@ public class BinomialDistribution extends DiscreteDistribution {
             r2 = nu / (double) k2 - p;    //  p =      p / q
             r4 = nu / (double) (k4 + 1) - p;
             r5 = nu / (double) (k5 + 1) - p;
+
+            if (Double.isInfinite(r1) || Double.isNaN(r1) ||
+                Double.isInfinite(r2) || Double.isNaN(r2) ||
+                Double.isInfinite(r4) || Double.isNaN(r4) ||
+                Double.isInfinite(r5) || Double.isNaN(r5)) {
+                throw new ArithmeticException("RNG arithmetic overflow/underflow.");
+            }
 
             // reciprocal values of the scale parameters of expon. tail envelopes
             ll = log(r1);                     // expon. tail left
