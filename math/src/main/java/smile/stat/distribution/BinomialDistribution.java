@@ -194,7 +194,7 @@ public class BinomialDistribution extends DiscreteDistribution {
      */
     @Override
     public double rand() {
-        double np = n * p;
+        double np = n * Math.min(p, 1.0 - p);
 
         // Poisson approximation for extremely low np
         if (np < 1.E-6) {
@@ -275,7 +275,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
             // reciprocal values of the scale parameters of expon. tail envelopes
             ll = log(r1);                     // expon. tail left
-            lr = -log(r5);                     // expon. tail right
+            lr = -log(r5);                    // expon. tail right
 
             // binomial constants, necessary for computing function values f(k)
             l_pq = log(p);

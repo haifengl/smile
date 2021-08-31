@@ -178,14 +178,14 @@ public class BinomialDistributionTest {
         System.out.println("rand");
         MathEx.setSeed(19650218);
         BinomialDistribution instance = new BinomialDistribution(1000, 0.99);
-        assertEquals(986, instance.rand(), 1E-7);
+        assertEquals(987, instance.rand(), 1E-7);
     }
 
-    @Test(expected = ArithmeticException.class)
+    @Test
     public void testRandOverflow() {
         System.out.println("rand overflow");
         MathEx.setSeed(19650218);
         BinomialDistribution instance = new BinomialDistribution(1000, 0.999000999000999);
-        assertEquals(1000, instance.rand(), 1E-7);
+        assertEquals(999, instance.rand(), 1E-7);
     }
 }
