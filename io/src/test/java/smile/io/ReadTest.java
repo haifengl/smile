@@ -17,7 +17,6 @@
 
 package smile.io;
 
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,10 +24,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.data.DataFrame;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.util.Paths;
 
 /**
@@ -59,8 +54,10 @@ public class ReadTest {
     @Test
     public void testReadDataArff() throws Exception {
         System.out.println("arff");
-        DataFrame df = Read.data(Paths.getTestData("weka/weather.nominal.arff").toString());
-        System.out.println(df);
+        DataFrame weather = Read.data(Paths.getTestData("weka/weather.nominal.arff").toString());
+        System.out.println(weather);
+        assertEquals(14, weather.nrow());
+        assertEquals(5, weather.ncol());
     }
 
     @Test
@@ -71,6 +68,8 @@ public class ReadTest {
                 Paths.getTestData("kylo/userdata.avsc").toString()
         );
         System.out.println(df);
+        assertEquals(1000, df.nrow());
+        assertEquals(13, df.ncol());
     }
 
     @Test
@@ -78,6 +77,8 @@ public class ReadTest {
         System.out.println("json");
         DataFrame df = Read.data(Paths.getTestData("kylo/books.json").toString());
         System.out.println(df);
+        assertEquals(7, df.nrow());
+        assertEquals(10, df.ncol());
     }
 
     @Test
@@ -85,6 +86,8 @@ public class ReadTest {
         System.out.println("sas");
         DataFrame df = Read.data(Paths.getTestData("sas/airline.sas7bdat").toString());
         System.out.println(df);
+        assertEquals(32, df.nrow());
+        assertEquals(6, df.ncol());
     }
 
     @Test
@@ -92,19 +95,25 @@ public class ReadTest {
         System.out.println("parquet");
         DataFrame df = Read.data(Paths.getTestData("kylo/userdata1.parquet").toString());
         System.out.println(df);
+        assertEquals(1000, df.nrow());
+        assertEquals(13, df.ncol());
     }
 
     @Test
     public void testReadDataCsvZip() throws Exception {
         System.out.println("csv zip");
-        DataFrame df = Read.data(Paths.getTestData("usps/zip.train").toString(), "csv,delimiter= ");
-        System.out.println(df);
+        DataFrame usps = Read.data(Paths.getTestData("usps/zip.train").toString(), "csv,delimiter= ");
+        System.out.println(usps);
+        assertEquals(7291, usps.nrow());
+        assertEquals(257, usps.ncol());
     }
 
     @Test
     public void testReadDataCsvGdp() throws Exception {
         System.out.println("csv gdp");
-        DataFrame df = Read.data(Paths.getTestData("regression/gdp.csv").toString(), "header=true,comment=%");
-        System.out.println(df);
+        DataFrame gdp = Read.data(Paths.getTestData("regression/gdp.csv").toString(), "header=true,comment=%");
+        System.out.println(gdp);
+        assertEquals(68, gdp.nrow());
+        assertEquals(4, gdp.ncol());
     }
 }

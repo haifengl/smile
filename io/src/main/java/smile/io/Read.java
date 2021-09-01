@@ -128,24 +128,31 @@ public interface Read {
                     break;
                 case "quote":
                     String quote = Strings.unescape(option[1]);
-                    if (quote.length() != 1)
+                    if (quote.length() != 1) {
                         throw new IllegalArgumentException("Unknown csv quote: " + quote);
+                    }
                     formatBuilder.setQuote(quote.charAt(0));
                     break;
                 case "escape":
                     String escape = Strings.unescape(option[1]);
-                    if (escape.length() != 1)
+                    if (escape.length() != 1) {
                         throw new IllegalArgumentException("Unknown csv escape: " + escape);
+                    }
                     formatBuilder.setEscape(escape.charAt(0));
                     break;
                 case "comment":
                     String comment = Strings.unescape(option[1]);
-                    if (comment.length() != 1)
+                    if (comment.length() != 1) {
                         throw new IllegalArgumentException("Unknown csv comment marker: " + comment);
+                    }
                     formatBuilder.setCommentMarker(comment.charAt(0));
+                    break;
                 case "header":
-                    if (Boolean.parseBoolean(option[1])) {
+                    if ("true".equalsIgnoreCase(option[1])) {
                         formatBuilder.setHeader().setSkipHeaderRecord(true);
+                    } else {
+                        String[] header = option[1].split("|");
+                        formatBuilder.setHeader(header);
                     }
                     break;
                 default:
