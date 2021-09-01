@@ -84,38 +84,42 @@ object write {
   /** Writes a data frame to an ARFF file. */
   def arff(data: DataFrame, file: Path, relation: String): Unit = Write.arff(data, file, relation)
 
-  /** Writes a DataFrame to a delimited text file.
+  /** Writes a DataFrame to a comma delimited text file.
     *
     * @param data an attribute dataset.
-    * @param file the file path
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = csv(data, Paths.get(file), delimiter)
+  def csv(data: DataFrame, file: String, delimiter: String = ","): Unit =
+    csv(data, Paths.get(file), delimiter)
 
   /** Writes a DataFrame to a delimited text file.
     *
     * @param data an attribute dataset.
-    * @param file the file path
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def csv(data: DataFrame, file: Path, delimiter: Char): Unit = {
-    val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-    Write.csv(data, file, format)
+  def csv(data: DataFrame, file: Path, delimiter: String): Unit = {
+    val format = CSVFormat.Builder.create().setDelimiter(delimiter)
+    Write.csv(data, file, format.build())
   }
 
-  /** Writes a two-dimensional array to a delimited text file.
+  /** Writes a two-dimensional array to a comma delimited text file.
     *
     * @param data a two-dimensional array.
-    * @param file the file path
-    * @param delimiter delimiter string
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def table[T](data: Array[Array[T]], file: String, delimiter: Char = ','): Unit = table(data, Paths.get(file), delimiter)
+  def table[T](data: Array[Array[T]], file: String, delimiter: String = ","): Unit =
+    table(data, Paths.get(file), delimiter)
 
   /** Writes a two-dimensional array to a delimited text file.
     *
     * @param data a two-dimensional array.
-    * @param file the file path
-    * @param delimiter delimiter string
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def table[T](data: Array[Array[T]], file: Path, delimiter: Char): Unit = {
+  def table[T](data: Array[Array[T]], file: Path, delimiter: String): Unit = {
     val writer = new PrintWriter(file.toFile)
     val sb = new StringBuilder
     val del = sb.append(delimiter).toString
@@ -175,17 +179,23 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
-    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-    if (header) format = format.withFirstRecordAsHeader
-    Read.csv(file, format, schema)
+  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+    val format = CSVFormat.Builder.create()
+      .setDelimiter(delimiter)
+      .setQuote(quote)
+      .setEscape(escape)
+    if (header) format.setHeader().setSkipHeaderRecord(true)
+    Read.csv(file, format.build(), schema)
   }
 
   /** Reads a CSV file. */
-  def csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
-    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-    if (header) format = format.withFirstRecordAsHeader
-    Read.csv(file, format, schema)
+  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
+    val format = CSVFormat.Builder.create()
+      .setDelimiter(delimiter)
+      .setQuote(quote)
+      .setEscape(escape)
+    if (header) format.setHeader().setSkipHeaderRecord(true)
+    Read.csv(file, format.build(), schema)
   }
 
   /** Reads a CSV file. */

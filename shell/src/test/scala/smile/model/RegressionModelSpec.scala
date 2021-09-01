@@ -26,8 +26,8 @@ import smile.math.MathEx
 import smile.util.Paths
 
 class RegressionModelSpec extends Specification {
-  val train: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = '\t')
-  val test: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = '\t')
+  val train: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = "\t")
+  val test: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = "\t")
   val formula: Formula = "lpsa" ~ "."
 
   "RegressionModel" should {

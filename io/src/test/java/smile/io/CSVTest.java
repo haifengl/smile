@@ -91,7 +91,11 @@ public class CSVTest {
     public void testGdp() throws Exception {
         System.out.println("gdp");
 
-        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader().withCommentMarker('%');
+        CSVFormat format = CSVFormat.Builder.create()
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .setCommentMarker('%')
+                .build();
         CSV csv = new CSV(format);
         DataFrame gdp = csv.read(Paths.getTestData("regression/gdp.csv"));
 
@@ -124,7 +128,10 @@ public class CSVTest {
     public void testDiabetes() throws Exception {
         System.out.println("diabetes");
 
-        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+        CSVFormat format = CSVFormat.Builder.create()
+                .setHeader()
+                .setSkipHeaderRecord(false)
+                .build();
         CSV csv = new CSV(format);
         DataFrame diabetes = csv.read(Paths.getTestData("regression/diabetes.csv"));
 
@@ -155,7 +162,11 @@ public class CSVTest {
     public void testProstate() throws Exception {
         System.out.println("prostate");
 
-        CSVFormat format = CSVFormat.newFormat('\t').withFirstRecordAsHeader();
+        CSVFormat format = CSVFormat.Builder.create()
+                .setDelimiter('\t')
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .build();
         CSV csv = new CSV(format);
         DataFrame prostate = csv.read(Paths.getTestData("regression/prostate-train.csv"));
 
@@ -224,7 +235,10 @@ public class CSVTest {
     public void testUserdata() throws Exception {
         System.out.println("userdata");
 
-        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+        CSVFormat format = CSVFormat.Builder.create()
+                .setHeader()
+                .setSkipHeaderRecord(false)
+                .build();
         CSV csv = new CSV(format);
         DataFrame df = csv.read(Paths.getTestData("kylo/userdata1.csv"));
 

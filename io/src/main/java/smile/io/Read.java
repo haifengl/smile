@@ -116,7 +116,7 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
-        CSVFormat csvFormat = CSVFormat.DEFAULT;
+        CSVFormat.Builder formatBuilder = CSVFormat.Builder.create();
         for (String token : format.split(",")) {
             String[] option = token.split("=");
             if (option.length != 2) {
@@ -124,19 +124,28 @@ public interface Read {
             }
             switch (option[0].toLowerCase(Locale.ROOT)) {
                 case "delimiter":
-                    csvFormat = csvFormat.withDelimiter(Strings.unescape(option[1]).charAt(0));
+                    formatBuilder.setDelimiter(Strings.unescape(option[1]));
                     break;
                 case "quote":
-                    csvFormat = csvFormat.withQuote(Strings.unescape(option[1]).charAt(0));
+                    String quote = Strings.unescape(option[1]);
+                    if (quote.length() != 1)
+                        throw new IllegalArgumentException("Unknown csv quote: " + quote);
+                    formatBuilder.setQuote(quote.charAt(0));
                     break;
                 case "escape":
-                    csvFormat = csvFormat.withEscape(Strings.unescape(option[1]).charAt(0));
+                    String escape = Strings.unescape(option[1]);
+                    if (escape.length() != 1)
+                        throw new IllegalArgumentException("Unknown csv escape: " + escape);
+                    formatBuilder.setEscape(escape.charAt(0));
                     break;
                 case "comment":
-                    csvFormat = csvFormat.withCommentMarker(Strings.unescape(option[1]).charAt(0));
+                    String comment = Strings.unescape(option[1]);
+                    if (comment.length() != 1)
+                        throw new IllegalArgumentException("Unknown csv comment marker: " + comment);
+                    formatBuilder.setCommentMarker(comment.charAt(0));
                 case "header":
                     if (Boolean.parseBoolean(option[1])) {
-                        csvFormat = csvFormat.withFirstRecordAsHeader();
+                        formatBuilder.setHeader().setSkipHeaderRecord(true);
                     }
                     break;
                 default:
@@ -144,7 +153,7 @@ public interface Read {
             }
         }
 
-        return csv(path, csvFormat);
+        return csv(path, formatBuilder.build());
     }
 
     /**
