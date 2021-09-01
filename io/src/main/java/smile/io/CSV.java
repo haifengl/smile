@@ -245,9 +245,8 @@ public class CSV {
         }
 
         List<String> record = new ArrayList<>(p);
-        CSVFormat.Builder formatBuilder = CSVFormat.Builder.create(format);
-        formatBuilder.setHeader(header);
-        try (CSVPrinter printer = formatBuilder.build().print(path, charset)) {
+        try (CSVPrinter printer = format.print(path, charset)) {
+            printer.printRecord(header);
             for (int i = 0; i < data.size(); i++) {
                 Tuple row = data.get(i);
                 for (int j = 0; j < p; j++) record.add(row.getString(j));
