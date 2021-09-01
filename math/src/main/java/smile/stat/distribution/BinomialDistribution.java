@@ -64,8 +64,6 @@ public class BinomialDistribution extends DiscreteDistribution {
     public final int n;
     /** The entropy. */
     private final double entropy;
-    /** The random number generator. */
-    private RandomNumberGenerator rng;
 
     /**
      * Constructor.
@@ -194,39 +192,37 @@ public class BinomialDistribution extends DiscreteDistribution {
      */
     @Override
     public double rand() {
+        // faster calculation by inversion
+        boolean inv = p > 0.5;
         double np = n * Math.min(p, 1.0 - p);
 
         // Poisson approximation for extremely low np
-        if (np < 1.E-6) {
-            return PoissonDistribution.tinyLambdaRand(np);
-        }
-
-        // faster calculation by inversion
-        boolean inv = p > 0.5 ? true : false;
-
-        if (np < 55) {
-            // inversion method, using chop-down search from 0
-            if (p <= 0.5) {
-                rng = new ModeSearch(p);
-            } else {
-                rng = new ModeSearch(1.0 - p); // faster calculation by inversion
-            }
+        int x;
+        if (np < 1E-6) {
+            x = PoissonDistribution.tinyLambdaRand(np);
         } else {
-            // ratio of uniforms method
-            if (p <= 0.5) {
-                rng = new Patchwork(p);
+            RandomNumberGenerator rng;
+            if (np < 55) {
+                // inversion method, using chop-down search from 0
+                if (p <= 0.5) {
+                    rng = new ModeSearch(p);
+                } else {
+                    rng = new ModeSearch(1.0 - p); // faster calculation by inversion
+                }
             } else {
-                rng = new Patchwork(1.0 - p); // faster calculation by inversion
+                // ratio of uniforms method
+                if (p <= 0.5) {
+                    rng = new Patchwork(p);
+                } else {
+                    rng = new Patchwork(1.0 - p); // faster calculation by inversion
+                }
             }
+
+            x = rng.rand();
         }
 
-        int x = rng.rand();
-
-        if (inv) {
-            x = n - x;                         // undo inversion
-        }
-
-        return x;
+        // undo inversion
+        return inv ? n - x : x;
     }
 
     interface RandomNumberGenerator {
@@ -234,8 +230,6 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     class Patchwork implements RandomNumberGenerator {
-
-        private final int mode;
         private final int k1, k2, k4, k5;
         private final double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
 
@@ -248,7 +242,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
             // mode, reflection points k2 and k4, and points k1 and k5, which
             // delimit the centre region of h(x)
-            mode = (int) nu;
+            final int mode = (int) nu;
             k2 = (int) Math.ceil(nu - 0.5 - W);
             k4 = (int) (nu - 0.5 + W);
             k1 = k2 + k2 - mode + 1;
