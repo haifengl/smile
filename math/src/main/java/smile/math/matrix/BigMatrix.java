@@ -511,14 +511,6 @@ public class BigMatrix extends IMatrix {
     }
 
     /**
-     * Returns true if the matrix is a submatrix (sharing the storage with larger matrix).
-     * @return true if the matrix is a submatrix.
-     */
-    public boolean isSubmatrix() {
-        return A.position() != 0 || A.limit() != A.capacity();
-    }
-
-    /**
      * Return true if the matrix is symmetric ({@code uplo != null && diag == null}).
      * @return true if the matrix is symmetric.
      */

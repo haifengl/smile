@@ -126,7 +126,6 @@ public class BigMatrixTest {
         BigMatrix t = matrix.transpose();
         assertEquals(Layout.COL_MAJOR, matrix.layout());
         assertEquals(Layout.ROW_MAJOR, t.layout());
-        assertFalse(t.isSubmatrix());
         assertEquals(3, t.nrow());
         assertEquals(3, t.ncol());
 
@@ -141,8 +140,6 @@ public class BigMatrixTest {
     @Test
     public void testSubmatrix() {
         BigMatrix sub = matrix.submatrix(0, 1, 2, 2);
-        assertFalse(matrix.isSubmatrix());
-        assertTrue(sub.isSubmatrix());
         System.out.println(matrix);
         System.out.println(sub);
         assertEquals(3, sub.nrow());
@@ -151,7 +148,6 @@ public class BigMatrixTest {
         assertEquals(0.8, sub.get(2,1), 1E-7);
 
         BigMatrix sub2 = sub.submatrix(0, 0, 1, 1);
-        assertTrue(sub2.isSubmatrix());
         assertEquals(2, sub2.nrow());
         assertEquals(2, sub2.ncol());
         assertEquals(0.4, sub.get(0,0), 1E-7);
