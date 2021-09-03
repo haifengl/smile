@@ -54,7 +54,7 @@ class ClassificationModelSpec extends Specification {
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 33
+      model.test.get.error must beCloseTo(33 +/- 3)
     }
     "svm with ensemble" in {
       MathEx.setSeed(19650218)
@@ -67,7 +67,7 @@ class ClassificationModelSpec extends Specification {
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 31
+      model.test.get.error must beCloseTo(30 +/- 3)
     }
     "mlp" in {
       MathEx.setSeed(19650218)
