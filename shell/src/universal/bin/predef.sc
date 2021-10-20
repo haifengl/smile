@@ -53,11 +53,11 @@ import smile.base.rbf.RBF
 import smile.classification._
 import smile.regression.{lm, ridge, lasso, gpr}
 import smile.feature._
+import smile.feature.extraction._
 import smile.clustering._
 import smile.vq._
 import smile.manifold._
 import smile.sequence._
-import smile.projection._
 import smile.nlp._
 import smile.wavelet._
 import smile.shell._
