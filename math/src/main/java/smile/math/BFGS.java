@@ -694,7 +694,7 @@ public class BFGS {
                 sHistory.add(s);
 
                 int h = yHistory.size();
-                if (iter <= m) {
+                if (Y == null || Y.ncol() < h) {
                     Y = new Matrix(n, h);
                     S = new Matrix(n, h);
                     W = new Matrix(n, 2*h);
