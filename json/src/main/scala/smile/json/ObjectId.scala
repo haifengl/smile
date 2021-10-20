@@ -81,7 +81,7 @@ object ObjectId {
    * The following implementation of machineId work around openjdk limitations in
    * version 6 and 7
    *
-   * Openjdk fails to parse /proc/net/if_inet6 correctly to determine macaddress
+   * Openjdk fails to parse /proc/net/if_inet6 correctly to determine mac address
    * resulting in SocketException thrown.
    *
    * Please see:

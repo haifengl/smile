@@ -1,10 +1,7 @@
 name := "smile-spark"
 
-// Spark doesn't support 2.13+
-scalaVersion := "2.12.14"
-
 libraryDependencies ++= {
-  val sparkV = "3.1.2"
+  val sparkV = "3.2.0"
   Seq(
     "org.apache.spark" %% "spark-core"  % sparkV % Provided,
     "org.apache.spark" %% "spark-sql"   % sparkV % Provided,
