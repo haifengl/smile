@@ -103,7 +103,7 @@ object DataTypeOps {
     if (field.measure != null) {
       builder.putString("measure", field.measure.toString)
     }
-    org.apache.spark.sql.types.StructField(field.name, sparkType, nullable, builder.build)
+    org.apache.spark.sql.types.StructField(field.name, sparkType, nullable, builder.build())
   }
 
   /**

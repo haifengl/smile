@@ -31,7 +31,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
   var spark: SparkSession = _
 
   def beforeAll(): Unit = {
-    spark = SparkSession.builder().master("local[*]").getOrCreate
+    spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
   "SmileRegression" should {
