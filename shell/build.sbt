@@ -1,8 +1,6 @@
 name := "smile-shell"
 
 Compile / mainClass := Some("smile.shell.Main")
-// workaround the class loader failure with reflection
-Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
 
 // native packager
 enablePlugins(JavaAppPackaging)
