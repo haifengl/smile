@@ -52,11 +52,11 @@ import smile.regression.RidgeRegression;
 import smile.regression.GaussianProcessRegression;
 import smile.regression.RegressionTree;
 import smile.feature.*;
+import smile.feature.extraction.*;
 import smile.clustering.*;
 import smile.vq.*;
 import smile.manifold.*;
 import smile.sequence.*;
-import smile.projection.*;
 import smile.nlp.*;
 import smile.wavelet.*;
 
