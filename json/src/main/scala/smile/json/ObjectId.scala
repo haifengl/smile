@@ -93,40 +93,30 @@ object ObjectId {
    * and fix in openjdk8:
    * * http://hg.openjdk.java.net/jdk8/tl/jdk/rev/b1814b3ea6d3
    */
-  private val machineId = {
-    import java.net._
-    val validPlatform = Try {
-      val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
-      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
-      val isLinux = System.getProperty("os.name") == "Linux"
+  private val machineId: Array[Byte] = {
+    val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
+    val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
+    val isLinux = System.getProperty("os.name") == "Linux"
 
-      !isLinux || correctVersion || noIpv6
-    }.getOrElse(false)
-
-    // Check java policies
-    val permitted = {
-      val sec = System.getSecurityManager
+    val mac = if (!isLinux || correctVersion || noIpv6) {
       Try {
-        sec.checkPermission(new NetPermission("getNetworkInformation"))
-      }.toOption.isDefined
-    }
+        import java.net._
+        val networkInterfacesEnum = NetworkInterface.getNetworkInterfaces
+        val networkInterfaces = networkInterfacesEnum.asScala
+        val ha = networkInterfaces.find(ha => Try(ha.getHardwareAddress).isSuccess && ha.getHardwareAddress != null && ha.getHardwareAddress.length == 6)
+          .map(_.getHardwareAddress)
+          .getOrElse(InetAddress.getLocalHost.getHostName.getBytes)
+        md5(ha).take(3)
+      }.toOption
+    } else None
 
-    if (validPlatform && permitted) {
-      val networkInterfacesEnum = NetworkInterface.getNetworkInterfaces
-      val networkInterfaces = networkInterfacesEnum.asScala
-      val ha = networkInterfaces.find(ha => Try(ha.getHardwareAddress).isSuccess && ha.getHardwareAddress != null && ha.getHardwareAddress.length == 6)
-        .map(_.getHardwareAddress)
-        .getOrElse(InetAddress.getLocalHost.getHostName.getBytes)
-      md5(ha).take(3)
-    } else {
+    mac.getOrElse {
       val threadId = Thread.currentThread.getId.toInt
-      val arr = new Array[Byte](3)
-
-      arr(0) = (threadId & 0xFF).toByte
-      arr(1) = (threadId >> 8 & 0xFF).toByte
-      arr(2) = (threadId >> 16 & 0xFF).toByte
-
-      arr
+      Array(
+        (threadId & 0xFF).toByte,
+        (threadId >> 8 & 0xFF).toByte,
+        (threadId >> 16 & 0xFF).toByte
+      )
     }
   }
 
