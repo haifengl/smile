@@ -226,7 +226,7 @@ public class LinearModel implements DataFrameRegression {
      * @return the linear coefficients without intercept.
      */
     public double[] coefficients() {
-        return bias ? Arrays.copyOfRange(w, 1, w.length - 1) : w;
+        return bias ? Arrays.copyOfRange(w, 1, w.length) : w;
     }
 
     /**
