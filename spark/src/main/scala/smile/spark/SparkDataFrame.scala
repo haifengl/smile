@@ -20,7 +20,7 @@ package smile.spark
 import org.apache.spark.ml.DataTypeOps
 import smile.data.`type`.StructType
 import smile.data.{DataFrame, Tuple}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /** Converts Smile DataFrame to SparkSQL DataFrame */
 object SparkDataFrame {
