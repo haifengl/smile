@@ -17,24 +17,19 @@
 
 package smile.data;
 
-import java.util.function.Function;
-
 /**
- * Data transformation interface.
- *
- * @param <T> the type of input data objects.
- * @param <R> the type of output data objects.
+ * Data frame transformation interface.
  *
  * @author Haifeng Li
  */
-public interface DataTransform<T, R> extends Function<T, R> {
+public interface DataFrameTransform extends DataTransform<Tuple, Tuple> {
     /**
      * Applies this transform to the given argument.
-     * @param data the input dataset.
-     * @return the transformed dataset.
+     * @param data the input data frame.
+     * @return the transformed data frame.
      */
-    default Dataset<R> apply(Dataset<T> data) {
-        return data.stream().map(this::apply).collect(Dataset.Collectors.toDataset());
+    default DataFrame apply(DataFrame data) {
+        return data.stream().map(this::apply).collect(DataFrame.Collectors.collect());
     }
 
     /**
@@ -43,13 +38,11 @@ public interface DataTransform<T, R> extends Function<T, R> {
      * to the result.
      *
      * @param after the transform to apply after this transform is applied.
-     * @param <V> the type of output of the <code>after</code> transform,
-     *            and of the composed transform.
      * @return a composed transform that first applies this transform and
      *         then applies the <code>after</code> transform.
      */
-    default <V> DataTransform<T, V> andThen(Function<? super R, ? extends V> after) {
-        return (T t) -> after.apply(apply(t));
+    default DataFrameTransform andThen(DataFrameTransform after) {
+        return (Tuple t) -> after.apply(apply(t));
     }
 
     /**
@@ -57,12 +50,10 @@ public interface DataTransform<T, R> extends Function<T, R> {
      * function to its input, and then applies this function to the result.
      *
      * @param before the transform to apply before this transform is applied.
-     * @param <V> the type of input to the <code>before</code> transform,
-     *          and to the composed transform.
      * @return a composed transform that first applies the <code>before</code>
      *         transform and then applies this transform.
      */
-    default <V> DataTransform<V, R> compose(Function<? super V, ? extends T> before) {
-        return (V v) -> apply(before.apply(v));
+    default DataFrameTransform compose(DataFrameTransform before) {
+        return (Tuple v) -> apply(before.apply(v));
     }
 }
