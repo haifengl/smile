@@ -30,11 +30,11 @@ import java.util.function.Function;
 public interface DataTransform<T, R> extends Function<T, R> {
     /**
      * Applies this transform to the given argument.
-     * @param dataset the input dataset.
+     * @param data the input dataset.
      * @return the transformed dataset.
      */
-    default Dataset<R> apply(Dataset<T> dataset) {
-        return dataset.stream().map(this::apply).collect(Dataset.Collectors.toDataset());
+    default Dataset<R> apply(Dataset<T> data) {
+        return data.stream().map(this::apply).collect(Dataset.Collectors.toDataset());
     }
 
     /**
