@@ -17,19 +17,35 @@
 
 package smile.data;
 
+import java.util.function.Function;
+
 /**
- * Data frame transformation interface.
+ * Data transformation interface.
  *
  * @author Haifeng Li
  */
-public interface DataFrameTransform extends DataTransform<Tuple, Tuple> {
+public interface DataTransform extends Function<Tuple, Tuple> {
+    /**
+     * Returns a pipeline of data transforms.
+     *
+     * @param transforms the transforms to apply one after one.
+     * @return a composed transform.
+     */
+    static DataTransform pipeline(DataTransform... transforms) {
+        DataTransform pipeline = transforms[0];
+        for (int i = 1; i < transforms.length; i++) {
+            pipeline = pipeline.andThen(transforms[i]);
+        }
+        return pipeline;
+    }
+
     /**
      * Applies this transform to the given argument.
      * @param data the input data frame.
      * @return the transformed data frame.
      */
     default DataFrame apply(DataFrame data) {
-        return data.stream().map(this::apply).collect(DataFrame.Collectors.collect());
+        return data.stream().map(this).collect(DataFrame.Collectors.collect());
     }
 
     /**
@@ -41,7 +57,7 @@ public interface DataFrameTransform extends DataTransform<Tuple, Tuple> {
      * @return a composed transform that first applies this transform and
      *         then applies the <code>after</code> transform.
      */
-    default DataFrameTransform andThen(DataFrameTransform after) {
+    default DataTransform andThen(DataTransform after) {
         return (Tuple t) -> after.apply(apply(t));
     }
 
@@ -53,7 +69,7 @@ public interface DataFrameTransform extends DataTransform<Tuple, Tuple> {
      * @return a composed transform that first applies the <code>before</code>
      *         transform and then applies this transform.
      */
-    default DataFrameTransform compose(DataFrameTransform before) {
+    default DataTransform compose(DataTransform before) {
         return (Tuple v) -> apply(before.apply(v));
     }
 }
