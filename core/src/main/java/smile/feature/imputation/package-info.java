@@ -98,4 +98,4 @@
  * 
  * @author Haifeng Li
  */
-package smile.imputation;
+package smile.feature.imputation;
