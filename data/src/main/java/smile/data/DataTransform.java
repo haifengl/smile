@@ -17,6 +17,7 @@
 
 package smile.data;
 
+import java.io.Serializable;
 import java.util.function.Function;
 
 /**
@@ -24,7 +25,7 @@ import java.util.function.Function;
  *
  * @author Haifeng Li
  */
-public interface DataTransform extends Function<Tuple, Tuple> {
+public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
     /**
      * Returns a pipeline of data transforms.
      *
@@ -38,6 +39,12 @@ public interface DataTransform extends Function<Tuple, Tuple> {
         }
         return pipeline;
     }
+
+    /**
+     * Fits the transform on the data.
+     * @param data the training data.
+     */
+    void fit(DataFrame data);
 
     /**
      * Applies this transform to the given argument.
@@ -58,7 +65,19 @@ public interface DataTransform extends Function<Tuple, Tuple> {
      *         then applies the <code>after</code> transform.
      */
     default DataTransform andThen(DataTransform after) {
-        return (Tuple t) -> after.apply(apply(t));
+        final DataTransform self = this;
+        return new DataTransform() {
+            @Override
+            public void fit(DataFrame data) {
+                self.fit(data);
+                after.fit(self.apply(data));
+            }
+
+            @Override
+            public Tuple apply(Tuple tuple) {
+                return after.apply(self.apply(tuple));
+            }
+        };
     }
 
     /**
@@ -70,6 +89,18 @@ public interface DataTransform extends Function<Tuple, Tuple> {
      *         transform and then applies this transform.
      */
     default DataTransform compose(DataTransform before) {
-        return (Tuple v) -> apply(before.apply(v));
+        final DataTransform self = this;
+        return new DataTransform() {
+            @Override
+            public void fit(DataFrame data) {
+                before.fit(data);
+                self.fit(before.apply(data));
+            }
+
+            @Override
+            public Tuple apply(Tuple tuple) {
+                return self.apply(before.apply(tuple));
+            }
+        };
     }
 }
