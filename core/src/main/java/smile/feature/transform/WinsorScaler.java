@@ -27,28 +27,42 @@ import smile.math.Function;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
+import smile.sort.IQAgent;
 
 /**
- * Scales the numeric variables into the range [0, 1].
+ * Scales all numeric variables into the range [0, 1].
  * If the dataset has outliers, normalization will certainly scale
  * the "normal" data to a very small interval. In this case, the
  * Winsorization procedure should be applied: values greater than the
  * specified upper limit are replaced with the upper limit, and those
- * below the lower limit are replaced with the lower limit. Often, the
+ * below the lower limit are replace with the lower limit. Often, the
  * specified range is indicate in terms of percentiles of the original
  * distribution (like the 5th and 95th percentile).
  *
  * @author Haifeng Li
  */
-public class Scaler {
+public class WinsorScaler {
+    /**
+     * Fits the data transformation with 5% lower limit and 95% upper limit.
+     * @param data the training data.
+     * @return the transform.
+     */
+    public static InvertibleColumnTransform fit(DataFrame data) {
+        return fit(data, 0.05, 0.95);
+    }
+
     /**
      * Fits the data transformation.
      * @param data the training data.
+     * @param lower the lower limit in terms of percentiles of the original
+     *              distribution (e.g. 5th percentile).
+     * @param upper the upper limit in terms of percentiles of the original
+     *              distribution (e.g. 95th percentile).
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data, String... columns) {
+    public static InvertibleColumnTransform fit(DataFrame data, double lower, double upper, String... columns) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty data frame");
         }
@@ -69,9 +83,14 @@ public class Scaler {
                 throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
             }
 
+            IQAgent agent = new IQAgent();
             double[] vector = data.column(column).toDoubleArray();
-            double lo = MathEx.min(vector);
-            double hi = MathEx.max(vector);
+            for (double xi : vector) {
+                agent.add(xi);
+            }
+
+            double lo = agent.quantile(lower);
+            double hi = agent.quantile(upper);
             double range = hi - lo;
             double span = MathEx.isZero(range) ? 1.0 : hi - lo;
 
@@ -95,6 +114,6 @@ public class Scaler {
             inverses.put(field.name, inverse);
         }
 
-        return new InvertibleColumnTransform("Scaler", transforms, inverses);
+        return new InvertibleColumnTransform("WinsorScaler", transforms, inverses);
     }
 }
