@@ -27,6 +27,23 @@ import java.util.function.Function;
  */
 public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
     /**
+     * Fits a pipeline of data transforms.
+     *
+     * @param data the training data.
+     * @param trainers the training algorithm to fit the transforms to apply one after one.
+     * @return a composed transform.
+     */
+    @SafeVarargs
+    static DataTransform fit(DataFrame data, Function<DataFrame, DataTransform>... trainers) {
+        DataTransform pipeline = trainers[0].apply(data);
+        for (int i = 1; i < trainers.length; i++) {
+            data = pipeline.apply(data);
+            pipeline = pipeline.andThen(trainers[i].apply(data));
+        }
+        return pipeline;
+    }
+
+    /**
      * Returns a pipeline of data transforms.
      *
      * @param transforms the transforms to apply one after one.
@@ -39,12 +56,6 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
         }
         return pipeline;
     }
-
-    /**
-     * Fits the transform on the data.
-     * @param data the training data.
-     */
-    void fit(DataFrame data);
 
     /**
      * Applies this transform to the given argument.
@@ -65,19 +76,7 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      *         then applies the <code>after</code> transform.
      */
     default DataTransform andThen(DataTransform after) {
-        final DataTransform self = this;
-        return new DataTransform() {
-            @Override
-            public void fit(DataFrame data) {
-                self.fit(data);
-                after.fit(self.apply(data));
-            }
-
-            @Override
-            public Tuple apply(Tuple tuple) {
-                return after.apply(self.apply(tuple));
-            }
-        };
+        return (Tuple t) -> after.apply(apply(t));
     }
 
     /**
@@ -89,18 +88,6 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      *         transform and then applies this transform.
      */
     default DataTransform compose(DataTransform before) {
-        final DataTransform self = this;
-        return new DataTransform() {
-            @Override
-            public void fit(DataFrame data) {
-                before.fit(data);
-                self.fit(before.apply(data));
-            }
-
-            @Override
-            public Tuple apply(Tuple tuple) {
-                return self.apply(before.apply(tuple));
-            }
-        };
+        return (Tuple t) -> apply(before.apply(t));
     }
 }
