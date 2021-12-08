@@ -42,7 +42,7 @@ import smile.data.type.StructType;
  */
 public class Scaler {
     /**
-     * Fits the transformation parameters.
+     * Fits the data transformation.
      * @param data the training data.
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
@@ -63,13 +63,13 @@ public class Scaler {
 
         Map<String, Function> transforms = new HashMap<>();
         Map<String, Function> inverses = new HashMap<>();
-        for (int i = 0; i < columns.length; i++) {
-            StructField field = schema.field(columns[i]);
+        for (String column : columns) {
+            StructField field = schema.field(column);
             if (!field.isNumeric()) {
                 throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
             }
 
-            double[] vector = data.column(i).toDoubleArray();
+            double[] vector = data.column(column).toDoubleArray();
             double lo = MathEx.min(vector);
             double hi = MathEx.max(vector);
             double range = hi - lo;

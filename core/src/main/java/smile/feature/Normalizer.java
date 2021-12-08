@@ -26,7 +26,7 @@ import smile.math.MathEx;
 
 /**
  * Normalize samples individually to unit norm. Each sample (i.e. each row of
- * the data matrix) with at least one non zero component is rescaled
+ * the data matrix) with at least one non-zero component is rescaled
  * independently of other samples so that its norm (L1 or L2) equals one.
  * <p>
  * Scaling inputs to unit norms is a common operation for text
