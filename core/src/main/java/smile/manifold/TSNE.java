@@ -274,7 +274,7 @@ public class TSNE implements Serializable {
         }
     }
 
-    /** Compute the Gaussian kernel (search the width for given perplexity. */
+    /** Compute the Gaussian kernel (search the width for given perplexity). */
     private double[][] expd(double[][] D, double perplexity, double tol) {
         int n          = D.length;
         double[][] P   = new double[n][n];
