@@ -98,6 +98,9 @@ public class StructType implements DataType {
      * @return the index of field.
      */
     public int indexOf(String field) {
+        if (!index.containsKey(field)) {
+            throw new IllegalArgumentException(String.format("Field %s doesn't exist", field));
+        }
         return index.get(field);
     }
 

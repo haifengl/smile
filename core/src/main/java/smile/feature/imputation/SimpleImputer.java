@@ -17,16 +17,16 @@
 
 package smile.feature.imputation;
 
-import smile.data.DataTransform;
+import smile.data.transform.Transform;
 import smile.data.Tuple;
 
 /**
- * Simple imputer replaces missing values with the mean/median/mode
+ * Simple algorithm replaces missing values with the mean/median/mode
  * along each column.
  *
  * @author Haifeng Li
  */
-public class SimpleImputer implements DataTransform {
+public class SimpleImputer implements Transform {
     /**
      * Constructor.
      */

@@ -15,17 +15,21 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.data;
+package smile.data.transform;
 
 import java.io.Serializable;
 import java.util.function.Function;
+import smile.data.DataFrame;
+import smile.data.Tuple;
 
 /**
- * Data transformation interface.
+ * Data transformation interface. In general, learning algorithms benefit
+ * from standardization of the data set. If some outliers are present in
+ * the set, robust transformers are more appropriate.
  *
  * @author Haifeng Li
  */
-public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
+public interface Transform extends Function<Tuple, Tuple>, Serializable {
     /**
      * Fits a pipeline of data transforms.
      *
@@ -34,8 +38,8 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      * @return a composed transform.
      */
     @SafeVarargs
-    static DataTransform fit(DataFrame data, Function<DataFrame, DataTransform>... trainers) {
-        DataTransform pipeline = trainers[0].apply(data);
+    static Transform fit(DataFrame data, Function<DataFrame, Transform>... trainers) {
+        Transform pipeline = trainers[0].apply(data);
         for (int i = 1; i < trainers.length; i++) {
             data = pipeline.apply(data);
             pipeline = pipeline.andThen(trainers[i].apply(data));
@@ -49,8 +53,8 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      * @param transforms the transforms to apply one after one.
      * @return a composed transform.
      */
-    static DataTransform pipeline(DataTransform... transforms) {
-        DataTransform pipeline = transforms[0];
+    static Transform pipeline(Transform... transforms) {
+        Transform pipeline = transforms[0];
         for (int i = 1; i < transforms.length; i++) {
             pipeline = pipeline.andThen(transforms[i]);
         }
@@ -75,7 +79,7 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      * @return a composed transform that first applies this transform and
      *         then applies the <code>after</code> transform.
      */
-    default DataTransform andThen(DataTransform after) {
+    default Transform andThen(Transform after) {
         return (Tuple t) -> after.apply(apply(t));
     }
 
@@ -87,7 +91,7 @@ public interface DataTransform extends Function<Tuple, Tuple>, Serializable {
      * @return a composed transform that first applies the <code>before</code>
      *         transform and then applies this transform.
      */
-    default DataTransform compose(DataTransform before) {
+    default Transform compose(Transform before) {
         return (Tuple t) -> apply(before.apply(t));
     }
 }
