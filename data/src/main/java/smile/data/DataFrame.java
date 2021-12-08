@@ -53,8 +53,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         StructField[] fields = schema().fields();
         return Arrays.stream(fields)
                 .map(field -> field.name)
-                .collect(java.util.stream.Collectors.toList())
-                .toArray(new String[fields.length]);
+                .toArray(String[]::new);
     }
 
     /**

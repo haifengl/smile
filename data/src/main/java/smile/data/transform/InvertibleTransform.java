@@ -15,27 +15,28 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature.imputation;
+package smile.data.transform;
 
-import smile.data.transform.Transform;
+import smile.data.DataFrame;
 import smile.data.Tuple;
 
 /**
- * Simple algorithm replaces missing values with the mean/median/mode
- * along each column.
+ * Invertible data transformation.
  *
  * @author Haifeng Li
  */
-public class SimpleImputer implements Transform {
+public interface InvertibleTransform extends Transform {
     /**
-     * Constructor.
+     * Inverse transform a tuple.
+     * @param x a tuple.
+     * @return the inverse transformed tuple.
      */
-    public SimpleImputer() {
+    Tuple invert(Tuple x);
 
-    }
-
-    @Override
-    public Tuple apply(Tuple t) {
-        return t;
-    }
+    /**
+     * Inverse transform a data frame.
+     * @param data a data frame.
+     * @return the inverse transformed data frame.
+     */
+    DataFrame invert(DataFrame data);
 }
