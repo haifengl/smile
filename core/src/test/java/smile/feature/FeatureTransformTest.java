@@ -107,8 +107,9 @@ public class FeatureTransformTest {
     public void testMaxAbsScaler() {
         System.out.println("MaxAbs");
 
-        MaxAbsScaler scaler = MaxAbsScaler.fit(Segment.train);
-        DataFrame df = scaler.transform(Segment.test);
+        InvertibleColumnTransform transform = smile.feature.transform.MaxAbsScaler.fit(Segment.train);
+        DataFrame df = transform.apply(Segment.test);
+        System.out.println(transform);
 
         assertEquals(0.566929, df.getDouble(0, 0), 1E-4);
         assertEquals(0.139442, df.getDouble(0, 1), 1E-4);
@@ -175,49 +176,59 @@ public class FeatureTransformTest {
     public void testNormalizer() {
         System.out.println("Normalizer");
 
-        double[][] x = Normalizer.L1.transform(Colon.x);
-        assertEquals(0.013340, x[0][0], 1E-4);
-        assertEquals(0.008492, x[0][1], 1E-4);
-        assertEquals(0.006621, x[0][2], 1E-4);
-        assertEquals(0.006313, x[0][3], 1E-4);
-        assertEquals(0.008204, x[0][5], 1E-4);
-        assertEquals(0.003370, x[0][6], 1E-4);
+        DataFrame colon = DataFrame.of(Colon.x);
+        smile.feature.transform.Normalizer transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L1, colon.names());
+        DataFrame df = transform.apply(colon);
+        System.out.println(transform);
 
-        assertEquals(0.010351, x[1][0], 1E-4);
-        assertEquals(0.007589, x[1][1], 1E-4);
-        assertEquals(0.005516, x[1][2], 1E-4);
-        assertEquals(0.004199, x[1][3], 1E-4);
-        assertEquals(0.006291, x[1][5], 1E-4);
-        assertEquals(0.004347, x[1][6], 1E-4);
+        assertEquals(0.013340, df.getDouble(0, 0), 1E-4);
+        assertEquals(0.008492, df.getDouble(0, 1), 1E-4);
+        assertEquals(0.006621, df.getDouble(0, 2), 1E-4);
+        assertEquals(0.006313, df.getDouble(0, 3), 1E-4);
+        assertEquals(0.008204, df.getDouble(0, 5), 1E-4);
+        assertEquals(0.003370, df.getDouble(0, 6), 1E-4);
 
-        x = Normalizer.L2.transform(Colon.x);
-        assertEquals(0.303366, x[0][0], 1E-4);
-        assertEquals(0.193131, x[0][1], 1E-4);
-        assertEquals(0.150577, x[0][2], 1E-4);
-        assertEquals(0.143568, x[0][3], 1E-4);
-        assertEquals(0.186565, x[0][5], 1E-4);
-        assertEquals(0.076632, x[0][6], 1E-4);
+        assertEquals(0.010351, df.getDouble(1, 0), 1E-4);
+        assertEquals(0.007589, df.getDouble(1, 1), 1E-4);
+        assertEquals(0.005516, df.getDouble(1, 2), 1E-4);
+        assertEquals(0.004199, df.getDouble(1, 3), 1E-4);
+        assertEquals(0.006291, df.getDouble(1, 5), 1E-4);
+        assertEquals(0.004347, df.getDouble(1, 6), 1E-4);
 
-        assertEquals(0.256772, x[1][0], 1E-4);
-        assertEquals(0.188274, x[1][1], 1E-4);
-        assertEquals(0.136829, x[1][2], 1E-4);
-        assertEquals(0.104179, x[1][3], 1E-4);
-        assertEquals(0.156063, x[1][5], 1E-4);
-        assertEquals(0.107846, x[1][6], 1E-4);
+        transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L2, colon.names());
+        df = transform.apply(colon);
+        System.out.println(transform);
 
-        x = Normalizer.L_INF.transform(Colon.x);
-        assertEquals(1.000000, x[0][0], 1E-4);
-        assertEquals(0.636625, x[0][1], 1E-4);
-        assertEquals(0.496356, x[0][2], 1E-4);
-        assertEquals(0.473249, x[0][3], 1E-4);
-        assertEquals(0.614981, x[0][5], 1E-4);
-        assertEquals(0.252604, x[0][6], 1E-4);
+        assertEquals(0.303366, df.getDouble(0, 0), 1E-4);
+        assertEquals(0.193131, df.getDouble(0, 1), 1E-4);
+        assertEquals(0.150577, df.getDouble(0, 2), 1E-4);
+        assertEquals(0.143568, df.getDouble(0, 3), 1E-4);
+        assertEquals(0.186565, df.getDouble(0, 5), 1E-4);
+        assertEquals(0.076632, df.getDouble(0, 6), 1E-4);
 
-        assertEquals(1.000000, x[1][0], 1E-4);
-        assertEquals(0.733233, x[1][1], 1E-4);
-        assertEquals(0.532880, x[1][2], 1E-4);
-        assertEquals(0.405724, x[1][3], 1E-4);
-        assertEquals(0.607786, x[1][5], 1E-4);
-        assertEquals(0.420008, x[1][6], 1E-4);
+        assertEquals(0.256772, df.getDouble(1, 0), 1E-4);
+        assertEquals(0.188274, df.getDouble(1, 1), 1E-4);
+        assertEquals(0.136829, df.getDouble(1, 2), 1E-4);
+        assertEquals(0.104179, df.getDouble(1, 3), 1E-4);
+        assertEquals(0.156063, df.getDouble(1, 5), 1E-4);
+        assertEquals(0.107846, df.getDouble(1, 6), 1E-4);
+
+        transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L_INF, colon.names());
+        df = transform.apply(colon);
+        System.out.println(transform);
+
+        assertEquals(1.000000, df.getDouble(0, 0), 1E-4);
+        assertEquals(0.636625, df.getDouble(0, 1), 1E-4);
+        assertEquals(0.496356, df.getDouble(0, 2), 1E-4);
+        assertEquals(0.473249, df.getDouble(0, 3), 1E-4);
+        assertEquals(0.614981, df.getDouble(0, 5), 1E-4);
+        assertEquals(0.252604, df.getDouble(0, 6), 1E-4);
+
+        assertEquals(1.000000, df.getDouble(1, 0), 1E-4);
+        assertEquals(0.733233, df.getDouble(1, 1), 1E-4);
+        assertEquals(0.532880, df.getDouble(1, 2), 1E-4);
+        assertEquals(0.405724, df.getDouble(1, 3), 1E-4);
+        assertEquals(0.607786, df.getDouble(1, 5), 1E-4);
+        assertEquals(0.420008, df.getDouble(1, 6), 1E-4);
     }
 }

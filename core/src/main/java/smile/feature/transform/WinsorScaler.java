@@ -35,7 +35,7 @@ import smile.sort.IQAgent;
  * the "normal" data to a very small interval. In this case, the
  * Winsorization procedure should be applied: values greater than the
  * specified upper limit are replaced with the upper limit, and those
- * below the lower limit are replace with the lower limit. Often, the
+ * below the lower limit are replaced with the lower limit. Often, the
  * specified range is indicate in terms of percentiles of the original
  * distribution (like the 5th and 95th percentile).
  *
