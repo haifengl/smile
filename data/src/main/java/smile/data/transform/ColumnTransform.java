@@ -93,6 +93,6 @@ public class ColumnTransform implements Transform {
     public String toString() {
         return transforms.values().stream()
                 .map(Object::toString)
-                .collect(Collectors.joining(",", name + "(", ")"));
+                .collect(Collectors.joining(",\n  ", name + "(\n  ", "\n)"));
     }
 }
