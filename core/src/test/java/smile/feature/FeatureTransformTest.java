@@ -58,7 +58,7 @@ public class FeatureTransformTest {
     public void testScaler() {
         System.out.println("Scaler");
 
-        InvertibleColumnTransform transform = smile.feature.transform.Scaler.fit(Segment.train);
+        InvertibleColumnTransform transform = Scaler.fit(Segment.train);
         DataFrame df = transform.apply(Segment.test);
         System.out.println(transform);
 
@@ -81,7 +81,7 @@ public class FeatureTransformTest {
     public void testWinsorScaler() {
         System.out.println("Winsor");
 
-        InvertibleColumnTransform transform = smile.feature.transform.WinsorScaler.fit(Segment.train);
+        InvertibleColumnTransform transform = WinsorScaler.fit(Segment.train);
         DataFrame df = transform.apply(Segment.test);
         System.out.println(transform);
 
@@ -107,7 +107,7 @@ public class FeatureTransformTest {
     public void testMaxAbsScaler() {
         System.out.println("MaxAbs");
 
-        InvertibleColumnTransform transform = smile.feature.transform.MaxAbsScaler.fit(Segment.train);
+        InvertibleColumnTransform transform = MaxAbsScaler.fit(Segment.train);
         DataFrame df = transform.apply(Segment.test);
         System.out.println(transform);
 
@@ -130,7 +130,7 @@ public class FeatureTransformTest {
     public void testStandardizer() {
         System.out.println("Standardizer");
 
-        InvertibleColumnTransform transform = smile.feature.transform.Standardizer.fit(Segment.train);
+        InvertibleColumnTransform transform = Standardizer.fit(Segment.train);
         DataFrame df = transform.apply(Segment.test);
         System.out.println(transform);
 
@@ -153,7 +153,7 @@ public class FeatureTransformTest {
     public void testRobustStandardizer() {
         System.out.println("RobustStandardizer");
 
-        InvertibleColumnTransform transform = smile.feature.transform.RobustStandardizer.fit(Segment.train);
+        InvertibleColumnTransform transform = RobustStandardizer.fit(Segment.train);
         DataFrame df = transform.apply(Segment.test);
         System.out.println(transform);
 
@@ -177,7 +177,7 @@ public class FeatureTransformTest {
         System.out.println("Normalizer");
 
         DataFrame colon = DataFrame.of(Colon.x);
-        smile.feature.transform.Normalizer transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L1, colon.names());
+        Normalizer transform = new Normalizer(Normalizer.Norm.L1, colon.names());
         DataFrame df = transform.apply(colon);
         System.out.println(transform);
 
@@ -195,7 +195,7 @@ public class FeatureTransformTest {
         assertEquals(0.006291, df.getDouble(1, 5), 1E-4);
         assertEquals(0.004347, df.getDouble(1, 6), 1E-4);
 
-        transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L2, colon.names());
+        transform = new Normalizer(Normalizer.Norm.L2, colon.names());
         df = transform.apply(colon);
         System.out.println(transform);
 
@@ -213,7 +213,7 @@ public class FeatureTransformTest {
         assertEquals(0.156063, df.getDouble(1, 5), 1E-4);
         assertEquals(0.107846, df.getDouble(1, 6), 1E-4);
 
-        transform = new smile.feature.transform.Normalizer(smile.feature.transform.Normalizer.Norm.L_INF, colon.names());
+        transform = new Normalizer(Normalizer.Norm.L_INF, colon.names());
         df = transform.apply(colon);
         System.out.println(transform);
 

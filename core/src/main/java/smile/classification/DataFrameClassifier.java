@@ -28,7 +28,6 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.feature.FeatureTransform;
 import smile.math.MathEx;
 
 /**
@@ -124,11 +123,6 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
 
-        FeatureTransform preprocessor = FeatureTransform.of(params.getProperty("smile.feature.transform"), x);
-        if (preprocessor != null) {
-            x = preprocessor.transform(x);
-        }
-
         Classifier<double[]> model = trainer.fit(x, y, params);
 
         return new DataFrameClassifier() {
@@ -152,23 +146,14 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
                 return model.classes();
             }
 
-            /** Converts a tuple to array. */
-            private double[] toArray(Tuple t) {
-                double[] x = formula.x(t).toArray();
-                if (preprocessor != null) {
-                    preprocessor.transform(x, x);
-                }
-                return x;
-            }
-
             @Override
             public int predict(Tuple x) {
-                return model.predict(toArray(x));
+                return model.predict(formula.x(x).toArray());
             }
 
             @Override
             public int predict(Tuple x, double[] posteriori) {
-                return model.predict(toArray(x), posteriori);
+                return model.predict(formula.x(x).toArray(), posteriori);
             }
         };
     }

@@ -25,7 +25,7 @@ import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.*;
-import smile.feature.Standardizer;
+import smile.feature.transform.Standardizer;
 import smile.math.MathEx;
 import smile.math.Scaler;
 import smile.math.TimeFunction;
@@ -82,7 +82,7 @@ public class MLPTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Standardizer standardizer = Standardizer.fit(x);
-        x = standardizer.transform(x);
+        x = standardizer.apply(x);
 
         RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(scaler, builders);

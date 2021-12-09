@@ -24,7 +24,6 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.feature.FeatureTransform;
 
 /**
  * Regression trait on DataFrame.
@@ -98,11 +97,6 @@ public interface DataFrameRegression extends Regression<Tuple> {
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         double[] y = formula.y(data).toDoubleArray();
 
-        FeatureTransform preprocessor = FeatureTransform.of(params.getProperty("smile.feature.transform"), x);
-        if (preprocessor != null) {
-            x = preprocessor.transform(x);
-        }
-
         Regression<double[]> model = trainer.fit(x, y, params);
 
         return new DataFrameRegression() {
@@ -118,11 +112,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
 
             @Override
             public double predict(Tuple x) {
-                double[] vector = formula.x(x).toArray();
-                if (preprocessor != null) {
-                    preprocessor.transform(vector, vector);
-                }
-                return model.predict(vector);
+                return model.predict(formula.x(x).toArray());
             }
         };
     }
