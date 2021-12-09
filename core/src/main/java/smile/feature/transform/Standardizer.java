@@ -27,42 +27,25 @@ import smile.math.Function;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
-import smile.sort.IQAgent;
 
 /**
- * Scales all numeric variables into the range [0, 1].
- * If the dataset has outliers, normalization will certainly scale
- * the "normal" data to a very small interval. In this case, the
- * Winsorization procedure should be applied: values greater than the
- * specified upper limit are replaced with the upper limit, and those
- * below the lower limit are replace with the lower limit. Often, the
- * specified range is indicate in terms of percentiles of the original
- * distribution (like the 5th and 95th percentile).
+ * Standardizes numeric feature to 0 mean and unit variance.
+ * Standardization makes an assumption that the data follows
+ * a Gaussian distribution and are also not robust when outliers present.
+ * A robust alternative is to subtract the median and divide by the IQR
+ * by <code>RobustStandardizer</code>.
  *
  * @author Haifeng Li
  */
-public class WinsorScaler {
-    /**
-     * Fits the data transformation with 5% lower limit and 95% upper limit.
-     * @param data the training data.
-     * @return the transform.
-     */
-    public static InvertibleColumnTransform fit(DataFrame data) {
-        return fit(data, 0.05, 0.95);
-    }
-
+public class Standardizer {
     /**
      * Fits the data transformation.
      * @param data the training data.
-     * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (e.g. 5th percentile).
-     * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (e.g. 95th percentile).
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data, double lower, double upper, String... columns) {
+    public static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty data frame");
         }
@@ -83,39 +66,30 @@ public class WinsorScaler {
                 throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
             }
 
-            IQAgent agent = new IQAgent();
             double[] vector = data.column(column).toDoubleArray();
-            for (double xi : vector) {
-                agent.add(xi);
-            }
-
-            double lo = agent.quantile(lower);
-            double hi = agent.quantile(upper);
-            double span = hi - lo;
-            double scale = MathEx.isZero(span) ? 1.0 : hi - lo;
+            double mu = MathEx.mean(vector);
+            double sd = MathEx.sd(vector);
+            double scale = MathEx.isZero(sd) ? 1.0 : sd;
 
             Function transform = new Function() {
                 @Override
                 public double f(double x) {
-                    double y = (x - lo) / scale;
-                    if (y < 0.0) y = 0.0;
-                    if (y > 1.0) y = 1.0;
-                    return y;
+                    return (x - mu) / scale;
                 }
 
                 @Override
                 public String toString() {
-                    return (lo >= 0.0) ?
-                            String.format("(%s - %.4f) / %.4f", field.name,  lo, scale)
-                          : String.format("(%s + %.4f) / %.4f", field.name, -lo, scale);
+                    return (mu >= 0.0) ?
+                            String.format("(%s - %.4f) / %.4f", field.name,  mu, scale)
+                          : String.format("(%s + %.4f) / %.4f", field.name, -mu, scale);
                 }
             };
 
-            Function inverse = (double x) -> x * scale + lo;
+            Function inverse = (double x) -> x * scale + mu;
             transforms.put(field.name, transform);
             inverses.put(field.name, inverse);
         }
 
-        return new InvertibleColumnTransform("WinsorScaler", transforms, inverses);
+        return new InvertibleColumnTransform("Standardizer", transforms, inverses);
     }
 }

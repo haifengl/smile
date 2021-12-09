@@ -72,13 +72,13 @@ public class Scaler {
             double[] vector = data.column(column).toDoubleArray();
             double lo = MathEx.min(vector);
             double hi = MathEx.max(vector);
-            double range = hi - lo;
-            double span = MathEx.isZero(range) ? 1.0 : hi - lo;
+            double span = hi - lo;
+            double scale = MathEx.isZero(span) ? 1.0 : hi - lo;
 
             Function transform = new Function() {
                 @Override
                 public double f(double x) {
-                    double y = (x - lo) / span;
+                    double y = (x - lo) / scale;
                     if (y < 0.0) y = 0.0;
                     if (y > 1.0) y = 1.0;
                     return y;
@@ -86,11 +86,13 @@ public class Scaler {
 
                 @Override
                 public String toString() {
-                    return String.format("(%s - %.4f) / %.4f", field.name, lo, span);
+                    return (lo >= 0.0) ?
+                            String.format("(%s - %.4f) / %.4f", field.name,  lo, scale)
+                          : String.format("(%s + %.4f) / %.4f", field.name, -lo, scale);
                 }
             };
 
-            Function inverse = (double x) -> x * span + lo;
+            Function inverse = (double x) -> x * scale + lo;
             transforms.put(field.name, transform);
             inverses.put(field.name, inverse);
         }
