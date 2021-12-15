@@ -182,7 +182,7 @@ public class CSV {
      * </ol>
      *
      * @param reader the file reader.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
