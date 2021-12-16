@@ -67,6 +67,18 @@ public class WinsorScaler {
             throw new IllegalArgumentException("Empty data frame");
         }
 
+        if (lower < 0.0) {
+            throw new IllegalArgumentException("Invalid lower: " + lower);
+        }
+
+        if (upper > 1.0) {
+            throw new IllegalArgumentException("Invalid upper: " + upper);
+        }
+
+        if (lower >= upper) {
+            throw new IllegalArgumentException(String.format("Invalid lower=%f > upper=%f", lower, upper));
+        }
+
         StructType schema = data.schema();
         if (columns.length == 0) {
             columns = Arrays.stream(schema.fields())
