@@ -17,15 +17,20 @@
 
 package smile.feature.imputation;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import smile.data.DataFrame;
+import smile.data.measure.NominalScale;
 import smile.data.transform.Transform;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
+import smile.math.MathEx;
+import smile.sort.IQAgent;
 
 /**
  * Simple algorithm replaces missing values with the constant value
@@ -99,7 +104,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = BooleanVector.of(field, vector);
                     } else if (field.type == DataTypes.ByteObjectType) {
-                        byte x = (Byte) value;
+                        byte x = ((Number) value).byteValue();
                         byte[] vector = new byte[n];
                         for (int i = 0; i < n; i++) {
                             Byte cell = (Byte) data.get(i, j);
@@ -115,7 +120,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = CharVector.of(field, vector);
                     } else if (field.type == DataTypes.DoubleObjectType) {
-                        double x = (Double) value;
+                        double x = ((Number) value).doubleValue();
                         double[] vector = new double[n];
                         for (int i = 0; i < n; i++) {
                             Double cell = (Double) data.get(i, j);
@@ -123,7 +128,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = DoubleVector.of(field, vector);
                     } else if (field.type == DataTypes.FloatObjectType) {
-                        float x = (Float) value;
+                        float x = ((Number) value).floatValue();
                         float[] vector = new float[n];
                         for (int i = 0; i < n; i++) {
                             Float cell = (Float) data.get(i, j);
@@ -131,7 +136,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = FloatVector.of(field, vector);
                     } else if (field.type == DataTypes.IntegerObjectType) {
-                        int x = (Integer) value;
+                        int x = ((Number) value).intValue();
                         int[] vector = new int[n];
                         for (int i = 0; i < n; i++) {
                             Integer cell = (Integer) data.get(i, j);
@@ -139,7 +144,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = IntVector.of(field, vector);
                     } else if (field.type == DataTypes.LongObjectType) {
-                        long x = (Long) value;
+                        long x = ((Number) value).longValue();
                         long[] vector = new long[n];
                         for (int i = 0; i < n; i++) {
                             Long cell = (Long) data.get(i, j);
@@ -147,7 +152,7 @@ public class SimpleImputer implements Transform {
                         }
                         vectors[j] = LongVector.of(field, vector);
                     } else if (field.type == DataTypes.ShortObjectType) {
-                        short x = (Short) value;
+                        short x = ((Number) value).shortValue();
                         short[] vector = new short[n];
                         for (int i = 0; i < n; i++) {
                             Short cell = (Short) data.get(i, j);
@@ -175,5 +180,100 @@ public class SimpleImputer implements Transform {
         return values.keySet().stream()
                 .map(key -> key + " -> " + values.get(key))
                 .collect(Collectors.joining(",\n  ", "SimpleImputer(\n  ", "\n)"));
+    }
+    /**
+     * Fits the missing value imputation values. Impute all the numeric
+     * columns with median, boolean/nominal columns with mode, and text
+     * columns with empty string.
+     * @param data the training data.
+     * @param columns the columns to impute.
+     *                If empty, impute all the applicable columns.
+     * @return the imputer.
+     */
+    public static SimpleImputer fit(DataFrame data, String... columns) {
+        return fit(data, 0.5, 0.5, columns);
+    }
+
+    /**
+     * Fits the missing value imputation values. Impute all the numeric
+     * columns with the mean of values in the range [lower, upper],
+     * boolean/nominal columns with mode, and text columns with empty string.
+     * @param data the training data.
+     * @param lower the lower limit in terms of percentiles of the original
+     *              distribution (e.g. 5th percentile).
+     * @param upper the upper limit in terms of percentiles of the original
+     *              distribution (e.g. 95th percentile).
+     * @param columns the columns to impute.
+     *                If empty, impute all the applicable columns.
+     * @return the imputer.
+     */
+    public static SimpleImputer fit(DataFrame data, double lower, double upper, String... columns) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
+
+        if (lower < 0.0) {
+            throw new IllegalArgumentException("Invalid lower: " + lower);
+        }
+
+        if (upper > 1.0) {
+            throw new IllegalArgumentException("Invalid upper: " + upper);
+        }
+
+        if (lower > upper) {
+            throw new IllegalArgumentException(String.format("Invalid lower=%f > upper=%f", lower, upper));
+        }
+
+        StructType schema = data.schema();
+        if (columns.length == 0) {
+            columns = data.names();
+        }
+
+        Map<String, Object> values = new HashMap<>();
+        for (String column : columns) {
+            StructField field = schema.field(column);
+
+            if (field.type.isString()) {
+                values.put(field.name, "");
+            } else if (field.type.isBoolean()) {
+                int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
+                int mode = MathEx.mode(vector);
+                values.put(field.name, mode != 0);
+            } else if (field.type.isChar()) {
+                int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
+                int mode = MathEx.mode(vector);
+                values.put(field.name, (char) mode);
+            } else if (field.measure instanceof NominalScale) {
+                int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
+                int mode = MathEx.mode(vector);
+                values.put(field.name, mode);
+            } else if (field.type.isNumeric()) {
+                double[] vector = MathEx.omitNaN(data.column(column).toDoubleArray());
+                IQAgent agent = new IQAgent();
+                for (double xi : vector) {
+                    agent.add(xi);
+                }
+
+                if (lower == upper) {
+                    values.put(field.name, agent.quantile(lower));
+                } else {
+                    double lo = agent.quantile(lower);
+                    double hi = agent.quantile(upper);
+
+                    int n = 0;
+                    double sum = 0.0;
+                    for (double xi : vector) {
+                        if (xi >= lo && xi <= hi) {
+                            n++;
+                            sum += xi;
+                        }
+                    }
+
+                    values.put(field.name, sum/n);
+                }
+            }
+        }
+
+        return new SimpleImputer(values);
     }
 }
