@@ -135,33 +135,75 @@ class VectorImpl<T> implements Vector<T> {
 
     @Override
     public double[] toDoubleArray() {
-        if (!type.isNumeric()) throw new UnsupportedOperationException(name() + ":" + type());
-        return stream().mapToDouble(d -> d == null ? Double.NaN : ((Number) d).doubleValue()).toArray();
+        if (type.isBoolean()) {
+            return stream().mapToDouble(d -> d == null ? Double.NaN : ((Boolean) d ? 1.0 : 0.0)).toArray();
+        } else if (type.isChar()) {
+            return stream().mapToDouble(d -> d == null ? Double.NaN : (Character) d).toArray();
+        } else if (type.isNumeric()) {
+            return stream().mapToDouble(d -> d == null ? Double.NaN : ((Number) d).doubleValue()).toArray();
+        } else {
+            throw new UnsupportedOperationException(name() + ":" + type());
+        }
     }
 
     @Override
     public double[] toDoubleArray(double[] a) {
-        if (!type.isNumeric()) throw new UnsupportedOperationException(name() + ":" + type());
-        for (int i = 0; i < vector.length; i++) {
-            Number n = (Number) vector[i];
-            a[i] = n == null ? Double.NaN : n.doubleValue();
+        if (type.isBoolean()) {
+            for (int i = 0; i < vector.length; i++) {
+                Boolean b = (Boolean) vector[i];
+                a[i] = b == null ? Double.NaN : (b ? 1.0 : 0.0);
+            }
+        } else if (type.isChar()) {
+            for (int i = 0; i < vector.length; i++) {
+                Character n = (Character) vector[i];
+                a[i] = n == null ? Double.NaN : n;
+            }
+        } else if (type.isNumeric()) {
+            for (int i = 0; i < vector.length; i++) {
+                Number n = (Number) vector[i];
+                a[i] = n == null ? Double.NaN : n.doubleValue();
+            }
+        } else {
+            throw new UnsupportedOperationException(name() + ":" + type());
         }
+
         return a;
     }
 
     @Override
     public int[] toIntArray() {
-        if (!type.isIntegral()) throw new UnsupportedOperationException(name() + ":" + type());
-        return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Number) d).intValue()).toArray();
+        if (type.isBoolean()) {
+            return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Boolean) d ? 1 : 0)).toArray();
+        } else if (type.isChar()) {
+            return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : (Character) d).toArray();
+        } else if (type.isIntegral()) {
+            return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Number) d).intValue()).toArray();
+        } else {
+            throw new UnsupportedOperationException(name() + ":" + type());
+        }
     }
 
     @Override
     public int[] toIntArray(int[] a) {
-        if (!type.isIntegral()) throw new UnsupportedOperationException(name() + ":" + type());
-        for (int i = 0; i < vector.length; i++) {
-            Number n = (Number) vector[i];
-            a[i] = n == null ? Integer.MIN_VALUE : n.intValue();
+        if (type.isBoolean()) {
+            for (int i = 0; i < vector.length; i++) {
+                Boolean b = (Boolean) vector[i];
+                a[i] = b == null ? Integer.MIN_VALUE : (b ? 1 : 0);
+            }
+        } else if (type.isChar()) {
+            for (int i = 0; i < vector.length; i++) {
+                Character n = (Character) vector[i];
+                a[i] = n == null ? Integer.MIN_VALUE : n;
+            }
+        } else if (type.isIntegral()) {
+            for (int i = 0; i < vector.length; i++) {
+                Number n = (Number) vector[i];
+                a[i] = n == null ? Integer.MIN_VALUE : n.intValue();
+            }
+        } else {
+            throw new UnsupportedOperationException(name() + ":" + type());
         }
+
         return a;
     }
 
