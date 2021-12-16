@@ -75,7 +75,7 @@ public interface SHAP<T> {
                     for (int i = 0; i < values.length; i++)
                         values[i] = Math.abs(values[i]);
                     return values;
-                }).
-                toArray(double[][]::new));
+                }).toArray(double[][]::new)
+        );
     }
 }

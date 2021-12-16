@@ -48,16 +48,11 @@ public interface TreeSHAP extends SHAP<Tuple> {
         CART[] forest = trees();
         Tuple xt = formula().x(x);
 
-        double[] phi = null;
-        for (CART tree : forest) {
-            double[] phii = tree.shap(xt);
-
-            if (phi == null) {
-              phi = phii;
-            } else {
-                for (int i = 0; i < phi.length; i++) {
-                    phi[i] += phii[i];
-                }
+        double[] phi = forest[0].shap(xt);
+        for (int k = 1; k < forest.length; k++) {
+            double[] phii = forest[k].shap(xt);
+            for (int i = 0; i < phi.length; i++) {
+                phi[i] += phii[i];
             }
         }
 
