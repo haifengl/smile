@@ -1208,6 +1208,110 @@ public class MathEx {
     }
 
     /**
+     * Returns a new array without the specified value.
+     * @param a an input array.
+     * @param value the value to omit.
+     * @return a new array without the specified value.
+     */
+    public static int[] omit(int[] a, int value) {
+        int n = 0;
+        for (int x : a) {
+            if (x != value) n++;
+        }
+
+        int i = 0;
+        int[] b = new int[n];
+        for (int x : a) {
+            if (x != value) b[i++] = x;
+        }
+
+        return b;
+    }
+
+
+    /**
+     * Returns a new array without the specified value.
+     * @param a an input array.
+     * @param value the value to omit.
+     * @return a new array without the specified value.
+     */
+    public static float[] omit(float[] a, float value) {
+        int n = 0;
+        for (float x : a) {
+            if (x != value) n++;
+        }
+
+        int i = 0;
+        float[] b = new float[n];
+        for (float x : a) {
+            if (x != value) b[i++] = x;
+        }
+
+        return b;
+    }
+
+    /**
+     * Returns a new array without the specified value.
+     * @param a an input array.
+     * @param value the value to omit.
+     * @return a new array without the specified value.
+     */
+    public static double[] omit(double[] a, double value) {
+        int n = 0;
+        for (double x : a) {
+            if (x != value) n++;
+        }
+
+        int i = 0;
+        double[] b = new double[n];
+        for (double x : a) {
+            if (x != value) b[i++] = x;
+        }
+
+        return b;
+    }
+
+    /**
+     * Returns a new array without NaN values.
+     * @param a an input array that may contain NaN.
+     * @return a new array without NaN values.
+     */
+    public static float[] omitNaN(float[] a) {
+        int n = 0;
+        for (float x : a) {
+            if (!Float.isNaN(x)) n++;
+        }
+
+        int i = 0;
+        float[] b = new float[n];
+        for (float x : a) {
+            if (!Float.isNaN(x)) b[i++] = x;
+        }
+
+        return b;
+    }
+
+    /**
+     * Returns a new array without NaN values.
+     * @param a an input array that may contain NaN.
+     * @return a new array without NaN values.
+     */
+    public static double[] omitNaN(double[] a) {
+        int n = 0;
+        for (double x : a) {
+            if (!Double.isNaN(x)) n++;
+        }
+
+        int i = 0;
+        double[] b = new double[n];
+        for (double x : a) {
+            if (!Double.isNaN(x)) b[i++] = x;
+        }
+
+        return b;
+    }
+
+    /**
      * Reverses the order of the elements in the specified array.
      * @param a an array to reverse.
      */
