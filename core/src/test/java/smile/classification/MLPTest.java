@@ -27,6 +27,7 @@ import smile.data.BreastCancer;
 import smile.data.PenDigits;
 import smile.data.Segment;
 import smile.data.USPS;
+import smile.data.transform.InvertibleColumnTransform;
 import smile.feature.transform.Standardizer;
 import smile.feature.transform.WinsorScaler;
 import smile.math.MathEx;
@@ -67,8 +68,8 @@ public class MLPTest {
         System.out.println("Pen Digits");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        WinsorScaler scaler = WinsorScaler.fit(PenDigits.x, 0.01, 0.99);
-        double[][] x = scaler.transform(PenDigits.x);
+        InvertibleColumnTransform scaler = WinsorScaler.fit(PenDigits.data, 0.01, 0.99);
+        double[][] x = scaler.apply(PenDigits.data).toArray();
         int p = x[0].length;
         int k = MathEx.max(PenDigits.y) + 1;
 
@@ -100,8 +101,8 @@ public class MLPTest {
         System.out.println("Breast Cancer");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        WinsorScaler scaler = WinsorScaler.fit(BreastCancer.x, 0.01, 0.99);
-        double[][] x = scaler.transform(BreastCancer.x);
+        InvertibleColumnTransform scaler = WinsorScaler.fit(BreastCancer.data, 0.01, 0.99);
+        double[][] x = scaler.apply(BreastCancer.data).toArray();
         int p = x[0].length;
 
         ClassificationValidations<MLP> result = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
@@ -132,9 +133,9 @@ public class MLPTest {
         System.out.println("Segment SGD");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        WinsorScaler scaler = WinsorScaler.fit(Segment.x, 0.01, 0.99);
-        double[][] x = scaler.transform(Segment.x);
-        double[][] testx = scaler.transform(Segment.testx);
+        InvertibleColumnTransform scaler = WinsorScaler.fit(Segment.train, 0.01, 0.99);
+        double[][] x = scaler.apply(Segment.train).toArray();
+        double[][] testx = scaler.apply(Segment.test).toArray();
         int p = x[0].length;
         int k = MathEx.max(Segment.y) + 1;
 
@@ -165,9 +166,9 @@ public class MLPTest {
         System.out.println("Segment Mini-Batch");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        WinsorScaler scaler = WinsorScaler.fit(Segment.x, 0.01, 0.99);
-        double[][] x = scaler.transform(Segment.x);
-        double[][] testx = scaler.transform(Segment.testx);
+        InvertibleColumnTransform scaler = WinsorScaler.fit(Segment.train, 0.01, 0.99);
+        double[][] x = scaler.apply(Segment.train).toArray();
+        double[][] testx = scaler.apply(Segment.test).toArray();
         int p = x[0].length;
         int k = MathEx.max(Segment.y) + 1;
 

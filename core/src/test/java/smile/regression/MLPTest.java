@@ -25,6 +25,7 @@ import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.*;
+import smile.data.transform.InvertibleColumnTransform;
 import smile.feature.transform.Standardizer;
 import smile.math.MathEx;
 import smile.math.Scaler;
@@ -81,8 +82,9 @@ public class MLPTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer standardizer = Standardizer.fit(x);
-        x = standardizer.apply(x);
+        DataFrame df = DataFrame.of(x);
+        InvertibleColumnTransform standardizer = Standardizer.fit(df);
+        x = standardizer.apply(df).toArray();
 
         RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(scaler, builders);
