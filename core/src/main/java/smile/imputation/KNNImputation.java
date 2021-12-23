@@ -24,7 +24,7 @@ import smile.sort.QuickSort;
  * selects instances similar to the instance of interest to impute
  * missing values. If we consider instance A that has one missing value on
  * attribute i, this method would find K other instances, which have a value
- * present on attribute 1, with values most similar (in term of some distance,
+ * present on attribute 1, with values most similar (in terms of some distance,
  * e.g. Euclidean distance) to A on other attributes without missing values.
  * The average of values on attribute i from the K nearest
  * neighbors is then used as an estimate for the missing value in instance A.
