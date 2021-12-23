@@ -25,7 +25,10 @@ import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.*;
+import smile.data.transform.InvertibleColumnTransform;
+import smile.data.transform.Transform;
 import smile.feature.transform.Standardizer;
+import smile.feature.transform.WinsorScaler;
 import smile.math.MathEx;
 import smile.math.Scaler;
 import smile.math.TimeFunction;
@@ -81,8 +84,10 @@ public class MLPTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer standardizer = Standardizer.fit(x);
-        x = standardizer.apply(x);
+        DataFrame data = DataFrame.of(x);
+        InvertibleColumnTransform standardizer = Standardizer.fit(data);
+        System.out.println(standardizer);
+        x = standardizer.apply(data).toArray();
 
         RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(scaler, builders);
@@ -136,7 +141,7 @@ public class MLPTest {
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115700.2463,
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115702.2505,
                 Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 

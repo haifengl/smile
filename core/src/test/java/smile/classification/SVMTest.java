@@ -28,6 +28,7 @@ import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.Segment;
 import smile.data.USPS;
+import smile.data.transform.InvertibleColumnTransform;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.math.MathEx;
@@ -148,9 +149,10 @@ public class SVMTest {
         System.out.println("Segment");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer scaler = Standardizer.fit(Segment.x);
-        double[][] x = scaler.apply(Segment.x);
-        double[][] testx = scaler.apply(Segment.testx);
+        InvertibleColumnTransform scaler = Standardizer.fit(Segment.train);
+        System.out.println(scaler);
+        double[][] x = scaler.apply(Segment.formula.x(Segment.train)).toArray();
+        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
 
         GaussianKernel kernel = new GaussianKernel(6.4);
         OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
