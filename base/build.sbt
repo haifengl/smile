@@ -1,4 +1,4 @@
-name := "smile-math"
+name := "smile-base"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
