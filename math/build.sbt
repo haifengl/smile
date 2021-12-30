@@ -1,5 +1,7 @@
 name := "smile-math"
 
+packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
+
 libraryDependencies ++= Seq(
   "org.slf4j"    % "slf4j-api" % "1.7.32",
   "org.bytedeco" % "javacpp"   % "1.5.6",
