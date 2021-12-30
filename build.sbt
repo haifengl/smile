@@ -50,7 +50,6 @@ lazy val commonSettings = Seq(
 )
 
 lazy val javaSettings = commonSettings ++ Seq(
-  packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile"),
   crossPaths := false,
   autoScalaLibrary := false,
   Compile / compile / javacOptions ++= Seq(
