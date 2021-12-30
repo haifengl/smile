@@ -118,7 +118,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
-  .aggregate(core, data, io, math, mkl, nlp, plot, json, scala, spark, shell)
+  .aggregate(core, math, mkl, nlp, plot, json, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(java8Settings: _*)
 
@@ -126,17 +126,9 @@ lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
   .dependsOn(math)
 
-lazy val data = project.in(file("data"))
-  .settings(java8Settings: _*)
-  .dependsOn(math)
-
-lazy val io = project.in(file("io"))
-  .settings(java8Settings: _*)
-  .dependsOn(data)
-
 lazy val core = project.in(file("core"))
   .settings(java8Settings: _*)
-  .dependsOn(data, math, io % "test")
+  .dependsOn(math)
 
 lazy val deep = project.in(file("deep"))
   .settings(java8Settings: _*)
@@ -154,12 +146,12 @@ lazy val json = project.in(file("json")).settings(scalaSettings: _*)
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
-  .dependsOn(core, io, nlp, plot, json)
+  .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
-  .dependsOn(core, data, io % "test")
+  .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
