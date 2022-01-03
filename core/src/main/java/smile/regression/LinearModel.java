@@ -191,10 +191,11 @@ public class LinearModel implements DataFrameRegression {
         int df1 = p - 1;
         int df2 = n - p;
 
-        if (df2 > 0) {
+        if (df2 > 0 && F > 0.0) {
             pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
         } else {
-            logger.warn("Skip calculating p-value: the linear system is under-determined.");
+            String msg = F <= 0.0 ? "R2 is not positive" : "the linear system is under-determined";
+            logger.warn("Skip calculating p-value: {}.", msg);
             pvalue = Double.NaN;
         }
     }
