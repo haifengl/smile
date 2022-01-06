@@ -18,9 +18,14 @@
 package smile.classification;
 
 import java.util.stream.IntStream;
-import smile.data.Iris;
-import smile.data.WeatherNominal;
+import smile.io.Read;
+import smile.io.Write;
+import smile.math.MathEx;
+import smile.stat.distribution.Distribution;
+import smile.stat.distribution.GaussianMixture;
 import smile.stat.distribution.EmpiricalDistribution;
+import smile.test.data.Iris;
+import smile.test.data.WeatherNominal;
 import smile.util.IntSet;
 import smile.validation.ClassificationMetrics;
 import smile.validation.LOOCV;
@@ -30,9 +35,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.MathEx;
-import smile.stat.distribution.Distribution;
-import smile.stat.distribution.GaussianMixture;
 import static org.junit.Assert.*;
 
 /**
@@ -99,8 +101,8 @@ public class NaiveBayesTest {
             }
         }
         NaiveBayes model = new NaiveBayes(priori, condprob);
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

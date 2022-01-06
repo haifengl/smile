@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
 
 import smile.classification.DecisionTree;
 import smile.classification.LDA;
-import smile.data.Abalone;
-import smile.data.Segment;
-import smile.data.USPS;
+import smile.test.data.Abalone;
+import smile.test.data.Segment;
+import smile.test.data.USPS;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
 import smile.math.MathEx;

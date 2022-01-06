@@ -19,10 +19,12 @@ package smile.classification;
 
 import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.distance.EuclideanDistance;
 import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.After;
@@ -159,7 +161,7 @@ public class RBFNetworkTest {
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(143, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

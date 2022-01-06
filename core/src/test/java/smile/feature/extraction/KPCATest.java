@@ -23,8 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.CPU;
 import smile.math.kernel.GaussianKernel;
+import smile.test.data.CPU;
 
 import static org.junit.Assert.*;
 

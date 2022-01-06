@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.MNIST;
+import smile.test.data.MNIST;
 import smile.math.MathEx;
 import smile.feature.extraction.PCA;
 import static org.junit.Assert.*;

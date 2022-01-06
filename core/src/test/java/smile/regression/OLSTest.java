@@ -24,10 +24,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import smile.data.CPU;
-import smile.data.Longley;
-import smile.data.Prostate;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.CPU;
+import smile.test.data.Longley;
+import smile.test.data.Prostate;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
@@ -98,8 +100,8 @@ public class OLSTest {
             assertEquals(residuals[i], model.residuals()[i], 1E-4);
         }
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.USPS;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import static org.junit.Assert.*;
 

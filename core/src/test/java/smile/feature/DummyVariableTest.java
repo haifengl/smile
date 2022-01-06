@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.CategoricalEncoder;
-import smile.data.WeatherNominal;
+import smile.test.data.WeatherNominal;
 import static org.junit.Assert.*;
 
 /**

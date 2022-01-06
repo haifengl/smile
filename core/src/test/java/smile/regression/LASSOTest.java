@@ -22,12 +22,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.CPU;
 import smile.data.DataFrame;
-import smile.data.Longley;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.CPU;
+import smile.test.data.Longley;
 import smile.validation.*;
 
 import static org.junit.Assert.*;
@@ -95,8 +97,8 @@ public class LASSOTest {
         System.out.println(metrics);
         assertEquals(1.4146, metrics.rmse, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

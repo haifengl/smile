@@ -17,7 +17,9 @@
 
 package smile.clustering;
 
-import smile.data.USPS;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 import org.junit.After;
@@ -90,7 +92,7 @@ public class GMeansTest {
         assertEquals(0.9012, r, 1E-4);
         assertEquals(0.4822, r2, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

@@ -18,7 +18,8 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.data.Movie;
+import smile.test.data.Movie;
+import smile.test.data.Serialize;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.Bag;
@@ -80,8 +81,8 @@ public class DiscreteNaiveBayesTest {
 
         DiscreteNaiveBayes model = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
         model.update(Movie.x, Movie.y);
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Serialize.write(model);
+        Serialize.read(temp);
     }
 
     @Test

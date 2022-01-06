@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -54,7 +54,8 @@ public class BoxTestTest {
     public void testPierce() {
         System.out.println("Box-Pierce test");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         BoxTest box = BoxTest.pierce(x, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Box_Pierce, box.type);
@@ -67,7 +68,8 @@ public class BoxTestTest {
     public void testLjung() {
         System.out.println("Ljung-Box test");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         BoxTest box = BoxTest.ljung(x, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Ljung_Box, box.type);

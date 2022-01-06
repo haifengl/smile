@@ -24,14 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
-import smile.data.*;
+import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
-import smile.data.transform.Transform;
 import smile.feature.transform.Standardizer;
-import smile.feature.transform.WinsorScaler;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.Scaler;
 import smile.math.TimeFunction;
+import smile.test.data.*;
 import smile.validation.*;
 import static org.junit.Assert.assertEquals;
 
@@ -75,8 +76,8 @@ public class MLPTest {
             }
         }
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     public void test(String dataset, double[][] x, double[] y, Scaler scaler, double expected, LayerBuilder... builders) {

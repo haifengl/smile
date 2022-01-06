@@ -17,7 +17,7 @@
 
 package smile.vq;
 
-import smile.data.USPS;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import org.junit.After;
 import org.junit.AfterClass;

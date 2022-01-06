@@ -128,7 +128,7 @@ lazy val mkl = project.in(file("mkl"))
 
 lazy val core = project.in(file("core"))
   .settings(java8Settings: _*)
-  .dependsOn(base)
+  .dependsOn(base % "compile->compile;test->test")
 
 lazy val deep = project.in(file("deep"))
   .settings(java8Settings: _*)

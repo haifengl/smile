@@ -19,8 +19,10 @@ package smile.classification;
 
 import java.util.Arrays;
 import smile.base.cart.SplitRule;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -110,8 +112,8 @@ public class RandomForestTest {
         System.out.println(metrics);
         assertEquals(0.5714, metrics.accuracy, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

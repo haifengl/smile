@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
-import smile.data.Date;
+import smile.test.data.Date;
 import smile.data.formula.Formula;
 import smile.data.formula.DateFeature;
 import smile.data.measure.NominalScale;

@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -54,7 +54,8 @@ public class ARTest {
     public void testAR6OLS() {
         System.out.println("AR(6).ols");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         AR model = AR.ols(x, 6);
         System.out.println(model);
         assertEquals(6, model.p());
@@ -86,7 +87,8 @@ public class ARTest {
     public void testAR6YW() {
         System.out.println("AR(6).yw");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         AR model = AR.fit(x, 6);
         System.out.println(model);
         assertEquals(6, model.p());

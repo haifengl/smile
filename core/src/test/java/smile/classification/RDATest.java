@@ -22,10 +22,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.BreastCancer;
-import smile.data.Iris;
-import smile.data.PenDigits;
-import smile.data.USPS;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.BreastCancer;
+import smile.test.data.Iris;
+import smile.test.data.PenDigits;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.validation.*;
 import smile.validation.metric.Error;
@@ -106,7 +108,7 @@ public class RDATest {
         System.out.println("Error = " + error);
         assertEquals(235, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

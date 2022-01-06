@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.GaussianMixture;
-import smile.data.USPS;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.GaussianMixture;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 
@@ -178,7 +180,7 @@ public class KMeansTest {
         assertEquals(0.8942, r, 1E-4);
         assertEquals(0.4540, r2, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

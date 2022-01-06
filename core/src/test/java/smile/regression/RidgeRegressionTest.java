@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.CPU;
-import smile.data.Longley;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.CPU;
+import smile.test.data.Longley;
 import smile.math.MathEx;
 import smile.validation.*;
 
@@ -73,8 +75,8 @@ public class RidgeRegressionTest {
         System.out.println(metrics);
         assertEquals(1.7288188, metrics.rmse, 1E-7);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

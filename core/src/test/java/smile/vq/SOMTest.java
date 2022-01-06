@@ -18,7 +18,7 @@
 package smile.vq;
 
 import smile.clustering.KMeans;
-import smile.data.USPS;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import org.junit.After;

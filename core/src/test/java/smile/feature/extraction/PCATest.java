@@ -23,8 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.USArrests;
 import smile.math.MathEx;
+import smile.test.data.USArrests;
 
 /**
  *

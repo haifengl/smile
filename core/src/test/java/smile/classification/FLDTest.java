@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 
@@ -96,8 +98,8 @@ public class FLDTest {
         System.out.println(result);
         assertEquals(262, result.metrics.error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(result.model);
-        FLD model = (FLD) smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(result.model);
+        FLD model = (FLD) Read.object(temp);
 
         int error = Error.of(USPS.testy, model.predict(USPS.testx));
         assertEquals(262, error);

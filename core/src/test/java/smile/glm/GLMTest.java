@@ -24,8 +24,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import smile.data.Default;
 import smile.glm.model.*;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.Default;
 
 /**
  *
@@ -77,7 +79,7 @@ public class GLMTest {
             }
         }
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }
