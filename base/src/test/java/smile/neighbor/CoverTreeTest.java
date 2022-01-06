@@ -20,28 +20,32 @@ package smile.neighbor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
-import smile.data.GaussianMixture;
-import smile.data.USPS;
-import smile.math.MathEx;
+import smile.math.distance.EditDistance;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
+import smile.test.data.IndexNoun;
+import smile.test.data.SwissRoll;
+import smile.test.data.USPS;
+
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Haifeng Li
  */
-public class KDTreeTest {
+@SuppressWarnings("rawtypes")
+public class CoverTreeTest {
 
-    public KDTreeTest() {
-
+    public CoverTreeTest() {
     }
+
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -64,12 +68,12 @@ public class KDTreeTest {
         System.out.println("nearest");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
-        for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> n1 = naive.nearest(data[i]);
-            Neighbor<double[], double[]> n2 = kdtree.nearest(data[i]);
+        for (double[] datum : data) {
+            Neighbor n1 = coverTree.nearest(datum);
+            Neighbor n2 = naive.nearest(datum);
             assertEquals(n1.index, n2.index);
             assertEquals(n1.value, n2.value);
             assertEquals(n1.distance, n2.distance, 1E-7);
@@ -81,12 +85,13 @@ public class KDTreeTest {
         System.out.println("knn");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
-        for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> [] n1 = naive.knn(data[i], 10);
-            Neighbor<double[], double[]> [] n2 = kdtree.knn(data[i], 10);
+        for (double[] datum : data) {
+            Neighbor[] n1 = coverTree.knn(datum, 10);
+            Neighbor[] n2 = naive.knn(datum, 10);
+            assertEquals(n1.length, n2.length);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
@@ -95,35 +100,38 @@ public class KDTreeTest {
         }
     }
 
+    /**
+     * Test of knn method when the data has only one elements
+     */
+    @Test
+    public void testKnn1() {
+        System.out.println("knn1");
+
+        double[][] data = Matrix.randn(2, 10).toArray();
+        double[][] data1 = {data[0]};
+        EuclideanDistance d = new EuclideanDistance();
+        CoverTree<double[]> coverTree = new CoverTree<>(data1, d);
+
+        Neighbor[] n1 = coverTree.knn(data[1], 1);
+        assertEquals(1, n1.length);
+        assertEquals(0, n1[0].index);
+        assertEquals(data[0], n1[0].value);
+        assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
+    }
+
     @Test
     public void testRange() {
-        System.out.println("range 0.5");
+        System.out.println("range");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
-        for (int i = 0; i < data.length; i++) {
-            kdtree.range(data[i], 0.5, n1);
-            naive.range(data[i], 0.5, n2);
-            Collections.sort(n1);
-            Collections.sort(n2);
-            assertEquals(n1.size(), n2.size());
-            for (int j = 0; j < n1.size(); j++) {
-                assertEquals(n1.get(j).index, n2.get(j).index);
-                assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
-            }
-            n1.clear();
-            n2.clear();
-        }
-
-        System.out.println("range 1.5");
-        for (int i = 0; i < data.length; i++) {
-            naive.range(data[i], 1.5, n1);
-            kdtree.range(data[i], 1.5, n2);
+        for (double[] datum : data) {
+            coverTree.range(datum, 0.5, n1);
+            naive.range(datum, 0.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
@@ -138,103 +146,93 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testGaussianMixture() {
-        System.out.println("----- Gaussian Mixture -----");
+    public void testSwissRoll() {
+        System.out.println("----- Swiss Roll -----");
 
-        double[][] data = GaussianMixture.x;
+        double[][] x = new double[10000][];
+        double[][] testx = new double[1000][];
+        System.arraycopy(SwissRoll.data, 0, x, 0, x.length);
+        System.arraycopy(SwissRoll.data, x.length, testx, 0, testx.length);
 
         long start = System.currentTimeMillis();
-        KDTree<double[]> kdtree = new KDTree<>(data, data);
+        CoverTree<double[]> coverTree = new CoverTree<>(x, new EuclideanDistance());
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building KD-tree: %.2fs%n", time);
+        System.out.format("Building cover tree: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < 1000; i++) {
-            kdtree.nearest(data[MathEx.randomInt(data.length)]);
+        for (double[] xi : testx) {
+            coverTree.nearest(xi);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < 1000; i++) {
-            kdtree.knn(data[MathEx.randomInt(data.length)], 10);
+        for (double[] xi : testx) {
+            coverTree.knn(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
-            kdtree.range(data[MathEx.randomInt(data.length)], 1.0, n);
+        for (double[] xi : testx) {
+            coverTree.range(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Range: %.2fs%n", time);
     }
 
-    @Test(expected = Test.None.class)
-    public void testBenchmark() throws Exception {
-        System.out.println("----- Benchmark -----");
-
-        int N = 40000;
-        int scale = 100;
-        int numTests = 100_000;
-
-        double[][] coords = new double[N][3];
-        for (int i = 0; i < N; i++) {
-            coords[i][0] = MathEx.random() * scale;
-            coords[i][1] = MathEx.random() * scale;
-            coords[i][2] = MathEx.random() * scale;
-        }
-        KDTree<double[]> kdt = new KDTree<>(coords, coords);
-
-        long start = System.currentTimeMillis();
-        double[] q = new double[3];
-        for (int i = 0; i < numTests; i++) {
-            q[0] = MathEx.random() * scale;
-            q[1] = MathEx.random() * scale;
-            q[2] = MathEx.random() * scale;
-            kdt.nearest(q);
-        }
-
-        double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Benchmark: %.2fs%n", time);
-        assertTrue(time < 0.25);
-    }
-
-    @Test(expected = Test.None.class)
-    public void testUSPS() throws Exception {
+    @Test
+    public void testUSPS() {
         System.out.println("----- USPS -----");
 
         double[][] x = USPS.x;
         double[][] testx = USPS.testx;
 
         long start = System.currentTimeMillis();
-        KDTree<double[]> kdtree = new KDTree<>(x, x);
+        CoverTree<double[]> coverTree = new CoverTree<>(x, new EuclideanDistance());
         double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building KD-tree: %.2fs%n", time);
+        System.out.format("Building cover tree: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.nearest(testx[i]);
+        for (double[] xi : testx) {
+            coverTree.nearest(xi);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.knn(testx[i], 10);
+        for (double[] xi : testx) {
+            coverTree.knn(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.range(testx[i], 8.0, n);
+        for (double[] xi : testx) {
+            coverTree.range(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Range: %.2fs%n", time);
+    }
+
+    @Test
+    public void testStrings() {
+        System.out.println("----- Strings -----");
+
+        String[] words = IndexNoun.words;
+        CoverTree<String> cover = new CoverTree<>(words, new EditDistance(50, true));
+
+        long start = System.currentTimeMillis();
+        List<Neighbor<String, String>> neighbors = new ArrayList<>();
+        for (int i = 1000; i < 1100; i++) {
+            cover.range(words[i], 1, neighbors);
+            neighbors.clear();
+        }
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("String search: %.2fs%n", time);
     }
 }

@@ -25,25 +25,38 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.USPS;
+
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
-import static org.junit.Assert.*;
+import smile.test.data.USPS;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author Haifeng Li
  */
 @SuppressWarnings("rawtypes")
-public class LSHTest {
+public class MPLSHTest {
     double[][] x = USPS.x;
     double[][] testx = USPS.testx;
-    LSH<double[]> lsh;
+    MPLSH<double[]> lsh;
     LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
-    public LSHTest() {
+    public MPLSHTest() {
         MathEx.setSeed(19650218); // to get repeatable results.
-        lsh = new LSH<>(x, x, 4.0, 1017881);
+
+        lsh = new MPLSH<>(256, 100, 3, 4.0);
+        for (double[] xi : x) {
+            lsh.put(xi, xi);
+        }
+        
+        double[][] train = new double[500][];
+        int[] index = MathEx.permutate(x.length);
+        for (int i = 0; i < train.length; i++) {
+            train[i] = x[index[i]];
+        }
+        lsh.fit(naive, train, 8.0);
     }
 
     @BeforeClass
@@ -85,9 +98,9 @@ public class LSHTest {
 
         error /= (hit - recall);
 
-        assertEquals(1154, recall);
+        assertEquals(1722, recall);
         assertEquals(2007, hit);
-        assertEquals(0.1305, error, 1E-4);
+        assertEquals(0.0687, error, 1E-4);
         System.out.format("recall is %.2f%%%n", 100.0 * recall / testx.length);
         System.out.format("error when miss is %.2f%%%n", 100.0 * error);
         System.out.format("null rate is %.2f%%%n", 100.0 - 100.0 * hit / testx.length);
@@ -100,7 +113,7 @@ public class LSHTest {
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
-            Neighbor[] n1 = lsh.knn(testx[i], k);
+            Neighbor[] n1 = lsh.knn(testx[i], k, 0.95, 50);
             Neighbor[] n2 = naive.knn(testx[i], k);
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
@@ -125,7 +138,7 @@ public class LSHTest {
         for (int i = 0; i < testx.length; i++) {
             ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<>();
             ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<>();
-            lsh.range(testx[i], 8.0, n1);
+            lsh.range(testx[i], 8.0, n1, 0.95, 50);
             naive.range(testx[i], 8.0, n2);
 
             for (Neighbor m2 : n2) {

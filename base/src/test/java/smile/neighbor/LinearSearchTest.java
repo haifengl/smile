@@ -26,14 +26,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.GaussianMixture;
-import smile.data.IndexNoun;
-import smile.data.SwissRoll;
-import smile.data.USPS;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
+import smile.test.data.GaussianMixture;
+import smile.test.data.IndexNoun;
+import smile.test.data.SwissRoll;
+import smile.test.data.USPS;
 
 import static org.junit.Assert.*;
 

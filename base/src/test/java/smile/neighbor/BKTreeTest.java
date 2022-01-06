@@ -25,8 +25,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.IndexNoun;
 import smile.math.distance.EditDistance;
+import smile.test.data.IndexNoun;
 
 import static org.junit.Assert.*;
 
