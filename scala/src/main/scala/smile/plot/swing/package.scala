@@ -20,7 +20,6 @@ package smile.plot
 import java.awt.Color
 import smile.clustering.HierarchicalClustering
 import smile.data.DataFrame
-import smile.feature.extraction.PCA
 import smile.math.matrix.SparseMatrix
 import smile.stat.distribution.{DiscreteDistribution, Distribution}
 
@@ -454,10 +453,10 @@ package object swing {
     * number of components, we look for an "elbow" in the scree plot. The component number is taken to
     * be the point at which the remaining eigenvalues are relatively small and all about the same size.
     *
-    * @param pca principal component analysis object.
+    * @param varianceProportion The proportion of variance contained in each principal component.
     */
-  def screeplot(pca: PCA): Canvas = {
-    new ScreePlot(pca).canvas
+  def screeplot(varianceProportion: Array[Double]): Canvas = {
+    new ScreePlot(varianceProportion).canvas
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement
