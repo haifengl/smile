@@ -140,7 +140,7 @@ lazy val nlp = project.in(file("nlp"))
 
 lazy val plot = project.in(file("plot"))
   .settings(java8Settings: _*)
-  .dependsOn(core)
+  .dependsOn(base)
 
 lazy val json = project.in(file("json")).settings(scalaSettings: _*)
 

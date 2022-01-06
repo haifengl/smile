@@ -19,7 +19,6 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Optional;
-import smile.feature.extraction.PCA;
 
 /**
  * In multivariate statistics, a scree plot is a line plot of the eigenvalues
@@ -40,27 +39,24 @@ import smile.feature.extraction.PCA;
  */
 public class ScreePlot extends Plot {
     /** The line legends. */
-    private static Legend[] legends = {
+    private static final Legend[] legends = {
             new Legend("Variance", Color.RED),
             new Legend("Cumulative Variance", Color.BLUE)
     };
 
-    /** The principal component analysis object. */
-    private PCA pca;
     /** The mark of x-axis. */
-    private double[] x;
+    private final double[] x;
     /** The label of x-axis. */
-    private String[] labels;
+    private final String[] labels;
     /** The variance & cumulative variance plot. */
-    private Line[] lines;
+    private final Line[] lines;
 
     /**
      * Constructor.
-     * @param pca principal component analysis object.
+     * @param varianceProportion The proportion of variance contained in each principal component.
      */
-    public ScreePlot(PCA pca) {
-        this.pca = pca;
-        int n = pca.varianceProportion().length;
+    public ScreePlot(double[] varianceProportion) {
+        int n = varianceProportion.length;
 
         labels = new String[n];
         x = new double[n];
@@ -70,9 +66,9 @@ public class ScreePlot extends Plot {
             labels[i] = "PC" + (i + 1);
             x[i] = i + 1;
             var[i][0] = x[i];
-            var[i][1] = pca.varianceProportion()[i];
+            var[i][1] = varianceProportion[i];
             cumVar[i][0] = x[i];
-            cumVar[i][1] = pca.cumulativeVarianceProportion()[i];
+            cumVar[i][1] = i == 0 ? varianceProportion[0] : cumVar[i - 1][1] + varianceProportion[i];
         }
 
         lines = new Line[] {
@@ -104,14 +100,11 @@ public class ScreePlot extends Plot {
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {1, 0.0};
-        return bound;
+        return new double[]{1, 0.0};
     }
 
     @Override
     public double[] getUpperBound() {
-        int n = pca.varianceProportion().length;
-        double[] bound = {n, 1.0};
-        return bound;
+        return new double[]{x.length, 1.0};
     }
 }
