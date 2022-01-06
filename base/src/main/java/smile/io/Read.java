@@ -20,6 +20,7 @@ package smile.io;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +43,20 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public interface Read {
+    /**
+     * Reads a serialized object from a file.
+     * @param path the file path.
+     * @return the serialized object.
+     */
+    static Object object(Path path) throws IOException, ClassNotFoundException {
+        InputStream file = Files.newInputStream(path);
+        ObjectInputStream in = new ObjectInputStream(file);
+        Object o = in.readObject();
+        in.close();
+        file.close();
+        return o;
+    }
+
     /**
      * Reads a data file. Infers the data format by the file name extension.
      * @param path the input file path.

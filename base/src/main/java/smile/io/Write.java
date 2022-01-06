@@ -18,6 +18,10 @@
 package smile.io;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
@@ -28,6 +32,32 @@ import smile.data.DataFrame;
  * @author Haifeng Li
  */
 public interface Write {
+    /**
+     * Writes an object to a temporary file and returns the path of file.
+     * The temporary file will be deleted when the VM exits.
+     * @param o the object to serialize.
+     * @return the path of temporary file.
+     */
+    static Path object(Serializable o) throws IOException {
+        Path temp = Files.createTempFile("smile-test-", ".tmp");
+        object(o, temp);
+        temp.toFile().deleteOnExit();
+        return temp;
+    }
+
+    /**
+     * Writes a serializable object to a file.
+     * @param o the object to serialize.
+     * @param path the file path.
+     */
+    static void object(Serializable o, Path path) throws IOException {
+        OutputStream file = Files.newOutputStream(path);
+        ObjectOutputStream out = new ObjectOutputStream(file);
+        out.writeObject(o);
+        out.close();
+        file.close();
+    }
+
     /**
      * Writes a CSV file.
      *
