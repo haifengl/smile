@@ -18,8 +18,11 @@
 package smile.regression;
 
 import smile.base.cart.Loss;
-import smile.data.*;
+import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
@@ -83,8 +86,8 @@ public class GradientTreeBoostTest {
         System.out.println(metrics);
         assertEquals(3.5453, metrics.rmse, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     public void test(Loss loss, String name, Formula formula, DataFrame data, double expected) {

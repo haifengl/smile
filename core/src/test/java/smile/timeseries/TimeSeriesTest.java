@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -78,7 +78,8 @@ public class TimeSeriesTest {
     public void testAcfLogReturn() {
         System.out.println("ACF of log return");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         assertEquals( 1.0, TimeSeries.acf(x, 0), 1E-8);
         assertEquals( 0.00648546, TimeSeries.acf(x, 1), 1E-8);
         assertEquals(-0.03218588, TimeSeries.acf(x, 2), 1E-8);
@@ -90,7 +91,8 @@ public class TimeSeriesTest {
     public void testPacf() {
         System.out.println("PACF");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         assertEquals( 1.0, TimeSeries.pacf(x, 0), 1E-8);
         assertEquals( 0.00648546, TimeSeries.pacf(x, 1), 1E-8);
         assertEquals(-0.03222929, TimeSeries.pacf(x, 2), 1E-8);

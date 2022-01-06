@@ -23,7 +23,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.Arrays;
-import smile.data.*;
+import smile.data.SparseDataset;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.*;
 import smile.util.SparseArray;
 import smile.validation.metric.Error;
 import static org.junit.Assert.*;
@@ -106,7 +109,7 @@ public class SparseLogisticRegressionTest {
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

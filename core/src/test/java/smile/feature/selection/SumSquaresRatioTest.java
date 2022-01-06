@@ -18,8 +18,8 @@
 package smile.feature.selection;
 
 import smile.classification.LDA;
-import smile.data.Iris;
-import smile.data.USPS;
+import smile.test.data.Iris;
+import smile.test.data.USPS;
 import smile.sort.QuickSort;
 import smile.validation.metric.Accuracy;
 import org.junit.After;

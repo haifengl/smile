@@ -23,8 +23,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.*;
+import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
@@ -77,8 +80,8 @@ public class RLSTest {
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     /**

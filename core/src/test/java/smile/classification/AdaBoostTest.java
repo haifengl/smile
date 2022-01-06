@@ -17,8 +17,10 @@
 
 package smile.classification;
 
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -67,8 +69,8 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
                 (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));

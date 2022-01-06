@@ -18,7 +18,8 @@
 package smile.anomaly;
 
 import org.apache.commons.csv.CSVFormat;
-import smile.io.CSV;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
 import smile.util.Paths;
 import org.junit.After;
@@ -56,8 +57,8 @@ public class SVMTest {
     public void testSixClusters() throws Exception {
         System.out.println("Six clusters");
 
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter(' '));
-        double[][] data = csv.read(Paths.getTestData("clustering/rem.txt")).toArray();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+        double[][] data = Read.csv(Paths.getTestData("clustering/rem.txt"), format).toArray();
         SVM<double[]> model = SVM.fit(data, new GaussianKernel(1.0), 0.2, 1E-3);
 
         double[] x = new double[201];
@@ -78,16 +79,16 @@ public class SVMTest {
         // ScatterPlot.of(data).canvas().window();
         // Heatmap.of(x, y, grid).canvas().window();
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test
     public void testSinCos() throws Exception {
         System.out.println("SinCos");
 
-        CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
-        double[][] data = csv.read(Paths.getTestData("clustering/sincos.txt")).toArray();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').build();
+        double[][] data = Read.csv(Paths.getTestData("clustering/sincos.txt"), format).toArray();
         SVM<double[]> model = SVM.fit(data, new GaussianKernel(0.5));
 
         double[] x = new double[51];

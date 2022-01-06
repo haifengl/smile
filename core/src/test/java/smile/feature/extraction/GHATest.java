@@ -24,7 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.data.USArrests;
+import smile.test.data.USArrests;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;

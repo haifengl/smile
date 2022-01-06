@@ -24,11 +24,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.clustering.KMeans;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
+import smile.test.data.*;
 import smile.validation.*;
 
 import static org.junit.Assert.assertEquals;
@@ -133,11 +135,11 @@ public class GaussianProcessRegressionTest {
         }
 
         double[][] samples = joint.sample(500);
-        System.out.format("samples = %s\n", Matrix.of(samples).toString());
+        System.out.format("samples = %s\n", Matrix.of(samples));
         System.out.format("sample cov = %s\n", Matrix.of(MathEx.cov(samples)).toString(true));
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

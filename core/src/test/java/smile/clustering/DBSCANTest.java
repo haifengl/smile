@@ -17,7 +17,9 @@
 
 package smile.clustering;
 
-import smile.data.GaussianMixture;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.GaussianMixture;
 import smile.validation.metric.*;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -74,7 +76,7 @@ public class DBSCANTest {
         System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
         System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

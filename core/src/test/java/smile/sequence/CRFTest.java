@@ -23,8 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.Hyphen;
-import smile.data.Protein;
+import smile.test.data.Hyphen;
+import smile.test.data.Protein;
 
 import static org.junit.Assert.*;
 

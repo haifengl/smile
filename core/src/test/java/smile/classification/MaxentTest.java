@@ -17,8 +17,10 @@
 
 package smile.classification;
 
-import smile.data.Hyphen;
-import smile.data.Protein;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.Hyphen;
+import smile.test.data.Protein;
 import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -65,8 +67,8 @@ public class MaxentTest {
         System.out.format("The error is %d of %d%n", error, Protein.testx.length);
         assertEquals(1339, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

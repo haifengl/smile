@@ -134,10 +134,10 @@ object write {
 
 /** Data loading utilities. */
 object read {
-  /** Reads a `Serializable` object/model. */
+  /** Reads a serialized object from a file. */
   def apply(file: String): AnyRef = apply(Paths.get(file))
 
-  /** Reads a `Serializable` object/model. */
+  /** Reads a serialized object from a file. */
   def apply(file: Path): AnyRef = {
     val ois = new ObjectInputStream(new FileInputStream(file.toFile))
     val o = ois.readObject

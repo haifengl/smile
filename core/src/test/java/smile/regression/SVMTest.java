@@ -22,9 +22,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import static org.junit.Assert.assertEquals;
 
@@ -63,8 +65,8 @@ public class SVMTest {
         assertEquals(1.6140, metrics.rmse, 1E-4);
 
         Regression<double[]> model = SVM.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test

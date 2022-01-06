@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.metric.*;
@@ -96,7 +97,7 @@ public class SIBTest {
         assertEquals(0.8782, r, 1E-4);
         assertEquals(0.2287, r2, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

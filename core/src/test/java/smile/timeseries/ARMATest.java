@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -54,7 +54,8 @@ public class ARMATest {
     public void testARMA63() {
         System.out.println("ARMA(6, 3)");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         ARMA model = ARMA.fit(x, 6, 3);
         System.out.println(model);
         assertEquals(6, model.p());

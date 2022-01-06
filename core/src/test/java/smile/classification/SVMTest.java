@@ -26,8 +26,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.data.Segment;
-import smile.data.USPS;
+import smile.io.Write;
+import smile.test.data.Segment;
+import smile.test.data.USPS;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
@@ -176,7 +177,7 @@ public class SVMTest {
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
         assertEquals(86, error, 3);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

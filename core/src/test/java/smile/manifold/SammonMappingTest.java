@@ -23,7 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.Eurodist;
+import smile.test.data.Eurodist;
 
 import static org.junit.Assert.*;
 

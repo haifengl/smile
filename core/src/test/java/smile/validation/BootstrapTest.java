@@ -25,8 +25,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import smile.classification.DecisionTree;
-import smile.data.CPU;
-import smile.data.Iris;
+import smile.test.data.CPU;
+import smile.test.data.Iris;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 
