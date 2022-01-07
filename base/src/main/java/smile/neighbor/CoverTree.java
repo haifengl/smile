@@ -55,7 +55,7 @@ import smile.sort.DoubleHeapSelect;
  *
  * @author Haifeng Li
  */
-public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E>, RNNSearch<E, E>, Serializable {
+public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializable {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoverTree.class);
 
@@ -462,11 +462,6 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         pointSet.clear();
         pointSet.addAll(newSet);
-    }
-
-    @Override
-    public Neighbor<E, E> nearest(E q) {
-        return search(q, 1)[0];
     }
 
     @Override

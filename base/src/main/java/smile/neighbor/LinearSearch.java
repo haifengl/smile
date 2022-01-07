@@ -48,7 +48,7 @@ import smile.sort.HeapSelect;
  *
  * @author Haifeng Li
  */
-public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,T>, RNNSearch<T,T>, Serializable {
+public class LinearSearch<T> implements KNNSearch<T,T>, RNNSearch<T,T>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
