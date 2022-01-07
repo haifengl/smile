@@ -130,8 +130,8 @@ public class CoverTreeTest {
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (double[] datum : data) {
-            coverTree.range(datum, 0.5, n1);
-            naive.range(datum, 0.5, n2);
+            coverTree.search(datum, 0.5, n1);
+            naive.search(datum, 0.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
@@ -176,7 +176,7 @@ public class CoverTreeTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (double[] xi : testx) {
-            coverTree.range(xi, 8.0, n);
+            coverTree.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -212,7 +212,7 @@ public class CoverTreeTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (double[] xi : testx) {
-            coverTree.range(xi, 8.0, n);
+            coverTree.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -229,7 +229,7 @@ public class CoverTreeTest {
         long start = System.currentTimeMillis();
         List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
-            cover.range(words[i], 1, neighbors);
+            cover.search(words[i], 1, neighbors);
             neighbors.clear();
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;

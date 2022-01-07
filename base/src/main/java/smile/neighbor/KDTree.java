@@ -394,7 +394,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     }
 
     @Override
-    public void range(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
+    public void search(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }

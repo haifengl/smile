@@ -111,7 +111,7 @@ public class LinearSearchTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (double[] xi : testx) {
-            naive.range(xi, 8.0, n);
+            naive.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -144,7 +144,7 @@ public class LinearSearchTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (double[] xi : testx) {
-            naive.range(xi, 8.0, n);
+            naive.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -161,7 +161,7 @@ public class LinearSearchTest {
         long start = System.currentTimeMillis();
         List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
-            naive.range(words[i], 1, neighbors);
+            naive.search(words[i], 1, neighbors);
             neighbors.clear();
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
@@ -192,7 +192,7 @@ public class LinearSearchTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            naive.range(data[MathEx.randomInt(data.length)], 1.0, n);
+            naive.search(data[MathEx.randomInt(data.length)], 1.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

@@ -19,14 +19,14 @@ package smile.neighbor;
 
 /**
  * Nearest neighbor search, also known as proximity search, similarity search
- * or closest point search, is an optimization problem for finding closest
+ * or closest point search, is an optimization problem for finding the closest
  * points in metric spaces. The problem is: given a set S of points in a metric
  * space M and a query point q &isin; M, find the closest point in S to q.
  * <p>
  * In machine learning, we often build a nearest neighbor search data structure,
  * and then search with object in the same dataset. The object itself is of course
- * the nearest one with distance 0. But this is meaningless and we therefore do
- * the reference check during the search and excludes the query object from the
+ * the nearest one with distance 0. Since this is generally useless, we check
+ * the reference during the search and excludes the query object from the
  * results.
  * 
  * @param <K> the type of keys.

@@ -166,7 +166,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             // and also avoid empty neighborhood.
             list.add(Neighbor.of(data[i], i, 0.0));
 
-            nns.range(data[i], radius, list);
+            nns.search(data[i], radius, list);
             int[] neighborhood = new int[list.size()];
             neighbors[i] = neighborhood;
 
@@ -281,7 +281,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
-        nns.range(x, radius, neighbors);
+        nns.search(x, radius, neighbors);
 
         if (neighbors.isEmpty()) {
             return OUTLIER;

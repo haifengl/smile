@@ -566,7 +566,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     }
 
     @Override
-    public void range(E q, double radius, List<Neighbor<E, E>> neighbors) {
+    public void search(E q, double radius, List<Neighbor<E, E>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }

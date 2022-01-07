@@ -133,7 +133,7 @@ public class MPLSH <E> extends LSH<E> {
         for (int i = 0; i < samples.length; i++) {
             training[i] = new MultiProbeSample(samples[i], new LinkedList<>());
             ArrayList<Neighbor<double[], double[]>> neighbors = new ArrayList<>();
-            range.range(samples[i], radius, neighbors);
+            range.search(samples[i], radius, neighbors);
             for (Neighbor<double[], double[]> n : neighbors) {
                 training[i].neighbors.add(keys.get(n.index));
             }
@@ -227,8 +227,8 @@ public class MPLSH <E> extends LSH<E> {
     }
 
     @Override
-    public void range(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
-        if (model == null) super.range(q,radius, neighbors);
+    public void search(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
+        if (model == null) super.search(q,radius, neighbors);
         else range(q, radius, neighbors, 0.95, 100);
     }
 

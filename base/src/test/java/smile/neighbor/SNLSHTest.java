@@ -57,24 +57,24 @@ public class SNLSHTest {
         SNLSH<String[], String> lsh = createLSH(texts);
 
         ArrayList<Neighbor<String[], String>> neighbors = new ArrayList<>();
-        lsh.range(tokenize(texts[0]), 3, neighbors);
+        lsh.search(tokenize(texts[0]), 3, neighbors);
         assertEquals(2, neighbors.size());
         assertEquals(0, neighbors.get(0).index);
         assertEquals(1, neighbors.get(1).index);
 
         neighbors.clear();
-        lsh.range(tokenize(texts[1]), 3, neighbors);
+        lsh.search(tokenize(texts[1]), 3, neighbors);
         assertEquals(2, neighbors.size());
         assertEquals(0, neighbors.get(0).index);
         assertEquals(1, neighbors.get(1).index);
 
         neighbors.clear();
-        lsh.range(tokenize(texts[2]), 3, neighbors);
+        lsh.search(tokenize(texts[2]), 3, neighbors);
         assertEquals(1, neighbors.size());
         assertEquals(2, neighbors.get(0).index);
 
         neighbors.clear();
-        lsh.range(tokenize(texts[3]), 3, neighbors);
+        lsh.search(tokenize(texts[3]), 3, neighbors);
         assertEquals(1, neighbors.size());
         assertEquals(3, neighbors.get(0).index);
     }
