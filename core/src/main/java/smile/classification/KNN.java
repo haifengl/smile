@@ -175,7 +175,7 @@ public class KNN<T> extends AbstractClassifier<T> {
 
     @Override
     public int predict(T x) {
-        Neighbor<T,T>[] neighbors = knn.knn(x, k);
+        Neighbor<T,T>[] neighbors = knn.search(x, k);
         if (k == 1) {
             if (neighbors[0] == null) {
                 throw new IllegalStateException("No neighbor found.");
@@ -205,7 +205,7 @@ public class KNN<T> extends AbstractClassifier<T> {
 
     @Override
     public int predict(T x, double[] posteriori) {
-        Neighbor<T,T>[] neighbors = knn.knn(x, k);
+        Neighbor<T,T>[] neighbors = knn.search(x, k);
         if (k == 1) {
             if (neighbors[0] == null) {
                 throw new IllegalStateException("No neighbor found.");

@@ -230,7 +230,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
 
     @Override
     @SuppressWarnings("unchecked")
-    public Neighbor<double[], E>[] knn(double[] q, int k) {
+    public Neighbor<double[], E>[] search(double[] q, int k) {
         if (k < 1) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }

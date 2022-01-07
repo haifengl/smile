@@ -37,5 +37,5 @@ public interface KNNSearch<K, V> {
      * @param k the number of nearest neighbors to search for.
      * @return the k nearest neighbors
      */
-    Neighbor<K,V>[] knn(K q, int k);
+    Neighbor<K,V>[] search(K q, int k);
 }

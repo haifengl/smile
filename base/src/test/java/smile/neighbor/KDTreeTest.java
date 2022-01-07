@@ -85,8 +85,8 @@ public class KDTreeTest {
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> [] n1 = naive.knn(data[i], 10);
-            Neighbor<double[], double[]> [] n2 = kdtree.knn(data[i], 10);
+            Neighbor<double[], double[]> [] n1 = naive.search(data[i], 10);
+            Neighbor<double[], double[]> [] n2 = kdtree.search(data[i], 10);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
@@ -157,7 +157,7 @@ public class KDTreeTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
-            kdtree.knn(data[MathEx.randomInt(data.length)], 10);
+            kdtree.search(data[MathEx.randomInt(data.length)], 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
@@ -223,7 +223,7 @@ public class KDTreeTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < testx.length; i++) {
-            kdtree.knn(testx[i], 10);
+            kdtree.search(testx[i], 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);

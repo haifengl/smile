@@ -185,8 +185,8 @@ public class MPLSH <E> extends LSH<E> {
     }
 
     @Override
-    public Neighbor<double[], E>[] knn(double[] q, int k) {
-        if (model == null) return super.knn(q, k);
+    public Neighbor<double[], E>[] search(double[] q, int k) {
+        if (model == null) return super.search(q, k);
         return knn(q, k, 0.95, 100);
     }
 
