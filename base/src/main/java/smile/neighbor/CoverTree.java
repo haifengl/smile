@@ -52,22 +52,27 @@ import smile.util.DoubleArrayList;
  * <li> Alina Beygelzimer, Sham Kakade, and John Langford. Cover Trees for Nearest Neighbor. ICML 2006. </li>
  * </ol>
  *
- * @param <E> the type of data objects in the tree.
+ * @param <K> the type of keys.
+ * @param <V> the type of associated objects.
  *
  * @author Haifeng Li
  */
-public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializable {
+public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serializable {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoverTree.class);
 
     /**
-     * The dataset to build the cover tree.
+     * The object keys.
      */
-    private final E[] data;
+    private final List<K> keys;
+    /**
+     * The data objects.
+     */
+    private final List<V> data;
     /**
      * The distance/metric function for nearest neighbor search.
      */
-    private final Metric<E> distance;
+    private final Metric<K> distance;
     /**
      * The root node.
      */
@@ -126,11 +131,18 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
             this.scale = scale;
         }
 
-        /** Returns the instance represented by the node.
-         * @return the instance represented by the node.
+        /** Returns the data key represented by the node.
+         * @return the data key represented by the node.
          */
-        E getObject() {
-            return data[idx];
+        K getKey() {
+            return keys.get(idx);
+        }
+
+        /** Returns the data object represented by the node.
+         * @return the data object represented by the node.
+         */
+        V getValue() {
+            return data.get(idx);
         }
 
         /** Returns whether if the node is a leaf or not.
@@ -164,12 +176,18 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
             dist = new DoubleArrayList();
         }
 
-        /**
-         * Returns the instance represent by this DistanceNode.
-         * @return the instance represented by this node.
+        /** Returns the data key represented by the DistanceNode.
+         * @return the data key represented by the node.
          */
-        E getObject() {
-            return data[idx];
+        K getKey() {
+            return keys.get(idx);
+        }
+
+        /** Returns the data object represented by the DistanceNode.
+         * @return the data object represented by the node.
+         */
+        V getValue() {
+            return data.get(idx);
         }
     }
 
@@ -201,30 +219,92 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
 
     /**
      * Constructor.
-     * @param dataset the data set for nearest neighbor search.
+     * @param keys the data keys.
+     * @param data the data objects.
      * @param distance a metric distance measure for nearest neighbor search.
      */
-    public CoverTree(E[] dataset, Metric<E> distance) {
-        this(dataset, distance, 1.3);
+    public CoverTree(K[] keys, V[] data, Metric<K> distance) {
+        this(keys, data, distance, 1.3);
     }
 
     /**
      * Constructor.
-     * @param dataset the data set for nearest neighbor search.
+     * @param keys the data keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     */
+    public CoverTree(List<K> keys, List<V> data, Metric<K> distance) {
+        this(keys, data, distance, 1.3);
+    }
+
+    /**
+     * Constructor.
+     * @param keys the data keys.
+     * @param data the data objects.
      * @param distance a metric distance measure for nearest neighbor search.
      * @param base the base of the expansion constant.
      */
-    public CoverTree(E[] dataset, Metric<E> distance, double base) {
-        if (dataset.length == 0) {
-            throw new IllegalArgumentException("Empty dataset");
+    public CoverTree(K[] keys, V[] data, Metric<K> distance, double base) {
+        this(Arrays.asList(keys), Arrays.asList(data), distance, base);
+    }
+
+    /**
+     * Constructor.
+     * @param keys the data keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     * @param base the base of the expansion constant.
+     */
+    public CoverTree(List<K> keys, List<V> data, Metric<K> distance, double base) {
+        if (keys.size() != data.size()) {
+            throw new IllegalArgumentException("Different size of keys and data objects");
         }
 
-        this.data = dataset;
+        this.keys = keys;
+        this.data = data;
         this.distance = distance;
 
         this.base = base;
-        invLogBase = 1.0 / Math.log(base);
+        this.invLogBase = 1.0 / Math.log(base);
         buildCoverTree();
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     */
+    public static <T> CoverTree<T, T> of(T[] data, Metric<T> distance) {
+        return new CoverTree<>(data, data, distance);
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     * @param base the base of the expansion constant.
+     */
+    public static <T> CoverTree<T, T> of(T[] data, Metric<T> distance, double base) {
+        return new CoverTree<>(data, data, distance, base);
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     */
+    public static <T> CoverTree<T, T> of(List<T> data, Metric<T> distance) {
+        return new CoverTree<>(data, data, distance);
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects.
+     * @param distance a metric distance measure for nearest neighbor search.
+     * @param base the base of the expansion constant.
+     */
+    public static <T> CoverTree<T, T> of(List<T> data, Metric<T> distance, double base) {
+        return new CoverTree<>(data, data, distance, base);
     }
 
     @Override
@@ -239,13 +319,14 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
         ArrayList<DistanceSet> pointSet = new ArrayList<>();
         ArrayList<DistanceSet> consumedSet = new ArrayList<>();
 
-        E point = data[0];
+        K point = keys.get(0);
         int idx = 0;
+        int n = keys.size();
         double maxDist = -1;
 
-        for (int i = 1; i < data.length; i++) {
+        for (int i = 1; i < n; i++) {
             DistanceSet set = new DistanceSet(i);
-            double dist = distance.d(point, data[i]);
+            double dist = distance.d(point, keys.get(i));
             set.dist.add(dist);
             pointSet.add(set);
             if (dist > maxDist) {
@@ -318,9 +399,9 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
                         consumedSet.add(set);
 
                         // putting points closer to newPoint into newPointSet (and removing them from pointSet)
-                        distSplit(pointSet, newPointSet, set.getObject(), maxScale); // O(|point_saet|)
+                        distSplit(pointSet, newPointSet, set.getKey(), maxScale); // O(|point_saet|)
                         // putting points closer to newPoint into newPointSet (and removing them from far)
-                        distSplit(far, newPointSet, set.getObject(), maxScale); // O(|far|)
+                        distSplit(far, newPointSet, set.getKey(), maxScale); // O(|far|)
 
                         Node newChild = batchInsert(set.idx, nextScale, topScale, newPointSet, newConsumedSet);
                         newChild.parentDist = newDist;
@@ -448,11 +529,11 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
      * @param maxScale the scale based on which distances are
      * judged (radius of cover ball is calculated).
      */
-    private void distSplit(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> newPointSet, E newPoint, int maxScale) {
+    private void distSplit(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> newPointSet, K newPoint, int maxScale) {
         double fmax = getCoverRadius(maxScale);
         ArrayList<DistanceSet> newSet = new ArrayList<>();
         for (DistanceSet ds : pointSet) {
-            double newDist = distance.d(newPoint, ds.getObject());
+            double newDist = distance.d(newPoint, ds.getKey());
             if (newDist <= fmax) {
                 ds.dist.add(newDist);
                 newPointSet.add(ds);
@@ -466,22 +547,22 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
     }
 
     @Override
-    public Neighbor<E, E>[] search(E q, int k) {
+    public Neighbor<K, V>[] search(K q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
 
-        if (k > data.length) {
+        if (k > data.size()) {
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        E e = root.getObject();
+        K e = root.getKey();
         double d = distance.d(e, q);
 
         // Neighbor array of length 1.
-        Neighbor<E, E> n1 = new Neighbor<>(e, e, root.idx, d);
+        Neighbor<K, V> n1 = new Neighbor<>(e, root.getValue(), root.idx, d);
         @SuppressWarnings("unchecked")
-        Neighbor<E, E>[] a1 = (Neighbor<E, E>[]) java.lang.reflect.Array.newInstance(n1.getClass(), 1);
+        Neighbor<K, V>[] a1 = (Neighbor<K, V>[]) java.lang.reflect.Array.newInstance(n1.getClass(), 1);
 
         //if root is the only node
         if (root.children == null) {
@@ -498,7 +579,7 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
         heap.add(Double.MAX_VALUE);
 
         boolean emptyHeap = true;
-        if (root.getObject() != q) {
+        if (root.getKey() != q) {
             heap.add(d);
             emptyHeap = false;
         }
@@ -512,13 +593,13 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
                     if (c == 0) {
                         d = par.dist;
                     } else {
-                        d = distance.d(child.getObject(), q);
+                        d = distance.d(child.getKey(), q);
                     }
 
                     double upperBound = emptyHeap ? Double.MAX_VALUE : heap.peek();
                     if (d <= (upperBound + child.maxDist)) {
                         if (c > 0 && d < upperBound) {
-                            if (child.getObject() != q) {
+                            if (child.getKey() != q) {
                                 heap.add(d);
                             }
                         }
@@ -534,18 +615,18 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
             currentCoverSet = nextCoverSet;
         }
 
-        ArrayList<Neighbor<E, E>> list = new ArrayList<>();
+        ArrayList<Neighbor<K, V>> list = new ArrayList<>();
         double upperBound = heap.peek();
         for (DistanceNode ds : zeroSet) {
             if (ds.dist <= upperBound) {
-                if (ds.node.getObject() != q) {
-                    e = ds.node.getObject();
-                    list.add(new Neighbor<>(e, e, ds.node.idx, ds.dist));
+                if (ds.node.getKey() != q) {
+                    e = ds.node.getKey();
+                    list.add(new Neighbor<>(e, ds.node.getValue(), ds.node.idx, ds.dist));
                 }
             }
         }
 
-        Neighbor<E, E>[] neighbors = list.toArray(a1);
+        Neighbor<K, V>[] neighbors = list.toArray(a1);
         if (neighbors.length < k) {
             logger.warn(String.format("CoverTree.knn(%d) returns only %d neighbors", k, neighbors.length));
         }
@@ -562,7 +643,7 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
     }
 
     @Override
-    public void search(E q, double radius, List<Neighbor<E, E>> neighbors) {
+    public void search(K q, double radius, List<Neighbor<K, V>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
@@ -570,7 +651,7 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
         ArrayList<DistanceNode> currentCoverSet = new ArrayList<>();
         ArrayList<DistanceNode> zeroSet = new ArrayList<>();
 
-        double d = distance.d(root.getObject(), q);
+        double d = distance.d(root.getKey(), q);
         currentCoverSet.add(new DistanceNode(d, root));
 
         while (!currentCoverSet.isEmpty()) {
@@ -582,7 +663,7 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
                     if (c == 0) {
                         d = par.dist;
                     } else {
-                        d = distance.d(child.getObject(), q);
+                        d = distance.d(child.getKey(), q);
                     }
 
                     if (d <= (radius + child.maxDist)) {
@@ -598,8 +679,8 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
         }
 
         for (DistanceNode ds : zeroSet) {
-            if (ds.node.getObject() != q) {
-                neighbors.add(new Neighbor<>(ds.node.getObject(), ds.node.getObject(), ds.node.idx, ds.dist));
+            if (ds.node.getKey() != q) {
+                neighbors.add(new Neighbor<>(ds.node.getKey(), ds.node.getValue(), ds.node.idx, ds.dist));
             }
         }
     }
