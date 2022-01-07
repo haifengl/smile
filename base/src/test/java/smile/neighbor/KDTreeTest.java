@@ -106,8 +106,8 @@ public class KDTreeTest {
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
-            kdtree.range(data[i], 0.5, n1);
-            naive.range(data[i], 0.5, n2);
+            kdtree.search(data[i], 0.5, n1);
+            naive.search(data[i], 0.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
@@ -122,8 +122,8 @@ public class KDTreeTest {
 
         System.out.println("range 1.5");
         for (int i = 0; i < data.length; i++) {
-            naive.range(data[i], 1.5, n1);
-            kdtree.range(data[i], 1.5, n2);
+            naive.search(data[i], 1.5, n1);
+            kdtree.search(data[i], 1.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
@@ -165,7 +165,7 @@ public class KDTreeTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            kdtree.range(data[MathEx.randomInt(data.length)], 1.0, n);
+            kdtree.search(data[MathEx.randomInt(data.length)], 1.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -231,7 +231,7 @@ public class KDTreeTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (int i = 0; i < testx.length; i++) {
-            kdtree.range(testx[i], 8.0, n);
+            kdtree.search(testx[i], 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

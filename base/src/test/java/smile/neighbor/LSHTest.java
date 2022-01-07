@@ -125,8 +125,8 @@ public class LSHTest {
         for (int i = 0; i < testx.length; i++) {
             ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<>();
             ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<>();
-            lsh.range(testx[i], 8.0, n1);
-            naive.range(testx[i], 8.0, n2);
+            lsh.search(testx[i], 8.0, n1);
+            naive.search(testx[i], 8.0, n2);
 
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
@@ -164,7 +164,7 @@ public class LSHTest {
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
         for (double[] xi : testx) {
-            lsh.range(xi, 8.0, n);
+            lsh.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

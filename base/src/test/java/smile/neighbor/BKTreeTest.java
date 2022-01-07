@@ -73,7 +73,7 @@ public class BKTreeTest {
         List<Neighbor<String, String>> n2 = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
             bktree.range(words[i], 1, n1);
-            naive.range(words[i], 1, n2);
+            naive.search(words[i], 1, n2);
             /*
             System.out.println(i+" "+words[i]);
             java.util.Collections.sort(n1);

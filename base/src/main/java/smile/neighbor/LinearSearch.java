@@ -125,7 +125,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     }
 
     @Override
-    public void range(T q, double radius, List<Neighbor<T, T>> neighbors) {
+    public void search(T q, double radius, List<Neighbor<T, T>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }

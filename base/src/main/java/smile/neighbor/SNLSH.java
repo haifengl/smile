@@ -132,7 +132,7 @@ public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
     }
 
     @Override
-    public void range(K q, double radius, List<Neighbor<K, V>> neighbors) {
+    public void search(K q, double radius, List<Neighbor<K, V>> neighbors) {
         if (radius <= 0 || radius != (int) radius) {
             throw new IllegalArgumentException("The parameter radius has to be an integer: " + radius);
         }

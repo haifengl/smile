@@ -176,7 +176,7 @@ public class DBSCAN<T> extends PartitionClustering {
         for (int i = 0; i < data.length; i++) {
             if (y[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
-                nns.range(data[i], radius, neighbors);
+                nns.search(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
                     y[i] = OUTLIER;
                 } else {
@@ -200,7 +200,7 @@ public class DBSCAN<T> extends PartitionClustering {
                             y[index] = k;
 
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
-                            nns.range(neighbor.key, radius, secondaryNeighbors);
+                            nns.search(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
                                 for (Neighbor<T, T> sn : secondaryNeighbors) {
@@ -232,7 +232,7 @@ public class DBSCAN<T> extends PartitionClustering {
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
-        nns.range(x, radius, neighbors);
+        nns.search(x, radius, neighbors);
         
         if (neighbors.size() < minPts) {
             return OUTLIER;
