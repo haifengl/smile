@@ -37,13 +37,12 @@ import static org.junit.Assert.*;
 public class BKTreeTest {
 
     String[] words = Arrays.copyOf(IndexNoun.words, 10000);
-    BKTree<String> bktree;
+    BKTree<String, String> bktree;
     LinearSearch<String, String> naive;
 
     public BKTreeTest() {
         long start = System.currentTimeMillis();
-        bktree = new BKTree<>(new EditDistance(50, true));
-        bktree.add(words);
+        bktree = BKTree.of(words, new EditDistance(50, true));
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building BK-tree: %.2fs%n", time);
 
