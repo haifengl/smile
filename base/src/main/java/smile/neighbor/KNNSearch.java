@@ -18,11 +18,10 @@
 package smile.neighbor;
 
 /**
- * K-nearest neighbor search identifies the top k nearest neighbors to the
- * query. This technique is commonly used in predictive analytics to
- * estimate or classify a point based on the consensus of its neighbors.
- * K-nearest neighbor graphs are graphs in which every point is connected
- * to its k nearest neighbors.
+ * Retrieves the top k nearest neighbors to the query. This technique is
+ * commonly used in predictive analytics to estimate or classify a point
+ * based on the consensus of its neighbors. K-nearest neighbor graphs are
+ * graphs in which every point is connected to its k nearest neighbors.
  *
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
@@ -46,7 +45,7 @@ public interface KNNSearch<K, V> {
     }
 
     /**
-     * Search the k nearest neighbors to the query key.
+     * Retrieves the k nearest neighbors to the query key.
      *
      * @param q the query key.
      * @param k the number of nearest neighbors to search for.

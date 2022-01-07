@@ -20,9 +20,9 @@ package smile.neighbor;
 import java.util.List;
 
 /**
- * The nearest neighbor search retrieves the nearest neighbors to a query
- * in a radius. It is a natural generalization of point and continuous nearest
- * neighbor queries and has many applications.
+ * Retrieves the nearest neighbors to a query in a radius. It is a natural
+ * generalization of point and continuous nearest neighbor queries and has
+ * many applications.
  *
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public interface RNNSearch<K, V> {
     /**
-     * Search the neighbors in a fixed radius of query object, i.e.
+     * Retrieves the neighbors in a fixed radius of query object, i.e.
      * {@code d(q, v) <= radius}.
      *
      * @param q the query key.
