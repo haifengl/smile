@@ -84,7 +84,7 @@ public class LogisticRegressionTest {
         ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9548, result.avg.accuracy, 1E-4);
+        assertEquals(0.9548, result.avg.accuracy, 0.001);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class LogisticRegressionTest {
                 LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9495, result.avg.accuracy, 1E-3);
+        assertEquals(0.9495, result.avg.accuracy, 0.01);
     }
 
     @Test
@@ -119,7 +119,7 @@ public class LogisticRegressionTest {
         int[] prediction = model.predict(Segment.testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(50, error);
+        assertEquals(50, error, 1);
 
         int t = Segment.x.length;
         int round = (int) Math.round(Math.log(Segment.testx.length));
@@ -136,7 +136,7 @@ public class LogisticRegressionTest {
         prediction = model.predict(Segment.testx);
         error = Error.of(Segment.testy, prediction);
         System.out.println("Error after online update = " + error);
-        assertEquals(39, error);
+        assertEquals(39, error, 3);
     }
 
     @Test
