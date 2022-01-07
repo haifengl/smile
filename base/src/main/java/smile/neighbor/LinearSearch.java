@@ -94,7 +94,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
 
     @Override
     @SuppressWarnings("unchecked")
-    public Neighbor<T, T>[] knn(T q, int k) {
+    public Neighbor<T, T>[] search(T q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }

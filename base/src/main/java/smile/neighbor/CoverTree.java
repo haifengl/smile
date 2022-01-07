@@ -466,11 +466,11 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
     @Override
     public Neighbor<E, E> nearest(E q) {
-        return knn(q, 1)[0];
+        return search(q, 1)[0];
     }
 
     @Override
-    public Neighbor<E, E>[] knn(E q, int k) {
+    public Neighbor<E, E>[] search(E q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }

@@ -89,8 +89,8 @@ public class CoverTreeTest {
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         for (double[] datum : data) {
-            Neighbor[] n1 = coverTree.knn(datum, 10);
-            Neighbor[] n2 = naive.knn(datum, 10);
+            Neighbor[] n1 = coverTree.search(datum, 10);
+            Neighbor[] n2 = naive.search(datum, 10);
             assertEquals(n1.length, n2.length);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
@@ -112,7 +112,7 @@ public class CoverTreeTest {
         EuclideanDistance d = new EuclideanDistance();
         CoverTree<double[]> coverTree = new CoverTree<>(data1, d);
 
-        Neighbor[] n1 = coverTree.knn(data[1], 1);
+        Neighbor[] n1 = coverTree.search(data[1], 1);
         assertEquals(1, n1.length);
         assertEquals(0, n1[0].index);
         assertEquals(data[0], n1[0].value);
@@ -168,7 +168,7 @@ public class CoverTreeTest {
 
         start = System.currentTimeMillis();
         for (double[] xi : testx) {
-            coverTree.knn(xi, 10);
+            coverTree.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
@@ -204,7 +204,7 @@ public class CoverTreeTest {
 
         start = System.currentTimeMillis();
         for (double[] xi : testx) {
-            coverTree.knn(xi, 10);
+            coverTree.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);

@@ -76,7 +76,7 @@ public class LinearSearchTest {
         EuclideanDistance d = new EuclideanDistance();
         LinearSearch<double[]> naive = new LinearSearch<>(data1, d);
 
-        Neighbor[] n1 = naive.knn(data[1], 1);
+        Neighbor[] n1 = naive.search(data[1], 1);
         assertEquals(1, n1.length);
         assertEquals(0, n1[0].index);
         assertEquals(data[0], n1[0].value);
@@ -103,7 +103,7 @@ public class LinearSearchTest {
 
         start = System.currentTimeMillis();
         for (double[] xi : testx) {
-            naive.knn(xi, 10);
+            naive.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
@@ -136,7 +136,7 @@ public class LinearSearchTest {
 
         start = System.currentTimeMillis();
         for (double[] xi : testx) {
-            naive.knn(xi, 10);
+            naive.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
@@ -184,7 +184,7 @@ public class LinearSearchTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
-            naive.knn(data[MathEx.randomInt(data.length)], 10);
+            naive.search(data[MathEx.randomInt(data.length)], 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);

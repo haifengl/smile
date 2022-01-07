@@ -114,7 +114,7 @@ public class MPLSHTest {
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
             Neighbor[] n1 = lsh.knn(testx[i], k, 0.95, 50);
-            Neighbor[] n2 = naive.knn(testx[i], k);
+            Neighbor[] n2 = naive.search(testx[i], k);
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
                     if (m1.index == m2.index) {
@@ -169,7 +169,7 @@ public class MPLSHTest {
 
         start = System.currentTimeMillis();
         for (double[] xi : testx) {
-            lsh.knn(xi, 10);
+            lsh.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);

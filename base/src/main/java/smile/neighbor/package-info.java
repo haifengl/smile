@@ -17,7 +17,7 @@
 
 /**
  * Nearest neighbor search. Nearest neighbor search is an optimization problem
- * for finding closest points in metric spaces. The problem is: given a set S
+ * for finding the closest points in metric spaces. The problem is: given a set S
  * of points in a metric space M and a query point q &isin; M, find the closest
  * point in S to q.
  * <p>

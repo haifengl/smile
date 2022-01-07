@@ -368,7 +368,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
 
     @Override
     @SuppressWarnings("unchecked")
-    public Neighbor<double[], E>[] knn(double[] q, int k) {
+    public Neighbor<double[], E>[] search(double[] q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }

@@ -92,7 +92,7 @@ class NearestNeighborGraph {
 
         if (consumer != null) {
             for (int i = 0; i < n; i++) {
-                Neighbor<T, T>[] neighbors = knn.knn(data[i], k);
+                Neighbor<T, T>[] neighbors = knn.search(data[i], k);
 
                 int v1 = i;
                 for (int j = 0; j < neighbors.length; j++) {
@@ -104,7 +104,7 @@ class NearestNeighborGraph {
             }
         } else {
             for (int i = 0; i < n; i++) {
-                for (Neighbor<T, T> neighbor : knn.knn(data[i], k)) {
+                for (Neighbor<T, T> neighbor : knn.search(data[i], k)) {
                     graph.setWeight(i, neighbor.index, neighbor.distance);
                 }
             }
