@@ -18,6 +18,7 @@
 package smile.neighbor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -187,7 +188,7 @@ public class CoverTreeTest {
     public void testUSPS() {
         System.out.println("----- USPS -----");
 
-        double[][] x = USPS.x;
+        double[][] x = Arrays.copyOf(USPS.x, 2000);
         double[][] testx = USPS.testx;
 
         long start = System.currentTimeMillis();
@@ -210,10 +211,10 @@ public class CoverTreeTest {
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        List<Neighbor<double[], double[]>> n = new ArrayList<>();
+        List<Neighbor<double[], double[]>> list = new ArrayList<>();
         for (double[] xi : testx) {
-            coverTree.search(xi, 8.0, n);
-            n.clear();
+            coverTree.search(xi, 8.0, list);
+            list.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Range: %.2fs%n", time);
@@ -223,13 +224,13 @@ public class CoverTreeTest {
     public void testStrings() {
         System.out.println("----- Strings -----");
 
-        String[] words = IndexNoun.words;
+        String[] words = Arrays.copyOf(IndexNoun.words, 10000);
         CoverTree<String> cover = new CoverTree<>(words, new EditDistance(50, true));
 
         long start = System.currentTimeMillis();
         List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
-            cover.search(words[i], 1, neighbors);
+            cover.search(words[i], 3, neighbors);
             neighbors.clear();
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;

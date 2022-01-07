@@ -113,7 +113,7 @@ public class MPLSHTest {
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
-            Neighbor[] n1 = lsh.knn(testx[i], k, 0.95, 50);
+            Neighbor[] n1 = lsh.search(testx[i], k, 0.95, 50);
             Neighbor[] n2 = naive.search(testx[i], k);
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
@@ -138,7 +138,7 @@ public class MPLSHTest {
         for (int i = 0; i < testx.length; i++) {
             ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<>();
             ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<>();
-            lsh.range(testx[i], 8.0, n1, 0.95, 50);
+            lsh.search(testx[i], 8.0, n1, 0.95, 50);
             naive.search(testx[i], 8.0, n2);
 
             for (Neighbor m2 : n2) {

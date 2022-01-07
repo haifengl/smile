@@ -24,6 +24,7 @@ import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
+import smile.util.DoubleArrayList;
 
 /**
  * Cover tree is a data structure for generic nearest neighbor search, which
@@ -32,19 +33,19 @@ import smile.sort.DoubleHeapSelect;
  * The bound on search time is O(c<sup>12</sup> log node) where c is the expansion
  * constant of the dataset.
  * <p>
- * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
+ * By default, the query object (reference equality) is excluded from the
+ * neighborhood. You may change this behavior with
+ * <code>setIdenticalExcluded</code>. Note that you may observe weird behavior
+ * with String objects. JVM will pool the string literal objects. So the below
+ * variables
  * <code>
  *     String a = "ABC";
  *     String b = "ABC";
  *     String c = "AB" + "C";
  * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data
+ * that you type explicitly in the code, this will cause problems. Fortunately,
+ * the data would be generally read from secondary storage in production.
  *
  * <h2>References</h2>
  * <ol>
@@ -74,7 +75,7 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
     /**
      * The base of our expansion constant. In other words the 2 in 2^i used
      * in covering tree and separation invariants of a cover tree. In
-     * paper it's suggested the separation invariant is relaxed in batch
+     * paper, it's suggested the separation invariant is relaxed in batch
      * construction.
      */
     private final double base;
@@ -153,14 +154,14 @@ public class CoverTree<E> implements KNNSearch<E, E>, RNNSearch<E, E>, Serializa
          * to reference points that were previously looked at
          * (all potential ancestors).
          */
-        ArrayList<Double> dist;
+        DoubleArrayList dist;
 
         /**
          * Constructor.
          */
         DistanceSet(int idx) {
             this.idx = idx;
-            dist = new ArrayList<>();
+            dist = new DoubleArrayList();
         }
 
         /**

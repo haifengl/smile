@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  */
 public class BKTreeTest {
 
-    String[] words = IndexNoun.words;
+    String[] words = Arrays.copyOf(IndexNoun.words, 10000);
     BKTree<String> bktree;
     LinearSearch<String> naive;
 
