@@ -29,6 +29,8 @@ import smile.neighbor.lsh.Hash;
  * @author Haifeng Li
  */
 public class MutableLSH<E> extends LSH<E> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MutableLSH.class);
+
     /**
      * Constructor.
      * @param d the dimensionality of data.
@@ -80,7 +82,7 @@ public class MutableLSH<E> extends LSH<E> {
                 for (Hash h : hash) {
                     Bucket bucket = h.get(key);
                     if (bucket == null) {
-                        System.out.println("impossible");
+                        logger.error("null bucket when removing an entry");
                     }
                     bucket.remove(i);
                 }

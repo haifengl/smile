@@ -28,14 +28,15 @@ import smile.math.MathEx;
 import smile.sort.HeapSelect;
 
 /**
- * Locality-Sensitive Hashing. LSH is an efficient algorithm for
- * approximate nearest neighbor search in high dimensional spaces
- * by performing probabilistic dimension reduction of data. The basic idea
- * is to hash the input items so that similar items are mapped to the same
- * buckets with high probability (the number of buckets being much smaller
- * than the universe of possible input items).
+ * Locality-Sensitive Hashing. LSH is an efficient algorithm for approximate
+ * nearest neighbor search in high dimensional spaces by performing
+ * probabilistic dimension reduction of data. The basic idea is to hash the
+ * input items so that similar items are mapped to the same buckets with high
+ * probability (the number of buckets being much smaller than the universe
+ * of possible input items).
  * <p>
- * By default, the query object (reference equality) is excluded from the neighborhood.
+ * By default, the query object (reference equality) is excluded from the
+ * neighborhood.
  *
  * <h2>References</h2>
  * <ol>
@@ -53,7 +54,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
     private static final long serialVersionUID = 2L;
 
     /**
-     * The keys of data objects.
+     * The object keys.
      */
     protected ArrayList<double[]> keys;
     /**
@@ -80,10 +81,10 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
 
     /**
      * Constructor.
-     * @param keys the keys of data objects.
+     * @param keys the object keys.
      * @param data the data objects.
      * @param w the width of random projections. It should be sufficiently
-     * away from 0. But we should not choose an w value that is too large, which
+     * away from 0. But we should not choose a w value that is too large, which
      * will increase the query time.
      */
     public LSH(double[][] keys, E[] data, double w) {
@@ -92,7 +93,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
 
     /**
      * Constructor.
-     * @param keys the keys of data objects.
+     * @param keys the object keys.
      * @param data the data objects.
      * @param w the width of random projections. It should be sufficiently
      *          away from 0. But we should not choose an w value that is too

@@ -25,25 +25,26 @@ import smile.math.distance.Metric;
 
 /**
  * A BK-tree is a metric tree specifically adapted to discrete metric spaces.
- * For simplicity, let us consider integer discrete metric d(x,y). Then, BK-tree
- * is defined in the following way. An arbitrary element a is selected as root.
- * Root may have zero or more subtrees. The k-th subtree is
- * recursively built of all elements b such that d(a,b) = k. BK-trees can be
- * used for approximate string matching in a dictionary.
+ * For simplicity, let us consider integer discrete metric d(x,y). Then,
+ * BK-tree is defined in the following way. An arbitrary element <code>a</code>
+ * is selected as root. Root may have zero or more subtrees. The k-th subtree
+ * is recursively built of all elements <code>a</code> such that
+ * <code>d(a,b) = k</code>. BK-trees can be used for approximate string
+ * matching in a dictionary.
  * <p>
- * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
+ * By default, the query object (reference equality) is excluded from the
+ * neighborhood. You may change this behavior with
+ * <code>setIdenticalExcluded</code>. Note that you may observe weird behavior
+ * with String objects. JVM will pool the string literal objects. So the below
+ * variables
  * <code>
  *     String a = "ABC";
  *     String b = "ABC";
  *     String c = "AB" + "C";
  * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data
+ * that you type explicitly in the code, this will cause problems. Fortunately,
+ * the data would be generally read from secondary storage in production.
  *
  * <h2>References</h2>
  * <ol>

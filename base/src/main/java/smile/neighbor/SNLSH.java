@@ -27,28 +27,26 @@ import smile.util.IntArrayList;
 /**
  * Locality-Sensitive Hashing for Signatures.
  * LSH is an efficient algorithm for approximate nearest neighbor search
- * in high dimensional spaces by performing probabilistic dimension reduction of data.
- * The basic idea is to hash the input items so that similar items are mapped to the same
- * buckets with high probability (the number of buckets being much smaller
- * than the universe of possible input items).
- * To avoid computing the similarity of every pair of sets or their signatures.
- * If we are given signatures for the sets, we may divide them into bands, and only
- * measure the similarity of a pair of sets if they are identical in at least one band.
- * By choosing the size of bands appropriately, we can eliminate from
- * consideration most of the pairs that do not meet our threshold of similarity.
+ * in high dimensional spaces by performing probabilistic dimension reduction
+ * of data. The basic idea is to hash the input items so that similar items
+ * are mapped to the same buckets with high probability (the number of buckets
+ * being much smaller than the universe of possible input items).
+ * If we are given signatures for the sets, we may divide them into bands,
+ * and only measure the similarity of a pair of sets if they are identical
+ * in at least one band. By choosing the size of bands appropriately, we can
+ * eliminate most of the pairs that do not meet our threshold of similarity.
  * <p>
- * By default, the query object (reference equality) is excluded from the neighborhood.
- * Note that you may observe weird behavior with String objects. JVM will pool the string
- * literal objects. So the below variables
+ * By default, the query object (reference equality) is excluded from the
+ * neighborhood. Note that you may observe weird behavior with String objects.
+ * JVM will pool the string literal objects. So the below variables
  * <code>
  *     String a = "ABC";
  *     String b = "ABC";
  *     String c = "AB" + "C";
  * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
+ * are actually equal in reference test <code>a == b == c</code>. With toy data
+ * that you type explicitly in the code, this will cause problems. Fortunately,
+ * the data would be generally read from secondary storage in production.
  *
  * <h2>References</h2>
  * <ol>
@@ -76,7 +74,7 @@ public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
      */
     private final List<V> data = new ArrayList<>();
     /**
-     * The keys of data objects.
+     * The keys of data object.
      */
     private final List<K> keys = new ArrayList<>();
     /**

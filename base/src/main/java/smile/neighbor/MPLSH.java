@@ -187,7 +187,7 @@ public class MPLSH <E> extends LSH<E> {
     @Override
     public Neighbor<double[], E>[] search(double[] q, int k) {
         if (model == null) return super.search(q, k);
-        return knn(q, k, 0.95, 100);
+        return search(q, k, 0.95, 100);
     }
 
     /**
@@ -200,7 +200,7 @@ public class MPLSH <E> extends LSH<E> {
      * @return the approximate k-nearest neighbors.
      */
     @SuppressWarnings("unchecked")
-    public Neighbor<double[], E>[] knn(double[] q, int k, double recall, int T) {
+    public Neighbor<double[], E>[] search(double[] q, int k, double recall, int T) {
         if (recall > 1 || recall < 0) {
             throw new IllegalArgumentException("Invalid recall: " + recall);
         }
@@ -229,7 +229,7 @@ public class MPLSH <E> extends LSH<E> {
     @Override
     public void search(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
         if (model == null) super.search(q,radius, neighbors);
-        else range(q, radius, neighbors, 0.95, 100);
+        else search(q, radius, neighbors, 0.95, 100);
     }
 
     /**
@@ -242,7 +242,7 @@ public class MPLSH <E> extends LSH<E> {
      * @param recall the expected recall rate.
      * @param T the maximum number of probes.
      */
-    public void range(double[] q, double radius, List<Neighbor<double[], E>> neighbors, double recall, int T) {
+    public void search(double[] q, double radius, List<Neighbor<double[], E>> neighbors, double recall, int T) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
