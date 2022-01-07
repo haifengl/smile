@@ -94,7 +94,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
         }
     }
     /**
-     * The keys of data objects.
+     * The object keys.
      */
     private final double[][] keys;
     /**

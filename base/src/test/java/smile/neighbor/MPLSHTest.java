@@ -41,7 +41,7 @@ public class MPLSHTest {
     double[][] x = USPS.x;
     double[][] testx = USPS.testx;
     MPLSH<double[]> lsh;
-    LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
+    LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
 
     public MPLSHTest() {
         MathEx.setSeed(19650218); // to get repeatable results.

@@ -39,7 +39,7 @@ public class LSHTest {
     double[][] x = USPS.x;
     double[][] testx = USPS.testx;
     LSH<double[]> lsh;
-    LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
+    LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
 
     public LSHTest() {
         MathEx.setSeed(19650218); // to get repeatable results.

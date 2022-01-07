@@ -74,7 +74,7 @@ public class LinearSearchTest {
         double[][] data = Matrix.randn(2, 10).toArray();
         double[][] data1 = {data[0]};
         EuclideanDistance d = new EuclideanDistance();
-        LinearSearch<double[]> naive = new LinearSearch<>(data1, d);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data1, d);
 
         Neighbor[] n1 = naive.search(data[1], 1);
         assertEquals(1, n1.length);
@@ -92,7 +92,7 @@ public class LinearSearchTest {
         System.arraycopy(SwissRoll.data, 0, x, 0, x.length);
         System.arraycopy(SwissRoll.data, x.length, testx, 0, testx.length);
 
-        LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
         for (double[] xi : testx) {
@@ -125,7 +125,7 @@ public class LinearSearchTest {
         double[][] x = USPS.x;
         double[][] testx = USPS.testx;
 
-        LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
         for (double[] xi : testx) {
@@ -156,7 +156,7 @@ public class LinearSearchTest {
         System.out.println("----- Strings -----");
 
         String[] words = IndexNoun.words;
-        LinearSearch<String> naive = new LinearSearch<>(words, new EditDistance(true));
+        LinearSearch<String, String> naive = LinearSearch.of(words, new EditDistance(true));
 
         long start = System.currentTimeMillis();
         List<Neighbor<String, String>> neighbors = new ArrayList<>();
@@ -173,7 +173,7 @@ public class LinearSearchTest {
         System.out.println("----- Gaussian Mixture -----");
 
         double[][] data = GaussianMixture.x;
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {

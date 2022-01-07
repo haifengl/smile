@@ -38,7 +38,7 @@ public class BKTreeTest {
 
     String[] words = Arrays.copyOf(IndexNoun.words, 10000);
     BKTree<String> bktree;
-    LinearSearch<String> naive;
+    LinearSearch<String, String> naive;
 
     public BKTreeTest() {
         long start = System.currentTimeMillis();
@@ -47,7 +47,7 @@ public class BKTreeTest {
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building BK-tree: %.2fs%n", time);
 
-        naive = new LinearSearch<>(words, new EditDistance(true));
+        naive = LinearSearch.of(words, new EditDistance(true));
     }
 
     @BeforeClass
@@ -72,7 +72,7 @@ public class BKTreeTest {
         List<Neighbor<String, String>> n1 = new ArrayList<>();
         List<Neighbor<String, String>> n2 = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
-            bktree.range(words[i], 1, n1);
+            bktree.search(words[i], 1, n1);
             naive.search(words[i], 1, n2);
             /*
             System.out.println(i+" "+words[i]);
@@ -104,7 +104,7 @@ public class BKTreeTest {
         long start = System.currentTimeMillis();
         List<Neighbor<String, String>> neighbors = new ArrayList<>();
         for (int i = 1000; i < 1100; i++) {
-            bktree.range(words[i], 1, neighbors);
+            bktree.search(words[i], 1, neighbors);
             neighbors.clear();
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
@@ -112,7 +112,7 @@ public class BKTreeTest {
 
         start = System.currentTimeMillis();
         for (int i = 1000; i < 1100; i++) {
-            bktree.range(words[i], 2, neighbors);
+            bktree.search(words[i], 2, neighbors);
             neighbors.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -120,7 +120,7 @@ public class BKTreeTest {
 
         start = System.currentTimeMillis();
         for (int i = 1000; i < 1100; i++) {
-            bktree.range(words[i], 3, neighbors);
+            bktree.search(words[i], 3, neighbors);
             neighbors.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
@@ -128,7 +128,7 @@ public class BKTreeTest {
 
         start = System.currentTimeMillis();
         for (int i = 1000; i < 1100; i++) {
-            bktree.range(words[i], 4, neighbors);
+            bktree.search(words[i], 4, neighbors);
             neighbors.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

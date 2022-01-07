@@ -70,7 +70,7 @@ public class CoverTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         for (double[] datum : data) {
             Neighbor n1 = coverTree.nearest(datum);
@@ -87,7 +87,7 @@ public class CoverTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         for (double[] datum : data) {
             Neighbor[] n1 = coverTree.search(datum, 10);
@@ -126,7 +126,7 @@ public class CoverTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         CoverTree<double[]> coverTree = new CoverTree<>(data, new EuclideanDistance());
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();

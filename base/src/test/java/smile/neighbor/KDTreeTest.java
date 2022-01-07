@@ -65,7 +65,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> n1 = naive.nearest(data[i]);
@@ -82,7 +82,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> [] n1 = naive.search(data[i], 10);
@@ -101,7 +101,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
