@@ -270,8 +270,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * Factory method when the data objects are same as keys.
-     * @param data the data objects.
+     * Return a cover tree of the data.
+     * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      */
     public static <T> CoverTree<T, T> of(T[] data, Metric<T> distance) {
@@ -279,8 +279,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * Factory method when the data objects are same as keys.
-     * @param data the data objects.
+     * Return a cover tree of the data.
+     * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      * @param base the base of the expansion constant.
      */
@@ -289,8 +289,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * Factory method when the data objects are same as keys.
-     * @param data the data objects.
+     * Return a cover tree of the data.
+     * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      */
     public static <T> CoverTree<T, T> of(List<T> data, Metric<T> distance) {
@@ -298,8 +298,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * Factory method when the data objects are same as keys.
-     * @param data the data objects.
+     * Return a cover tree of the data.
+     * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      * @param base the base of the expansion constant.
      */

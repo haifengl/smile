@@ -115,7 +115,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
     }
 
     /**
-     * Factory method when the data objects are same as keys.
+     * Return linear nearest neighbor search.
      * @param data the data objects, which are also used as key.
      * @param distance the distance function.
      */
@@ -124,7 +124,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
     }
 
     /**
-     * Factory method when the data objects are same as keys.
+     * Return linear nearest neighbor search.
      * @param data the data objects, which are also used as key.
      * @param distance the distance function.
      */
