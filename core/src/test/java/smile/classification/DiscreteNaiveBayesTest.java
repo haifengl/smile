@@ -17,12 +17,13 @@
 
 package smile.classification;
 
+import java.io.BufferedReader;
 import java.util.Arrays;
-import smile.test.data.Movie;
-import smile.test.data.Serialize;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
 import smile.validation.Bag;
+import smile.validation.CrossValidation;
 import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -38,11 +39,50 @@ import static org.junit.Assert.*;
  */
 public class DiscreteNaiveBayesTest {
 
+    public static final String[] feature = {
+            "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",
+            "ridiculous", "waste", "worst", "bland", "unfunny", "stupid", "dull",
+            "fantastic", "laughable", "mess", "pointless", "terrific", "memorable",
+            "superb", "boring", "badly", "subtle", "terrible", "excellent",
+            "perfectly", "masterpiece", "realistic", "flaws", "enjoyable", "funniest",
+            "loved", "amazing", "favorite", "perfect", "poor", "worse", "horrible",
+            "disappointing", "disappointment"
+    };
+
+    public static final String[][] doc = new String[2000][];
+    public static final int[][] x = new int[doc.length][];
+    public static final int[] y = new int[doc.length];
+
     public DiscreteNaiveBayesTest() {
+
     }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        try (BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
+            for (int i = 0; i < x.length; i++) {
+                String[] words = input.readLine().trim().split("\\s+");
+
+                if (words[0].equalsIgnoreCase("pos")) {
+                    y[i] = 1;
+                } else if (words[0].equalsIgnoreCase("neg")) {
+                    y[i] = 0;
+                } else {
+                    System.err.println("Invalid class label: " + words[0]);
+                }
+
+                doc[i] = new String[words.length - 1];
+                System.arraycopy(words, 1, doc[i], 0, doc[i].length);
+            }
+
+            smile.feature.Bag bag = new smile.feature.Bag(feature);
+            for (int i = 0; i < x.length; i++) {
+                x[i] = bag.apply(doc[i]);
+            }
+        } catch (Exception ex) {
+            System.err.println("Failed to load 'movie': " + ex);
+            System.exit(-1);
+        }
     }
 
     @AfterClass
@@ -62,27 +102,27 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(316, error);
 
-        DiscreteNaiveBayes model = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
-        model.update(Movie.x, Movie.y);
-        java.nio.file.Path temp = Serialize.write(model);
-        Serialize.read(temp);
+        DiscreteNaiveBayes model = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, feature.length);
+        model.update(x, y);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test
@@ -90,24 +130,24 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, feature.length);
 
             for (int i : bag.samples) {
-                bayes.update(Movie.x[i], Movie.y[i]);
+                bayes.update(x[i], y[i]);
             }
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(316, error);
     }
 
@@ -116,21 +156,21 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(316, error);
     }
 
@@ -139,24 +179,24 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, feature.length);
 
             for (int i : bag.samples) {
-                bayes.update(Movie.x[i], Movie.y[i]);
+                bayes.update(x[i], y[i]);
             }
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(316, error);
     }
 
@@ -165,21 +205,21 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(309, error);
     }
 
@@ -188,24 +228,24 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, feature.length);
 
             for (int i : bag.samples) {
-                bayes.update(Movie.x[i], Movie.y[i]);
+                bayes.update(x[i], y[i]);
             }
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(309, error);
     }
 
@@ -214,21 +254,21 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(313, error);
     }
 
@@ -237,24 +277,24 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, feature.length);
 
             for (int i : bag.samples) {
-                bayes.update(Movie.x[i], Movie.y[i]);
+                bayes.update(x[i], y[i]);
             }
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(313, error);
     }
 
@@ -263,21 +303,21 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(315, error);
     }
 
@@ -286,24 +326,24 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, feature.length);
 
             for (int i : bag.samples) {
-                bayes.update(Movie.x[i], Movie.y[i]);
+                bayes.update(x[i], y[i]);
             }
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(315, error);
     }
 
@@ -312,21 +352,21 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch TWCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
-        int[] prediction = new int[Movie.x.length];
+        Bag[] bags = CrossValidation.of(x.length, 10);
+        int[] prediction = new int[x.length];
         for (Bag bag : bags) {
-            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.TWCNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
+            DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.TWCNB, 2, feature.length);
+            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
 
             for (int i : bag.oob) {
-                prediction[i] = bayes.predict(Movie.x[i]);
+                prediction[i] = bayes.predict(x[i]);
             }
         }
 
         // discount the instance without any feature words.
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
-        int error = Error.of(Movie.y, prediction) - nulls;
-        System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
+        int error = Error.of(y, prediction) - nulls;
+        System.out.format("Error = %d out of %d%n", error, x.length - nulls);
         assertEquals(316, error);
     }
 }
