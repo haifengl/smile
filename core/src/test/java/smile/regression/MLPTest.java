@@ -107,7 +107,7 @@ public class MLPTest {
         });
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse, 1E-4);
+        assertEquals(expected, result.avg.rmse, 0.001);
     }
 
     @Test
@@ -142,7 +142,7 @@ public class MLPTest {
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115702.2505,
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115704.9305,
                 Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 

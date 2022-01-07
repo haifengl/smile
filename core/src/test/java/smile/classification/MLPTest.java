@@ -170,9 +170,11 @@ public class MLPTest {
         System.out.println("Segment Mini-Batch");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        //Transform scaler = WinsorScaler.fit(Segment.x, 0.01, 0.99);
-        double[][] x = Segment.x;//scaler.apply(Segment.x);
-        double[][] testx = Segment.testx;//scaler.apply(Segment.testx);
+        DataFrame data = Segment.formula.x(Segment.train);
+        InvertibleColumnTransform scaler = WinsorScaler.fit(data, 0.01, 0.99);
+        System.out.println(scaler);
+        double[][] x = scaler.apply(data).toArray();
+        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
         int p = x[0].length;
         int k = MathEx.max(Segment.y) + 1;
 

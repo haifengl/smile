@@ -63,19 +63,19 @@ public class KNNTest {
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y));
         System.out.println("1-NN Error: " + metrics);
-        assertEquals(0.5, metrics.accuracy, 1E-4);
+        assertEquals(8, metrics.error);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 3));
         System.out.println("3-NN Error: " + metrics);
-        assertEquals(0.6429, metrics.accuracy, 1E-4);
+        assertEquals(7, metrics.error);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 5));
         System.out.println("5-NN Error: " + metrics);
-        assertEquals(0.7143, metrics.accuracy, 1E-4);
+        assertEquals(8, metrics.error);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y,7));
         System.out.println("7-NN Error: " + metrics);
-        assertEquals(0.6429, metrics.accuracy, 1E-4);
+        assertEquals(5, metrics.error);
     }
 
     @Test

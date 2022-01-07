@@ -120,7 +120,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(0.9640, result.avg.accuracy, 1E-4);
+        assertEquals(0.962, result.avg.accuracy, 0.003);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class GradientTreeBoostTest {
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(20, error);
+        assertEquals(20, error, 1);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(Segment.test);
@@ -164,7 +164,7 @@ public class GradientTreeBoostTest {
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(141, error);
+        assertEquals(141, error, 3);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
