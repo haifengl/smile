@@ -19,8 +19,8 @@ package smile.neighbor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import smile.math.distance.Metric;
 
 /**
@@ -51,11 +51,12 @@ import smile.math.distance.Metric;
  * <li> W. Burkhard and R. Keller. Some approaches to best-match file searching. CACM, 1973. </li>
  * </ol>
  *
- * @param <E> the data type of objects in the tree.
+ * @param <K> the type of keys.
+ * @param <V> the type of associated objects.
  *
  * @author Haifeng Li
  */
-public class BKTree<E> implements RNNSearch<E, E>, Serializable {
+public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
     private static final long serialVersionUID = 2L;
     
     /**
@@ -63,9 +64,13 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      */
     class Node implements Serializable {
         /**
-         * The datum object.
+         * The object key.
          */
-        E object;
+        K key;
+        /**
+         * The data object.
+         */
+        V value;
         /**
          * The index of datum in the dataset.
          */
@@ -78,20 +83,23 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
 
         /**
          * Constructor.
-         * @param object the datum object.
+         * @param key the data key.
+         * @param value the data object.
          * @param index the index of datum in the dataset.
          */
-        Node(int index, E object) {
+        Node(int index, K key, V value) {
             this.index = index;
-            this.object = object;
+            this.key = key;
+            this.value = value;
         }
 
         /**
          * Add a datum into the subtree.
-         * @param datum the datum object.
+         * @param key the data key.
+         * @param value the data object.
          */
-        private void add(E datum) {
-            int d = (int) distance.d(object, datum);
+        private void add(K key, V value) {
+            int d = (int) distance.d(this.key, key);
             if (d == 0) {
                 return;
             }
@@ -106,10 +114,35 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
 
             Node child = children.get(d);
             if (child == null) {
-                Node node = new Node(count++, datum);
+                Node node = new Node(count++, key, value);
                 children.set(d, node);
             } else {
-                child.add(datum);
+                child.add(key, value);
+            }
+        }
+
+        /**
+         * Range search in the subtree.
+         * @param q the query object.
+         * @param k the range of query.
+         * @param neighbors the returned results of which {@code d(x, target) <= k}.
+         */
+        private void search(K q, int k, List<Neighbor<K, V>> neighbors) {
+            int d = (int) distance.d(key, q);
+
+            if (d <= k && key != q) {
+                neighbors.add(new Neighbor<>(key, value, index, d));
+            }
+
+            if (children != null) {
+                int start = Math.max(1, d-k);
+                int end = Math.min(children.size(), d+k+1);
+                for (int i = start; i < end; i++) {
+                    Node child = children.get(i);
+                    if (child != null) {
+                        child.search(q, k, neighbors);
+                    }
+                }
             }
         }
     }
@@ -123,7 +156,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * e.g. edit distance, Hamming distance, Lee distance, Jaccard distance,
      * and taxonomic distance, etc.
      */
-    private final Metric<E> distance;
+    private final Metric<K> distance;
     /**
      * The number of nodes in the tree.
      */
@@ -135,28 +168,38 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
      * distance, Jaccard distance, and taxonomic distance, etc.
      */
-    public BKTree(Metric<E> distance) {
+    public BKTree(Metric<K> distance) {
         this.distance = distance;
     }
 
     /**
-     * Adds a dataset into BK-tree.
-     * @param data the dataset to insert into the BK-tree.
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects, which are also used as key.
+     * @param distance the metric used to build BK-tree. Note that the metric
+     * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
+     * distance, Jaccard distance, and taxonomic distance, etc.
      */
-    public void add(E[] data) {
-        for (E datum : data) {
-            add(datum);
+    public static <T> BKTree<T, T> of(T[] data, Metric<T> distance) {
+        BKTree<T, T> tree = new BKTree<>(distance);
+        for (T key : data) {
+            tree.add(key, key);
         }
+        return tree;
     }
 
     /**
-     * Adds a dataset into BK-tree.
-     * @param data the dataset to insert into the BK-tree.
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects, which are also used as key.
+     * @param distance the metric used to build BK-tree. Note that the metric
+     * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
+     * distance, Jaccard distance, and taxonomic distance, etc.
      */
-    public void add(Collection<E> data) {
-        for (E datum : data) {
-            add(datum);
+    public static <T> BKTree<T, T> of(List<T> data, Metric<T> distance) {
+        BKTree<T, T> tree = new BKTree<>(distance);
+        for (T key : data) {
+            tree.add(key, key);
         }
+        return tree;
     }
 
     @Override
@@ -166,49 +209,34 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
 
     /**
      * Adds a datum into the BK-tree.
-     * @param datum the datum.
+     * @param key the data key.
+     * @param value the data object.
      */
-    public void add(E datum) {
+    public void add(K key, V value) {
         if (root == null) {
-            root = new Node(count++, datum);
+            root = new Node(count++, key, value);
         } else {
-            root.add(datum);
+            root.add(key, value);
         }
     }
 
     /**
-     * Range search in the given subtree.
-     * @param node the root of subtree.
-     * @param q the query object.
-     * @param k the range of query.
-     * @param neighbors the returned results of which {@code d(x, target) <= k}.
+     * Adds a dataset into BK-tree.
+     * @param data the dataset to insert into the BK-tree.
      */
-    private void search(Node node, E q, int k, List<Neighbor<E, E>> neighbors) {
-        int d = (int) distance.d(node.object, q);
-
-        if (d <= k && node.object != q) {
-            neighbors.add(new Neighbor<>(node.object, node.object, node.index, d));
-        }
-
-        if (node.children != null) {
-            int start = Math.max(1, d-k);
-            int end = Math.min(node.children.size(), d+k+1);
-            for (int i = start; i < end; i++) {
-                Node child = node.children.get(i);
-                if (child != null) {
-                    search(child, q, k, neighbors);
-                }
-            }
+    public void add(Map<K, V> data) {
+        for (Map.Entry<K, V> entry : data.entrySet()) {
+            add(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
-    public void search(E q, double radius, List<Neighbor<E, E>> neighbors) {
+    public void search(K q, double radius, List<Neighbor<K, V>> neighbors) {
         if (radius <= 0 || radius != (int) radius) {
             throw new IllegalArgumentException("The parameter radius has to be an integer: " + radius);
         }
         
-        search(root, q, (int) radius, neighbors);
+        root.search(q, (int) radius, neighbors);
     }
 
     /**
@@ -219,7 +247,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * @param radius the radius of search range from target.
      * @param neighbors the list to store found neighbors in the given range on output.
      */
-    public void search(E q, int radius, List<Neighbor<E, E>> neighbors) {
-        search(root, q, radius, neighbors);
+    public void search(K q, int radius, List<Neighbor<K, V>> neighbors) {
+        root.search(q, radius, neighbors);
     }
 }
