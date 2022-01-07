@@ -20,6 +20,7 @@ package smile.neighbor;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 
@@ -44,30 +45,91 @@ import smile.sort.HeapSelect;
  * read from secondary storage in production.
  * </p>
  *
- * @param <T> the type of data objects.
+ * @param <K> the type of keys.
+ * @param <V> the type of associated objects.
  *
  * @author Haifeng Li
  */
-public class LinearSearch<T> implements KNNSearch<T,T>, RNNSearch<T,T>, Serializable {
+public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The dataset of search space.
+     * The object keys.
      */
-    private final T[] data;
+    private final List<K> keys;
+    /**
+     * The data objects.
+     */
+    private final List<V> data;
     /**
      * The distance function used to determine nearest neighbors.
      */
-    private final Distance<T> distance;
+    private final Distance<K> distance;
 
     /**
-     * Constructor. By default, query object self will be excluded from search.
-     * @param data the data set.
+     * Constructor.
+     * @param keys the data keys.
+     * @param data the data objects.
      * @param distance the distance function.
      */
-    public LinearSearch(T[] data, Distance<T> distance) {
+    public LinearSearch(K[] keys, V[] data, Distance<K> distance) {
+        this(Arrays.asList(keys), Arrays.asList(data), distance);
+    }
+
+    /**
+     * Constructor.
+     * @param keys the data keys.
+     * @param data the data objects.
+     * @param distance the distance function.
+     */
+    public LinearSearch(List<K> keys, List<V> data, Distance<K> distance) {
+        if (keys.size() != data.size()) {
+            throw new IllegalArgumentException("Different size of keys and data objects");
+        }
+
+        this.keys = keys;
         this.data = data;
         this.distance = distance;
+    }
+
+    /**
+     * Constructor.
+     * @param data the data objects.
+     * @param distance the distance function.
+     * @param key the lambda to extra the key from data object.
+     */
+    public LinearSearch(V[] data, Distance<K> distance, Function<V, K> key) {
+        this(Arrays.asList(data), distance, key);
+    }
+
+    /**
+     * Constructor.
+     * @param data the data objects.
+     * @param distance the distance function.
+     * @param key the lambda to extra the key from data object.
+     */
+    public LinearSearch(List<V> data, Distance<K> distance, Function<V, K> key) {
+        this.data = data;
+        this.keys = data.stream().map(key).toList();
+        this.distance = distance;
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects, which are also used as key.
+     * @param distance the distance function.
+     */
+    public static <T> LinearSearch<T, T> of(T[] data, Distance<T> distance) {
+        return new LinearSearch<>(data, data, distance);
+    }
+
+    /**
+     * Factory method when the data objects are same as keys.
+     * @param data the data objects, which are also used as key.
+     * @param distance the distance function.
+     */
+    public static <T> LinearSearch<T, T> of(List<T> data, Distance<T> distance) {
+        return new LinearSearch<>(data, data, distance);
     }
 
     @Override
@@ -75,47 +137,52 @@ public class LinearSearch<T> implements KNNSearch<T,T>, RNNSearch<T,T>, Serializ
         return String.format("Linear Search (%s)", distance);
     }
 
+    /** Returns a neighbor object. */
+    private Neighbor<K, V> neighbor(int i, double distance) {
+        return new Neighbor<>(keys.get(i), data.get(i), i, distance);
+    }
+
     @Override
-    public Neighbor<T, T> nearest(T q) {
+    public Neighbor<K, V> nearest(K q) {
         // avoid Stream.reduce as we will create a lot of temporary Neighbor objects.
-        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
+        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
 
         int index = -1;
         double nearest = Double.MAX_VALUE;
         for (int i = 0; i < dist.length; i++) {
-            if (dist[i] < nearest && q != data[i]) {
+            if (dist[i] < nearest && q != keys.get(i)) {
                 index = i;
                 nearest = dist[i];
             }
         }
 
-        return Neighbor.of(data[index], index, nearest);
+        return neighbor(index, nearest);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Neighbor<T, T>[] search(T q, int k) {
+    public Neighbor<K, V>[] search(K q, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
 
-        if (k > data.length) {
+        if (k > data.size()) {
             throw new IllegalArgumentException("Neighbor array length is larger than the data size");
         }
 
-        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
-        HeapSelect<NeighborBuilder<T,T>> heap = new HeapSelect<>(NeighborBuilder.class, k);
+        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
+        HeapSelect<NeighborBuilder<K, V>> heap = new HeapSelect<>(NeighborBuilder.class, k);
         for (int i = 0; i < k; i++) {
             heap.add(new NeighborBuilder<>());
         }
 
         for (int i = 0; i < dist.length; i++) {
-            NeighborBuilder<T,T> datum = heap.peek();
-            if (dist[i] < datum.distance && q != data[i]) {
+            NeighborBuilder<K, V> datum = heap.peek();
+            if (dist[i] < datum.distance && q != keys.get(i)) {
                 datum.distance = dist[i];
                 datum.index = i;
-                datum.key = data[i];
-                datum.value = data[i];
+                datum.key = keys.get(i);
+                datum.value = data.get(i);
                 heap.heapify();
             }
         }
@@ -125,15 +192,15 @@ public class LinearSearch<T> implements KNNSearch<T,T>, RNNSearch<T,T>, Serializ
     }
 
     @Override
-    public void search(T q, double radius, List<Neighbor<T, T>> neighbors) {
+    public void search(K q, double radius, List<Neighbor<K, V>> neighbors) {
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
-        for (int i = 0; i < data.length; i++) {
-            if (dist[i] <= radius && q != data[i]) {
-                neighbors.add(Neighbor.of(data[i], i, dist[i]));
+        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
+        for (int i = 0; i < dist.length; i++) {
+            if (dist[i] <= radius && q != keys.get(i)) {
+                neighbors.add(neighbor(i, dist[i]));
             }
         }
     }
