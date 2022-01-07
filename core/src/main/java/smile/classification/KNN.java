@@ -129,9 +129,9 @@ public class KNN<T> extends AbstractClassifier<T> {
 
         KNNSearch<T, T> knn;
         if (distance instanceof Metric) {
-            knn = new CoverTree<>(x, (Metric<T>) distance);
+            knn = CoverTree.of(x, (Metric<T>) distance);
         } else {
-            knn = new LinearSearch<>(x, distance);
+            knn = LinearSearch.of(x, distance);
         }
 
         return new KNN<>(knn, y, k);
@@ -165,9 +165,9 @@ public class KNN<T> extends AbstractClassifier<T> {
 
         KNNSearch<double[], double[]> knn;
         if (x[0].length < 10) {
-            knn = new KDTree<>(x, x);
+            knn = KDTree.of(x);
         } else {
-            knn = new CoverTree<>(x, new EuclideanDistance());
+            knn = CoverTree.of(x, new EuclideanDistance());
         }
         
         return new KNN<>(knn, y, k);

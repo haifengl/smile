@@ -121,7 +121,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             y = clarans.y;
         }
 
-        return fit(data, new LinearSearch<>(data, distance), k, radius, y, 1E-4);
+        return fit(data, LinearSearch.of(data, distance), k, radius, y, 1E-4);
     }
 
     /**

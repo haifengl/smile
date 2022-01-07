@@ -142,7 +142,7 @@ public class DBSCAN<T> extends PartitionClustering {
      * @return the model.
      */
     public static <T> DBSCAN<T> fit(T[] data, Distance<T> distance, int minPts, double radius) {
-        return fit(data, new LinearSearch<>(data, distance), minPts, radius);
+        return fit(data, LinearSearch.of(data, distance), minPts, radius);
     }
 
     /**

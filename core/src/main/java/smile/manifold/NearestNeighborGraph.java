@@ -85,7 +85,7 @@ class NearestNeighborGraph {
      */
     public static <T> AdjacencyList of(T[] data, Distance<T> distance, int k, boolean digraph, EdgeConsumer consumer) {
         // This is actually faster on many core systems.
-        LinearSearch<T> knn = new LinearSearch<>(data, distance);
+        LinearSearch<T, T> knn = LinearSearch.of(data, distance);
 
         int n = data.length;
         AdjacencyList graph = new AdjacencyList(n, digraph);

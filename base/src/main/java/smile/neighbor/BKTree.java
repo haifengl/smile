@@ -173,7 +173,7 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
     }
 
     /**
-     * Factory method when the data objects are same as keys.
+     * Return a BK-tree of the data.
      * @param data the data objects, which are also used as key.
      * @param distance the metric used to build BK-tree. Note that the metric
      * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
@@ -188,7 +188,7 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
     }
 
     /**
-     * Factory method when the data objects are same as keys.
+     * Return a BK-tree of the data.
      * @param data the data objects, which are also used as key.
      * @param distance the metric used to build BK-tree. Note that the metric
      * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
