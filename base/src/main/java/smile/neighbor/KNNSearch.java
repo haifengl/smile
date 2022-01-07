@@ -31,6 +31,21 @@ package smile.neighbor;
  */
 public interface KNNSearch<K, V> {
     /**
+     * Returns the nearest neighbor. In machine learning, we often build
+     * a nearest neighbor search data structure, and then search with object
+     * in the same dataset. The object itself is of course the nearest one
+     * with distance 0. Since this is generally useless, we check
+     * the reference during the search and excludes the query object from the
+     * results.
+     *
+     * @param q the query key.
+     * @return the nearest neighbor
+     */
+    default Neighbor<K, V> nearest(K q) {
+        return search(q, 1)[0];
+    }
+
+    /**
      * Search the k nearest neighbors to the query key.
      *
      * @param q the query key.

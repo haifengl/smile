@@ -49,7 +49,7 @@ import smile.sort.HeapSelect;
  *
  * @author Haifeng Li
  */
-public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
+public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
