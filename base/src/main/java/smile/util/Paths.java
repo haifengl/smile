@@ -18,6 +18,7 @@
 package smile.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -37,7 +38,7 @@ public interface Paths {
      * @return the file path to the test data.
      */
     static Path getTestData(String... path) {
-        return java.nio.file.Paths.get(home + "/data", path);
+        return java.nio.file.Paths.get(home + File.separator + "data", path);
     }
 
     /**
