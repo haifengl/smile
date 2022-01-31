@@ -106,7 +106,7 @@ public class Matern implements IsotropicKernel {
 
         if (nu == 2.5) {
             d *= SQRT5;
-            return (1.0 + d) * Math.exp(-d);
+            return (1.0 + d + d*d/3) * Math.exp(-d);
         }
 
         if (nu == 0.5) {
@@ -131,8 +131,8 @@ public class Matern implements IsotropicKernel {
             g = (2.0 + d) * Math.exp(-d) * d / sigma;
         } else if (nu == 2.5) {
             d *= SQRT5;
-            k = (1.0 + d) * Math.exp(-d);
-            g = (2.0 + d) * Math.exp(-d) * d / sigma;
+            k = (1.0 + d + d*d/3) * Math.exp(-d);
+            g = (2.0 + 5*d/3 + d*d/3) * Math.exp(-d) * d / sigma;
         } else if (nu == 0.5) {
             k = Math.exp(-d);
             g = k * d / sigma;
