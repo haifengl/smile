@@ -54,7 +54,11 @@ public abstract class Linkage {
      */
     public Linkage(double[][] proximity) {
         this.size = proximity.length;
-        this.proximity = new float[size * (size+1) / 2];
+        if (size > 65535) {
+            throw new IllegalArgumentException("Data size " + size + " > 65535");
+        }
+        int length = (int) ((long) size * (size+1) / 2);
+        this.proximity = new float[length];
 
         // row wise
         //for (int i = 0, k = 0; i < size; i++) {
@@ -153,7 +157,10 @@ public abstract class Linkage {
      */
     public static <T> float[] proximity(T[] data, Distance<T> distance) {
         int n = data.length;
-        int length = n * (n+1) / 2;
+        if (n > 65535) {
+            throw new IllegalArgumentException("Data size " + n + " > 65535");
+        }
+        int length = (int) ((long) n * (n+1) / 2);
 
         float[] proximity = new float[length];
         IntStream.range(0, n).parallel().forEach(i -> {
