@@ -100,9 +100,16 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
         heap.sort();
 
         Bigram[] collocations = new Bigram[k];
+        int n = 0;
         for (int i = 0; i < k; i++) {
             Bigram bigram = bigrams[k-i-1];
-            collocations[i] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
+            if (bigram != null) {
+                collocations[n++] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
+            }
+        }
+
+        if (n < k) {
+            collocations = Arrays.copyOf(collocations, n);
         }
 
         return collocations;
