@@ -18,6 +18,7 @@
 package smile.nlp.collocation;
 
 import java.io.IOException;
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -26,7 +27,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.nlp.SimpleCorpus;
 import smile.nlp.Text;
-import smile.nlp.normalizer.Normalizer;
 import smile.nlp.normalizer.SimpleNormalizer;
 
 /**
@@ -126,12 +126,10 @@ public class BigramTest {
                 + "across their combined vehicle fleets. The commission also said an interim target of a "
                 + "15 percent carbon-dioxide reduction by 2025 should be adopted.";
 
-        Normalizer normalizer = SimpleNormalizer.getInstance();
         SimpleCorpus corpus = new SimpleCorpus();
-        String normalizedContent = normalizer.normalize(content);
-        corpus.add(new Text(normalizedContent));
+        corpus.add(new Text(SimpleNormalizer.getInstance().normalize(content)));
         smile.nlp.Bigram[] bigrams = Bigram.of(corpus, 10, 3) ;
-        System.out.println("Bigrams :"+ java.util.Arrays.toString(bigrams));
+        System.out.println("Bigrams :"+ Arrays.toString(bigrams));
         assertEquals(1, bigrams.length);
     }
 }
