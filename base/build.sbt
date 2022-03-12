@@ -2,19 +2,14 @@ name := "smile-base"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
-libraryDependencies += "org.slf4j"    % "slf4j-api" % "1.7.32"
-
 libraryDependencies ++= Seq(
-  "org.bytedeco" % "javacpp"   % "1.5.6",
-  "org.bytedeco" % "openblas"  % "0.3.17-1.5.6",
-  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.6",
-  "org.bytedeco" % "javacpp"   % "1.5.6"        % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.17-1.5.6" % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.6"  % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
+  "org.bytedeco" % "javacpp"   % "1.5.7"        % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.19-1.5.7" % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.7"  % "provided" classifier "" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
 )
 
 libraryDependencies ++= {
-  val arrowV = "6.0.1"
+  val arrowV = "7.0.0"
   Seq(
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
