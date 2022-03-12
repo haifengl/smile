@@ -10,5 +10,5 @@ Compile / doc / target := baseDirectory.value / "../doc/api/scala"
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "2.0.1",
-  "com.thoughtworks.xstream" % "xstream" % "1.4.18"
+  "com.thoughtworks.xstream" % "xstream" % "1.4.19"
 )
