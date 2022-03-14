@@ -1693,6 +1693,7 @@ public class Matrix extends IMatrix {
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
+        lu.uplo = null; // LU is not symmetric
         return new LU(lu, ipiv, info);
     }
 
@@ -1725,6 +1726,7 @@ public class Matrix extends IMatrix {
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
+        lu.uplo = null; // L is not symmetric
         return new Cholesky(lu);
     }
 
@@ -1751,6 +1753,7 @@ public class Matrix extends IMatrix {
             throw new ArithmeticException("LAPACK GEQRF error code: " + info);
         }
 
+        qr.uplo = null; // QR is not symmetric
         return new QR(qr, tau);
     }
 
@@ -1862,6 +1865,8 @@ public class Matrix extends IMatrix {
                 logger.error("LAPACK SYEV error code: {}", info);
                 throw new ArithmeticException("LAPACK SYEV error code: " + info);
             }
+
+            eig.uplo = null; // Vr is not symmetric
             return new EVD(w, vr ? eig : null);
         } else {
             double[] wr = new double[n];
