@@ -1797,7 +1797,6 @@ public class Matrix extends IMatrix {
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
-        lu.uplo = null; // L is not symmetric
         return new Matrix.Cholesky(lu);
     }
 
