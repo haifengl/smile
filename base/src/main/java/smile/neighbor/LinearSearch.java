@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 
@@ -110,7 +112,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
      */
     public LinearSearch(List<V> data, Distance<K> distance, Function<V, K> key) {
         this.data = data;
-        this.keys = data.stream().map(key).toList();
+        this.keys = data.stream().map(key).collect(Collectors.toList());
         this.distance = distance;
     }
 
