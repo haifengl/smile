@@ -337,6 +337,25 @@ public class MatrixTest {
     }
 
     @Test
+    public void testTm() {
+        System.out.println("tm");
+        float[][] A = {
+                {4.0f, 1.2f, 0.8f},
+                {1.2f, 9.0f, 1.2f},
+                {0.8f, 1.2f, 16.0f}
+        };
+        float[] B = {-4.0f, 1.0f, -3.0f};
+        float[] C = {-1.0505f, 0.2719f, -0.1554f};
+
+        Matrix a = Matrix.of(A).inverse();
+        Matrix b = Matrix.column(B);
+
+        assertTrue(MathEx.equals((b.tm(a)).toArray()[0], C, 1E-4f));
+        assertTrue(MathEx.equals((b.transpose().mm(a)).toArray()[0], C, 1E-4f));
+        assertTrue(MathEx.equals((b.transpose(false).mm(a)).toArray()[0], C, 1E-4f));
+    }
+
+    @Test
     public void testLU() {
         System.out.println("LU");
         float[][] A = {

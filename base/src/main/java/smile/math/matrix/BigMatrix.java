@@ -1618,8 +1618,14 @@ public class BigMatrix extends IMatrix {
         } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
             BLAS.engine.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
         } else {
-            if (layout() != A.layout()) transA = flip(transA);
-            if (layout() != B.layout()) transB = flip(transB);
+            if (layout() != A.layout()) {
+                transA = flip(transA);
+                A = A.transpose();
+            }
+            if (layout() != B.layout()) {
+                transB = flip(transB);
+                B = B.transpose();
+            }
             int k = transA == NO_TRANSPOSE ? A.n : A.m;
 
             BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
