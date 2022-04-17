@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,6 +104,10 @@ public class DBSCAN<T> extends PartitionClustering {
      * Data structure for neighborhood search.
      */
     private final RNNSearch<T,T> nns;
+    /**
+     * The flag if the point is a core point (at least minPts points are within radius).
+     */
+    private final boolean[] core;
 
     /**
      * Constructor.
@@ -111,12 +116,14 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param nns the data structure for neighborhood search.
      * @param k the number of clusters.
      * @param y the cluster labels.
+     * @param core the flag if the point is a core point.
      */
-    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y) {
+    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y, boolean[] core) {
         super(k, y);
         this.minPts = minPts;
         this.radius = radius;
         this.nns = nns;
+        this.core = core;
     }
 
     /**
@@ -170,6 +177,7 @@ public class DBSCAN<T> extends PartitionClustering {
 
         int k = 0;
         int n = data.length;
+        boolean[] core = new boolean[n];
         int[] y = new int[n];
         Arrays.fill(y, UNDEFINED);
 
@@ -181,6 +189,7 @@ public class DBSCAN<T> extends PartitionClustering {
                     y[i] = OUTLIER;
                 } else {
                     y[i] = k;
+                    core[i] = true;
 
                     for (Neighbor<T, T> neighbor : neighbors) {
                         if (y[neighbor.index] == UNDEFINED) {
@@ -203,6 +212,7 @@ public class DBSCAN<T> extends PartitionClustering {
                             nns.search(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
+                                core[neighbor.index] = true;
                                 for (Neighbor<T, T> sn : secondaryNeighbors) {
                                     int label = y[sn.index];
                                     if (label == UNDEFINED) {
@@ -222,7 +232,7 @@ public class DBSCAN<T> extends PartitionClustering {
             }
         }
 
-        return new DBSCAN<>(minPts, radius, nns, k, y);
+        return new DBSCAN<>(minPts, radius, nns, k, y, core);
     }
 
     /**
@@ -233,19 +243,14 @@ public class DBSCAN<T> extends PartitionClustering {
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.search(x, radius, neighbors);
-        
-        if (neighbors.size() < minPts) {
-            return OUTLIER;
+
+        Collections.sort(neighbors);
+        for (Neighbor<T, T> neighbor : neighbors) {
+            if (core[neighbor.index]) {
+                return y[neighbor.index];
+            }
         }
-        
-        int[] count = new int[k + 1];
-        for (Neighbor<T,T> neighbor : neighbors) {
-            int yi = y[neighbor.index];
-            if (yi == OUTLIER) yi = k;
-            count[yi]++;
-        }
-        
-        int y = MathEx.whichMax(count);
-        return y == k ? OUTLIER : y;
+
+        return OUTLIER;
     }
 }
