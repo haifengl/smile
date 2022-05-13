@@ -2787,6 +2787,10 @@ public class MathEx {
 
     /**
      * The squared Euclidean distance with handling missing values (represented as NaN).
+     * NaN will be treated as missing values and will be excluded from the
+     * calculation. Let m be the number nonmissing values, and n be the
+     * number of all values. The returned distance is (n * d / m),
+     * where d is the square of distance between nonmissing values.
      *
      * @param x a vector.
      * @param y a vector.

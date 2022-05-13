@@ -73,8 +73,9 @@ public class EuclideanDistance implements Metric<double[]> {
      * @return the distance.
      */
     public double d(int[] x, int[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         double dist = 0.0;
 
@@ -135,11 +136,11 @@ public class EuclideanDistance implements Metric<double[]> {
             }
         }
 
-        if (m == 0)
+        if (m == 0) {
             dist = Double.NaN;
-        else
+        } else {
             dist = n * dist / m;
-
+        }
 
         return Math.sqrt(dist);
     }
@@ -153,8 +154,9 @@ public class EuclideanDistance implements Metric<double[]> {
      */
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         int n = x.length;
         int m = 0;
@@ -181,10 +183,11 @@ public class EuclideanDistance implements Metric<double[]> {
             }
         }
 
-        if (m == 0)
+        if (m == 0) {
             dist = Double.NaN;
-        else
+        } else {
             dist = n * dist / m;
+        }
 
         return Math.sqrt(dist);
     }

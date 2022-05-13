@@ -50,10 +50,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @return the column names.
      */
     default String[] names() {
-        StructField[] fields = schema().fields();
-        return Arrays.stream(fields)
-                .map(field -> field.name)
-                .toArray(String[]::new);
+        return schema().names();
     }
 
     /**
@@ -61,23 +58,15 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @return the column data types.
      */
     default DataType[] types() {
-        StructField[] fields = schema().fields();
-        return Arrays.stream(fields)
-                .map(field -> field.type)
-                .collect(java.util.stream.Collectors.toList())
-                .toArray(new DataType[fields.length]);
+        return schema().types();
     }
-
 
     /**
      * Returns the column's level of measurements.
      * @return the column's level of measurements.
      */
     default Measure[] measures() {
-        StructField[] fields = schema().fields();
-        return Arrays.stream(fields)
-                .map(field -> field.measure)
-                .toArray(Measure[]::new);
+        return schema().measures();
     }
 
     /**
