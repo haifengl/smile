@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import smile.data.Tuple;
+import smile.data.measure.Measure;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -111,6 +112,55 @@ public class StructType implements DataType {
      */
     public String name(int i) {
         return fields[i].name;
+    }
+
+    /**
+     * Returns the field names.
+     * @return the field names.
+     */
+    public String[] names() {
+        return Arrays.stream(fields)
+                .map(field -> field.name)
+                .toArray(String[]::new);
+    }
+
+    /**
+     * Returns the field data type.
+     * @param i the index of field.
+     * @return the field data type.
+     */
+    public DataType type(int i) {
+        return fields[i].type;
+    }
+
+    /**
+     * Returns the field data types.
+     * @return the field data types.
+     */
+    public DataType[] types() {
+        return Arrays.stream(fields)
+                .map(field -> field.type)
+                .collect(java.util.stream.Collectors.toList())
+                .toArray(new DataType[fields.length]);
+    }
+
+    /**
+     * Returns the field's level of measurements.
+     * @param i the index of field.
+     * @return the field's level of measurements.
+     */
+    public Measure measure(int i) {
+        return fields[i].measure;
+    }
+
+    /**
+     * Returns the field's level of measurements.
+     * @return the field's level of measurements.
+     */
+    public Measure[] measures() {
+        return Arrays.stream(fields)
+                .map(field -> field.measure)
+                .toArray(Measure[]::new);
     }
 
     /**

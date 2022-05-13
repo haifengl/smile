@@ -27,6 +27,7 @@ import java.util.stream.IntStream;
 
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
+import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -57,29 +58,57 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns the field names.
+     * @return the field names.
+     */
+    default String[] names() {
+        return schema().names();
+    }
+
+    /**
+     * Returns the field data types.
+     * @return the field data types.
+     */
+    default DataType[] types() {
+        return schema().types();
+    }
+
+    /**
+     * Returns the field's level of measurements.
+     * @return the field's level of measurements.
+     */
+    default Measure[] measures() {
+        return schema().measures();
+    }
+
+    /**
      * Returns the tuple as an array of doubles.
+     * @param fields the fields to export. If empty, all fields will be used.
      * @return the tuple as an array of doubles.
      */
-    default double[] toArray() {
-        return toArray(false, CategoricalEncoder.LEVEL);
+    default double[] toArray(String... fields) {
+        return toArray(false, CategoricalEncoder.LEVEL, fields);
     }
 
     /**
      * Return an array obtained by converting all the variables
-     * in a data frame to numeric mode. Missing values/nulls will be
+     * in a tuple to numeric mode. Missing values/nulls will be
      * encoded as Double.NaN.
      *
-     * @param bias if true, add the first column of all 1's.
+     * @param bias if true, add the first element of 1.
      * @param encoder the categorical variable encoder.
+     * @param fields the fields to export. If empty, all fields will be used.
      * @return the tuple as an array of doubles.
      */
-    default double[] toArray(boolean bias, CategoricalEncoder encoder) {
-        int ncol = length();
+    default double[] toArray(boolean bias, CategoricalEncoder encoder, String... fields) {
         StructType schema = schema();
+        if (fields.length == 0) {
+            fields = schema.names();
+        }
 
         int n = bias ? 1 : 0;
-        for (int i = 0; i < ncol; i++) {
-            StructField field = schema.field(i);
+        for (String column : fields) {
+            StructField field = schema.field(column);
 
             Measure measure = field.measure;
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
@@ -102,7 +131,8 @@ public interface Tuple extends Serializable {
             array[j++] = 1.0;
         }
 
-        for (int i = 0; i < ncol; i++) {
+        for (String column : fields) {
+            int i = schema.indexOf(column);
             StructField field = schema.field(i);
 
             Measure measure = field.measure;
