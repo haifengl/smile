@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.imputation;
+package smile.feature.imputation;
 
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
@@ -28,52 +28,26 @@ import smile.sort.QuickSort;
  * 
  * @author Haifeng Li
  */
-public class LLSImputation implements MissingValueImputation {
+public interface LLSImputer {
     /**
-     * The number of nearest neighbors used for imputation.
-     */
-    private final int k;
-
-    /**
-     * Constructor.
+     * Impute missing values in the dataset.
+     * @param data a data set with missing values (represented as Double.NaN).
      * @param k the number of similar rows used for imputation.
+     * @return the imputed data.
+     * @throws IllegalArgumentException when the whole row or column is missing.
      */
-    public LLSImputation(int k) {
+    static double[][] impute(double[][] data, int k) {
+        int d = data[0].length;
+
         if (k < 1) {
             throw new IllegalArgumentException("Invalid number of rows for imputation: " + k);
         }
 
-        this.k = k;
-    }
-
-    @Override
-    public void impute(double[][] data) throws MissingValueImputationException {
-        int d = data[0].length;
-
-        if (d < 1.5*k)
+        if (d < 1.5*k) {
             throw new IllegalArgumentException("The dimensionality of data is too small compared to k = " + k);
-
-        int[] count = new int[data[0].length];
-        for (int i = 0; i < data.length; i++) {
-            int n = 0;
-            for (int j = 0; j < data[i].length; j++) {
-                if (Double.isNaN(data[i][j])) {
-                    n++;
-                    count[j]++;
-                }
-            }
-
-            if (n == data[i].length) {
-                throw new MissingValueImputationException("The whole row " + i + " is missing");
-            }
         }
 
-        for (int i = 0; i < data[0].length; i++) {
-            if (count[i] == data.length) {
-                throw new MissingValueImputationException("The whole column " + i + " is missing");
-            }
-        }
-
+        double[][] full = SimpleImputer.impute(data);
         double[] dist = new double[data.length];
 
         for (int i = 0; i < data.length; i++) {
@@ -85,8 +59,13 @@ public class LLSImputation implements MissingValueImputation {
                 }
             }
 
-            if (missing == 0)
+            if (missing == d) {
+                throw new IllegalArgumentException("The whole row " + i + " is missing");
+            }
+
+            if (missing == 0) {
                 continue;
+            }
 
             for (int j = 0; j < data.length; j++) {
                 double[] y = data[j];
@@ -147,19 +126,16 @@ public class LLSImputation implements MissingValueImputation {
 
             for (int j = 0; j < d; j++) {
                 if (Double.isNaN(data[i][j])) {
-                    data[i][j] = 0;
+                    full[i][j] = 0;
                     for (int l = 0; l < k; l++) {
-                        data[i][j] += b[l] * dat[l][j];
+                        full[i][j] += b[l] * dat[l][j];
                     }
                 }
             }
         }
 
-        /*
-         * In case we miss some missing values because no sufficient
-         * nearest neighbors exist.
-         */
-        KNNImputation knn = new KNNImputation(k);
-        knn.impute(data);
+        // In case we miss some missing values because no sufficient
+        // nearest neighbors exist.
+        return full;
     }
 }

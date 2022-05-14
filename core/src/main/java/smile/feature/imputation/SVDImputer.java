@@ -60,27 +60,6 @@ public interface SVDImputer {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int[] count = new int[data[0].length];
-        for (int i = 0; i < data.length; i++) {
-            int n = 0;
-            for (int j = 0; j < data[i].length; j++) {
-                if (Double.isNaN(data[i][j])) {
-                    n++;
-                    count[j]++;
-                }
-            }
-
-            if (n == data[i].length) {
-                throw new IllegalArgumentException("The whole row " + i + " is missing");
-            }
-        }
-
-        for (int i = 0; i < data[0].length; i++) {
-            if (count[i] == data.length) {
-                throw new IllegalArgumentException("The whole column " + i + " is missing");
-            }
-        }
-
         int d = data[0].length;
         double[][] full = SimpleImputer.impute(data);
 

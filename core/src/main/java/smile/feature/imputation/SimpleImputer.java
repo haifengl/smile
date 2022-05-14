@@ -275,4 +275,62 @@ public class SimpleImputer implements Transform {
 
         return new SimpleImputer(values);
     }
+
+    /**
+     * Impute the missing values with column averages.
+     * @param data data with missing values.
+     * @return the imputed data.
+     * @throws IllegalArgumentException when the whole row or column is missing.
+     */
+    public static double[][] impute(double[][] data) {
+        int d = data[0].length;
+        int[] count = new int[d];
+        for (int i = 0; i < data.length; i++) {
+            int missing = 0;
+            for (int j = 0; j < d; j++) {
+                if (Double.isNaN(data[i][j])) {
+                    missing++;
+                    count[j]++;
+                }
+            }
+
+            if (missing == d) {
+                throw new IllegalArgumentException("The whole row " + i + " is missing");
+            }
+        }
+
+        for (int i = 0; i < d; i++) {
+            if (count[i] == data.length) {
+                throw new IllegalArgumentException("The whole column " + i + " is missing");
+            }
+        }
+
+        double[] mean = new double[d];
+        int[] n = new int[d];
+        for (double[] x : data) {
+            for (int j = 0; j < d; j++) {
+                if (!Double.isNaN(x[j])) {
+                    n[j]++;
+                    mean[j] += x[j];
+                }
+            }
+        }
+
+        for (int j = 0; j < d; j++) {
+            if (n[j] != 0) {
+                mean[j] /= n[j];
+            }
+        }
+
+        double[][] full = MathEx.clone(data);
+        for (double[] x : full) {
+            for (int j = 0; j < d; j++) {
+                if (Double.isNaN(x[j])) {
+                    x[j] = mean[j];
+                }
+            }
+        }
+
+        return full;
+    }
 }
