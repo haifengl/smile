@@ -142,45 +142,6 @@ package object imputation {
     new KMeansImputation(k, runs).impute(data)
   }
 
-  /** Local least squares missing value imputation. The local least squares
-    * imputation method represents a target instance that has missing values as
-    * a linear combination of similar instances, which are selected by k-nearest
-    * neighbors method.
-    *
-    * @param data the data set.
-    * @param k the number of similar rows used for imputation.
-    */
-  def llsimpute(data: Array[Array[Double]], k: Int): Unit = time("Missing value imputation by local least squares") {
-    new LLSImputation(k).impute(data)
-  }
-
-  /** Missing value imputation with singular value decomposition. Given SVD
-    * A = U &Sigma; V<sup>T</sup>, we use the most significant eigenvectors of
-    * V<sup>T</sup> to linearly estimate missing values. Although it has been
-    * shown that several significant eigenvectors are sufficient to describe
-    * the data with small errors, the exact fraction of eigenvectors best for
-    * estimation needs to be determined empirically. Once k most significant
-    * eigenvectors from V<sup>T</sup> are selected, we estimate a missing value j
-    * in row i by first regressing this row against the k eigenvectors and then use
-    * the coefficients of the regression to reconstruct j from a linear combination
-    * of the k eigenvectors. The j th value of row i and the j th values of the k
-    * eigenvectors are not used in determining these regression coefficients.
-    * It should be noted that SVD can only be performed on complete matrices;
-    * therefore we originally fill all missing values by other methods in
-    * matrix A, obtaining A'. We then utilize an expectation maximization method to
-    * arrive at the final estimate, as follows. Each missing value in A is estimated
-    * using the above algorithm, and then the procedure is repeated on the newly
-    * obtained matrix, until the total change in the matrix falls below the
-    * empirically determined threshold (say 0.01).
-    *
-    * @param data the data set.
-    * @param k the number of eigenvectors used for imputation.
-    * @param maxIter the maximum number of iterations.
-    */
-  def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10): Unit = time("Missing value imputation by SVD") {
-    new SVDImputation(k).impute(data)
-  }
-
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
     * The user should ignore this object. */
   object $dummy
