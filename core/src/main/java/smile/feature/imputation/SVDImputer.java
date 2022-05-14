@@ -15,8 +15,9 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.imputation;
+package smile.feature.imputation;
 
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 /**
@@ -41,38 +42,20 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class SVDImputation implements MissingValueImputation {
-
-    /**
-     * The number of eigenvectors used for imputation.
-     */
-    private final int k;
-
-    /**
-     * Constructor.
-     * @param k the number of eigenvectors used for imputation.
-     */
-    public SVDImputation(int k) {
-        if (k < 1) {
-            throw new IllegalArgumentException("Invalid number of eigenvectors for imputation: " + k);
-        }
-
-        this.k = k;
-    }
-
-    @Override
-    public void impute(double[][] data) throws MissingValueImputationException {
-        impute(data, 10);
-    }
-    
+public interface SVDImputer {
     /**
      * Impute missing values in the dataset.
      * @param data a data set with missing values (represented as Double.NaN).
-     * On output, missing values are filled with estimated values.
+     * @param k the number of eigenvectors used for imputation.
      * @param maxIter the maximum number of iterations.
-     * @throws MissingValueImputationException when the whole row or column is missing.
+     * @return the imputed data.
+     * @throws IllegalArgumentException when the whole row or column is missing.
      */
-    public void impute(double[][] data, int maxIter) throws MissingValueImputationException {
+    static double[][] impute(double[][] data, int k, int maxIter) {
+        if (k < 1 || k > Math.min(data.length, data[0].length)) {
+            throw new IllegalArgumentException("Invalid number of eigenvectors for imputation: " + k);
+        }
+
         if (maxIter < 1) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
@@ -88,79 +71,62 @@ public class SVDImputation implements MissingValueImputation {
             }
 
             if (n == data[i].length) {
-                throw new MissingValueImputationException("The whole row " + i + " is missing");
+                throw new IllegalArgumentException("The whole row " + i + " is missing");
             }
         }
 
         for (int i = 0; i < data[0].length; i++) {
             if (count[i] == data.length) {
-                throw new MissingValueImputationException("The whole column " + i + " is missing");
+                throw new IllegalArgumentException("The whole column " + i + " is missing");
             }
         }
-
-        double[][] full = new double[data.length][];
-        for (int i = 0; i < full.length; i++) {
-            full[i] = data[i].clone();
-        }
-
-        MissingValueImputation.imputeWithColumnAverage(full);
-
-        for (int iter = 0; iter < maxIter; iter++) {
-            svdImpute(data, full);
-        }
-
-        for (int i = 0; i < data.length; i++) {
-            System.arraycopy(full[i], 0, data[i], 0, data[i].length);
-        }
-    }
-
-    /**
-     * Impute the missing values by SVD.
-     * @param raw the raw data with missing values.
-     * @param data the data with current imputations.
-     */
-    private void svdImpute(double[][] raw, double[][] data) {
-        Matrix.SVD svd = Matrix.of(data).svd(true, true);
 
         int d = data[0].length;
+        double[][] full = SimpleImputer.impute(data);
 
-        for (int i = 0; i < raw.length; i++) {
-            int missing = 0;
-            for (int j = 0; j < d; j++) {
-                if (Double.isNaN(raw[i][j])) {
-                    missing++;
-                } else {
-                    data[i][j] = raw[i][j];
-                }
-            }
+        for (int iter = 0; iter < maxIter; iter++) {
+            Matrix.SVD svd = Matrix.of(full).svd(true, true);
 
-            if (missing == 0) {
-                continue;
-            }
-
-            Matrix A = new Matrix(d - missing, k);
-            double[] b = new double[d - missing];
-
-            for (int j = 0, m = 0; j < d; j++) {
-                if (!Double.isNaN(raw[i][j])) {
-                    for (int l = 0; l < k; l++) {
-                        A.set(m, l, svd.V.get(j, l));
+            for (int i = 0; i < data.length; i++) {
+                int missing = 0;
+                for (int j = 0; j < d; j++) {
+                    if (Double.isNaN(data[i][j])) {
+                        missing++;
+                    } else {
+                        full[i][j] = data[i][j];
                     }
-                    b[m++] = raw[i][j];
                 }
-            }
 
-            Matrix.QR qr = A.qr(true);
-            double[] s = qr.solve(b);
+                if (missing == 0) {
+                    continue;
+                }
 
-            for (int j = 0; j < d; j++) {
-                if (Double.isNaN(raw[i][j])) {
-                    data[i][j] = 0;
-                    for (int l = 0; l < k; l++) {
-                        data[i][j] += s[l] * svd.V.get(j, l);
+                Matrix A = new Matrix(d - missing, k);
+                double[] b = new double[d - missing];
+
+                for (int j = 0, m = 0; j < d; j++) {
+                    if (!Double.isNaN(data[i][j])) {
+                        for (int l = 0; l < k; l++) {
+                            A.set(m, l, svd.V.get(j, l));
+                        }
+                        b[m++] = data[i][j];
+                    }
+                }
+
+                Matrix.QR qr = A.qr(true);
+                double[] s = qr.solve(b);
+
+                for (int j = 0; j < d; j++) {
+                    if (Double.isNaN(data[i][j])) {
+                        full[i][j] = 0;
+                        for (int l = 0; l < k; l++) {
+                            full[i][j] += s[l] * svd.V.get(j, l);
+                        }
                     }
                 }
             }
         }
+
+        return full;
     }
 }
