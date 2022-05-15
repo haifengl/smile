@@ -59,10 +59,6 @@ public interface LLSImputer {
                 }
             }
 
-            if (missing == d) {
-                throw new IllegalArgumentException("The whole row " + i + " is missing");
-            }
-
             if (missing == 0) {
                 continue;
             }
@@ -71,15 +67,15 @@ public interface LLSImputer {
                 double[] y = data[j];
                 int n = 0;
                 dist[j] = 0;
-                for (int m = 0; m < x.length; m++) {
+                for (int m = 0; m < d; m++) {
                     if (!Double.isNaN(x[m]) && !Double.isNaN(y[m])) {
                         n++;
                         dist[j] += (x[m] - y[m]) * (x[m] - y[m]);
                     }
                 }
 
-                if (n != x.length - missing) {
-                    dist[j] = x.length * dist[j] / n;
+                if (n != d - missing) {
+                    dist[j] = d * dist[j] / n;
                 } else {
                     dist[j] = Double.MAX_VALUE;
                 }
@@ -121,6 +117,7 @@ public interface LLSImputer {
                 continue;
             }
 
+            System.out.println("sufficient");
             Matrix.LU lu = A.lu(true);
             lu.solve(b);
 
