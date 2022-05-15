@@ -31,9 +31,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class ImputationTest {
+public class SVDImputerTest {
 
-    public ImputationTest() {
+    public SVDImputerTest() {
     }
 
     @BeforeClass
@@ -106,19 +106,5 @@ public class ImputationTest {
         impute(imputer, data, 0.05, 15.84);
         impute(imputer, data, 0.10, 14.94);
         // Matrix will be rank deficient with higher missing rate.
-    }
-
-    @Test(expected = Test.None.class)
-    public void testLLS() throws Exception {
-        System.out.println("LLS Imputation");
-        double[][] data = SyntheticControl.x;
-
-        Function<double[][], double[][]> imputer = x -> LLSImputer.impute(x, 10);
-        impute(imputer, data, 0.01, 14.66);
-        impute(imputer, data, 0.05, 16.35);
-        impute(imputer, data, 0.10, 15.50);
-        impute(imputer, data, 0.15, 15.55);
-        impute(imputer, data, 0.20, 15.26);
-        impute(imputer, data, 0.25, 15.86);
     }
 }
