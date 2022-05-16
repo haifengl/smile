@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
 import smile.test.data.SyntheticControl;
 import smile.math.MathEx;
 import static org.junit.Assert.*;
@@ -83,6 +84,19 @@ public class SVDImputerTest {
     }
 
     @Test(expected = Test.None.class)
+    public void testSVD() throws Exception {
+        System.out.println("SVDImputer");
+        double[][] data = SyntheticControl.x;
+        int k = data[0].length / 5;
+
+        Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);
+        impute(imputer, data, 0.01, 13.50);
+        impute(imputer, data, 0.05, 15.84);
+        impute(imputer, data, 0.10, 14.94);
+        // Matrix will be rank deficient with higher missing rate.
+    }
+
+    @Test(expected = Test.None.class)
     public void testAverage() throws Exception {
         System.out.println("Column Average Imputation");
         double[][] data = SyntheticControl.x;
@@ -96,15 +110,28 @@ public class SVDImputerTest {
     }
 
     @Test(expected = Test.None.class)
-    public void testSVD() throws Exception {
-        System.out.println("SVD Imputation");
+    public void testSimpleImputer() throws Exception {
+        System.out.println("SimpleImputer");
         double[][] data = SyntheticControl.x;
-        int k = data[0].length / 5;
+        DataFrame df = DataFrame.of(data);
+        SimpleImputer simpleImputer = SimpleImputer.fit(df);
+        Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
 
-        Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);
-        impute(imputer, data, 0.01, 13.50);
-        impute(imputer, data, 0.05, 15.84);
-        impute(imputer, data, 0.10, 14.94);
-        // Matrix will be rank deficient with higher missing rate.
+        impute(imputer, data, 0.01, 38.88);
+        impute(imputer, data, 0.05, 48.80);
+        impute(imputer, data, 0.10, 45.04);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testKNNImputer() throws Exception {
+        System.out.println("KNNImputer");
+        double[][] data = SyntheticControl.x;
+        DataFrame df = DataFrame.of(data);
+        KNNImputer knnImputer = new KNNImputer(df, 5);
+        Function<double[][], double[][]> imputer = x -> knnImputer.apply(DataFrame.of(x)).toArray();
+
+        impute(imputer, data, 0.01, 11.08);
+        impute(imputer, data, 0.05, 12.22);
+        impute(imputer, data, 0.10, 11.63);
     }
 }

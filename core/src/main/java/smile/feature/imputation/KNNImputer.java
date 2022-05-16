@@ -66,7 +66,7 @@ import smile.neighbor.Neighbor;
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
-                if (xi != null) {
+                if (!SimpleImputer.isMissing(xi)) {
                     return xi;
                 } else {
                     StructField field = schema.field(i);
