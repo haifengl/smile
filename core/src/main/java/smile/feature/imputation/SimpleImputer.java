@@ -58,6 +58,21 @@ public class SimpleImputer implements Transform {
         return false;
     }
 
+    /**
+     * Return true if the tuple x has missing values.
+     * @param x a tuple.
+     * @return true if the tuple x has missing values.
+     */
+    public static boolean hasMissing(Tuple x) {
+        int n = x.length();
+        for (int i = 0; i < n; i++) {
+            if (isMissing(x.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Tuple apply(Tuple x) {
         StructType schema = x.schema();
@@ -189,6 +204,7 @@ public class SimpleImputer implements Transform {
                 .map(key -> key + " -> " + values.get(key))
                 .collect(Collectors.joining(",\n  ", "SimpleImputer(\n  ", "\n)"));
     }
+
     /**
      * Fits the missing value imputation values. Impute all the numeric
      * columns with median, boolean/nominal columns with mode, and text
