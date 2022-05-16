@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
 import smile.test.data.SyntheticControl;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
@@ -30,9 +31,9 @@ import static smile.feature.imputation.SimpleImputerTest.impute;
  *
  * @author Haifeng Li
  */
-public class SVDImputerTest {
+public class KNNImputerTest {
 
-    public SVDImputerTest() {
+    public KNNImputerTest() {
     }
 
     @BeforeClass
@@ -53,14 +54,14 @@ public class SVDImputerTest {
 
     @Test(expected = Test.None.class)
     public void test() throws Exception {
-        System.out.println("SVDImputer");
+        System.out.println("KNNImputer");
         double[][] data = SyntheticControl.x;
-        int k = data[0].length / 5;
+        DataFrame df = DataFrame.of(data);
+        KNNImputer knnImputer = new KNNImputer(df, 5);
+        Function<double[][], double[][]> imputer = x -> knnImputer.apply(DataFrame.of(x)).toArray();
 
-        Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);
-        impute(imputer, data, 0.01, 13.50);
-        impute(imputer, data, 0.05, 15.84);
-        impute(imputer, data, 0.10, 14.94);
-        // Matrix will be rank deficient with higher missing rate.
+        impute(imputer, data, 0.01, 11.08);
+        impute(imputer, data, 0.05, 12.22);
+        impute(imputer, data, 0.10, 11.63);
     }
 }

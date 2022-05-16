@@ -17,12 +17,16 @@
 
 package smile.feature.imputation;
 
+import java.util.function.Function;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.math.MathEx;
 import smile.test.data.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -49,6 +53,36 @@ public class SimpleImputerTest {
     public void tearDown() {
     }
 
+    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) throws Exception {
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        int n = 0;
+        double[][] missing = new double[data.length][data[0].length];
+        for (int i = 0; i < missing.length; i++) {
+            for (int j = 0; j < missing[i].length; j++) {
+                if (MathEx.random() < rate) {
+                    n++;
+                    missing[i][j] = Double.NaN;
+                } else {
+                    missing[i][j] = data[i][j];
+                }
+            }
+        }
+
+        double[][] imputed = imputer.apply(missing);
+
+        double error = 0.0;
+        for (int i = 0; i < imputed.length; i++) {
+            for (int j = 0; j < imputed[i].length; j++) {
+                error += Math.abs(data[i][j] - imputed[i][j]) / data[i][j];
+            }
+        }
+
+        error = 100 * error / n;
+        System.out.format("The error of %d%% missing values = %.2f%n", (int) (100 * rate),  error);
+        assertEquals(expected, error, 1E-2);
+    }
+
     @Test
     public void testUSArrests() throws Exception {
         System.out.println(USArrests.data);
@@ -61,5 +95,31 @@ public class SimpleImputerTest {
         System.out.println(Longley.data);
         SimpleImputer imputer = SimpleImputer.fit(Longley.data);
         System.out.println(imputer);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testAverage() throws Exception {
+        System.out.println("Column Average Imputation");
+        double[][] data = SyntheticControl.x;
+
+        impute(SimpleImputer::impute, data, 0.01, 39.11);
+        impute(SimpleImputer::impute, data, 0.05, 48.86);
+        impute(SimpleImputer::impute, data, 0.10, 45.24);
+        impute(SimpleImputer::impute, data, 0.15, 44.59);
+        impute(SimpleImputer::impute, data, 0.20, 41.93);
+        impute(SimpleImputer::impute, data, 0.25, 44.77);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testSimpleImputer() throws Exception {
+        System.out.println("SimpleImputer");
+        double[][] data = SyntheticControl.x;
+        DataFrame df = DataFrame.of(data);
+        SimpleImputer simpleImputer = SimpleImputer.fit(df);
+        Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
+
+        impute(imputer, data, 0.01, 38.88);
+        impute(imputer, data, 0.05, 48.80);
+        impute(imputer, data, 0.10, 45.04);
     }
 }
