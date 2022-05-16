@@ -49,6 +49,15 @@ public class SimpleImputer implements Transform {
         this.values = values;
     }
 
+    /** Return true if x is null or NaN. */
+    static boolean isMissing(Object x) {
+        if (x == null) return true;
+        if (x instanceof Number) {
+            return Double.isNaN(((Number) x).doubleValue());
+        }
+        return false;
+    }
+
     @Override
     public Tuple apply(Tuple x) {
         StructType schema = x.schema();
@@ -56,7 +65,7 @@ public class SimpleImputer implements Transform {
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
-                return xi != null ? xi : values.get(schema.field(i).name);
+                return isMissing(xi) ? values.get(schema.field(i).name) : xi;
             }
 
             @Override
