@@ -17,7 +17,6 @@
 
 package smile.feature.extraction;
 
-import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
@@ -46,7 +45,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class ProbabilisticPCA implements LinearProjection, Serializable {
+public class ProbabilisticPCA extends LinearProjection {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -65,23 +64,21 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * The loading matrix.
      */
     private final Matrix loading;
-    /**
-     * The projection matrix.
-     */
-    private final Matrix projection;
 
     /**
      * Constructor.
      * @param noise the variance of noise.
      * @param mu the mean of samples.
      * @param loading the loading matrix.
-     * @param projection the projection matrix.
+     * @param projection the projection matrix. Note that this is not
+     *                   the matrix W in the latent model.
      */
     public ProbabilisticPCA(double noise, double[] mu, Matrix loading, Matrix projection) {
+        super(projection);
+
         this.noise = noise;
         this.mu = mu;
         this.loading = loading;
-        this.projection = projection;
 
         pmu = new double[projection.nrow()];
         projection.mv(mu, pmu);
@@ -112,39 +109,10 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
         return noise;
     }
 
-    /**
-     * Returns the projection matrix. Note that this is not the matrix W in the
-     * latent model.
-     */
     @Override
-    public Matrix projection() {
-        return projection;
-    }
-
-    @Override
-    public double[] project(double[] x) {
-        if (x.length != mu.length) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, mu.length));
-        }
-
-        double[] y = new double[projection.nrow()];
-        projection.mv(x, y);
-        MathEx.sub(y, pmu);
-        return y;
-    }
-
-    @Override
-    public double[][] project(double[][] x) {
-        if (x[0].length != mu.length) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, mu.length));
-        }
-
-        double[][] y = new double[x.length][projection.nrow()];
-        for (int i = 0; i < x.length; i++) {
-            projection.mv(x[i], y[i]);
-            MathEx.sub(y[i], pmu);
-        }
-        return y;
+    public double[] postprocess(double[] x) {
+        MathEx.sub(x, pmu);
+        return x;
     }
 
     /**

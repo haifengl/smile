@@ -17,7 +17,6 @@
 
 package smile.feature.extraction;
 
-import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
@@ -53,24 +52,20 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-public class RandomProjection implements LinearProjection, Serializable {
+public class RandomProjection extends LinearProjection {
     private static final long serialVersionUID = 2L;
 
     /**
      * Probability distribution to generate random projection.
      */
     private static final double[] prob = {1.0 / 6, 2.0 / 3, 1.0 / 6};
-    /**
-     * Projection matrix.
-     */
-    private final Matrix projection;
 
     /**
      * Constructor.
      * @param projection the projection matrix.
      */
     public RandomProjection(Matrix projection) {
-        this.projection = projection;
+        super(projection);
     }
 
     /**
@@ -133,10 +128,5 @@ public class RandomProjection implements LinearProjection, Serializable {
             }
         }
         return new RandomProjection(projection);
-    }
-
-    @Override
-    public Matrix projection() {
-        return projection;
     }
 }

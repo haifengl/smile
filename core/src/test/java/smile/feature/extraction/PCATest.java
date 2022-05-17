@@ -114,8 +114,7 @@ public class PCATest {
             {118.176327855097, 5.50757920474225, 2.71132076743689, -0.204972398473778},
             {10.4345393883043, -5.92445292066816, 3.79444682032120, 0.517867427500318}
         };
-        PCA pca = PCA.fit(USArrests.x);
-        pca.setProjection(4);
+        PCA pca = PCA.fit(USArrests.x).getProjection(4);
         assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));
 
@@ -197,8 +196,7 @@ public class PCATest {
             {-0.629426663525205, -0.321012967465219, 0.240659233693745, 0.166651800709434}
         };
 
-        PCA pca = PCA.cor(USArrests.x);
-        pca.setProjection(4);
+        PCA pca = PCA.cor(USArrests.x).getProjection(4);
         System.out.println(java.util.Arrays.toString(pca.varianceProportion()));
         assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));

@@ -17,6 +17,14 @@
 
 package smile.feature.extraction;
 
+import java.util.stream.IntStream;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.transform.Transform;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.data.vector.DoubleVector;
 import smile.math.matrix.Matrix;
 
 /**
@@ -24,44 +32,109 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public interface LinearProjection extends Projection<double[]> {
+public class LinearProjection implements Transform {
+    /**
+     * The projection matrix. The dimension reduced data
+     * can be obtained by y = W * x.
+     */
+    public final Matrix projection;
+    /**
+     * The schema of output space.
+     */
+    public final StructType schema;
+    /**
+     * The fields of input space.
+     */
+    public final String[] inputFields;
 
     /**
-     * Returns the projection matrix. The dimension reduced data can be obtained
+     * Constructor. The dimension reduced data can be obtained
      * by y = W * x.
-     * @return the projection matrix.
+     * @param projection the projection matrix.
      */
-    Matrix projection();
+    public LinearProjection(Matrix projection) {
+        this(projection, "PCA_");
+    }
 
-    @Override
-    default double[] project(double[] x) {
-        Matrix A = projection();
-        int p = A.nrow();
-        int n = A.ncol();
-
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] y = new double[p];
-        A.mv(x, y);
-        return y;
+    /**
+     * Constructor. The dimension reduced data can be obtained
+     * by y = W * x.
+     * @param projection the projection matrix.
+     * @param outputPrefix the output field name prefix.
+     * @param inputFields the input fields.
+     */
+    public LinearProjection(Matrix projection, String outputPrefix, String... inputFields) {
+        this.projection = projection;
+        int p = projection.nrow();
+        StructField[] fields = IntStream.range(1, p+1)
+                .mapToObj(i -> new StructField(outputPrefix + i, DataTypes.DoubleType))
+                .toArray(StructField[]::new);
+        this.schema = new StructType(fields);
+        this.inputFields = inputFields;
     }
 
     @Override
-    default double[][] project(double[][] x) {
-        Matrix A = projection();
-        int p = A.nrow();
-        int n = A.ncol();
+    public Tuple apply(Tuple x) {
+        double[] vector = x.toArray(inputFields);
+        double[] y = postprocess(projection.mv(preprocess(vector)));
+        return Tuple.of(y, schema);
+    }
 
-        if (x[0].length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
+    @Override
+    public DataFrame apply(DataFrame data) {
+        double[][] vector = data.toArray(inputFields);
+        double[][] y = project(vector);
+
+        int n = data.size();
+        int p = projection.nrow();
+        DoubleVector[] vectors = new DoubleVector[p];
+        for (int j = 0; j < p; j++) {
+            double[] x = new double[n];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = y[i][j];
+            }
+            vectors[j] = DoubleVector.of(schema.field(j), x);
         }
+        return DataFrame.of(vectors);
+    }
 
-        double[][] y = new double[x.length][p];
+    /**
+     * Project a data point to the feature space.
+     * @param x the data point.
+     * @return the projection in the feature space.
+     */
+    public double[] project(double[] x) {
+        return postprocess(projection.mv(preprocess(x)));
+    }
+
+    /**
+     * Project a set of data to the feature space.
+     * @param x the data set.
+     * @return the projection in the feature space.
+     */
+    public double[][] project(double[][] x) {
+        double[][] y = new double[x.length][];
         for (int i = 0; i < x.length; i++) {
-            A.mv(x[i], y[i]);
+            y[i] = project(x[i]);
         }
         return y;
+    }
+
+    /**
+     * Preprocess the input vector before projection.
+     * @param x the input vector of projection.
+     * @return the preprocessed vector.
+     */
+    protected double[] preprocess(double[] x) {
+        return x;
+    }
+
+    /**
+     * Postprocess the output vector after projection.
+     * @param x the output vector of projection.
+     * @return the postprocessed vector.
+     */
+    protected double[] postprocess(double[] x) {
+        return x;
     }
 }
