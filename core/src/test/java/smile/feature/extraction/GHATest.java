@@ -88,7 +88,7 @@ public class GHATest {
             }
         }
 
-        Matrix p = gha.projection();
+        Matrix p = gha.projection;
         Matrix t = p.ata();
         System.out.println(t);
 

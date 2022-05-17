@@ -17,7 +17,6 @@
 
 package smile.feature.extraction;
 
-import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
@@ -56,7 +55,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class GHA implements LinearProjection, Serializable {
+public class GHA extends LinearProjection {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -71,10 +70,6 @@ public class GHA implements LinearProjection, Serializable {
      * The learning rate;
      */
     private final TimeFunction r;
-    /**
-     * Projection matrix.
-     */
-    private final Matrix projection;
     /**
      * Workspace for W * x.
      */
@@ -94,6 +89,8 @@ public class GHA implements LinearProjection, Serializable {
      * @param r the learning rate.
      */
     public GHA(int n, int p, TimeFunction r) {
+        super(new Matrix(p, n));
+
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
         }
@@ -108,7 +105,7 @@ public class GHA implements LinearProjection, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = new Matrix(p, n);
+
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
                 projection.set(i, j, 0.1 * MathEx.random());
@@ -118,27 +115,21 @@ public class GHA implements LinearProjection, Serializable {
 
     /**
      * Constructor.
-     * @param w the initial projection matrix.
+     * @param w the initial projection matrix. When GHA converges,
+     *          the column of projection matrix are the first p
+     *          eigenvectors of covariance matrix, ordered by
+     *          decreasing eigenvalues.
      * @param r the learning rate.
      */
     public GHA(double[][] w, TimeFunction r) {
+        super(Matrix.of(w));
+
         this.p = w.length;
         this.n = w[0].length;
         this.r = r;
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.of(w);
-    }
-
-    /**
-     * Returns the projection matrix. When GHA converges, the column of projection
-     * matrix are the first p eigenvectors of covariance matrix, ordered by decreasing
-     * eigenvalues. The dimension reduced data can be obtained by y = W * x.
-     */
-    @Override
-    public Matrix projection() {
-        return projection;
     }
 
     /**

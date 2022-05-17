@@ -17,7 +17,6 @@
 
 package smile.feature.extraction;
 
-import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
@@ -60,17 +59,9 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public class PCA implements LinearProjection, Serializable {
+public class PCA extends LinearProjection {
     private static final long serialVersionUID = 2L;
 
-    /**
-     * The dimension of feature space.
-     */
-    private int p;
-    /**
-     * The dimension of input space.
-     */
-    private final int n;
     /**
      * The sample mean.
      */
@@ -95,22 +86,20 @@ public class PCA implements LinearProjection, Serializable {
      * The cumulative proportion of variance contained in principal components.
      */
     private final double[] cumulativeProportion;
-    /**
-     * Projection matrix.
-     */
-    private Matrix projection;
 
     /**
      * Constructor.
      * @param mu the mean of samples.
      * @param eigvalues the eigen values of principal components.
      * @param loadings the matrix of variable loadings.
+     * @param projection the projection matrix.
      */
-    public PCA(double[] mu, double[] eigvalues, Matrix loadings) {
+    public PCA(double[] mu, double[] eigvalues, Matrix loadings, Matrix projection) {
+        super(projection);
+
         this.mu = mu;
         this.eigvalues = eigvalues;
         this.eigvectors = loadings;
-        this.n = mu.length;
 
         proportion = eigvalues.clone();
         MathEx.unitize1(proportion);
@@ -121,7 +110,7 @@ public class PCA implements LinearProjection, Serializable {
             cumulativeProportion[i] = cumulativeProportion[i - 1] + proportion[i];
         }
 
-        setProjection(0.95);
+        pmu = projection.mv(mu);
     }
 
     /**
@@ -180,7 +169,8 @@ public class PCA implements LinearProjection, Serializable {
             eigvectors = eigen.Vr;
         }
 
-        return new PCA(mu, eigvalues, eigvectors);
+        Matrix projection = getProjection(eigvalues, eigvectors, 0.95);
+        return new PCA(mu, eigvalues, eigvectors, projection);
     }
 
     /**
@@ -242,7 +232,8 @@ public class PCA implements LinearProjection, Serializable {
             }
         }
 
-        return new PCA(mu, eigen.wr, loadings);
+        Matrix projection = getProjection(eigen.wr, loadings, 0.95);
+        return new PCA(mu, eigen.wr, loadings, projection);
     }
 
     /**
@@ -289,71 +280,92 @@ public class PCA implements LinearProjection, Serializable {
         return cumulativeProportion;
     }
 
-    @Override
-    public Matrix projection() {
-        return projection;
+    /**
+     * Returns the projection matrix with top principal components that contain
+     * (more than) the given percentage of variance.
+     *
+     * @param eigvalues the eigen values of principal components.
+     * @param loadings the matrix of variable loadings.
+     * @param p the required percentage of variance.
+     * @return the projection matrix.
+     */
+    private static Matrix getProjection(double[] eigvalues, Matrix loadings, double p) {
+        if (p <= 0.0 || p > 1.0) {
+            throw new IllegalArgumentException("Invalid percentage of variance: " + p);
+        }
+
+        double[] proportion = eigvalues.clone();
+        MathEx.unitize1(proportion);
+
+        int k = 0;
+        double sum = 0.0;
+        for (; k < proportion.length; k++) {
+            sum += proportion[k];
+            if (sum >= p) {
+                break;
+            }
+        }
+
+        return getProjection(loadings, k+1);
     }
 
     /**
-     * Set the projection matrix with given number of principal components.
-     * @param p choose top p principal components used for projection.
+     * Returns the projection matrix with given number of principal components.
+     *
+     * @param loadings the matrix of variable loadings.
+     * @param p the required percentage of variance.
+     * @return the projection matrix.
      */
-    public void setProjection(int p) {
+    private static Matrix getProjection(Matrix loadings, int p) {
+        int n = loadings.nrow();
         if (p < 1 || p > n) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        this.p = p;
-        projection = new Matrix(p, n);
+        Matrix projection = new Matrix(p, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                projection.set(j, i, eigvectors.get(i, j));
+                projection.set(j, i, loadings.get(i, j));
             }
         }
 
-        pmu = projection.mv(mu);
+        return projection;
     }
 
     /**
-     * Set the projection matrix with top principal components that contain
+     * Returns the projection with given number of principal components.
+     * @param p choose top p principal components used for projection.
+     * @return a new PCA projection.
+     */
+    public PCA getProjection(int p) {
+        Matrix projection = getProjection(eigvectors, p);
+        return new PCA(mu, eigvalues, eigvectors, projection);
+    }
+
+    /**
+     * Returns the projection with top principal components that contain
      * (more than) the given percentage of variance.
      * @param p the required percentage of variance.
+     * @return a new PCA projection.
      */
-    public void setProjection(double p) {
-        if (p <= 0 || p > 1) {
+    public PCA getProjection(double p) {
+        if (p <= 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid percentage of variance: " + p);
         }
 
-        for (int k = 0; k < n; k++) {
+        int k = 0;
+        for (; k < cumulativeProportion.length; k++) {
             if (cumulativeProportion[k] >= p) {
-                setProjection(k + 1);
                 break;
             }
         }
+
+        return getProjection(k);
     }
 
     @Override
-    public double[] project(double[] x) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] y = projection.mv(x);
-        MathEx.sub(y, pmu);
-        return y;
-    }
-
-    @Override
-    public double[][] project(double[][] x) {
-        if (x[0].length != mu.length) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
-        }
-
-        double[][] y = new double[x.length][p];
-        for (int i = 0; i < x.length; i++) {
-            projection.mv(x[i], y[i]);
-            MathEx.sub(y[i], pmu);
-        }
-        return y;
+    public double[] postprocess(double[] x) {
+        MathEx.sub(x, pmu);
+        return x;
     }
 }
