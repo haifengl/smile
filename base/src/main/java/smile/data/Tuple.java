@@ -82,7 +82,9 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the tuple as an array of doubles.
+     * Return an array obtained by converting the fields
+     * to numeric mode. Missing values/nulls will be
+     * encoded as Double.NaN.
      * @param fields the fields to export. If empty, all fields will be used.
      * @return the tuple as an array of doubles.
      */
@@ -91,8 +93,8 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Return an array obtained by converting all the variables
-     * in a tuple to numeric mode. Missing values/nulls will be
+     * Return an array obtained by converting the fields
+     * to numeric mode. Missing values/nulls will be
      * encoded as Double.NaN.
      *
      * @param bias if true, add the first element of 1.

@@ -971,7 +971,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns a new DataFrame with given columns converted to nominal.
      *
      * @param columns column names. If empty, all object columns
-     *             in the data frame will be converted.
+     *                in the data frame will be converted.
      * @return a new DataFrame.
      */
     default DataFrame factorize(String... columns) {
@@ -1006,35 +1006,40 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Return an array obtained by converting all the variables
+     * Return an array obtained by converting the columns
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Missing values/nulls will be
      * encoded as Double.NaN. No bias term and uses level encoding
      * for categorical variables.
+     * @param columns the columns to export. If empty, all columns will be used.
      * @return the numeric array.
      */
-    default double[][] toArray() {
-        return toArray(false, CategoricalEncoder.LEVEL);
+    default double[][] toArray(String... columns) {
+        return toArray(false, CategoricalEncoder.LEVEL, columns);
     }
 
     /**
-     * Return an array obtained by converting all the variables
+     * Return an array obtained by converting the columns
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Missing values/nulls will be
      * encoded as Double.NaN.
      *
      * @param bias if true, add the first column of all 1's.
      * @param encoder the categorical variable encoder.
+     * @param columns the columns to export. If empty, all columns will be used.
      * @return the numeric array.
      */
-    default double[][] toArray(boolean bias, CategoricalEncoder encoder) {
+    default double[][] toArray(boolean bias, CategoricalEncoder encoder, String... columns) {
         int nrow = nrow();
-        int ncol = ncol();
         StructType schema = schema();
+        if (columns.length == 0) {
+            columns = schema.names();
+        }
 
         ArrayList<String> colNames = new ArrayList<>();
         if (bias) colNames.add("Intercept");
-        for (int j = 0; j < ncol; j++) {
+        for (String column : columns) {
+            int j = schema.indexOf(column);
             StructField field = schema.field(j);
 
             Measure measure = field.measure;
@@ -1066,7 +1071,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             }
         }
 
-        for (int col = 0; col < ncol; col++) {
+        for (String column : columns) {
+            int col = schema.indexOf(column);
             StructField field = schema.field(col);
 
             Measure measure = field.measure;
