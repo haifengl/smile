@@ -63,18 +63,20 @@ public class RandomProjection extends LinearProjection {
     /**
      * Constructor.
      * @param projection the projection matrix.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public RandomProjection(Matrix projection) {
-        super(projection);
+    public RandomProjection(Matrix projection, String... columns) {
+        super(projection, "RP", columns);
     }
 
     /**
      * Generates a non-sparse random projection.
      * @param n the dimension of input space.
      * @param p the dimension of feature space.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      * @return the model.
      */
-    public static RandomProjection of(int n, int p) {
+    public static RandomProjection of(int n, int p, String... columns) {
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
         }
@@ -102,16 +104,17 @@ public class RandomProjection extends LinearProjection {
             MathEx.unitize(projection[i]);
         }
 
-        return new RandomProjection(Matrix.of(projection));
+        return new RandomProjection(Matrix.of(projection), columns);
     }
 
     /**
      * Generates a sparse random projection.
      * @param n the dimension of input space.
      * @param p the dimension of feature space.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      * @return the model.
      */
-    public static RandomProjection sparse(int n, int p) {
+    public static RandomProjection sparse(int n, int p, String... columns) {
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
         }
@@ -127,6 +130,6 @@ public class RandomProjection extends LinearProjection {
                 projection.set(i, j, scale * (MathEx.random(prob) - 1));
             }
         }
-        return new RandomProjection(projection);
+        return new RandomProjection(projection, columns);
     }
 }

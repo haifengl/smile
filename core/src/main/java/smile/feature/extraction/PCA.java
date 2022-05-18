@@ -17,6 +17,7 @@
 
 package smile.feature.extraction;
 
+import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
@@ -93,9 +94,10 @@ public class PCA extends LinearProjection {
      * @param eigvalues the eigen values of principal components.
      * @param loadings the matrix of variable loadings.
      * @param projection the projection matrix.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public PCA(double[] mu, double[] eigvalues, Matrix loadings, Matrix projection) {
-        super(projection);
+    public PCA(double[] mu, double[] eigvalues, Matrix loadings, Matrix projection, String... columns) {
+        super(projection, "PCA", columns);
 
         this.mu = mu;
         this.eigvalues = eigvalues;
@@ -116,13 +118,34 @@ public class PCA extends LinearProjection {
     /**
      * Fits principal component analysis with covariance matrix.
      * @param data training data of which each row is a sample.
-     *             If the sample size is larger than the data
-     *             dimension and cor = false, SVD is employed for
-     *             efficiency. Otherwise, eigen decomposition on
-     *             covariance or correlation matrix is performed.
+     * @param columns the columns to fit PCA. If empty, all columns
+     *                will be used.
      * @return the model.
      */
-    public static PCA fit(double[][] data) {
+    public static PCA fit(DataFrame data, String... columns) {
+        double[][] x = data.toArray(columns);
+        return fit(x, columns);
+    }
+
+    /**
+     * Fits principal component analysis with correlation matrix.
+     * @param data training data of which each row is a sample.
+     * @param columns the columns to fit PCA. If empty, all columns
+     *                will be used.
+     * @return the model.
+     */
+    public static PCA cor(DataFrame data, String... columns) {
+        double[][] x = data.toArray(columns);
+        return cor(x, columns);
+    }
+
+    /**
+     * Fits principal component analysis with covariance matrix.
+     * @param data training data of which each row is a sample.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
+     * @return the model.
+     */
+    public static PCA fit(double[][] data, String... columns) {
         int m = data.length;
         int n = data[0].length;
 
@@ -170,19 +193,16 @@ public class PCA extends LinearProjection {
         }
 
         Matrix projection = getProjection(eigvalues, eigvectors, 0.95);
-        return new PCA(mu, eigvalues, eigvectors, projection);
+        return new PCA(mu, eigvalues, eigvectors, projection, columns);
     }
 
     /**
      * Fits principal component analysis with correlation matrix.
      * @param data training data of which each row is a sample.
-     *             If the sample size is larger than the data
-     *             dimension and cor = false, SVD is employed for
-     *             efficiency. Otherwise, eigen decomposition on
-     *             covariance or correlation matrix is performed.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      * @return the model.
      */
-    public static PCA cor(double[][] data) {
+    public static PCA cor(double[][] data, String... columns) {
         int m = data.length;
         int n = data[0].length;
 
@@ -233,7 +253,7 @@ public class PCA extends LinearProjection {
         }
 
         Matrix projection = getProjection(eigen.wr, loadings, 0.95);
-        return new PCA(mu, eigen.wr, loadings, projection);
+        return new PCA(mu, eigen.wr, loadings, projection, columns);
     }
 
     /**
@@ -339,7 +359,7 @@ public class PCA extends LinearProjection {
      */
     public PCA getProjection(int p) {
         Matrix projection = getProjection(eigvectors, p);
-        return new PCA(mu, eigvalues, eigvectors, projection);
+        return new PCA(mu, eigvalues, eigvectors, projection, columns);
     }
 
     /**
@@ -364,7 +384,7 @@ public class PCA extends LinearProjection {
     }
 
     @Override
-    public double[] postprocess(double[] x) {
+    protected double[] postprocess(double[] x) {
         MathEx.sub(x, pmu);
         return x;
     }

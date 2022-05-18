@@ -17,6 +17,8 @@
 
 package smile.feature.extraction;
 
+import smile.data.Tuple;
+import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
@@ -87,9 +89,10 @@ public class GHA extends LinearProjection {
      * @param n the dimension of input space.
      * @param p the dimension of feature space.
      * @param r the learning rate.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public GHA(int n, int p, TimeFunction r) {
-        super(new Matrix(p, n));
+    public GHA(int n, int p, TimeFunction r, String... columns) {
+        super(new Matrix(p, n), "GHA", columns);
 
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
@@ -120,9 +123,10 @@ public class GHA extends LinearProjection {
      *          eigenvectors of covariance matrix, ordered by
      *          decreasing eigenvalues.
      * @param r the learning rate.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public GHA(double[][] w, TimeFunction r) {
-        super(Matrix.of(w));
+    public GHA(double[][] w, TimeFunction r, String... columns) {
+        super(Matrix.of(w), "GHA", columns);
 
         this.p = w.length;
         this.n = w[0].length;
@@ -162,5 +166,33 @@ public class GHA extends LinearProjection {
         projection.mv(x, y);
         projection.tv(y, wy);
         return MathEx.squaredDistance(x, wy);
+    }
+
+    /**
+     * Update the model with a new sample.
+     * @param x the centered learning sample whose E(x) = 0.
+     * @return the approximation error for input sample.
+     */
+    public double update(Tuple x) {
+        return update(x.toArray(columns));
+    }
+
+    /**
+     * Update the model with a set of samples.
+     * @param data the centered learning samples whose E(x) = 0.
+     * @return the approximation error for input sample.
+     */
+    public void update(double[][] data) {
+        for (double[] x : data) {
+            update(x);
+        }
+    }
+
+    /**
+     * Update the model with a new data frame.
+     * @param data the centered learning samples whose E(x) = 0.
+     */
+    public void update(DataFrame data) {
+        update(data.toArray(columns));
     }
 }
