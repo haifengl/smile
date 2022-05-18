@@ -17,6 +17,7 @@
 
 package smile.feature.extraction;
 
+import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
@@ -72,9 +73,10 @@ public class ProbabilisticPCA extends LinearProjection {
      * @param loading the loading matrix.
      * @param projection the projection matrix. Note that this is not
      *                   the matrix W in the latent model.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public ProbabilisticPCA(double noise, double[] mu, Matrix loading, Matrix projection) {
-        super(projection);
+    public ProbabilisticPCA(double noise, double[] mu, Matrix loading, Matrix projection, String... columns) {
+        super(projection, "PPCA", columns);
 
         this.noise = noise;
         this.mu = mu;
@@ -110,7 +112,7 @@ public class ProbabilisticPCA extends LinearProjection {
     }
 
     @Override
-    public double[] postprocess(double[] x) {
+    protected double[] postprocess(double[] x) {
         MathEx.sub(x, pmu);
         return x;
     }
@@ -119,9 +121,22 @@ public class ProbabilisticPCA extends LinearProjection {
      * Fits probabilistic principal component analysis.
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
+     * @param columns the columns to fit PCA. If empty, all columns
+     *                will be used.
      * @return the model.
      */
-    public static ProbabilisticPCA fit(double[][] data, int k) {
+    public static ProbabilisticPCA fit(DataFrame data, int k, String... columns) {
+        double[][] x = data.toArray(columns);
+        return fit(x, k, columns);
+    }
+
+    /**
+     * Fits probabilistic principal component analysis.
+     * @param data training data of which each row is a sample.
+     * @param k the number of principal component to learn.
+     * @return the model.
+     */
+    public static ProbabilisticPCA fit(double[][] data, int k, String... columns) {
         int m = data.length;
         int n = data[0].length;
 
@@ -167,6 +182,6 @@ public class ProbabilisticPCA extends LinearProjection {
         Matrix Mi = chol.inverse();
         Matrix projection = Mi.mt(loading);
 
-        return new ProbabilisticPCA(noise, mu, loading, projection);
+        return new ProbabilisticPCA(noise, mu, loading, projection, columns);
     }
 }

@@ -45,45 +45,36 @@ public class LinearProjection implements Transform {
     /**
      * The fields of input space.
      */
-    public final String[] inputFields;
+    public final String[] columns;
 
     /**
      * Constructor. The dimension reduced data can be obtained
      * by y = W * x.
      * @param projection the projection matrix.
+     * @param prefix the output field name prefix.
+     * @param columns the input fields.
      */
-    public LinearProjection(Matrix projection) {
-        this(projection, "PCA_");
-    }
-
-    /**
-     * Constructor. The dimension reduced data can be obtained
-     * by y = W * x.
-     * @param projection the projection matrix.
-     * @param outputPrefix the output field name prefix.
-     * @param inputFields the input fields.
-     */
-    public LinearProjection(Matrix projection, String outputPrefix, String... inputFields) {
+    public LinearProjection(Matrix projection, String prefix, String... columns) {
         this.projection = projection;
         int p = projection.nrow();
         StructField[] fields = IntStream.range(1, p+1)
-                .mapToObj(i -> new StructField(outputPrefix + i, DataTypes.DoubleType))
+                .mapToObj(i -> new StructField(prefix + i, DataTypes.DoubleType))
                 .toArray(StructField[]::new);
         this.schema = new StructType(fields);
-        this.inputFields = inputFields;
+        this.columns = columns;
     }
 
     @Override
     public Tuple apply(Tuple x) {
-        double[] vector = x.toArray(inputFields);
+        double[] vector = x.toArray(columns);
         double[] y = postprocess(projection.mv(preprocess(vector)));
         return Tuple.of(y, schema);
     }
 
     @Override
     public DataFrame apply(DataFrame data) {
-        double[][] vector = data.toArray(inputFields);
-        double[][] y = project(vector);
+        double[][] vector = data.toArray(columns);
+        double[][] y = apply(vector);
 
         int n = data.size();
         int p = projection.nrow();
@@ -103,7 +94,7 @@ public class LinearProjection implements Transform {
      * @param x the data point.
      * @return the projection in the feature space.
      */
-    public double[] project(double[] x) {
+    public double[] apply(double[] x) {
         return postprocess(projection.mv(preprocess(x)));
     }
 
@@ -112,10 +103,10 @@ public class LinearProjection implements Transform {
      * @param x the data set.
      * @return the projection in the feature space.
      */
-    public double[][] project(double[][] x) {
+    public double[][] apply(double[][] x) {
         double[][] y = new double[x.length][];
         for (int i = 0; i < x.length; i++) {
-            y[i] = project(x[i]);
+            y[i] = apply(x[i]);
         }
         return y;
     }
