@@ -124,7 +124,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.project(USArrests.x);
+        double[][] p = pca.apply(USArrests.x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
@@ -207,7 +207,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.project(USArrests.x);
+        double[][] p = pca.apply(USArrests.x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);

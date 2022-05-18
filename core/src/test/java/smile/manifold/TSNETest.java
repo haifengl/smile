@@ -59,7 +59,7 @@ public class TSNETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         PCA pca = PCA.fit(MNIST.x).getProjection(50);
-        double[][] X = pca.project(MNIST.x);
+        double[][] X = pca.apply(MNIST.x);
 
         long start = System.currentTimeMillis();
         TSNE tsne = new TSNE(X, 2, 20, 200, 550);
