@@ -31,7 +31,7 @@ import smile.math.matrix.Matrix;
  * distance metric. However, when Euclidean distances are used MDS is
  * equivalent to PCA.
  *
- * @see smile.projection.PCA
+ * @see smile.feature.extraction.PCA
  * @see SammonMapping
  * 
  * @author Haifeng Li

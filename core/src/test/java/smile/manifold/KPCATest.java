@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature.extraction;
+package smile.manifold;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -73,7 +73,7 @@ public class KPCATest {
             assertEquals(latent[i], kpca.variances()[i], 1E-3);
         }
 
-        double[][] points = kpca.project(CPU.x);
+        double[][] points = kpca.apply(CPU.x);
         double[][] coord = kpca.coordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {

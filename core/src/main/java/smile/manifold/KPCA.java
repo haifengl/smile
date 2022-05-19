@@ -15,10 +15,11 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature.extraction;
+package smile.manifold;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.function.Function;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.kernel.MercerKernel;
@@ -50,7 +51,7 @@ import smile.math.matrix.Matrix;
  * </ol>
  *
  * @see smile.math.kernel.MercerKernel
- * @see PCA
+ * @see smile.feature.extraction.PCA
  * @see smile.manifold.IsoMap
  * @see smile.manifold.LLE
  * @see smile.manifold.LaplacianEigenmap
@@ -58,15 +59,11 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class KPCA<T> implements Projection<T>, Serializable {
+public class KPCA<T> implements Function<T, double[]>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The dimension of feature space.
-     */
-    private final int p;
-    /**
-     * Learning data.
+     * Training data.
      */
     private final T[] data;
     /**
@@ -112,7 +109,6 @@ public class KPCA<T> implements Projection<T>, Serializable {
         this.coordinates = coordinates;
         this.latent = latent;
         this.projection = projection;
-        this.p = projection.nrow();
     }
 
     /**
@@ -225,7 +221,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
     }
 
     @Override
-    public double[] project(T x) {
+    public double[] apply(T x) {
         int n = data.length;
 
         double[] y = new double[n];
@@ -241,27 +237,17 @@ public class KPCA<T> implements Projection<T>, Serializable {
         return projection.mv(y);
     }
 
-    @Override
-    public double[][] project(T[] x) {
+    /**
+     * Project a set of data to the feature space.
+     * @param x the data set.
+     * @return the projection in the feature space.
+     */
+    public double[][] apply(T[] x) {
         int m = x.length;
-        int n = data.length;
-        double[][] y = new double[m][n];
+        double[][] y = new double[m][];
         for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                y[i][j] = kernel.k(x[i], data[j]);
-            }
-
-            double my = MathEx.mean(y[i]);
-            for (int j = 0; j < n; j++) {
-                y[i][j] = y[i][j] - my - mean[j] + mu;
-            }
-
+            y[i] = apply(x[i]);
         }
-
-        double[][] z = new double[x.length][p];
-        for (int i = 0; i < y.length; i++) {
-            projection.mv(y[i], z[i]);
-        }
-        return z;
+        return y;
     }
 }

@@ -54,7 +54,7 @@ import smile.math.matrix.Matrix;
  * when there are outliers in the data. In other situations, the linearity
  * of PCA may be an obstacle to successful data reduction and compression.
  *
- * @see KPCA
+ * @see KernelPCA
  * @see ProbabilisticPCA
  * @see GHA
  * 
