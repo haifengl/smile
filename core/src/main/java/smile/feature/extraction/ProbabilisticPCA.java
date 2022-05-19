@@ -46,7 +46,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class ProbabilisticPCA extends LinearProjection {
+public class ProbabilisticPCA extends Projection {
     private static final long serialVersionUID = 2L;
 
     /**

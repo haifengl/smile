@@ -52,7 +52,7 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-public class RandomProjection extends LinearProjection {
+public class RandomProjection extends Projection {
     private static final long serialVersionUID = 2L;
 
     /**

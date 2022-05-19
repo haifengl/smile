@@ -34,7 +34,9 @@ import smile.math.kernel.MercerKernel;
 ] *
  * @author Haifeng Li
  */
-public class KernelPCA extends LinearProjection {
+public class KernelPCA extends Projection {
+    private static final long serialVersionUID = 2L;
+
     public final KPCA<double[]> kpca;
 
     /**

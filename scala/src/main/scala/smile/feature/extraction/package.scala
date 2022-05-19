@@ -17,6 +17,7 @@
 
 package smile.feature
 
+import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
 import smile.math.TimeFunction
 import smile.util.time
@@ -125,7 +126,7 @@ package object extraction {
     *             matrix is performed.
     * @param cor true if use correlation matrix instead of covariance matrix if ture.
     */
-  def pca(data: Array[Array[Double]], cor: Boolean = false): PCA = time("PCA") {
+  def pca(data: DataFrame, cor: Boolean = false): PCA = time("PCA") {
     if (cor) PCA.cor(data) else PCA.fit(data)
   }
 
@@ -146,7 +147,7 @@ package object extraction {
     * @param data training data.
     * @param k the number of principal component to learn.
     */
-  def ppca(data: Array[Array[Double]], k: Int): ProbabilisticPCA = time("Probabilistic PCA") {
+  def ppca(data: DataFrame, k: Int): ProbabilisticPCA = time("Probabilistic PCA") {
     ProbabilisticPCA.fit(data, k)
   }
 
@@ -177,8 +178,8 @@ package object extraction {
     * @param threshold only principal components with eigenvalues larger than
     *                  the given threshold will be kept.
     */
-  def kpca[T <: AnyRef](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = time("Kernel PCA") {
-    KPCA.fit(data, kernel, k, threshold)
+  def kpca(data: DataFrame, kernel: MercerKernel[Array[Double]], k: Int, threshold: Double = 0.0001): KernelPCA = time("Kernel PCA") {
+    KernelPCA.fit(data, kernel, k, threshold)
   }
 
   /** Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
