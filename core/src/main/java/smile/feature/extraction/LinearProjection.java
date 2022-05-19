@@ -66,15 +66,13 @@ public class LinearProjection implements Transform {
 
     @Override
     public Tuple apply(Tuple x) {
-        double[] vector = x.toArray(columns);
-        double[] y = postprocess(projection.mv(preprocess(vector)));
+        double[] y = apply(x.toArray(columns));
         return Tuple.of(y, schema);
     }
 
     @Override
     public DataFrame apply(DataFrame data) {
-        double[][] vector = data.toArray(columns);
-        double[][] y = apply(vector);
+        double[][] y = apply(data.toArray(columns));
 
         int n = data.size();
         int p = projection.nrow();
