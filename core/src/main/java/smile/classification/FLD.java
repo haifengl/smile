@@ -61,7 +61,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class FLD extends AbstractClassifier<double[]> implements Projection<double[]> {
+public class FLD extends AbstractClassifier<double[]> /*implements Projection<double[]>*/ {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -323,7 +323,7 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
         return classes.valueOf(y);
     }
 
-    @Override
+    //@Override
     public double[] project(double[] x) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
@@ -334,7 +334,7 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
         return y;
     }
 
-    @Override
+    //@Override
     public double[][] project(double[][] x) {
         double[][] y = new double[x.length][scaling.ncol()];
         

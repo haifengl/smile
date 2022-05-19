@@ -60,7 +60,7 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public class PCA extends LinearProjection {
+public class PCA extends Projection {
     private static final long serialVersionUID = 2L;
 
     /**

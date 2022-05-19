@@ -57,7 +57,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class GHA extends LinearProjection {
+public class GHA extends Projection {
     private static final long serialVersionUID = 2L;
 
     /**

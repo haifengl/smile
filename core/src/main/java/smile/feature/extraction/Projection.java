@@ -36,7 +36,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class LinearProjection implements Transform {
+public class Projection implements Transform {
     /**
      * The projection matrix. The dimension reduced data
      * can be obtained by y = W * x.
@@ -52,13 +52,12 @@ public class LinearProjection implements Transform {
     public final String[] columns;
 
     /**
-     * Constructor. The dimension reduced data can be obtained
-     * by y = W * x.
+     * Constructor.
      * @param projection the projection matrix.
      * @param prefix the output field name prefix.
      * @param columns the input fields.
      */
-    public LinearProjection(Matrix projection, String prefix, String... columns) {
+    public Projection(Matrix projection, String prefix, String... columns) {
         this.projection = projection;
         int p = projection.nrow();
         StructField[] fields = IntStream.range(1, p+1)
