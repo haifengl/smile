@@ -15,30 +15,30 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature.extraction.ica;
+package smile.ica;
 
 import smile.math.DifferentiableFunction;
 
 /**
- * A good general-purpose contrast function for ICA.
+ * The kurtosis of the probability density function of a signal.
+ * Note that kurtosis is very sensitive to outliers.
  *
  * @author Haifeng Li
  */
-public class LogCosh implements DifferentiableFunction {
+public class Kurtosis implements DifferentiableFunction {
 
     @Override
     public double f(double x) {
-        return Math.log(Math.cosh(x));
+        return 0.25 * x * x * x * x;
     }
 
     @Override
     public double g(double x) {
-        return Math.tanh(x);
+        return x * x * x;
     }
 
     @Override
     public double g2(double x) {
-        double tanh = Math.tanh(x);
-        return 1 - tanh * tanh;
+        return 3 * x * x;
     }
 }

@@ -15,16 +15,30 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+package smile.ica;
+
+import smile.math.DifferentiableFunction;
+
 /**
- * The contrast functions in FastICA. Using maximum entropy approximations of
- * differential entropy, FastICA introduce a family of new contrast (objective)
- * functions for ICA. These contrast functions enable both the estimation of
- * the whole decomposition by minimizing mutual information, and estimation
- * of individual independent components as projection pursuit directions.
- * <p>
- * The contrast functions must be a non-quadratic non-linear function
- * that has second-order derivative.
+ * A good general-purpose contrast function for ICA.
  *
  * @author Haifeng Li
  */
-package smile.feature.extraction.ica;
+public class LogCosh implements DifferentiableFunction {
+
+    @Override
+    public double f(double x) {
+        return Math.log(Math.cosh(x));
+    }
+
+    @Override
+    public double g(double x) {
+        return Math.tanh(x);
+    }
+
+    @Override
+    public double g2(double x) {
+        double tanh = Math.tanh(x);
+        return 1 - tanh * tanh;
+    }
+}

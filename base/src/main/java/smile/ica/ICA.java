@@ -15,15 +15,13 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature.extraction;
+package smile.ica;
 
 import java.io.Serializable;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.feature.extraction.ica.Exp;
-import smile.feature.extraction.ica.LogCosh;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
