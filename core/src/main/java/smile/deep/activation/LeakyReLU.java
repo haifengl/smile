@@ -28,10 +28,12 @@ package smile.deep.activation;
 public class LeakyReLU implements ActivationFunction {
     /** Default instance. */
     static LeakyReLU instance = new LeakyReLU(0.01);
-
+    /** The leaky parameter {@code 0 <= a < 1}. */
     private double a;
+
     /**
      * Constructor.
+     * @param a leaky parameter {@code 0 <= a < 1}.
      */
     public LeakyReLU(double a) {
         if (a < 0 || a >= 1.0) {

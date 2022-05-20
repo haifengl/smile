@@ -273,6 +273,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      * Return a cover tree of the data.
      * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
+     * @param <T> the type of keys and values.
+     * @return Cover tree.
      */
     public static <T> CoverTree<T, T> of(T[] data, Metric<T> distance) {
         return new CoverTree<>(data, data, distance);
@@ -283,6 +285,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      * @param base the base of the expansion constant.
+     * @param <T> the type of keys and values.
+     * @return Cover tree.
      */
     public static <T> CoverTree<T, T> of(T[] data, Metric<T> distance, double base) {
         return new CoverTree<>(data, data, distance, base);
@@ -292,6 +296,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      * Return a cover tree of the data.
      * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
+     * @param <T> the type of keys and values.
+     * @return Cover tree.
      */
     public static <T> CoverTree<T, T> of(List<T> data, Metric<T> distance) {
         return new CoverTree<>(data, data, distance);
@@ -302,6 +308,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      * @param data the data objects, which are also used as key.
      * @param distance a metric distance measure for nearest neighbor search.
      * @param base the base of the expansion constant.
+     * @param <T> the type of keys and values.
+     * @return Cover tree.
      */
     public static <T> CoverTree<T, T> of(List<T> data, Metric<T> distance, double base) {
         return new CoverTree<>(data, data, distance, base);

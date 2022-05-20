@@ -180,7 +180,6 @@ public class GHA extends Projection {
     /**
      * Update the model with a set of samples.
      * @param data the centered learning samples whose E(x) = 0.
-     * @return the approximation error for input sample.
      */
     public void update(double[][] data) {
         for (double[] x : data) {

@@ -37,6 +37,7 @@ public interface Write {
      * The temporary file will be deleted when the VM exits.
      * @param o the object to serialize.
      * @return the path of temporary file.
+     * @throws IOException when fails to write the stream.
      */
     static Path object(Serializable o) throws IOException {
         Path temp = Files.createTempFile("smile-test-", ".tmp");
@@ -49,6 +50,7 @@ public interface Write {
      * Writes a serializable object to a file.
      * @param o the object to serialize.
      * @param path the file path.
+     * @throws IOException when fails to write the stream.
      */
     static void object(Serializable o, Path path) throws IOException {
         OutputStream file = Files.newOutputStream(path);
