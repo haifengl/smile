@@ -134,6 +134,7 @@ public class ProbabilisticPCA extends Projection {
      * Fits probabilistic principal component analysis.
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
+     * @param columns the columns to transform when applied on Tuple/DataFrame.
      * @return the model.
      */
     public static ProbabilisticPCA fit(double[][] data, int k, String... columns) {

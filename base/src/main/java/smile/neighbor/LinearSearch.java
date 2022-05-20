@@ -120,6 +120,8 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
      * Return linear nearest neighbor search.
      * @param data the data objects, which are also used as key.
      * @param distance the distance function.
+     * @param <T> the type of keys and values.
+     * @return Linear nearest neighbor search.
      */
     public static <T> LinearSearch<T, T> of(T[] data, Distance<T> distance) {
         return new LinearSearch<>(data, data, distance);
@@ -129,6 +131,8 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
      * Return linear nearest neighbor search.
      * @param data the data objects, which are also used as key.
      * @param distance the distance function.
+     * @param <T> the type of keys and values.
+     * @return Linear nearest neighbor search.
      */
     public static <T> LinearSearch<T, T> of(List<T> data, Distance<T> distance) {
         return new LinearSearch<>(data, data, distance);

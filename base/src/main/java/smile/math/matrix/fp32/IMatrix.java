@@ -731,9 +731,9 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * The square matrix of A' * A or A * A', whichever is smaller.
-     * For SVD, we compute eigenvalue decomposition of A' * A
-     * when m >= n, or that of A * A' when m < n.
+     * The square matrix of {@code A' * A} or {@code A * A'}, whichever is smaller.
+     * For SVD, we compute eigenvalue decomposition of {@code A' * A}
+     * when {@code m >= n}, or that of {@code A * A'} when {@code m < n}.
      */
     static class Square extends IMatrix {
         /**
@@ -813,13 +813,17 @@ public abstract class IMatrix implements Cloneable, Serializable {
     }
 
     /**
-     * Returns the matrix of A' * A or A * A', whichever is smaller.
-     * For SVD, we compute eigenvalue decomposition of A' * A
-     * when m >= n, or that of A * A' when m < n.
+     * Returns the square matrix of {@code A' * A} or {@code A * A'},
+     * whichever is smaller. For SVD, we compute eigenvalue decomposition
+     * of {@code A' * A} when {@code m >= n}, or that of {@code A * A'}
+     * when {@code m < n}.
+     *
+     * @return the matrix of {@code A' * A} or {@code A * A'}, whichever is smaller.
      */
     public IMatrix square() {
         return new IMatrix.Square(this);
     }
+
     /**
      * The preconditioner matrix. A preconditioner P of a matrix A is a matrix
      * such that P<sup>-1</sup>A has a smaller condition number than A.

@@ -37,6 +37,9 @@ import smile.math.kernel.MercerKernel;
 public class KernelPCA extends Projection {
     private static final long serialVersionUID = 2L;
 
+    /**
+     * Kernel PCA.
+     */
     public final KPCA<double[]> kpca;
 
     /**

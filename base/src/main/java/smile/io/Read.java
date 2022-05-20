@@ -47,6 +47,8 @@ public interface Read {
      * Reads a serialized object from a file.
      * @param path the file path.
      * @return the serialized object.
+     * @throws IOException when fails to read the stream.
+     * @throws ClassNotFoundException when fails to load the class.
      */
     static Object object(Path path) throws IOException, ClassNotFoundException {
         InputStream file = Files.newInputStream(path);

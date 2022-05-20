@@ -1659,7 +1659,7 @@ public class BigMatrix extends IMatrix {
      * Returns {@code A * D * B}, where D is a diagonal matrix.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
-     * @param B the operand.
+     * @param A the operand.
      * @param D the diagonal matrix.
      * @param transB normal, transpose, or conjugate transpose
      *               operation on the matrix B.

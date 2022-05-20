@@ -178,6 +178,8 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
      * @param distance the metric used to build BK-tree. Note that the metric
      * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
      * distance, Jaccard distance, and taxonomic distance, etc.
+     * @param <T> the type of keys and values.
+     * @return BK-tree.
      */
     public static <T> BKTree<T, T> of(T[] data, Metric<T> distance) {
         BKTree<T, T> tree = new BKTree<>(distance);
@@ -193,6 +195,8 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
      * @param distance the metric used to build BK-tree. Note that the metric
      * must be a discrete distance, e.g. edit distance, Hamming distance, Lee
      * distance, Jaccard distance, and taxonomic distance, etc.
+     * @param <T> the type of keys and values.
+     * @return BK-tree.
      */
     public static <T> BKTree<T, T> of(List<T> data, Metric<T> distance) {
         BKTree<T, T> tree = new BKTree<>(distance);

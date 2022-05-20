@@ -139,6 +139,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
     /**
      * Return a KD-tree of the data.
      * @param data the data objects, which are also used as key.
+     * @return KD-tree.
      */
     public static KDTree<double[]> of(double[][] data) {
         return new KDTree<>(data, data);
