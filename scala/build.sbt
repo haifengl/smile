@@ -9,6 +9,6 @@ Compile / doc / scalacOptions ++= Seq(
 Compile / doc / target := baseDirectory.value / "../doc/api/scala"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang.modules" %% "scala-xml" % "2.0.1",
+  "org.scala-lang.modules" %% "scala-xml" % "2.1.0",
   "com.thoughtworks.xstream" % "xstream" % "1.4.19"
 )
