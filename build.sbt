@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   // skip javadoc and scaladoc for publishLocal
   Compile / packageDoc / publishArtifact := false,
   // always set scala version including Java only modules
-  scalaVersion := "2.13.8",
+  scalaVersion := "2.13.10",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -65,8 +65,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "1.7.36",
-    "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.3",
+    "org.slf4j" % "slf4j-simple" % "2.0.3" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
@@ -107,9 +107,9 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-implicits"
   ),
   libraryDependencies ++= Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-    "org.slf4j" % "slf4j-simple" % "1.7.36" % Test,
-    "org.specs2" %% "specs2-core" % "4.14.1" % Test
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+    "org.slf4j" % "slf4j-simple" % "2.0.3" % Test,
+    "org.specs2" %% "specs2-core" % "4.17.0" % Test
   ),
 )
 
