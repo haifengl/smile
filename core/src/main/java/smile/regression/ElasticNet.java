@@ -46,7 +46,7 @@ import smile.math.matrix.Matrix;
  */
 public class ElasticNet {
     /**
-     * Fit an Elastic Net model.
+     * Fits an Elastic Net model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -63,7 +63,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
      * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
@@ -83,7 +83,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
      * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
@@ -122,8 +122,14 @@ public class ElasticNet {
         double[] scale = X.colSds();
 
         // Pads 0 at the tail
-        double[] y2 = new double[y.length + p];
-        System.arraycopy(y, 0, y2, 0, y.length);
+        double[] y2 = new double[n + p];
+
+        // Center y2 before calling LASSO.
+        // Otherwise, padding zeros become negative when LASSO centers y2 again.
+        double ym = MathEx.mean(y);
+        for (int i = 0; i < n; i++) {
+            y2[i] = y[i] - ym;
+        }
 
         // Scales the original data array and pads a weighted identity matrix
         Matrix X2 = new Matrix(X.nrow()+ p, p);
@@ -141,7 +147,7 @@ public class ElasticNet {
             w[i] = c * w[i] / scale[i];
         }
 
-        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        double b = ym - MathEx.dot(w, center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }
