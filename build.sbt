@@ -70,6 +70,11 @@ lazy val javaSettings = commonSettings ++ Seq(
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
+  Test / run / javaOptions ++= Seq(
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+  ),
   Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 )
 
