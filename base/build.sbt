@@ -3,13 +3,13 @@ name := "smile-base"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
 libraryDependencies ++= Seq(
-  "org.bytedeco" % "javacpp"   % "1.5.7"        % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.19-1.5.7" % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.7"  % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  "org.bytedeco" % "javacpp"   % "1.5.8"        % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
 )
 
 libraryDependencies ++= {
-  val arrowV = "9.0.0"
+  val arrowV = "10.0.0"
   Seq(
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
@@ -19,6 +19,6 @@ libraryDependencies ++= {
     "org.apache.avro" % "avro" % "1.8.2" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
     "org.apache.commons" % "commons-csv" % "1.9.0",
-    "org.xerial" % "sqlite-jdbc" % "3.39.3.0" % Test
+    "org.xerial" % "sqlite-jdbc" % "3.39.4.1" % Test
   )
 }

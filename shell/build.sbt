@@ -66,13 +66,13 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "4.1.0",
   "org.scala-lang" % "scala-compiler" % "2.13.10",
-  "org.slf4j" % "slf4j-simple" % "2.0.3",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.20",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.20",
-  "com.typesafe.akka" %% "akka-http" % "10.2.10",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.10",
-  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "4.0.0",
-  "org.bytedeco" % "javacpp"   % "1.5.7"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.19-1.5.7" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.7"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  "org.slf4j" % "slf4j-simple" % "2.0.4",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.7.0",
+  "com.typesafe.akka" %% "akka-stream" % "2.7.0",
+  "com.typesafe.akka" %% "akka-http" % "10.4.0",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.4.0",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "5.0.0",
+  "org.bytedeco" % "javacpp"   % "1.5.8"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
 )
