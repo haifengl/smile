@@ -65,8 +65,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.3",
-    "org.slf4j" % "slf4j-simple" % "2.0.3" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.4",
+    "org.slf4j" % "slf4j-simple" % "2.0.4" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
@@ -100,7 +100,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-target:jvm-1.8"
+    "-release:8"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
@@ -108,8 +108,8 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.3" % Test,
-    "org.specs2" %% "specs2-core" % "4.17.0" % Test
+    "org.slf4j" % "slf4j-simple" % "2.0.4" % Test,
+    "org.specs2" %% "specs2-core" % "4.19.0" % Test
   ),
 )
 
