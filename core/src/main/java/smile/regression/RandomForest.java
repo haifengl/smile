@@ -30,7 +30,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.feature.TreeSHAP;
+import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.validation.RegressionMetrics;
 import smile.validation.metric.*;

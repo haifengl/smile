@@ -24,7 +24,7 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.feature.SHAP;
+import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 

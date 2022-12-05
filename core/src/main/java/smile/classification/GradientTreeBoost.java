@@ -29,7 +29,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.feature.SHAP;
+import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.IntSet;

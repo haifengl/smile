@@ -27,7 +27,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.feature.TreeSHAP;
+import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.Strings;
 
