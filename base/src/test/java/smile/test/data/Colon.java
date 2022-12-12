@@ -17,12 +17,9 @@
 
 package smile.test.data;
 
-import smile.data.formula.Formula;
-import smile.io.Read;
-import smile.util.Paths;
-
 import java.io.BufferedReader;
 import java.util.Arrays;
+import smile.util.Paths;
 
 /**
  *
