@@ -49,12 +49,9 @@ public class FTestTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of test method, of class FTest.
-     */
     @Test
-    public void testTest() {
-        System.out.println("test");
+    public void test() {
+        System.out.println("F-test");
         double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
             1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
             2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
@@ -81,4 +78,17 @@ public class FTestTest {
         assertEquals(0.1438, result.pvalue, 1E-4);
     }
 
+    @Test
+    public void testANOVA() {
+        System.out.println("ANOVA");
+
+        int[] x = {1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3};
+        double[] y = {6, 8, 4, 5, 3, 4, 8, 12, 9, 11, 6, 8, 13, 9, 11, 8, 7, 12};
+
+        FTest result = FTest.test(x, y);
+        assertEquals(2, result.df1, 1E-10);
+        assertEquals(15, result.df2, 1E-10);
+        assertEquals(9.2647, result.f, 1E-4);
+        assertEquals(0.002399, result.pvalue, 1E-6);
+    }
 }
