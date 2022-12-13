@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
@@ -81,7 +82,11 @@ public class ColumnTransform implements Transform {
             Function transform = transforms.get(field.name);
             if (transform != null) {
                 DoubleStream stream = data.stream().mapToDouble(t -> transform.apply(t.getDouble(i)));
-                vectors[i] = DoubleVector.of(field, stream);
+                if (field.measure == null || field.measure instanceof NumericalMeasure) {
+                    vectors[i] = DoubleVector.of(field, stream);
+                } else {
+                    vectors[i] = DoubleVector.of(field.name, stream);
+                }
             } else {
                 vectors[i] = data.column(i);
             }
