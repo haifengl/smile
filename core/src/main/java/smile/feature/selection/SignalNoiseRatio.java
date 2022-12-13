@@ -42,7 +42,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class SignalNoiseRatio {
+public class SignalNoiseRatio implements Comparable<SignalNoiseRatio> {
     /** The feature name. */
     public final String feature;
     /** Signal noise ratio. */
@@ -56,6 +56,11 @@ public class SignalNoiseRatio {
     public SignalNoiseRatio(String feature, double s2n) {
         this.feature = feature;
         this.s2n = s2n;
+    }
+
+    @Override
+    public int compareTo(SignalNoiseRatio other) {
+        return Double.compare(s2n, other.s2n);
     }
 
     @Override

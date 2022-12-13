@@ -33,7 +33,7 @@ import smile.validation.metric.*;
  * subsets of variables of expected classification power using a Genetic
  * Algorithm. The "fitness" of each subset of variables is determined by its
  * ability to classify the samples according to a given classification
- * method. When many such subsets of variables are obtained, the one with best
+ * method. When many such subsets of variables are obtained, the one with the best
  * performance may be used as selected features. Alternatively, the frequencies
  * with which variables are selected may be analyzed further. The most
  * frequently selected variables may be presumed to be the most relevant to
