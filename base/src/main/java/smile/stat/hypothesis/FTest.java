@@ -17,8 +17,10 @@
 
 package smile.stat.hypothesis;
 
+import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.special.Beta;
+import smile.util.IntSet;
 
 /**
  * F test of the hypothesis that two independent samples come from normal
@@ -50,7 +52,7 @@ public class FTest {
      * Constructor.
      * @param f the F-statistic.
      * @param df1 the first degree of freedom of F-statistic.
-     * @param df2 the scoend degree of freedom of F-statistic.
+     * @param df2 the second degree of freedom of F-statistic.
      * @param pvalue the p-value.
      */
     public FTest(double f, int df1, int df2, double pvalue) {
@@ -101,5 +103,60 @@ public class FTest {
         }
 
         return new FTest(f, df1, df2, p);
+    }
+
+    /**
+     * One-way analysis of variance (ANOVA) between a categorical independent
+     * variable (with two or more categories) and a normally distributed
+     * interval dependent variable to test for differences in the means of
+     * the dependent variable broken down by the levels of the independent
+     * variable. Treat the variances in the samples as equal.
+     *
+     * @param x the categorical independent variable.
+     * @param y the normally distributed interval dependent variable.
+     * @return the test results.
+     */
+    public static FTest test(int[] x, double[] y) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("Input vectors have different size");
+        }
+
+        int[] labels = MathEx.unique(x);
+        int k = labels.length;
+
+        if (k < 2) {
+            throw new IllegalArgumentException("Categorical variable should have two or more levels.");
+        }
+
+        Arrays.sort(labels);
+        IntSet encoder = new IntSet(labels);
+        int[] clazz = Arrays.stream(x).map(encoder::indexOf).toArray();
+
+        double ybar = MathEx.mean(y);
+        double[] mu = new double[k];
+
+        int n = x.length;
+        int[] ni = new int[k];
+        double sst = 0.0;
+        for (int i = 0; i < n; i++) {
+            mu[clazz[i]] += y[i];
+            ni[clazz[i]]++;
+            sst += (y[i] - ybar) * (y[i] - ybar);
+        }
+
+        double ssb = 0.0;
+        for (int i = 0; i < k; i++) {
+            mu[i] /= ni[i];
+            ssb += ni[i] * (mu[i] - ybar) * (mu[i] - ybar);
+        }
+
+        double ssw = sst - ssb;
+
+        int dfb = k - 1;
+        int dfw = n - k;
+        double f = (ssb / dfb) / (ssw / dfw);
+
+        double p = Beta.regularizedIncompleteBetaFunction(0.5 * dfw, 0.5 * dfb, dfw / (dfw + dfb * f));
+        return new FTest(f, dfb, dfw, p);
     }
 }

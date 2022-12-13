@@ -130,7 +130,7 @@ public class CorTest {
 
     /**
      * Given a sorted array, replaces the elements by their rank, including
-     * midranking of ties, and returns the sum of f<sup>3</sup>-f, where
+     * mid-ranking of ties, and returns the sum of f<sup>3</sup>-f, where
      * f is the number of elements in each tie.
      */
     private static double crank(double[] w) {
@@ -168,7 +168,7 @@ public class CorTest {
     /**
      * Spearman rank correlation coefficient test. The Spearman Rank Correlation
      * Coefficient is a form of the Pearson coefficient with the data converted
-     * to rankings (ie. when variables are ordinal). It can be used when there
+     * to rankings (i.e. when variables are ordinal). It can be used when there
      * is non-parametric data and hence Pearson cannot be used.
      * <p>
      * The raw scores are converted to ranks and the differences between
