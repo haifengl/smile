@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import smile.data.transform.ColumnTransform;
 import smile.test.data.BreastCancer;
 import smile.test.data.Default;
 import smile.test.data.Weather;
@@ -56,42 +58,45 @@ public class InformationValueTest {
     public void testDefault() {
         System.out.println("Default");
 
-        InformationValue model = InformationValue.fit(Default.formula, Default.data);
-        System.out.println(model);
+        InformationValue[] iv = InformationValue.fit(Default.data, "default");
+        System.out.println(InformationValue.toString(iv));
 
-        double[] iv = model.iv();
         assertEquals(3, iv.length);
-        assertEquals(0.0364, iv[0], 1E-4);
-        assertEquals(4.2638, iv[1], 1E-4);
-        assertEquals(0.0664, iv[2], 1E-4);
+        assertEquals(0.0364, iv[0].iv, 1E-4);
+        assertEquals(4.2638, iv[1].iv, 1E-4);
+        assertEquals(0.0664, iv[2].iv, 1E-4);
+
+        ColumnTransform transform = InformationValue.toTransform(iv);
+        System.out.println(transform.apply(Default.data));
     }
 
     @Test
     public void testBreastCancer() {
         System.out.println("BreastCancer");
 
-        InformationValue model = InformationValue.fit(BreastCancer.formula, BreastCancer.data);
-        System.out.println(model);
+        InformationValue[] iv = InformationValue.fit(BreastCancer.data, "diagnosis");
+        System.out.println(InformationValue.toString(iv));
 
-        double[] iv = model.iv();
         assertEquals(30, iv.length);
-        assertEquals(0.2425, iv[ 9], 1E-4);
-        assertEquals(0.1002, iv[11], 1E-4);
-        assertEquals(0.0817, iv[14], 1E-4);
+        assertEquals(0.2425, iv[ 9].iv, 1E-4);
+        assertEquals(0.1002, iv[11].iv, 1E-4);
+        assertEquals(0.0817, iv[14].iv, 1E-4);
     }
 
     @Test
     public void testWeather() {
         System.out.println("Weather");
 
-        InformationValue model = InformationValue.fit(Weather.formula, Weather.data);
-        System.out.println(model);
+        InformationValue[] iv = InformationValue.fit(Weather.data, "play");
+        System.out.println(InformationValue.toString(iv));
 
-        double[] iv = model.iv();
         assertEquals(4, iv.length);
-        assertEquals(0.9012, iv[0], 1E-4);
-        assertEquals(0.6291, iv[1], 1E-4);
-        assertEquals(0.6291, iv[2], 1E-4);
-        assertEquals(0.2930, iv[3], 1E-4);
+        assertEquals(0.9012, iv[0].iv, 1E-4);
+        assertEquals(0.6291, iv[1].iv, 1E-4);
+        assertEquals(0.6291, iv[2].iv, 1E-4);
+        assertEquals(0.2930, iv[3].iv, 1E-4);
+
+        ColumnTransform transform = InformationValue.toTransform(iv);
+        System.out.println(transform.apply(Weather.data));
     }
 }
