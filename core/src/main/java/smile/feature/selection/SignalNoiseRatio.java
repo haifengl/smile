@@ -17,7 +17,13 @@
 
 package smile.feature.selection;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import smile.classification.ClassLabels;
+import smile.data.DataFrame;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 
 /**
@@ -36,64 +42,81 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class SignalNoiseRatio implements FeatureRanking {
+public class SignalNoiseRatio {
+    /** The feature name. */
+    public final String feature;
+    /** Signal noise ratio. */
+    public final double s2n;
+
+    /**
+     * Constructor.
+     * @param feature The feature name.
+     * @param s2n Signal noise ratio.
+     */
+    public SignalNoiseRatio(String feature, double s2n) {
+        this.feature = feature;
+        this.s2n = s2n;
+    }
+
     @Override
-    public double[] rank(double[][] x, int[] y) {
-        return of(x, y);
+    public String toString() {
+        return String.format("SignalNoiseRatio(%s, %.4f)", feature, s2n);
     }
 
     /**
-     * Univariate feature ranking. Note that this method actually does NOT rank
-     * the features. It just returns the metric values of each feature. The
-     * use can then rank and select features.
+     * Calculates the signal noise ratio of numeric variables.
      *
-     * @param x a n-by-p matrix of n instances with p features.
-     * @param y class labels.
-     * @return the signal noise ratio for each feature.
+     * @param data the data frame of the explanatory and response variables.
+     * @param clazz the column name of binary class labels.
+     * @return the signal noise ratio.
      */
-    public static double[] of(double[][] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
+    public static SignalNoiseRatio[] fit(DataFrame data, String clazz) {
+        BaseVector<?, ?, ?> y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
-        y = codec.y;
 
         if (codec.k != 2) {
-            throw new IllegalArgumentException("SignalNoiseRatio is applicable only to binary class.");
+            throw new UnsupportedOperationException("Signal Noise Ratio is applicable only to binary classification");
         }
 
+        int n = data.nrow();
         int n1 = 0;
-        for (int yi : y) {
+        for (int yi : codec.y) {
             if (yi == 0) {
                 n1++;
-            } else if (yi != 1) {
-                throw new IllegalArgumentException("Invalid class label: " + yi);
             }
         }
 
-        int n = x.length;
         int n2 = n - n1;
-        double[][] x1 = new double[n1][];
-        double[][] x2 = new double[n2][];
-        for (int i = 0, j = 0, k = 0; i < n; i++) {
-            if (y[i] == 0) {
-                x1[j++] = x[i];
+        double[] x1 = new double[n1];
+        double[] x2 = new double[n2];
+
+        StructType schema = data.schema();
+
+        return IntStream.range(0, schema.length()).mapToObj(i -> {
+            StructField field = schema.field(i);
+            if (field.isNumeric()) {
+                Arrays.fill(x1, 0.0);
+                Arrays.fill(x2, 0.0);
+                BaseVector<?, ?, ?> xi = data.column(i);
+
+                for (int l = 0, j = 0, k = 0; l < n; l++) {
+                    if (codec.y[l] == 0) {
+                        x1[j++] = xi.getDouble(l);
+                    } else {
+                        x2[k++] = xi.getDouble(l);
+                    }
+                }
+
+                double mu1 = MathEx.mean(x1);
+                double mu2 = MathEx.mean(x2);
+                double sd1 = MathEx.sd(x1);
+                double sd2 = MathEx.sd(x2);
+
+                double s2n = Math.abs(mu1 - mu2) / (sd1 + sd2);
+                return new SignalNoiseRatio(field.name, s2n);
             } else {
-                x2[k++] = x[i];
+                return null;
             }
-        }
-
-        double[] mu1 = MathEx.colMeans(x1);
-        double[] mu2 = MathEx.colMeans(x2);
-        double[] sd1 = MathEx.colSds(x1);
-        double[] sd2 = MathEx.colSds(x2);
-
-        int p = mu1.length;
-        double[] s2n = new double[p];
-        for (int i = 0; i < p; i++) {
-            s2n[i] = Math.abs(mu1[i] - mu2[i]) / (sd1[i] + sd2[i]);
-        }
-        return s2n;
+        }).filter(s2n -> s2n != null && !s2n.feature.equals(clazz)).toArray(SignalNoiseRatio[]::new);
     }
 }
