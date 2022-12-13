@@ -85,7 +85,7 @@ import smile.sort.QuickSort;
  *
  * @author Haifeng Li
  */
-public class InformationValue {
+public class InformationValue implements Comparable<InformationValue> {
     /** The feature name. */
     public final String feature;
     /** Information value. */
@@ -107,6 +107,16 @@ public class InformationValue {
         this.iv = iv;
         this.woe = woe;
         this.breaks = breaks;
+    }
+
+    @Override
+    public int compareTo(InformationValue other) {
+        return Double.compare(iv, other.iv);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("InformationValue(%s, %.4f)", feature, iv);
     }
 
     /**
