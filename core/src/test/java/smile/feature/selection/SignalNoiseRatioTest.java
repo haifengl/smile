@@ -23,6 +23,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import smile.data.DataFrame;
+import smile.data.vector.IntVector;
+import smile.test.data.BreastCancer;
+import smile.test.data.Default;
 import smile.test.data.Iris;
 
 /**
@@ -51,20 +55,42 @@ public class SignalNoiseRatioTest {
     }
 
     @Test
-    public void test() {
-        System.out.println("SignalNoiseRatio");
+    public void testIris() {
+        System.out.println("Iris");
+
         int[] y = new int[Iris.data.size()];
-            
         for (int i = 0; i < y.length; i++) {
             if (Iris.y[i] < 2) y[i] = 0;
             else y[i] = 1;
         }
 
-        double[] ratio = SignalNoiseRatio.of(Iris.x, y);
-        assertEquals(4, ratio.length);
-        assertEquals(0.8743107, ratio[0], 1E-7);
-        assertEquals(0.1502717, ratio[1], 1E-7);
-        assertEquals(1.3446912, ratio[2], 1E-7);
-        assertEquals(1.4757334, ratio[3], 1E-7);
+        DataFrame data = Iris.data.drop("class").merge(IntVector.of("y", y));
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(data, "y");
+        assertEquals(4, s2n.length);
+        assertEquals(0.8743107, s2n[0].s2n, 1E-7);
+        assertEquals(0.1502717, s2n[1].s2n, 1E-7);
+        assertEquals(1.3446912, s2n[2].s2n, 1E-7);
+        assertEquals(1.4757334, s2n[3].s2n, 1E-7);
+    }
+
+    @Test
+    public void testDefault() {
+        System.out.println("Default");
+
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(Default.data, "default");
+        assertEquals(2, s2n.length);
+        assertEquals(1.1832, s2n[0].s2n, 1E-4);
+        assertEquals(0.0545, s2n[1].s2n, 1E-4);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("BreastCancer");
+
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(BreastCancer.data, "diagnosis");
+        assertEquals(30, s2n.length);
+        assertEquals(1.0666, s2n[0].s2n, 1E-4);
+        assertEquals(0.4746, s2n[1].s2n, 1E-4);
+        assertEquals(1.1078, s2n[2].s2n, 1E-4);
     }
 }
