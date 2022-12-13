@@ -1,21 +1,44 @@
+/*
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package smile.feature.selection;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import smile.classification.ClassLabels;
 import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.data.measure.NominalScale;
+import smile.data.transform.ColumnTransform;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
+import smile.math.Function;
 import smile.sort.QuickSort;
 
 /**
  * Information Value (IV) measures the predictive strength of a feature
  * for a binary dependent variable. IV is essentially a weighted
- * sum of all the individual WoE values, where the weights incorporate the
- * absolute difference between the numerator and the denominator (WoE captures
- * the relative difference).Note that the weight follows the same sign as WoE
- * hence ensuring that the IV is always a positive number.
+ * sum of all the individual Weight of Evidence (WoE) values, where the
+ * weights incorporate the absolute difference between the numerator and
+ * the denominator (WoE captures the relative difference). Note that the
+ * weight follows the same sign as WoE hence ensuring that the IV is always
+ * a positive number.
  * <p>
  * IV is a good measure of the predictive power of a feature. It also helps
  * point out the suspicious feature. Unlike other feature selection methods
@@ -32,45 +55,66 @@ import smile.sort.QuickSort;
  *     <tr><td>&gt;0.5</td><td>Suspicious</td></tr>
  * </table>
  *
- * @see smile.feature.extraction.WoE
+ * Weight of Evidence (WoE) measures the predictive power of every
+ * bin/category of a feature for a binary dependent variable.
+ * WoE is calculated as
+ * <pre>
+ * WoE = ln (percentage of events / percentage of non-events).
+ * </pre>
+ * Note that the conditional log odds is exactly what a logistic
+ * regression model tries to predict.
+ * <p>
+ * WoE values of a categorical variable can be used to convert
+ * a categorical feature to a numerical feature. If a continuous
+ * feature does not have a linear relationship with the log odds,
+ * the feature can be binned into groups and a new feature created
+ * by replaced each bin with its WoE value. Therefore, WoE is a good
+ * variable transformation method for logistic regression.
+ * <p>
+ * On arranging a numerical feature in ascending order, if the WoE
+ * values are all linear, we know that the feature has the right
+ * linear relation with the target. However, if the feature’s WoE
+ * is non-linear, we should either discard it or consider some other
+ * variable transformation to ensure the linearity. Hence, WoE helps
+ * check the linear relationship of a feature with its dependent variable
+ * to be used in the model. Though WoE and IV are highly useful,
+ * always ensure that it is only used with logistic regression.
+ * <p>
+ * WoE is better than on-hot encoding as it does not increase the
+ * complexity of the model.
  *
  * @author Haifeng Li
  */
 public class InformationValue {
-    /** The predictors. */
-    private final String[] predictors;
+    /** The feature name. */
+    public final String feature;
     /** Information value. */
-    private final double[] iv;
+    public final double iv;
     /** Weight of evidence. */
-    private final double[][] woe;
-    /** Boundary of intervals for numerical variables. */
-    private final double[][] bins;
+    public final double[] woe;
+    /** Breakpoints of intervals for numerical variables. */
+    public final double[] breaks;
 
     /**
      * Constructor.
-     * @param predictors The predictors.
+     * @param feature The feature name.
      * @param iv Information value.
      * @param woe Weight of evidence.
-     * @param bins Boundary of intervals for numerical variables.
+     * @param breaks Breakpoints of intervals for numerical variables.
      */
-    public InformationValue(String[] predictors, double[] iv, double[][] woe, double[][] bins) {
-        this.predictors = predictors;
+    public InformationValue(String feature, double iv, double[] woe, double[] breaks) {
+        this.feature = feature;
         this.iv = iv;
         this.woe = woe;
-        this.bins = bins;
+        this.breaks = breaks;
     }
 
-    /** Returns the information value. */
-    public double[] iv() {
-        return iv;
-    }
-
-    /** Returns the weight of evidence. */
-    public double[][] woe() {
-        return woe;
-    }
-
-    private String significance(double iv) {
+    /**
+     * Returns the code of predictive power of information value.
+     * @param iv information value
+     * @return the code of predictive power
+     */
+    private static String predictivePower(double iv) {
         if (Double.isNaN(iv)) return "";
         if (iv < 0.02) return "Not useful";
         else if (iv <= 0.1) return "Weak";
@@ -79,71 +123,104 @@ public class InformationValue {
         else return "Suspicious";
     }
 
-    @Override
-    public String toString() {
+    /**
+     * Returns a string representation of the array of information values.
+     * @param iv the array of information values.
+     * @return a string representation of information values
+     */
+    public static String toString(InformationValue[] iv) {
         StringBuilder builder = new StringBuilder();
 
-        builder.append("                          Information Value    Predictive Power\n");
+        builder.append("Feature                   Information Value    Predictive Power\n");
         for (int i = 0; i < iv.length; i++) {
-            builder.append(String.format("%-25s %17.4f    %16s%n", predictors[i], iv[i], significance(iv[i])));
+            builder.append(String.format("%-25s %17.4f    %16s%n", iv[i].feature, iv[i].iv, predictivePower(iv[i].iv)));
         }
 
         return builder.toString();
     }
 
     /**
-     * Calculates the information value.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the information value.
+     * Returns the data transformation that covert feature value to its weight of evidence.
+     * @return the transform.
      */
-    public static InformationValue fit(Formula formula, DataFrame data) {
-        return fit(formula, data, 10);
+    public static ColumnTransform toTransform(InformationValue[] values) {
+        Map<String, Function> transforms = new HashMap<>();
+        for (InformationValue iv : values) {
+            Function transform = new Function() {
+                @Override
+                public double f(double x) {
+                    int i;
+                    if (iv.breaks == null) {
+                        i = (int) x;
+                        if (i < 0 || i >= iv.woe.length) {
+                            throw new IllegalArgumentException("Invalid nominal value: " + i);
+                        }
+                        return iv.woe[i];
+                    } else {
+                        i = Arrays.binarySearch(iv.breaks, x);
+                        if (i < 0) i = -i - 1;
+                    }
+                    return iv.woe[i];
+                }
+
+                @Override
+                public String toString() {
+                    return iv.feature + "_WoE";
+                }
+            };
+
+            transforms.put(iv.feature, transform);
+        }
+
+        return new ColumnTransform("WoE", transforms);
     }
 
     /**
      * Calculates the information value.
      *
-     * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param clazz the column name of binary class labels.
+     * @return the information value.
+     */
+    public static InformationValue[] fit(DataFrame data, String clazz) {
+        return fit(data, clazz, 10);
+    }
+
+    /**
+     * Calculates the information value.
+     *
+     * @param data the data frame of the explanatory and response variables.
+     * @param clazz the column name of binary class labels.
      * @param nbins the number of bins to discretize numeric variables in WOE calculation.
      * @return the information value.
      */
-    public static InformationValue fit(Formula formula, DataFrame data, int nbins) {
+    public static InformationValue[] fit(DataFrame data, String clazz, int nbins) {
         if (nbins < 2) {
             throw new IllegalArgumentException("Invalid number of bins: " + nbins);
         }
 
-        formula = formula.expand(data.schema());
-        BaseVector<?, ?, ?> y = formula.y(data);
+        BaseVector<?, ?, ?> y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k != 2) {
             throw new UnsupportedOperationException("Information Value is applicable only to binary classification");
         }
 
-        DataFrame x = formula.x(data);
-        StructType schema = x.schema();
-        int n = x.nrow();
-        int p = schema.length();
-        double[] iv = new double[p];
-        double[][] woe = new double[p][];
-        double[][] bins = new double[p][];
+        int n = data.nrow();
+        StructType schema = data.schema();
 
-        for (int i = 0; i < p; i++) {
-            int[] events;
-            int[] nonevents;
+        return IntStream.range(0, schema.length()).mapToObj(i -> {
+            int[] events = null;
+            int[] nonevents = null;
+            double[] breaks = null;
 
             StructField field = schema.field(i);
             if (field.measure instanceof NominalScale) {
                 int k = ((NominalScale) field.measure).size();
-                woe[i] = new double[k];
-
-                int[] xi = x.column(i).toIntArray();
                 events = new int[k];
                 nonevents = new int[k];
 
+                int[] xi = data.column(i).toIntArray();
                 for (int j = 0; j < n; j++) {
                     if (codec.y[j] == 1) {
                         events[xi[j]]++;
@@ -154,15 +231,15 @@ public class InformationValue {
             } else if (field.isNumeric()) {
                 events = new int[nbins];
                 nonevents = new int[nbins];
-                bins[i] = new double[nbins - 1];
+                breaks = new double[nbins - 1];
 
-                double[] xi = x.column(i).toDoubleArray();
+                double[] xi = data.column(i).toDoubleArray();
                 int[] order = QuickSort.sort(xi);
 
                 int begin = 0;
                 for (int j = 0; j < nbins; j++) {
                     int end = (j + 1) * n / nbins;
-                    if (j < nbins - 1) bins[i][j] = xi[end];
+                    if (j < nbins - 1) breaks[j] = xi[end];
 
                     for (int k = begin; k < end; k++) {
                         if (codec.y[order[k]] == 1) {
@@ -173,23 +250,21 @@ public class InformationValue {
                     }
                     begin = end;
                 }
-            } else{
-                events = null;
-                nonevents = null;
+            } else {
+                return null;
             }
 
-            if (events != null) {
-                int k = events.length;
-                woe[i] = new double[k];
-                for (int j = 0; j < k; j++) {
-                    double pnonevents = Math.max(nonevents[j], 0.5) / codec.ni[0];
-                    double pevents = Math.max(events[j], 0.5) / codec.ni[1];
-                    woe[i][j] = Math.log(pnonevents / pevents);
-                    iv[i] += (pnonevents - pevents) * woe[i][j];
-                }
+            int k = events.length;
+            double[] woe = new double[k];
+            double iv = 0.0;
+            for (int j = 0; j < k; j++) {
+                double pnonevents = Math.max(nonevents[j], 0.5) / codec.ni[0];
+                double pevents = Math.max(events[j], 0.5) / codec.ni[1];
+                woe[j] = Math.log(pnonevents / pevents);
+                iv += (pnonevents - pevents) * woe[j];
             }
-        }
 
-        return new InformationValue(x.schema().names(), iv, woe, bins);
+            return new InformationValue(field.name, iv, woe, breaks);
+        }).filter(iv -> iv != null && !iv.feature.equals(clazz)).toArray(InformationValue[]::new);
     }
 }
