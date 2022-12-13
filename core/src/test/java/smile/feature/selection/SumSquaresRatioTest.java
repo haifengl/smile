@@ -18,15 +18,18 @@
 package smile.feature.selection;
 
 import smile.classification.LDA;
+import smile.data.DataFrame;
 import smile.test.data.Iris;
 import smile.test.data.USPS;
-import smile.sort.QuickSort;
 import smile.validation.metric.Accuracy;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,52 +58,32 @@ public class SumSquaresRatioTest {
     }
 
     @Test
-    public void test() {
-        System.out.println("SumSquaresRatio");
-        double[] ratio = SumSquaresRatio.of(Iris.x, Iris.y);
-        assertEquals(4, ratio.length);
-        assertEquals( 1.6226463, ratio[0], 1E-6);
-        assertEquals( 0.6444144, ratio[1], 1E-6);
-        assertEquals(16.0412833, ratio[2], 1E-6);
-        assertEquals(13.0520327, ratio[3], 1E-6);
+    public void testIris() {
+        System.out.println("Iris");
+        SumSquaresRatio[] ssr = SumSquaresRatio.fit(Iris.data, "class");
+        assertEquals(4, ssr.length);
+        assertEquals( 1.6226463, ssr[0].ssr, 1E-6);
+        assertEquals( 0.6444144, ssr[1].ssr, 1E-6);
+        assertEquals(16.0412833, ssr[2].ssr, 1E-6);
+        assertEquals(13.0520327, ssr[3].ssr, 1E-6);
     }
 
     @Test
     public void tesUSPS() {
         System.out.println("USPS");
 
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
-        double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
+        SumSquaresRatio[] score = SumSquaresRatio.fit(USPS.train, "class");
+        Arrays.sort(score);
+        String[] columns = Arrays.stream(score).limit(121).map(s -> s.feature).toArray(String[]::new);
 
-        double[] score = SumSquaresRatio.of(x, y);
-        int[] index = QuickSort.sort(score);
+        double[][] train = USPS.formula.x(USPS.train.drop(columns)).toArray();
+        LDA lda = LDA.fit(train, USPS.y);
 
-        int p = 135;
-        int n = x.length;
-        double[][] xx = new double[n][p];
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                xx[i][j] = x[i][index[255-j]];
-            }
-        }
+        double[][] test = USPS.formula.x(USPS.test.drop(columns)).toArray();
+        int[] prediction = lda.predict(test);
 
-        int testn = testx.length;
-        double[][] testxx = new double[testn][p];
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < testn; i++) {
-                testxx[i][j] = testx[i][index[255-j]];
-            }
-        }
-
-        LDA lda = LDA.fit(xx, y);
-        int[] prediction = new int[testn];
-        for (int i = 0; i < testn; i++) {
-            prediction[i] = lda.predict(testxx[i]);
-        }
-
-        double accuracy = new Accuracy().score(testy, prediction);
+        double accuracy = new Accuracy().score(USPS.testy, prediction);
         System.out.format("SSR %.2f%%%n", 100 * accuracy);
+        assertEquals(0.86, accuracy, 1E-2);
     }
 }

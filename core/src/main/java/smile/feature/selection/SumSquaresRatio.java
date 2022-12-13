@@ -17,7 +17,13 @@
 
 package smile.feature.selection;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import smile.classification.ClassLabels;
+import smile.data.DataFrame;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 
 /**
@@ -37,67 +43,91 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class SumSquaresRatio implements FeatureRanking {
+public class SumSquaresRatio implements Comparable<SumSquaresRatio> {
+    /** The feature name. */
+    public final String feature;
+    /** Sum squares ratio. */
+    public final double ssr;
+
+    /**
+     * Constructor.
+     * @param feature The feature name.
+     * @param ssr Sum squares ratio.
+     */
+    public SumSquaresRatio(String feature, double ssr) {
+        this.feature = feature;
+        this.ssr = ssr;
+    }
+
     @Override
-    public double[] rank(double[][] x, int[] y) {
-        return of(x, y);
+    public int compareTo(SumSquaresRatio other) {
+        return Double.compare(ssr, other.ssr);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("SumSquaresRatio(%s, %.4f)", feature, ssr);
     }
 
     /**
-     * Univariate feature ranking. Note that this method actually does NOT rank
-     * the features. It just returns the metric values of each feature. The
-     * use can then rank and select features.
+     * Calculates the sum squares ratio of numeric variables.
      *
-     * @param x a n-by-p matrix of n instances with p features.
-     * @param y class labels.
-     * @return the sum of squares ratio of between-groups to within-groups.
+     * @param data the data frame of the explanatory and response variables.
+     * @param clazz the column name of class labels.
+     * @return the sum squares ratio.
      */
-    public static double[] of(double[][] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
+    public static SumSquaresRatio[] fit(DataFrame data, String clazz) {
+        BaseVector<?, ?, ?> y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
+
+        if (codec.k < 2) {
+            throw new UnsupportedOperationException("Invalid number of classes: " + codec.k);
+        }
+
+        int n = data.nrow();
         int k = codec.k;
-        y = codec.y;
-
-        int n = x.length;
-        int p = x[0].length;
         int[] nc = new int[k];
-        double[] mu = new double[p];
-        double[][] condmu = new double[k][p];
+        double[] condmu = new double[k];
 
         for (int i = 0; i < n; i++) {
-            int yi = y[i];
+            int yi = codec.y[i];
             nc[yi]++;
-            for (int j = 0; j < p; j++) {
-                mu[j] += x[i][j];
-                condmu[yi][j] += x[i][j];
+        }
+
+        StructType schema = data.schema();
+
+        return IntStream.range(0, schema.length()).mapToObj(j -> {
+            StructField field = schema.field(j);
+            if (field.isNumeric()) {
+                BaseVector<?, ?, ?> xj = data.column(j);
+                double mu = 0.0;
+                Arrays.fill(condmu, 0.0);
+                for (int i = 0; i < n; i++) {
+                    int yi = codec.y[i];
+                    double xij = xj.getDouble(i);
+                    mu += xij;
+                    condmu[yi] += xij;
+                }
+
+                mu /= n;
+                for (int i = 0; i < k; i++) {
+                    condmu[i] /= nc[i];
+                }
+
+                double wss = 0.0;
+                double bss = 0.0;
+
+                for (int i = 0; i < n; i++) {
+                    int yi = codec.y[i];
+                    double xij = xj.getDouble(i);
+                    bss += MathEx.pow2(condmu[yi] - mu);
+                    wss += MathEx.pow2(xij - condmu[yi]);
+                }
+
+                return new SumSquaresRatio(field.name, bss / wss);
+            } else {
+                return null;
             }
-        }
-
-        for (int j = 0; j < p; j++) {
-            mu[j] /= n;
-            for (int i = 0; i < k; i++) {
-                condmu[i][j] /= nc[i];
-            }
-        }
-
-        double[] wss = new double[p];
-        double[] bss = new double[p];
-
-        for (int i = 0; i < n; i++) {
-            int yi = y[i];
-            for (int j = 0; j < p; j++) {
-                bss[j] += MathEx.pow2(condmu[yi][j] - mu[j]);
-                wss[j] += MathEx.pow2(x[i][j] - condmu[yi][j]);
-            }
-        }
-
-        for (int j = 0; j < p; j++) {
-            bss[j] /= wss[j];
-        }
-
-        return bss;
+        }).filter(s2n -> s2n != null && !s2n.feature.equals(clazz)).toArray(SumSquaresRatio[]::new);
     }
 }
