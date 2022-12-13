@@ -366,7 +366,7 @@ public interface Histogram {
         double h = (max - min) / k;
         return breaks(min, max, h);
     }
-    
+
     /**
      * Returns the number of bins for a data based on a suggested bin width h.
      * @param x the data set.

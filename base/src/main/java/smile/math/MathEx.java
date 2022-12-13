@@ -2342,6 +2342,24 @@ public class MathEx {
     }
 
     /**
+     * Returns the breakpoints that break data into equal-sized buckets
+     * based on sample quantiles.
+     * @param x the data set, which will be sorted.
+     * @param q the number of quantiles.
+     * @return the breakpoints between buckets.
+     */
+    static double[] qcut(double[] x, int q) {
+        int n = x.length;
+        double[] cuts = new double[q - 1];
+
+        Arrays.sort(x);
+        for (int i = 0; i < q - 1; i++) {
+            cuts[i] = x[(i + 1) * n / q];
+        }
+        return cuts;
+    }
+
+    /**
      * Find the third quantile (p = 3/4) of an array of type double.
      * The input array will be rearranged.
      * @param x the array.
