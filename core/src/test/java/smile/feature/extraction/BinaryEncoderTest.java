@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.extraction;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -24,16 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
 import smile.test.data.WeatherNominal;
-
 import static org.junit.Assert.*;
 
 /**
  *
  * @author Haifeng Li
  */
-public class SparseOneHotEncoderTest {
+public class BinaryEncoderTest {
     
-    public SparseOneHotEncoderTest() {
+    public BinaryEncoderTest() {
     }
 
     @BeforeClass
@@ -52,12 +51,9 @@ public class SparseOneHotEncoderTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of feature method, of class SparseOneHotEncoder.
-     */
     @Test
-    public void testFeature() {
-        System.out.println("feature");
+    public void test() {
+        System.out.println("Binary Encoder");
         int[][] result = {
             {0, 3, 6, 9},
             {0, 3, 6, 8},
@@ -75,9 +71,9 @@ public class SparseOneHotEncoderTest {
             {2, 4, 6, 8}
         };
 
-        DataFrame data = WeatherNominal.formula.x(WeatherNominal.data);
-        SparseOneHotEncoder n2sb = new SparseOneHotEncoder(data.schema());
-        int[][] onehot = n2sb.apply(data);
+        DataFrame data = WeatherNominal.data;
+        BinaryEncoder encoder = new BinaryEncoder(data.schema(), "outlook", "temperature", "humidity", "windy");
+        int[][] onehot = encoder.apply(data);
 
         for (int i = 0; i < data.size(); i++) {
             for (int j = 0; j < result[i].length; j++) {
