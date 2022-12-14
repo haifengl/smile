@@ -24,6 +24,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.io.Read;
+import smile.util.Paths;
 import static org.junit.Assert.*;
 
 /**
@@ -85,5 +88,23 @@ public class BagOfWordsTest {
         }
         
         assertEquals(1, x[0][15]);
+    }
+
+    @Test
+    public void testFit() throws IOException {
+        System.out.println("fit");
+        try {
+            DataFrame data = Read.arff(Paths.getTestData("weka/string.arff"));
+            System.out.println(data);
+
+            BagOfWords bag = BagOfWords.fit(data, tokenizer, 10,"LCSH");
+            DataFrame df = bag.apply(data);
+            System.out.println(df);
+
+            assertEquals(data.nrow(), df.nrow());
+            assertEquals(10, df.ncol());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }
