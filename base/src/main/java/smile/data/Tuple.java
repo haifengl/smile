@@ -714,6 +714,31 @@ public interface Tuple extends Serializable {
     }
 
     /**
+     * Returns an integer array based tuple.
+     * @param row the int array.
+     * @param schema the schema of tuple.
+     * @return the tuple.
+     */
+    static Tuple of(int[] row, StructType schema) {
+        return new AbstractTuple() {
+            @Override
+            public Object get(int i) {
+                return row[i];
+            }
+
+            @Override
+            public int getInt(int i) {
+                return row[i];
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
+    }
+
+    /**
      * Returns the current row of a JDBC ResultSet as a tuple.
      * @param rs the JDBC ResultSet.
      * @param schema the schema of tuple.
