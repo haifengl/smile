@@ -103,6 +103,12 @@ public class BagOfWordsTest {
 
             assertEquals(data.nrow(), df.nrow());
             assertEquals(10, df.ncol());
+            assertEquals(10, bag.features().length);
+            assertEquals("--", bag.features()[0]);
+            assertEquals("Encyclopedias", bag.features()[1]);
+            assertEquals("Union", bag.features()[9]);
+            for (int i = 0; i < 10; i++)
+            System.out.println(bag.features()[i]);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
