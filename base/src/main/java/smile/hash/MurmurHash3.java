@@ -18,6 +18,7 @@
 package smile.hash;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * MurmurHash is a very fast, non-cryptographic hash suitable for general hash-based
@@ -59,6 +60,17 @@ public class MurmurHash3 {
         k ^= k >>> 33;
 
         return k;
+    }
+
+    /**
+     * 32-bit MurmurHash3.
+     * @param text the text string.
+     * @param seed the seed of hash code.
+     * @return the hash code.
+     */
+    public static int hash32(String text, int seed) {
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        return hash32(bytes, 0, bytes.length, seed);
     }
 
     /**
