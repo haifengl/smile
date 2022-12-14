@@ -15,14 +15,13 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.data;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.CategoricalEncoder;
 import smile.test.data.WeatherNominal;
 import static org.junit.Assert.*;
 
