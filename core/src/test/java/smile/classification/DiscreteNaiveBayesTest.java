@@ -19,6 +19,8 @@ package smile.classification;
 
 import java.io.BufferedReader;
 import java.util.Arrays;
+import java.util.function.Function;
+import smile.feature.extraction.BagOfWords;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -30,7 +32,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 /**
@@ -39,7 +40,7 @@ import static org.junit.Assert.*;
  */
 public class DiscreteNaiveBayesTest {
 
-    public static final String[] feature = {
+    private static final String[] feature = {
             "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",
             "ridiculous", "waste", "worst", "bland", "unfunny", "stupid", "dull",
             "fantastic", "laughable", "mess", "pointless", "terrific", "memorable",
@@ -49,9 +50,10 @@ public class DiscreteNaiveBayesTest {
             "disappointing", "disappointment"
     };
 
-    public static final String[][] doc = new String[2000][];
-    public static final int[][] x = new int[doc.length][];
-    public static final int[] y = new int[doc.length];
+    private static final String[] doc = new String[2000];
+    private static final int[][] x = new int[doc.length][];
+    private static final int[] y = new int[doc.length];
+    private static final Function<String, String[]> tokenizer = s -> s.split("\\s+");
 
     public DiscreteNaiveBayesTest() {
 
@@ -61,7 +63,7 @@ public class DiscreteNaiveBayesTest {
     public static void setUpClass() throws Exception {
         try (BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < x.length; i++) {
-                String[] words = input.readLine().trim().split("\\s+");
+                String[] words = input.readLine().trim().split("\\s+", 2);
 
                 if (words[0].equalsIgnoreCase("pos")) {
                     y[i] = 1;
@@ -71,11 +73,10 @@ public class DiscreteNaiveBayesTest {
                     System.err.println("Invalid class label: " + words[0]);
                 }
 
-                doc[i] = new String[words.length - 1];
-                System.arraycopy(words, 1, doc[i], 0, doc[i].length);
+                doc[i] = words[1];
             }
 
-            smile.feature.Bag bag = new smile.feature.Bag(feature);
+            BagOfWords bag = new BagOfWords(tokenizer, feature);
             for (int i = 0; i < x.length; i++) {
                 x[i] = bag.apply(doc[i]);
             }
