@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.data.formula;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -24,8 +24,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
 import smile.test.data.Date;
-import smile.data.formula.Formula;
-import smile.data.formula.DateFeature;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
