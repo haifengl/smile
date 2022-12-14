@@ -15,28 +15,34 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.extraction;
 
+import java.util.Arrays;
+import java.util.function.Function;
 import smile.data.DataFrame;
-import smile.data.measure.NominalScale;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.type.StructField;
 import smile.data.Tuple;
 import smile.data.type.StructType;
 
 /**
- * Encode categorical integer features using sparse one-hot scheme.
- * All variables should be nominal attributes and will be converted to binary
- * dummy variables in a compact representation in which only indices of nonzero
- * elements are stored in an integer array. In Maximum Entropy Classifier,
- * the data are expected to store in this format.
+ * Encodes categorical features using sparse one-hot scheme. The categorical
+ * attributes will be converted to binary dummy variables in a compact
+ * representation in which only indices of nonzero elements are stored in
+ * an integer array. In Maximum Entropy Classifier, the data are expected
+ * to store in this format.
  *
  * @author Haifeng Li
  */
-public class SparseOneHotEncoder {
+public class BinaryEncoder implements Function<Tuple, int[]> {
     /**
      * The variable attributes.
      */
     private final StructType schema;
+    /**
+     * The columns of categorical variables.
+     */
+    private final String[] columns;
     /**
      * Starting index for each nominal attribute.
      */
@@ -44,20 +50,29 @@ public class SparseOneHotEncoder {
 
     /**
      * Constructor.
-     * @param schema the variable attributes. All of them have to be
-     *               nominal attributes.
+     * @param schema the data frame schema.
+     * @param columns the column names of categorical variables.
+     *                If empty, all categorical columns will be used.
      */
-    public SparseOneHotEncoder(StructType schema) {
+    public BinaryEncoder(StructType schema, String... columns) {
         this.schema = schema;
-        base = new int[schema.length()];
-        for (int i = 0; i < base.length; i++) {
-            StructField field = schema.field(i);
-            if (!(field.measure instanceof NominalScale)) {
-                throw new IllegalArgumentException("Non-nominal attribute: " + field);
+        if (columns == null || columns.length == 0) {
+            columns = Arrays.stream(schema.fields())
+                    .filter(field -> field.measure instanceof CategoricalMeasure)
+                    .map(field -> field.name)
+                    .toArray(String[]::new);
+        }
+
+        this.columns = columns;
+        base = new int[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            StructField field = schema.field(columns[i]);
+            if (!(field.measure instanceof CategoricalMeasure)) {
+                throw new IllegalArgumentException("Non-categorical attribute: " + field);
             }
 
             if (i < base.length-1) {
-                base[i+1] = base[i] + ((NominalScale) field.measure).size();
+                base[i+1] = base[i] + ((CategoricalMeasure) field.measure).size();
             }
         }
     }
@@ -67,10 +82,11 @@ public class SparseOneHotEncoder {
      * @param x an object of interest.
      * @return an integer array of nonzero binary features.
      */
+    @Override
     public int[] apply(Tuple x) {
-        int[] features = new int[schema.length()];
+        int[] features = new int[columns.length];
         for (int i = 0; i < features.length; i++) {
-            features[i] = x.getInt(i) + base[i];
+            features[i] = x.getInt(columns[i]) + base[i];
         }
 
         return features;
