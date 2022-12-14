@@ -15,20 +15,26 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.extraction;
 
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The bag-of-words feature of text used in natural language
- * processing and information retrieval. In this model, a text (such as a
- * sentence or a document) is represented as an unordered collection of words,
- * disregarding grammar and even word order.
+ * processing and information retrieval. In this model, a text
+ * (such as a sentence or a document) is represented as an
+ * unordered collection of words, disregarding grammar and
+ * even word order.
  * 
  * @author Haifeng Li
  */
-public class Bag {
+public class BagOfWords {
+    /**
+     * The tokenizer of text, which may include stop word filtering.
+     */
+    private final Function<String, String[]> tokenizer;
     /**
      * The mapping from feature words to indices.
      */
@@ -42,20 +48,23 @@ public class Bag {
 
     /**
      * Constructor.
+     * @param tokenizer the tokenizer of text, which may include stop word filtering.
      * @param words the list of feature words.
      */
-    public Bag(String[] words) {
-        this(words, false);
+    public BagOfWords(Function<String, String[]> tokenizer, String[] words) {
+        this(tokenizer, words, false);
     }
 
     /**
      * Constructor.
+     * @param tokenizer the tokenizer of text, which may include stop word filtering.
      * @param words the list of feature words. The feature words should be unique in the list.
      * Note that the Bag class doesn't learn the features, but just use them as attributes.
      * @param binary true to check if feature object appear in a collection
      * instead of their frequencies.
      */
-    public Bag(String[] words, boolean binary) {
+    public BagOfWords(Function<String, String[]> tokenizer, String[] words, boolean binary) {
+        this.tokenizer = tokenizer;
         this.binary = binary;
         this.words = new HashMap<>();
         for (int i = 0; i < words.length; i++) {
@@ -68,25 +77,17 @@ public class Bag {
 
     /**
      * Returns the bag-of-words features of a document.
-     * @param x a bag of words.
+     * @param text a document.
      * @return the feature vector.
      */
-    public int[] apply(String[] x) {
+    public int[] apply(String text) {
         int[] bag = new int[words.size()];
 
-        if (binary) {
-            for (String word : x) {
-                Integer f = words.get(word);
-                if (f != null) {
-                    bag[f] = 1;
-                }
-            }
-        } else {
-            for (String word : x) {
-                Integer f = words.get(word);
-                if (f != null) {
-                    bag[f]++;
-                }
+        for (String word : tokenizer.apply(text)) {
+            Integer f = words.get(word);
+            if (f != null) {
+                if (binary) bag[f] = 1;
+                else bag[f]++;
             }
         }
 
