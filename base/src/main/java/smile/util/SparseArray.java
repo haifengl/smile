@@ -185,7 +185,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     }
 
     /**
-     * Sets or add an entry.
+     * Sets or adds an entry.
      * @param i the index of entry.
      * @param x the value of entry.
      * @return true if a new entry added, false if an existing entry updated.
