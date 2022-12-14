@@ -15,9 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.extraction;
 
 import java.io.IOException;
+import java.util.function.Function;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,9 +30,10 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class BagTest {
-    
-    public BagTest() {
+public class BagOfWordsTest {
+    private static final Function<String, String[]> tokenizer = s -> s.split("\\s+");
+
+    public BagOfWordsTest() {
     }
 
     @BeforeClass
@@ -54,7 +56,7 @@ public class BagTest {
     public void testUniquenessOfFeatures() {
         System.out.println("unique features");
         String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
-        Bag bag = new Bag(features);
+        BagOfWords bag = new BagOfWords(tokenizer, features);
     }
 
     @Test
@@ -63,7 +65,7 @@ public class BagTest {
         String[][] text = smile.util.Paths.getTestDataLines("text/movie.txt")
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
-                .map(line -> line.split("\\s+"))
+                .map(line -> line.split("\\s+", 2))
                 .toArray(String[][]::new);
 
         String[] feature = {
@@ -73,12 +75,12 @@ public class BagTest {
             "superb", "boring", "badly", "subtle", "terrible", "excellent",
             "perfectly", "masterpiece", "realistic", "flaws"
         };
-        
-        Bag bag = new Bag(feature);
+
+        BagOfWords bag = new BagOfWords(tokenizer, feature);
         
         int[][] x = new int[text.length][];
         for (int i = 0; i < text.length; i++) {
-            x[i] = bag.apply(text[i]);
+            x[i] = bag.apply(text[i][1]);
             assertEquals(feature.length, x[i].length);
         }
         
