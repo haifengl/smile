@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.feature;
+package smile.feature.transform;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -26,7 +26,6 @@ import smile.data.DataFrame;
 import smile.test.data.Colon;
 import smile.test.data.Segment;
 import smile.data.transform.InvertibleColumnTransform;
-import smile.feature.transform.*;
 import static org.junit.Assert.*;
 
 /**
