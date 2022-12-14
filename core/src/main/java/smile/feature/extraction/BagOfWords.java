@@ -46,9 +46,13 @@ public class BagOfWords implements Transform {
      */
     private final Function<String, String[]> tokenizer;
     /**
+     * The feature words.
+     */
+    private final String[] words;
+    /**
      * The mapping from feature words to indices.
      */
-    private final Map<String, Integer> words;
+    private final Map<String, Integer> featureIndex;
     /**
      * True to check if feature words appear in a document instead of their
      * frequencies.
@@ -87,18 +91,26 @@ public class BagOfWords implements Transform {
         this.columns = columns;
         this.tokenizer = tokenizer;
         this.binary = binary;
-        this.words = new HashMap<>();
+        this.words = words;
+        this.featureIndex = new HashMap<>();
         for (int i = 0; i < words.length; i++) {
-            if (this.words.containsKey(words[i])) {
+            if (this.featureIndex.containsKey(words[i])) {
                 throw new IllegalArgumentException("Duplicated word:" + words[i]);
             }
-            this.words.put(words[i], i);
+            this.featureIndex.put(words[i], i);
         }
 
         StructField[] fields = Arrays.stream(words)
                 .map(word -> new StructField("BoW_" + word, DataTypes.IntegerType))
                 .toArray(StructField[]::new);
         this.schema = new StructType(fields);
+    }
+
+    /**
+     * Returns the feature words.
+     */
+    public String[] features() {
+        return words;
     }
 
     /**
@@ -134,14 +146,14 @@ public class BagOfWords implements Transform {
 
     @Override
     public Tuple apply(Tuple x) {
-        int[] bag = new int[words.size()];
+        int[] bag = new int[featureIndex.size()];
 
         for (String column : columns) {
             for (String word : tokenizer.apply(x.getString(column))) {
-                Integer f = words.get(word);
-                if (f != null) {
-                    if (binary) bag[f] = 1;
-                    else bag[f]++;
+                Integer index = featureIndex.get(word);
+                if (index != null) {
+                    if (binary) bag[index] = 1;
+                    else bag[index]++;
                 }
             }
         }
@@ -155,13 +167,13 @@ public class BagOfWords implements Transform {
      * @return the feature vector.
      */
     public int[] apply(String text) {
-        int[] bag = new int[words.size()];
+        int[] bag = new int[featureIndex.size()];
 
         for (String word : tokenizer.apply(text)) {
-            Integer f = words.get(word);
-            if (f != null) {
-                if (binary) bag[f] = 1;
-                else bag[f]++;
+            Integer index = featureIndex.get(word);
+            if (index != null) {
+                if (binary) bag[index] = 1;
+                else bag[index]++;
             }
         }
 
