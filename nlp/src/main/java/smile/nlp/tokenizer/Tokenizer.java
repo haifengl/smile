@@ -17,6 +17,8 @@
 
 package smile.nlp.tokenizer;
 
+import java.util.function.Function;
+
 /**
  * A token is a string of characters, categorized according to the rules as a
  * symbol. The process of forming tokens from an input stream of characters
@@ -31,11 +33,16 @@ package smile.nlp.tokenizer;
  *
  * @author Haifeng Li
  */
-public interface Tokenizer {
+public interface Tokenizer extends Function<String, String[]> {
     /**
      * Splits the string into a list of tokens.
      * @param text the text.
      * @return the tokens.
      */
     String[] split(String text);
+
+    @Override
+    default String[] apply(String text) {
+        return split(text);
+    }
 }
