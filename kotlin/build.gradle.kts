@@ -1,5 +1,4 @@
 import org.gradle.jvm.tasks.Jar
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
@@ -11,7 +10,7 @@ tasks.withType<KotlinCompile> {
 plugins {
     `maven-publish`
     kotlin("jvm") version "1.7.21" 
-    id("org.jetbrains.dokka") version "1.7.20"
+    id("org.jetbrains.dokka") version "1.5.31"
     signing
 }
 
