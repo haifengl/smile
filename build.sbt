@@ -3,8 +3,6 @@ name := "smile"
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
-  // skip javadoc and scaladoc for publishLocal
-  Compile / packageDoc / publishArtifact := false,
   // always set scala version including Java only modules
   scalaVersion := "2.13.10",
 
