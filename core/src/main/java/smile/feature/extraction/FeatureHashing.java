@@ -31,7 +31,7 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class FeatureHashing {
+public class FeatureHashing implements Function<String, SparseArray> {
     /**
      * The tokenizer of text, which may include additional processing
      * such as filtering stop word, converting to lowercase, stemming, etc.
@@ -86,6 +86,7 @@ public class FeatureHashing {
      * @param text a document.
      * @return the sparse feature vector.
      */
+    @Override
     public SparseArray apply(String text) {
         TreeMap<Integer, Integer> bag = new TreeMap<>();
         for (String word : tokenizer.apply(text)) {
