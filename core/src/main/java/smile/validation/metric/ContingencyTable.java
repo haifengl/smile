@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -19,15 +19,14 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * The contingency table of two clusterings.
+ * The contingency table. A contingency table (aka a cross tabulation) is
+ * a type of table in a matrix format that displays the (multivariate)
+ * frequency distribution of the variables.
  *
  * @author owlmsj
  */
-class ContingencyTable {
+public class ContingencyTable {
 
     /** The number of observations. */
     public final int n;
@@ -42,7 +41,11 @@ class ContingencyTable {
     /** The contingency table. */
     public final int[][] table;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param y1 the first random variable.
+     * @param y2 the second random variable.
+     */
     public ContingencyTable(int[] y1, int[] y2) {
         if (y1.length != y2.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", y1.length, y2.length));

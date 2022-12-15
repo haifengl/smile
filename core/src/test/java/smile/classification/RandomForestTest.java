@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -19,8 +19,10 @@ package smile.classification;
 
 import java.util.Arrays;
 import smile.base.cart.SplitRule;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -92,7 +94,7 @@ public class RandomForestTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
 
@@ -101,7 +103,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
@@ -110,8 +112,8 @@ public class RandomForestTest {
         System.out.println(metrics);
         assertEquals(0.5714, metrics.accuracy, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     @Test
@@ -123,13 +125,13 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(0.9533, metrics.accuracy, 1E-4);
+        assertEquals(0.9467, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -141,7 +143,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(0.9709, result.avg.accuracy, 1E-4);
+        assertEquals(0.9706, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -164,7 +166,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(Segment.test);
@@ -188,14 +190,14 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(152, error);
+        assertEquals(150, error);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(USPS.test);
@@ -234,7 +236,7 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testMerge() throws Exception {
+    public void testMerge() {
         System.out.println("merge");
 
         RandomForest forest1 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
@@ -247,9 +249,9 @@ public class RandomForestTest {
         System.out.format("Forest 1 Error = %d%n", error1);
         System.out.format("Forest 2 Error = %d%n", error2);
         System.out.format("Merged   Error = %d%n", error);
-        assertEquals(34, error1);
-        assertEquals(34, error2);
-        assertEquals(34, error);
+        assertEquals(33, error1);
+        assertEquals(33, error2);
+        assertEquals(33, error);
     }
 
     @Test
@@ -261,20 +263,20 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(118, error);
+        assertEquals(115, error);
 
         RandomForest lean = model.prune(USPS.test);
 
         importance = lean.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", lean.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", lean.schema().name(i), importance[i]);
         }
 
         // The old model should not be modified.
@@ -282,13 +284,13 @@ public class RandomForestTest {
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
-        assertEquals(118, error);
+        assertEquals(115, error);
 
         prediction = lean.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
-        assertEquals(86, error);
+        assertEquals(87, error);
     }
 
     @Test

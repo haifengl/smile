@@ -1,23 +1,25 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.projection
+package smile.feature.extraction
 
+import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
+import smile.math.TimeFunction
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -111,8 +113,8 @@ fun ppca(data: Array<DoubleArray>, k: Int): ProbabilisticPCA  {
  * @param threshold only principal components with eigenvalues larger than
  *                  the given threshold will be kept.
  */
-fun <T> kpca(data: Array<T>, kernel: MercerKernel<T>, k: Int, threshold: Double = 0.0001): KPCA<T> {
-    return KPCA.fit(data, kernel, k, threshold)
+fun <T> kpca(data: DataFrame, kernel: MercerKernel<DoubleArray>, k: Int, threshold: Double = 0.0001): KernelPCA {
+    return KernelPCA.fit(data, kernel, k, threshold)
 }
 
 /**
@@ -147,7 +149,7 @@ fun <T> kpca(data: Array<T>, kernel: MercerKernel<T>, k: Int, threshold: Double 
  * @param w the initial projection matrix.
  * @param r the learning rate.
  */
-fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: Double): GHA {
+fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: TimeFunction): GHA {
     val model = GHA(w, r)
     for (x in data) model.update(x)
     return model
@@ -160,7 +162,7 @@ fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: Double): GHA {
  * @param k the dimension of feature space.
  * @param r the learning rate.
  */
-fun gha(data: Array<DoubleArray>, k: Int, r: Double): GHA {
+fun gha(data: Array<DoubleArray>, k: Int, r: TimeFunction): GHA {
     val model = GHA(data[0].size, k, r)
     for (x in data) model.update(x)
     return model

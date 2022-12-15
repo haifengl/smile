@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -77,16 +77,16 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends CART implements DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
-    private transient double[] y;
+    private final transient double[] y;
 
     /**
      * The loss function.
      */
-    private transient Loss loss;
+    private final transient Loss loss;
 
     @Override
     protected double impurity(LeafNode node) {
@@ -117,7 +117,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         double rss = 0.0;
         for (int i : nodeSamples) {
             n += samples[i];
-            rss += samples[i] * MathEx.sqr(y[i] - mean);
+            rss += samples[i] * MathEx.pow2(y[i] - mean);
         }
 
         return new RegressionNode(n, out, mean, rss);
@@ -126,9 +126,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         RegressionNode node = (RegressionNode) leaf;
-        BaseVector xj = x.column(j);
+        BaseVector<?, ?, ?> xj = x.column(j);
 
-        double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y[i] * samples[i]).sum();
+        double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
 
         Split split = null;
@@ -229,7 +229,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * Constructor. Learns a regression tree for AdaBoost and Random Forest.
+     * Constructor. Fits a regression tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param loss the loss function.
      * @param response the metadata of response variable.
@@ -252,7 +252,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncols()]);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncol()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -260,7 +260,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         } else {
             // best-first split
             PriorityQueue<Split> queue = new PriorityQueue<>(2 * maxNodes, Split.comparator.reversed());
-            split.ifPresent(s -> queue.add(s));
+            split.ifPresent(queue::add);
 
             for (int leaves = 1; leaves < this.maxNodes && !queue.isEmpty(); ) {
                 if (split(queue.poll(), queue)) leaves++;
@@ -274,16 +274,17 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.node.size</code>
@@ -291,27 +292,29 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.cart.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.cart.node.size", "5"));
+    public static RegressionTree fit(Formula formula, DataFrame data, Properties params) {
+        int maxDepth = Integer.parseInt(params.getProperty("smile.cart.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.cart.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.cart.node_size", "5"));
         return fit(formula, data, maxDepth, maxNodes, nodeSize);
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the minimum size of leaf nodes.
+     * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
         return tree;

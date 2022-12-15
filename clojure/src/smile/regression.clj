@@ -1,22 +1,22 @@
-;   Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+;   Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
 ;
 ;   Smile is free software: you can redistribute it and/or modify
-;   it under the terms of the GNU Lesser General Public License as
-;   published by the Free Software Foundation, either version 3 of
-;   the License, or (at your option) any later version.
+;   it under the terms of the GNU General Public License as published by
+;   the Free Software Foundation, either version 3 of the License, or
+;   (at your option) any later version.
 ;
 ;   Smile is distributed in the hope that it will be useful,
 ;   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;   GNU Lesser General Public License for more details.
+;   GNU General Public License for more details.
 ;
-;   You should have received a copy of the GNU Lesser General Public License
+;   You should have received a copy of the GNU General Public License
 ;   along with Smile.  If not, see <https://www.gnu.org/licenses/>.
 
 (ns smile.regression
   "Regression Analysis"
   {:author "Haifeng Li"}
-  (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVR
+  (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVM
                              RegressionTree RandomForest GradientTreeBoost
                              GaussianProcessRegression]
            [smile.base.cart Loss]))
@@ -298,10 +298,10 @@
   ([x y neurons] (rbfnet x y neurons false))
   ([x y neurons normalized] (RBFNetwork/fit x y neurons normalized)))
 
-(defn svr
+(defn svm
   "Support vector regression.
 
-  Like SVM for classification, the model produced by SVR depends only on a
+  Like SVM for classification, the model produced by SVM depends only on a
   subset of the training data, because the cost function ignores any training
   data close to the model prediction (within a threshold).
 
@@ -311,8 +311,8 @@
   `eps` is the loss function error threshold.
   `C` is the soft margin penalty parameter.
   `tol` is the tolerance of convergence test."
-  ([x y kernel eps C] (svr x y kernel eps C 1E-3))
-  ([x y kernel eps C tol] (SVR/fit x y kernel eps C tol)))
+  ([x y kernel eps C] (svm x y kernel eps C 1E-3))
+  ([x y kernel eps C tol] (SVM/fit x y kernel eps C tol)))
 
 (defn cart
   "Regression tree.

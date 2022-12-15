@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,6 +22,8 @@ import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.IntSet;
+
+import java.util.Properties;
 
 /**
  * Radial basis function networks. A radial basis function network is an
@@ -49,7 +51,7 @@ import smile.util.IntSet;
  * called thin plate splines. The advantage of the thin plate splines is that
  * their conditioning is invariant under scalings. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
  * parameter. In particular, increasing r<sub><small>0</small></sub> has the
@@ -87,29 +89,25 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T> {
+public class RBFNetwork<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * The linear weights.
      */
-    private Matrix w;
+    private final Matrix w;
     /**
      * The radial basis function.
      */
-    private RBF<T>[] rbf;
+    private final RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
-    private boolean normalized;
-    /**
-     * The class label encoder.
-     */
-    private IntSet labels;
+    private final boolean normalized;
 
     /**
      * Constructor.
@@ -128,14 +126,14 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param rbf the radial basis functions.
      * @param w the weights of RBFs.
      * @param normalized True if this is a normalized RBF network.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
+        super(labels);
         this.k = k;
         this.rbf = rbf;
         this.w = w;
         this.normalized = normalized;
-        this.labels = labels;
     }
 
     /**
@@ -144,6 +142,8 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf, false);
@@ -156,6 +156,8 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
@@ -189,10 +191,26 @@ public class RBFNetwork<T> implements Classifier<T> {
         Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.classes);
     }
 
-    /** Returns true if the model is  normalized. */
+    /**
+     * Fits a RBF network.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {
+        int neurons = Integer.parseInt(params.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.rbf.normalize", "false"));
+        return RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize);
+    }
+
+    /**
+     * Returns true if the model is  normalized.
+     * @return true if the model is  normalized.
+     */
     public boolean isNormalized() {
         return normalized;
     }
@@ -209,6 +227,6 @@ public class RBFNetwork<T> implements Classifier<T> {
         double[] sumw = new double[k];
         w.tv(f, sumw);
 
-        return labels.valueOf(MathEx.whichMax(sumw));
+        return classes.valueOf(MathEx.whichMax(sumw));
     }
 }

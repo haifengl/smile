@@ -1,5 +1,4 @@
 import org.gradle.jvm.tasks.Jar
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
@@ -10,25 +9,23 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.4.10" 
-    id("org.jetbrains.dokka") version "1.4.10.2"
+    kotlin("jvm") version "1.7.21" 
+    id("org.jetbrains.dokka") version "1.5.31"
     signing
 }
 
 group = "com.github.haifengl"
-version = "2.6.0"
+version = "3.0.0"
 
 repositories {
     mavenCentral()
-    jcenter()
     mavenLocal()
 }
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:2.6.0")
-    api("com.github.haifengl:smile-nlp:2.6.0")
-    api("com.github.haifengl:smile-io:2.6.0")
+    api("com.github.haifengl:smile-core:3.0.0")
+    api("com.github.haifengl:smile-nlp:3.0.0")
 }
 
 // Copy jar to shell lib
@@ -95,8 +92,8 @@ publishing {
                 url.set("https://haifengl.github.io//")
                 licenses {
                     license {
-                        name.set("GNU Lesser General Public License, Version 3")
-                        url.set("https://opensource.org/licenses/LGPL-3.0")
+                        name.set("GNU General Public License, Version 3")
+                        url.set("https://opensource.org/licenses/GPL-3.0")
                     }
                 }
                 developers {

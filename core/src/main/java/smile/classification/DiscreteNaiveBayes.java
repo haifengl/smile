@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -81,7 +81,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
+public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 
@@ -152,19 +152,19 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
     /**
      * The generation model of naive Bayes.
      */
-    private Model model;
+    private final Model model;
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * The number of independent variables.
      */
-    private int p;
+    private final int p;
     /**
      * The priori probability of each class.
      */
-    private double[] priori;
+    private final double[] priori;
     /**
      * Amount of add-k smoothing of evidence. By default, we use add-one or
      * Laplace smoothing, which simply adds one to each count to eliminate zeros.
@@ -172,11 +172,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * once for each class) that is then updated as evidence from the training
      * data comes in.
      */
-    private double sigma;
+    private final double sigma;
     /**
      * If true, don't update the priori during learning.
      */
-    private boolean fixedPriori;
+    private final boolean fixedPriori;
     /**
      * The total number of documents.
      */
@@ -184,23 +184,19 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
     /**
      * The number of documents in each class.
      */
-    private int[] nc;
+    private final int[] nc;
     /**
      * The number of terms per class.
      */
-    private int[] nt;
+    private final int[] nt;
     /**
      * The number of each term per class.
      */
-    private int[][] ntc;
+    private final int[][] ntc;
     /**
      * The log conditional probabilities for document classification.
      */
-    private double[][] logcondprob;
-    /**
-     * The class label encoder.
-     */
-    private IntSet labels;
+    private final double[][] logcondprob;
 
     /**
      * Constructor of naive Bayes classifier for document classification.
@@ -227,9 +223,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param k the number of classes.
      * @param p the dimensionality of input space.
      * @param sigma the prior count of add-k smoothing of evidence.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, int k, int p, double sigma, IntSet labels) {
+        super(labels);
+
         if (k < 2) {
             throw new IllegalArgumentException("Invalid number of classes: " + k);
         }
@@ -246,7 +244,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         this.k = k;
         this.p = p;
         this.sigma = sigma;
-        this.labels = labels;
 
         fixedPriori = false;
         priori = new double[k];
@@ -281,8 +278,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param priori the priori probability of each class.
      * @param p the dimensionality of input space.
      * @param sigma the prior count of add-k smoothing of evidence.
+     * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, double[] priori, int p, double sigma, IntSet labels) {
+        super(labels);
+
         if (p <= 0) {
             throw new IllegalArgumentException("Invalid dimension: " + p);
         }
@@ -311,7 +311,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         this.k = priori.length;
         this.p = p;
         this.sigma = sigma;
-        this.labels = labels;
 
         this.priori = priori;
         fixedPriori = true;
@@ -325,6 +324,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;
@@ -349,12 +349,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
             throw new UnsupportedOperationException("TWCNB supports only batch learning");
         }
 
-        y = labels.indexOf(y);
+        y = classes.indexOf(y);
         switch (model) {
             case MULTINOMIAL:
             case CNB:
             case WCNB:
-            case TWCNB:
                 for (int i = 0; i < p; i++) {
                     ntc[y][i] += x[i];
                     nt[y] += x[i];
@@ -405,12 +404,11 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
             throw new UnsupportedOperationException("TWCNB supports only batch learning");
         }
 
-        y = labels.indexOf(y);
+        y = classes.indexOf(y);
         switch (model) {
             case MULTINOMIAL:
             case CNB:
             case WCNB:
-            case TWCNB:
                 for (SparseArray.Entry e : x) {
                     ntc[y][e.i] += e.x;
                     nt[y] += e.x;
@@ -463,7 +461,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         ntc[yi][j] += x[i][j];
                         nt[yi] += x[i][j];
@@ -533,7 +531,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         ntc[yi][j] += x[i][j] * 2;
                         nt[yi] += x[i][j] * 2;
@@ -551,7 +549,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         if (x[i][j] > 0) {
                             ntc[yi][j]++;
@@ -590,7 +588,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         ntc[yi][e.i] += e.x;
                         nt[yi] += e.x;
@@ -660,7 +658,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         ntc[yi][e.i] += e.x * 2;
                         nt[yi] += e.x * 2;
@@ -678,7 +676,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         if (e.x > 0) {
                             ntc[yi][e.i]++;
@@ -753,6 +751,16 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
                 // we should never reach here
                 throw new IllegalStateException("Unknown model: " + model);
         }
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**
@@ -923,6 +931,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         }
 
         MathEx.softmax(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

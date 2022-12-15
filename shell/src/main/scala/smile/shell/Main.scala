@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile Shell is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,14 @@ package smile.shell
   */
 object Main {
   def main(args: Array[String]): Unit = {
+    if (args.length > 0) {
+      args(0) match {
+        case "train" => return Train(args.drop(1))
+        case "predict" => return Predict(args.drop(1))
+        case "serve" => return Serve(args.drop(1))
+      }
+    }
+
     try {
       val clazz = Class.forName("ammonite.Main$")
       AmmoniteREPL.main0(clazz, args)

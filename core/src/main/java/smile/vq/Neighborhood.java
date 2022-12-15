@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -31,6 +31,7 @@ public interface Neighborhood extends Serializable {
      * @param i the row distance of topology from the the winner neuron.
      * @param j the column distance of topology from the the winner neuron.
      * @param t the order number of current iteration.
+     * @return the changing rate of neighborhood.
      */
     double of(int i, int j, int t);
 
@@ -44,6 +45,7 @@ public interface Neighborhood extends Serializable {
      * computational cost and the approximation of the Gaussian.
      *
      * @param radius the radius of neighborhood.
+     * @return the bubble neighborhood function.
      */
     static Neighborhood bubble(int radius) {
         return (i, j, t) -> Math.abs(i) < radius && Math.abs(j) < radius ? 1 : 0;
@@ -53,6 +55,7 @@ public interface Neighborhood extends Serializable {
      * Returns Gaussian neighborhood function.
      * @param sigma the initial radius of neighborhood.
      * @param T the number of iterations.
+     * @return Gaussian neighborhood function.
      */
     static Neighborhood Gaussian(double sigma, double T) {
         return (i, j, t) -> {

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
-
 import static org.junit.Assert.*;
 
 /**
@@ -107,12 +106,12 @@ public class CrossValidationTest {
         int n = 57;
         int k = 5;
 
-        int[] stratum = new int[n];
+        int[] label = new int[n];
         for (int i = 0; i < n; i++) {
-            stratum[i] = MathEx.randomInt(3);
+            label[i] = MathEx.randomInt(3);
         }
 
-        Bag[] bags = CrossValidation.of(stratum, k);
+        Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
@@ -143,12 +142,12 @@ public class CrossValidationTest {
         int n = 57;
         int k = 5;
 
-        int[] stratum = new int[n];
+        int[] label = new int[n];
         for (int i = 0; i < n; i++) {
-            stratum[i] = MathEx.randomInt(3);
+            label[i] = MathEx.randomInt(3);
         }
 
-        Bag[] bags = CrossValidation.of(stratum, k);
+        Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             int[] test = bags[i].oob;

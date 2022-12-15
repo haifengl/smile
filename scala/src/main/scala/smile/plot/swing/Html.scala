@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -37,13 +37,13 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 
   /** Returns the HTML img tag of the swing component encoded by BASE64. */
   def of(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
     val headless = new Headless(canvas, width, height)
-    headless.pack
+    headless.pack()
     headless.setVisible(true)
     SwingUtilities.invokeAndWait(() => {})
 
@@ -55,6 +55,6 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 }

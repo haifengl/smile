@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -65,6 +65,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * determined by G-Means algorithm automatically.
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
+     * @return the model.
      */
     public static GMeans fit(double[][] data, int kmax) {
         return fit(data, kmax, 100, 1E-4);
@@ -77,6 +78,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * @param kmax the maximum number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
      * @param tol the tolerance of k-means convergence test.
+     * @return the model.
      */
     public static GMeans fit(double[][] data, int kmax, int maxIter, double tol) {
         if (kmax < 2) {

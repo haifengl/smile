@@ -1,22 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.regression;
 
+import java.util.Properties;
 import smile.base.rbf.RBF;
 import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
@@ -45,9 +46,9 @@ import smile.math.rbf.RadialBasisFunction;
  * <p>
  * Popular choices for &phi; comprise the Gaussian function and the so
  * called thin plate splines. The advantage of the thin plate splines is that
- * their conditioning is invariant under scalings. Gaussian, multi-quadric
+ * their conditioning is invariant under scaling. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
  * parameter. In particular, increasing r<sub><small>0</small></sub> has the
@@ -68,8 +69,10 @@ import smile.math.rbf.RadialBasisFunction;
  * </ol>
  * 
  * @see RadialBasisFunction
- * @see SVR
- * 
+ * @see SVM
+ *
+ * @param <T> the data type of samples.
+ *
  * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Regression<T> {
@@ -78,15 +81,15 @@ public class RBFNetwork<T> implements Regression<T> {
     /**
      * The linear weights.
      */
-    private double[] w;
+    private final double[] w;
     /**
      * The radial basis functions.
      */
-    private RBF<T>[] rbf;
+    private final RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
-    private boolean normalized;
+    private final boolean normalized;
 
     /**
      * Constructor.
@@ -105,6 +108,8 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param rbf the radial basis functions.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf, false);
@@ -116,6 +121,8 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param y the response variable.
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
@@ -148,7 +155,23 @@ public class RBFNetwork<T> implements Regression<T> {
         return new RBFNetwork<>(rbf, w, normalized);
     }
 
-    /** Returns true if the model is  normalized. */
+    /**
+     * Fits a RBF network.
+     * @param x training samples.
+     * @param y the response variable.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static RBFNetwork<double[]> fit(double[][] x, double[] y, Properties params) {
+        int neurons = Integer.parseInt(params.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.rbf.normalize", "false"));
+        return fit(x, y, RBF.fit(x, neurons), normalize);
+    }
+
+    /**
+     * Returns true if the model is normalized.
+     * @return true if the model is normalized.
+     */
     public boolean isNormalized() {
         return normalized;
     }

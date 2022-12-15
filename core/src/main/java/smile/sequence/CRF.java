@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -67,15 +67,15 @@ public class CRF implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
     /** The schema of (x, s_j). */
-    private StructType schema;
+    private final StructType schema;
     /**
      * The potential functions for each class.
      */
-    private RegressionTree[][] potentials;
+    private final RegressionTree[][] potentials;
     /**
      * The learning rate.
      */
-    private double shrinkage;
+    private final double shrinkage;
 
     /**
      * Constructor.
@@ -107,6 +107,9 @@ public class CRF implements Serializable {
      * labels a sequence by individual prediction on each position.
      * This usually produces better accuracy although the results may not
      * be coherent.
+     *
+     * @param x the sequence.
+     * @return the sequence labels.
      */
     public int[] viterbi(Tuple[] x) {
         int n = x.length;
@@ -227,6 +230,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels) {
         return fit(sequences, labels, new Properties());
@@ -236,13 +240,15 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
+    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.crf.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.crf.max_nodes", "100"));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.crf.node_size", "5"));
+        double shrinkage = Double.parseDouble(params.getProperty("smile.crf.shrinkage", "1.0"));
         return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
     }
 
@@ -256,6 +262,7 @@ public class CRF implements Serializable {
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
         int k = MathEx.max(labels) + 1;
@@ -340,7 +347,7 @@ public class CRF implements Serializable {
             });
 
             for (int j = 0; j < k; j++) {
-                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncols(), samples, order);
+                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncol(), samples, order);
                 potentials[j][iter] = tree;
 
                 double[] hj = h[j];

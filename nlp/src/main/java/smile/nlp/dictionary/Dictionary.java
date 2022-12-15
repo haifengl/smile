@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -28,16 +28,20 @@ public interface Dictionary {
 
     /**
      * Returns true if this dictionary contains the specified word.
+     * @param word the query word.
+     * @return true if this dictionary contains the specified word.
      */
     boolean contains(String word);
 
     /**
-     * Returns the number of elements in this dictionary.
+     * Returns the number of words in this dictionary.
+     * @return the number of words in this dictionary.
      */
     int size();
 
     /**
-     * Returns an iterator over the elements in this dictionary.
+     * Returns an iterator over the words in this dictionary.
+     * @return the iterator.
      */
     Iterator<String> iterator();
 }

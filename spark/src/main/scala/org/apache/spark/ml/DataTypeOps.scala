@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -24,12 +24,11 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 
 /**
-  * DataTypeOps is a collection of internal helper methods to convert back and forth
-  * between [[smile.data.`type`.DataType]] and [[org.apache.spark.sql.types.DataType]].
+  * A collection of convert methods between Smile DataType and SparkSQL DataType.
   */
 object DataTypeOps {
   /**
-    * Convert a Spark schema to a Smile schema
+    * Converts a Spark schema to a Smile schema.
     *
     * @param schema Spark schema
     * @return Smile schema
@@ -39,7 +38,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Spark field to a Smile field
+    * Converts a Spark field to a Smile field.
     *
     * @param field Spark field
     * @return Smile field
@@ -49,7 +48,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a [[org.apache.spark.sql.types.DataType]] to a Smile [[DataType]].
+    * Converts a SparkSQL DataType to a Smile DataType.
     * Deals with nested type or even user defined types.
     *
     * @param `type` Spark datatype
@@ -82,7 +81,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Smile schema to a Spark schema
+    * Converts a Smile schema to a Spark schema
     *
     * @param schema Smile schema
     * @return Spark schema
@@ -92,18 +91,23 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Smile field to a Spark field
+    * Converts a Smile field to a Spark field.
     *
     * @param field Smile field
     * @return Spark field
     */
   def toSparkField(field: StructField): org.apache.spark.sql.types.StructField = {
-    //TODO: add metadata for measure
-    org.apache.spark.sql.types.StructField(field.name, toSparkType(field.`type`))
+    val sparkType = toSparkType(field.`type`)
+    val nullable = !field.`type`.isPrimitive
+    val builder = new MetadataBuilder
+    if (field.measure != null) {
+      builder.putString("measure", field.measure.toString)
+    }
+    org.apache.spark.sql.types.StructField(field.name, sparkType, nullable, builder.build())
   }
 
   /**
-    * Convert a Smile [[DataType]] to a [[org.apache.spark.sql.types.DataType]].
+    * Convert a Smile DataType to a SparkSQL DataType.
     * Deals with nested type or even user defined types.
     *
     * @param `type` Smile datatype

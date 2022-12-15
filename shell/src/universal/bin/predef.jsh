@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile Shell is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,9 @@ import smile.math.distance.*;
 import smile.math.kernel.*;
 import smile.math.matrix.*;
 import smile.math.rbf.*;
+import smile.stat.*;
 import smile.stat.distribution.*;
+import smile.stat.hypothesis.*;
 import smile.data.*;
 import smile.data.formula.*;
 import static smile.data.formula.Terms.*;
@@ -37,6 +39,7 @@ import smile.plot.swing.*;
 import smile.interpolation.*;
 import smile.validation.*;
 import smile.validation.metric.*;
+import smile.anomaly.IsolationForest;
 import smile.association.*;
 import smile.base.cart.SplitRule;
 import smile.base.mlp.*;
@@ -48,14 +51,12 @@ import smile.regression.ElasticNet;
 import smile.regression.RidgeRegression;
 import smile.regression.GaussianProcessRegression;
 import smile.regression.RegressionTree;
-import smile.regression.SVR;
 import smile.feature.*;
+import smile.feature.extraction.*;
 import smile.clustering.*;
 import smile.vq.*;
 import smile.manifold.*;
-import smile.mds.*;
 import smile.sequence.*;
-import smile.projection.*;
 import smile.nlp.*;
 import smile.wavelet.*;
 

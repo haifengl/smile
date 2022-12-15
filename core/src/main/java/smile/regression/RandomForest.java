@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -30,7 +30,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.feature.TreeSHAP;
+import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.validation.RegressionMetrics;
 import smile.validation.metric.*;
@@ -45,7 +45,7 @@ import smile.validation.metric.*;
  * <li> If the number of cases in the training set is N, randomly sample N cases 
  * with replacement from the original data. This sample will
  * be the training set for growing the tree. 
- * <li> If there are M input variables, a number m &lt;&lt; M is specified such
+ * <li> If there are M input variables, a number {@code m << M} is specified such
  * that at each node, m variables are selected at random out of the M and
  * the best split on these m is used to split the node. The value of m is
  * held constant during the forest growing. 
@@ -74,8 +74,9 @@ import smile.validation.metric.*;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
+public class RandomForest implements DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
     /**
      * The base model.
@@ -96,19 +97,19 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
 
     /**
      * Forest of regression trees.
      */
-    private Model[] models;
+    private final Model[] models;
 
     /**
      * The overall out-of-bag metrics, which are quite accurate given that
      * enough trees have been grown (otherwise the OOB error estimate can
      * bias upward).
      */
-    private RegressionMetrics metrics;
+    private final RegressionMetrics metrics;
 
     /**
      * Variable importance. Every time a split of a node is made on variable
@@ -117,7 +118,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * all trees in the forest gives a fast variable importance that is often
      * very consistent with the permutation importance measure.
      */
-    private double[] importance;
+    private final double[] importance;
 
     /**
      * Constructor.
@@ -134,33 +135,36 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "0"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.random.forest.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
-        double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
+        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
+        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -173,14 +177,15 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. &lt; 1.0 means sampling without replacement.
+     *                  replacement. {@code < 1.0} means sampling without replacement.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -193,8 +198,9 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. &lt; 1.0 means sampling without replacement.
+     *                  replacement. {@code < 1.0} means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {
         if (ntrees < 1) {
@@ -207,17 +213,17 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector response = formula.y(data);
+        BaseVector<?, ?, ?> response = formula.y(data);
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
-        if (mtry > x.ncols()) {
+        if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
+        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncol()/3, 1);
 
-        final int n = x.nrows();
+        final int n = x.nrow();
         double[] prediction = new double[n];
         int[] oob = new int[n];
         final int[][] order = CART.order(x);
@@ -283,6 +289,12 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
                     MAD.of(truth, predict),
                     R2.of(truth, predict)
             );
+
+            if (noob != 0) {
+                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2));
+            } else {
+                logger.error("Regression tree trained without OOB samples.");
+            }
 
             return new Model(tree, metrics);
         }).toArray(Model[]::new);
@@ -370,6 +382,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
     /**
      * Returns the base models.
+     * @return the base models.
      */
     public Model[] models() {
         return models;
@@ -387,6 +400,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * prediction.
      * 
      * @param ntrees the new (smaller) size of tree model set.
+     * @return the trimmed model.
      */
     public RandomForest trim(int ntrees) {
         if (ntrees > models.length) {
@@ -403,6 +417,9 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
     /**
      * Merges two random forests.
+     *
+     * @param other the model to merge with.
+     * @return the merged model.
      */
     public RandomForest merge(RandomForest other) {
         if (!formula.equals(other.formula)) {
@@ -453,7 +470,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrows();
+        int n = x.nrow();
         int ntrees = models.length;
         double[][] prediction = new double[ntrees][n];
 

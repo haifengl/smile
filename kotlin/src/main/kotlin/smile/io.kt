@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -68,8 +68,8 @@ object write {
      * @param file the file path
      */
     fun csv(data: DataFrame, file: Path, delimiter: Char): Unit {
-        val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-        Write.csv(data, file, format)
+        val format = CSVFormat.Builder.create().setDelimiter(delimiter)
+        Write.csv(data, file, format.build())
     }
 }
 
@@ -82,16 +82,16 @@ object read {
 
     /** Reads a CSV file. */
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
-        var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-        if (header) format = format.withFirstRecordAsHeader()
-        return Read.csv(file, format, schema)
+        var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
+        if (header) format = format.setHeader().setSkipHeaderRecord(true)
+        return Read.csv(file, format.build(), schema)
     }
 
     /** Reads a CSV file. */
     fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
-        var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-        if (header) format = format.withFirstRecordAsHeader()
-        return Read.csv(file, format, schema)
+        var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
+        if (header) format = format.setHeader().setSkipHeaderRecord(true)
+        return Read.csv(file, format.build(), schema)
     }
 
     /** Reads a CSV file. */

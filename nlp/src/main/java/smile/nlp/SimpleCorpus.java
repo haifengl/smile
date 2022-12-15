@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -51,36 +51,36 @@ public class SimpleCorpus implements Corpus {
     /**
      * The set of documents.
      */
-    private List<SimpleText> docs = new ArrayList<>();
+    private final List<SimpleText> docs = new ArrayList<>();
     /**
      * Frequency of single tokens.
      */
-    private HashMap<String, MutableInt> freq = new HashMap<>();
+    private final HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * Frequency of bigrams.
      */
-    private HashMap<Bigram, MutableInt> freq2 = new HashMap<>();
+    private final HashMap<Bigram, MutableInt> freq2 = new HashMap<>();
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
-    private HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
+    private final HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
     /**
      * Sentence splitter.
      */
-    private SentenceSplitter splitter;
+    private final SentenceSplitter splitter;
     /**
      * Tokenizer.
      */
-    private Tokenizer tokenizer;
+    private final Tokenizer tokenizer;
     /**
      * The set of stop words.
      */
-    private StopWords stopWords;
+    private final StopWords stopWords;
 
     /**
      * The set of punctuations marks.
      */
-    private Punctuations punctuations;
+    private final Punctuations punctuations;
     
     /**
      * Constructor.
@@ -105,7 +105,9 @@ public class SimpleCorpus implements Corpus {
     }
 
     /**
-     * Add a document to the corpus.
+     * Adds a document to the corpus.
+     * @param text the document text.
+     * @return the document.
      */
     public Text add(Text text) {
         ArrayList<String> bag = new ArrayList<>();
@@ -162,11 +164,7 @@ public class SimpleCorpus implements Corpus {
         docs.add(doc);
 
         for (String term : doc.unique()) {
-            List<SimpleText> hit = invertedFile.get(term);
-            if (hit == null) {
-                hit = new ArrayList<>();
-                invertedFile.put(term, hit);
-            }
+            List<SimpleText> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
             hit.add(doc);
         }
 
@@ -179,44 +177,44 @@ public class SimpleCorpus implements Corpus {
     }
 
     @Override
-    public int getNumDocuments() {
+    public int ndoc() {
         return docs.size();
     }
 
     @Override
-    public int getNumTerms() {
+    public int nterm() {
         return freq.size();
     }
 
     @Override
-    public long getNumBigrams() {
+    public long nbigram() {
         return freq2.size();
     }
 
     @Override
-    public int getAverageDocumentSize() {
+    public int avgDocSize() {
         return (int) (size / docs.size());
     }
 
     @Override
-    public int getTermFrequency(String term) {
+    public int count(String term) {
         MutableInt count = freq.get(term);
         return count == null ? 0 : count.value;
     }
 
     @Override
-    public int getBigramFrequency(Bigram bigram) {
+    public int count(Bigram bigram) {
         MutableInt count = freq2.get(bigram);
         return count == null ? 0 : count.value;
     }
 
     @Override
-    public Iterator<String> getTerms() {
+    public Iterator<String> terms() {
         return freq.keySet().iterator();
     }
 
     @Override
-    public Iterator<Bigram> getBigrams() {
+    public Iterator<Bigram> bigrams() {
         return freq2.keySet().iterator();
     }
 
@@ -243,7 +241,7 @@ public class SimpleCorpus implements Corpus {
                 rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
             }
 
-            Collections.sort(rank, Collections.reverseOrder());
+            rank.sort(Collections.reverseOrder());
             return rank.iterator();
         } else {
             return Collections.emptyIterator();
@@ -254,9 +252,9 @@ public class SimpleCorpus implements Corpus {
     public Iterator<Relevance> search(RelevanceRanker ranker, String[] terms) {
         Set<SimpleText> hits = new HashSet<>();
 
-        for (int i = 0; i < terms.length; i++) {
-            if (invertedFile.containsKey(terms[i])) {
-                hits.addAll(invertedFile.get(terms[i]));
+        for (String term : terms) {
+            if (invertedFile.containsKey(term)) {
+                hits.addAll(invertedFile.get(term));
             }
         }
 
@@ -268,15 +266,15 @@ public class SimpleCorpus implements Corpus {
         ArrayList<Relevance> rank = new ArrayList<>(n);
         for (SimpleText doc : hits) {
             double r = 0.0;
-            for (int i = 0; i < terms.length; i++) {
-                int tf = doc.tf(terms[i]);
-                r += ranker.rank(this, doc, terms[i], tf, n);
+            for (String term : terms) {
+                int tf = doc.tf(term);
+                r += ranker.rank(this, doc, term, tf, n);
             }
 
             rank.add(new Relevance(doc, r));
         }
 
-        Collections.sort(rank, Collections.reverseOrder());
+        rank.sort(Collections.reverseOrder());
         return rank.iterator();
     }
 }

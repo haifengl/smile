@@ -1,23 +1,24 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.nlp.pos;
 
 import java.util.regex.Pattern;
+import smile.util.Regex;
 
 /**
  * Part-of-speech tagging by regular expression.
@@ -34,30 +35,24 @@ class RegexPOSTagger {
      * Tagging words based on regular expressions over word strings.
      */
     private static final Pattern[] REGEX = {
-        // cardinal numbers
-        Pattern.compile("^-?[0-9]+(\\.[0-9]+)?$"),
-        // cardinal numbers, optionally thousands are separated by comma
-        Pattern.compile("^\\d{1,3},(\\d{3},)*\\d{3}(\\.\\d+)?$"),
-        // U.S. phone number
-        Pattern.compile("^(((\\d{3})|(\\d{3}-)){0,1}\\d{3}-\\d{4})((x|ext)\\d{1,5}){0,1}$"),
-        // U.S. phone number extension
-        Pattern.compile("^(x|ext)\\d{1,5}$"),
-        // internet URLs
-        Pattern.compile("^((mailto\\:|(news|(ht|f)tp(s?))\\://){1}\\S+)$"),
-        // email address
-        Pattern.compile("^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])$"),
+            Regex.CARDINAL_NUMBER,
+            Regex.CARDINAL_NUMBER_WITH_COMMA,
+            Regex.PHONE_NUMBER,
+            Regex.PHONE_NUMBER_EXTENSION,
+            Regex.URL,
+            Regex.EMAIL_ADDRESS
     };
 
     /**
      * POS tags for words matching regular expressions.
      */
     private static final PennTreebankPOS[] REGEX_POS = {
-        PennTreebankPOS.CD,
-        PennTreebankPOS.CD,
-        PennTreebankPOS.NN,
-        PennTreebankPOS.NN,
-        PennTreebankPOS.NN,
-        PennTreebankPOS.NN
+            PennTreebankPOS.CD,
+            PennTreebankPOS.CD,
+            PennTreebankPOS.NN,
+            PennTreebankPOS.NN,
+            PennTreebankPOS.NN,
+            PennTreebankPOS.NN
     };
 
     /**

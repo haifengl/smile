@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,14 +22,14 @@ import smile.data.formula.Terms.$
 
 /** Formula DSL. */
 package object formula {
-  implicit def buildFormula(x: FormulaBuilder) = x.toFormula
-  implicit def buildFactorInteraction(x: FactorInteractionBuilder) = x.toFactorInteraction
-  implicit def buildFactorCrossing(x: FactorCrossingBuilder) = x.toFactorCrossing
-  implicit def pimpFormulaBuilder(x: String) = PimpedFormulaBuilder($(x))
-  implicit def pimpFormulaBuilder(x: Term) = PimpedFormulaBuilder(x)
-  implicit def pimpFormulaString(x: String) = PimpedFormulaString(x)
-  implicit def pimpHyperTerm(x: Term) = PimpedHyperTerm(x)
-  implicit def pimpTerm(x: Term) = PimpedTerm(x)
+  implicit def buildFormula(x: FormulaBuilder): Formula = x.toFormula
+  implicit def buildFactorInteraction(x: FactorInteractionBuilder): FactorInteraction = x.toFactorInteraction
+  implicit def buildFactorCrossing(x: FactorCrossingBuilder): FactorCrossing = x.toFactorCrossing
+  implicit def pimpFormulaBuilder(x: String): PimpedFormulaBuilder = PimpedFormulaBuilder($(x))
+  implicit def pimpFormulaBuilder(x: Term): PimpedFormulaBuilder = PimpedFormulaBuilder(x)
+  implicit def pimpFormulaString(x: String): PimpedFormulaString = PimpedFormulaString(x)
+  implicit def pimpHyperTerm(x: Term): PimpedHyperTerm = PimpedHyperTerm(x)
+  implicit def pimpTerm(x: Term): PimpedTerm = PimpedTerm(x)
 
   def abs(x: String): Term = Terms.abs($(x))
   def ceil(x: String): Term = Terms.ceil($(x))

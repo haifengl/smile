@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -53,7 +53,7 @@ public class BiconjugateGradientTest {
     public void setUp() {
         System.out.println("setUp");
 
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         Matrix.LU lu = a.lu();
         x = lu.solve(b);
     }
@@ -69,10 +69,9 @@ public class BiconjugateGradientTest {
     public void testSolveMatrix() {
         System.out.println("naive matrix");
 
-        Matrix naive = new Matrix(A);
+        Matrix matrix = Matrix.of(A);
         double[] result = new double[3];
-        BiconjugateGradient biconj = new BiconjugateGradient();
-        biconj.solve(naive, b, result);
+        matrix.solve(b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
@@ -86,14 +85,10 @@ public class BiconjugateGradientTest {
     @Test
     public void testSolveSparseMatrix() {
         System.out.println("sparse matrix");
-        int[] rowIndex = {0, 1, 0, 1, 2, 1, 2};
-        int[] colIndex = {0, 2, 5, 7};
-        double[] val = {0.9, 0.4, 0.4, 0.5, 0.3, 0.3, 0.8};
-        SparseMatrix sparse = new SparseMatrix(A, 1E-8);//new SparseMatrix(3, 3, val, rowIndex, colIndex);
+        SparseMatrix sparse = new SparseMatrix(A, 1E-8);
 
         double[] result = new double[3];
-        BiconjugateGradient biconj = new BiconjugateGradient();
-        biconj.solve(sparse, b, result);
+        sparse.solve(b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {

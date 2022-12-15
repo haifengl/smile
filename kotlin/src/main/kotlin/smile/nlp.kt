@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -117,7 +117,7 @@ fun ngram(maxNGramSize: Int, minFreq: Int, text: List<String>): Array<Array<NGra
     val sentences = text.flatMap { doc ->
         doc.sentences().map { sentence ->
             sentence.words("none")
-                    .map { word -> porter.stripPluralParticiple(word).toLowerCase() }
+                    .map { word -> porter.stripPluralParticiple(word).lowercase() }
                     .toTypedArray()
         }
     }
@@ -317,7 +317,7 @@ fun String.words(filter: String = "default"): Array<String> {
 
     val punctuations = smile.nlp.dictionary.EnglishPunctuations.getInstance()
     return tokens
-            .filter { word -> !(dict.contains(word.toLowerCase()) || punctuations.contains(word)) }
+            .filter { word -> !(dict.contains(word.lowercase()) || punctuations.contains(word)) }
             .toTypedArray()
 }
 
@@ -336,7 +336,7 @@ fun String.bag(filter: String = "default", stemmer: Stemmer? = porter): Map<Stri
     }
 
     return words
-            .map(String::toLowerCase)
+            .map(String::lowercase)
             .groupBy { it }
             .mapValues { (_, v) -> v.size }
             .withDefault { 0 }
@@ -352,7 +352,7 @@ fun String.bag2(filter: String = "default", stemmer: Stemmer? = porter): Set<Str
         words = words.map(stemmer::stem)
     }
 
-    return words.map(String::toLowerCase).toSet()
+    return words.map(String::lowercase).toSet()
 }
 
 /**

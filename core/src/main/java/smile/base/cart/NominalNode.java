@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -38,9 +38,17 @@ public class NominalNode extends InternalNode {
      */
     int value;
 
-    /** Constructor. */
-    public NominalNode(int feature, int value, double splitScore, double deviance, Node trueChild, Node falseChild) {
-        super(feature, splitScore, deviance, trueChild, falseChild);
+    /**
+     * Constructor.
+     * @param feature the index of feature column.
+     * @param value the split value.
+     * @param score the split score.
+     * @param deviance the deviance.
+     * @param trueChild the true branch child.
+     * @param falseChild the false branch child.
+     */
+    public NominalNode(int feature, int value, double score, double deviance, Node trueChild, Node falseChild) {
+        super(feature, score, deviance, trueChild, falseChild);
         this.value = value;
     }
 
@@ -74,7 +82,7 @@ public class NominalNode extends InternalNode {
         } else {
             if (field.measure instanceof NominalScale) {
                 NominalScale scale = (NominalScale) field.measure;
-                values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(v -> scale.level(v)).collect(Collectors.joining(","));
+                values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(scale::level).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;
             }

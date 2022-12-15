@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -32,7 +32,7 @@ import scala.jdk.CollectionConverters._
  * The implementation is adopt from ReactiveMongo.
  */
 case class ObjectId(id: Array[Byte]) {
-  require(id.size == ObjectId.size)
+  require(id.length == ObjectId.size)
 
   override def equals(that: Any): Boolean = {
     that.isInstanceOf[ObjectId] && Arrays.equals(id, that.asInstanceOf[ObjectId].id)
@@ -81,7 +81,7 @@ object ObjectId {
    * The following implementation of machineId work around openjdk limitations in
    * version 6 and 7
    *
-   * Openjdk fails to parse /proc/net/if_inet6 correctly to determine macaddress
+   * Openjdk fails to parse /proc/net/if_inet6 correctly to determine mac address
    * resulting in SocketException thrown.
    *
    * Please see:
@@ -93,38 +93,30 @@ object ObjectId {
    * and fix in openjdk8:
    * * http://hg.openjdk.java.net/jdk8/tl/jdk/rev/b1814b3ea6d3
    */
-  private val machineId = {
-    import java.net._
-    val validPlatform = Try {
-      val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
-      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == true
-      val isLinux = System.getProperty("os.name") == "Linux"
+  private val machineId: Array[Byte] = {
+    val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
+    val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
+    val isLinux = System.getProperty("os.name") == "Linux"
 
-      !isLinux || correctVersion || noIpv6
-    }.getOrElse(false)
+    val mac = if (!isLinux || correctVersion || noIpv6) {
+      Try {
+        import java.net._
+        val networkInterfacesEnum = NetworkInterface.getNetworkInterfaces
+        val networkInterfaces = networkInterfacesEnum.asScala
+        val ha = networkInterfaces.find(ha => Try(ha.getHardwareAddress).isSuccess && ha.getHardwareAddress != null && ha.getHardwareAddress.length == 6)
+          .map(_.getHardwareAddress)
+          .getOrElse(InetAddress.getLocalHost.getHostName.getBytes)
+        md5(ha).take(3)
+      }.toOption
+    } else None
 
-    // Check java policies
-    val permitted = {
-      val sec = System.getSecurityManager();
-      Try { sec.checkPermission(new NetPermission("getNetworkInformation")) }.toOption.map(_ => true).getOrElse(false);
-    }
-
-    if (validPlatform && permitted) {
-      val networkInterfacesEnum = NetworkInterface.getNetworkInterfaces
-      val networkInterfaces = networkInterfacesEnum.asScala
-      val ha = networkInterfaces.find(ha => Try(ha.getHardwareAddress).isSuccess && ha.getHardwareAddress != null && ha.getHardwareAddress.length == 6)
-        .map(_.getHardwareAddress)
-        .getOrElse(InetAddress.getLocalHost.getHostName.getBytes)
-      md5(ha).take(3)
-    } else {
+    mac.getOrElse {
       val threadId = Thread.currentThread.getId.toInt
-      val arr = new Array[Byte](3)
-
-      arr(0) = (threadId & 0xFF).toByte
-      arr(1) = (threadId >> 8 & 0xFF).toByte
-      arr(2) = (threadId >> 16 & 0xFF).toByte
-
-      arr
+      Array(
+        (threadId & 0xFF).toByte,
+        (threadId >> 8 & 0xFF).toByte,
+        (threadId >> 16 & 0xFF).toByte
+      )
     }
   }
 
@@ -157,7 +149,7 @@ object ObjectId {
    * The returned BSONObjectID contains a timestamp set to the current time (in seconds),
    * with the `machine identifier`, `thread identifier` and `increment` properly set.
    */
-  def generate: ObjectId = fromTime(System.currentTimeMillis, false)
+  def generate: ObjectId = fromTime(System.currentTimeMillis, fillOnlyTimestamp = false)
 
   /**
    * Generates a new BSON ObjectID from the given timestamp in milliseconds.

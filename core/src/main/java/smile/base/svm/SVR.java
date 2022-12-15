@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -24,10 +24,10 @@ import smile.math.kernel.MercerKernel;
 import smile.regression.KernelMachine;
 
 /**
- * Epsilon support vector regression. Like SVMs for classification, the model produced
- * by SVR depends only on a subset of the training data, because the cost
- * function ignores any training data close to the model prediction (within
- * a threshold &epsilon;).
+ * Epsilon support vector regression. Like SVMs for classification, the model
+ * produced by SVR depends only on a subset of the training data, because
+ * the cost function ignores any training data close to the model prediction
+ * (within a threshold &epsilon;).
  *
  * <h2>References</h2>
  * <ol>
@@ -54,23 +54,23 @@ public class SVR<T> {
     /**
      * The kernel function.
      */
-    private MercerKernel<T> kernel;
+    private final MercerKernel<T> kernel;
     /**
      * The loss function error threshold.
      */
-    private double eps = 0.1;
+    private final double eps;
     /**
      * The soft margin penalty parameter.
      */
-    private double C = 1.0;
+    private final double C;
     /**
      * The tolerance of convergence test.
      */
-    private double tol = 1E-3;
+    private final double tol;
     /**
      * Support vectors.
      */
-    private List<SupportVector> sv;
+    private List<SupportVector> vectors;
     /**
      * Threshold of decision function.
      */
@@ -111,7 +111,7 @@ public class SVR<T> {
          */
         double[] alpha = new double[2];
         /**
-         * Gradient y - K&alpha;.
+         * Gradient y - Ki * alpha.
          */
         double[] g = new double[2];
         /**
@@ -119,6 +119,12 @@ public class SVR<T> {
          */
         double k;
 
+        /**
+         * Constructor.
+         * @param i the index of support vector.
+         * @param x the support vector.
+         * @param y the response variable.
+         */
         SupportVector(int i, T x, double y) {
             this.i = i;
             this.x = x;
@@ -131,6 +137,9 @@ public class SVR<T> {
     /**
      * Constructor.
      * @param kernel the kernel function.
+     * @param eps the loss function error threshold.
+     * @param C the soft margin penalty parameter.
+     * @param tol the tolerance of convergence test.
      */
     public SVR(MercerKernel<T> kernel, double eps, double C, double tol) {
         if (eps <= 0) {
@@ -152,9 +161,10 @@ public class SVR<T> {
     }
 
     /**
-     * Fits a epsilon support vector regression model.
+     * Fits an epsilon support vector regression model.
      * @param x training instances.
      * @param y response variable.
+     * @return the model.
      */
     public KernelMachine<T> fit(T[] x, double[] y) {
         if (x.length != y.length) {
@@ -165,9 +175,9 @@ public class SVR<T> {
         K = new double[n][];
 
         // Initialize support vectors.
-        sv = new ArrayList<>(n);
+        vectors = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            sv.add(new SupportVector(i, x[i], y[i]));
+            vectors.add(new SupportVector(i, x[i], y[i]));
         }
 
         minmax();
@@ -182,9 +192,9 @@ public class SVR<T> {
         int bsv = 0;
 
         for (int i = 0; i < n; i++) {
-            SupportVector v = sv.get(i);
+            SupportVector v = vectors.get(i);
             if (v.alpha[0] == v.alpha[1]) {
-                sv.set(i, null);
+                vectors.set(i, null);
             } else {
                 nsv++;
                 if (v.alpha[0] == C || v.alpha[1] == C) {
@@ -195,19 +205,19 @@ public class SVR<T> {
 
         double[] alpha = new double[nsv];
         @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
+        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
 
         int i = 0;
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             if (v != null) {
-                vectors[i] = v.x;
+                sv[i] = v.x;
                 alpha[i++] = v.alpha[1] - v.alpha[0];
             }
         }
 
         logger.info("{} samples, {} support vectors, {} bounded", n, nsv, bsv);
 
-        return new KernelMachine<>(kernel, vectors, alpha, b);
+        return new KernelMachine<>(kernel, sv, alpha, b);
     }
 
     /**
@@ -217,7 +227,7 @@ public class SVR<T> {
         gmin = Double.MAX_VALUE;
         gmax = -Double.MAX_VALUE;
 
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             double g = -v.g[0];
             double a = v.alpha[0];
             if (g < gmin && a > 0.0) {
@@ -247,13 +257,13 @@ public class SVR<T> {
     }
 
     /**
-     * Calculate the row of kernel matrix for a vector i.
+     * Computes the row of kernel matrix for a vector i.
      * @param v data vector to evaluate kernel matrix.
      */
     private double[] gram(SupportVector v) {
         if (K[v.i] == null) {
-            double[] ki = new double[sv.size()];
-            sv.stream().parallel().forEach(vi -> ki[vi.i] = kernel.k(v.x, vi.x));
+            double[] ki = new double[vectors.size()];
+            vectors.stream().parallel().forEach(vi -> ki[vi.i] = kernel.k(v.x, vi.x));
             K[v.i] = ki;
         }
         return K[v.i];
@@ -276,13 +286,13 @@ public class SVR<T> {
         // Second order working set selection.
         double best = 0.0;
         double gi = i == 0 ? -v1.g[0] : v1.g[1];
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             double curv = v1.k + v.k - 2 * k1[v.i];
             if (curv <= 0.0) curv = TAU;
 
             double gj = -v.g[0];
             if (v.alpha[0] > 0.0 && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;
@@ -293,7 +303,7 @@ public class SVR<T> {
 
             gj = v.g[1];
             if (v.alpha[1] < C && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;
@@ -379,7 +389,7 @@ public class SVR<T> {
 
         int si = 2 * i - 1;
         int sj = 2 * j - 1;
-        for (SupportVector v : sv) {
+        for (SupportVector v : vectors) {
             v.g[0] -= si * k1[v.i] * delta_alpha_i + sj * k2[v.i] * delta_alpha_j;
             v.g[1] += si * k1[v.i] * delta_alpha_i + sj * k2[v.i] * delta_alpha_j;
         }

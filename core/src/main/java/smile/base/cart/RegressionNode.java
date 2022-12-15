@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -32,17 +32,17 @@ public class RegressionNode extends LeafNode {
     private static final long serialVersionUID = 2L;
 
     /** The mean of response variable. */
-    private double mean;
+    private final double mean;
 
     /**
      * The predicted output. In standard regression tree,
      * this is same as the mean. However, in gradient tree
      * boosting, this may be different.
      */
-    private double output;
+    private final double output;
 
     /** The residual sum of squares. */
-    private double rss;
+    private final double rss;
 
     /**
      * Constructor.
@@ -59,17 +59,26 @@ public class RegressionNode extends LeafNode {
         this.rss = rss;
     }
 
-    /** Returns the predicted value. */
+    /**
+     * Returns the predicted value.
+     * @return the predicted value.
+     */
     public double output() {
         return output;
     }
 
-    /** Returns the mean of response variable. */
+    /**
+     * Returns the mean of response variable.
+     * @return the mean of response variable.
+     */
     public double mean() {
         return mean;
     }
 
-    /** Returns the residual sum of squares. */
+    /**
+     * Returns the residual sum of squares.
+     * @return the residual sum of squares.
+     */
     public double impurity() {
         return rss;
     }

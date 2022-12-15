@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -31,7 +31,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
   var spark: SparkSession = _
 
   def beforeAll(): Unit = {
-    spark = SparkSession.builder().master("local[*]").getOrCreate
+    spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
   "SmileRegression" should {
@@ -56,7 +56,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
       val temp = Files.createTempFile("smile-test-", ".tmp")
       val path = temp.normalize().toString
       model.write.overwrite().save(path)
-      temp.toFile().deleteOnExit()
+      temp.toFile.deleteOnExit()
 
       val loaded = SmileRegressionModel.load(path)
       eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))

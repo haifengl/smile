@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -85,6 +85,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param data     the observations.
      * @param k        the number of clusters.
      * @param distance the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k) {
         return fit(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
@@ -98,6 +100,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param maxNeighbor the maximum number of neighbors examined during
      *                    the random search of local minima.
      * @param distance    the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k, int maxNeighbor) {
         if (maxNeighbor <= 0) {

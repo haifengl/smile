@@ -1,26 +1,25 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.base.svm;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 
@@ -47,23 +46,23 @@ public class LASVM<T> implements Serializable {
     /**
      * The kernel function.
      */
-    private MercerKernel<T> kernel;
+    private final MercerKernel<T> kernel;
     /**
      * The soft margin penalty parameter for positive samples.
      */
-    private double Cp = 1.0;
+    private final double Cp;
     /**
      * The soft margin penalty parameter for negative samples.
      */
-    private double Cn = 1.0;
+    private final double Cn;
     /**
      * The tolerance of convergence test.
      */
-    private double tol = 1E-3;
+    private final double tol;
     /**
      * Support vectors.
      */
-    private LinkedList<SupportVector<T>> sv = new LinkedList<>();
+    private final ArrayList<SupportVector<T>> vectors = new ArrayList<>();
     /**
      * Threshold of decision function.
      */
@@ -80,9 +79,13 @@ public class LASVM<T> implements Serializable {
      * where m_i = min{0, y_i * C}
      * and   M_i = max{0, y_i * C}
      */
+    /** The most violating pair. */
     private SupportVector<T> svmin = null;
+    /** The most violating pair. */
     private SupportVector<T> svmax = null;
+    /** The gradient of most violating pair. */
     private double gmin = Double.MAX_VALUE;
+    /** The gradient of most violating pair. */
     private double gmax = -Double.MAX_VALUE;
 
     /**
@@ -96,6 +99,7 @@ public class LASVM<T> implements Serializable {
 
     /**
      * Constructor.
+     * @param kernel the kernel.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
      */
@@ -105,11 +109,24 @@ public class LASVM<T> implements Serializable {
 
     /**
      * Constructor.
+     * @param kernel the kernel.
      * @param Cp the soft margin penalty parameter for positive instances.
      * @param Cn the soft margin penalty parameter for negative instances.
      * @param tol the tolerance of convergence test.
      */
     public LASVM(MercerKernel<T> kernel, double Cp, double Cn, double tol) {
+        if (Cp < 0) {
+            throw new IllegalArgumentException("Invalid C: " + Cp);
+        }
+
+        if (Cn < 0) {
+            throw new IllegalArgumentException("Invalid C: " + Cn);
+        }
+
+        if (tol <= 0) {
+            throw new IllegalArgumentException("Invalid tol: " + tol);
+        }
+
         this.kernel = kernel;
         this.Cp = Cp;
         this.Cn = Cn;
@@ -120,18 +137,10 @@ public class LASVM<T> implements Serializable {
      * Trains the model.
      * @param x training samples.
      * @param y training labels.
+     * @param epochs the number of epochs, usually 1 or 2 is sufficient.
+     * @return the model.
      */
-    public KernelMachine<T> fit(T[] x, int[] y) {
-        return fit(x, y, 2);
-    }
-
-    /**
-     * Trains the model.
-     * @param x training samples.
-     * @param y training labels.
-     * @param epoch the number of epochs, usually 1 or 2 is sufficient.
-     */
-    public KernelMachine<T>  fit(T[] x, int[] y, int epoch) {
+    public KernelMachine<T>  fit(T[] x, int[] y, int epochs) {
         this.x = x;
         this.K = new double[x.length][];
 
@@ -140,7 +149,7 @@ public class LASVM<T> implements Serializable {
 
         // stochastic training
         int phase = Math.min(x.length, 1000);
-        for (int e = 0, iter = 0; e < epoch; e++) {
+        for (int epoch = 0, iter = 0; epoch < epochs; epoch++) {
             for (int i : MathEx.permutate(x.length)) {
                 process(i, x[i], y[i]);
 
@@ -150,23 +159,24 @@ public class LASVM<T> implements Serializable {
                 } while (gmax - gmin > 1000);
 
                 if (++iter % phase == 0) {
-                    logger.info("{} iterations, {} support vectors", iter, sv.size());
+                    logger.info("{} iterations, {} support vectors", iter, vectors.size());
                 }
             }
         }
 
         finish();
 
-        int n = sv.size();
+        int n = vectors.size();
         @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
+        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
         double[] alpha = new double[n];
         for (int i = 0; i < n; i++) {
-            SupportVector<T> v = sv.get(i);
-            vectors[i] = v.x;
+            SupportVector<T> v = vectors.get(i);
+            sv[i] = v.x;
             alpha[i] = v.alpha;
         }
-        return new KernelMachine<>(kernel, vectors, alpha, b);
+
+        return new KernelMachine<>(kernel, sv, alpha, b);
     }
 
     /**
@@ -177,7 +187,7 @@ public class LASVM<T> implements Serializable {
         int cp = 0, cn = 0;
 
         for (int i : MathEx.permutate(x.length)) {
-            if (y[i] == 1 && cp < few) {
+            if (y[i] == +1 && cp < few) {
                 if (process(i, x[i], y[i])) cp++;
             } else if (y[i] == -1 && cn < few) {
                 if (process(i, x[i], y[i])) cn++;
@@ -188,7 +198,7 @@ public class LASVM<T> implements Serializable {
     }
 
     /**
-     * Find support vectors with smallest (of I_up) and largest (of I_down) gradients.
+     * Finds the support vectors with smallest (of I_up) and largest (of I_down) gradients.
      */
     private void minmax() {
         if (minmaxflag) return;
@@ -196,7 +206,7 @@ public class LASVM<T> implements Serializable {
         gmin = Double.MAX_VALUE;
         gmax = -Double.MAX_VALUE;
 
-        for (SupportVector<T> v : sv) {
+        for (SupportVector<T> v : vectors) {
             double gi = v.g;
             double ai = v.alpha;
             if (gi < gmin && ai > v.cmin) {
@@ -216,6 +226,7 @@ public class LASVM<T> implements Serializable {
      * Returns the cached kernel value.
      * @param i the index of support vector.
      * @param j the index of support vector.
+     * @return the kernel value.
      */
     private double k(int i, int j) {
         double k = Double.NaN;
@@ -237,6 +248,7 @@ public class LASVM<T> implements Serializable {
      * @param v1 the first vector of working set.
      * @param v2 the second vector of working set.
      * @param epsgr the tolerance of convergence test.
+     * @return true if NOT pass convergence test.
      */
     private boolean smo(SupportVector<T> v1, SupportVector<T> v2, double epsgr) {
         // SMO working set selection
@@ -259,7 +271,7 @@ public class LASVM<T> implements Serializable {
             double km = v1.k;
             double gm = v1.g;
             double best = 0.0;
-            for (SupportVector<T> v : sv) {
+            for (SupportVector<T> v : vectors) {
                 double Z = v.g - gm;
                 double k = k(v1.i, v.i);
                 double curv = km + v.k - 2.0 * k;
@@ -281,7 +293,7 @@ public class LASVM<T> implements Serializable {
             double km = v2.k;
             double gm = v2.g;
             double best = 0.0;
-            for (SupportVector<T> v : sv) {
+            for (SupportVector<T> v : vectors) {
                 double Z = gm - v.g;
                 double k = k(v2.i, v.i);
                 double curv = km + v.k - 2.0 * k;
@@ -315,29 +327,29 @@ public class LASVM<T> implements Serializable {
 
         // Determine maximal step
         if (step >= 0.0) {
-            double ostep = v1.alpha - v1.cmin;
-            if (ostep < step) {
-                step = ostep;
+            double delta = v1.alpha - v1.cmin;
+            if (delta < step) {
+                step = delta;
             }
-            ostep = v2.cmax - v2.alpha;
-            if (ostep < step) {
-                step = ostep;
+            delta = v2.cmax - v2.alpha;
+            if (delta < step) {
+                step = delta;
             }
         } else {
-            double ostep = v2.cmin - v2.alpha;
-            if (ostep > step) {
-                step = ostep;
+            double delta = v2.cmin - v2.alpha;
+            if (delta > step) {
+                step = delta;
             }
-            ostep = v1.alpha - v1.cmax;
-            if (ostep > step) {
-                step = ostep;
+            delta = v1.alpha - v1.cmax;
+            if (delta > step) {
+                step = delta;
             }
         }
 
         // Perform update
         v1.alpha -= step;
         v2.alpha += step;
-        for (SupportVector v : sv) {
+        for (SupportVector<T> v : vectors) {
             v.g -= step * (k(v2.i, v.i) - k(v1.i, v.i));
         }
 
@@ -351,6 +363,7 @@ public class LASVM<T> implements Serializable {
 
     /**
      * Process a new sample.
+     * @return true if x is added to support vectors.
      */
     private boolean process(int i, T x, int y) {
         if (y != +1 && y != -1) {
@@ -358,20 +371,25 @@ public class LASVM<T> implements Serializable {
         }
 
         // Bail out if already in expansion
-        for (SupportVector<T> v : sv) {
-            if (v.x == x) return true;
+        for (SupportVector<T> v : vectors) {
+            if (v.x == x) return false;
         }
-
-        // Compute gradient
-        double g = y;
 
         double[] cache = new double[K.length];
         Arrays.fill(cache, Double.NaN);
-        g -= sv.stream().parallel().mapToDouble(v -> {
+
+        // Compute gradient
+        double g = y;
+        for (SupportVector<T> v : vectors) {
+            // Parallel stream may cause unreproducible results due to
+            // different numeric round-off because of different data
+            // partitions (i.e. different number of cores/threads).
+            // The speed up of parallel stream is also limited as
+            // the number of support vectors is often small.
             double k = kernel.k(v.x, x);
             cache[v.i] = k;
-            return v.alpha * k;
-        }).sum();
+            g -= v.alpha * k;
+        }
 
         // Decide insertion
         minmax();
@@ -383,7 +401,7 @@ public class LASVM<T> implements Serializable {
 
         // Insert
         SupportVector<T> v = new SupportVector<>(i, x, y, 0.0, g, Cp, Cn, kernel.k(x, x));
-        sv.addFirst(v);
+        vectors.add(v);
         K[i] = cache;
 
         // Process
@@ -400,6 +418,7 @@ public class LASVM<T> implements Serializable {
     /**
      * Reprocess support vectors.
      * @param epsgr the tolerance of convergence test.
+     * @return true if NOT pass convergence test.
      */
     private boolean reprocess(double epsgr) {
         boolean status = smo(null, null, epsgr);
@@ -411,16 +430,16 @@ public class LASVM<T> implements Serializable {
      * Call reprocess until converge.
      */
     private void finish() {
-        finish(tol, sv.size());
+        finish(tol, vectors.size());
 
         int bsv = 0;
-        for (SupportVector v : sv) {
+        for (SupportVector<T> v : vectors) {
             if (v.alpha == v.cmin || v.alpha == v.cmax) {
                 bsv++;
             }
         }
 
-        logger.info("{} samples, {} support vectors, {} bounded", x.length, sv.size(), bsv);
+        logger.info("{} samples, {} support vectors, {} bounded", x.length, vectors.size(), bsv);
 
     }
 
@@ -443,7 +462,7 @@ public class LASVM<T> implements Serializable {
      * Removes support vectors from the kernel expansion.
      * Online kernel classifiers usually experience considerable problems
      * with noisy data sets. Each iteration is likely to cause a mistake
-     * because the best achievable misclassification rate for such problems
+     * because the best achievable error rate for such problems
      * is high. The number of support vectors increases very rapidly and
      * potentially causes overfitting and poor convergence. Support vector
      * removal criteria avoid this drawback.
@@ -451,15 +470,14 @@ public class LASVM<T> implements Serializable {
     private void evict() {
         minmax();
 
-        Iterator<SupportVector<T>> iter = sv.iterator();
-        while (iter.hasNext()) {
-            SupportVector v = iter.next();
-            if (v.alpha == 0) {
+        vectors.removeIf(v -> {
+            if (MathEx.isZero(v.alpha, 1E-4)) {
                 if ((v.g >= gmax && 0 >= v.cmax) || (v.g <= gmin && 0 <= v.cmin)) {
                     K[v.i] = null;
-                    iter.remove();
+                    return true;
                 }
             }
-        }
+            return false;
+        });
     }
 }

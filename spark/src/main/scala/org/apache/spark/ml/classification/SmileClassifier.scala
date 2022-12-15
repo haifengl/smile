@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -20,7 +20,6 @@ package org.apache.spark.ml.classification
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.classification.{ClassificationModel => SparkClassificationModel, Classifier => SparkClassifier}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param._
@@ -70,11 +69,11 @@ private[ml] object SmileClassifierParams {
 }
 
 /**
-  * SmileClassifier is an [[Estimator]] that takes a smile classification trainer and train it on a [[Dataset]].
-  * It makes it easy to add a smile classification trainer into a Spark MLLib [[Pipeline]].
+  * A Spark Estimator based on Smile's classification algorithms.
+  * It allows to add a Smile model into a Spark MLLib Pipeline.
   *
-  * @note SmileClassifier will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
-  *       but train the classifier on a Spark Executor.
+  * @note SmileClassifier will collect the training Dataset
+  *       to the Spark Driver but train the model on a Spark Executor.
   */
 class SmileClassifier(override val uid: String)
   extends SparkClassifier[Vector, SmileClassifier, SmileClassificationModel]
@@ -165,16 +164,17 @@ class SmileClassificationModel(override val uid: String,
   def this(numClasses: Int, model: smile.classification.Classifier[Array[Double]]) =
     this(Identifiable.randomUID("SmileClassificationModel"), numClasses, model)
 
-  override protected def predictRaw(features: Vector): Vector = {
+  override def predictRaw(features: Vector): Vector = {
     // The Spark API predictRaw function outputs a Vector with
     // "confidence scores" for each class.
-    val posteriori = Array.fill(numClasses)(0.0)
-    if (model.isInstanceOf[smile.classification.SoftClassifier[Array[Double]]]) {
-      model.asInstanceOf[smile.classification.SoftClassifier[Array[Double]]].predict(features.toArray, posteriori)
+    val posteriori = Array.ofDim[Double](numClasses)
+    if (model.soft()) {
+      model.predict(features.toArray, posteriori)
     } else {
-      // The "hard" confidence for the predicted class.
+        // The "hard" confidence for the predicted class.
       posteriori(model.predict(features.toArray)) = 1.0
     }
+
     Vectors.dense(posteriori)
   }
 

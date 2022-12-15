@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -38,8 +38,8 @@ import smile.math.distance.Distance;
 public class SingleLinkage extends Linkage {
     /**
      * Constructor.
-     * @param proximity The proximity matrix to store the distance measure of
-     * dissimilarity. To save space, we only need the lower half of matrix.
+     * @param proximity the proximity matrix. Only the lower half will
+     *                  be referred.
      */
     public SingleLinkage(double[][] proximity) {
         super(proximity);
@@ -48,7 +48,7 @@ public class SingleLinkage extends Linkage {
     /**
      * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
-     * @param proximity column-wise linearized proximity matrix that stores
+     * @param proximity the column-wise linearized proximity matrix that stores
      *                  only the lower half. The length of proximity should be
      *                  size * (size+1) / 2.
      *                  To save space, Linkage will use this argument directly
@@ -58,12 +58,24 @@ public class SingleLinkage extends Linkage {
         super(size, proximity);
     }
 
-    /** Given a set of data, computes the proximity and then the linkage. */
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @return the linkage.
+     */
     public static SingleLinkage of(double[][] data) {
         return new SingleLinkage(data.length, proximity(data));
     }
 
-    /** Given a set of data, computes the proximity and then the linkage. */
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the linkage.
+     */
     public static <T> SingleLinkage of(T[] data, Distance<T> distance) {
         return new SingleLinkage(data.length, proximity(data, distance));
     }

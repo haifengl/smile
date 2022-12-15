@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -85,7 +85,12 @@ public class NormalizedMutualInformation implements ClusteringMetric {
         }
     }
 
-    /** Calculates the normalized mutual information of I(y1, y2) / H(y1, y2). */
+    /**
+     * Calculates the normalized mutual information of I(y1, y2) / H(y1, y2).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double joint(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -110,7 +115,12 @@ public class NormalizedMutualInformation implements ClusteringMetric {
         return I / H;
     }
 
-    /** Calculates the normalized mutual information of I(y1, y2) / max(H(y1), H(y2)). */
+    /**
+     * Calculates the normalized mutual information of I(y1, y2) / max(H(y1), H(y2)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double max(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -122,7 +132,12 @@ public class NormalizedMutualInformation implements ClusteringMetric {
         return I / Math.max(h1, h2);
     }
 
-    /** Calculates the normalized mutual information of 2 * I(y1, y2) / (H(y1) + H(y2)). */
+    /**
+     * Calculates the normalized mutual information of 2 * I(y1, y2) / (H(y1) + H(y2)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double sum(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -134,7 +149,12 @@ public class NormalizedMutualInformation implements ClusteringMetric {
         return 2 * I / (h1 + h2);
     }
 
-    /** Calculates the normalized mutual information of I(y1, y2) / sqrt(H(y1) * H(y2)). */
+    /**
+     * Calculates the normalized mutual information of I(y1, y2) / sqrt(H(y1) * H(y2)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double sqrt(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -146,7 +166,12 @@ public class NormalizedMutualInformation implements ClusteringMetric {
         return I / Math.sqrt(h1 * h2);
     }
 
-    /** Calculates the normalized mutual information of I(y1, y2) / min(H(y1), H(y2)). */
+    /**
+     * Calculates the normalized mutual information of I(y1, y2) / min(H(y1), H(y2)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double min(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;

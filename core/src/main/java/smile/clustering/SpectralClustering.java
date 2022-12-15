@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -69,6 +69,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      * Spectral graph clustering.
      * @param W the adjacency matrix of graph, which will be modified.
      * @param k the number of clusters.
+     * @return the model.
      */
     public static SpectralClustering fit(Matrix W, int k) {
         return fit(W, k, 100, 1E-4);
@@ -80,13 +81,14 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
      * @param tol the tolerance of k-means convergence test.
+     * @return the model.
      */
     public static SpectralClustering fit(Matrix W, int k, int maxIter, double tol) {
         if (k < 2) {
             throw new IllegalArgumentException("Invalid number of clusters: " + k);
         }
 
-        int n = W.nrows();
+        int n = W.nrow();
         double[] D = W.colSums();
         for (int i = 0; i < n; i++) {
             if (D[i] == 0.0) {
@@ -123,6 +125,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest
      *              clusters (smallest distortion) in feature space.
+     * @return the model.
      */
     public static SpectralClustering fit(double[][] data, int k, double sigma) {
         return fit(data, k, sigma, 100, 1E-4);
@@ -138,6 +141,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              clusters (smallest distortion) in feature space.
      * @param maxIter the maximum number of iterations for k-means.
      * @param tol the tolerance of k-means convergence test.
+     * @return the model.
      */
     public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol) {
         if (k < 2) {
@@ -172,6 +176,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              a somewhat sensitive parameter. To search for the best
      *              setting, one may pick the value that gives the tightest
      *              clusters (smallest distortion) in feature space.
+     * @return the model.
      */
     public static SpectralClustering fit(double[][] data, int k, int l, double sigma) {
         return fit(data, k, l, sigma, 100, 1E-4);
@@ -188,6 +193,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      *              clusters (smallest distortion) in feature space.
      * @param maxIter the maximum number of iterations for k-means.
      * @param tol the tolerance of k-means convergence test.
+     * @return the model.
      */
     public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol) {
         if (l < k || l >= data.length) {

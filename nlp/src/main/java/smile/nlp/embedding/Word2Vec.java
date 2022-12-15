@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,14 +22,10 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import smile.data.DataFrame;
 import smile.data.vector.FloatVector;
 
@@ -63,7 +59,7 @@ public class Word2Vec {
     /** The vector space. */
     public final DataFrame vectors;
     /** The word-to-index map. */
-    private HashMap<String, Integer> map;
+    private final HashMap<String, Integer> map;
 
     /**
      * Constructor.
@@ -86,18 +82,25 @@ public class Word2Vec {
         }
     }
 
-    /** Returns the dimension of vector space. */
+    /**
+     * Returns the dimension of embedding vector space.
+     * @return the dimension of embedding vector space.
+     */
     public int dimension() {
-        return vectors.ncols();
+        return vectors.ncol();
     }
 
-    /** Returns the vector embedding of a word. */
+    /**
+     * Returns the embedding vector of a word.
+     * @param word the word.
+     * @return the embedding vector.
+     */
     public float[] get(String word) {
         Integer index = map.get(word);
         if (index == null) return null;
 
         int i = index;
-        int dim = vectors.ncols();
+        int dim = vectors.ncol();
         float[] vector = new float[dim];
         for (int j = 0; j < dim; j++) {
             vector[j] = vectors.getFloat(i, j);
@@ -106,7 +109,11 @@ public class Word2Vec {
         return vector;
     }
 
-    /** Returns the vector embedding of a word. For Scala convenience. */
+    /**
+     * Returns the embedding vector of a word. For Scala convenience.
+     * @param word the word.
+     * @return the embedding vector.
+     */
     public float[] apply(String word) {
         return get(word);
     }
@@ -114,6 +121,9 @@ public class Word2Vec {
     /**
      * Loads a <a href="https://code.google.com/archive/p/word2vec/">pre-trained</a>
      * word2vec model from binary file of ByteOrder.LITTLE_ENDIAN.
+     * @param file the path to model file.
+     * @throws IOException when fails to read the file.
+     * @return the word2vec model.
      */
     public static Word2Vec of(Path file) throws IOException {
         return of(file, ByteOrder.LITTLE_ENDIAN);
@@ -122,6 +132,10 @@ public class Word2Vec {
     /**
      * Loads a <a href="https://code.google.com/archive/p/word2vec/">pre-trained</a>
      * word2vec model from binary file.
+     * @param file the path to model file.
+     * @param order the byte order of model file.
+     * @throws IOException when fails to read the file.
+     * @return the word2vec model.
      */
     public static Word2Vec of(Path file, ByteOrder order) throws IOException {
         final long GB = 1024 * 1024 * 1024;

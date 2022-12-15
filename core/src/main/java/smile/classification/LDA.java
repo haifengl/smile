@@ -1,26 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
@@ -59,7 +56,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class LDA implements SoftClassifier<double[]> {
+public class LDA extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -92,10 +89,6 @@ public class LDA implements SoftClassifier<double[]> {
      * matrix is spherical.
      */
     private final Matrix scaling;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -114,16 +107,16 @@ public class LDA implements SoftClassifier<double[]> {
      * @param mu the mean vectors of each class.
      * @param eigen the eigen values of common variance matrix.
      * @param scaling the eigen vectors of common covariance matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public LDA(double[] priori, double[][] mu, double[] eigen, Matrix scaling, IntSet labels) {
+        super(labels);
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
         this.mu = mu;
         this.eigen = eigen;
         this.scaling = scaling;
-        this.labels = labels;
 
         logppriori = new double[k];
         for (int i = 0; i < k; i++) {
@@ -132,55 +125,37 @@ public class LDA implements SoftClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static LDA fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static LDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
-    }
-
-    /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
     public static LDA fit(double[][] x, int[] y) {
         return fit(x, y, null, 1E-4);
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static LDA fit(double[][] x, int[] y, Properties prop) {
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
+    public static LDA fit(double[][] x, int[] y, Properties params) {
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.lda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.lda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param priori the priori probability of each class. If null, it will be
      * estimated from the training data.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      * will reject variables whose variance is less than tol<sup>2</sup>.
+     * @return the model.
      */
     public static LDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
@@ -199,6 +174,7 @@ public class LDA implements SoftClassifier<double[]> {
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;
@@ -207,6 +183,11 @@ public class LDA implements SoftClassifier<double[]> {
     @Override
     public int predict(double[] x) {
         return predict(x, new double[k]);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
@@ -234,6 +215,6 @@ public class LDA implements SoftClassifier<double[]> {
             posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        return labels.valueOf(MathEx.softmax(posteriori));
+        return classes.valueOf(MathEx.softmax(posteriori));
     }
 }

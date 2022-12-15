@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -101,6 +101,7 @@ public class LaplacianEigenmap implements Serializable {
      * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LaplacianEigenmap of(double[][] data, int k) {
         return of(data, k, 2, -1);
@@ -111,8 +112,9 @@ public class LaplacianEigenmap implements Serializable {
      * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
-     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
+     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
      *          Non-positive value means discrete weights.
+     * @return the model.
      */
     public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
         return of(data, new EuclideanDistance(), k, d, t);
@@ -121,8 +123,10 @@ public class LaplacianEigenmap implements Serializable {
     /**
      * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
-     * @param distance the distance measure.
+     * @param distance the distance function.
      * @param k k-nearest neighbor.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, -1);
@@ -131,11 +135,13 @@ public class LaplacianEigenmap implements Serializable {
     /**
      * Laplacian Eigenmap with Gaussian kernel.
      * @param data the input data.
-     * @param distance the distance measure.
+     * @param distance the distance function.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
-     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
+     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
      *          Non-positive value means discrete weights.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
         // Use largest connected component of nearest neighbor graph.
@@ -184,7 +190,7 @@ public class LaplacianEigenmap implements Serializable {
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             double norm = 0.0;
-            int c = V.ncols() - j - 2;
+            int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
                 double xi = V.get(i, c) * D[i];
                 coordinates[i][j] = xi;

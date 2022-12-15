@@ -1,29 +1,25 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.projection.Projection;
 import smile.sort.QuickSort;
 import smile.util.IntSet;
 
@@ -60,11 +56,11 @@ import smile.util.IntSet;
  * </ol>
  *
  * @see LDA
- * @see smile.projection.PCA
+ * @see smile.feature.extraction.PCA
  * 
  * @author Haifeng Li
  */
-public class FLD implements Classifier<double[]>, Projection<double[]> {
+public class FLD extends AbstractClassifier<double[]> /*implements Projection<double[]>*/ {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -87,10 +83,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * Projected class mean vectors.
      */
     private final double[][] mu;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -107,15 +99,15 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param mean the mean vector of all samples.
      * @param mu the mean vectors of each class - mean.
      * @param scaling the projection matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public FLD(double[] mean, double[][] mu, Matrix scaling, IntSet labels) {
+        super(labels);
         this.k = mu.length;
         this.p = mean.length;
         this.scaling = scaling;
-        this.labels = labels;
 
-        int L = scaling.ncols();
+        int L = scaling.ncol();
         this.mean = new double[L];
         scaling.tv(mean, this.mean);
 
@@ -126,45 +118,36 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     }
 
     /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static FLD fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static FLD fit(Formula formula, DataFrame data, Properties prop) {
-        int L = Integer.valueOf(prop.getProperty("smile.fld.dimension", "-1"));
-        double tol = Double.valueOf(prop.getProperty("smile.fld.tolerance", "1E-4"));
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, L, tol);
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
+     * @return the model
      */
     public static FLD fit (double[][] x, int[] y) {
         return fit(x, y, -1, 1E-4);
     }
 
     /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model
+     */
+    public static FLD fit (double[][] x, int[] y, Properties params) {
+        int L = Integer.parseInt(params.getProperty("smile.fisher.dimension", "-1"));
+        double tol = Double.parseDouble(params.getProperty("smile.fisher.tolerance", "1E-4"));
+        return fit(x, y, L, tol);
+    }
+
+    /**
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @param L the dimensionality of mapped space.
-     * @param tol a tolerance to decide if a covariance matrix is singular; it
-     * will reject variables whose variance is less than tol<sup>2</sup>.
+     * @param tol a tolerance to decide if a covariance matrix is singular;
+     *            it will reject variables whose variance is less than tol<sup>2</sup>.
+     * @return the model
      */
     public static FLD fit(double[][] x, int[] y, int L, double tol) {
         if (x.length != y.length) {
@@ -206,8 +189,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         // Total scatter
         Matrix St = DiscriminantAnalysis.St(x, mean, k, tol);
 
-        for (int i = 0; i < k; i++) {
-            double[] mui = mu[i];
+        for (double[] mui : mu) {
             for (int j = 0; j < p; j++) {
                 mui[j] -= mean[j];
             }
@@ -215,8 +197,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
         // Between class scatter
         Matrix Sb = new Matrix(p, p);
-        for (int c = 0; c < k; c++) {
-            double[] mui = mu[c];
+        for (double[] mui : mu) {
             for (int j = 0; j < p; j++) {
                 for (int i = 0; i <= j; i++) {
                     Sb.add(i, j, mui[i] * mui[j]);
@@ -232,7 +213,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         // Within class scatter
-        Matrix Sw = St.sub(1.0, Sb);
+        Matrix Sw = St.sub(Sb);
         Matrix SwInvSb = Sw.inverse().mm(Sb);
         Matrix.EVD evd = SwInvSb.eigen(false, true, true);
 
@@ -269,8 +250,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        for (int i = 0; i < k; i++) {
-            double[] mui = mu[i];
+        for (double[] mui : mu) {
             for (int j = 0; j < p; j++) {
                 mui[j] -= mean[j];
             }
@@ -318,8 +298,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        Matrix scaling = U.mm(U2);
-        return scaling;
+        return U.mm(U2);
     }
 
     @Override
@@ -340,10 +319,14 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 
-    @Override
+    /**
+     * Projects a sample to the feature space.
+     * @param x a sample
+     * @return the feature vector.
+     */
     public double[] project(double[] x) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
@@ -354,9 +337,13 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         return y;
     }
 
-    @Override
+    /**
+     * Projects samples to the feature space.
+     * @param x samples
+     * @return the feature vectors.
+     */
     public double[][] project(double[][] x) {
-        double[][] y = new double[x.length][scaling.ncols()];
+        double[][] y = new double[x.length][scaling.ncol()];
         
         for (int i = 0; i < x.length; i++) {
             if (x[i].length != p) {
@@ -371,8 +358,9 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     }
 
     /**
-     * Returns the projection matrix W. The dimension reduced data can be obtained
-     * by y = W' * x.
+     * Returns the projection matrix W. The dimension reduced data can
+     * be obtained by {@code y = W' * x}.
+     * @return the projection matrix.
      */
     public Matrix getProjection() {
         return scaling;

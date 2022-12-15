@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -30,7 +30,10 @@ import java.util.LinkedList;
  * and the root is associated with the empty string. Values are normally
  * not associated with every node, only with leaves and some inner nodes
  * that correspond to keys of interest.
- *  
+ *
+ * @param <K> the data type of key.
+ * @param <V> the data type of value.
+ *
  * @author Haifeng Li
  */
 public class Trie<K, V> {
@@ -41,7 +44,7 @@ public class Trie<K, V> {
      * node will contains a lot of children. A plain list
      * will be slow for search.
      */
-    private HashMap<K, Node> root;
+    private final HashMap<K, Node> root;
     /**
      * The number of entries.
      */
@@ -50,31 +53,50 @@ public class Trie<K, V> {
     /** The nodes in the trie. */
     public class Node {
 
-        private K key;
+        private final K key;
         private V value;
-        private LinkedList<Node> children;
+        private final LinkedList<Node> children;
 
+        /**
+         * Constructor.
+         * @param key the key.
+         */
         public Node(K key) {
             this.key = key;
             this.value = null;
             this.children = new LinkedList<>();
         }
-        
+
+        /**
+         * Returns the key.
+         * @return the key.
+         */
         public K getKey() {
             return key;
         }
-        
+
+        /**
+         * Returns the value.
+         * @return the value.
+         */
         public V getValue() {
             return value;
         }
 
+        /**
+         * Returns the value matching the key sequence.
+         * @param key the key sequence.
+         * @param index the index of current element in the key sequence.
+         * @return the value.
+         */
         public V getChild(K[] key, int index) {
             if (index >= key.length) {
                 return value;
             }
 
+            K k = key[index];
             for (Node child : children) {
-                if (child.key.equals(key[index])) {
+                if (child.key.equals(k)) {
                     return child.getChild(key, index + 1);
                 }
             }
@@ -82,6 +104,11 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Returns the child with the key.
+         * @param key the key.
+         * @return the child.
+         */
         public Node getChild(K key) {
             for (Node child : children) {
                 if (child.key.equals(key)) {
@@ -92,6 +119,12 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Adds a child.
+         * @param key the key sequence.
+         * @param value the value.
+         * @param index the index of current element in the key sequence.
+         */
         public void addChild(K[] key, V value, int index) {
             if (index >= key.length) {
                 if (this.value == null) {

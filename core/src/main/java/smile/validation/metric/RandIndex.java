@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -41,13 +41,18 @@ public class RandIndex implements ClusteringMetric {
     public final static RandIndex instance = new RandIndex();
 
     @Override
-    public double score(int[] y1, int[] y2) {
-        return of(y1, y2);
+    public double score(int[] truth, int[] cluster) {
+        return of(truth, cluster);
     }
 
-    /** Calculates the rand index. */
-    public static double of(int[] y1, int[] y2) {
-        ContingencyTable contingency = new ContingencyTable(y1, y2);
+    /**
+     * Calculates the rand index.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
+     */
+    public static double of(int[] truth, int[] cluster) {
+        ContingencyTable contingency = new ContingencyTable(truth, cluster);
         int n = contingency.n;
         int n1 = contingency.n1;
         int n2 = contingency.n2;
@@ -59,25 +64,24 @@ public class RandIndex implements ClusteringMetric {
         double randT = 0.0;
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
-                randT += MathEx.sqr(count[i][j]);
+                randT += MathEx.pow2(count[i][j]);
             }
         }
         randT -= n;
 
         double randP = 0.0;
         for (int i = 0; i < n1; i++) {
-            randP += MathEx.sqr(a[i]);
+            randP += MathEx.pow2(a[i]);
         }
         randP -= n;
 
         double randQ = 0.0;
         for (int j = 0; j < n2; j++) {
-            randQ += MathEx.sqr(b[j]);
+            randQ += MathEx.pow2(b[j]);
         }
         randQ -= n;
 
-        double rand = (randT - 0.5 * randP - 0.5 * randQ + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
-        return rand;
+        return (randT - 0.5 * randP - 0.5 * randQ + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
     }
 
     @Override

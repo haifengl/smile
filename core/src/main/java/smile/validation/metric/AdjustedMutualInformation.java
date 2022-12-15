@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -87,7 +87,12 @@ public class AdjustedMutualInformation implements ClusteringMetric {
         }
     }
 
-    /** Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (max(H(y1), H(y2)) - E(MI)). */
+    /**
+     * Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (max(H(y1), H(y2)) - E(MI)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double max(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -100,7 +105,12 @@ public class AdjustedMutualInformation implements ClusteringMetric {
         return (I - E) / (Math.max(h1, h2) - E);
     }
 
-    /** Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (0.5 * (H(y1) + H(y2)) - E(MI)). */
+    /**
+     * Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (0.5 * (H(y1) + H(y2)) - E(MI)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double sum(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -113,7 +123,12 @@ public class AdjustedMutualInformation implements ClusteringMetric {
         return (I - E) / (0.5 * (h1 + h2) - E);
     }
 
-    /** Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (sqrt(H(y1) * H(y2)) - E(MI)). */
+    /**
+     * Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (sqrt(H(y1) * H(y2)) - E(MI)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double sqrt(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -126,7 +141,12 @@ public class AdjustedMutualInformation implements ClusteringMetric {
         return (I - E) / (Math.sqrt(h1 * h2) - E);
     }
 
-    /** Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (min(H(y1), H(y2)) - E(MI)). */
+    /**
+     * Calculates the adjusted mutual information of (I(y1, y2) - E(MI)) / (min(H(y1), H(y2)) - E(MI)).
+     * @param y1 the clustering labels.
+     * @param y2 the alternative cluster labels.
+     * @return the metric.
+     */
     public static double min(int[] y1, int[] y2) {
         ContingencyTable contingency = new ContingencyTable(y1, y2);
         double n = contingency.n;
@@ -141,19 +161,15 @@ public class AdjustedMutualInformation implements ClusteringMetric {
 
     /** Calculates the expected value of mutual information. */
     private static double E(int n, int[] a, int[] b) {
-        int n1 = a.length;
-        int n2 = b.length;
         double N = n;
         double E = 0.0;
-        for (int i = 0; i < n1; i++) {
-            int ai = a[i];
-            for (int j = 0; j < n2; j++) {
-                int bj = b[j];
+        for (int ai : a) {
+            for (int bj : b) {
                 int begin = Math.max(1, ai + bj - n);
                 int end = Math.min(ai, bj);
                 for (int nij = begin; nij <= end; nij++) {
-                    E += ((double) nij / N) * log(((double) nij * N) / (ai * bj))
-                        * exp((lfactorial(ai) + lfactorial(bj) + lfactorial(n - ai) + lfactorial(n - bj))
+                    E += (nij / N) * log((nij * N) / (ai * bj))
+                            * exp((lfactorial(ai) + lfactorial(bj) + lfactorial(n - ai) + lfactorial(n - bj))
                             - (lfactorial(n) + lfactorial(nij) + lfactorial(ai - nij) + lfactorial(bj - nij) + lfactorial(n - ai - bj + nij)));
                 }
             }

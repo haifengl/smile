@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -24,10 +24,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
-import smile.data.*;
-import smile.feature.Standardizer;
+import smile.data.DataFrame;
+import smile.data.transform.InvertibleColumnTransform;
+import smile.feature.transform.Standardizer;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.math.Scaler;
 import smile.math.TimeFunction;
+import smile.test.data.*;
 import smile.validation.*;
 import static org.junit.Assert.assertEquals;
 
@@ -54,12 +59,12 @@ public class MLPTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
         int p = Longley.x[0].length;
-        MLP model = new MLP(p, Layer.rectifier(30), Layer.sigmoid(30));
+        MLP model = new MLP(Layer.input(p), Layer.rectifier(30), Layer.sigmoid(30));
         // small learning rate and weight decay to counter exploding gradient
         model.setLearningRate(TimeFunction.constant(0.01));
         model.setWeightDecay(0.1);
@@ -71,21 +76,22 @@ public class MLPTest {
             }
         }
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
-    public void test(String dataset, double[][] x, double[] y, double expected, LayerBuilder... builders) {
+    public void test(String dataset, double[][] x, double[] y, Scaler scaler, double expected, LayerBuilder... builders) {
         System.out.println(dataset);
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer scaler = Standardizer.fit(x);
-        x = scaler.transform(x);
-        int p = x[0].length;
+        DataFrame data = DataFrame.of(x);
+        InvertibleColumnTransform standardizer = Standardizer.fit(data);
+        System.out.println(standardizer);
+        x = standardizer.apply(data).toArray();
 
         RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
-            MLP model = new MLP(p, builders);
+            MLP model = new MLP(scaler, builders);
             // small learning rate and weight decay to counter exploding gradient
             model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
             model.setWeightDecay(0.1);
@@ -101,18 +107,54 @@ public class MLPTest {
         });
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse, 1E-4);
+        assertEquals(expected, result.avg.rmse, 0.001);
     }
 
     @Test
-    public void testReLUSigmoid() {
-        test("CPU", CPU.x, CPU.y, 121.9408, Layer.rectifier(30), Layer.sigmoid(30));
-        test("2dplanes", Planes.x, Planes.y, 1.5173, Layer.rectifier(50), Layer.sigmoid(30));
-        test("abalone", Abalone.x, Abalone.y, 2.5296, Layer.rectifier(40), Layer.sigmoid(30));
-        test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
-        test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
-        test("cal_housing", CalHousing.x, CalHousing.y, 115668.7941, Layer.rectifier(40), Layer.sigmoid(30));
-        test("puma8nh", Puma8NH.x, Puma8NH.y, 3.9609, Layer.rectifier(40), Layer.sigmoid(30));
-        test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2638, Layer.rectifier(40), Layer.sigmoid(30));
+    public void testCPU() {
+        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 65.4472,
+                Layer.input(CPU.x[0].length), Layer.rectifier(30), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void test2DPlanes() {
+        test("2dplanes", Planes.x, Planes.y, null, 1.5174,
+                Layer.input(Planes.x[0].length), Layer.rectifier(50), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testAbalone() {
+        test("abalone", Abalone.x, Abalone.y, null, 2.5298,
+                Layer.input(Abalone.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testAilerons() {
+        test("ailerons", Ailerons.x, Ailerons.y, null, 0.0004,
+                Layer.input(Ailerons.x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testBank32nh() {
+        test("bank32nh", Bank32nh.x, Bank32nh.y, null, 0.1218,
+                Layer.input(Bank32nh.x[0].length), Layer.rectifier(65), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testCalHousing() {
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115704.9305,
+                Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testPuma8nh() {
+        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9605,
+                Layer.input(Puma8NH.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testKin8nm() {
+        test("kin8nm", Kin8nm.x, Kin8nm.y, null, 0.2638,
+                Layer.input(Kin8nm.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -19,6 +19,8 @@ package smile.classification;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
+
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -49,37 +51,37 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class OneVersusRest<T> implements SoftClassifier<T> {
+public class OneVersusRest<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusRest.class);
 
     /** The number of classes. */
-    private int k;
+    private final int k;
     /** The binary classifier. */
-    private Classifier<T>[] classifiers;
+    private final Classifier<T>[] classifiers;
     /** The probability estimation by Platt scaling. */
-    private PlattScaling[] platts;
-    /** The class label encoder. */
-    private IntSet labels;
+    private final PlattScaling[] platt;
 
     /**
      * Constructor.
      * @param classifiers the binary classifier for each one-vs-rest case.
+     * @param platt Platt scaling models.
      */
-    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platts) {
-        this(classifiers, platts, IntSet.of(classifiers.length));
+    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platt) {
+        this(classifiers, platt, IntSet.of(classifiers.length));
     }
 
     /**
      * Constructor.
      * @param classifiers the binary classifier for each one-vs-rest case.
-     * @param labels the class labels.
+     * @param platt Platt scaling models.
+     * @param labels the class label encoder.
      */
-    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platts, IntSet labels) {
+    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platt, IntSet labels) {
+        super(labels);
         this.classifiers = classifiers;
-        this.platts = platts;
+        this.platt = platt;
         this. k = classifiers.length;
-        this.labels = labels;
     }
 
     /**
@@ -88,6 +90,8 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param x the training samples.
      * @param y the training labels.
      * @param trainer the lambda to train binary classifiers.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> OneVersusRest<T> fit(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         return fit(x, y, +1, -1, trainer);
@@ -100,6 +104,8 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param pos the class label for one case.
      * @param neg the class label for rest cases.
      * @param trainer the lambda to train binary classifiers.
+     * @param <T> the data type.
+     * @return the model.
      */
     @SuppressWarnings("unchecked")
     public static <T> OneVersusRest<T> fit(T[] x, int[] y, int pos, int neg, BiFunction<T[], int[], Classifier<T>> trainer) {
@@ -114,33 +120,26 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         }
 
         int n = x.length;
-        y = codec.y;
+        int[] labels = codec.y;
 
         Classifier<T>[] classifiers = new Classifier[k];
-        PlattScaling[] platts = null;
-        for (int i = 0; i < k; i++) {
+        PlattScaling[] platts = new PlattScaling[k];
+        IntStream.range(0, k).parallel().forEach(i -> {
             int[] yi = new int[n];
             for (int j = 0; j < n; j++) {
-                yi[j] = y[j] == i ? pos : neg;
+                yi[j] = labels[j] == i ? pos : neg;
             }
 
             classifiers[i] = trainer.apply(x, yi);
 
-            if (i == 0) {
-                try {
-                    classifiers[0].score(x[0]);
-                    platts = new PlattScaling[k];
-                } catch (UnsupportedOperationException ex) {
-                    logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
-                }
-            }
-
-            if (platts != null) {
+            try {
                 platts[i] = PlattScaling.fit(classifiers[i], x, yi);
+            } catch (UnsupportedOperationException ex) {
+                logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
             }
-        }
+        });
 
-        return new OneVersusRest<>(classifiers, platts);
+        return new OneVersusRest<>(classifiers, platts[0] == null ? null : platts);
     }
 
     /**
@@ -148,18 +147,28 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param trainer the lambda to train binary classifiers.
+     * @return the model.
      */
-    @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();
         OneVersusRest<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
             DataFrame df = DataFrame.of(Arrays.asList(rows));
-            return (Classifier<Tuple>) trainer.apply(formula, df);
+            return trainer.apply(formula, df);
         });
 
         StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
+            @Override
+            public int numClasses() {
+                return model.numClasses();
+            }
+
+            @Override
+            public int[] classes() {
+                return model.classes();
+            }
+
             @Override
             public int predict(Tuple x) {
                 return model.predict(x);
@@ -182,27 +191,32 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         int y = 0;
         double maxf = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            double f = platts[i].scale(classifiers[i].score(x));
+            double f = platt[i].scale(classifiers[i].score(x));
             if (f > maxf) {
                 y = i;
                 maxf = f;
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
     public int predict(T x, double[] posteriori) {
-        if (platts == null) {
+        if (platt == null) {
             throw new UnsupportedOperationException("Platt scaling is not available");
         }
 
         for (int i = 0; i < k; i++) {
-            posteriori[i] = platts[i].scale(classifiers[i].score(x));
+            posteriori[i] = platt[i].scale(classifiers[i].score(x));
         }
 
         MathEx.unitize1(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

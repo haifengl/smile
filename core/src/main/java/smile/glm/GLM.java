@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -25,7 +25,6 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
-import smile.data.type.StructType;
 import smile.glm.model.Model;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -47,9 +46,8 @@ import smile.validation.ModelSelection;
  * The mean, <code>&mu;</code>, of the distribution depends on the
  * independent variables, <code>X</code>, through:
  * <p>
- * <pre>
  *     E(Y) = &mu; = g<sup>-1</sup>(X&beta;)
- * </pre>
+ * <p>
  * where <code>E(Y)</code> is the expected value of <code>Y</code>;
  * <code>X&beta;</code> is the linear combination of linear predictors
  * and unknown parameters &beta;; g is the link function that is a monotonic,
@@ -59,10 +57,8 @@ import smile.validation.ModelSelection;
  * In this framework, the variance is typically a function, <code>V</code>,
  * of the mean:
  * <p>
- * <pre>
  *     Var(Y) = V(&mu;) = V(g<sup>-1</sup>(X&beta;))
- * </pre>
- * </p>
+ * <p>
  * It is convenient if <code>V</code> follows from an exponential family
  * of distributions, but it may simply be that the variance is a function
  * of the predicted value, such as <code>V(&mu;<sub>i</sub>) = &mu;<sub>i</sub></code>
@@ -132,17 +128,27 @@ public class GLM implements Serializable {
     /**
      * Log-likelihood.
      */
-    protected double loglikelihood;
+    protected double logLikelihood;
 
     /**
      * Constructor.
+     * @param formula the model formula.
+     * @param predictors the predictors of design matrix.
+     * @param model the generalized linear model specification.
+     * @param beta the linear weights.
+     * @param logLikelihood the log-likelihood.
+     * @param deviance the deviance.
+     * @param nullDeviance the null deviance.
+     * @param mu the fitted mean values.
+     * @param residuals the residuals of fitted values of training data.
+     * @param ztest the z-test of the coefficients.
      */
-    public GLM(Formula formula, String[] predictors, Model model, double[] beta, double loglikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
+    public GLM(Formula formula, String[] predictors, Model model, double[] beta, double logLikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
         this.formula = formula;
         this.model = model;
         this.predictors = predictors;
         this.beta = beta;
-        this.loglikelihood = loglikelihood;
+        this.logLikelihood = logLikelihood;
         this.deviance = deviance;
         this.nullDeviance = nullDeviance;
         this.mu = mu;
@@ -155,6 +161,8 @@ public class GLM implements Serializable {
      * Returns an array of size (p+1) containing the linear weights
      * of binary logistic regression, where p is the dimension of
      * feature vectors. The last element is the weight of bias.
+     *
+     * @return the linear weights.
      */
     public double[] coefficients() {
         return beta;
@@ -166,6 +174,8 @@ public class GLM implements Serializable {
      * error of coefficients, the third column is the z-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     *
+     * @return the z-test of the coefficients.
      */
     public double[][] ztest() {
         return ztest;
@@ -173,6 +183,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the deviance residuals.
+     * @return the deviance residuals.
      */
     public double[] devianceResiduals() {
         return devianceResiduals;
@@ -180,6 +191,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the fitted mean values.
+     * @return the fitted mean values.
      */
     public double[] fittedValues() {
         return mu;
@@ -187,6 +199,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the deviance of model.
+     * @return the deviance of model.
      */
     public double deviance() {
         return deviance;
@@ -194,26 +207,33 @@ public class GLM implements Serializable {
 
     /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
-    public double loglikelihood() {
-        return loglikelihood;
+    public double logLikelihood() {
+        return logLikelihood;
     }
 
     /**
      * Returns the AIC score.
+     * @return the AIC score.
      */
     public double AIC() {
-        return ModelSelection.AIC(loglikelihood, beta.length);
+        return ModelSelection.AIC(logLikelihood, beta.length);
     }
 
     /**
      * Returns the BIC score.
+     * @return the BIC score.
      */
     public double BIC() {
-        return ModelSelection.BIC(loglikelihood, beta.length, mu.length);
+        return ModelSelection.BIC(logLikelihood, beta.length, mu.length);
     }
 
-    /** Predicts the mean response. */
+    /**
+     * Predicts the mean response.
+     * @param x the instance.
+     * @return the mean response.
+     */
     public double predict(Tuple x) {
         double[] a = formula.x(x).toArray(true, CategoricalEncoder.DUMMY);
         int p = beta.length;
@@ -225,9 +245,13 @@ public class GLM implements Serializable {
         return model.invlink(dot);
     }
 
-    /** Predicts the mean response. */
-    public double[] predict(DataFrame df) {
-        Matrix X = formula.matrix(df, true);
+    /**
+     * Predicts the mean response.
+     * @param data the data frame.
+     * @return the mean response.
+     */
+    public double[] predict(DataFrame data) {
+        Matrix X = formula.matrix(data, true);
         double[] y = X.mv(beta);
         int n = y.length;
         for (int i = 0; i < n; i++) {
@@ -275,6 +299,8 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model) {
         return fit(formula, data, model, new Properties());
@@ -285,10 +311,13 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static GLM fit(Formula formula, DataFrame data, Model model, Properties prop) {
-        double tol = Double.valueOf(prop.getProperty("smile.glm.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.glm.max.iterations", "50"));
+    public static GLM fit(Formula formula, DataFrame data, Model model, Properties params) {
+        double tol = Double.parseDouble(params.getProperty("smile.glm.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.glm.iterations", "50"));
         return fit(formula, data, model, tol, maxIter);
     }
 
@@ -297,8 +326,10 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, double tol, int maxIter) {
         if (tol <= 0.0) {
@@ -310,11 +341,11 @@ public class GLM implements Serializable {
         }
 
         Matrix X = formula.matrix(data, true);
-        Matrix XW = new Matrix(X.nrows(), X.ncols());
+        Matrix XW = new Matrix(X.nrow(), X.ncol());
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
 
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
@@ -388,6 +419,6 @@ public class GLM implements Serializable {
             ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
         }
 
-        return new GLM(formula, X.colNames(), model, beta, model.loglikelihood(y, mu), dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
+        return new GLM(formula, X.colNames(), model, beta, model.logLikelihood(y, mu), dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
     }
 }

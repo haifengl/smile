@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.manifold;
 
 import smile.graph.AdjacencyList;
-import smile.graph.Graph;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
@@ -80,20 +79,20 @@ class NearestNeighborGraph {
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
-     * @param distance the distance measure.
+     * @param distance the distance function.
      * @param digraph flag to create a directed graph.
      * @param consumer an optional lambda to perform some side effect operations.
      */
     public static <T> AdjacencyList of(T[] data, Distance<T> distance, int k, boolean digraph, EdgeConsumer consumer) {
         // This is actually faster on many core systems.
-        LinearSearch<T> knn = new LinearSearch<>(data, distance);
+        LinearSearch<T, T> knn = LinearSearch.of(data, distance);
 
         int n = data.length;
         AdjacencyList graph = new AdjacencyList(n, digraph);
 
         if (consumer != null) {
             for (int i = 0; i < n; i++) {
-                Neighbor<T, T>[] neighbors = knn.knn(data[i], k);
+                Neighbor<T, T>[] neighbors = knn.search(data[i], k);
 
                 int v1 = i;
                 for (int j = 0; j < neighbors.length; j++) {
@@ -105,7 +104,7 @@ class NearestNeighborGraph {
             }
         } else {
             for (int i = 0; i < n; i++) {
-                for (Neighbor<T, T> neighbor : knn.knn(data[i], k)) {
+                for (Neighbor<T, T> neighbor : knn.search(data[i], k)) {
                     graph.setWeight(i, neighbor.index, neighbor.distance);
                 }
             }

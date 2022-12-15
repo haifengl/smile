@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -41,7 +41,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
     /**
      * The distance between the neuron and an input signal.
      */
-    public double distance = Double.MAX_VALUE;
+    public transient double distance = Double.MAX_VALUE;
     /**
      * The local counter variable (e.g. the accumulated error, freshness, etc.)
      */
@@ -49,6 +49,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Constructor.
+     * @param w the reference vector.
      */
     public Neuron(double[] w) {
         this(w, 0.0);
@@ -56,6 +57,8 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Constructor.
+     * @param w the reference vector.
+     * @param counter the local counter.
      */
     public Neuron(double[] w, double counter) {
         this.w = w;
@@ -74,17 +77,27 @@ public class Neuron implements Comparable<Neuron>, Serializable {
         }
     }
 
-    /** Adds an edge. */
+    /**
+     * Adds an edge.
+     * @param neighbor the neighbor neuron.
+     */
     public void addEdge(Neuron neighbor) {
         addEdge(neighbor, 0);
     }
 
-    /** Adds an edge. */
+    /**
+     * Adds an edge.
+     * @param neighbor the neighbor neuron.
+     * @param age the age of edge.
+     */
     public void addEdge(Neuron neighbor, int age) {
         edges.add(new Edge(neighbor, age));
     }
 
-    /** Removes an edge. */
+    /**
+     * Removes an edge.
+     * @param neighbor the neighbor neuron of the edge.
+     */
     public void removeEdge(Neuron neighbor) {
         for (Iterator<Edge> iter = edges.iterator(); iter.hasNext();) {
             Edge edge = iter.next();
@@ -95,10 +108,13 @@ public class Neuron implements Comparable<Neuron>, Serializable {
         }
     }
 
-    /** Sets the age of edge. */
+    /**
+     * Sets the age of edge.
+     * @param neighbor the neighbor neuron of the edge.
+     * @param age the age of edge.
+     */
     public void setEdgeAge(Neuron neighbor, int age) {
-        for (Iterator<Edge> iter = edges.iterator(); iter.hasNext();) {
-            Edge edge = iter.next();
+        for (Edge edge : edges) {
             if (edge.neighbor == neighbor) {
                 edge.age = age;
                 return;
@@ -115,6 +131,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Computes the distance between the neuron and a signal.
+     * @param x the signal.
      */
     public void distance(double[] x) {
         distance = MathEx.distance(w, x);

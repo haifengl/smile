@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -27,8 +27,9 @@ import java.io.Serializable;
 public interface ClusteringMetric extends Serializable {
     /**
      * Returns a score to measure the quality of clustering.
-     * @param y1 the cluster labels.
-     * @param y2 the alternative cluster labels.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
      */
-    double score(int[] y1, int[] y2);
+    double score(int[] truth, int[] cluster);
 }

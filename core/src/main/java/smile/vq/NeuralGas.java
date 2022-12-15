@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -19,6 +19,7 @@ package smile.vq;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
@@ -90,35 +91,35 @@ public class NeuralGas implements VectorQuantizer {
     /**
      * The neurons.
      */
-    private Neuron[] neurons;
+    private final Neuron[] neurons;
     /**
      * The network of neurons.
      */
-    private AdjacencyMatrix graph;
+    private final AdjacencyMatrix graph;
     /**
      * The learning rate function.
      */
-    private TimeFunction alpha;
+    private final TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private TimeFunction theta;
+    private final TimeFunction theta;
     /**
      * The lifetime of connections.
      */
-    private TimeFunction lifetime;
+    private final TimeFunction lifetime;
     /**
      * The distance between a new observation to neurons.
      */
-    private double[] dist;
+    private final double[] dist;
+    /**
+     * The threshold to update neuron if {@code alpha * theta > eps}.
+     */
+    private final double eps = 1E-7;
     /**
      * The current iteration.
      */
     private int t = 0;
-    /*
-     * The threshold to update neuron if alpha * theta > eps.
-     */
-    private double eps = 1E-7;
 
     /**
      * Constructor.
@@ -141,6 +142,7 @@ public class NeuralGas implements VectorQuantizer {
      * Selects random samples as initial neurons of Neural Gas.
      * @param k the number of neurons.
      * @param samples some samples to select initial weight vectors.
+     * @return the initial neurons.
      */
     public static double[][] seed(int k, double[][] samples) {
         int n = samples.length;
@@ -153,14 +155,16 @@ public class NeuralGas implements VectorQuantizer {
 
     /**
      * Returns the neurons.
+     * @return the neurons.
      */
     public double[][] neurons() {
-        Arrays.sort(neurons, (x, y) -> Integer.compare(x.i, y.i));
+        Arrays.sort(neurons, Comparator.comparingInt(x -> x.i));
         return Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
     }
 
     /**
      * Returns the network of neurons.
+     * @return the network of neurons.
      */
     public Graph network() {
         double lifetime = this.lifetime.apply(t);

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,7 +22,6 @@ import smile.data.type.StructType;
 import smile.math.MathEx;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,10 +35,10 @@ public class DecisionNode extends LeafNode {
     private static final long serialVersionUID = 2L;
 
     /** The predicted output. */
-    private int output;
+    private final int output;
 
     /** The number of node samples in each class. */
-    private int[] count;
+    private final int[] count;
 
     /**
      * Constructor.
@@ -52,12 +51,18 @@ public class DecisionNode extends LeafNode {
         this.count = count;
     }
 
-    /** Returns the predicted value. */
+    /**
+     * Returns the predicted value.
+     * @return the predicted value.
+     */
     public int output() {
         return output;
     }
 
-    /** Returns the number of node samples in each class. */
+    /**
+     * Returns the number of node samples in each class.
+     * @return the number of node samples in each class.
+     */
     public int[] count() {
         return count;
     }
@@ -105,6 +110,7 @@ public class DecisionNode extends LeafNode {
 
     /**
      * Returns the impurity of node.
+     * @param rule the node split rule.
      * @return  the impurity of node
      */
     public double impurity(SplitRule rule) {
@@ -113,6 +119,7 @@ public class DecisionNode extends LeafNode {
 
     /**
      * Returns the impurity of samples.
+     * @param rule the node split rule.
      * @param size the number of samples.
      * @param count the number of samples in each class.
      * @return  the impurity of node
@@ -158,12 +165,21 @@ public class DecisionNode extends LeafNode {
         return false;
     }
 
-    /** Returns the class probability. */
+    /**
+     * Returns the class probability.
+     * @param prob the output variable of posteriori probabilities.
+     * @return the posteriori probabilities.
+     */
     public double[] posteriori(double[] prob) {
         return posteriori(count, prob);
     }
 
-    /** Returns the class probability. */
+    /**
+     * Returns the class probability.
+     * @param count the input variable of the number of samples per class.
+     * @param prob the output variable of posteriori probabilities.
+     * @return the posteriori probabilities.
+     */
     public static double[] posteriori(int[] count, double[] prob) {
         int k = count.length;
         double n = MathEx.sum(count) + k;
@@ -173,7 +189,12 @@ public class DecisionNode extends LeafNode {
         return prob;
     }
 
-    /** Returns the deviance of node. */
+    /**
+     * Returns the deviance of node.
+     * @param count the input variable of the number of samples per class.
+     * @param prob the output variable of posteriori probabilities.
+     * @return the deviance of node.
+     */
     public static double deviance(int[] count, double[] prob) {
         int k = count.length;
         double d = 0.0;

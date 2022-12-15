@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -43,13 +43,18 @@ public class AdjustedRandIndex implements ClusteringMetric {
     public final static AdjustedRandIndex instance = new AdjustedRandIndex();
 
     @Override
-    public double score(int[] y1, int[] y2) {
-        return of(y1, y2);
+    public double score(int[] truth, int[] cluster) {
+        return of(truth, cluster);
     }
 
-    /** Calculates the adjusted rand index. */
-    public static double of(int[] y1, int[] y2) {
-        ContingencyTable contingency = new ContingencyTable(y1, y2);
+    /**
+     * Calculates the adjusted rand index.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
+     */
+    public static double of(int[] truth, int[] cluster) {
+        ContingencyTable contingency = new ContingencyTable(truth, cluster);
         int n = contingency.n;
         int n1 = contingency.n1;
         int n2 = contingency.n2;
@@ -89,8 +94,7 @@ public class AdjustedRandIndex implements ClusteringMetric {
         double rand4 = (rand2a + rand2b) / 2;
         double randD = rand4 - rand3;
 
-        double rand = rand_N / randD;
-        return rand;
+        return rand_N / randD;
     }
 
     @Override

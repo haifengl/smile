@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -44,7 +44,7 @@ public class Dendrogram extends Plot {
      * Constructor.
      * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      * @param height a set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method
@@ -58,7 +58,7 @@ public class Dendrogram extends Plot {
      * Constructor.
      * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      * @param height a set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method

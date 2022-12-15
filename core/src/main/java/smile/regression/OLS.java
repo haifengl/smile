@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -21,7 +21,6 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 
@@ -80,6 +79,7 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -96,12 +96,13 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        String method = prop.getProperty("smile.ols.method", "qr");
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
-        boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        String method = params.getProperty("smile.ols.method", "qr");
+        boolean stderr = Boolean.parseBoolean(params.getProperty("smile.ols.standard_error", "true"));
+        boolean recursive = Boolean.parseBoolean(params.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, recursive);
     }
     
@@ -111,8 +112,9 @@ public class OLS {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param method the fitting method ("svd" or "qr").
-     * @param stderr if true, compute the estimated standard errors of the estimate of parameters.
+     * @param stderr if true, compute the standard errors of the estimate of parameters.
      * @param recursive if true, the return model supports recursive least squares.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
         formula = formula.expand(data.schema());
@@ -121,17 +123,17 @@ public class OLS {
         Matrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
         
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
         // weights and intercept
-        double[] w = null;
+        double[] w;
         Matrix.QR qr = null;
-        Matrix.SVD svd = null;
+        Matrix.SVD svd;
 
         if (method.equalsIgnoreCase("svd")) {
             svd = X.svd();
