@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -25,7 +25,6 @@ import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.util.Strings;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -46,14 +45,14 @@ import smile.util.Strings;
  * as the kriging estimate of a Gaussian random field in spatial statistics.
  * <p>
  * A significant problem with Gaussian process prediction is that it typically
- * scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
+ * scales as O(n<sup>3</sup>). For large problems (e.g. {@code n > 10,000}) both
  * storing the Gram matrix and solving the associated linear systems are
  * prohibitive on modern workstations. An extensive range of proposals have
  * been suggested to deal with this problem. A popular approach is the
  * reduced-rank Approximations of the Gram Matrix, known as Nystrom
  * approximation. Subset of Regressors (SR) is another popular approach
  * that uses an active set of training samples of size m selected from
- * the training set of size n &gt; m. We assume that it is impossible
+ * the training set of size {@code n > m}. We assume that it is impossible
  * to search for the optimal subset of size m due to combinatorics.
  * The samples in the active set could be selected randomly, but in general
  * we might expect better performance if the samples are selected greedily
@@ -113,7 +112,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     /**
      * The Cholesky decomposition of kernel matrix.
      */
-    private Matrix.Cholesky cholesky;
+    private final Matrix.Cholesky cholesky;
 
     /** The joint prediction of multiple data points. */
     public class JointPrediction {
@@ -128,7 +127,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         /** The joint predictive distribution. */
         private MultivariateGaussianDistribution dist;
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param x the query points.
+         * @param mu the mean of predictive distribution at query points.
+         * @param sd the standard deviation of predictive distribution at query points.
+         * @param cov the covariance matrix of joint predictive distribution at query points.
+         */
         public JointPrediction(T[] x, double[] mu, double[] sd, Matrix cov) {
             this.x = x;
             this.mu = mu;
@@ -152,7 +157,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         @Override
         public String toString() {
             return String.format("GaussianProcessRegression.Prediction {\n  mean    = %s\n  std.dev = %s\n  cov     = %s\n}",
-                    Strings.toString(mu), Strings.toString(sd), cov.toString(true));
+                    Arrays.toString(mu), Arrays.toString(sd), cov.toString(true));
         }
     }
 
@@ -261,7 +266,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         Matrix Kx = kernel.K(samples);
         Matrix Kt = kernel.K(samples, regressors);
 
-        Matrix Kv = Kt.transpose().clone();
+        Matrix Kv = Kt.transpose(false);
         cholesky.solve(Kv);
         Matrix cov = Kx.sub(Kt.mm(Kv));
         cov.mul(sd * sd);
@@ -296,14 +301,32 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits a regular Gaussian process model.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param kernel the Mercer kernel.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
-        double tol = Double.valueOf(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
+    public static GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties params) {
+        MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.gaussian_process.kernel", "linear"));
+        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
+        double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
+        return fit(x, y, kernel, noise, normalize, tol, maxIter);
+    }
+
+    /**
+     * Fits a regular Gaussian process model.
+     * @param x the training dataset.
+     * @param y the response variable.
+     * @param kernel the Mercer kernel.
+     * @param params the hyper-parameters.
+     * @param <T> the data type of samples.
+     * @return the model.
+     */
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties params) {
+        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
+        double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
         return fit(x, y, kernel, noise, normalize, tol, maxIter);
     }
 
@@ -313,6 +336,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise) {
         return fit(x, y, kernel, noise,true,1E-5, 0);
@@ -326,7 +351,9 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the flag if normalize the response variable.
      * @param tol the stopping tolerance for HPO.
-     * @param maxIter the maximum number of iterations for HPO. No HPO if maxIter <= 0.
+     * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize, double tol, int maxIter) {
         if (x.length != y.length) {
@@ -365,15 +392,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             l[m] = 1E-10;
             u[m] = 1E5;
 
-            double L = -BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
+            BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
             kernel = kernel.of(params);
             noise = params[params.length - 1];
         }
 
         Matrix K = kernel.K(x);
-        for (int i = 0; i < n; i++) {
-            K.add(i, i, noise);
-        }
+        K.addDiag(noise);
 
         Matrix.Cholesky cholesky = K.cholesky(true);
         double[] w = cholesky.solve(y);
@@ -387,12 +412,18 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model by the method of subset of regressors.
      * @param x the training dataset.
      * @param y the response variable.
+     * @param t the inducing input, which are pre-selected or inducing samples
+     *          acting as active set of regressors. In simple case, these can
+     *          be chosen randomly from the training set or as the centers of
+     *          k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties params) {
+        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
         return fit(x, y, t, kernel, noise, normalize);
     }
 
@@ -406,6 +437,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          k-means clustering.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
         return fit(x, y, t, kernel, noise, true);
@@ -422,6 +455,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the option to normalize the response variable.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
         if (x.length != y.length) {
@@ -461,12 +496,15 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
+    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties params) {
+        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
         return nystrom(x, y, t, kernel, noise, normalize);
     }
 
@@ -474,12 +512,11 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param t the inducing input, which are pre-selected or inducing samples
-     *          acting as active set of regressors. In simple case, these can
-     *          be chosen randomly from the training set or as the centers of
-     *          k-means clustering.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
         return nystrom(x, y, t, kernel, noise, true);
@@ -489,11 +526,12 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param t the inducing input for Nystrom approximation. Commonly, these
-     * can be chosen as the centers of k-means clustering.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the option to normalize the response variable.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
         if (x.length != y.length) {
@@ -534,9 +572,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         Matrix L = E.mm(UDUt);
 
         Matrix LtL = L.ata();
-        for (int i = 0; i < m; i++) {
-            LtL.add(i, i, noise);
-        }
+        LtL.addDiag(noise);
 
         Matrix.Cholesky chol = LtL.cholesky(true);
         Matrix invLtL = chol.inverse();
@@ -550,6 +586,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
     }
 
+    /** Log marginal likelihood as optimization objective function. */
     private static class LogMarginalLikelihood<T> implements DifferentiableMultivariateFunction {
         final T[] x;
         final double[] y;
@@ -567,14 +604,12 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             double noise = params[params.length - 1];
 
             Matrix K = kernel.K(x);
-            int n = x.length;
-            for (int i = 0; i < n; i++) {
-                K.add(i, i, noise);
-            }
+            K.addDiag(noise);
 
             Matrix.Cholesky cholesky = K.cholesky(true);
             double[] w = cholesky.solve(y);
 
+            int n = x.length;
             double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
             return -L;
         }
@@ -586,11 +621,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
             Matrix[] K = kernel.KG(x);
             Matrix Ky = K[0];
-
-            int n = x.length;
-            for (int i = 0; i < n; i++) {
-                Ky.add(i, i, noise);
-            }
+            Ky.addDiag(noise);
 
             Matrix.Cholesky cholesky = Ky.cholesky(true);
             Matrix Kinv = cholesky.inverse();
@@ -603,6 +634,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
                 g[i-1] = -gi / 2;
             }
 
+            int n = x.length;
             double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
             return -L;
         }

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -77,7 +77,12 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
         return Double.compare(distortion, o.distortion);
     }
 
-    /** The distance function. */
+    /**
+     * The distance function.
+     * @param x an observation.
+     * @param y the other observation.
+     * @return the distance.
+     */
     protected abstract double distance(T x, U y);
 
     /**
@@ -110,7 +115,8 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
      */
     static <T> double assign(int[] y, T[] data, T[] centroids, ToDoubleBiFunction<T, T> distance) {
         int k = centroids.length;
-        double wcss = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
+
+        return IntStream.range(0, data.length).parallel().mapToDouble(i -> {
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j++) {
                 double dist = distance.applyAsDouble(data[i], centroids[j]);
@@ -121,8 +127,6 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
             }
             return nearest;
         }).sum();
-
-        return wcss;
     }
 
     /**

@@ -1,29 +1,29 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 
 /**
  *
@@ -65,10 +65,10 @@ public class PowerIterationTest {
     public void testEigen() {
         System.out.println("Eigen");
         double[] v = new double[3];
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
+        Arrays.fill(v, 1.0);
 
-        double eigenvalue = PowerIteration.eigen(new Matrix(A), v);
+        Matrix matrix = Matrix.of(A);
+        double eigenvalue = matrix.eigen(v);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -81,10 +81,9 @@ public class PowerIterationTest {
                 A[i][j] = -A[i][j];
         }
 
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
-
-        eigenvalue = PowerIteration.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
+        Arrays.fill(v, 1.0);
+        matrix = Matrix.of(A);
+        eigenvalue = matrix.eigen(v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);

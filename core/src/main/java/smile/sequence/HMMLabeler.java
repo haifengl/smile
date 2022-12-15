@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -51,6 +51,8 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @param <T> the data type of observations.
+     * @return the model.
      */
     public static <T> HMMLabeler<T> fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
         if (observations.length != labels.length) {
@@ -59,7 +61,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
 
         HMM model = HMM.fit(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 labels);
 
@@ -75,7 +77,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
     public void update(T[][] observations, int iterations) {
         model.update(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 iterations);
     }
@@ -89,7 +91,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * Translates an observation sequence to internal representation.
      */
     private int[] translate(T[] o) {
-        return Arrays.stream(o).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray();
+        return Arrays.stream(o).mapToInt(ordinal).toArray();
     }
 
     /**
@@ -128,7 +130,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
 
     /**
      * Returns the logarithm probability of an observation sequence.
-     * A scaling procedure is used in order to avoid underflows when
+     * A scaling procedure is used in order to avoid underflow when
      * computing the probability of long sequences.
      *
      * @param o an observation sequence.

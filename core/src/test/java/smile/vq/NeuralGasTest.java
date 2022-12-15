@@ -1,23 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.vq;
 
-import smile.data.USPS;
+import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import org.junit.After;
@@ -52,7 +52,7 @@ public class NeuralGasTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -63,8 +63,8 @@ public class NeuralGasTest {
         int epochs = 20;
         int T = x.length * epochs;
         NeuralGas model = new NeuralGas(NeuralGas.seed(400, x),
-                TimeFunction.exp(0.3, T / 2),
-                TimeFunction.exp(30, T / 8),
+                TimeFunction.exp(0.3, T / 2.0),
+                TimeFunction.exp(30, T / 8.0),
                 TimeFunction.constant(x.length * 2));
 
         for (int i = 1; i <= epochs; i++) {
@@ -80,7 +80,7 @@ public class NeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.7011, error, 1E-4);
+        assertEquals(5.7002, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -90,6 +90,6 @@ public class NeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5534, error, 1E-4);
+        assertEquals(6.5502, error, 1E-4);
     }
 }

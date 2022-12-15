@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -61,7 +61,7 @@ import smile.math.matrix.Matrix;
  * the same solution. If we center the columns of <code>X</code>, then
  * the intercept estimate ends up just being the mean of <code>y</code>.
  * <p>
- * Ridge regression doesn’t set coefficients exactly to zero unless
+ * Ridge regression does not set coefficients exactly to zero unless
  * <code>&lambda; = &infin;</code>, in which case they’re all zero.
  * Hence ridge regression cannot perform variable selection, and
  * even though it performs well in terms of prediction accuracy,
@@ -75,6 +75,7 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -91,10 +92,11 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.ridge.lambda", "1"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.ridge.lambda", "1"));
         return fit(formula, data, lambda);
     }
 
@@ -105,6 +107,7 @@ public class RidgeRegression {
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
         int n = data.size();
@@ -117,9 +120,9 @@ public class RidgeRegression {
      * Fits a generalized ridge regression model that minimizes a
      * weighted least squares criterion augmented with a
      * generalized ridge penalty:
-     * <pre><code>
+     * <pre>{@code
      *     (Y - X'*beta)' * W * (Y - X'*beta) + (beta - beta0)' * lambda * (beta - beta0)
-     * </code></pre>
+     * }</pre>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -131,6 +134,7 @@ public class RidgeRegression {
      *               be 1 so that its value is applied to all variables.
      * @param beta0 generalized ridge penalty target. Its length may
      *              be 1 so that its value is applied to all variables.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double[] weights, double[] lambda, double[] beta0) {
         formula = formula.expand(data.schema());
@@ -139,8 +143,8 @@ public class RidgeRegression {
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
 
         if (weights.length != n) {
             throw new IllegalArgumentException(String.format("Invalid weights vector size: %d != %d", weights.length, n));
@@ -198,9 +202,7 @@ public class RidgeRegression {
 
         Matrix XtX = XtW.mm(scaledX);
         XtX.uplo(UPLO.LOWER);
-        for (int i = 0; i < p; i++) {
-            XtX.add(i, i, lambda[i]);
-        }
+        XtX.addDiag(lambda);
         Matrix.Cholesky cholesky = XtX.cholesky(true);
 
         double[] w = cholesky.solve(scaledY);

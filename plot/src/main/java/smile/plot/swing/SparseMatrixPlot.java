@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -66,8 +66,8 @@ public class SparseMatrixPlot extends Plot {
         super(color);
         this.sparse = sparse;
 
-        int m = sparse.nrows();
-        int n = sparse.ncols();
+        int m = sparse.nrow();
+        int n = sparse.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -87,8 +87,8 @@ public class SparseMatrixPlot extends Plot {
         this.sparse = sparse;
         this.palette = palette;
 
-        int m = sparse.nrows();
-        int n = sparse.ncols();
+        int m = sparse.nrow();
+        int n = sparse.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -121,7 +121,7 @@ public class SparseMatrixPlot extends Plot {
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {sparse.ncols(), sparse.nrows()};
+        double[] bound = {sparse.ncol(), sparse.nrow()};
         return bound;
     }
 
@@ -216,7 +216,7 @@ public class SparseMatrixPlot extends Plot {
     @Override
     public Canvas canvas() {
         double[] lowerBound = {0, 0};
-        double[] upperBound = {sparse.ncols(), sparse.nrows()};
+        double[] upperBound = {sparse.ncol(), sparse.nrow()};
         Canvas canvas = new Canvas(lowerBound, upperBound, false);
         canvas.add(this);
 

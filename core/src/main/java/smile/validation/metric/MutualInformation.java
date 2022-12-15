@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -36,20 +36,32 @@ public class MutualInformation implements ClusteringMetric {
     public final static MutualInformation instance = new MutualInformation();
 
     @Override
-    public double score(int[] y1, int[] y2) {
-        return of(y1, y2);
+    public double score(int[] truth, int[] cluster) {
+        return of(truth, cluster);
     }
 
-    /** Calculates the mutual information. */
-    public static double of(int[] y1, int[] y2) {
-        ContingencyTable contingency = new ContingencyTable(y1, y2);
+    /**
+     * Calculates the mutual information.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
+     */
+    public static double of(int[] truth, int[] cluster) {
+        ContingencyTable contingency = new ContingencyTable(truth, cluster);
         double n = contingency.n;
         double[] p1 = Arrays.stream(contingency.a).mapToDouble(a -> a/n).toArray();
         double[] p2 = Arrays.stream(contingency.b).mapToDouble(b -> b/n).toArray();
         return of(n, p1, p2, contingency.table);
     }
 
-    /** Calculates the mutual information. */
+    /**
+     * Calculates the mutual information.
+     * @param n the data size.
+     * @param p1 the row marginal probability of contingency table.
+     * @param p2 the column marginal probability of contingency table.
+     * @param count the contingency table.
+     * @return the metric.
+     */
     static double of(double n, double[] p1, double[] p2, int[][] count) {
         int n1 = p1.length;
         int n2 = p2.length;

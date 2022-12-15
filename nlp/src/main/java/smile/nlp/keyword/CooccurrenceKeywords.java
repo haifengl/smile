@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -62,6 +62,7 @@ public interface CooccurrenceKeywords {
     /**
      * Returns a given number of top keywords.
      * @param text A single document.
+     * @param maxNumKeywords the maximum number of keywords.
      * @return The top keywords.
      */
     static NGram[] of(String text, int maxNumKeywords) {
@@ -87,9 +88,7 @@ public interface CooccurrenceKeywords {
         int maxNGramSize = 4;
         ArrayList<NGram> terms = new ArrayList<>();
         for (NGram[] ngrams : NGram.of(sentences, maxNGramSize, 4)) {
-            for (NGram ngram : ngrams) {
-                terms.add(ngram);
-            }
+            Collections.addAll(terms, ngrams);
         }
         Collections.sort(terms);
         
@@ -230,6 +229,6 @@ public interface CooccurrenceKeywords {
             }
         }
 
-        return keywords.toArray(new NGram[keywords.size()]);
+        return keywords.toArray(new NGram[0]);
     }
 }

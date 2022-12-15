@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,14 +22,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.io.Read;
+import smile.test.data.MNIST;
 import smile.math.MathEx;
-import smile.projection.PCA;
-import smile.util.Paths;
-import org.apache.commons.csv.CSVFormat;
-
-import java.util.Arrays;
-
+import smile.feature.extraction.PCA;
 import static org.junit.Assert.*;
 
 /**
@@ -57,31 +52,28 @@ public class TSNETest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("tSNE");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ');
-        double[][] mnist = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
-
-        PCA pca = PCA.fit(mnist);
-        pca.setProjection(50);
-        double[][] X = pca.project(mnist);
+        PCA pca = PCA.fit(MNIST.x).getProjection(50);
+        double[][] X = pca.apply(MNIST.x);
 
         long start = System.currentTimeMillis();
-        TSNE tsne = new TSNE(X, 2, 20, 200, 1000);
+        TSNE tsne = new TSNE(X, 2, 20, 200, 550);
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 
-        assertEquals(-5.2315022440214785, tsne.coordinates[0][0], 1E-7);
-        assertEquals(8.033757250596969, tsne.coordinates[0][1], 1E-7);
-        assertEquals(5.089496162961281, tsne.coordinates[100][0], 1E-7);
-        assertEquals(-17.72146277229905, tsne.coordinates[100][1], 1E-7);
-        assertEquals(-25.499868415707077, tsne.coordinates[1000][0], 1E-7);
-        assertEquals(19.881092027717276, tsne.coordinates[1000][1], 1E-7);
-        assertEquals(-5.046192009411943, tsne.coordinates[2000][0], 1E-7);
-        assertEquals(30.328124791830007, tsne.coordinates[2000][1], 1E-7);
+        assertEquals(1.3872256, tsne.cost(), 0.1);
+        double[] coord0    = {  2.6870328, 16.8175010};
+        double[] coord100  = {-16.3270630,  3.6016438};
+        double[] coord1000 = {-16.2529939, 26.8543395};
+        double[] coord2000 = {-17.0491869,  4.8453648};
+        assertArrayEquals(coord0,    tsne.coordinates[0], 1E-6);
+        assertArrayEquals(coord100,  tsne.coordinates[100], 1E-6);
+        assertArrayEquals(coord1000, tsne.coordinates[1000], 1E-6);
+        assertArrayEquals(coord2000, tsne.coordinates[2000], 1E-6);
     }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -39,19 +39,19 @@ case class DataFrameOps(data: DataFrame) {
   def of(range: Range): DataFrame = data.of(range.toArray: _*)
 
   /** Finds the first row satisfying a predicate. */
-  def find(p: (Tuple) => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
+  def find(p: Tuple => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
   /** Tests if a predicate holds for at least one row of data frame. */
-  def exists(p: (Tuple) => Boolean): Boolean = data.stream.anyMatch(t => p(t))
+  def exists(p: Tuple => Boolean): Boolean = data.stream.anyMatch(t => p(t))
   /** Tests if a predicate holds for all rows of data frame. */
-  def forall(p: (Tuple) => Boolean): Boolean = data.stream.allMatch(t => p(t))
+  def forall(p: Tuple => Boolean): Boolean = data.stream.allMatch(t => p(t))
   /** Applies a function for its side-effect to every row. */
-  def foreach[U](p: (Tuple) => U): Unit = data.stream.forEach(t => p(t))
+  def foreach[U](p: Tuple => U): Unit = data.stream.forEach(t => p(t))
 
   /** Builds a new data collection by applying a function to all rows. */
-  def map[U](p: (Tuple) => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
+  def map[U](p: Tuple => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
 
   /** Selects all rows which satisfy a predicate. */
-  def filter(p: (Tuple) => Boolean): DataFrame = {
+  def filter(p: Tuple => Boolean): DataFrame = {
     val index = IntStream.range(0, data.size).filter(i => p(data(i))).toArray
     data.of(index: _*)
   }
@@ -64,11 +64,11 @@ case class DataFrameOps(data: DataFrame) {
     *           that don't. The relative order of the elements in the resulting DataFramess
     *           is the same as in the original DataFrame.
     */
-  def partition(p: (Tuple) => Boolean): (DataFrame, DataFrame) = {
+  def partition(p: Tuple => Boolean): (DataFrame, DataFrame) = {
     val l = new scala.collection.mutable.ArrayBuffer[Int]
     val r = new scala.collection.mutable.ArrayBuffer[Int]
     IntStream.range(0, data.size).forEach { i =>
-      if (p(data(i))) l :+ i else r :+ i
+      if (p(data(i))) l += i else r += i
     }
     (data.of(l.toArray: _*), data.of(r.toArray: _*))
   }
@@ -80,7 +80,7 @@ case class DataFrameOps(data: DataFrame) {
     * @tparam K the type of keys returned by the discriminator function.
     * @return A map from keys to DataFrames
     */
-  def groupBy[K](f: (Tuple) => K): scala.collection.immutable.Map[K, DataFrame] = {
+  def groupBy[K](f: Tuple => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
     groups.view.mapValues(index => data.of(index: _*)).toMap
   }
@@ -100,7 +100,7 @@ case class DataFrameOps(data: DataFrame) {
 case class TupleOps(t: Tuple) {
   /** Converts the tuple to a JSON object. */
   def toJSON: JsObject = {
-    JsObject((0 until t.length()).map(valueOf(_)): _*)
+    JsObject((0 until t.length()).map(valueOf): _*)
   }
 
   /** Returns the name value pair of a field. */

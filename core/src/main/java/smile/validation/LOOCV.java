@@ -1,30 +1,27 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.validation;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
-import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
@@ -73,7 +70,12 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param x the training data.
+     * @param y the class labels of training data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     static <T, M extends Classifier<T>> ClassificationMetrics classification(T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         int k = MathEx.unique(y).length;
@@ -94,16 +96,14 @@ public interface LOOCV {
             M model = trainer.apply(trainx, trainy);
             fitTime += System.nanoTime() - start;
 
-            if (model instanceof SoftClassifier) {
+            start = System.nanoTime();
+            if (model.soft()) {
                 soft = true;
-                start = System.nanoTime();
-                prediction[i] = ((SoftClassifier<T>) model).predict(x[i], posteriori[i]);
-                scoreTime += System.nanoTime() - start;
+                prediction[i] = model.predict(x[i], posteriori[i]);
             } else {
-                start = System.nanoTime();
                 prediction[i] = model.predict(x[i]);
-                scoreTime += System.nanoTime() - start;
             }
+            scoreTime += System.nanoTime() - start;
         }
 
         int error = Error.of(y, prediction);
@@ -158,9 +158,11 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param trainer the lambda to train the model.
+     * @return the validation results.
      */
-    @SuppressWarnings("unchecked")
     static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int[] y = formula.y(data).toIntArray();
         int k = MathEx.unique(y).length;
@@ -178,16 +180,14 @@ public interface LOOCV {
             DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
             fitTime += System.nanoTime() - start;
 
-            if (model instanceof SoftClassifier) {
+            start = System.nanoTime();
+            if (model.soft()) {
                 soft = true;
-                start = System.nanoTime();
-                prediction[i] = ((SoftClassifier<Tuple>) model).predict(data.get(i), posteriori[i]);
-                scoreTime += System.nanoTime() - start;
+                prediction[i] = model.predict(data.get(i), posteriori[i]);
             } else {
-                start = System.nanoTime();
                 prediction[i] = model.predict(data.get(i));
-                scoreTime += System.nanoTime() - start;
             }
+            scoreTime += System.nanoTime() - start;
         }
 
         int error = Error.of(y, prediction);
@@ -242,7 +242,12 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param x the training data.
+     * @param y the responsible variable of training data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     static <T, M extends Regression<T>> RegressionMetrics regression(T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         int n = x.length;
@@ -278,7 +283,10 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param trainer the lambda to train the model.
+     * @return the validation results.
      */
     static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         int n = data.size();

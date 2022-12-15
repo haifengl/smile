@@ -1,41 +1,34 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.spark
 
-import java.util.stream.Collectors
 import org.apache.spark.ml.DataTypeOps
 import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
-/**
-  * Converts Spark [[org.apache.spark.sql.DataFrame]] to Smile [[DataFrame]]
-  */
+/** Converts Spark DataFrame to Smile DataFrame. */
 object SmileDataFrame {
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
     val schema = DataTypeOps.toSparkSchema(df.schema)
     spark.createDataFrame(
-      df.stream()
-        .collect(Collectors.toList())
-        .asScala
-        .map(tuple => SparkRow(tuple, schema).asInstanceOf[Row])
-        .asJava,
+      df.toList.asScala.map(tuple => SparkRow(tuple, schema).asInstanceOf[Row]).asJava,
       schema)
   }
 }

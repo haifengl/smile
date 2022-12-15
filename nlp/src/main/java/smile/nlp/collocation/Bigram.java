@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -69,26 +69,28 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Chi-square distribution with 1 degree of freedom.
      */
-    private static ChiSquareDistribution chisq = new ChiSquareDistribution(1);
+    private static final ChiSquareDistribution chisq = new ChiSquareDistribution(1);
 
     /**
      * Finds top k bigram collocations in the given corpus.
+     * @param corpus the corpus.
+     * @param k the top k bigram to compute.
      * @param minFrequency The minimum frequency of bigram in the corpus.
-     * @return the array of significant bigram collocations in descending order
+     * @return the significant bigram collocations in the descending order
      * of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
         Bigram[] bigrams = new Bigram[k];
         HeapSelect<Bigram> heap = new HeapSelect<>(bigrams);
 
-        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
+        Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
         while (iterator.hasNext()) {
             smile.nlp.Bigram bigram = iterator.next();
-            int c12 = corpus.getBigramFrequency(bigram);
+            int c12 = corpus.count(bigram);
 
             if (c12 > minFrequency) {
-                int c1 = corpus.getTermFrequency(bigram.w1);
-                int c2 = corpus.getTermFrequency(bigram.w2);
+                int c1 = corpus.count(bigram.w1);
+                int c2 = corpus.count(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
                 heap.add(new Bigram(bigram.w1, bigram.w2, c12, -score));
@@ -98,9 +100,16 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
         heap.sort();
 
         Bigram[] collocations = new Bigram[k];
+        int n = 0;
         for (int i = 0; i < k; i++) {
             Bigram bigram = bigrams[k-i-1];
-            collocations[i] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
+            if (bigram != null) {
+                collocations[n++] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
+            }
+        }
+
+        if (n < k) {
+            collocations = Arrays.copyOf(collocations, n);
         }
 
         return collocations;
@@ -109,10 +118,10 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Finds bigram collocations in the given corpus whose p-value is less than
      * the given threshold.
+     * @param corpus the corpus.
      * @param p the p-value threshold
      * @param minFrequency The minimum frequency of bigram in the corpus.
-     * @return the array of significant bigram collocations in descending
-     * order of likelihood ratio.
+     * @return the significant bigram collocations in descending order of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, double p, int minFrequency) {
         if (p <= 0.0 || p >= 1.0) {
@@ -123,14 +132,14 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 
         ArrayList<Bigram> bigrams = new ArrayList<>();
 
-        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
+        Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
         while (iterator.hasNext()) {
             smile.nlp.Bigram bigram = iterator.next();
-            int c12 = corpus.getBigramFrequency(bigram);
+            int c12 = corpus.count(bigram);
 
             if (c12 > minFrequency) {
-                int c1 = corpus.getTermFrequency(bigram.w1);
-                int c2 = corpus.getTermFrequency(bigram.w2);
+                int c1 = corpus.count(bigram.w1);
+                int c2 = corpus.count(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
                 if (score > cutoff) {
@@ -139,7 +148,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
             }
         }
 
-        Bigram[] collocations = bigrams.toArray(new Bigram[bigrams.size()]);
+        Bigram[] collocations = bigrams.toArray(new Bigram[0]);
         Arrays.sort(collocations, Collections.reverseOrder());
 
         return collocations;

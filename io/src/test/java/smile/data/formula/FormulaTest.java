@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.data.formula;
@@ -22,22 +22,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 import smile.data.DataFrame;
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.Read;
-import smile.math.matrix.Matrix;
 import smile.util.Paths;
 
 import static smile.data.formula.Terms.*;
-
 import static org.junit.Assert.*;
 
 /**

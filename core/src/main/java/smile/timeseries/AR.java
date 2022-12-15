@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -66,39 +66,41 @@ public class AR implements Serializable {
 
     /** The fitting method. */
     public enum Method {
+        /** Yule-Walker method. */
         YuleWalker {
             @Override
             public String toString() {
                 return "Yule-Walker";
             }
         },
+        /** Ordinary least squares. */
         OLS,
     }
 
     /**
      * The time series.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The mean of time series.
      */
-    private double mean;
+    private final double mean;
     /**
      * The fitting method.
      */
-    private Method method;
+    private final Method method;
     /**
      * The order.
      */
-    private int p;
+    private final int p;
     /**
      * The intercept.
      */
-    private double b;
+    private final double b;
     /**
      * The linear weights of AR.
      */
-    private double[] ar;
+    private final double[] ar;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -106,11 +108,11 @@ public class AR implements Serializable {
     /**
      * The fitted values.
      */
-    private double[] fittedValues;
+    private final double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    private double[] residuals;
+    private final double[] residuals;
     /**
      * Residual sum of squares.
      */
@@ -122,7 +124,7 @@ public class AR implements Serializable {
     /**
      * The degree-of-freedom of residual variance.
      */
-    private int df;
+    private final int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -138,13 +140,13 @@ public class AR implements Serializable {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    private double RSquared;
+    private final double R2;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    private double adjustedRSquared;
+    private final double adjustedR2;
 
     /**
      * Constructor.
@@ -177,15 +179,15 @@ public class AR implements Serializable {
 
             double residual = y[i] - yi;
             residuals[i] = residual;
-            RSS += MathEx.sqr(residual);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residual);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         df = x.length - p;
         variance = RSS / df;
 
-        RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
+        R2 = 1.0 - RSS / TSS;
+        adjustedR2 = 1.0 - ((1 - R2) * (n-1) / (n-p));
     }
 
     /** Returns the least squares design matrix. */
@@ -212,6 +214,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the time series.
+     * @return the time series.
      */
     public double[] x() {
         return x;
@@ -219,6 +222,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the mean of time series.
+     * @return the mean of time series.
      */
     public double mean() {
         return mean;
@@ -226,6 +230,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the order of AR.
+     * @return the order of AR.
      */
     public int p() {
         return p;
@@ -237,6 +242,8 @@ public class AR implements Serializable {
      * error of coefficients, the third column is the t-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     *
+     * @return the t-test of the coefficients.
      */
     public double[][] ttest() {
         return ttest;
@@ -244,6 +251,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the linear coefficients of AR (without intercept).
+     * @return the linear coefficients.
      */
     public double[] ar() {
         return ar;
@@ -251,6 +259,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the intercept.
+     * @return the intercept.
      */
     public double intercept() {
         return b;
@@ -258,6 +267,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the residuals, that is response minus fitted values.
+     * @return the residuals.
      */
     public double[] residuals() {
         return residuals;
@@ -265,6 +275,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the fitted values.
+     * @return the fitted values.
      */
     public double[] fittedValues() {
         return fittedValues;
@@ -272,6 +283,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the residual sum of squares.
+     * @return the residual sum of squares.
      */
     public double RSS() {
         return RSS;
@@ -279,6 +291,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the residual variance.
+     * @return the residual variance.
      */
     public double variance() {
         return variance;
@@ -286,6 +299,7 @@ public class AR implements Serializable {
 
     /**
      * Returns the degree-of-freedom of residual standard error.
+     * @return the degree-of-freedom of residual standard error.
      */
     public int df() {
         return df;
@@ -303,18 +317,22 @@ public class AR implements Serializable {
      * one possible use of R<sup>2</sup>, where one might try to include more
      * variables in the model until "there is no more improvement". This leads
      * to the alternative approach of looking at the adjusted R<sup>2</sup>.
+     *
+     * @return R<sup>2</sup> statistic.
      */
-    public double RSquared() {
-        return RSquared;
+    public double R2() {
+        return R2;
     }
 
     /**
      * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
      * has almost same explanation as R<sup>2</sup> but it penalizes the
      * statistic as extra variables are included in the model.
+     *
+     * @return Adjusted R<sup>2</sup> statistic.
      */
-    public double adjustedRSquared() {
-        return adjustedRSquared;
+    public double adjustedR2() {
+        return adjustedR2;
     }
 
     /**
@@ -322,6 +340,7 @@ public class AR implements Serializable {
      *
      * @param x the time series.
      * @param p the order.
+     * @return the model.
      */
     public static AR fit(double[] x, int p) {
         if (p <= 0 || p >= x.length) {
@@ -358,6 +377,7 @@ public class AR implements Serializable {
      *
      * @param x the time series.
      * @param p the order.
+     * @return the model.
      */
     public static AR ols(double[] x, int p) {
         return ols(x, p, true);
@@ -369,6 +389,7 @@ public class AR implements Serializable {
      * @param x the time series.
      * @param p the order.
      * @param stderr the flag if estimate the standard errors of parameters.
+     * @return the model.
      */
     public static AR ols(double[] x, int p, boolean stderr) {
         if (p <= 0 || p >= x.length) {
@@ -422,6 +443,7 @@ public class AR implements Serializable {
 
     /**
      * Returns 1-step ahead forecast.
+     * @return 1-step ahead forecast.
      */
     public double forecast() {
         return forecast(x, x.length);
@@ -429,6 +451,8 @@ public class AR implements Serializable {
 
     /**
      * Returns l-step ahead forecast.
+     * @param l the number of steps.
+     * @return l-step ahead forecast.
      */
     public double[] forecast(int l) {
         double[] x = new double[p + l];
@@ -473,7 +497,7 @@ public class AR implements Serializable {
         }
 
         builder.append(String.format("%nResidual  variance: %.4f on %5d degrees of freedom%n", variance, df));
-        builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", R2, adjustedR2));
 
         return builder.toString();
     }

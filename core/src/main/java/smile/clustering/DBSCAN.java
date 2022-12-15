@@ -1,22 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.clustering;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,7 +103,11 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Data structure for neighborhood search.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
+    /**
+     * The flag if the point is a core point (at least minPts points are within radius).
+     */
+    private final boolean[] core;
 
     /**
      * Constructor.
@@ -111,12 +116,14 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param nns the data structure for neighborhood search.
      * @param k the number of clusters.
      * @param y the cluster labels.
+     * @param core the flag if the point is a core point.
      */
-    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y) {
+    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y, boolean[] core) {
         super(k, y);
         this.minPts = minPts;
         this.radius = radius;
         this.nns = nns;
+        this.core = core;
     }
 
     /**
@@ -126,6 +133,7 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param data the observations.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @return the model.
      */
     public static DBSCAN<double[]> fit(double[][] data, int minPts, double radius) {
         return fit(data, new KDTree<>(data, data), minPts, radius);
@@ -134,12 +142,14 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Clustering the data.
      * @param data the observations.
-     * @param distance the distance measure for neighborhood search.
+     * @param distance the distance function.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> DBSCAN<T> fit(T[] data, Distance<T> distance, int minPts, double radius) {
-        return fit(data, new LinearSearch<>(data, distance), minPts, radius);
+        return fit(data, LinearSearch.of(data, distance), minPts, radius);
     }
 
     /**
@@ -148,6 +158,8 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param nns the data structure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> DBSCAN<T> fit(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
         if (minPts < 1) {
@@ -165,17 +177,19 @@ public class DBSCAN<T> extends PartitionClustering {
 
         int k = 0;
         int n = data.length;
+        boolean[] core = new boolean[n];
         int[] y = new int[n];
         Arrays.fill(y, UNDEFINED);
 
         for (int i = 0; i < data.length; i++) {
             if (y[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
-                nns.range(data[i], radius, neighbors);
+                nns.search(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
                     y[i] = OUTLIER;
                 } else {
                     y[i] = k;
+                    core[i] = true;
 
                     for (Neighbor<T, T> neighbor : neighbors) {
                         if (y[neighbor.index] == UNDEFINED) {
@@ -195,9 +209,10 @@ public class DBSCAN<T> extends PartitionClustering {
                             y[index] = k;
 
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
-                            nns.range(neighbor.key, radius, secondaryNeighbors);
+                            nns.search(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
+                                core[neighbor.index] = true;
                                 for (Neighbor<T, T> sn : secondaryNeighbors) {
                                     int label = y[sn.index];
                                     if (label == UNDEFINED) {
@@ -217,7 +232,7 @@ public class DBSCAN<T> extends PartitionClustering {
             }
         }
 
-        return new DBSCAN<>(minPts, radius, nns, k, y);
+        return new DBSCAN<>(minPts, radius, nns, k, y, core);
     }
 
     /**
@@ -227,20 +242,15 @@ public class DBSCAN<T> extends PartitionClustering {
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
-        nns.range(x, radius, neighbors);
-        
-        if (neighbors.size() < minPts) {
-            return OUTLIER;
+        nns.search(x, radius, neighbors);
+
+        Collections.sort(neighbors);
+        for (Neighbor<T, T> neighbor : neighbors) {
+            if (core[neighbor.index]) {
+                return y[neighbor.index];
+            }
         }
-        
-        int[] count = new int[k + 1];
-        for (Neighbor<T,T> neighbor : neighbors) {
-            int yi = y[neighbor.index];
-            if (yi == OUTLIER) yi = k;
-            count[yi]++;
-        }
-        
-        int y = MathEx.whichMax(count);
-        return y == k ? OUTLIER : y;
+
+        return OUTLIER;
     }
 }

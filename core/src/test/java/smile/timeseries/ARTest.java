@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -54,7 +54,8 @@ public class ARTest {
     public void testAR6OLS() {
         System.out.println("AR(6).ols");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         AR model = AR.ols(x, 6);
         System.out.println(model);
         assertEquals(6, model.p());
@@ -86,7 +87,8 @@ public class ARTest {
     public void testAR6YW() {
         System.out.println("AR(6).yw");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         AR model = AR.fit(x, 6);
         System.out.println(model);
         assertEquals(6, model.p());

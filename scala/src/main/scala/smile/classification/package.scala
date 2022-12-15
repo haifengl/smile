@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -397,7 +397,7 @@ package object classification {
           learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
           momentum: TimeFunction = TimeFunction.constant(0.0),
           weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP = time("Multi-layer Perceptron Neural Network") {
-    val net = new MLP(x(0).length, builders: _*)
+    val net = new MLP(builders: _*)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
     net.setWeightDecay(weightDecay)
@@ -871,7 +871,7 @@ package object classification {
     * training instances is small compared to the dimension of input space,
     * the ML covariance estimation can be ill-posed. One approach to resolve
     * the ill-posed estimation is to regularize the covariance estimation.
-    * One of these regularization methods is {@link rda regularized discriminant analysis}.
+    * One of these regularization methods is [[rda]].
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
@@ -923,11 +923,11 @@ package object classification {
   def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {
     val p = x(0).length
     val k = MathEx.max(y) + 1
-    val labels = ClassLabels.fit(y).labels
+    val classes = ClassLabels.fit(y).classes
     val naive = if (priori == null)
-      new DiscreteNaiveBayes(model, k, p, sigma, labels)
+      new DiscreteNaiveBayes(model, k, p, sigma, classes)
     else
-      new DiscreteNaiveBayes(model, priori, p, sigma, labels)
+      new DiscreteNaiveBayes(model, priori, p, sigma, classes)
     naive.update(x, y)
     naive
   }

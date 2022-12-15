@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -65,13 +65,13 @@ public class LanczosTest {
     @Test
     public void testLanczos() {
         System.out.println("eigen");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 3);
         assertTrue(MathEx.equals(eigenValues, result.wr, 1E-7));
 
-        assertEquals(eigenVectors.length,    result.Vr.nrows());
-        assertEquals(eigenVectors[0].length, result.Vr.ncols());
+        assertEquals(eigenVectors.length,    result.Vr.nrow());
+        assertEquals(eigenVectors[0].length, result.Vr.ncol());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
                 assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.Vr.get(i, j)), 1E-7);
@@ -82,7 +82,7 @@ public class LanczosTest {
     @Test
     public void testEigen1() {
         System.out.println("eigen1");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 1);
         assertEquals(eigenValues[0], result.wr[0], 1E-4);
@@ -99,7 +99,7 @@ public class LanczosTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD result = Lanczos.eigen(a, 6);
         assertEquals(2.0, result.wr[0], 1E-4);

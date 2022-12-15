@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -33,6 +33,7 @@ public interface Binomial {
      * So E(y) is independent of n.
      *
      * @param n each sample y[i] is of bin(n[i], p_i) distribution.
+     * @return logit link function.
      */
     static Model logit(int[] n) {
         return new Model() {
@@ -89,7 +90,7 @@ public interface Binomial {
             }
 
             @Override
-            public double loglikelihood(double[] y, double[] mu) {
+            public double logLikelihood(double[] y, double[] mu) {
                 return IntStream.range(0, y.length).mapToDouble(i ->
                         (y[i] * mu[i] - Math.log(1 + Math.exp(mu[i]))) / n[i] + MathEx.lchoose(n[i], (int) (n[i] * y[i]))
                 ).sum();

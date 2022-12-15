@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile Shell is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,4 @@ package object shell {
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion} built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
-
-  /** Show demo window */
-  def demo = {
-    javax.swing.SwingUtilities.invokeLater(new Runnable {
-      override def run(): Unit = {
-        smile.demo.SmileDemo.createAndShowGUI(false)
-      }
-    })
-  }
 }

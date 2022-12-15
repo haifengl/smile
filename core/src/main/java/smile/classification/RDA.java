@@ -1,26 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
 import smile.util.Strings;
@@ -62,59 +59,40 @@ public class RDA extends QDA {
      * @param mu the mean vectors of each class.
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public RDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
         super(priori, mu, eigen, scaling, labels);
     }
 
     /**
-     * Learns regularized discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static RDA fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learns regularized discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     */
-    public static RDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
-    }
-
-    /**
-     * Learns regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static RDA fit(double[][] x, int[] y, Properties prop) {
-        double alpha = Double.valueOf(prop.getProperty("smile.rda.alpha", "0.9"));
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.rda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.rda.tolerance", "1E-4"));
+    public static RDA fit(double[][] x, int[] y, Properties params) {
+        double alpha = Double.parseDouble(params.getProperty("smile.rda.alpha", "0.9"));
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.rda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.rda.tolerance", "1E-4"));
         return fit(x, y, alpha, priori, tol);
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models
      *              between LDA and QDA.
+     * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, double alpha) {
         return fit(x, y, alpha, null, 1E-4);
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models
@@ -123,6 +101,7 @@ public class RDA extends QDA {
      *               estimated from the training data.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      *            will reject variables whose variance is less than tol<sup>2</sup>.
+     * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, double alpha, double[] priori, double tol) {
         if (alpha < 0.0 || alpha > 1.0) {

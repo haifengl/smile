@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -32,7 +32,7 @@ trait Scalar extends Tensor {
   /** Returns the derivative. */
   def d(dx: Var): Scalar
   /** Returns the gradient vector. */
-  def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
+  def d(dx: Var*): Vector = Vars(dx.map(d): _*).simplify
   /** Returns the gradient vector. */
   def d(dx: VectorVar): Vector
 
@@ -546,7 +546,7 @@ case class IntDiv(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntMul(b, c)) if a / c != IntDiv(a, c) => (a / c) / b
     case (IntMul(a, b), c) if a / c != IntDiv(a, c) => (a / c) * b
     case (IntMul(a, b), c) if b / c != IntDiv(b, c) => a * (b / c)
-    case (a, b) if (a == b) => IntVal(1)
+    case (a, b) if a == b => IntVal(1)
     case _ => this
   }
 }

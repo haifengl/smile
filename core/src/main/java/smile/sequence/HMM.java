@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.function.ToIntFunction;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.util.Strings;
 
 /**
  * First-order Hidden Markov Model. A hidden Markov model (HMM) is a
@@ -46,15 +45,15 @@ public class HMM implements Serializable {
     /**
      * Initial state probabilities.
      */
-    private double[] pi;
+    private final double[] pi;
     /**
      * State transition probabilities.
      */
-    private Matrix a;
+    private final Matrix a;
     /**
      * Symbol emission probabilities.
      */
-    private Matrix b;
+    private final Matrix b;
 
     /**
      * Constructor.
@@ -70,11 +69,11 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("Invalid initial state probabilities.");
         }
 
-        if (pi.length != a.nrows()) {
+        if (pi.length != a.nrow()) {
             throw new IllegalArgumentException("Invalid state transition probability matrix.");
         }
 
-        if (a.nrows() != b.nrows()) {
+        if (a.nrow() != b.nrow()) {
             throw new IllegalArgumentException("Invalid symbol emission probability matrix.");
         }
 
@@ -85,6 +84,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the initial state probabilities.
+     * @return the initial state probabilities.
      */
     public double[] getInitialStateProbabilities() {
         return pi;
@@ -92,6 +92,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the state transition probabilities.
+     * @return the state transition probabilities.
      */
     public Matrix getStateTransitionProbabilities() {
         return a;
@@ -99,6 +100,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the symbol emission probabilities.
+     * @return the symbol emission probabilities.
      */
     public Matrix getSymbolEmissionProbabilities() {
         return b;
@@ -150,14 +152,14 @@ public class HMM implements Serializable {
 
     /**
      * Returns the logarithm probability of an observation sequence given this
-     * HMM. A scaling procedure is used in order to avoid underflows when
+     * HMM. A scaling procedure is used in order to avoid underflow when
      * computing the probability of long sequences.
      *
      * @param o an observation sequence.
      * @return the log probability of this sequence.
      */
     public double logp(int[] o) {
-        double[][] alpha = new double[o.length][a.nrows()];
+        double[][] alpha = new double[o.length][a.nrow()];
         double[] scaling = new double[o.length];
 
         forward(o, alpha, scaling);
@@ -177,8 +179,8 @@ public class HMM implements Serializable {
         double[] table = alpha[t];
 
         double sum = 0.0;
-        for (int i = 0; i < table.length; i++) {
-            sum += table[i];
+        for (double x : table) {
+            sum += x;
         }
 
         scaling[t] = sum;
@@ -196,9 +198,9 @@ public class HMM implements Serializable {
      * @param scaling on output, it holds scaling factors.
      */
     private void forward(int[] o, double[][] alpha, double[] scaling) {
-        int N = a.nrows();
+        int N = a.nrow();
         for (int k = 0; k < N; k++) {
-            alpha[0][k] = pi[k] * b.get(k, o[0]);;
+            alpha[0][k] = pi[k] * b.get(k, o[0]);
         }
         scale(scaling, alpha, 0);
 
@@ -226,7 +228,7 @@ public class HMM implements Serializable {
      * forward procedure.
      */
     private void backward(int[] o, double[][] beta, double[] scaling) {
-        int N = a.nrows();
+        int N = a.nrow();
         int n = o.length - 1;
         for (int i = 0; i < N; i++) {
             beta[n][i] = 1.0 / scaling[n];
@@ -248,14 +250,14 @@ public class HMM implements Serializable {
     /**
      * Returns the most likely state sequence given the observation sequence by
      * the Viterbi algorithm, which maximizes the probability of
-     * <code>P(I | O, HMM)</code>. In the calculation, we may get ties. In this
+     * {@code P(I | O, HMM)}. In the calculation, we may get ties. In this
      * case, one of them is chosen randomly.
      *
      * @param o an observation sequence.
      * @return the most likely state sequence.
      */
     public int[] predict(int[] o) {
-        int N = a.nrows();
+        int N = a.nrow();
         // The probability of the most probable path.
         double[][] trellis = new double[o.length][N];
         // Backtrace.
@@ -312,6 +314,7 @@ public class HMM implements Serializable {
      * values in [0, n), where n is the number of unique symbols.
      * @param labels the state labels of observations, of which states take
      * values in [0, p), where p is the number of hidden states.
+     * @return the model.
      */
     public static HMM fit(int[][] observations, int[][] labels) {
         if (observations.length != labels.length) {
@@ -349,7 +352,7 @@ public class HMM implements Serializable {
             MathEx.unitize1(b[i]);
         }
 
-        return new HMM(pi, new Matrix(a), new Matrix(b));
+        return new HMM(pi, Matrix.of(a), Matrix.of(b));
     }
 
     /**
@@ -359,6 +362,8 @@ public class HMM implements Serializable {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @param <T> the data type of observations.
+     * @return the model.
      */
     public static <T> HMM fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
         if (observations.length != labels.length) {
@@ -367,7 +372,7 @@ public class HMM implements Serializable {
 
         return fit(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 labels);
     }
@@ -378,11 +383,12 @@ public class HMM implements Serializable {
      * @param observations the training observation sequences.
      * @param iterations the number of iterations to execute.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @param <T> the data type of observations.
      */
     public <T> void update(T[][] observations, int iterations, ToIntFunction<T> ordinal) {
         update(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 iterations);
     }
@@ -405,17 +411,17 @@ public class HMM implements Serializable {
      * @param sequences the training observation sequences.
      */
     private void iterate(int[][] sequences) {
-        int N = a.nrows();
-        int M = b.ncols();
+        int N = a.nrow();
+        int M = b.ncol();
 
         // gamma[n] = gamma array associated to observation sequence n
-        double gamma[][][] = new double[sequences.length][][];
+        double[][][] gamma = new double[sequences.length][][];
 
         // a[i][j] = aijNum[i][j] / aijDen[i]
         // aijDen[i] = expected number of transitions from state i
         // aijNum[i][j] = expected number of transitions from state i to j
-        double aijNum[][] = new double[N][N];
-        double aijDen[] = new double[N];
+        double[][] aijNum = new double[N][N];
+        double[] aijDen = new double[N];
 
         for (int k = 0; k < sequences.length; k++) {
             if (sequences[k].length <= 2) {
@@ -429,8 +435,8 @@ public class HMM implements Serializable {
             forward(o, alpha, scaling);
             backward(o, beta, scaling);
 
-            double xi[][][] = estimateXi(o, alpha, beta);
-            double g[][] = gamma[k] = estimateGamma(xi);
+            double[][][] xi = estimateXi(o, alpha, beta);
+            double[][] g = gamma[k] = estimateGamma(xi);
 
             int n = o.length - 1;
             for (int i = 0; i < N; i++) {
@@ -499,9 +505,9 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("Observation sequence is too short.");
         }
 
-        int N = a.nrows();
+        int N = a.nrow();
         int n = o.length - 1;
-        double xi[][][] = new double[n][N][N];
+        double[][][] xi = new double[n][N][N];
 
         for (int t = 0; t < n; t++) {
             for (int i = 0; i < N; i++) {
@@ -521,7 +527,7 @@ public class HMM implements Serializable {
      * beta arrays).
      */
     private double[][] estimateGamma(double[][][] xi) {
-        int N = a.nrows();
+        int N = a.nrow();
         double[][] gamma = new double[xi.length + 1][N];
 
         for (int t = 0; t < xi.length; t++) {
@@ -545,16 +551,16 @@ public class HMM implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrows(), b.ncols()));
+        sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrow(), b.ncol()));
 
         sb.append("Initial state probability: ");
-        sb.append(Strings.toString(pi));
+        sb.append(Arrays.toString(pi));
 
         sb.append("\nState transition probability:\n");
-        sb.append(a.toString());
+        sb.append(a);
 
         sb.append("Symbol emission probability:\n");
-        sb.append(b.toString());
+        sb.append(b);
 
         return sb.toString();
     }

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.PowerIteration;
 
 /**
  * Deterministic annealing clustering. Deterministic annealing extends
@@ -66,6 +65,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
      * Clustering data into k clusters.
      * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
+     * @return the model.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax) {
         return fit(data, Kmax, 0.9, 100, 1E-4, 1E-2);
@@ -80,6 +80,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
      * @param maxIter the maximum number of iterations at each temperature.
      * @param tol the tolerance of convergence test.
      * @param splitTol the tolerance to split a cluster.
+     * @return the model.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol) {
         if (alpha <= 0 || alpha >= 1.0) {
@@ -100,10 +101,10 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
 
         priori[0] = priori[1] = 0.5;
 
-        Matrix cov = new Matrix(MathEx.cov(data, centroids[0]));
+        Matrix cov = Matrix.of(MathEx.cov(data, centroids[0]));
         double[] ev = new double[d];
         Arrays.fill(ev, 1.0);
-        double lambda = PowerIteration.eigen(cov, ev, 0.0f, 1E-4, Math.max(20, 2 * cov.nrows()));
+        double lambda = cov.eigen(ev, 0.0f, 1E-4, Math.max(20, 2 * cov.nrow()));
         double T = 2.0 * lambda + 0.01;
         
         int k = 2;

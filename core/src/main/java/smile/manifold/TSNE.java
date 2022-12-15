@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -71,19 +71,42 @@ public class TSNE implements Serializable {
      */
     public final double[][] coordinates;
 
-    private double eta             = 500;
-    private double momentum        = 0.5;
-    private double finalMomentum   = 0.8;
-    private int momentumSwitchIter = 250;
-    private double minGain         = .01;
-    private int    totalIter       =   1; // total iterations
+    /**
+     * The learning rate.
+     */
+    private final double eta;
+    /**
+     * The number of iterations so far.
+     */
+    private int totalIter = 0;
+    /**
+     * The momentum factor.
+     */
+    private double momentum              = 0.5;
+    /**
+     * The momentum in later stage.
+     */
+    private final double finalMomentum   = 0.8;
+    /**
+     * The number of iterations at which switch the momentum to
+     * finalMomentum.
+     */
+    private final int momentumSwitchIter = 250;
+    /**
+     * The floor of gain.
+     */
+    private final double minGain         = .01;
 
-    private double[][] gains; // adjust learning rate for each point
-
-    private double[][] D;
-    private double[][] P;
-    private double[][] Q;
-    private double     Qsum;
+    /** The gain matrix. */
+    private final double[][] gains; // adjust learning rate for each point
+    /** The probability matrix of the distances in the input space. */
+    private final double[][] P;
+    /** The probability matrix of the distances in the feature space. */
+    private final double[][] Q;
+    /** The sum of Q matrix. */
+    private double Qsum;
+    /** The cost function value. */
+    private double cost;
 
     /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
@@ -108,6 +131,7 @@ public class TSNE implements Serializable {
         this.eta = eta;
         int n = X.length;
 
+        double[][] D;
         if (X.length == X[0].length) {
             D = X;
         } else {
@@ -150,7 +174,18 @@ public class TSNE implements Serializable {
         update(iterations);
     }
 
-    /** Performs additional iterations. */
+    /**
+     * Returns the cost function value.
+     * @return the cost function value.
+     */
+    public double cost() {
+        return cost;
+    }
+
+    /**
+     * Performs additional iterations.
+     * @param iterations the number of iterations.
+     */
     public void update(int iterations) {
         double[][] Y = coordinates;
         int n = Y.length;
@@ -187,19 +222,8 @@ public class TSNE implements Serializable {
 
             // Compute current value of cost function
             if (iter % 100 == 0)   {
-                double C = IntStream.range(0, n).parallel().mapToDouble(i -> {
-                    double[] Pi = P[i];
-                    double[] Qi = Q[i];
-                    double Ci = 0.0;
-                    for (int j = 0; j < i; j++) {
-                        double p = Pi[j];
-                        double q = Qi[j] / Qsum;
-                        if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
-                        Ci += p * MathEx.log2(p / q);
-                    }
-                    return Ci;
-                }).sum();
-                logger.info("Error after {} iterations: {}", totalIter, 2 * C);
+                cost = computeCost(P, Q);
+                logger.info("Error after {} iterations: {}", iter, cost);
             }
         }
 
@@ -211,6 +235,11 @@ public class TSNE implements Serializable {
                 Yi[j] -= colMeans[j];
             }
         });
+
+        if (iterations % 100 != 0)   {
+            cost = computeCost(P, Q);
+            logger.info("Error after {} iterations: {}", iterations, cost);
+        }
     }
 
     /** Computes the gradients and updates the coordinates. */
@@ -245,7 +274,7 @@ public class TSNE implements Serializable {
         }
     }
 
-    /** Compute the Gaussian kernel (search the width for given perplexity. */
+    /** Compute the Gaussian kernel (search the width for given perplexity). */
     private double[][] expd(double[][] D, double perplexity, double tol) {
         int n          = D.length;
         double[][] P   = new double[n][n];
@@ -309,21 +338,44 @@ public class TSNE implements Serializable {
     }
 
     /**
-     * Compute the Q matrix.
+     * Computes the Q matrix.
      */
-    private double computeQ(double[][] x, double[][] Q) {
-        int n = x.length;
+    private double computeQ(double[][] Y, double[][] Q) {
+        int n = Y.length;
 
-        return IntStream.range(0, n).parallel().mapToDouble(i -> {
-            double[] xi = x[i];
+        // DoubleStream.sum is unreproducible across machines
+        // due to scheduling randomness. Therefore, we accumulate the
+        // row sum and then compute the overall sum.
+        double[] rowSum = IntStream.range(0, n).parallel().mapToDouble(i -> {
+            double[] Yi = Y[i];
             double[] Qi = Q[i];
             double sum = 0.0;
             for (int j = 0; j < n; j++) {
-                double q = 1.0 / (1.0 + MathEx.squaredDistance(xi, x[j]));
+                double q = 1.0 / (1.0 + MathEx.squaredDistance(Yi, Y[j]));
                 Qi[j] = q;
                 sum += q;
             }
             return sum;
+        }).toArray();
+
+        return MathEx.sum(rowSum);
+    }
+
+    /**
+     * Computes the cost function.
+     */
+    private double computeCost(double[][] P, double[][] Q) {
+        return 2 * IntStream.range(0, Q.length).parallel().mapToDouble(i -> {
+            double[] Pi = P[i];
+            double[] Qi = Q[i];
+            double C = 0.0;
+            for (int j = 0; j < i; j++) {
+                double p = Pi[j];
+                double q = Qi[j] / Qsum;
+                if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
+                C += p * MathEx.log2(p / q);
+            }
+            return C;
         }).sum();
     }
 }

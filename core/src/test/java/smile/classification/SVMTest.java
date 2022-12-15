@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -26,9 +26,11 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.data.Segment;
-import smile.data.USPS;
-import smile.feature.Standardizer;
+import smile.io.Write;
+import smile.test.data.Segment;
+import smile.test.data.USPS;
+import smile.data.transform.InvertibleColumnTransform;
+import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
@@ -61,10 +63,9 @@ public class SVMTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testSVMGuide1() throws IOException {
         System.out.println("svmguide1");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
@@ -93,24 +94,23 @@ public class SVMTest {
         }
 
         GaussianKernel kernel = new GaussianKernel(90);
-        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(130, error);
+        assertEquals(125, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testAdult() throws IOException {
         System.out.println("adult");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
         Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
 
-        int n = train.size();
+        int n = Math.min(20000, train.size()); // to avoid OOM
         int[][] x = new int[n][];
         int[] y = new int[n];
         for (int i = 0; i < n; i++) {
@@ -136,49 +136,48 @@ public class SVMTest {
             testy[i] = sample.label();
         }
 
-        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31.6);
-        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(28);
+        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2451, error);
+        assertEquals(2479, error);
     }
 
     @Test
     public void testSegment() {
         System.out.println("Segment");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-        MathEx.setSeed(19650217); // to get repeatable results.
-
-        Standardizer scaler = Standardizer.fit(Segment.x);
-        double[][] x = scaler.transform(Segment.x);
-        double[][] testx = scaler.transform(Segment.testx);
+        InvertibleColumnTransform scaler = Standardizer.fit(Segment.train);
+        System.out.println(scaler);
+        double[][] x = scaler.apply(Segment.formula.x(Segment.train)).toArray();
+        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
 
         GaussianKernel kernel = new GaussianKernel(6.4);
-        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3));
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(33, error);
+        assertEquals(33, error, 3);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3, 1));
 
         int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(87, error);
+        assertEquals(86, error, 3);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

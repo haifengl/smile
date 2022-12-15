@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -25,25 +25,26 @@ package smile.base.mlp;
 public class HiddenLayerBuilder extends LayerBuilder {
 
     /** The activation function. */
-    private ActivationFunction f;
+    private final ActivationFunction activation;
 
     /**
      * Constructor.
-     * @param n the number of neurons.
-     * @param f the activation function.
+     * @param neurons the number of neurons.
+     * @param dropout the dropout rate.
+     * @param activation the activation function.
      */
-    public HiddenLayerBuilder(int n, ActivationFunction f) {
-        super(n);
-        this.f = f;
+    public HiddenLayerBuilder(int neurons, double dropout, ActivationFunction activation) {
+        super(neurons, dropout);
+        this.activation = activation;
     }
 
     @Override
     public String toString() {
-        return String.format("%s(%d)", f.name(), n);
+        return String.format("%s(%d)", activation.name(), neurons);
     }
 
     @Override
     public HiddenLayer build(int p) {
-        return new HiddenLayer(n, p, f);
+        return new HiddenLayer(neurons, p, activation);
     }
 }

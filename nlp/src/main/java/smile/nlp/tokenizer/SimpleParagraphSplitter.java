@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -45,16 +45,16 @@ public class SimpleParagraphSplitter implements ParagraphSplitter {
     /**
      * Remove whitespaces in an blank line. Note to turn multiline mode.
      */
-    private static Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
+    private static final Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
     /**
      * Pattern to split paragraphs. Note that \u2029 is paragraph-separator character
      */
-    private static Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|'\u2029+");
+    private static final Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|'\u2029+");
 
     /**
      * The singleton instance for standard unweighted Euclidean distance.
      */
-    private static SimpleParagraphSplitter singleton = new SimpleParagraphSplitter();
+    private static final SimpleParagraphSplitter singleton = new SimpleParagraphSplitter();
 
     /**
      * Constructor.
@@ -64,6 +64,7 @@ public class SimpleParagraphSplitter implements ParagraphSplitter {
 
     /**
      * Returns the singleton instance.
+     * @return the singleton instance.
      */
     public static SimpleParagraphSplitter getInstance() {
         return singleton;

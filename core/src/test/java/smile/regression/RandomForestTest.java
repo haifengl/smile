@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -19,9 +19,12 @@ package smile.regression;
 
 import java.util.Arrays;
 import org.junit.*;
-import smile.data.*;
+import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.RMSE;
 
@@ -89,7 +92,7 @@ public class RandomForestTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -99,14 +102,14 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
-        assertEquals(6595.3241,  importance[1], 1E-4);
-        assertEquals(10242.6828, importance[2], 1E-4);
-        assertEquals(34755.6754, importance[3], 1E-4);
-        assertEquals(31075.0867, importance[4], 1E-4);
+        assertEquals( 6578.6575, importance[1], 1E-4);
+        assertEquals(10270.8817, importance[2], 1E-4);
+        assertEquals(36150.0766, importance[3], 1E-4);
+        assertEquals(30099.2985, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
         System.out.println("----- Progressive RMSE -----");
@@ -119,10 +122,10 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(2.710121445970332, metrics.rmse, 1E-4);
+        assertEquals(2.7062, metrics.rmse, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     public void test(String name, Formula formula, DataFrame data, double expected) {
@@ -139,20 +142,52 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
         }
     }
 
     @Test
-    public void testAll() {
-        test("CPU", CPU.formula, CPU.data, 69.3312);
-        test("2dplanes", Planes.formula, Planes.data, 1.3574);
-        test("abalone", Abalone.formula, Abalone.train, 2.1888);
+    public void testCPU() {
+        test("CPU", CPU.formula, CPU.data, 69.0170);
+    }
+
+    @Test
+    public void test2DPlanes() {
+        test("2dplanes", Planes.formula, Planes.data, 1.3581);
+    }
+
+    @Test
+    public void testAbalone() {
+        test("abalone", Abalone.formula, Abalone.train, 2.1889);
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5620);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 58550.8159);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3147);
+    }
+
+    @Test
+    public void testAutoMPG() {
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5588);
+    }
+
+    @Test
+    public void testCalHousing() {
+        test("cal_housing", CalHousing.formula, CalHousing.data, 58605.0710);
+    }
+
+    @Test
+    public void testPuma8nh() {
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3145);
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
@@ -181,7 +216,7 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testMerge() throws Exception {
+    public void testMerge() {
         System.out.println("merge");
 
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
@@ -194,8 +229,8 @@ public class RandomForestTest {
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);
         assertEquals(2.0858, rmse1, 1E-4);
-        assertEquals(2.0630, rmse2, 1E-4);
-        assertEquals(2.0691, rmse,  1E-4);
+        assertEquals(2.0633, rmse2, 1E-4);
+        assertEquals(2.0693, rmse,  1E-4);
     }
 
     @Test

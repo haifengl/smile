@@ -1,25 +1,26 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.classification;
 
-import java.io.IOException;
-import smile.data.Hyphen;
-import smile.data.Protein;
+import smile.io.Read;
+import smile.io.Write;
+import smile.test.data.Hyphen;
+import smile.test.data.Protein;
 import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -54,7 +55,7 @@ public class MaxentTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testProtein() throws Exception {
         System.out.println("protein");
 
@@ -66,12 +67,12 @@ public class MaxentTest {
         System.out.format("The error is %d of %d%n", error, Protein.testx.length);
         assertEquals(1339, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
-    @Test(expected = Test.None.class)
-    public void testHyphen() throws IOException {
+    @Test
+    public void testHyphen() {
         System.out.println("hyphen");
 
         Maxent model = Maxent.fit(Hyphen.p, Hyphen.x, Hyphen.y);

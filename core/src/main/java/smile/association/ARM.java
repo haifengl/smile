@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -24,7 +24,7 @@ import smile.association.TotalSupportTree.Node;
 
 /**
  * Association Rule Mining.
- * Let <code></code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
+ * Let <code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
  * be a set of n binary attributes called items. Let
  * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
  * be a set of transactions called the database. Each transaction in
@@ -54,19 +54,19 @@ public class ARM implements Iterable<AssociationRule> {
     /**
      * The number transactions in the database.
      */
-    private int size;
+    private final int size;
     /**
      * The confidence threshold for association rules.
      */
-    private double confidence;
+    private final double confidence;
     /**
      * Compressed set enumeration tree.
      */
-    private TotalSupportTree ttree;
+    private final TotalSupportTree ttree;
     /**
      * The buffer to collect mining results.
      */
-    private Queue<AssociationRule> buffer = new LinkedList<>();
+    private final Queue<AssociationRule> buffer = new LinkedList<>();
 
     /**
      * Constructor.
@@ -86,9 +86,10 @@ public class ARM implements Iterable<AssociationRule> {
             @Override
             public boolean hasNext() {
                 if (buffer.isEmpty()) {
-                    for (; i < ttree.root.children.length; i++) {
-                        Node child = ttree.root.children[i];
-                        if (ttree.root.children[i] != null) {
+                    TotalSupportTree.Node root = ttree.root();
+                    for (; i < root.children.length; i++) {
+                        Node child = root.children[i];
+                        if (root.children[i] != null) {
                             int[] itemset = {child.id};
                             generate(itemset, i, child);
 
@@ -113,6 +114,8 @@ public class ARM implements Iterable<AssociationRule> {
     /**
      * Mines the association rules.
      * @param confidence the confidence threshold for association rules.
+     * @param tree the FP-tree.
+     * @return the stream of association rules.
      */
     public static Stream<AssociationRule> apply(double confidence, FPTree tree) {
         TotalSupportTree ttree = new TotalSupportTree(tree);
@@ -122,7 +125,7 @@ public class ARM implements Iterable<AssociationRule> {
 
     /**
      * Generates association rules from a T-tree.
-     * @param itemset the label for a T-tree node as generated sofar.
+     * @param itemset the label for a T-tree node as generated so far.
      * @param size the size of the current array level in the T-tree.
      * @param node the current node in the T-tree.
      */
@@ -152,19 +155,19 @@ public class ARM implements Iterable<AssociationRule> {
         int[][] combinations = getPowerSet(itemset);
 
         // Loop through combinations
-        for (int i = 0; i < combinations.length; i++) {
+        for (int[] combination : combinations) {
             // Find complement of combination in given itemSet
-            int[] complement = getComplement(combinations[i], itemset);
+            int[] complement = getComplement(combination, itemset);
             // If complement is not empty generate rule
             if (complement != null) {
-                double antecedentSupport = ttree.getSupport(combinations[i]);
+                double antecedentSupport = ttree.getSupport(combination);
                 double arc = support / antecedentSupport;
                 if (arc >= confidence) {
                     double supp = (double) support / size;
                     double consequentSupport = ttree.getSupport(complement);
                     double lift = support / (antecedentSupport * consequentSupport / size);
                     double leverage = supp - (antecedentSupport / size) * (consequentSupport / size);
-                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc, lift, leverage);
+                    AssociationRule ar = new AssociationRule(combination, complement, supp, arc, lift, leverage);
                     buffer.offer(ar);
                 }
             }
@@ -182,14 +185,13 @@ public class ARM implements Iterable<AssociationRule> {
             return null;
         }
 
-        // Otherwsise define combination array and determine complement
+        // Otherwise define combination array and determine complement
         int[] complement = new int[size];
         int index = 0;
-        for (int i = 0; i < fullset.length; i++) {
-            int item = fullset[i];
+        for (int item : fullset) {
             boolean member = false;
-            for (int j = 0; j < subset.length; j++) {
-                if (item == subset[j]) {
+            for (int i : subset) {
+                if (item == i) {
                     member = true;
                     break;
                 }
@@ -218,7 +220,7 @@ public class ARM implements Iterable<AssociationRule> {
      * @param set the input item set.
      * @param inputIndex the index within the input set marking current
      * element under consideration (0 at start).
-     * @param sofar the current combination determined sofar during the
+     * @param sofar the current combination determined so far during the
      * recursion (null at start).
      * @param sets the power set to store all combinations when recursion ends.
      * @param outputIndex the current location in the output set.

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -84,7 +84,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   }
 
   /** Clears the object buffer. */
-  def clear: Unit = buffer.clear
+  def clear(): Unit = buffer.clear
 
   private def serialize(buffer: ByteBuffer, string: Option[String]): Unit = {
     if (string.isDefined) {
@@ -188,7 +188,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   private def serialize(buffer: ByteBuffer, json: JsBinary, ename: Option[String]): Unit = {
     buffer.put(TYPE_BINARY)
     serialize(buffer, ename)
-    buffer.putInt(json.value.size)
+    buffer.putInt(json.value.length)
     buffer.put(BINARY_SUBTYPE_GENERIC)
     buffer.put(json.value)
   }
@@ -394,7 +394,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
 }
 
 object JsonSerializer {
-  val UTF8 = Charset.forName("UTF-8")
+  val UTF8: Charset = Charset.forName("UTF-8")
 
   /** End of document */
   val END_OF_DOCUMENT             : Byte = 0x00
@@ -442,8 +442,8 @@ object JsonSerializer {
   val FALSE                       : Byte = 0x00
 
   /** Encoding of "undefined" */
-  val undefined = Array(TYPE_UNDEFINED)
-  val `null` = Array(TYPE_NULL)
+  val undefined: Array[Byte] = Array(TYPE_UNDEFINED)
+  val `null`: Array[Byte] = Array(TYPE_NULL)
 
   /** Helper function convert ByteBuffer to Array[Byte]. */
   implicit def byteBuffer2ArrayByte(buffer: ByteBuffer): Array[Byte] = {

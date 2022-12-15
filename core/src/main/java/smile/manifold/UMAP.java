@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -37,19 +37,16 @@ import smile.stat.distribution.GaussianDistribution;
  * UMAP is a dimension reduction technique that can be used for visualization
  * similarly to t-SNE, but also for general non-linear dimension reduction.
  * The algorithm is founded on three assumptions about the data:
- * <p>
  * <ul>
  * <li>The data is uniformly distributed on a Riemannian manifold;</li>
  * <li>The Riemannian metric is locally constant (or can be approximated as
  * such);</li>
  * <li>The manifold is locally connected.</li>
  * </ul>
- * <p>
  * From these assumptions it is possible to model the manifold with a fuzzy
  * topological structure. The embedding is found by searching for a low
  * dimensional projection of the data that has the closest possible equivalent
  * fuzzy topological structure.
- * <p>
  * <h2>References</h2>
  * <ol>
  * <li>McInnes, L, Healy, J, UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction, ArXiv e-prints 1802.03426, 2018</li>
@@ -93,6 +90,7 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data the input data.
+     * @return the model.
      */
     public static UMAP of(double[][] data) {
         return of(data, 15);
@@ -102,7 +100,9 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data     the input data.
-     * @param distance the distance measure.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance) {
         return of(data, distance, 15);
@@ -115,6 +115,7 @@ public class UMAP implements Serializable {
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
+     * @return the model.
      */
     public static UMAP of(double[][] data, int k) {
         return of(data, new EuclideanDistance(), k);
@@ -124,9 +125,12 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data    the input data.
+     * @param distance the distance function.
      * @param k       k-nearest neighbor. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
@@ -166,6 +170,7 @@ public class UMAP implements Serializable {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     * @return the model.
      */
     public static UMAP of(double[][] data, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
         return of(data, new EuclideanDistance(), k, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
@@ -175,7 +180,7 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data               the input data.
-     * @param distance           the distance measure.
+     * @param distance           the distance function.
      * @param k                  k-nearest neighbor. Larger values result in more global views
      *                           of the manifold, while smaller values result in more local data
      *                           being preserved. Generally in the range 2 to 100.
@@ -206,6 +211,8 @@ public class UMAP implements Serializable {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
         if (d < 2) {
@@ -262,7 +269,7 @@ public class UMAP implements Serializable {
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>
      */
-    private static DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+    private static final DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
         @Override
         public double f(double[] x) {
@@ -336,7 +343,7 @@ public class UMAP implements Serializable {
         // The distance to nearest neighbor
         double[] rho = new double[n];
 
-        double avg = IntStream.range(0, n).mapToObj(i -> nng.getEdges(i))
+        double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
                 .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
                 .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
@@ -457,7 +464,7 @@ public class UMAP implements Serializable {
         Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - 2;
+            int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
                 double x = V.get(i, c);
                 coordinates[i][j] = x;
@@ -604,12 +611,6 @@ public class UMAP implements Serializable {
      * Clamps a value to range [-4.0, 4.0].
      */
     private static double clamp(double val) {
-        if (val > 4.0) {
-            return 4.0;
-        } else if (val < -4.0) {
-            return -4.0;
-        } else {
-            return val;
-        }
+        return Math.min(4.0, Math.max(val, -4.0));
     }
 }

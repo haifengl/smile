@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -86,9 +86,9 @@ public class BIRCH implements VectorQuantizer {
         /** The number of observations. */
         private int n;
         /** The sum of observations. */
-        private double[] sum = new double[d];
+        private final double[] sum = new double[d];
         /** The square sum of observations. */
-        private double[] ss = new double[d];
+        private final double[] ss = new double[d];
 
         /**
          * Constructor.
@@ -264,7 +264,7 @@ public class BIRCH implements VectorQuantizer {
         /**
          * The children nodes.
          */
-        private Node[] children;
+        private final Node[] children;
         /**
          * The number of children.
          */
@@ -340,7 +340,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             Node[] sister = new Node[B];
             for (int i = 0; i <= B; i++) {
-                if (dist[i][farthest.i()] < dist[i][farthest.j()]) {
+                if (dist[i][farthest.i] < dist[i][farthest.j]) {
                     children[k++] = nodes[i];
                 } else {
                     sister[n++] = nodes[i];
@@ -360,7 +360,7 @@ public class BIRCH implements VectorQuantizer {
      * The leaf node of CF tree.
      */
     private class Leaf extends Node {
-        private ClusteringFeature[] clusters;
+        private final ClusteringFeature[] clusters;
         private int k;
 
         /**
@@ -428,7 +428,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             ClusteringFeature[] sister = new ClusteringFeature[L];
             for (int i = 0; i <= L; i++) {
-                if (dist[i][farthest.i()] < dist[i][farthest.j()]) {
+                if (dist[i][farthest.i] < dist[i][farthest.j]) {
                     this.clusters[k++] = clusters[i];
                 } else {
                     sister[n++] = clusters[i];
@@ -475,7 +475,10 @@ public class BIRCH implements VectorQuantizer {
         return cluster.centroid();
     }
 
-    /** Returns the cluster centroids of leaf nodes. */
+    /**
+     * Returns the cluster centroids of leaf nodes.
+     * @return the cluster centroids of leaf nodes.
+     */
     public double[][] centroids() {
         ArrayList<double[]> list = new ArrayList<>();
         centroids(root, list);

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -24,10 +24,8 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
-import smile.math.matrix.DMatrix;
+import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.BiconjugateGradient;
-import smile.math.matrix.Preconditioner;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -76,6 +74,7 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -87,17 +86,18 @@ public class LASSO {
      * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
      * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>smile.lasso.max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.lasso.lambda", "1"));
-        double tol = Double.valueOf(prop.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.lasso.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.iterations", "1000"));
         return fit(formula, data, lambda, tol, maxIter);
     }
 
@@ -107,6 +107,7 @@ public class LASSO {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
         return fit(formula, data, lambda, 1E-4, 1000);
@@ -118,8 +119,9 @@ public class LASSO {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param tol the tolerance to stop iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
         formula = formula.expand(data.schema());
@@ -150,6 +152,15 @@ public class LASSO {
         return new LinearModel(formula, schema, X, y, w, b);
     }
 
+    /**
+     * Fits the LASSO model.
+     * @param x the design matrix.
+     * @param y the responsible variable.
+     * @param lambda the shrinkage/regularization parameter.
+     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
+     */
     static double[] train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
@@ -175,8 +186,8 @@ public class LASSO {
         final double eta = 1E-3;  // tolerance for PCG termination
 
         int pitr = 0;
-        int n = x.nrows();
-        int p = x.ncols();
+        int n = x.nrow();
+        int p = x.ncol();
 
         double[] Y = new double[n];
         double ym = MathEx.mean(y);
@@ -185,7 +196,6 @@ public class LASSO {
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
-        double pobj = 0.0; // primal objective function value
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
 
@@ -228,7 +238,7 @@ public class LASSO {
         double[] prb = new double[p];
         double[] prs = new double[p];
 
-        PCGMatrix pcg = new PCGMatrix(x, d1, d2, prb, prs);
+        PCG pcg = new PCG(x, d1, d2, prb, prs);
 
         // MAIN LOOP
         int ntiter = 0;
@@ -249,7 +259,8 @@ public class LASSO {
                 }
             }
 
-            pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
+            // primal objective function value
+            double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
             dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
                 logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
@@ -300,7 +311,7 @@ public class LASSO {
             }
 
             // preconditioned conjugate gradient
-            double error = BiconjugateGradient.solve(pcg, grad, dxu, pcg, pcgtol, 1, pcgmaxi);
+            double error = pcg.solve(grad, dxu, pcg, pcgtol, 1, pcgmaxi);
             if (error > pcgtol) {
                 pitr = pcgmaxi;
             }
@@ -358,59 +369,70 @@ public class LASSO {
 
     /**
      * Returns sum(log(-f)).
-     * @param f a matrix.
+     * @param f the matrix.
      * @return sum(log(-f))
      */
     private static double sumlogneg(double[][] f) {
-        int m = f.length;
-        int n = f[0].length;
-
         double sum = 0.0;
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sum += Math.log(-f[i][j]);
+        for (double[] row : f) {
+            for (double x : row) {
+                sum += Math.log(-x);
             }
         }
 
         return sum;
     }
 
-    static class PCGMatrix extends DMatrix implements Preconditioner {
-
+    /**
+     * Preconditioned conjugate gradients matrix.
+     */
+    static class PCG extends IMatrix implements IMatrix.Preconditioner {
+        /** The design matrix. */
         Matrix A;
+        /** A' * A */
         Matrix AtA;
+        /** The number of columns of A. */
         int p;
+        /** The right bottom of Hessian matrix. */
         double[] d1;
+        /** The last row/column of Hessian matrix. */
         double[] d2;
+        /** The vector used in preconditioner. */
         double[] prb;
+        /** The vector used in preconditioner. */
         double[] prs;
+        /** A * x */
         double[] ax;
+        /** A' * A * x. */
         double[] atax;
 
-        PCGMatrix(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
+        /**
+         * Constructor.
+         */
+        PCG(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;
             this.d1 = d1;
             this.d2 = d2;
             this.prb = prb;
             this.prs = prs;
 
-            int n = A.nrows();
-            p = A.ncols();
+            int n = A.nrow();
+            p = A.ncol();
             ax = new double[n];
             atax = new double[p];
 
-            if ((A.ncols() < 10000) && (A instanceof Matrix)) {
+            if (A.ncol() < 10000) {
                 AtA = A.ata();
             }
         }
 
         @Override
-        public int nrows() {
+        public int nrow() {
             return 2 * p;
         }
 
         @Override
-        public int ncols() {
+        public int ncol() {
             return 2 * p;
         }
 
@@ -446,9 +468,8 @@ public class LASSO {
         }
 
         @Override
-        public void solve(double[] b, double[] x) {
+        public void asolve(double[] b, double[] x) {
             // COMPUTE P^{-1}X (PCG)
-            //
             // y = P^{-1} * x
             for (int i = 0; i < p; i++) {
                 x[i]   = ( d1[i] * b[i] -  d2[i] * b[i+p]) / prs[i];
@@ -469,16 +490,6 @@ public class LASSO {
 
         @Override
         public void tv(double[] work, int inputOffset, int outputOffset) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
             throw new UnsupportedOperationException();
         }
     }

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -40,8 +40,8 @@ import smile.neighbor.RNNSearch;
  * conditional entropy H(C | X) is small. MEC also generalizes the criterion
  * by replacing Shannon's entropy with Havrda-Charvat's structural
  * &alpha;-entropy. Interestingly, the minimum entropy criterion based
- * on structural &alpha;-entropy is equal to the probability error of the
- * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
+ * on structural &alpha;-entropy is equal to the probability error of the
+ * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
  * Parzen density estimation, a nonparametric approach.
  * <p>
  * MEC is an iterative algorithm starting with an initial partition given by
@@ -70,7 +70,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * The neighborhood search data structure.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
      * Constructor.
@@ -95,10 +95,12 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * Clustering the data.
      * @param data the observations.
-     * @param distance the distance measure for neighborhood search.
+     * @param distance the distance function.
      * @param k the number of clusters. Note that this is just a hint. The final
      *          number of clusters may be less.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> MEC<T> fit(T[] data, Distance<T> distance, int k, double radius) {
         if (k < 2) {
@@ -115,11 +117,11 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             KMeans kmeans = KMeans.fit((double[][]) data, k);
             y = kmeans.y;
         } else {
-            CLARANS<T> clarans = CLARANS.fit(data, distance::d, k);
+            CLARANS<T> clarans = CLARANS.fit(data, distance, k);
             y = clarans.y;
         }
 
-        return fit(data, new LinearSearch<>(data, distance), k, radius, y, 1E-4);
+        return fit(data, LinearSearch.of(data, distance), k, radius, y, 1E-4);
     }
 
     /**
@@ -132,6 +134,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      * @param y the initial clustering labels, which could be produced by any
      *          other clustering methods.
      * @param tol the tolerance of convergence test.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y, double tol) {
         if (k < 2) {
@@ -147,9 +151,9 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         double[] px = new double[n];
 
         // Neighbors of each observation.
-        ArrayList<int[]> neighbors = new ArrayList<>();
+        int[][] neighbors = new int[n][];
 
-        logger.info(String.format("Estimating the probabilities ..."));
+        logger.info("Estimating the probabilities ...");
         IntStream stream = IntStream.range(0, n);
         if (!(nns instanceof LinearSearch)) {
             stream = stream.parallel();
@@ -162,9 +166,9 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             // and also avoid empty neighborhood.
             list.add(Neighbor.of(data[i], i, 0.0));
 
-            nns.range(data[i], radius, list);
+            nns.search(data[i], radius, list);
             int[] neighborhood = new int[list.size()];
-            neighbors.add(neighborhood);
+            neighbors[i] = neighborhood;
 
             for (int j = 0; j < list.size(); j++) {
                 neighborhood[j] = list.get(j).index;
@@ -180,7 +184,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         int[] dominantCluster = new int[n];
 
         IntStream.range(0, n).parallel().forEach(i -> {
-            for (int j : neighbors.get(i)) {
+            for (int j : neighbors[i]) {
                 size[i][y[j]]++;
             }
         });
@@ -205,8 +209,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                     double oldMutual = 0.0;
                     double newMutual = 0.0;
 
-                    for (int neighbor : neighbors.get(i)) {
-                        double nk = neighbors.get(neighbor).length;
+                    for (int neighbor : neighbors[i]) {
+                        double nk = neighbors[neighbor].length;
 
                         double r1 = (double) size[neighbor][y[i]] / nk;
                         double r2 = (double) size[neighbor][dominantCluster[i]] / nk;
@@ -228,7 +232,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                     }
 
                     if (newMutual < oldMutual) {
-                        for (int neighbor : neighbors.get(i)) {
+                        for (int neighbor : neighbors[i]) {
                             --size[neighbor][y[i]];
                             ++size[neighbor][dominantCluster[i]];
                             int mi = dominantCluster[i];
@@ -277,7 +281,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
-        nns.range(x, radius, neighbors);
+        nns.search(x, radius, neighbors);
 
         if (neighbors.isEmpty()) {
             return OUTLIER;
@@ -298,12 +302,10 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     }
 
     /** Calculates the entropy. */
-    private static double entropy(int k, ArrayList<int[]> neighbors, int[][] size, double[] px) {
-        int n = neighbors.size();
-
-        return IntStream.range(0, n).parallel().mapToDouble(i -> {
+    private static double entropy(int k, int[][] neighbors, int[][] size, double[] px) {
+        return IntStream.range(0, neighbors.length).parallel().mapToDouble(i -> {
             double conditionalEntropy = 0.0;
-            int ni = neighbors.get(i).length;
+            int ni = neighbors[i].length;
             int[] ci = size[i];
             for (int j = 0; j < k; j++) {
                 if (ci[j] > 0) {

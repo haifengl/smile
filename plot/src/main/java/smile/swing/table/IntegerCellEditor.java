@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -65,8 +65,8 @@ public class IntegerCellEditor extends DefaultCellEditor {
     public IntegerCellEditor(int min, int max) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
-        minimum = new Integer(min);
-        maximum = new Integer(max);
+        minimum = min;
+        maximum = max;
 
         // Set up the editor for the integer cells.
         integerFormat = NumberFormat.getIntegerInstance();
@@ -117,7 +117,7 @@ public class IntegerCellEditor extends DefaultCellEditor {
         if (o instanceof Integer) {
             return o;
         } else if (o instanceof Number) {
-            return new Integer(((Number) o).intValue());
+            return ((Number) o).intValue();
         } else {
             try {
                 return integerFormat.parseObject(o.toString());

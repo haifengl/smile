@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -60,6 +60,14 @@ public abstract class InternalNode implements Node {
      */
     double deviance;
 
+    /**
+     * Constructor.
+     * @param feature the index of feature column.
+     * @param score the split score.
+     * @param deviance the deviance.
+     * @param trueChild the true branch child.
+     * @param falseChild the false branch child.
+     */
     public InternalNode(int feature, double score, double deviance, Node trueChild, Node falseChild) {
         this.size = trueChild.size() + falseChild.size();
         this.feature = feature;
@@ -69,35 +77,53 @@ public abstract class InternalNode implements Node {
         this.falseChild = falseChild;
     }
 
-    /**
-     * Evaluates the tree over an instance.
-     */
+    @Override
     public abstract LeafNode predict(Tuple x);
 
     /**
      * Returns true if the instance goes to the true branch.
+     * @param x the instance.
+     * @return true if the instance goes to the true branch.
      */
     public abstract boolean branch(Tuple x);
 
-    /** Returns a new internal node with children replaced. */
+    /**
+     * Returns a new internal node with children replaced.
+     * @param trueChild the new true branch child.
+     * @param falseChild the new false branch child.
+     *
+     * @return a new internal node with children replaced.
+     */
     public abstract InternalNode replace(Node trueChild, Node falseChild);
 
-    /** Returns the true branch child. */
+    /**
+     * Returns the true branch child.
+     * @return the true branch child.
+     */
     public Node trueChild() {
         return trueChild;
     }
 
-    /** Returns the false branch child. */
+    /**
+     * Returns the false branch child.
+     * @return the false branch child.
+     */
     public Node falseChild() {
         return falseChild;
     }
 
-    /** Returns the split feature. */
+    /**
+     * Returns the split feature.
+     * @return the split feature.
+     */
     public int feature() {
         return feature;
     }
 
-    /** Returns the split score (reduction of impurity). */
+    /**
+     * Returns the split score (reduction of impurity).
+     * @return the split score.
+     */
     public double score () {
         return score;
     }
@@ -108,8 +134,8 @@ public abstract class InternalNode implements Node {
     }
 
     @Override
-    public int leafs() {
-        return trueChild.leafs() + falseChild.leafs();
+    public int leaves() {
+        return trueChild.leaves() + falseChild.leaves();
     }
 
     @Override
@@ -155,6 +181,7 @@ public abstract class InternalNode implements Node {
      *
      * @param schema the schema of data.
      * @param trueBranch for true or false branch.
+     * @return the string representation of branch.
      */
     public abstract String toString(StructType schema, boolean trueBranch);
 

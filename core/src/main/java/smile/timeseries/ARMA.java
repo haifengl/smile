@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -46,31 +46,31 @@ public class ARMA implements Serializable {
     /**
      * The time series.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The mean of time series.
      */
-    private double mean;
+    private final double mean;
     /**
      * The order of AR.
      */
-    private int p;
+    private final int p;
     /**
      * The order of MA.
      */
-    private int q;
+    private final int q;
     /**
      * The intercept.
      */
-    private double b;
+    private final double b;
     /**
      * The linear weights of AR.
      */
-    private double[] ar;
+    private final double[] ar;
     /**
      * The linear weights of MA.
      */
-    private double[] ma;
+    private final double[] ma;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -78,11 +78,11 @@ public class ARMA implements Serializable {
     /**
      * The fitted values.
      */
-    private double[] fittedValues;
+    private final double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    private double[] residuals;
+    private final double[] residuals;
     /**
      * Residual sum of squares.
      */
@@ -90,11 +90,11 @@ public class ARMA implements Serializable {
     /**
      * Estimated variance.
      */
-    private double variance;
+    private final double variance;
     /**
      * The degree-of-freedom of residual variance.
      */
-    private int df;
+    private final int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -110,13 +110,13 @@ public class ARMA implements Serializable {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    private double RSquared;
+    private final double R2;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    private double adjustedRSquared;
+    private final double adjustedR2;
 
     /**
      * Constructor.
@@ -125,6 +125,8 @@ public class ARMA implements Serializable {
      * @param ar the estimated weight parameters of AR(p).
      * @param ma the estimated weight parameters of MA(q).
      * @param b the intercept.
+     * @param fittedValues the fitted values.
+     * @param residuals the residuals.
      */
     public ARMA(double[] x, double[] ar, double[] ma, double b, double[] fittedValues, double[] residuals) {
         this.x = x;
@@ -148,19 +150,20 @@ public class ARMA implements Serializable {
         RSS = 0.0;
 
         for (int i = 0; i < n; i++) {
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(fittedValues[i] - ybar);
+            RSS += MathEx.pow2(residuals[i]);
+            TSS += MathEx.pow2(fittedValues[i] - ybar);
         }
 
         df = n;
         variance = RSS / df;
 
-        RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
+        R2 = 1.0 - RSS / TSS;
+        adjustedR2 = 1.0 - ((1 - R2) * (n-1) / (n-p));
     }
 
     /**
      * Returns the time series.
+     * @return the time series.
      */
     public double[] x() {
         return x;
@@ -168,6 +171,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the mean of time series.
+     * @return the mean of time series.
      */
     public double mean() {
         return mean;
@@ -175,6 +179,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the order of AR.
+     * @return the order of AR.
      */
     public int p() {
         return p;
@@ -182,6 +187,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the order of MA.
+     * @return the order of MA.
      */
     public int q() {
         return q;
@@ -193,6 +199,8 @@ public class ARMA implements Serializable {
      * error of coefficients, the third column is the t-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     *
+     * @return the t-test of the coefficients.
      */
     public double[][] ttest() {
         return ttest;
@@ -200,6 +208,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the linear coefficients of AR(p).
+     * @return the linear coefficients of AR(p).
      */
     public double[] ar() {
         return ar;
@@ -207,6 +216,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the linear coefficients of MA(q).
+     * @return the linear coefficients of MA(q).
      */
     public double[] ma() {
         return ma;
@@ -214,6 +224,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the intercept.
+     * @return the intercept.
      */
     public double intercept() {
         return b;
@@ -221,6 +232,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the residuals, that is response minus fitted values.
+     * @return the residuals.
      */
     public double[] residuals() {
         return residuals;
@@ -228,6 +240,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the fitted values.
+     * @return the fitted values.
      */
     public double[] fittedValues() {
         return fittedValues;
@@ -235,6 +248,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the residual sum of squares.
+     * @return the residual sum of squares.
      */
     public double RSS() {
         return RSS;
@@ -242,6 +256,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the residual variance.
+     * @return the residual variance.
      */
     public double variance() {
         return variance;
@@ -249,6 +264,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns the degree-of-freedom of residual standard error.
+     * @return the degree-of-freedom of residual standard error.
      */
     public int df() {
         return df;
@@ -266,18 +282,22 @@ public class ARMA implements Serializable {
      * one possible use of R<sup>2</sup>, where one might try to include more
      * variables in the model until "there is no more improvement". This leads
      * to the alternative approach of looking at the adjusted R<sup>2</sup>.
+     *
+     * @return R<sup>2</sup> statistic.
      */
-    public double RSquared() {
-        return RSquared;
+    public double R2() {
+        return R2;
     }
 
     /**
      * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
      * has almost same explanation as R<sup>2</sup> but it penalizes the
      * statistic as extra variables are included in the model.
+     *
+     * @return Adjusted R<sup>2</sup> statistic.
      */
-    public double adjustedRSquared() {
-        return adjustedRSquared;
+    public double adjustedR2() {
+        return adjustedR2;
     }
 
     /**
@@ -286,6 +306,7 @@ public class ARMA implements Serializable {
      * @param x the time series.
      * @param p the order of AR.
      * @param q the order of MA.
+     * @return the model.
      */
     public static ARMA fit(double[] x, int p, int q) {
         if (p <= 0 || p >= x.length) {
@@ -359,6 +380,7 @@ public class ARMA implements Serializable {
      * @param x the time series.
      * @param a the white noise error terms.
      * @param offset the offset of time series to forecast.
+     * @return the model.
      */
     private double forecast(double[] x, double[] a, int offset) {
         double y = b;
@@ -376,6 +398,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns 1-step ahead forecast.
+     * @return 1-step ahead forecast.
      */
     public double forecast() {
         return forecast(x, residuals, x.length);
@@ -383,6 +406,8 @@ public class ARMA implements Serializable {
 
     /**
      * Returns l-step ahead forecast.
+     * @param l the number of steps.
+     * @return l-step ahead forecast.
      */
     public double[] forecast(int l) {
         int k = Math.max(p, q);
@@ -434,7 +459,7 @@ public class ARMA implements Serializable {
         }
 
         builder.append(String.format("%nResidual  variance: %.4f on %5d degrees of freedom%n", variance, df));
-        builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+        builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", R2, adjustedR2));
 
         return builder.toString();
     }

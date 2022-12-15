@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,14 +22,16 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.*;
+import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -59,7 +61,7 @@ public class RegressionTreeTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -70,7 +72,7 @@ public class RegressionTreeTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
@@ -78,8 +80,8 @@ public class RegressionTreeTest {
         System.out.println(metrics);
         assertEquals(3.0848729264302333, metrics.rmse, 1E-4);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 
     public void test(String name, Formula formula, DataFrame data, double expected) {
@@ -94,25 +96,57 @@ public class RegressionTreeTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
-        RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, (f, x) -> RegressionTree.fit(f, x));
+        RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, RegressionTree::fit);
 
         System.out.println(result);
         assertEquals(expected, result.avg.rmse, 1E-4);
     }
 
     @Test
-    public void testAll() {
+    public void testCPU() {
         test("CPU", CPU.formula, CPU.data, 74.3149);
+    }
+
+    @Test
+    public void test2DPlanes() {
         test("2dplanes", Planes.formula, Planes.data, 1.1164);
+    }
+
+    @Test
+    public void testAbalone() {
         test("abalone", Abalone.formula, Abalone.train, 2.5834);
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.1093);
+    }
+
+    @Test
+    public void testAutoMPG() {
         test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8138);
+    }
+
+    @Test
+    public void testCalHousing() {
         test("cal_housing", CalHousing.formula, CalHousing.data, 59944.8076);
+    }
+
+    @Test
+    public void testPuma8nh() {
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9117);
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);
     }
 

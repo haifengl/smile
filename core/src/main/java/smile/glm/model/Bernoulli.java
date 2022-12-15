@@ -1,22 +1,23 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.glm.model;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
@@ -25,7 +26,10 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public interface Bernoulli {
-    /** logit link function. */
+    /**
+     * logit link function.
+     * @return logit link function.
+     */
     static Model logit() {
         return new Model() {
             @Override
@@ -73,11 +77,11 @@ public interface Bernoulli {
             public double nullDeviance(double[] y, double mu) {
                 double logmu = -Math.log(mu);
                 double logmu1 = -Math.log(1.0 - mu);
-                return 2.0 * IntStream.range(0, y.length).mapToDouble(i -> y[i] == 0.0 ? logmu1 : logmu).sum();
+                return 2.0 * Arrays.stream(y).map(yi -> yi == 0.0 ? logmu1 : logmu).sum();
             }
 
             @Override
-            public double loglikelihood(double[] y, double[] mu) {
+            public double logLikelihood(double[] y, double[] mu) {
                 return IntStream.range(0, y.length).mapToDouble(i -> y[i] == 0.0 ? Math.log(1 - mu[i]) : Math.log(mu[i])).sum();
             }
         };

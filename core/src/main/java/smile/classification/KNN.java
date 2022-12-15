@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -27,7 +27,6 @@ import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
-import smile.util.IntSet;
 
 /**
  * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
@@ -69,25 +68,22 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class KNN<T> implements SoftClassifier<T> {
+public class KNN<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /**
      * The data structure for nearest neighbor search.
      */
-    private KNNSearch<T, T> knn;
+    private final KNNSearch<T, T> knn;
     /**
      * The labels of training samples.
      */
-    private int[] y;
+    private final int[] y;
     /**
      * The number of neighbors for decision.
      */
-    private int k;
-    /**
-     * The class labels.
-     */
-    private IntSet labels;
+    private final int k;
+
     /**
      * Constructor.
      * @param knn k-nearest neighbor search data structure of training instances.
@@ -95,28 +91,32 @@ public class KNN<T> implements SoftClassifier<T> {
      * @param k the number of neighbors for classification.
      */
     public KNN(KNNSearch<T, T> knn, int[] y, int k) {
+        super(y);
         this.knn = knn;
         this.k = k;
         this.y = y;
-        labels = ClassLabels.fit(y).labels;
     }
 
     /**
-     * Learn the 1-NN classifier.
+     * Fits the 1-NN classifier.
      * @param x training samples.
      * @param y training labels.
-     * @param distance the distance measure for finding nearest neighbors.
+     * @param distance the distance function.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> KNN<T> fit(T[] x, int[] y, Distance<T> distance) {
         return fit(x, y, 1, distance);
     }
 
     /**
-     * Learn the K-NN classifier.
+     * Fits the K-NN classifier.
      * @param k the number of neighbors.
      * @param x training samples.
      * @param y training labels.
-     * @param distance the distance measure for finding nearest neighbors.
+     * @param distance the distance function.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> KNN<T> fit(T[] x, int[] y, int k, Distance<T> distance) {
         if (x.length != y.length) {
@@ -129,28 +129,30 @@ public class KNN<T> implements SoftClassifier<T> {
 
         KNNSearch<T, T> knn;
         if (distance instanceof Metric) {
-            knn = new CoverTree<>(x, (Metric<T>) distance);
+            knn = CoverTree.of(x, (Metric<T>) distance);
         } else {
-            knn = new LinearSearch<>(x, distance);
+            knn = LinearSearch.of(x, distance);
         }
 
         return new KNN<>(knn, y, k);
     }
 
     /**
-     * Learn the 1-NN classifier.
+     * Fits the 1-NN classifier.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static KNN<double[]> fit(double[][] x, int[] y) {
         return fit(x, y, 1);
     }
 
     /**
-     * Learn the K-NN classifier.
+     * Fits the K-NN classifier.
      * @param k the number of neighbors for classification.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static KNN<double[]> fit(double[][] x, int[] y, int k) {
         if (x.length != y.length) {
@@ -163,9 +165,9 @@ public class KNN<T> implements SoftClassifier<T> {
 
         KNNSearch<double[], double[]> knn;
         if (x[0].length < 10) {
-            knn = new KDTree<>(x, x);
+            knn = KDTree.of(x);
         } else {
-            knn = new CoverTree<>(x, new EuclideanDistance());
+            knn = CoverTree.of(x, new EuclideanDistance());
         }
         
         return new KNN<>(knn, y, k);
@@ -173,7 +175,7 @@ public class KNN<T> implements SoftClassifier<T> {
 
     @Override
     public int predict(T x) {
-        Neighbor<T,T>[] neighbors = knn.knn(x, k);
+        Neighbor<T,T>[] neighbors = knn.search(x, k);
         if (k == 1) {
             if (neighbors[0] == null) {
                 throw new IllegalStateException("No neighbor found.");
@@ -181,10 +183,10 @@ public class KNN<T> implements SoftClassifier<T> {
             return y[neighbors[0].index];
         }
 
-        int[] count = new int[labels.size()];
+        int[] count = new int[classes.size()];
         for (Neighbor<T,T> neighbor : neighbors) {
             if (neighbor != null) {
-                count[labels.indexOf(y[neighbor.index])]++;
+                count[classes.indexOf(y[neighbor.index])]++;
             }
         }
 
@@ -193,25 +195,30 @@ public class KNN<T> implements SoftClassifier<T> {
             throw new IllegalStateException("No neighbor found.");
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
     public int predict(T x, double[] posteriori) {
-        Neighbor<T,T>[] neighbors = knn.knn(x, k);
+        Neighbor<T,T>[] neighbors = knn.search(x, k);
         if (k == 1) {
             if (neighbors[0] == null) {
                 throw new IllegalStateException("No neighbor found.");
             }
 
             Arrays.fill(posteriori, 0.0);
-            posteriori[labels.indexOf(y[neighbors[0].index])] = 1.0;
+            posteriori[classes.indexOf(y[neighbors[0].index])] = 1.0;
             return y[neighbors[0].index];
         }
 
-        int[] count = new int[labels.size()];
+        int[] count = new int[classes.size()];
         for (int i = 0; i < k; i++) {
-            count[labels.indexOf(y[neighbors[i].index])]++;
+            count[classes.indexOf(y[neighbors[i].index])]++;
         }
 
         int y = MathEx.whichMax(count);
@@ -223,6 +230,6 @@ public class KNN<T> implements SoftClassifier<T> {
             posteriori[i] = (double) count[i] / k;
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 }

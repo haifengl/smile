@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -42,16 +42,19 @@ public interface Loss {
     /**
      * Returns the intercept of model.
      * @param y the response variable.
+     * @return the intercept of model.
      */
     double intercept(double[] y);
 
     /**
      * Returns the response variable for next iteration.
+     * @return the response variable for next iteration.
      */
     double[] response();
 
     /**
      * Returns the residual vector.
+     * @return the residual vector.
      */
     double[] residual();
 
@@ -81,14 +84,15 @@ public interface Loss {
         /**
          * Huber loss function for M-regression, which attempts resistance to
          * long-tailed error distributions and outliers while maintaining high
-         * efficency for normally distributed errors.
+         * efficiency for normally distributed errors.
          */
         Huber
     }
 
     /**
-     * Least squares regression. Least-squares is highly efficient for
+     * Least squares regression loss. Least-squares is highly efficient for
      * normally distributed errors but is prone to long tails and outliers.
+     * @return the least square regression loss.
      */
     static Loss ls() {
         return new Loss() {
@@ -138,13 +142,15 @@ public interface Loss {
     }
 
     /**
-     * Least squares regression. Least-squares is highly efficient for
+     * Least squares regression loss. Least-squares is highly efficient for
      * normally distributed errors but is prone to long tails and outliers.
+     * @param y the response variable.
+     * @return the least square regression loss.
      */
     static Loss ls(double[] y) {
         return new Loss() {
             /** The residual/response variable. */
-            double[] residual = y;
+            final double[] residual = y;
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -181,13 +187,14 @@ public interface Loss {
     }
 
     /**
-     * Quantile regression. The gradient tree boosting based
+     * Quantile regression loss. The gradient tree boosting based
      * on this loss function is highly robust. The trees use only order
      * information on the input variables and the pseudo-response has only
      * two values {-1, +1}. The line searches (terminal node values) use
      * only specified quantile ratio.
      *
      * @param p the percentile.
+     * @return the quantile regression loss.
      */
     static Loss quantile(double p) {
         if (p <= 0.0 || p >= 1.0) {
@@ -242,11 +249,12 @@ public interface Loss {
     }
 
     /**
-     * Least absolute deviation regression. The gradient tree boosting based
+     * Least absolute deviation regression loss. The gradient tree boosting based
      * on this loss function is highly robust. The trees use only order
      * information on the input variables and the pseudo-response has only
      * two values {-1, +1}. The line searches (terminal node values) use
      * only medians. This is a special case of quantile regression of q = 0.5.
+     * @return the least absolute deviation regression loss.
      */
     static Loss lad() {
         return new Loss() {
@@ -301,6 +309,7 @@ public interface Loss {
      * long-tailed error distributions and outliers while maintaining high
      * efficiency for normally distributed errors.
      * @param p of residuals
+     * @return the Huber loss.
      */
     static Loss huber(double p) {
         if (p <= 0.0 || p >= 1.0) {
@@ -377,18 +386,19 @@ public interface Loss {
 
     /**
      * Logistic regression loss for binary classification.
-     * @param labels the class labels.
+     * @param labels the class label encoder.
+     * @return the logistic regression loss for binary classification.
      */
     static Loss logistic(int[] labels) {
         int n = labels.length;
 
         return new Loss() {
             /** The class labels of +1 and -1. */
-            int[] y = Arrays.stream(labels).map(yi -> 2 * yi - 1).toArray();
+            final int[] y = Arrays.stream(labels).map(yi -> 2 * yi - 1).toArray();
             /** The response variable. */
-            double[] response = new double[n];
+            final double[] response = new double[n];
             /** The residuals. */
-            double[] residual = new double[n];
+            final double[] residual = new double[n];
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -435,19 +445,20 @@ public interface Loss {
      * Logistic regression loss for multi-class classification.
      * @param c the class id that this loss function fits on.
      * @param k the number of classes.
-     * @param labels the class labels.
+     * @param labels the class label encoder.
      * @param p the posteriori probabilities.
+     * @return the logistic regression loss for multi-class classification.
      */
     static Loss logistic(int c, int k, int[] labels, double[][] p) {
         int n = labels.length;
 
         return new Loss() {
             /** The class labels of binary case. */
-            int[] y = Arrays.stream(labels).map(yi -> yi == c ? 1 : 0).toArray();
+            final int[] y = Arrays.stream(labels).map(yi -> yi == c ? 1 : 0).toArray();
             /** The response variable. */
-            double[] response = new double[n];
+            final double[] response = new double[n];
             /** The residuals. */
-            double[] residual = new double[n];
+            final double[] residual = new double[n];
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -491,7 +502,11 @@ public interface Loss {
         };
     }
 
-    /** Parses the loss. */
+    /**
+     * Parses the loss.
+     * @param s the string specification of loss.
+     * @return the loss function.
+     */
     static Loss valueOf(String s) {
         switch (s) {
             case "LeastSquares": return ls();

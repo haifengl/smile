@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -76,11 +76,11 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
 
     /**
      * Constructor.
-     * @param nrows the number of rows.
-     * @param ncols the number of columns.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
-    public PlotGrid(int nrows, int ncols) {
-        init(layout(nrows, ncols));
+    public PlotGrid(int nrow, int ncol) {
+        init(layout(nrow, ncol));
     }
 
     /**
@@ -119,11 +119,11 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
 
     /**
      * Returns a layout manager for content pane.
-     * @param nrows the number of rows.
-     * @param ncols the number of columns.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
-    private LayoutManager layout(int nrows, int ncols) {
-        return new GridLayout(nrows, ncols, 0, 0);
+    private LayoutManager layout(int nrow, int ncol) {
+        return new GridLayout(nrow, ncol, 0, 0);
     }
 
     /**
@@ -316,7 +316,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * @param category the category column for coloring.
      */
     public static PlotGrid splom(DataFrame data, char mark, String category) {
-        int clazz = data.columnIndex(category);
+        int clazz = data.indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);

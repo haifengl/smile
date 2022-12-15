@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 
@@ -58,8 +60,7 @@ public class LogisticRegressionTest {
     public void testIris() {
         System.out.println("Iris");
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, LogisticRegression::fit);
 
         System.out.println(metrics);
         assertEquals(0.9667, metrics.accuracy, 1E-4);
@@ -69,8 +70,7 @@ public class LogisticRegressionTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y, LogisticRegression::fit);
 
         System.out.println(metrics);
         assertEquals(0.7143, metrics.accuracy, 1E-4);
@@ -81,11 +81,21 @@ public class LogisticRegressionTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9548, result.avg.accuracy, 1E-4);
+        assertEquals(0.9548, result.avg.accuracy, 0.001);
+    }
+
+    @Test
+    public void testLibrasMovement() {
+        System.out.println("Libras Movement");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, LibrasMovement.x, LibrasMovement.y, LogisticRegression::fit);
+
+        System.out.println(result);
+        assertEquals(0.7361, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -94,10 +104,10 @@ public class LogisticRegressionTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+                LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9509, result.avg.accuracy, 1E-4);
+        assertEquals(0.9495, result.avg.accuracy, 0.01);
     }
 
     @Test
@@ -109,7 +119,7 @@ public class LogisticRegressionTest {
         int[] prediction = model.predict(Segment.testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(50, error);
+        assertEquals(50, error, 1);
 
         int t = Segment.x.length;
         int round = (int) Math.round(Math.log(Segment.testx.length));
@@ -126,10 +136,10 @@ public class LogisticRegressionTest {
         prediction = model.predict(Segment.testx);
         error = Error.of(Segment.testy, prediction);
         System.out.println("Error after online update = " + error);
-        assertEquals(39, error);
+        assertEquals(39, error, 3);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
@@ -157,7 +167,7 @@ public class LogisticRegressionTest {
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = Write.object(model);
+        Read.object(temp);
     }
 }

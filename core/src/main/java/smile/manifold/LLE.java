@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -23,7 +23,7 @@ import smile.graph.AdjacencyList;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.math.matrix.ARPACK;
-import smile.math.matrix.DMatrix;
+import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 
@@ -84,6 +84,7 @@ public class LLE implements Serializable {
      * Runs the LLE algorithm.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k) {
         return of(data, k, 2);
@@ -94,6 +95,7 @@ public class LLE implements Serializable {
      * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k, int d) {
         int D = data[0].length;
@@ -106,13 +108,11 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
-            N[v1][j] = v2;
-        });
+        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> N[v1][j] = v2);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;
-        int n = index.length;
+        int n = data.length;
         graph = nng.graph;
 
         // The reverse index maps the original data to the largest connected component
@@ -188,11 +188,9 @@ public class LLE implements Serializable {
         // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
         // Maybe due to numeric stability.
         int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
-        //System.out.println(Arrays.toString(eigen.wr));
-        //System.out.println(V.toString(10, V.nrows()-1));
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - offset;
+            int c = V.ncol() - j - offset;
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, c);
             }
@@ -206,8 +204,7 @@ public class LLE implements Serializable {
      * we have M * v = v - W * v - W' * v + W' * W * v. As W is sparse and we can
      * compute only W * v and W' * v efficiently.
      */
-    private static class M extends DMatrix {
-
+    private static class M extends IMatrix {
         SparseMatrix Wt;
         double[] x;
         double[] Wx;
@@ -217,20 +214,20 @@ public class LLE implements Serializable {
         public M(SparseMatrix Wt) {
             this.Wt = Wt;
 
-            x = new double[Wt.nrows()];
-            Wx = new double[Wt.nrows()];
-            Wtx = new double[Wt.ncols()];
-            WtWx = new double[Wt.nrows()];
+            x = new double[Wt.nrow()];
+            Wx = new double[Wt.nrow()];
+            Wtx = new double[Wt.ncol()];
+            WtWx = new double[Wt.nrow()];
         }
 
         @Override
-        public int nrows() {
-            return Wt.nrows();
+        public int nrow() {
+            return Wt.nrow();
         }
 
         @Override
-        public int ncols() {
-            return nrows();
+        public int ncol() {
+            return nrow();
         }
 
         @Override
@@ -258,16 +255,6 @@ public class LLE implements Serializable {
 
         @Override
         public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DMatrix set(int i, int j, double x) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
             throw new UnsupportedOperationException();
         }
     }

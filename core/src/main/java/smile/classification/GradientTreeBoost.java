@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -29,7 +29,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.feature.SHAP;
+import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.IntSet;
@@ -49,9 +49,9 @@ import smile.util.Strings;
  * level of interaction between variables in the model. With J = 2 (decision
  * stumps), no interaction between variables is allowed. With J = 3 the model
  * may include effects of the interaction between up to two variables, and
- * so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
+ * so on. Hastie et al. comment that typically {@code 4 <= J <= 8} work well
  * for boosting and results are fairly insensitive to the choice of in
- * this range, J = 2 is insufficient for many applications, and J &gt; 10 is
+ * this range, J = 2 is insufficient for many applications, and {@code J > 10} is
  * unlikely to be required.
  * <p>
  * Fitting the training set too closely can lead to degradation of the model's
@@ -67,7 +67,7 @@ import smile.util.Strings;
  * Another regularization approach is the shrinkage which times a parameter
  * &eta; (called the "learning rate") to update term.
  * Empirically it has been found that using small learning rates (such as
- * &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
+ * &eta; {@code < 0.1}) yields dramatic improvements in model's generalization ability
  * over gradient boosting without shrinking (&eta; = 1). However, it comes at
  * the price of increasing computational time both during training and
  * prediction: lower learning rate requires more iterations.
@@ -108,18 +108,18 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier, SHAP<Tuple> {
+public class GradientTreeBoost extends AbstractClassifier<Tuple> implements DataFrameClassifier, SHAP<Tuple> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
     /**
      * The number of classes.
      */
-    private int k = 2;
+    private final int k;
     /**
      * Forest of regression trees for binary classification.
      */
@@ -134,7 +134,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * parent node. Adding up the decreases for each individual variable over
      * all trees in the forest gives a simple variable importance.
      */
-    private double[] importance;
+    private final double[] importance;
     /**
      * The intercept for binary classification.
      */
@@ -142,11 +142,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.05;
-    /**
-     * The class label encoder.
-     */
-    private IntSet labels;
+    private final double shrinkage;
 
     /**
      * Constructor of binary class.
@@ -154,6 +150,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
@@ -166,17 +163,18 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      * @param labels     class labels
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = 2;
         this.trees = trees;
         this.b = b;
         this.shrinkage = shrinkage;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**
@@ -184,6 +182,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance) {
@@ -195,16 +194,17 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
-     * @param labels     class labels
+     * @param labels     the class label encoder.
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = forest.length;
         this.forest = forest;
         this.shrinkage = shrinkage;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**
@@ -212,6 +212,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data    the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -221,15 +222,17 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
-     * @param data    the data frame of the explanatory and response variables.
+     * @param data the data frame of the explanatory and response variables.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.gbt.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
-        double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.gradient_boost.trees", "500"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.gradient_boost.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.gradient_boost.max_nodes", "6"));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.gradient_boost.node_size", "5"));
+        double shrinkage = Double.parseDouble(params.getProperty("smile.gradient_boost.shrinkage", "0.05"));
+        double subsample = Double.parseDouble(params.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
     }
 
@@ -245,6 +248,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth,
                                         int maxNodes, int nodeSize, double shrinkage, double subsample) {
@@ -262,7 +266,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         int[][] order = CART.order(x);
         ClassLabels codec = ClassLabels.fit(y);
@@ -304,7 +308,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * Train L2 tree boost.
      */
     private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
-        int n = x.nrows();
+        int n = x.nrow();
         int k = codec.k;
         int[] y = codec.y;
 
@@ -325,7 +329,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             sampling(samples, permutation, nc, y, subsample);
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
+            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
             trees[t] = tree;
 
             for (int i = 0; i < n; i++) {
@@ -333,7 +337,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             }
         }
 
-        double[] importance = new double[x.ncols()];
+        double[] importance = new double[x.ncol()];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
@@ -341,7 +345,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             }
         }
 
-        return new GradientTreeBoost(formula, trees, b, shrinkage, importance, codec.labels);
+        return new GradientTreeBoost(formula, trees, b, shrinkage, importance, codec.classes);
     }
 
     /**
@@ -350,7 +354,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order,
                                             int ntrees, int maxDepth, int maxNodes, int nodeSize,
                                             double shrinkage, double subsample) {
-        int n = x.nrows();
+        int n = x.nrow();
         int k = codec.k;
         int[] y = codec.y;
 
@@ -383,7 +387,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             for (int j = 0; j < k; j++) {
                 sampling(samples, permutation, nc, y, subsample);
 
-                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
+                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
                 forest[j][t] = tree;
 
                 double[] hj = h[j];
@@ -393,7 +397,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             }
         }
 
-        double[] importance = new double[x.ncols()];
+        double[] importance = new double[x.ncol()];
         for (RegressionTree[] grove : forest) {
             for (RegressionTree tree : grove) {
                 double[] imp = tree.importance();
@@ -403,7 +407,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             }
         }
 
-        return new GradientTreeBoost(formula, forest, shrinkage, importance, codec.labels);
+        return new GradientTreeBoost(formula, forest, shrinkage, importance, codec.classes);
     }
 
     /**
@@ -438,6 +442,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
     /**
      * Returns the regression trees.
+     * @return the regression trees.
      */
     public RegressionTree[] trees() {
         if (trees != null) {
@@ -490,7 +495,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 y += shrinkage * tree.predict(xt);
             }
 
-            return labels.valueOf(y > 0 ? 1 : 0);
+            return classes.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -506,8 +511,13 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 }
             }
 
-            return labels.valueOf(y);
+            return classes.valueOf(y);
         }
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
     }
 
     @Override
@@ -526,7 +536,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             posteriori[0] = 1.0 / (1.0 + Math.exp(2 * y));
             posteriori[1] = 1.0 - posteriori[0];
 
-            return labels.valueOf(y > 0 ? 1 : 0);
+            return classes.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -553,7 +563,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 posteriori[i] /= Z;
             }
 
-            return labels.valueOf(y);
+            return classes.valueOf(y);
         }
     }
 
@@ -566,7 +576,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     public int[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrows();
+        int n = x.nrow();
         int ntrees = trees != null ? trees.length : forest[0].length;
         int[][] prediction = new int[ntrees][n];
 
@@ -598,6 +608,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
     /**
      * Returns the average of absolute SHAP values over a data frame.
+     * @param data the data set.
+     * @return the average of absolute SHAP values.
      */
     public double[] shap(DataFrame data) {
         // Binds the formula to the data frame's schema in case that

@@ -53,7 +53,7 @@ install_almond() {
       chmod +x coursier
   fi
 
-  SCALA_VERSION=2.13.3 ALMOND_VERSION=0.10.9
+  SCALA_VERSION=2.13.5 ALMOND_VERSION=0.11.2
 
   ./coursier bootstrap \
       -r jitpack \
@@ -62,6 +62,7 @@ install_almond() {
       sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
       --sources \
       --default=true \
+      --main-class almond.ScalaKernel \
       -f -o almond-scala-2.13
 
   ./almond-scala-2.13 --install --force --id scala213 --display-name "Scala (2.13)" \

@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -55,7 +55,7 @@ import smile.stat.Hypothesis;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements OnlineRegression<double[]>, DataFrameRegression {
+public class LinearModel implements DataFrameRegression {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
@@ -83,6 +83,10 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * The linear weights.
      */
     double[] w;
+    /**
+     * True if the linear weights w includes the intercept.
+     */
+    boolean bias;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -157,11 +161,12 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         this.formula = formula;
         this.schema = schema;
         this.predictors = X.colNames();
-        this.p = X.ncols();
+        this.p = X.ncol();
         this.w = w;
         this.b = b;
+        this.bias = predictors[0].equals("Intercept");
 
-        int n = X.nrows();
+        int n = X.nrow();
         fittedValues = new double[n];
         Arrays.fill(fittedValues, b);
         X.mv(1.0, w, 1.0, fittedValues);
@@ -172,8 +177,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         double ybar = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residuals[i]);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         error = Math.sqrt(RSS / (n - p));
@@ -186,10 +191,11 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         int df1 = p - 1;
         int df2 = n - p;
 
-        if (df2 > 0) {
+        if (df2 > 0 && F > 0.0) {
             pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
         } else {
-            logger.warn("Skip calculating p-value: the linear system is under-determined.");
+            String msg = F <= 0.0 ? "R2 is not positive" : "the linear system is under-determined";
+            logger.warn("Skip calculating p-value: {}.", msg);
             pvalue = Double.NaN;
         }
     }
@@ -210,27 +216,31 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * error of coefficients, the third column is the t-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     * @return the t-test of the coefficients.
      */
     public double[][] ttest() {
         return ttest;
     }
 
     /**
-     * Returns the linear coefficients (without intercept).
+     * Returns the linear coefficients without intercept.
+     * @return the linear coefficients without intercept.
      */
     public double[] coefficients() {
-        return w;
+        return bias ? Arrays.copyOfRange(w, 1, w.length) : w;
     }
 
     /**
      * Returns the intercept.
+     * @return the intercept.
      */
     public double intercept() {
-        return b;
+        return bias ? w[0] : b;
     }
 
     /**
-     * Returns the residuals, that is response minus fitted values.
+     * Returns the residuals, which is response minus fitted values.
+     * @return the residuals
      */
     public double[] residuals() {
         return residuals;
@@ -238,6 +248,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the fitted values.
+     * @return the fitted values.
      */
     public double[] fittedValues() {
         return fittedValues;
@@ -245,6 +256,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the residual sum of squares.
+     * @return the residual sum of squares.
      */
     public double RSS() {
         return RSS;
@@ -252,6 +264,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the residual standard error.
+     * @return the residual standard error.
      */
     public double error() {
         return error;
@@ -259,6 +272,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the degree-of-freedom of residual standard error.
+     * @return the degree-of-freedom of residual standard error.
      */
     public int df() {
         return df;
@@ -276,6 +290,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * one possible use of R<sup>2</sup>, where one might try to include more
      * variables in the model until "there is no more improvement". This leads
      * to the alternative approach of looking at the adjusted R<sup>2</sup>.
+     *
+     * @return R<sup>2</sup> statistic.
      */
     public double RSquared() {
         return RSquared;
@@ -285,6 +301,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
      * has almost same explanation as R<sup>2</sup> but it penalizes the
      * statistic as extra variables are included in the model.
+     *
+     * @return adjusted R<sup>2</sup> statistic.
      */
     public double adjustedRSquared() {
         return adjustedRSquared;
@@ -292,6 +310,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the F-statistic of goodness-of-fit.
+     * @return the F-statistic of goodness-of-fit.
      */
     public double ftest() {
         return F;
@@ -299,47 +318,66 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the p-value of goodness-of-fit test.
+     * @return the p-value of goodness-of-fit test.
      */
     public double pvalue() {
         return pvalue;
     }
 
-    @Override
+    /**
+     * Predicts the dependent variable of an instance.
+     * @param x an instance.
+     * @return the predicted value of dependent variable.
+     */
     public double predict(double[] x) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+        double y = b;
+        if (x.length == w.length) {
+            for (int i = 0; i < x.length; i++) {
+                y += x[i] * w[i];
+            }
+        } else if (bias && x.length == w.length - 1){
+            y = w[0];
+            for (int i = 0; i < x.length; i++) {
+                y += x[i] * w[i+1];
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid vector size: " + x.length);
         }
 
-        return b + MathEx.dot(x, w);
+        return y;
     }
 
     @Override
     public double predict(Tuple x) {
-        boolean bias = b == 0.0;
-        return predict(formula.x(x).toArray(bias, CategoricalEncoder.DUMMY));
+        return predict(formula.x(x).toArray(false, CategoricalEncoder.DUMMY));
     }
 
     @Override
     public double[] predict(DataFrame df) {
-        if (b == 0.0) {
+        if (bias) {
             Matrix X = formula.matrix(df, true);
             return X.mv(w);
         } else {
             Matrix X = formula.matrix(df, false);
-            double[] y = new double[X.nrows()];
+            double[] y = new double[X.nrow()];
             Arrays.fill(y, b);
             X.mv(1.0, w, 1.0, y);
             return y;
         }
     }
 
-    /** Online update the regression model with a new training instance. */
+    /**
+     * Online update the regression model with a new training instance.
+     * @param data the training data.
+     */
     public void update(Tuple data) {
-        boolean bias = b == 0.0;
         update(formula.x(data).toArray(bias, CategoricalEncoder.DUMMY), formula.y(data));
     }
 
-    /** Online update the regression model with a new data frame. */
+    /**
+     * Online update the regression model with a new data frame.
+     * @param data the training data.
+     */
     public void update(DataFrame data) {
         // Don't use data.stream, which may run in parallel.
         // However, update is not multi-thread safe.
@@ -349,12 +387,18 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         }
     }
 
+    @Override
+    public boolean online() {
+        return V != null;
+    }
+
     /**
      * Growing window recursive least squares with lambda = 1.
      * RLS updates an ordinary least squares with samples that
      * arrive sequentially.
+     * @param x training instance.
+     * @param y response variable.
      */
-    @Override
     public void update(double[] x, double y) {
         update(x, y, 1.0);
     }
@@ -362,7 +406,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
     /**
      * Recursive least squares. RLS updates an ordinary least squares with
      * samples that arrive sequentially.
-     *
+     * <p>
      * In some adaptive configurations it can be useful not to give equal
      * importance to all the historical data but to assign higher weights
      * to the most recent data (and then to forget the oldest one). This
@@ -370,11 +414,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * or when we want to approximate a nonlinear dependence by using a
      * linear model which is local in time. Both these situations are common
      * in adaptive control problems.
-     *
-     * <h2>References</h2>
-     * <ol>
-     * <li> https://www.otexts.org/1582 </li>
-     * </ol>
      *
      * @param x training instance.
      * @param y response variable.
@@ -436,7 +475,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
             builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
-            if (b != 0.0) {
+            if (!bias) {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 
@@ -447,7 +486,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             builder.append("---------------------------------------------------------------------\n");
             builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
         } else {
-            if (b != 0.0) {
+            if (!bias) {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 

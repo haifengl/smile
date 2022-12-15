@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -22,9 +22,9 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
-import smile.mds.MDS;
-import smile.sort.QuickSort;
 import smile.math.TimeFunction;
+import smile.manifold.MDS;
+import smile.sort.QuickSort;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce
@@ -115,39 +115,39 @@ public class SOM implements VectorQuantizer {
     /**
      * The number of rows in the lattice.
      */
-    private int nrows;
+    private final int nrow;
     /**
      * The number of columns in the lattice.
      */
-    private int ncols;
+    private final int ncol;
     /**
      * The lattice of neurons.
      */
-    private Neuron[][] map;
+    private final Neuron[][] map;
     /**
      * The neurons in linear array.
      */
-    private Neuron[] neurons;
+    private final Neuron[] neurons;
     /**
      * The distance between a new observation to neurons.
      */
-    private double[] dist;
+    private final double[] dist;
     /**
      * The learning rate function.
      */
-    private TimeFunction alpha;
+    private final TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private Neighborhood theta;
+    private final Neighborhood theta;
+    /**
+     * The threshold to update neuron if {@code alpha * theta > eps}.
+     */
+    private final double tol = 1E-5;
     /**
      * The current iteration.
      */
     private int t = 0;
-    /*
-     * The threshold to update neuron if alpha * theta > eps.
-     */
-    private double eps = 1E-5;
 
     /**
      * Constructor.
@@ -158,15 +158,15 @@ public class SOM implements VectorQuantizer {
     public SOM(double[][][] neurons, TimeFunction alpha, Neighborhood theta) {
         this.alpha = alpha;
         this.theta = theta;
-        this.nrows = neurons.length;
-        this.ncols = neurons[0].length;
+        this.nrow = neurons.length;
+        this.ncol = neurons[0].length;
         
-        this.map = new Neuron[nrows][ncols];
-        this.neurons = new Neuron[nrows * ncols];
+        this.map = new Neuron[nrow][ncol];
+        this.neurons = new Neuron[nrow * ncol];
         this.dist = new double[this.neurons.length];
 
-        for (int i = 0, k = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++, k++) {
+        for (int i = 0, k = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++, k++) {
                 Neuron neuron = new Neuron(i, j, neurons[i][j].clone());
                 map[i][j] = neuron;
                 this.neurons[k] = neuron;
@@ -176,12 +176,13 @@ public class SOM implements VectorQuantizer {
 
     /**
      * Creates a lattice of which the weight vectors are randomly selected from samples.
-     * @param nrows the number of rows in the lattice.
-     * @param ncols the number of columns in the lattice.
+     * @param nrow the number of rows in the lattice.
+     * @param ncol the number of columns in the lattice.
      * @param samples the samples to draw initial weight vectors.
+     * @return the lattice.
      */
-    public static double[][][] lattice(int nrows, int ncols, double[][] samples) {
-        int k = nrows * ncols;
+    public static double[][][] lattice(int nrow, int ncol, double[][] samples) {
+        int k = nrow * ncol;
         int n = samples.length;
 
         int[] clusters = new int[n];
@@ -195,21 +196,21 @@ public class SOM implements VectorQuantizer {
         double[][] coordinates = mds.coordinates;
 
         double[] x = Arrays.stream(coordinates).mapToDouble(point -> point[0]).toArray();
-        double[] y = new double[ncols];
-        int[] row = new int[ncols];
+        double[] y = new double[ncol];
+        int[] row = new int[ncol];
         int[] index = QuickSort.sort(x);
 
-        double[][][] neurons = new double[nrows][ncols][];
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
-                int point = index[i * ncols + j];
+        double[][][] neurons = new double[nrow][ncol][];
+        for (int i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
+                int point = index[i * ncol + j];
                 y[j] = coordinates[point][1];
                 row[j] = point;
             }
 
             QuickSort.sort(y, row);
 
-            for (int j = 0; j < ncols; j++) {
+            for (int j = 0; j < ncol; j++) {
                 neurons[i][j] = medoids[row[j]];
             }
         }
@@ -227,7 +228,7 @@ public class SOM implements VectorQuantizer {
         double alpha = this.alpha.apply(t);
         Arrays.stream(neurons).parallel().forEach(neuron -> {
             double delta = alpha * theta.of(neuron.i - i, neuron.j - j, t);
-            if (delta > eps) {
+            if (delta > tol) {
                 double[] w = neuron.w;
                 for (int k = 0; k < d; k++) {
                     w[k] += delta * (x[k] - w[k]);
@@ -240,11 +241,12 @@ public class SOM implements VectorQuantizer {
 
     /**
      * Returns the lattice of neurons.
+     * @return the lattice of neurons.
      */
     public double[][][] neurons() {
-        double[][][] lattice = new double[nrows][ncols][];
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
+        double[][][] lattice = new double[nrow][ncol][];
+        for (int i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
                 lattice[i][j] = map[i][j].w;
             }
         }
@@ -255,11 +257,13 @@ public class SOM implements VectorQuantizer {
      * Calculates the unified distance matrix (u-matrix) for visualization.
      * U-matrix is a popular method of displaying SOMs. The value of umatrix
      * is the maximum of distances between a map unit to its neighbors.
+     *
+     * @return the unified distance matrix.
      */
     public double[][] umatrix() {
-        double[][] umatrix = new double[nrows][ncols];
-        for (int i = 0; i < nrows - 1; i++) {
-            for (int j = 0; j < ncols - 1; j++) {
+        double[][] umatrix = new double[nrow][ncol];
+        for (int i = 0; i < nrow - 1; i++) {
+            for (int j = 0; j < ncol - 1; j++) {
                 double dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i][j + 1].w));
                 umatrix[i][j] = Math.max(umatrix[i][j], dist);
                 umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
@@ -270,19 +274,19 @@ public class SOM implements VectorQuantizer {
             }
         }
 
-        for (int i = 0; i < nrows - 1; i++) {
-            double dist = Math.sqrt(MathEx.distance(map[i][ncols - 1].w, map[i + 1][ncols - 1].w));
-            umatrix[i][ncols - 1] = Math.max(umatrix[i][ncols - 1], dist);
-            umatrix[i + 1][ncols - 1] = Math.max(umatrix[i + 1][ncols - 1], dist);
+        for (int i = 0; i < nrow - 1; i++) {
+            double dist = Math.sqrt(MathEx.distance(map[i][ncol - 1].w, map[i + 1][ncol - 1].w));
+            umatrix[i][ncol - 1] = Math.max(umatrix[i][ncol - 1], dist);
+            umatrix[i + 1][ncol - 1] = Math.max(umatrix[i + 1][ncol - 1], dist);
         }
 
-        for (int j = 0; j < ncols - 1; j++) {
-            double dist = Math.sqrt(MathEx.distance(map[nrows - 1][j].w, map[nrows - 1][j + 1].w));
-            umatrix[nrows - 1][j] = Math.max(umatrix[nrows - 1][j], dist);
-            umatrix[nrows - 1][j + 1] = Math.max(umatrix[nrows - 1][j + 1], dist);
+        for (int j = 0; j < ncol - 1; j++) {
+            double dist = Math.sqrt(MathEx.distance(map[nrow - 1][j].w, map[nrow - 1][j + 1].w));
+            umatrix[nrow - 1][j] = Math.max(umatrix[nrow - 1][j], dist);
+            umatrix[nrow - 1][j + 1] = Math.max(umatrix[nrow - 1][j + 1], dist);
         }
 
-        umatrix[nrows - 1][ncols - 1] = Math.max(umatrix[nrows - 1][ncols - 2], umatrix[nrows - 2][ncols - 1]);
+        umatrix[nrow - 1][ncol - 1] = Math.max(umatrix[nrow - 1][ncol - 2], umatrix[nrow - 2][ncol - 1]);
 
         return umatrix;
     }

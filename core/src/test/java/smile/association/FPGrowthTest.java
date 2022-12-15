@@ -1,23 +1,22 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.association;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,16 +104,16 @@ public class FPGrowthTest {
         assertEquals(15, FPGrowth.apply(tree).count());
     }
 
-    @Test(expected = Test.None.class)
-    public void testPima() throws IOException {
+    @Test
+    public void testPima() {
         System.out.println("pima");
 
         FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
         assertEquals(1803, FPGrowth.apply(tree).count());
     }
     
-    @Test(expected = Test.None.class)
-    public void testKosarak() throws IOException {
+    @Test
+    public void testKosarak() {
         System.out.println("kosarak");
 
         FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));

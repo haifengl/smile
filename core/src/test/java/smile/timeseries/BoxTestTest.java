@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import smile.data.BitcoinPrice;
+import smile.test.data.BitcoinPrice;
 
 /**
  *
@@ -54,7 +54,8 @@ public class BoxTestTest {
     public void testPierce() {
         System.out.println("Box-Pierce test");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         BoxTest box = BoxTest.pierce(x, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Box_Pierce, box.type);
@@ -67,7 +68,8 @@ public class BoxTestTest {
     public void testLjung() {
         System.out.println("Ljung-Box test");
 
-        double[] x = BitcoinPrice.logReturn;
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
         BoxTest box = BoxTest.ljung(x, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Ljung_Box, box.type);

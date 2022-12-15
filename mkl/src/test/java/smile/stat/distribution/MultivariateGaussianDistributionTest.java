@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -98,7 +98,7 @@ public class MultivariateGaussianDistributionTest {
             }
         }
 
-        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
         data = instance.rand(2000);
         est = MultivariateGaussianDistribution.fit(data);
         assertArrayEquals(mu, est.mean(), 5E-2);
@@ -129,13 +129,13 @@ public class MultivariateGaussianDistributionTest {
     public void testDiagonal() {
         System.out.println("diagonal");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, 1.0);
-        assertEquals(true, instance.diagonal);
+        assertTrue(instance.diagonal);
 
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        assertEquals(true, instance.diagonal);
+        assertTrue(instance.diagonal);
 
-        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
-        assertEquals(false, instance.diagonal);
+        instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
+        assertFalse(instance.diagonal);
     }
 
     /**
@@ -150,7 +150,7 @@ public class MultivariateGaussianDistributionTest {
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
         assertEquals(6, instance.length());
 
-        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
         assertEquals(9, instance.length());
     }
 
@@ -160,7 +160,7 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testEntropy() {
         System.out.println("entropy");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
         assertEquals(2.954971, instance.entropy(), 1E-6);
     }
 
@@ -170,7 +170,7 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testPdf() {
         System.out.println("pdf");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
         for (int i = 0; i < x.length; i++) {
             assertEquals(pdf[i], instance.p(x[i]), 1E-4);
         }
@@ -182,7 +182,7 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testCdf() {
         System.out.println("cdf");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, Matrix.of(sigma));
         for (int i = 0; i < x.length; i++) {
             assertEquals(cdf[i], instance.cdf(x[i]), 1E-2);
         }
@@ -204,7 +204,7 @@ public class MultivariateGaussianDistributionTest {
         double[] M = {-0.683477474844462,  1.480296478403701,  1.008431991316523,  0.448404211078558};
         double[] X = {0.713919336274493, 0.584408785741822, 0.263119200077829, 0.732513610871908};
 
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(M, new Matrix(S));
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(M, Matrix.of(S));
 
         // The expected value is based on R
         assertEquals(0.0904191282120575, instance.cdf(X), 1E-3);

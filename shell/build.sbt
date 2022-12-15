@@ -1,11 +1,6 @@
 name := "smile-shell"
 
-// Parent project disables Scala as most libraries are in Java.
-// Enable it as this is a Scala project.
-crossPaths := true
-autoScalaLibrary := true
-
-mainClass in Compile := Some("smile.shell.Main")
+Compile / mainClass := Some("smile.shell.Main")
 
 // native packager
 enablePlugins(JavaAppPackaging)
@@ -20,6 +15,24 @@ packageDescription :=
     |state-of-art performance. Smile is well documented and please check out
     |the project website for programming guides and more information.
     |""".stripMargin
+
+// Filter data files in universal
+Universal / mappings := {
+  // universalMappings: Seq[(File,String)]
+  val universalMappings = (Universal / mappings).value
+
+  // removing means filtering
+  universalMappings filter {
+    case (file, name) => !name.startsWith("data/kylo") &&
+                         !name.startsWith("data/matrix") &&
+                         !name.startsWith("data/nlp") &&
+                         !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sparse") &&
+                         !name.startsWith("data/sqlite") &&
+                         !name.startsWith("data/transaction") &&
+                         !name.startsWith("data/wavefront")
+  }
+}
 
 // dealing with long classpaths
 scriptClasspath := Seq("*")
@@ -51,9 +64,15 @@ buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-compiler" % "2.13.4",
-  "org.slf4j" % "slf4j-simple" % "1.7.30",
-  "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.10-1.5.4" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
+  "com.github.scopt" %% "scopt" % "4.1.0",
+  "org.scala-lang" % "scala-compiler" % "2.13.10",
+  "org.slf4j" % "slf4j-simple" % "2.0.6",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.7.0",
+  "com.typesafe.akka" %% "akka-stream" % "2.7.0",
+  "com.typesafe.akka" %% "akka-http" % "10.4.0",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.4.0",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "5.0.0",
+  "org.bytedeco" % "javacpp"   % "1.5.8"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
 )

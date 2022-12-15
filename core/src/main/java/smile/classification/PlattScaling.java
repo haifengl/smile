@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -46,9 +46,9 @@ public class PlattScaling implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
 
     /** The scaling parameter. */
-    private double alpha;
+    private final double alpha;
     /** The scaling parameter. */
-    private double beta;
+    private final double beta;
 
     /**
      * Constructor. P(y = 1 | x) = 1 / (1 + exp(alpha * f(x) + beta))
@@ -79,6 +79,7 @@ public class PlattScaling implements Serializable {
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y) {
         return fit(scores, y, 100);
@@ -89,6 +90,7 @@ public class PlattScaling implements Serializable {
      * @param scores The predicted scores.
      * @param y The training labels.
      * @param maxIters The maximal number of iterations.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y, int maxIters) {
         int l = scores.length;
@@ -100,7 +102,7 @@ public class PlattScaling implements Serializable {
             else prior0 += 1;
         }
 
-        double min_step = 1e-10;    // Minimal step taken in line search
+        double minStep = 1e-10;    // Minimal step taken in line search
         double sigma = 1e-12;    // For numerically strict PD of Hessian
         double eps = 1e-5;
         double hiTarget = (prior1 + 1.0) / (prior1 + 2.0);
@@ -162,10 +164,10 @@ public class PlattScaling implements Serializable {
             double gd = g1 * dA + g2 * dB;
 
 
-            double stepsize = 1;        // Line Search
-            while (stepsize >= min_step) {
-                double newA = alpha + stepsize * dA;
-                double newB = beta + stepsize * dB;
+            double stepSize = 1.0;        // Line Search
+            while (stepSize >= minStep) {
+                double newA = alpha + stepSize * dA;
+                double newB = beta + stepSize * dB;
 
                 // New function value
                 double newf = 0.0;
@@ -177,16 +179,16 @@ public class PlattScaling implements Serializable {
                         newf += (t[i] - 1) * fApB + log(1 + exp(fApB));
                 }
                 // Check sufficient decrease
-                if (newf < fval + 0.0001 * stepsize * gd) {
+                if (newf < fval + 0.0001 * stepSize * gd) {
                     alpha = newA;
                     beta = newB;
                     fval = newf;
                     break;
                 } else
-                    stepsize = stepsize / 2.0;
+                    stepSize = stepSize / 2.0;
             }
 
-            if (stepsize < min_step) {
+            if (stepSize < minStep) {
                 logger.error("Line search fails.");
                 break;
             }
@@ -205,6 +207,8 @@ public class PlattScaling implements Serializable {
      * @param model the binary-class model to fit Platt scaling.
      * @param x training samples.
      * @param y training labels.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> PlattScaling fit(Classifier<T> model, T[] x, int[] y) {
         int n = y.length;

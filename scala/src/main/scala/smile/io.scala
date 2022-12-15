@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -38,7 +38,7 @@ object write {
   def apply[T <: Serializable](x: T, file: Path): Unit = {
     val oos = new ObjectOutputStream(new FileOutputStream(file.toFile))
     oos.writeObject(x)
-    oos.close
+    oos.close()
   }
 
   /** Serializes an object/model to a file by XStream. */
@@ -50,7 +50,7 @@ object write {
     val xml = xstream.toXML(x)
     new PrintWriter(file.toFile) {
       write(xml)
-      close
+      close()
     }
   }
 
@@ -69,7 +69,7 @@ object write {
   def apply[T](data: Array[T], file: Path): Unit = {
     val writer = new PrintWriter(file.toFile)
     data.foreach(writer.println(_))
-    writer.close
+    writer.close()
   }
 
   /** Writes a data frame to an Apache Arrow file. */
@@ -84,38 +84,42 @@ object write {
   /** Writes a data frame to an ARFF file. */
   def arff(data: DataFrame, file: Path, relation: String): Unit = Write.arff(data, file, relation)
 
-  /** Writes a DataFrame to a delimited text file.
+  /** Writes a DataFrame to a comma delimited text file.
     *
     * @param data an attribute dataset.
-    * @param file the file path
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = csv(data, Paths.get(file), delimiter)
+  def csv(data: DataFrame, file: String, delimiter: String = ","): Unit =
+    csv(data, Paths.get(file), delimiter)
 
   /** Writes a DataFrame to a delimited text file.
     *
     * @param data an attribute dataset.
-    * @param file the file path
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def csv(data: DataFrame, file: Path, delimiter: Char): Unit = {
-    val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-    Write.csv(data, file, format)
+  def csv(data: DataFrame, file: Path, delimiter: String): Unit = {
+    val format = CSVFormat.Builder.create().setDelimiter(delimiter)
+    Write.csv(data, file, format.build())
   }
 
-  /** Writes a two-dimensional array to a delimited text file.
+  /** Writes a two-dimensional array to a comma delimited text file.
     *
     * @param data a two-dimensional array.
-    * @param file the file path
-    * @param delimiter delimiter string
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def table[T](data: Array[Array[T]], file: String, delimiter: Char = ','): Unit = table(data, Paths.get(file), delimiter)
+  def table[T](data: Array[Array[T]], file: String, delimiter: String = ","): Unit =
+    table(data, Paths.get(file), delimiter)
 
   /** Writes a two-dimensional array to a delimited text file.
     *
     * @param data a two-dimensional array.
-    * @param file the file path
-    * @param delimiter delimiter string
+    * @param file the file path.
+    * @param delimiter delimiter string.
     */
-  def table[T](data: Array[Array[T]], file: Path, delimiter: Char): Unit = {
+  def table[T](data: Array[Array[T]], file: Path, delimiter: String): Unit = {
     val writer = new PrintWriter(file.toFile)
     val sb = new StringBuilder
     val del = sb.append(delimiter).toString
@@ -124,20 +128,20 @@ object write {
       writer.println(row.mkString(del))
     }
 
-    writer.close
+    writer.close()
   }
 }
 
 /** Data loading utilities. */
 object read {
-  /** Reads a `Serializable` object/model. */
+  /** Reads a serialized object from a file. */
   def apply(file: String): AnyRef = apply(Paths.get(file))
 
-  /** Reads a `Serializable` object/model. */
+  /** Reads a serialized object from a file. */
   def apply(file: Path): AnyRef = {
     val ois = new ObjectInputStream(new FileInputStream(file.toFile))
     val o = ois.readObject
-    ois.close
+    ois.close()
     o
   }
 
@@ -146,9 +150,27 @@ object read {
 
   /** Reads an object/model that was serialized by XStream. */
   def xstream(file: Path): AnyRef = {
-    val xml = Source.fromFile(file.toFile).mkString
-    val xstream = new XStream
-    xstream.fromXML(xml)
+    val source = Source.fromFile(file.toFile)
+    try {
+      val xstream = new XStream
+      xstream.fromXML(source.mkString)
+    } finally {
+      source.close()
+    }
+  }
+
+  /**
+    * Reads a data file. Infers the data format by the file name extension.
+    * @param path the input file path.
+    * @param format the optional file format specification. For csv files,
+    *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+    *               For json files, it is the file mode (single-line or
+    *               multi-line). For avro files, it is the path to the schema
+    *               file.
+    * @return the data frame.
+    */
+  def data(path: String, format: String = null): DataFrame = {
+    Read.data(path, format)
   }
 
   /** Reads a JDBC query result to a data frame. */
@@ -157,17 +179,23 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
-    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-    if (header) format = format.withFirstRecordAsHeader
-    Read.csv(file, format, schema)
+  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+    val format = CSVFormat.Builder.create()
+      .setDelimiter(delimiter)
+      .setQuote(quote)
+      .setEscape(escape)
+    if (header) format.setHeader().setSkipHeaderRecord(true)
+    Read.csv(file, format.build(), schema)
   }
 
   /** Reads a CSV file. */
-  def csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
-    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-    if (header) format = format.withFirstRecordAsHeader
-    Read.csv(file, format, schema)
+  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
+    val format = CSVFormat.Builder.create()
+      .setDelimiter(delimiter)
+      .setQuote(quote)
+      .setEscape(escape)
+    if (header) format.setHeader().setSkipHeaderRecord(true)
+    Read.csv(file, format.build(), schema)
   }
 
   /** Reads a CSV file. */
@@ -249,23 +277,29 @@ object read {
     val vertices = new ArrayBuffer[Array[Double]]
     val edges = new ArrayBuffer[Array[Int]]
 
-    Source.fromFile(file.toFile).getLines() foreach { line =>
-      val tokens = line.split("\\s+")
+    val source = Source.fromFile(file.toFile)
+    try {
+      source.getLines() foreach { line =>
+        val tokens = line.split("\\s+")
 
-      if (tokens.size > 1) {
-        tokens(0) match {
-          case "v" =>
-            require(tokens.size == 4 || tokens.size == 5, s"Invalid vertex element: $line")
-            vertices += Array(tokens(1).toDouble, tokens(2).toDouble, tokens(3).toDouble)
-          case "f" =>
-            require(tokens.size >= 3, s"Invalid face element: $line")
-            val face = tokens.drop(1).map(_.toInt - 1)
-            for (i <- 1 until face.size) edges += Array(face(i-1), face(i))
-            edges += Array(face(0), face.last)
-          case _ => // ignore all other elements
+        if (tokens.size > 1) {
+          tokens(0) match {
+            case "v" =>
+              require(tokens.size == 4 || tokens.size == 5, s"Invalid vertex element: $line")
+              vertices += Array(tokens(1).toDouble, tokens(2).toDouble, tokens(3).toDouble)
+            case "f" =>
+              require(tokens.size >= 3, s"Invalid face element: $line")
+              val face = tokens.drop(1).map(_.toInt - 1)
+              for (i <- 1 until face.length) edges += Array(face(i - 1), face(i))
+              edges += Array(face(0), face.last)
+            case _ => // ignore all other elements
+          }
         }
       }
+
+      (vertices.toArray, edges.toArray)
+    } finally {
+      source.close()
     }
-    (vertices.toArray, edges.toArray)
   }
 }

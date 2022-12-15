@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -64,7 +64,7 @@ public class ARPACKTest {
     @Test
     public void testSA() {
         System.out.println("SA");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(LOWER);
         Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.SA, 2);
         assertEquals(eigenValues[1], eig.wr[0], 1E-4);
@@ -92,7 +92,7 @@ public class ARPACKTest {
     @Test
     public void testLA() {
         System.out.println("LA");
-        Matrix a = new Matrix(A);
+        Matrix a = Matrix.of(A);
         a.uplo(LOWER);
         Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
@@ -223,21 +223,21 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 1;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A), k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A), k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
 
-        assertEquals(m, svd.U.nrows());
-        assertEquals(k, svd.U.ncols());
+        assertEquals(m, svd.U.nrow());
+        assertEquals(k, svd.U.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(svd.U.get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(n, svd.V.nrows());
-        assertEquals(k, svd.V.ncols());
+        assertEquals(n, svd.V.nrow());
+        assertEquals(k, svd.V.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(svd.V.get(i, j)), 1E-6);
@@ -284,21 +284,21 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A), k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A), k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
 
-        assertEquals(m, svd.U.nrows());
-        assertEquals(k, svd.U.ncols());
+        assertEquals(m, svd.U.nrow());
+        assertEquals(k, svd.U.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(svd.U.get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(n, svd.V.nrows());
-        assertEquals(k, svd.V.ncols());
+        assertEquals(n, svd.V.nrow());
+        assertEquals(k, svd.V.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(svd.V.get(i, j)), 1E-6);
@@ -344,21 +344,21 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A),k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A),k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-6);
         }
 
-        assertEquals(m, svd.U.nrows());
-        assertEquals(k, svd.U.ncols());
+        assertEquals(m, svd.U.nrow());
+        assertEquals(k, svd.U.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(svd.U.get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(n, svd.V.nrows());
-        assertEquals(k, svd.V.ncols());
+        assertEquals(n, svd.V.nrow());
+        assertEquals(k, svd.V.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(svd.V.get(i, j)), 1E-6);
@@ -403,21 +403,21 @@ public class ARPACKTest {
         int n = A[0].length;
         int k = 3;
 
-        Matrix.SVD svd = ARPACK.svd(new Matrix(A),k);
+        Matrix.SVD svd = ARPACK.svd(Matrix.of(A),k);
         for (int i = 0; i < k; i++) {
             assertEquals(s[i], svd.s[i], 1E-5);
         }
 
-        assertEquals(m, svd.U.nrows());
-        assertEquals(k, svd.U.ncols());
+        assertEquals(m, svd.U.nrow());
+        assertEquals(k, svd.U.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(svd.U.get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(n, svd.V.nrows());
-        assertEquals(k, svd.V.ncols());
+        assertEquals(n, svd.V.nrow());
+        assertEquals(k, svd.V.ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(svd.V.get(i, j)), 1E-6);

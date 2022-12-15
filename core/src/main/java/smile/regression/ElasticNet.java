@@ -1,23 +1,22 @@
 /*
- * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Smile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package smile.regression;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -47,56 +46,59 @@ import smile.math.matrix.Matrix;
  */
 public class ElasticNet {
     /**
-     * Fit an Elastic Net model.
+     * Fits an Elastic Net model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda1"));
-        double lambda2 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda2"));
-        double tol = Double.valueOf(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda1 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda1"));
+        double lambda2 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda2"));
+        double tol = Double.parseDouble(params.getProperty("smile.elastic_net.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 
     /**
-     * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda1</code> is the shrinkage/regularization parameter for L1
-     * <li><code>lambda2</code> is the shrinkage/regularization parameter for L2
+     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
+     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
      * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the shrinkage/regularization parameter for L1
-     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param lambda1 the L1 shrinkage/regularization parameter
+     * @param lambda2 the L2 shrinkage/regularization parameter
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
         return fit(formula, data, lambda1, lambda2, 1E-4, 1000);
     }
 
     /**
-     * Fit an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
      * <ul>
-     * <li><code>lambda1</code> is the shrinkage/regularization parameter for L1
-     * <li><code>lambda2</code> is the shrinkage/regularization parameter for L2
+     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
+     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
      * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the shrinkage/regularization parameter for L1
-     * @param lambda2 the shrinkage/regularization parameter for L2
+     * @param lambda1 the L1 shrinkage/regularization parameter
+     * @param lambda2 the L2 shrinkage/regularization parameter
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, double tol, int maxIter) {
         if (lambda1 <= 0) {
@@ -114,17 +116,23 @@ public class ElasticNet {
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
         double[] center = X.colMeans();
         double[] scale = X.colSds();
 
         // Pads 0 at the tail
-        double[] y2 = new double[y.length + p];
-        System.arraycopy(y, 0, y2, 0, y.length);
+        double[] y2 = new double[n + p];
+
+        // Center y2 before calling LASSO.
+        // Otherwise, padding zeros become negative when LASSO centers y2 again.
+        double ym = MathEx.mean(y);
+        for (int i = 0; i < n; i++) {
+            y2[i] = y[i] - ym;
+        }
 
         // Scales the original data array and pads a weighted identity matrix
-        Matrix X2 = new Matrix(X.nrows()+ p, p);
+        Matrix X2 = new Matrix(X.nrow()+ p, p);
         double padding = c * Math.sqrt(lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
@@ -139,7 +147,7 @@ public class ElasticNet {
             w[i] = c * w[i] / scale[i];
         }
 
-        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        double b = ym - MathEx.dot(w, center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }
