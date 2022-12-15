@@ -68,8 +68,8 @@ object write {
      * @param file the file path
      */
     fun csv(data: DataFrame, file: Path, delimiter: Char): Unit {
-        val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-        Write.csv(data, file, format)
+        val format = CSVFormat.Builder.create().setDelimiter(delimiter)
+        Write.csv(data, file, format.build())
     }
 }
 
@@ -82,16 +82,16 @@ object read {
 
     /** Reads a CSV file. */
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
-        var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-        if (header) format = format.withFirstRecordAsHeader()
-        return Read.csv(file, format, schema)
+        var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
+        if (header) format = format.setHeader().setSkipHeaderRecord(true)
+        return Read.csv(file, format.build(), schema)
     }
 
     /** Reads a CSV file. */
     fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
-        var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
-        if (header) format = format.withFirstRecordAsHeader()
-        return Read.csv(file, format, schema)
+        var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
+        if (header) format = format.setHeader().setSkipHeaderRecord(true)
+        return Read.csv(file, format.build(), schema)
     }
 
     /** Reads a CSV file. */

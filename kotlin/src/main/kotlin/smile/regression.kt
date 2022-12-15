@@ -166,7 +166,7 @@ fun lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3,
  * @return SVR model.
  */
 fun <T> svr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, eps: Double, C: Double, tol: Double = 1E-3): KernelMachine<T> {
-    return SVR.fit(x, y, kernel, eps, C, tol)
+    return SVM.fit(x, y, kernel, eps, C, tol)
 }
 
 /**

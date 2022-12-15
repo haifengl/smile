@@ -117,7 +117,7 @@ fun ngram(maxNGramSize: Int, minFreq: Int, text: List<String>): Array<Array<NGra
     val sentences = text.flatMap { doc ->
         doc.sentences().map { sentence ->
             sentence.words("none")
-                    .map { word -> porter.stripPluralParticiple(word).toLowerCase() }
+                    .map { word -> porter.stripPluralParticiple(word).lowercase() }
                     .toTypedArray()
         }
     }
@@ -317,7 +317,7 @@ fun String.words(filter: String = "default"): Array<String> {
 
     val punctuations = smile.nlp.dictionary.EnglishPunctuations.getInstance()
     return tokens
-            .filter { word -> !(dict.contains(word.toLowerCase()) || punctuations.contains(word)) }
+            .filter { word -> !(dict.contains(word.lowercase()) || punctuations.contains(word)) }
             .toTypedArray()
 }
 
@@ -336,7 +336,7 @@ fun String.bag(filter: String = "default", stemmer: Stemmer? = porter): Map<Stri
     }
 
     return words
-            .map(String::toLowerCase)
+            .map(String::lowercase)
             .groupBy { it }
             .mapValues { (_, v) -> v.size }
             .withDefault { 0 }
@@ -352,7 +352,7 @@ fun String.bag2(filter: String = "default", stemmer: Stemmer? = porter): Set<Str
         words = words.map(stemmer::stem)
     }
 
-    return words.map(String::toLowerCase).toSet()
+    return words.map(String::lowercase).toSet()
 }
 
 /**
