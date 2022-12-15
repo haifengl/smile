@@ -16,7 +16,7 @@
 (ns smile.regression
   "Regression Analysis"
   {:author "Haifeng Li"}
-  (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVR
+  (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVM
                              RegressionTree RandomForest GradientTreeBoost
                              GaussianProcessRegression]
            [smile.base.cart Loss]))
@@ -298,10 +298,10 @@
   ([x y neurons] (rbfnet x y neurons false))
   ([x y neurons normalized] (RBFNetwork/fit x y neurons normalized)))
 
-(defn svr
+(defn svm
   "Support vector regression.
 
-  Like SVM for classification, the model produced by SVR depends only on a
+  Like SVM for classification, the model produced by SVM depends only on a
   subset of the training data, because the cost function ignores any training
   data close to the model prediction (within a threshold).
 
@@ -311,8 +311,8 @@
   `eps` is the loss function error threshold.
   `C` is the soft margin penalty parameter.
   `tol` is the tolerance of convergence test."
-  ([x y kernel eps C] (svr x y kernel eps C 1E-3))
-  ([x y kernel eps C tol] (SVR/fit x y kernel eps C tol)))
+  ([x y kernel eps C] (svm x y kernel eps C 1E-3))
+  ([x y kernel eps C tol] (SVM/fit x y kernel eps C tol)))
 
 (defn cart
   "Regression tree.
