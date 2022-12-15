@@ -22,7 +22,6 @@ import java.nio.file.{Path, Paths}
 import java.sql.ResultSet
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
-import com.thoughtworks.xstream.XStream
 import org.apache.commons.csv.CSVFormat
 import smile.data.{DataFrame, Dataset, Instance}
 import smile.data.`type`.StructType
@@ -39,19 +38,6 @@ object write {
     val oos = new ObjectOutputStream(new FileOutputStream(file.toFile))
     oos.writeObject(x)
     oos.close()
-  }
-
-  /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: AnyRef](x: T, file: String): Unit = xstream(x, Paths.get(file))
-
-  /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: AnyRef](x: T, file: Path): Unit = {
-    val xstream = new XStream
-    val xml = xstream.toXML(x)
-    new PrintWriter(file.toFile) {
-      write(xml)
-      close()
-    }
   }
 
   /** Writes an array to a text file line by line.
@@ -143,20 +129,6 @@ object read {
     val o = ois.readObject
     ois.close()
     o
-  }
-
-  /** Reads an object/model that was serialized by XStream. */
-  def xstream(file: String): AnyRef = xstream(Paths.get(file))
-
-  /** Reads an object/model that was serialized by XStream. */
-  def xstream(file: Path): AnyRef = {
-    val source = Source.fromFile(file.toFile)
-    try {
-      val xstream = new XStream
-      xstream.fromXML(source.mkString)
-    } finally {
-      source.close()
-    }
   }
 
   /**
