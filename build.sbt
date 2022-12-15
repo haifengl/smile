@@ -121,6 +121,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
 lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
+  .settings(publish / skip := true)
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
@@ -156,7 +157,6 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
-  .settings(publish / skip := true)
   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
