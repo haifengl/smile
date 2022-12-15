@@ -31,7 +31,7 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class FeatureHashing implements Function<String, SparseArray> {
+public class HashEncoder implements Function<String, SparseArray> {
     /**
      * The tokenizer of text, which may include additional processing
      * such as filtering stop word, converting to lowercase, stemming, etc.
@@ -59,7 +59,7 @@ public class FeatureHashing implements Function<String, SparseArray> {
      *      features are likely to cause hash collisions, but large numbers
      *      will cause larger coefficient dimensions in linear learners.
      */
-    public FeatureHashing(Function<String, String[]> tokenizer, int numFeatures) {
+    public HashEncoder(Function<String, String[]> tokenizer, int numFeatures) {
         this(tokenizer, numFeatures, true);
     }
 
@@ -75,7 +75,7 @@ public class FeatureHashing implements Function<String, SparseArray> {
      *      even for small number of features. This approach is similar
      *      to sparse random projection.
      */
-    public FeatureHashing(Function<String, String[]> tokenizer, int numFeatures, boolean alternateSign) {
+    public HashEncoder(Function<String, String[]> tokenizer, int numFeatures, boolean alternateSign) {
         this.tokenizer = tokenizer;
         this.numFeatures = numFeatures;
         this.alternateSign = alternateSign;
