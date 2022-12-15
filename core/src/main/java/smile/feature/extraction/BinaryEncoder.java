@@ -44,7 +44,7 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
      */
     private final String[] columns;
     /**
-     * Starting index for each nominal attribute.
+     * Starting index for each categorical attribute.
      */
     private final int[] base;
 
