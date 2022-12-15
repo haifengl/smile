@@ -5,10 +5,9 @@
         :url "https://github.com/haifengl/smile"}
   :license {:name "GNU General Public License, Version 3"
             :url "https://opensource.org/licenses/GPL-3.0"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 [com.github.haifengl/smile-core "3.0.0"]
-                 [com.github.haifengl/smile-io "3.0.0"]]
-  :plugins [[lein-codox "0.10.7"]]
+  :dependencies [[org.clojure/clojure "1.11.1"]
+                 [com.github.haifengl/smile-core "3.0.0"]]
+  :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
           :output-path "../doc/api/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
