@@ -151,6 +151,7 @@ public class InformationValue implements Comparable<InformationValue> {
 
     /**
      * Returns the data transformation that covert feature value to its weight of evidence.
+     * @param values the information value objects of features.
      * @return the transform.
      */
     public static ColumnTransform toTransform(InformationValue[] values) {
