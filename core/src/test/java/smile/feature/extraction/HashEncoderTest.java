@@ -31,10 +31,10 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class FeatureHashingTest {
+public class HashEncoderTest {
     private static final Function<String, String[]> tokenizer = s -> s.split("\\s+");
 
-    public FeatureHashingTest() {
+    public HashEncoderTest() {
     }
 
     @BeforeClass
@@ -62,7 +62,7 @@ public class FeatureHashingTest {
                 .map(line -> line.split("\\s+", 2))
                 .toArray(String[][]::new);
 
-        FeatureHashing hashing = new FeatureHashing(tokenizer, 1000);
+        HashEncoder hashing = new HashEncoder(tokenizer, 1000);
 
         SparseArray[] x = new SparseArray[text.length];
         for (int i = 0; i < text.length; i++) {
