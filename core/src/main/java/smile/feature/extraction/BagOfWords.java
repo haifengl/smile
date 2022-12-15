@@ -108,6 +108,7 @@ public class BagOfWords implements Transform {
 
     /**
      * Returns the feature words.
+     * @return the feature words.
      */
     public String[] features() {
         return words;
@@ -116,6 +117,8 @@ public class BagOfWords implements Transform {
     /**
      * Learns a vocabulary dictionary of top-k frequent tokens in the raw documents.
      * @param data training data.
+     * @param tokenizer the tokenizer of text, which may include additional processing
+     *                  such as filtering stop word, converting to lowercase, stemming, etc.
      * @param k the limit of vocabulary size.
      * @param columns the text columns.
      * @return the model.

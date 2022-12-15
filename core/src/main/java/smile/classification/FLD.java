@@ -20,7 +20,6 @@ package smile.classification;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.feature.extraction.Projection;
 import smile.sort.QuickSort;
 import smile.util.IntSet;
 
@@ -323,7 +322,11 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         return classes.valueOf(y);
     }
 
-    //@Override
+    /**
+     * Projects a sample to the feature space.
+     * @param x a sample
+     * @return the feature vector.
+     */
     public double[] project(double[] x) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
@@ -334,7 +337,11 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         return y;
     }
 
-    //@Override
+    /**
+     * Projects samples to the feature space.
+     * @param x samples
+     * @return the feature vectors.
+     */
     public double[][] project(double[][] x) {
         double[][] y = new double[x.length][scaling.ncol()];
         
