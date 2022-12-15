@@ -15,8 +15,9 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.projection
+package smile.feature.extraction
 
+import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
 import smile.math.TimeFunction
 
@@ -112,8 +113,8 @@ fun ppca(data: Array<DoubleArray>, k: Int): ProbabilisticPCA  {
  * @param threshold only principal components with eigenvalues larger than
  *                  the given threshold will be kept.
  */
-fun <T> kpca(data: Array<T>, kernel: MercerKernel<T>, k: Int, threshold: Double = 0.0001): KPCA<T> {
-    return KPCA.fit(data, kernel, k, threshold)
+fun <T> kpca(data: DataFrame, kernel: MercerKernel<DoubleArray>, k: Int, threshold: Double = 0.0001): KernelPCA {
+    return KernelPCA.fit(data, kernel, k, threshold)
 }
 
 /**

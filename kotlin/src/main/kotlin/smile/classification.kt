@@ -290,7 +290,7 @@ fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epoch
        learningRate: TimeFunction = TimeFunction.linear(0.01, 10000.0, 0.001),
        momentum: TimeFunction = TimeFunction.constant(0.0),
        weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP {
-    val net = MLP(x[0].size, *builders)
+    val net = MLP(*builders)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
     net.setWeightDecay(weightDecay)
@@ -827,11 +827,11 @@ fun rda(x: Array<DoubleArray>, y: IntArray, alpha: Double, priori: DoubleArray? 
 fun naiveBayes(x: Array<IntArray>, y: IntArray, model: DiscreteNaiveBayes.Model, priori: DoubleArray? = null, sigma: Double = 1.0): DiscreteNaiveBayes {
     val p = x[0].size
     val k = MathEx.max(y) + 1
-    val labels = ClassLabels.fit(y).labels
+    val classes = ClassLabels.fit(y).classes
     val naive = if (priori == null)
-        DiscreteNaiveBayes(model, k, p, sigma, labels)
+        DiscreteNaiveBayes(model, k, p, sigma, classes)
     else
-        DiscreteNaiveBayes(model, priori, p, sigma, labels)
+        DiscreteNaiveBayes(model, priori, p, sigma, classes)
     naive.update(x, y)
     return naive
 }
