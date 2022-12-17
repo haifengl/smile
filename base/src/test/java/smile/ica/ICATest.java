@@ -26,11 +26,7 @@ import org.junit.Test;
 import smile.data.CategoricalEncoder;
 import smile.io.CSV;
 import smile.math.MathEx;
-import smile.test.data.SwissRoll;
 import smile.util.Paths;
-
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 
 /**
@@ -58,23 +54,20 @@ public class ICATest {
     public void tearDown() {
     }
 
-    @Test
+    @Test(expected = Test.None.class)
     public void test() throws Exception {
         System.out.println("ICA");
 
-        try {
-            CSVFormat format = CSVFormat.Builder.create().build();
-            CSV csv = new CSV(format);
-            double[][] data = csv.read(Paths.getTestData("ica/ica.csv")).toArray(false, CategoricalEncoder.DUMMY);
+        CSVFormat format = CSVFormat.Builder.create().build();
+        CSV csv = new CSV(format);
+        double[][] data = csv.read(Paths.getTestData("ica/ica.csv")).toArray(false, CategoricalEncoder.DUMMY);
 
-            ICA ica = ICA.fit(MathEx.transpose(data), 2);
-            assertEquals(2, ica.components.length);
-            assertEquals(data.length, ica.components[0].length);
-            System.out.println(Arrays.toString(ica.components[0]));
-            System.out.println(Arrays.toString(ica.components[1]));
-        } catch (Exception ex) {
-            System.err.println("Failed to load 'ica.csv': " + ex);
-            System.exit(-1);
-        }
+        ICA ica = ICA.fit(MathEx.transpose(data), 2);
+        assertEquals(2, ica.components.length);
+        assertEquals(data.length, ica.components[0].length);
+        assertEquals(-0.00523, ica.components[0][0], 1E-5);
+        assertEquals(-0.02396, ica.components[1][0], 1E-5);
+        assertEquals( 0.01987, ica.components[0][1], 1E-5);
+        assertEquals(-0.01737, ica.components[1][1], 1E-5);
     }
 }
