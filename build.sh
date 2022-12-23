@@ -36,33 +36,33 @@ while true; do
             sbt publishSigned
             check_error "sbt publishSigned"
 
-            git checkout scala-2.12
-            check_error "git checkout scala-2.12"
-            git pull
-            check_error "git pull"
-            git merge master
-            check_error "git merge master"
-            sbt ++2.12.11 scala/publishSigned
-            check_error "sbt ++2.12.11 scala/publishSigned"
-            sbt ++2.12.11 json/publishSigned
-            check_error "sbt ++2.12.11 json/publishSigned"
-            sbt ++2.12.11 spark/publishSigned
-            check_error "sbt ++2.12.11 spark/publishSigned"
+            # git checkout scala-2.12
+            # check_error "git checkout scala-2.12"
+            # git pull
+            # check_error "git pull"
+            # git merge master
+            # check_error "git merge master"
+            # sbt ++2.12.11 scala/publishSigned
+            # check_error "sbt ++2.12.11 scala/publishSigned"
+            # sbt ++2.12.11 json/publishSigned
+            # check_error "sbt ++2.12.11 json/publishSigned"
+            # sbt ++2.12.11 spark/publishSigned
+            # check_error "sbt ++2.12.11 spark/publishSigned"
 
-            git checkout scala-2.11
-            check_error "git checkout scala-2.11"
-            git pull
-            check_error "git pull"
-            git merge master
-            check_error "git merge master"
-            sbt ++2.11.12 scala/publishSigned
-            check_error "sbt ++2.11.12 scala/publishSigned"
-            sbt ++2.11.12 json/publishSigned
-            check_error "sbt ++2.11.12 json/publishSigned"
-            sbt ++2.11.12 spark/publishSigned
-            check_error "sbt ++2.11.12 spark/publishSigned"
+            # git checkout scala-2.11
+            # check_error "git checkout scala-2.11"
+            # git pull
+            # check_error "git pull"
+            # git merge master
+            # check_error "git merge master"
+            # sbt ++2.11.12 scala/publishSigned
+            # check_error "sbt ++2.11.12 scala/publishSigned"
+            # sbt ++2.11.12 json/publishSigned
+            # check_error "sbt ++2.11.12 json/publishSigned"
+            # sbt ++2.11.12 spark/publishSigned
+            # check_error "sbt ++2.11.12 spark/publishSigned"
 
-            git checkout master
+            # git checkout master
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
