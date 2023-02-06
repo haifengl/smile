@@ -24,7 +24,7 @@ permalink: "{{ page.filePathStem }}.html"
         the project website. The universal tarball
         is also available and can be used on Mac, Linux and Windows.</p>
 
-    <p>If you would like to build Smile from source, please first install Java 8, Scala 2.13
+    <p>If you would like to build Smile from source, please first install Java 17, Scala 2.13
         and SBT 1.0+. Then clone the repo and build the package:</p>
 
     <pre class="prettyprint lang-sh"><code>
@@ -49,7 +49,9 @@ permalink: "{{ page.filePathStem }}.html"
     <p>which will build the system and enter the shell.</p>
 
     <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
-        All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
+        Although we require Java9+ to build Smile to enable automatic module,
+        the built library can work with Java8+. All you need is to have
+        <code>Java</code> installed on your system <code>PATH</code>,
         or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
     <h2 id="shell">Shell</h2>
