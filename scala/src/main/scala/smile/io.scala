@@ -45,14 +45,14 @@ object write {
     * @param data an array.
     * @param file the file path
     */
-  def apply[T](data: Array[T], file: String): Unit = apply(data, Paths.get(file))
+  def array[T](data: Array[T], file: String): Unit = array(data, Paths.get(file))
 
   /** Writes an array to a text file line by line.
     *
     * @param data an array.
     * @param file the file path
     */
-  def apply[T](data: Array[T], file: Path): Unit = {
+  def array[T](data: Array[T], file: Path): Unit = {
     val writer = new PrintWriter(file.toFile)
     data.foreach(writer.println(_))
     writer.close()
