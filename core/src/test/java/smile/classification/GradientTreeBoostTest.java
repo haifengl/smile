@@ -57,17 +57,24 @@ public class GradientTreeBoostTest {
     public void tearDown() {
     }
 
-
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(WeatherNominal.formula, WeatherNominal.data, 100, 20, 6, 5, 0.05, 0.7);
+        String[] fields = model.schema().names();
 
         double[] importance = model.importance();
+        System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        double[] shap = model.shap(WeatherNominal.data);
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
@@ -177,7 +184,7 @@ public class GradientTreeBoostTest {
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 20, 6, 5, 0.05, 0.7);
-        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        String[] fields = model.schema().names();
         double[] importance = model.importance();
         double[] shap = model.shap(Iris.data);
 
