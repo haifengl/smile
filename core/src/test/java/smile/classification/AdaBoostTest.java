@@ -63,10 +63,17 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 20, 5, 8, 1);
+        String[] fields = model.schema().names();
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        double[] shap = model.shap(WeatherNominal.data);
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
         }
 
         java.nio.file.Path temp = Write.object(model);
