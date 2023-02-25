@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val arrowV = "10.0.1"
+  val arrowV = "11.0.0"
   Seq(
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
@@ -18,7 +18,7 @@ libraryDependencies ++= {
     "org.apache.hadoop" % "hadoop-common" % "3.3.4" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.avro" % "avro" % "1.11.1" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
-    "org.apache.commons" % "commons-csv" % "1.9.0",
-    "org.xerial" % "sqlite-jdbc" % "3.40.0.0" % Test
+    "org.apache.commons" % "commons-csv" % "1.10.0",
+    "org.xerial" % "sqlite-jdbc" % "3.41.0.0" % Test
   )
 }

@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
 public class ICATest {
 
     public ICATest() {
+
     }
 
     @BeforeClass
