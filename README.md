@@ -65,7 +65,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.1</version>
     </dependency>
 ```
 
@@ -73,18 +73,18 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.0.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.0.1"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:3.0.0")
+    implementation("com.github.haifengl:smile-kotlin:3.0.1")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "3.0.0"]
+    [org.clojars.haifengl/smile "3.0.1"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
@@ -113,7 +113,7 @@ Or you may simply include `smile-mkl` module in your project, which includes
 MKL binaries. With `smile-mkl` module in the class path, Smile will
 automatically switch to MKL.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "3.0.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "3.0.1"
 ```
 
 ## Shell
@@ -149,11 +149,7 @@ to enter Kotlin REPL.
 ## Model Serialization
 Most models support the Java `Serializable` interface (all classifiers
 do support `Serializable` interface) so that you can use them in Spark.
-For reading/writing the models in non-Java code, we suggest [XStream]
-(https://github.com/x-stream/xstream) to serialize the trained models.
-XStream is a simple library to serialize objects to XML and back again.
-XStream is easy to use and doesn't require mappings (actually requires
-no modifications to objects). [Protostuff](http://code.google.com/p/protostuff/)
+[Protostuff](http://code.google.com/p/protostuff/)
 is a nice alternative that supports forward-backward compatibility
 (schema evolution) and validation. Beyond XML, Protostuff supports many
 other formats such as JSON, YAML, protobuf, etc.
@@ -169,7 +165,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.1</version>
     </dependency>
 ```
 
