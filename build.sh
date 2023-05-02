@@ -1,8 +1,12 @@
 #!/bin/bash
 
+# In a script, history expansion is turned off by default, enable it with
+set -o history -o histexpand
+
 check_error() {
-  if [ $? -ne 0 ]; then
-    echo "$1 return code was not zero but $retval"
+  retval=$?
+  if [ $retval -ne 0 ]; then
+    echo "'$1' returns code $retval"
     exit
   fi
 }
@@ -14,20 +18,24 @@ fi
 sbt clean
 rm -rf doc/api/*
 sbt unidoc
+check_error "!!"
 mv target/javaunidoc doc/api/java
 
 cd kotlin
 gradle dokkaHtml
+check_error "!!"
 
 cd ../clojure
 lein codox
+check_error "!!"
 
 cd ../web
 npx @11ty/eleventy
+check_error "!!"
 
 cd ..
 sbt universal:packageBin
-check_error "sbt universal:packageBin"
+check_error "!!"
 
 while true; do
     read -p "Do you want to publish it? " ans
@@ -48,19 +56,6 @@ while true; do
             # check_error "sbt ++2.12.11 json/publishSigned"
             # sbt ++2.12.11 spark/publishSigned
             # check_error "sbt ++2.12.11 spark/publishSigned"
-
-            # git checkout scala-2.11
-            # check_error "git checkout scala-2.11"
-            # git pull
-            # check_error "git pull"
-            # git merge master
-            # check_error "git merge master"
-            # sbt ++2.11.12 scala/publishSigned
-            # check_error "sbt ++2.11.12 scala/publishSigned"
-            # sbt ++2.11.12 json/publishSigned
-            # check_error "sbt ++2.11.12 json/publishSigned"
-            # sbt ++2.11.12 spark/publishSigned
-            # check_error "sbt ++2.11.12 spark/publishSigned"
 
             # git checkout master
             break;;
