@@ -7,7 +7,7 @@ check_error() {
   retval=$?
   if [ $retval -ne 0 ]; then
     echo "'$1' returns code $retval"
-    exit
+    exit $retval
   fi
 }
 
