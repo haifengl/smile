@@ -4,7 +4,7 @@
 set -o history -o histexpand
 
 check_error() {
-  retval=$?
+  local retval=$?
   if [ $retval -ne 0 ]; then
     echo "'$1' returns code $retval"
     exit $retval
