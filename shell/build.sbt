@@ -69,9 +69,9 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-simple" % "2.0.7",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.1",
   "com.typesafe.akka" %% "akka-stream" % "2.8.1",
-  "com.typesafe.akka" %% "akka-http" % "10.5.1",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.1",
-  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "6.0.0",
+  "com.typesafe.akka" %% "akka-http" % "10.5.2",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.2",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "6.0.1",
   "org.bytedeco" % "javacpp"   % "1.5.8"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
   "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
   "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
