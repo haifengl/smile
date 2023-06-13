@@ -58,6 +58,7 @@ public class ICATest {
     @Test(expected = Test.None.class)
     public void test() throws Exception {
         System.out.println("ICA");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         CSVFormat format = CSVFormat.Builder.create().build();
         CSV csv = new CSV(format);
@@ -66,9 +67,9 @@ public class ICATest {
         ICA ica = ICA.fit(MathEx.transpose(data), 2);
         assertEquals(2, ica.components.length);
         assertEquals(data.length, ica.components[0].length);
-        assertEquals(-0.00523, ica.components[0][0], 1E-5);
-        assertEquals(-0.02396, ica.components[1][0], 1E-5);
-        assertEquals( 0.01987, ica.components[0][1], 1E-5);
-        assertEquals(-0.01737, ica.components[1][1], 1E-5);
+        assertEquals( 0.02003, ica.components[0][0], 1E-5);
+        assertEquals(-0.03275, ica.components[1][0], 1E-5);
+        assertEquals(-0.01140, ica.components[0][1], 1E-5);
+        assertEquals(-0.01084, ica.components[1][1], 1E-5);
     }
 }
