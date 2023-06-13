@@ -4,7 +4,7 @@ lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := "2.13.10",
+  scalaVersion := "2.13.11",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
