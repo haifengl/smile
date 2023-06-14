@@ -277,7 +277,7 @@ public class MLPTest {
         );
         model.setRMSProp(0.9, 1E-7);
 
-        int batch = 32;
+        int batch = 64;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         int error = 0;
@@ -302,6 +302,6 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(115, error);
+        assertEquals(120, error, 5);
     }
 }

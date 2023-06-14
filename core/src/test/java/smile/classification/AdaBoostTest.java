@@ -119,7 +119,6 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
                 (f, x) -> AdaBoost.fit(f, x, 100, 20, 4, 1));
 
@@ -176,6 +175,8 @@ public class AdaBoostTest {
 
     @Test
     public void testShap() {
+        System.out.println("SHAP");
+
         MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);

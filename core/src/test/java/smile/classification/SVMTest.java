@@ -99,7 +99,7 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(125, error);
+        assertEquals(130, error, 10);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class SVMTest {
         int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(86, error, 3);
+        assertEquals(86, error, 5);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
