@@ -21,6 +21,12 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
+sbt json/doc
+check_error "!!"
+
+sbt scala/doc
+check_error "!!"
+
 cd kotlin
 gradle dokkaHtml
 check_error "!!"
