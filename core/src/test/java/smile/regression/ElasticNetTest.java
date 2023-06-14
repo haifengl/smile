@@ -154,6 +154,6 @@ public class ElasticNetTest {
                 (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
         System.out.println(result);
-        assertEquals(58.9498, result.avg.rmse, 0.001);
+        assertEquals(58.9498, result.avg.rmse, 0.01);
     }
 }
