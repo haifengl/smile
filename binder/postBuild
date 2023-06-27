@@ -6,7 +6,7 @@ gunzip cs.gz
 chmod +x cs
 
 # Install almond for Scala 2.13
-SCALA_VERSION=2.13.11 ALMOND_VERSION=0.13.14
+SCALA_VERSION=2.13.11 ALMOND_VERSION=almond:0.14.0-RC8
 ./cs launch "almond:$ALMOND_VERSION" --scala SCALA_VERSION -- \
   --install \
   --id scala213 \
