@@ -48,20 +48,20 @@ while true; do
     case $ans in
         [Yy]* )
             sbt publishSigned
-            check_error "sbt publishSigned"
+            check_error "!!"
 
-            # git checkout scala-2.12
-            # check_error "git checkout scala-2.12"
-            # git pull
-            # check_error "git pull"
-            # git merge master
-            # check_error "git merge master"
-            # sbt ++2.12.11 scala/publishSigned
-            # check_error "sbt ++2.12.11 scala/publishSigned"
-            # sbt ++2.12.11 json/publishSigned
-            # check_error "sbt ++2.12.11 json/publishSigned"
-            # sbt ++2.12.11 spark/publishSigned
-            # check_error "sbt ++2.12.11 spark/publishSigned"
+            git checkout scala3
+            check_error "!!"
+            git pull
+            check_error "!!"
+            git merge master
+            check_error "!!"
+            sbt ++3.3.0 scala/publishSigned
+            check_error "!!"
+            sbt ++3.3.0 json/publishSigned
+            check_error "!!"
+            # sbt ++3.3.0 spark/publishSigned
+            # check_error "!!"
 
             # git checkout master
             break;;
