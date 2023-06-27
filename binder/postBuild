@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install coursier
-curl -fLo cs https://github.com/coursier/coursier/releases/download/v2.1.5/cs-x86_64-pc-linux
+curl -fLo cs https://github.com/coursier/coursier/releases/download/v2.1.5/cs-x86_64-pc-linux-static.gz
 chmod +x cs
 
 # Install almond for Scala 2.13
