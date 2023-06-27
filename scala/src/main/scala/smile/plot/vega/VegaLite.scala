@@ -334,7 +334,7 @@ object VegaLite {
   def layer(layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of()
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 
@@ -342,7 +342,7 @@ object VegaLite {
   def layer(json: JsArray, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(json)
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 
@@ -355,7 +355,7 @@ object VegaLite {
   def layer(url: String, format: JsValue, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(url, format)
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 
