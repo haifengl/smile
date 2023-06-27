@@ -1,10 +1,14 @@
 name := "smile"
 
+lazy val scala213 = "2.13.11"
+lazy val scala3 = "3.3.0"
+lazy val supportedScalaVersions = List(scala213, scala3)
+
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := "2.13.11",
+  scalaVersion := scala213,
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -98,7 +102,7 @@ lazy val java17Settings = javaSettings ++ Seq(
 lazy val scalaSettings = commonSettings ++ Seq(
   crossPaths := true,
   autoScalaLibrary := true,
-  crossScalaVersions := List("3.3.0", "2.13.11"),
+  crossScalaVersions := supportedScalaVersions,
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",

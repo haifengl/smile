@@ -17,8 +17,11 @@
 
 package smile.plot
 
+import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 import scala.util.Try
+import smile.plot.swing.{Canvas, PlotGrid}
+import smile.plot.vega.VegaLite
 
 /** Guess the notebook environment. */
 class RenderMacro(val c: whitebox.Context) {
@@ -62,4 +65,10 @@ class RenderMacro(val c: whitebox.Context) {
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default PlotGrid renderer could be materialized"))
   }
+}
+
+object RenderMacro {
+  implicit def renderVegaMacro: VegaLite => Unit = macro RenderMacro.renderVega
+  implicit def renderCanvasMacro: Canvas => Unit = macro RenderMacro.renderCanvas
+  implicit def renderPlotGridMacro: PlotGrid => Unit = macro RenderMacro.renderPlotGrid
 }
