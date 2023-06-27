@@ -14,15 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+/**
 package smile.plot
 
-import scala.reflect.macros.whitebox
+import scala.quoted.*
 import scala.util.Try
 
 /** Guess the notebook environment. */
-class RenderMacro(val c: whitebox.Context) {
-  import c.universe.{Try => _, _}
+class RenderMacro()(using Quotes) {
+  import quotes.reflect.Tree
+  //import c.universe.{Try => _, _}
 
   /** Try to compile a piece of code.  */
   private def compile(tree: Tree) = Try(c.typecheck(tree))
@@ -30,11 +31,11 @@ class RenderMacro(val c: whitebox.Context) {
   /** Materialize the vega renderer. */
   def renderVega: Tree = {
     val possibilities: Try[Tree] =
-      compile(q"""(spec: VegaLite) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(spec.iframe())) }""") orElse
-        compile(q"""(spec: VegaLite) => { publish.html(spec.iframe()) }""") orElse
-        compile(q"""(spec: VegaLite) => { display.html(spec.iframe()) }""") orElse
-        compile(q"""(spec: VegaLite) => { kernel.display.content("text/html", spec.iframe()) }""") orElse
-        compile(q"""(spec: VegaLite) => { smile.plot.Render.desktop(spec) }""")
+      compile('{(spec: VegaLite) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(spec.iframe())) }}) orElse
+        compile('{(spec: VegaLite) => { publish.html(spec.iframe()) }}) orElse
+        compile('{(spec: VegaLite) => { display.html(spec.iframe()) }}) orElse
+        compile('{(spec: VegaLite) => { kernel.display.content("text/html", spec.iframe()) }}) orElse
+        compile('{(spec: VegaLite) => { smile.plot.Render.desktop(spec) }})
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default VegaLite renderer could be materialized"))
   }
@@ -62,4 +63,4 @@ class RenderMacro(val c: whitebox.Context) {
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default PlotGrid renderer could be materialized"))
   }
-}
+}*/

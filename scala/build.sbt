@@ -1,5 +1,7 @@
 name := "smile-scala"
 
+scalaVersion := "3.3.0"
+
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.scala")
 
 Compile / doc / scalacOptions ++= Seq(

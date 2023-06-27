@@ -707,7 +707,7 @@ case class Slice(start: Int, end: Int, step: Int = 1) {
 private[math] case class PimpedInt(a: Int) {
   def ~ : Slice = Slice(a, -1)
   def ~ (b: Int): Slice = Slice(a, b)
-  def unary_~ (b: Int): Slice = Slice(0, b)
+  def unary_~ : Slice = Slice(0, a)
 }
 
 private[math] case class PimpedDouble(a: Double) {
