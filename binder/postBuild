@@ -1,28 +1,27 @@
 #!/bin/bash
 
 # Install coursier
-curl -L -o coursier https://git.io/coursier-cli
-chmod +x coursier
+curl -fLo cs https://github.com/coursier/coursier/releases/download/v2.1.5/cs-x86_64-pc-linux
+chmod +x cs
 
 # Install almond for Scala 2.13
 SCALA_VERSION=2.13.11 ALMOND_VERSION=0.13.14
-./coursier bootstrap \
-  -r jitpack \
-  -i user -I user:sh.almond:scala-kernel-api_$SCALA_VERSION:$ALMOND_VERSION \
-  sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
-  --sources --default=true \
-  -o almond-scala-2.13
-./almond-scala-2.13 --install --id scala213 --display-name "Scala (2.13)" \
-  --command "java -XX:MaxRAMPercentage=80.0 -jar almond-scala-2.13 --id scala213 --display-name 'Scala (2.13)'" \
-  --copy-launcher \
-  --metabrowse
-rm -f almond-scala-2.13
+./cs launch "almond:$ALMOND_VERSION" --scala SCALA_VERSION -- \
+  --install \
+  --id scala213 \
+  --display-name "Scala (2.13)" \
+  --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0" \
+  --variable-inspector \
+  </dev/null 2>&1 | grep -v '^Download'
 
 # Clean up the directory. Keep only the notebooks and data.
-rm -f coursier
+rm -f cs
 
 # Install required Jupyter/JupyterLab extensions
-jupyter labextension install @jupyterlab/plotly-extension
+jupyter labextension install --minimize=False \
+  jupyterlab-plotly \
+  @almond-sh/scalafmt \
+  @almond-sh/jupyterlab_variableinspector
 
 # Set indentation to two spaces
 JUPYTER_CONFIG_DIR=$(jupyter --config-dir)
