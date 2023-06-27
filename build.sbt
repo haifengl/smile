@@ -98,6 +98,7 @@ lazy val java17Settings = javaSettings ++ Seq(
 lazy val scalaSettings = commonSettings ++ Seq(
   crossPaths := true,
   autoScalaLibrary := true,
+  crossScalaVersions := List("3.3.0", "2.13.11"),
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",
@@ -120,6 +121,7 @@ lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
   .settings(publish / skip := true)
+  .settings(crossScalaVersions := Nil)
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
