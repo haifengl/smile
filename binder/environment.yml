@@ -5,7 +5,6 @@ channels:
   - jetbrains
 dependencies:
   - plotly
-  - jupyter-dash
   - ipywidgets
   - kotlin-jupyter-kernel
   - clojupyter
