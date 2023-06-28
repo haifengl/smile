@@ -17,12 +17,6 @@ SCALA_VERSION=2.13.11 ALMOND_VERSION=0.14.0-RC8
 # Clean up the directory. Keep only the notebooks and data.
 rm -f coursier
 
-# Install required Jupyter/JupyterLab extensions
-jupyter labextension install --minimize=False \
-  jupyterlab-plotly \
-  @almond-sh/scalafmt \
-  @almond-sh/jupyterlab_variableinspector
-
 # Set indentation to two spaces
 JUPYTER_CONFIG_DIR=$(jupyter --config-dir)
 # Classic notebook
