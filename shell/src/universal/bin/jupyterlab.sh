@@ -54,7 +54,7 @@ install_almond() {
   fi
 
   SCALA_VERSION=2.13.11 ALMOND_VERSION=0.14.0-RC8
-  ./coursier launch "almond:$ALMOND_VERSION" --scala SCALA_VERSION -- \
+  ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
     --install \
     --id scala213 \
     --display-name "Scala (2.13)" \
