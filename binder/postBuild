@@ -1,13 +1,12 @@
 #!/bin/bash
 
 # Install coursier
-curl -fLo cs.gz https://github.com/coursier/coursier/releases/download/v2.1.5/cs-x86_64-pc-linux-static.gz
-gunzip cs.gz
-chmod +x cs
+curl -Lo coursier https://git.io/coursier-cli
+chmod +x coursier
 
 # Install almond for Scala 2.13
 SCALA_VERSION=2.13.11 ALMOND_VERSION=0.14.0-RC8
-./cs launch "almond:$ALMOND_VERSION" --scala SCALA_VERSION -- \
+./coursier launch "almond:$ALMOND_VERSION" --scala SCALA_VERSION -- \
   --install \
   --id scala213 \
   --display-name "Scala (2.13)" \
@@ -16,7 +15,7 @@ SCALA_VERSION=2.13.11 ALMOND_VERSION=0.14.0-RC8
   </dev/null 2>&1 | grep -v '^Download'
 
 # Clean up the directory. Keep only the notebooks and data.
-rm -f cs
+rm -f coursier
 
 # Install required Jupyter/JupyterLab extensions
 jupyter labextension install --minimize=False \
