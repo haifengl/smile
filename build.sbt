@@ -1,6 +1,6 @@
 name := "smile"
 
-lazy val scala213 = "2.13.11"
+lazy val scala213 = "2.13.12"
 lazy val scala3 = "3.3.0"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
@@ -67,8 +67,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.7",
-    "org.slf4j" % "slf4j-simple" % "2.0.7" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.9",
+    "org.slf4j" % "slf4j-simple" % "2.0.9" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
@@ -116,7 +116,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.7" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.9" % Test,
     "org.specs2" %% "specs2-core" % "4.20.2" % Test
   ),
 )
