@@ -87,10 +87,10 @@ lazy val java8Settings = javaSettings ++ Seq(
   ),
 )
 
-lazy val java17Settings = javaSettings ++ Seq(
+lazy val java21Settings = javaSettings ++ Seq(
   Compile / compile / javacOptions ++= Seq(
-    "-source", "17",
-    "-target", "17",
+    "-source", "21",
+    "-target", "21",
     "--enable-preview",
     "-Xlint:preview"
   ),
