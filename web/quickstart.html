@@ -572,7 +572,7 @@ smile&gt;
     var prop = new java.util.Properties();
     prop.setProperty("smile.random.forest.trees", "200");
     var forest = RandomForest.fit(formula, zipTrain, prop);
-    System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
+    System.out.println(forest.metrics());
           </code></pre>
             </div>
         </div>
