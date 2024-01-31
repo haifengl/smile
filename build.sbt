@@ -121,6 +121,22 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
 )
 
+lazy val javaCppSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
+)
+
+lazy val javaCppTestSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
+)
+
 lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
@@ -131,10 +147,12 @@ lazy val root = project.in(file("."))
   )
   .aggregate(core, base, mkl, nlp, plot, json, scala, spark, shell)
 
-lazy val base = project.in(file("base")).settings(java8Settings: _*)
+lazy val base = project.in(file("base"))
+  .settings(java8Settings: _*)
 
 lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
+  .settings(javaCppTestSettings: _*)
   .dependsOn(base)
 
 lazy val core = project.in(file("core"))
@@ -153,7 +171,8 @@ lazy val plot = project.in(file("plot"))
   .settings(java8Settings: _*)
   .dependsOn(base)
 
-lazy val json = project.in(file("json")).settings(scalaSettings: _*)
+lazy val json = project.in(file("json"))
+  .settings(scalaSettings: _*)
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
@@ -161,9 +180,11 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
+  .settings(javaCppTestSettings: _*)
   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
+  .settings(javaCppSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
