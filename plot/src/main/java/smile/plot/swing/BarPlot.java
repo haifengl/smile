@@ -66,10 +66,10 @@ public class BarPlot extends Plot {
 
         for (int k = 1; k < bars.length; k++) {
             for (double[] x : bars[k].data) {
-                if (bound[0] > x[0] - bars[k].width / 2) {
+                if (bound[0] < x[0] - bars[k].width / 2) {
                     bound[0] = x[0] - bars[k].width / 2;
                 }
-                if (bound[1] > x[1]) {
+                if (bound[1] < x[1]) {
                     bound[1] = x[1];
                 }
             }
