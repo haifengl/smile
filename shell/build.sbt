@@ -66,13 +66,13 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "4.1.0",
   "org.scala-lang" % "scala-compiler" % "2.13.12",
-  "org.slf4j" % "slf4j-simple" % "2.0.9",
+  "org.slf4j" % "slf4j-simple" % "2.0.11",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
   "com.typesafe.akka" %% "akka-stream" % "2.8.5",
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.3",
   "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "6.0.2",
-  "org.bytedeco" % "javacpp"   % "1.5.9"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "openblas"  % "0.3.23-1.5.9" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "arpack-ng" % "3.9.0-1.5.9"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
 )
