@@ -45,6 +45,6 @@ public class HiddenLayerBuilder extends LayerBuilder {
 
     @Override
     public HiddenLayer build(int p) {
-        return new HiddenLayer(neurons, p, activation);
+        return new HiddenLayer(neurons, p, dropout, activation);
     }
 }
