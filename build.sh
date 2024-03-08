@@ -56,11 +56,11 @@ while true; do
             check_error "!!"
             git merge master
             check_error "!!"
-            sbt ++3.3.0 scala/publishSigned
+            sbt ++3.3.3 scala/publishSigned
             check_error "!!"
-            sbt ++3.3.0 json/publishSigned
+            sbt ++3.3.3 json/publishSigned
             check_error "!!"
-            # sbt ++3.3.0 spark/publishSigned
+            # sbt ++3.3.3 spark/publishSigned
             # check_error "!!"
 
             # git checkout master

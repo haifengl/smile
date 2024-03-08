@@ -1,7 +1,7 @@
 name := "smile"
 
-lazy val scala213 = "2.13.12"
-lazy val scala3 = "3.3.0"
+lazy val scala213 = "2.13.13"
+lazy val scala3 = "3.3.3"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.2",
+  version := "3.0.3",
 
   Test / parallelExecution := false,
   autoAPIMappings := true,

@@ -3,7 +3,7 @@ name := "smile-base"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
 libraryDependencies ++= {
-  val arrowV = "15.0.0"
+  val arrowV = "15.0.1"
   Seq(
     "org.bytedeco" % "javacpp"   % "1.5.10"        % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
     "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "provided" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
