@@ -19,6 +19,8 @@ package smile.plot
 
 import scala.quoted.*
 import scala.util.Try
+import smile.plot.swing.{Canvas, PlotGrid}
+import smile.plot.vega.VegaLite
 
 /** Guess the notebook environment. */
 class RenderMacro()(using Quotes) {

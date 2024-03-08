@@ -1,15 +1,19 @@
 name := "smile"
 
+lazy val scala213 = "2.13.13"
+lazy val scala3 = "3.3.3"
+lazy val supportedScalaVersions = List(scala213, scala3)
+
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := "2.13.11",
+  scalaVersion := scala213,
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.2",
+  version := "3.0.3",
 
   Test / parallelExecution := false,
   autoAPIMappings := true,
@@ -63,8 +67,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.7",
-    "org.slf4j" % "slf4j-simple" % "2.0.7" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.12",
+    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
@@ -83,10 +87,10 @@ lazy val java8Settings = javaSettings ++ Seq(
   ),
 )
 
-lazy val java17Settings = javaSettings ++ Seq(
+lazy val java21Settings = javaSettings ++ Seq(
   Compile / compile / javacOptions ++= Seq(
-    "-source", "17",
-    "-target", "17",
+    "-source", "21",
+    "-target", "21",
     "--enable-preview",
     "-Xlint:preview"
   ),
@@ -98,7 +102,7 @@ lazy val java17Settings = javaSettings ++ Seq(
 lazy val scalaSettings = commonSettings ++ Seq(
   crossPaths := true,
   autoScalaLibrary := true,
-  crossScalaVersions := List("3.3.0", "2.13.11"),
+  crossScalaVersions := supportedScalaVersions,
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",
@@ -112,9 +116,25 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.7" % Test,
-    "org.specs2" %% "specs2-core" % "4.20.0" % Test
+    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
+    "org.specs2" %% "specs2-core" % "4.20.5" % Test
   ),
+)
+
+lazy val javaCppSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
+)
+
+lazy val javaCppTestSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
 )
 
 lazy val root = project.in(file("."))
@@ -127,10 +147,12 @@ lazy val root = project.in(file("."))
   )
   .aggregate(core, base, mkl, nlp, plot, json, scala, spark, shell)
 
-lazy val base = project.in(file("base")).settings(java8Settings: _*)
+lazy val base = project.in(file("base"))
+  .settings(java8Settings: _*)
 
 lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
+  .settings(javaCppTestSettings: _*)
   .dependsOn(base)
 
 lazy val core = project.in(file("core"))
@@ -149,7 +171,8 @@ lazy val plot = project.in(file("plot"))
   .settings(java8Settings: _*)
   .dependsOn(base)
 
-lazy val json = project.in(file("json")).settings(scalaSettings: _*)
+lazy val json = project.in(file("json"))
+  .settings(scalaSettings: _*)
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
@@ -157,9 +180,11 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
+  .settings(javaCppTestSettings: _*)
   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
+  .settings(javaCppSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
