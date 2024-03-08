@@ -9,7 +9,7 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "1.8.22"
     id("org.jetbrains.dokka") version "1.5.31"
     signing
 }
