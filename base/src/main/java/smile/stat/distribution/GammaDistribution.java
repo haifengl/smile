@@ -151,7 +151,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
      */
     @Override
     public double rand() {
-        if (k - Math.floor(k) != 0.0) {
+        if (k - Math.floor(k) > MathEx.EPSILON) {
             throw new IllegalArgumentException("Gamma random number generator support only integer shape parameter.");
         }
 

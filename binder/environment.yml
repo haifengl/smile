@@ -4,5 +4,7 @@ channels:
   - simplect
   - jetbrains
 dependencies:
+  - plotly
+  - ipywidgets
   - kotlin-jupyter-kernel
   - clojupyter

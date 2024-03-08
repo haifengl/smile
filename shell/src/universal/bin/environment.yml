@@ -5,6 +5,9 @@ channels:
   - jetbrains
 dependencies:
   - nbdime
+  - plotly
+  - jupyter-dash
+  - ipywidgets
   - jupyterlab-git
   - kotlin-jupyter-kernel
   - clojupyter

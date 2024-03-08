@@ -9,13 +9,13 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.8.22"
+    kotlin("jvm") version "1.9.23"
     id("org.jetbrains.dokka") version "1.5.31"
     signing
 }
 
 group = "com.github.haifengl"
-version = "3.0.2"
+version = "3.0.3"
 
 repositories {
     mavenCentral()
@@ -24,8 +24,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:3.0.2")
-    api("com.github.haifengl:smile-nlp:3.0.2")
+    api("com.github.haifengl:smile-core:3.0.3")
+    api("com.github.haifengl:smile-nlp:3.0.3")
 }
 
 // Copy jar to shell lib
