@@ -153,6 +153,7 @@ lazy val base = project.in(file("base"))
 lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
   .settings(javaCppTestSettings: _*)
+  .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val core = project.in(file("core"))

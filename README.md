@@ -109,11 +109,16 @@ library from the Accelerate framework on Mac OS X, we can pass options such
 as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.
 
 For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
-Or you may simply include `smile-mkl` module in your project, which includes
-MKL binaries. With `smile-mkl` module in the class path, Smile will
-automatically switch to MKL.
+Or you may simply include the following modules in your project, which includes
+MKL binaries. If so, Smile will automatically switch to MKL.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "3.0.3"
+libraryDependencies ++= {
+  val version = "2024.0-1.5.10"
+  Seq(
+    "org.bytedeco" % "mkl-platform"        % version,
+    "org.bytedeco" % "mkl-platform-redist" % version
+  )
+}
 ```
 
 ## Shell
