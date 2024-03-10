@@ -60,9 +60,52 @@ public class Tensor {
         value.backward();
     }
 
+    /** Returns the int value when the tensor holds a single value. */
+    public int toInt() {
+        return value.item_int();
+    }
+
+    /** Returns the long value when the tensor holds a single value. */
+    public long toLong() {
+        return value.item_long();
+    }
+
     /** Returns the float value when the tensor holds a single value. */
     public float toFloat() {
         return value.item_float();
+    }
+
+    /** Returns the double value when the tensor holds a single value. */
+    public double toDouble() {
+        return value.item_double();
+    }
+
+    /**
+     * Returns the indices of the maximum value of a tensor across a dimension.
+     *
+     * @param dim the dimension to reduce.
+     * @param keepDim whether the output tensor has dim retained or not.
+     * @return the indices of the maximum value of a tensor across a dimension.
+     */
+    public Tensor argmax(int dim, boolean keepDim) {
+        return new Tensor(value.argmax(new LongOptional(dim), keepDim));
+    }
+
+    /**
+     * Computes element-wise equality.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor eq(Tensor other) {
+        return new Tensor(value.eq(other.value));
+    }
+
+    /**
+     * Returns the sum of all elements in the tensor.
+     * @return the sum of all elements.
+     */
+    public Tensor sum() {
+        return new Tensor(value.sum());
     }
 
     /**
@@ -293,18 +336,18 @@ public class Tensor {
         }
 
         /** Sets a compute device on which a tensor is stored. */
-        public Options device(DeviceType device) {
-            return device(device, (byte) 0);
+        public Options device(DeviceType deviceType) {
+            return device(deviceType, (byte) 0);
         }
 
         /**
          * Sets a compute device on which a tensor is stored.
-         * @param device device type.
+         * @param deviceType device type.
          * @param index device ordinal.
          * @return this options object.
          */
-        public Options device(DeviceType device, byte index) {
-            value = value.device(new DeviceOptional(new Device(device.value, index)));
+        public Options device(DeviceType deviceType, byte index) {
+            value = value.device(new DeviceOptional(deviceType.device(index).value));
             return this;
         }
 
