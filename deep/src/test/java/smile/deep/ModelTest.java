@@ -42,9 +42,9 @@ public class ModelTest {
     static class Net extends Module {
         Net() {
             // Construct and register two Linear submodules.
-            fc1 = register_module("fc1", new LinearImpl(784, 64));
-            fc2 = register_module("fc2", new LinearImpl(64, 32));
-            fc3 = register_module("fc3", new LinearImpl(32, 10));
+            fc1 = register_module("Layer-1", new LinearImpl(784, 64));
+            fc2 = register_module("Layer-2", new LinearImpl(64, 32));
+            fc3 = register_module("Layer-3", new LinearImpl(32, 10));
         }
 
         // Implement the Net's algorithm.
@@ -61,50 +61,6 @@ public class ModelTest {
         final LinearImpl fc1, fc2, fc3;
     }
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-        // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl");
-
-        // Create a new Net.
-        Net net = new Net();
-
-        // Create a multi-threaded data loader for the MNIST dataset.
-        MNISTMapDataset data_set = new MNIST(mnist).map(new ExampleStack());
-        MNISTRandomDataLoader data_loader = new MNISTRandomDataLoader(
-                data_set, new RandomSampler(data_set.size().get()),
-                new DataLoaderOptions(/*batch_size=*/64));
-
-        // Instantiate an SGD optimization algorithm to update our Net's parameters.
-        SGD optimizer = new SGD(net.parameters(), new SGDOptions(/*lr=*/0.01));
-
-        for (int epoch = 1; epoch <= 10; ++epoch) {
-            int batch_index = 0;
-            // Iterate the data loader to yield batches from the dataset.
-            for (ExampleIterator it = data_loader.begin(); !it.equals(data_loader.end()); it = it.increment()) {
-                Example batch = it.access();
-                // Reset gradients.
-                optimizer.zero_grad();
-                // Execute the model on the input data.
-                org.bytedeco.pytorch.Tensor prediction = net.forward(batch.data());
-                // Compute a loss value to judge the prediction of our model.
-                org.bytedeco.pytorch.Tensor loss = nll_loss(prediction, batch.target());
-                // Compute gradients of the loss w.r.t. the parameters of our model.
-                loss.backward();
-                // Update the parameters based on the calculated gradients.
-                optimizer.step();
-                // Output the loss and checkpoint every 100 batches.
-                if (++batch_index % 100 == 0) {
-                    System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.item_float());
-                    // Serialize your model periodically as a checkpoint.
-                    OutputArchive archive = new OutputArchive();
-                    net.save(archive);
-                    archive.save_to("net.pt");
-                }
-            }
-        }
-    }
-
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
@@ -119,6 +75,11 @@ public class ModelTest {
 
     @Test
     public void testModel() {
-
+        Model model = Model.of(
+                Layer.relu(784, 64, 0.5),
+                Layer.relu(64, 32),
+                Layer.logSoftmax(32, 10)
+        );
+        model.load("net.pt");
     }
 }
