@@ -46,6 +46,16 @@ public abstract class Model {
      */
     public abstract Tensor forward(Tensor x);
 
+    /** Sets the model in the training mode. */
+    public void train() {
+        net.train(true);
+    }
+
+    /** Sets the model in the evaluation/inference mode. */
+    public void eval() {
+        net.eval();
+    }
+
     /**
      * Loads a checkpoint.
      * @param path the checkpoint file path.
