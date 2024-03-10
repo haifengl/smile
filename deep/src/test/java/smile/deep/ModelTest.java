@@ -61,6 +61,50 @@ public class ModelTest {
         final LinearImpl fc1, fc2, fc3;
     }
 
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // try to use MKL when available
+        System.setProperty("org.bytedeco.openblas.load", "mkl");
+
+        // Create a new Net.
+        Net net = new Net();
+
+        // Create a multi-threaded data loader for the MNIST dataset.
+        MNISTMapDataset dataset = new MNIST(mnist).map(new ExampleStack());
+        MNISTRandomDataLoader dataLoader = new MNISTRandomDataLoader(
+                dataset, new RandomSampler(dataset.size().get()),
+                new DataLoaderOptions(64));
+
+        // Instantiate an SGD optimization algorithm to update our Net's parameters.
+        SGD optimizer = new SGD(net.parameters(), new SGDOptions(0.01));
+
+        for (int epoch = 1; epoch <= 10; ++epoch) {
+            int batch_index = 0;
+            // Iterate the data loader to yield batches from the dataset.
+            for (ExampleIterator it = dataLoader.begin(); !it.equals(dataLoader.end()); it = it.increment()) {
+                Example batch = it.access();
+                // Reset gradients.
+                optimizer.zero_grad();
+                // Execute the model on the input data.
+                org.bytedeco.pytorch.Tensor prediction = net.forward(batch.data());
+                // Compute a loss value to judge the prediction of our model.
+                org.bytedeco.pytorch.Tensor loss = nll_loss(prediction, batch.target());
+                // Compute gradients of the loss w.r.t. the parameters of our model.
+                loss.backward();
+                // Update the parameters based on the calculated gradients.
+                optimizer.step();
+                // Output the loss and checkpoint every 100 batches.
+                if (++batch_index % 100 == 0) {
+                    System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.item_float());
+                    // Serialize your model periodically as a checkpoint.
+                    OutputArchive archive = new OutputArchive();
+                    net.save(archive);
+                    archive.save_to("net.pt");
+                }
+            }
+        }
+    }
+
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
