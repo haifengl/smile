@@ -16,8 +16,7 @@
  */
 package smile.deep;
 
-import org.bytedeco.pytorch.InputArchive;
-import org.bytedeco.pytorch.OutputArchive;
+import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 
 /**
@@ -27,7 +26,7 @@ import org.bytedeco.pytorch.Module;
  */
 public abstract class Model {
     /** The neural network. */
-    private Module net;
+    Module net;
 
     /**
      * Constructor.
@@ -48,9 +47,8 @@ public abstract class Model {
     public abstract Tensor forward(Tensor x);
 
     /**
-     * Loads a model from checkpoint file.
+     * Loads a checkpoint.
      * @param path the checkpoint file path.
-     * @return the model.
      */
     public void load(String path) {
         InputArchive archive = new InputArchive();
@@ -68,6 +66,11 @@ public abstract class Model {
         archive.save_to(path);
     }
 
+    /**
+     * Creates a model.
+     * @param layers the neural network layers.
+     * @return the model.
+     */
     public static Model of(Layer... layers) {
         int depth = layers.length;
         Module net = new Module();
@@ -77,6 +80,15 @@ public abstract class Model {
         }
 
         return new Model(net) {
+            @Override
+            public void load(String path) {
+                super.load(path);
+                StringSharedModuleDict dict = net.named_modules("", false);
+                for (int i = 0; i < depth; i++) {
+                    //layers[i].load("Layer-" + (i+1), dict);
+                }
+            }
+
             @Override
             public Tensor forward(Tensor x) {
                 org.bytedeco.pytorch.Tensor tensor = x.value;
