@@ -145,7 +145,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
-  .aggregate(core, base, mkl, nlp, plot, json, scala, spark, shell)
+  .aggregate(core, base, mkl, nlp, deep, plot, json, scala, spark, shell)
 
 lazy val base = project.in(file("base"))
   .settings(java8Settings: _*)
@@ -161,7 +161,6 @@ lazy val core = project.in(file("core"))
 
 lazy val deep = project.in(file("deep"))
   .settings(java8Settings: _*)
-  .settings(publish / skip := true)
 
 lazy val nlp = project.in(file("nlp"))
   .settings(java8Settings: _*)
