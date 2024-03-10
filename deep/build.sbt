@@ -1,5 +1,7 @@
 name := "smile-deep"
 
+packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.deep")
+
 libraryDependencies ++= Seq(
   "org.slf4j"      % "slf4j-api" % "1.7.30",
   "org.bytedeco"   % "pytorch" % "2.1.2-1.5.10",
