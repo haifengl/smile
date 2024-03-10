@@ -42,7 +42,32 @@ public class Optimizer {
         optimizer.step();
     }
 
-    public static Optimizer sgd(Model model, float lr) {
-        return new Optimizer(new SGD(model.net.parameters(), new SGDOptions(lr)));
+    /**
+     * Returns a stochastic gradient descent optimizer without momentum.
+     * @param model the model to be optimized.
+     * @param rate the learning rate.
+     * @return the optimizer.
+     */
+    public static Optimizer sgd(Model model, double rate) {
+        return sgd(model, rate, 0.0, 0.0, 0.0, false);
+    }
+
+    /**
+     * Returns a stochastic gradient descent optimizer with momentum.
+     * @param model the model to be optimized.
+     * @param rate the learning rate.
+     * @param momentum the momentum factor.
+     * @param decay the weight decay (L2 penalty).
+     * @param dampening dampening for momentum.
+     * @param nesterov enables Nesterov momentum.
+     * @return the optimizer.
+     */
+    public static Optimizer sgd(Model model, double rate, double momentum, double decay, double dampening, boolean nesterov) {
+        SGDOptions options = new SGDOptions(rate);
+        options.momentum().put(momentum);
+        options.weight_decay().put(decay);
+        options.dampening().put(dampening);
+        options.nesterov().put(nesterov);
+        return new Optimizer(new SGD(model.net.parameters(), options));
     }
 }
