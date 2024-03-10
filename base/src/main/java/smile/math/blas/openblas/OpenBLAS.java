@@ -33,7 +33,7 @@ import static org.bytedeco.openblas.global.openblas.*;
 public class OpenBLAS implements BLAS, LAPACK {
     static {
         // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl");
+        System.setProperty("org.bytedeco.openblas.load", "mkl_rt");
     }
 
     @Override

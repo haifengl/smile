@@ -108,9 +108,9 @@ the "java.library.path" or on the class path, by specifying it with the
 library from the Accelerate framework on Mac OS X, we can pass options such
 as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.
 
-For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
-Or you may simply include the following modules in your project, which includes
-MKL binaries. If so, Smile will automatically switch to MKL.
+If you have a default installation of MKL or simply include the following
+modules that include the full version of MKL binaries, Smile will automatically
+switch to MKL.
 ```
 libraryDependencies ++= {
   val version = "2024.0-1.5.10"
