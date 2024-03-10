@@ -193,6 +193,7 @@ public class ModelTest {
         );
 
         model.load("net.pt");
+        model.eval();
 
         correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
@@ -206,7 +207,7 @@ public class ModelTest {
         }
 
         double accuracy2 = correct / test.size().get();
-        System.out.println("Loaded Model Accuracy: " + accuracy2);
+        System.out.println("Checkpoint Accuracy: " + accuracy2);
         assertEquals(accuracy, accuracy2, 0.01);
     }
 }
