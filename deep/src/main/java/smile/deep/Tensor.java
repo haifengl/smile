@@ -55,41 +55,73 @@ public class Tensor {
         return new Tensor(value.detach());
     }
 
+    /** Computes the gradients. */
+    public void backward() {
+        value.backward();
+    }
+
+    /** Returns the float value when the tensor holds a single value. */
+    public float toFloat() {
+        return value.item_float();
+    }
+
+    /**
+     * A += b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
     public Tensor add(float other) {
         value.add(new Scalar(other));
         return this;
     }
 
-    public Tensor add(float other, float alpha) {
-        value.add(new Scalar(other), new Scalar(alpha));
-        return this;
-    }
-
+    /**
+     * A += B.
+     * @param other another tensor.
+     * @return this tensor.
+     */
     public Tensor add(Tensor other) {
         value.add(other.value);
         return this;
     }
 
+    /**
+     * A += alpha * B.
+     * @param other another tensor.
+     * @param alpha the scaling factor.
+     * @return this tensor.
+     */
     public Tensor add(Tensor other, float alpha) {
         value.add(other.value, new Scalar(alpha));
         return this;
     }
 
+    /**
+     * A -= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
     public Tensor sub(float other) {
         value.sub(new Scalar(other));
         return this;
     }
 
-    public Tensor sub(float other, float alpha) {
-        value.sub(new Scalar(other), new Scalar(alpha));
-        return this;
-    }
-
+    /**
+     * A -= B.
+     * @param other another tensor.
+     * @return this tensor.
+     */
     public Tensor sub(Tensor other) {
         value.sub(other.value);
         return this;
     }
 
+    /**
+     * A -= alpha * B.
+     * @param other another tensor.
+     * @param alpha the scaling factor.
+     * @return this tensor.
+     */
     public Tensor sub(Tensor other, float alpha) {
         value.sub(other.value, new Scalar(alpha));
         return this;

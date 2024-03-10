@@ -63,8 +63,27 @@ public class ModelTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.out.format("CUDA available: %s\n", cuda_is_available());
+        System.out.format("CUDA device count: %d\n", cuda_device_count());
+
         // try to use MKL when available
         System.setProperty("org.bytedeco.openblas.load", "mkl");
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() {
+    }
+
+    @After
+    public void tearDown() {
+    }
+
+    @Test
+    public void testBase() {
 
         // Create a new Net.
         Net net = new Net();
@@ -105,25 +124,45 @@ public class ModelTest {
         }
     }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     @Test
     public void testModel() {
-        Model model = Model.of(
+        Model net = Model.of(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
                 Layer.logSoftmax(32, 10)
         );
-        model.load("net.pt");
+
+        MNISTMapDataset dataset = new MNIST(mnist).map(new ExampleStack());
+        MNISTRandomDataLoader dataLoader = new MNISTRandomDataLoader(
+                dataset, new RandomSampler(dataset.size().get()),
+                new DataLoaderOptions(64));
+
+        // Instantiate an SGD optimization algorithm to update our Net's parameters.
+        Optimizer optimizer = Optimizer.sgd(net, 0.01f);
+
+        for (int epoch = 1; epoch <= 10; ++epoch) {
+            int batch_index = 0;
+            // Iterate the data loader to yield batches from the dataset.
+            for (ExampleIterator it = dataLoader.begin(); !it.equals(dataLoader.end()); it = it.increment()) {
+                Example batch = it.access();
+                // Reset gradients.
+                optimizer.reset();
+                // Execute the model on the input data.
+                Tensor prediction = net.forward(new Tensor(batch.data()));
+                // Compute a loss value to judge the prediction of our model.
+                Tensor loss = Loss.nll(prediction, new Tensor(batch.target()));
+                // Compute gradients of the loss w.r.t. the parameters of our model.
+                loss.backward();
+                // Update the parameters based on the calculated gradients.
+                optimizer.step();
+                // Output the loss and checkpoint every 100 batches.
+                if (++batch_index % 100 == 0) {
+                    System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.toFloat());
+                    // Serialize your model periodically as a checkpoint.
+                    net.save("net.pt");
+                }
+            }
+        }
+        //model.load("net.pt");
     }
 }
