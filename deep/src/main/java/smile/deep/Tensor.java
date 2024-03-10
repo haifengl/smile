@@ -32,7 +32,7 @@ public class Tensor {
      * Constructor.
      * @param tensor PyTorch Tensor object.
      */
-    private Tensor(org.bytedeco.pytorch.Tensor tensor) {
+    Tensor(org.bytedeco.pytorch.Tensor tensor) {
         this.value = tensor;
     }
 

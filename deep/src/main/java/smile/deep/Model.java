@@ -21,11 +21,12 @@ import org.bytedeco.pytorch.OutputArchive;
 import org.bytedeco.pytorch.Module;
 
 /**
- * A deep learning model.
+ * The abstract base class of deep learning models.
  *
  * @author Haifeng Li
  */
-public class Model {
+public abstract class Model {
+    /** The neural network. */
     private Module net;
 
     /**
@@ -35,22 +36,26 @@ public class Model {
     private Model(Module net) {
         this.net = net;
     }
-/*
-    public Tensor forward(Tensor x) {
-        return new Tensor(net.forward(x.value));
-    }
-*/
+
+    /**
+     * Forward propagation (or forward pass) refers to the calculation
+     * and storage of intermediate variables (including outputs) for
+     * a neural network in order from the input layer to the output layer.
+     *
+     * @param x the input tensor.
+     * @return the output tensor.
+     */
+    public abstract Tensor forward(Tensor x);
+
     /**
      * Loads a model from checkpoint file.
      * @param path the checkpoint file path.
      * @return the model.
      */
-    public static Model load(String path) {
+    public void load(String path) {
         InputArchive archive = new InputArchive();
         archive.load_from(path);
-        Module net = new Module();
         net.load(archive);
-        return new Model(net);
     }
 
     /**
@@ -61,5 +66,26 @@ public class Model {
         OutputArchive archive = new OutputArchive();
         net.save(archive);
         archive.save_to(path);
+    }
+
+    public static Model of(Layer... layers) {
+        int depth = layers.length;
+        Module net = new Module();
+        Module[] modules = new Module[depth];
+
+        for (int i = 0; i < depth; i++) {
+            modules[i] = net.register_module("Layer-" + (i+1), layers[i].module);
+        }
+
+        return new Model(net) {
+            @Override
+            public Tensor forward(Tensor x) {
+                org.bytedeco.pytorch.Tensor tensor = x.value;
+                for (Layer layer : layers) {
+                    tensor = layer.forward(tensor);
+                }
+                return new Tensor(tensor);
+            }
+        };
     }
 }
