@@ -71,10 +71,9 @@ public abstract class Model {
     public static Model of(Layer... layers) {
         int depth = layers.length;
         Module net = new Module();
-        Module[] modules = new Module[depth];
 
         for (int i = 0; i < depth; i++) {
-            modules[i] = net.register_module("Layer-" + (i+1), layers[i].module);
+            layers[i].register("Layer-" + (i+1), net);
         }
 
         return new Model(net) {

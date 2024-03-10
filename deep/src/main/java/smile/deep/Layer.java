@@ -27,16 +27,15 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public abstract class Layer {
-    /** The neural network layer. */
-    Module module;
+    /** The neural network that this layer is registered to. */
+    Module net;
 
     /**
-     * Constructor.
-     * @param module the layer module.
+     * Registers this layer to a neural network.
+     * @param name the name of this layer.
+     * @param net the neural network that this layer is registered to.
      */
-    Layer(Module module) {
-        this.module = module;
-    }
+    abstract void register(String name, Module net);
 
     /**
      * Forward propagation (or forward pass) through the layer.
@@ -64,16 +63,23 @@ public abstract class Layer {
      * @return a ReLU layer.
      */
     public static Layer relu(int in, int out, double dropout) {
-        final LinearImpl linear = new LinearImpl(in, out);
-        return new Layer(linear) {
+        return new Layer() {
+            LinearImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new LinearImpl(in, out));
+            }
+
             @Override
             Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
-                x = torch.relu(linear.forward(x));
+                x = torch.relu(layer.forward(x));
                 if (dropout > 0.0) {
-                    x = torch.dropout(x, dropout, module.is_training());
+                    x = torch.dropout(x, dropout, net.is_training());
                 }
                 return x;
             }
@@ -87,14 +93,21 @@ public abstract class Layer {
      * @return a softmax layer.
      */
     public static Layer softmax(int in, int out) {
-        final LinearImpl linear = new LinearImpl(in, out);
-        return new Layer(linear) {
+        return new Layer() {
+            LinearImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new LinearImpl(in, out));
+            }
+
             @Override
             Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
-                x = torch.softmax(linear.forward(x), 1);
+                x = torch.softmax(layer.forward(x), 1);
                 return x;
             }
         };
@@ -107,14 +120,21 @@ public abstract class Layer {
      * @return a log softmax layer.
      */
     public static Layer logSoftmax(int in, int out) {
-        final LinearImpl linear = new LinearImpl(in, out);
-        return new Layer(linear) {
+        return new Layer() {
+            LinearImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new LinearImpl(in, out));
+            }
+
             @Override
             Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
-                x = torch.log_softmax(linear.forward(x), 1);
+                x = torch.log_softmax(layer.forward(x), 1);
                 return x;
             }
         };
