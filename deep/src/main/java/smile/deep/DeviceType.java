@@ -18,7 +18,11 @@ package smile.deep;
 
 import org.bytedeco.pytorch.global.torch;
 
-/** The compute device on which a tensor is stored. */
+/**
+ * The compute device type.
+ *
+ * @author Haifeng Li
+ */
 public enum DeviceType {
     CPU(torch.DeviceType.CPU),
     /** NVIDIA GPU */
@@ -30,7 +34,17 @@ public enum DeviceType {
     torch.DeviceType value;
 
     /** Constructor. */
-    private DeviceType(torch.DeviceType device) {
+    DeviceType(torch.DeviceType device) {
         this.value = device;
+    }
+
+    /**
+     * Returns the device of given index.
+     *
+     * @param index the CUDA device index.
+     * @return the compute device.
+     */
+    Device device(byte index) {
+        return new Device(this, index);
     }
 }
