@@ -31,6 +31,11 @@ import static org.bytedeco.openblas.global.openblas.*;
  * @author Haifeng Li
  */
 public class OpenBLAS implements BLAS, LAPACK {
+    static {
+        // try to use MKL when available
+        System.setProperty("org.bytedeco.openblas.load", "mkl");
+    }
+
     @Override
     public double asum(int n, double[] x, int incx) {
         return cblas_dasum(n, x, incx);
