@@ -53,6 +53,16 @@ public class Tensor {
     }
 
     /**
+     * Returns a new Tensor, detached from the current graph.
+     * The result will never require gradient.
+     *
+     * @return a new Tensor that doesn't require gradient.
+     */
+    public Tensor detach() {
+        return new Tensor(value.detach());
+    }
+
+    /**
      * Clone the tensor with a different data type.
      * @param dtype the element data type of new Tensor.
      * @return The cloned tensor.
@@ -72,16 +82,6 @@ public class Tensor {
     }
 
     /**
-     * Returns a new Tensor, detached from the current graph.
-     * The result will never require gradient.
-     *
-     * @return a new Tensor that doesn't require gradient.
-     */
-    public Tensor detach() {
-        return new Tensor(value.detach());
-    }
-
-    /**
      * Returns the element data type.
      * @return the element data type.
      */
@@ -93,6 +93,25 @@ public class Tensor {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the shape of the tensor.
+     * @return the shape of the tensor.
+     */
+    public long[] shape() {
+        return value.shape();
+    }
+
+    /**
+     * Returns a tensor with the same data and number of elements
+     * but with the specified shape. This method returns a view
+     * if shape is compatible with the current shape.
+     *
+     * @return the tensor with the specified shape.
+     */
+    public Tensor reshape(long... shape) {
+        return new Tensor(value.reshape(shape));
     }
 
     /** Computes the gradients. */
@@ -149,13 +168,31 @@ public class Tensor {
     }
 
     /**
+     * Returns A + b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor add(float other) {
+        return new Tensor(value.add(new Scalar(other)));
+    }
+
+    /**
      * A += b.
      * @param other a scalar value.
      * @return this tensor.
      */
-    public Tensor add(float other) {
-        value.add(new Scalar(other));
+    public Tensor add_(float other) {
+        value.add_(new Scalar(other));
         return this;
+    }
+
+    /**
+     * Returns A + B.
+     * @param other another tensor.
+     * @return the output tensor.
+     */
+    public Tensor add(Tensor other) {
+        return new Tensor(value.add(other.value));
     }
 
     /**
@@ -163,9 +200,19 @@ public class Tensor {
      * @param other another tensor.
      * @return this tensor.
      */
-    public Tensor add(Tensor other) {
-        value.add(other.value);
+    public Tensor add_(Tensor other) {
+        value.add_(other.value);
         return this;
+    }
+
+    /**
+     * Returns A + alpha * B.
+     * @param other another tensor.
+     * @param alpha the scaling factor.
+     * @return the output tensor.
+     */
+    public Tensor add(Tensor other, float alpha) {
+        return new Tensor(value.add(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -174,9 +221,18 @@ public class Tensor {
      * @param alpha the scaling factor.
      * @return this tensor.
      */
-    public Tensor add(Tensor other, float alpha) {
-        value.add(other.value, new Scalar(alpha));
+    public Tensor add_(Tensor other, float alpha) {
+        value.add_(other.value, new Scalar(alpha));
         return this;
+    }
+
+    /**
+     * Returns A - b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor sub(float other) {
+        return new Tensor(value.sub(new Scalar(other)));
     }
 
     /**
@@ -184,9 +240,18 @@ public class Tensor {
      * @param other a scalar value.
      * @return this tensor.
      */
-    public Tensor sub(float other) {
-        value.sub(new Scalar(other));
+    public Tensor sub_(float other) {
+        value.sub_(new Scalar(other));
         return this;
+    }
+
+    /**
+     * Returns A - B.
+     * @param other another tensor.
+     * @return the output tensor.
+     */
+    public Tensor sub(Tensor other) {
+        return new Tensor(value.sub(other.value));
     }
 
     /**
@@ -194,9 +259,19 @@ public class Tensor {
      * @param other another tensor.
      * @return this tensor.
      */
-    public Tensor sub(Tensor other) {
-        value.sub(other.value);
+    public Tensor sub_(Tensor other) {
+        value.sub_(other.value);
         return this;
+    }
+
+    /**
+     * Returns A - alpha * B.
+     * @param other another tensor.
+     * @param alpha the scaling factor.
+     * @return the output tensor.
+     */
+    public Tensor sub(Tensor other, float alpha) {
+        return new Tensor(value.sub(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -205,8 +280,114 @@ public class Tensor {
      * @param alpha the scaling factor.
      * @return this tensor.
      */
-    public Tensor sub(Tensor other, float alpha) {
-        value.sub(other.value, new Scalar(alpha));
+    public Tensor sub_(Tensor other, float alpha) {
+        value.sub_(other.value, new Scalar(alpha));
+        return this;
+    }
+
+    /**
+     * Multiplies each element of the tensor by the corresponding element of other.
+     * @param other another tensor.
+     * @return the output tensor.
+     */
+    public Tensor mul(Tensor other) {
+        return new Tensor(value.mul(other.value));
+    }
+
+    /**
+     * Multiplies each element of the tensor by the corresponding element of other in place.
+     * @param other another tensor.
+     * @return this tensor.
+     */
+    public Tensor mul_(Tensor other) {
+        value.mul_(other.value);
+        return this;
+    }
+
+    /**
+     * Divides each element of the tensor by the corresponding element of other.
+     * @param other another tensor.
+     * @return the output tensor.
+     */
+    public Tensor div(Tensor other) {
+        return new Tensor(value.div(other.value));
+    }
+
+    /**
+     * Divides each element of the tensor by the corresponding element of other in place.
+     * @param other another tensor.
+     * @return this tensor.
+     */
+    public Tensor div_(Tensor other) {
+        value.div_(other.value);
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the cosine of the elements of input.
+     * @return a new tensor with the cosine of the elements of input.
+     */
+    public Tensor cos() {
+        return new Tensor(value.cos());
+    }
+
+    /**
+     * Computes the cosine of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor cos_() {
+        value.cos_();
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the sine of the elements of input.
+     * @return a new tensor with the sine of the elements of input.
+     */
+    public Tensor sin() {
+        return new Tensor(value.cos());
+    }
+
+    /**
+     * Computes the sine of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor sin_() {
+        value.cos_();
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the arccosine of the elements of input.
+     * @return a new tensor with the arccosine of the elements of input.
+     */
+    public Tensor acos() {
+        return new Tensor(value.acos());
+    }
+
+    /**
+     * Computes the arccosine of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor acos_() {
+        value.acos_();
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the arcsine of the elements of input.
+     * @return a new tensor with the arcsine of the elements of input.
+     */
+    public Tensor asin() {
+        return new Tensor(value.acos());
+    }
+
+    /**
+     * Computes the arcsine of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor asin_() {
+        value.acos_();
         return this;
     }
 
