@@ -30,8 +30,13 @@ public enum ScalarType {
      * floating point tensor.
      */
     QInt8(torch.ScalarType.QInt8),
+    /** 8-bit integer. */
+    Int8(torch.ScalarType.Byte),
+    /** 16-bit integer. */
     Int16(torch.ScalarType.Short),
+    /** 32-bit integer. */
     Int32(torch.ScalarType.Int),
+    /** 64-bit integer. */
     Int64(torch.ScalarType.Long),
     /**
      * The bfloat16 (brain floating point) floating-point format occupies 16 bits.
@@ -42,11 +47,13 @@ public enum ScalarType {
      */
     BFloat16(torch.ScalarType.BFloat16),
     /**
-     * Half-precision floating-point format. It contains 5 exponent bits and 11
+     * Half-precision floating-point number. It contains 5 exponent bits and 11
      * 11-bit precision (10 explicitly stored).
      */
     Float16(torch.ScalarType.Half),
+    /** Single-precision floating-point number. */
     Float32(torch.ScalarType.Float),
+    /** Double-precision floating-point number. */
     Float64(torch.ScalarType.Double);
 
     /** PyTorch tensor data type. */

@@ -148,7 +148,7 @@ public class ModelTest {
             for (ExampleIterator it = trainLoader.begin(); !it.equals(trainLoader.end()); it = it.increment()) {
                 Example batch = it.access();
                 Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-                Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
+                Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
 
                 // Reset gradients.
                 optimizer.reset();
@@ -181,7 +181,7 @@ public class ModelTest {
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
             Example batch = it.access();
             Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
+            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
             Tensor output = net.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
@@ -203,7 +203,7 @@ public class ModelTest {
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
             Example batch = it.access();
             Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
+            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
 
             Tensor output = model.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
