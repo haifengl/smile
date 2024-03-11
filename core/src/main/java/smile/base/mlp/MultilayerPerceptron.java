@@ -283,13 +283,13 @@ public abstract class MultilayerPerceptron implements Serializable {
     /**
      * Propagates the signals through the neural network.
      * @param x the input signal.
-     * @param train true if this is in training pass.
+     * @param training true if this is in training pass.
      */
-    protected void propagate(double[] x, boolean train) {
+    protected void propagate(double[] x, boolean training) {
         double[] input = x;
         for (Layer layer : net) {
             layer.propagate(input);
-            if (train) {
+            if (training) {
                 layer.propagateDropout();
             }
             input = layer.output();
