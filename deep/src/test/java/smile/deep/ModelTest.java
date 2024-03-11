@@ -132,8 +132,7 @@ public class ModelTest {
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
                 Layer.logSoftmax(32, 10)
-        );
-        net.to(device);
+        ).to(device);
 
         MNISTMapDataset train = new MNIST(mnist, MNIST.Mode.kTrain.value).map(new ExampleStack());
         MNISTRandomDataLoader trainLoader = new MNISTRandomDataLoader(
@@ -198,9 +197,7 @@ public class ModelTest {
                 Layer.logSoftmax(32, 10)
         );
 
-        model.load("net.pt");
-        model.to(device);
-        model.eval();
+        model.load("net.pt").to(device).eval();
 
         correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {

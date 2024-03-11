@@ -46,42 +46,56 @@ public abstract class Model {
      */
     public abstract Tensor forward(Tensor x);
 
-    /** Sets the model in the training mode. */
-    public void train() {
+    /**
+     * Sets the model in the training mode.
+     * @return this model.
+     */
+    public Model train() {
         net.train(true);
+        return this;
     }
 
-    /** Sets the model in the evaluation/inference mode. */
-    public void eval() {
+    /**
+     * Sets the model in the evaluation/inference mode.
+     * @return this model.
+     */
+    public Model eval() {
         net.eval();
+        return this;
     }
 
     /**
      * Moves the model to a device.
      * @param device the compute device.
+     * @return this model.
      */
-    public void to(Device device) {
+    public Model to(Device device) {
         net.to(device.value);
+        return this;
     }
 
     /**
      * Loads a checkpoint.
      * @param path the checkpoint file path.
+     * @return this model.
      */
-    public void load(String path) {
+    public Model load(String path) {
         InputArchive archive = new InputArchive();
         archive.load_from(path);
         net.load(archive);
+        return this;
     }
 
     /**
      * Serialize the model as a checkpoint.
      * @param path the checkpoint file path.
+     * @return this model.
      */
-    public void save(String path) {
+    public Model save(String path) {
         OutputArchive archive = new OutputArchive();
         net.save(archive);
         archive.save_to(path);
+        return this;
     }
 
     /**

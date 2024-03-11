@@ -45,7 +45,15 @@ public class Device {
     }
 
     /**
-     * Sets this device as default compute device.
+     * Sets Tensor to be allocated on this device. This does not affect factory
+     * function calls which are called with an explicit device argument.
+     * Factory calls will be performed as if they were passed device as
+     * an argument.
+     *
+     * The default device is initially CPU. If you set the default tensor
+     * device to another device (e.g., CUDA) without a device index,
+     * tensors will be allocated on whatever the current device for
+     * the device type.
      */
     public void setDefaultDevice() {
         torch.device(value);
