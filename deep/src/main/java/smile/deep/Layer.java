@@ -38,13 +38,6 @@ public abstract class Layer {
     abstract void register(String name, Module net);
 
     /**
-     * Loads this layer from a checkpoint.
-     * @param name the name of this layer.
-     * @param dict the named module dictionary of the neural network.
-     */
-    abstract void load(String name, StringSharedModuleDict dict);
-
-    /**
      * Forward propagation (or forward pass) through the layer.
      *
      * @param x the input tensor.
@@ -80,11 +73,6 @@ public abstract class Layer {
             }
 
             @Override
-            void load(String name, StringSharedModuleDict dict) {
-                this.layer = (LinearImpl) dict.get(name);
-            }
-
-            @Override
             Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
@@ -115,11 +103,6 @@ public abstract class Layer {
             }
 
             @Override
-            void load(String name, StringSharedModuleDict dict) {
-                this.layer = (LinearImpl) dict.get(name);
-            }
-
-            @Override
             Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
@@ -144,11 +127,6 @@ public abstract class Layer {
             void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new LinearImpl(in, out));
-            }
-
-            @Override
-            void load(String name, StringSharedModuleDict dict) {
-                this.layer = (LinearImpl) dict.get(name);
             }
 
             @Override
