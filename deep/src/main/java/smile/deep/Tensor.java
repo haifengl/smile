@@ -37,12 +37,30 @@ public class Tensor {
     }
 
     /**
-     * Clone the tensor with a different data type and/or device.
-     * @param options New Tensor construction options.
+     * Clone the tensor.
      * @return The cloned tensor.
      */
-    public Tensor clone(Options options) {
-        return new Tensor(value.to(options.value, true, true, new MemoryFormatOptional(torch.MemoryFormat.Preserve)));
+    public Tensor clone() {
+        return new Tensor(value.to());
+    }
+
+    /**
+     * Clone the tensor with a different data type.
+     * @param dtype the element data type of new Tensor.
+     * @return The cloned tensor.
+     */
+    public Tensor clone(ScalarType dtype) {
+        return new Tensor(value.to(dtype.value));
+    }
+
+    /**
+     * Clone the tensor to a device with a different data type.
+     * @param device the compute device of new Tensor.
+     * @param dtype the element data type of new Tensor.
+     * @return The cloned tensor.
+     */
+    public Tensor clone(Device device, ScalarType dtype) {
+        return new Tensor(value.to(device.value, dtype.value));
     }
 
     /**

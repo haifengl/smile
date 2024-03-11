@@ -65,7 +65,8 @@ public class ModelTest {
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", cuda_is_available());
         System.out.format("CUDA device count: %d\n", cuda_device_count());
-        //device(new Device(cuda_is_available() ? "cuda" : "cpu"));
+        Device device = cuda_is_available() ? DeviceType.CUDA.device() : DeviceType.CPU.device();
+        device.setDefaultDevice();
 
         // try to use MKL when available
         System.setProperty("org.bytedeco.openblas.load", "mkl");

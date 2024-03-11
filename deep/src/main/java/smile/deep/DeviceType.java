@@ -39,6 +39,15 @@ public enum DeviceType {
     }
 
     /**
+     * Returns the default device.
+     *
+     * @return the compute device.
+     */
+    Device device() {
+        return device((byte) 0);
+    }
+
+    /**
      * Returns the device of given index.
      *
      * @param index the CUDA device index.

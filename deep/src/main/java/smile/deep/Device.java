@@ -16,6 +16,8 @@
  */
 package smile.deep;
 
+import org.bytedeco.pytorch.global.torch;
+
 /**
  * The compute device on which a tensor is stored.
  *
@@ -40,5 +42,12 @@ public class Device {
      */
     public Device(DeviceType type, byte index) {
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
+    }
+
+    /**
+     * Sets this device as default compute device.
+     */
+    public void setDefaultDevice() {
+        torch.device(value);
     }
 }
