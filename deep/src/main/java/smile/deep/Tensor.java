@@ -47,10 +47,7 @@ public class Tensor {
         return new Tensor(tensor.to(device.value, dtype.value));
     }
 
-    /**
-     * Clone the tensor.
-     * @return The cloned tensor.
-     */
+    @Override
     public Tensor clone() {
         return new Tensor(value.to());
     }
@@ -60,7 +57,7 @@ public class Tensor {
      * @param dtype the element data type of new Tensor.
      * @return The cloned tensor.
      */
-    public Tensor clone(ScalarType dtype) {
+    public Tensor to(ScalarType dtype) {
         return new Tensor(value.to(dtype.value));
     }
 
@@ -70,7 +67,7 @@ public class Tensor {
      * @param dtype the element data type of new Tensor.
      * @return The cloned tensor.
      */
-    public Tensor clone(Device device, ScalarType dtype) {
+    public Tensor to(Device device, ScalarType dtype) {
         return new Tensor(value.to(device.value, dtype.value));
     }
 

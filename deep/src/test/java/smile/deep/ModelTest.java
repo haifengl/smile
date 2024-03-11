@@ -24,6 +24,9 @@ import org.junit.Test;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+
+import java.util.Iterator;
+
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.Assert.assertEquals;
 
@@ -134,21 +137,18 @@ public class ModelTest {
                 Layer.logSoftmax(32, 10)
         ).to(device);
 
-        MNISTMapDataset train = new MNIST(mnist, MNIST.Mode.kTrain.value).map(new ExampleStack());
-        MNISTRandomDataLoader trainLoader = new MNISTRandomDataLoader(
-                train, new RandomSampler(train.size().get()),
-                new DataLoaderOptions(64));
+        Dataset trainDataset = Dataset.mnist(mnist, true, 64);
+        Dataset testDataset = Dataset.mnist(mnist, false, 64);
 
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.sgd(net, 0.01);
         net.train();
         for (int epoch = 1; epoch <= 10; ++epoch) {
-            int batch_index = 0;
+            int batchIndex = 0;
             // Iterate the data loader to yield batches from the dataset.
-            for (ExampleIterator it = trainLoader.begin(); !it.equals(trainLoader.end()); it = it.increment()) {
-                Example batch = it.access();
-                Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-                Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
+            for (Sample batch : trainDataset) {
+                Tensor data = batch.data.to(device, ScalarType.Float32);
+                Tensor target = batch.target.to(device, ScalarType.Int8);
 
                 // Reset gradients.
                 optimizer.reset();
@@ -162,8 +162,8 @@ public class ModelTest {
                 optimizer.step();
 
                 // Output the loss and checkpoint every 100 batches.
-                if (++batch_index % 100 == 0) {
-                    System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.toFloat());
+                if (++batchIndex % 100 == 0) {
+                    System.out.println("Epoch: " + epoch + " | Batch: " + batchIndex + " | Loss: " + loss.toFloat());
                 }
             }
         }
@@ -173,21 +173,16 @@ public class ModelTest {
 
         // Inference mode
         net.eval();
-        MNISTMapDataset test = new MNIST(mnist, MNIST.Mode.kTest.value).map(new ExampleStack());
-        MNISTRandomDataLoader testLoader = new MNISTRandomDataLoader(
-                test, new RandomSampler(test.size().get()),
-                new DataLoaderOptions(64));
         double correct = 0;
-        for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
-            Example batch = it.access();
-            Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
+        for (Sample batch : testDataset) {
+            Tensor data = batch.data.to(device, ScalarType.Float32);
+            Tensor target = batch.target.to(device, ScalarType.Int8);
             Tensor output = net.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
         }
 
-        double accuracy = correct / test.size().get();
+        double accuracy = correct / testDataset.size();
         System.out.println("Test Accuracy: " + accuracy);
 
         // Loads the model from checkpoint.
@@ -200,17 +195,16 @@ public class ModelTest {
         model.load("net.pt").to(device).eval();
 
         correct = 0;
-        for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
-            Example batch = it.access();
-            Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
-            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int8);
+        for (Sample batch : testDataset) {
+            Tensor data = batch.data.to(device, ScalarType.Float32);
+            Tensor target = batch.target.to(device, ScalarType.Int8);
 
             Tensor output = model.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
         }
 
-        double accuracy2 = correct / test.size().get();
+        double accuracy2 = correct / testDataset.size();
         System.out.println("Checkpoint Accuracy: " + accuracy2);
         assertEquals(accuracy, accuracy2, 0.01);
     }
