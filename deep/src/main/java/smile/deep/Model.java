@@ -91,15 +91,6 @@ public abstract class Model {
 
         return new Model(net) {
             @Override
-            public void load(String path) {
-                super.load(path);
-                StringSharedModuleDict dict = net.named_modules("", false);
-                for (int i = 0; i < depth; i++) {
-                    //layers[i].load("Layer-" + (i+1), dict);
-                }
-            }
-
-            @Override
             public Tensor forward(Tensor x) {
                 org.bytedeco.pytorch.Tensor tensor = x.value;
                 for (Layer layer : layers) {
