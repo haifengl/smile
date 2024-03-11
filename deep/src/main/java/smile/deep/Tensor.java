@@ -37,6 +37,17 @@ public class Tensor {
     }
 
     /**
+     * Creates a tensor instance.
+     * @param tensor PyTorch Tensor object.
+     * @param device the compute device of this Tensor.
+     * @param dtype the element data type of this Tensor.
+     * @return the tensor instance.
+     */
+    public static Tensor of(org.bytedeco.pytorch.Tensor tensor, Device device, ScalarType dtype) {
+        return new Tensor(tensor.to(device.value, dtype.value));
+    }
+
+    /**
      * Clone the tensor.
      * @return The cloned tensor.
      */

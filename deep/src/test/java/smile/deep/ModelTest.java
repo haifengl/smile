@@ -84,9 +84,6 @@ public class ModelTest {
 
     @Test
     public void testBase() {
-        Device device = DeviceType.CPU.device();
-        device.setDefaultDevice();
-
         // Create a new Net.
         Net net = new Net();
 
@@ -151,8 +148,8 @@ public class ModelTest {
             // Iterate the data loader to yield batches from the dataset.
             for (ExampleIterator it = trainLoader.begin(); !it.equals(trainLoader.end()); it = it.increment()) {
                 Example batch = it.access();
-                Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
-                Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
+                Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
+                Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
 
                 // Reset gradients.
                 optimizer.reset();
@@ -184,8 +181,8 @@ public class ModelTest {
         double correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
             Example batch = it.access();
-            Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
-            Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
+            Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
+            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
             Tensor output = net.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
@@ -208,8 +205,8 @@ public class ModelTest {
         correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
             Example batch = it.access();
-            Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
-            Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
+            Tensor data = Tensor.of(batch.data(), device, ScalarType.Float32);
+            Tensor target = Tensor.of(batch.target(), device, ScalarType.Int64);
 
             Tensor output = model.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
