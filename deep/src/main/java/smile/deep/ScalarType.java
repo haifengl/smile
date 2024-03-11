@@ -53,7 +53,7 @@ public enum ScalarType {
     torch.ScalarType value;
 
     /** Constructor. */
-    private ScalarType(torch.ScalarType dtype) {
+    ScalarType(torch.ScalarType dtype) {
         this.value = dtype;
     }
 }

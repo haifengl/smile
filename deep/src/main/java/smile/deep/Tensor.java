@@ -73,6 +73,20 @@ public class Tensor {
         return new Tensor(value.detach());
     }
 
+    /**
+     * Returns the element data type.
+     * @return the element data type.
+     */
+    public ScalarType dtype() {
+        byte typeValue = value.dtype().toScalarType().value;
+        for (ScalarType dtype : ScalarType.values()) {
+            if (dtype.value.value == typeValue) {
+                return dtype;
+            }
+        }
+        return null;
+    }
+
     /** Computes the gradients. */
     public void backward() {
         value.backward();

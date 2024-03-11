@@ -57,6 +57,14 @@ public abstract class Model {
     }
 
     /**
+     * Moves the model to a device.
+     * @param device the compute device.
+     */
+    public void to(Device device) {
+        net.to(device.value);
+    }
+
+    /**
      * Loads a checkpoint.
      * @param path the checkpoint file path.
      */

@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
  * @author Haifeng Li
  */
 public class ModelTest {
-    static String home = System.getProperty("smile.home", "../shell/src/universal/");
+    static String home = System.getProperty("smile.home", "shell/src/universal/");
     static String mnist = home + "data/mnist";
 
     public ModelTest() {
@@ -65,8 +65,6 @@ public class ModelTest {
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", cuda_is_available());
         System.out.format("CUDA device count: %d\n", cuda_device_count());
-        Device device = cuda_is_available() ? DeviceType.CUDA.device() : DeviceType.CPU.device();
-        device.setDefaultDevice();
 
         // try to use MKL when available
         System.setProperty("org.bytedeco.openblas.load", "mkl");
@@ -86,6 +84,9 @@ public class ModelTest {
 
     @Test
     public void testBase() {
+        Device device = DeviceType.CPU.device();
+        device.setDefaultDevice();
+
         // Create a new Net.
         Net net = new Net();
 
@@ -127,11 +128,15 @@ public class ModelTest {
 
     @Test
     public void testModel() {
+        Device device = cuda_is_available() ? DeviceType.CUDA.device() : DeviceType.CPU.device();
+        device.setDefaultDevice();
+
         Model net = Model.of(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
                 Layer.logSoftmax(32, 10)
         );
+        net.to(device);
 
         MNISTMapDataset train = new MNIST(mnist, MNIST.Mode.kTrain.value).map(new ExampleStack());
         MNISTRandomDataLoader trainLoader = new MNISTRandomDataLoader(
@@ -146,16 +151,20 @@ public class ModelTest {
             // Iterate the data loader to yield batches from the dataset.
             for (ExampleIterator it = trainLoader.begin(); !it.equals(trainLoader.end()); it = it.increment()) {
                 Example batch = it.access();
+                Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
+                Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
+
                 // Reset gradients.
                 optimizer.reset();
                 // Execute the model on the input data.
-                Tensor prediction = net.forward(new Tensor(batch.data()));
+                Tensor prediction = net.forward(data);
                 // Compute a loss value to judge the prediction of our model.
-                Tensor loss = Loss.nll(prediction, new Tensor(batch.target()));
+                Tensor loss = Loss.nll(prediction, target);
                 // Compute gradients of the loss w.r.t. the parameters of our model.
                 loss.backward();
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
+
                 // Output the loss and checkpoint every 100 batches.
                 if (++batch_index % 100 == 0) {
                     System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.toFloat());
@@ -174,10 +183,9 @@ public class ModelTest {
                 new DataLoaderOptions(64));
         double correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
-            //data, target = data.to(device), target.to(device)
             Example batch = it.access();
-            Tensor data = new Tensor(batch.data());
-            Tensor target = new Tensor(batch.target());
+            Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
+            Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
             Tensor output = net.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
@@ -194,14 +202,15 @@ public class ModelTest {
         );
 
         model.load("net.pt");
+        model.to(device);
         model.eval();
 
         correct = 0;
         for (ExampleIterator it = testLoader.begin(); !it.equals(testLoader.end()); it = it.increment()) {
-            //data, target = data.to(device), target.to(device)
             Example batch = it.access();
-            Tensor data = new Tensor(batch.data());
-            Tensor target = new Tensor(batch.target());
+            Tensor data = new Tensor(batch.data()).clone(device, ScalarType.Float32);
+            Tensor target = new Tensor(batch.target()).clone(device, ScalarType.Int64);
+
             Tensor output = model.forward(data);
             Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
             correct += pred.eq(target).sum().toInt();
