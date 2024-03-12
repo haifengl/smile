@@ -151,6 +151,7 @@ lazy val root = project.in(file("."))
 
 lazy val base = project.in(file("base"))
   .settings(java8Settings: _*)
+  .settings(javaCppSettings: _*)
 
 lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
@@ -184,11 +185,9 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
-  .settings(javaCppTestSettings: _*)
   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
-  .settings(javaCppSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
