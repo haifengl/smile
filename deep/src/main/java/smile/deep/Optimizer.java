@@ -16,6 +16,8 @@
  */
 package smile.deep;
 
+import org.bytedeco.pytorch.Adam;
+import org.bytedeco.pytorch.AdamOptions;
 import org.bytedeco.pytorch.SGD;
 import org.bytedeco.pytorch.SGDOptions;
 
@@ -69,5 +71,35 @@ public class Optimizer {
         options.dampening().put(dampening);
         options.nesterov().put(nesterov);
         return new Optimizer(new SGD(model.net.parameters(), options));
+    }
+
+    /**
+     * Returns an Adam optimizer.
+     * @param model the model to be optimized.
+     * @param rate the learning rate.
+     * @return the optimizer.
+     */
+    public static Optimizer adam(Model model, double rate) {
+        return adam(model, rate, 0.9, 0.999, 1E-08, 0, false);
+    }
+
+    /**
+     * Returns an Adam optimizer.
+     * @param model the model to be optimized.
+     * @param rate the learning rate.
+     * @param beta1 coefficients used for computing running averages of gradient and its square.
+     * @param beta2 coefficients used for computing running averages of gradient and its square.
+     * @param eps term added to the denominator to improve numerical stability.
+     * @param decay the weight decay (L2 penalty).
+     * @param amsgrad whether to use the AMSGrad variant of this algorithm from the paper On the Convergence of Adam and Beyond.
+     * @return the optimizer.
+     */
+    public static Optimizer adam(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
+        AdamOptions options = new AdamOptions(rate);
+        options.betas().put(beta1, beta2);
+        options.eps().put(eps);
+        options.weight_decay().put(decay);
+        options.amsgrad().put(amsgrad);
+        return new Optimizer(new Adam(model.net.parameters(), options));
     }
 }
