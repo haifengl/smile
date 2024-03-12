@@ -72,7 +72,9 @@ lazy val javaSettings = commonSettings ++ Seq(
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
-  Test / run / javaOptions ++= Seq(
+  Test / fork := true,
+  Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
+  Test / javaOptions ++= Seq(
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
@@ -130,6 +132,7 @@ lazy val javaCppSettings = Seq(
 )
 
 lazy val javaCppTestSettings = Seq(
+  Test / envVars += ("MKL_VERBOSE" -> "1"),
   libraryDependencies ++= Seq(
     "org.bytedeco" % "javacpp"   % "1.5.10"        % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
     "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
