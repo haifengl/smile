@@ -15,6 +15,8 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "3.0.3",
 
+  Test / fork := true,
+  Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
   Test / parallelExecution := false,
   autoAPIMappings := true,
 
@@ -72,8 +74,6 @@ lazy val javaSettings = commonSettings ++ Seq(
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
   ),
-  Test / fork := true,
-  Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
   Test / javaOptions ++= Seq(
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
