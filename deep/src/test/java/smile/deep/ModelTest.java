@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+import smile.util.Paths;
 
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.Assert.assertEquals;
@@ -33,8 +34,7 @@ import static org.junit.Assert.assertEquals;
  * @author Haifeng Li
  */
 public class ModelTest {
-    static String home = System.getProperty("smile.home", "shell/src/universal/");
-    static String mnist = home + "data/mnist";
+    static String mnist = Paths.getTestData("mnist").toString();
 
     public ModelTest() {
     }
