@@ -16,6 +16,7 @@
  */
 package smile.deep;
 
+import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.Tensor;
@@ -44,6 +45,32 @@ public abstract class Layer {
      * @return the output tensor.
      */
     abstract Tensor forward(Tensor x);
+
+    /**
+     * Returns a linear (fully connected) layer.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a linear layer.
+     */
+    public static Layer linear(int in, int out) {
+        return new Layer() {
+            LinearImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new LinearImpl(in, out));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                if (x.dim() > 1) {
+                    x = x.reshape(x.size(0), in);
+                }
+                return layer.forward(x);
+            }
+        };
+    }
 
     /**
      * Returns a ReLU layer.
@@ -136,6 +163,225 @@ public abstract class Layer {
                 }
                 x = torch.log_softmax(layer.forward(x), 1);
                 return x;
+            }
+        };
+    }
+
+    /**
+     * Returns a convolutional  layer.
+     * @param in the number of input channels.
+     * @param out the number of output features.
+     * @param size the window size.
+     * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
+     * @return a convolutional layer.
+     */
+    public static Layer conv2d(int in, int out, int size, int pool) {
+        return new Layer() {
+            Conv2dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(size);
+                this.net = net;
+                this.layer = net.register_module(name, new Conv2dImpl(in, out, p));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                x = torch.relu(layer.forward(x));
+                if (pool > 0) {
+                    x = torch.max_pool2d(x, pool, pool);
+                }
+                return x;
+            }
+        };
+    }
+
+    /**
+     * Returns a convolutional  layer.
+     * @param in the number of input channels.
+     * @param out the number of output channels/features.
+     * @param size the window size.
+     * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
+     * @param stride controls the stride for the cross-correlation.
+     * @param dilation controls the spacing between the kernel points.
+     *                It is harder to describe, but this link has a nice
+     *                visualization of what dilation does.
+     *
+     * @param groups controls the connections between inputs and outputs.
+     *              The in channels and out channels must both be divisible by groups.
+     * @return a convolutional layer.
+     */
+    public static Layer conv2d(int in, int out, int size, int pool, int stride, int dilation, int groups, boolean bias) {
+        return new Layer() {
+            Conv2dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(size);
+                Conv2dOptions options = new Conv2dOptions(in, out, p);
+                options.stride().put(stride);
+                options.dilation().put(dilation);
+                options.groups().put(groups);
+                options.bias().put(bias);
+
+                this.net = net;
+                this.layer = net.register_module(name, new Conv2dImpl(options));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                x = torch.relu(layer.forward(x));
+                if (pool > 0) {
+                    x = torch.max_pool2d(x, pool, pool);
+                }
+                return x;
+            }
+        };
+    }
+
+    /**
+     * Returns a max pooling layer that reduces a tensor by combining cells,
+     * and assigning the maximum value of the input cells to the output cell.
+     * @param size the window/kernel size.
+     * @return a max pooling layer.
+     */
+    public static Layer maxPool2d(int size) {
+        return new Layer() {
+            MaxPool2dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(size);
+                this.net = net;
+                this.layer = net.register_module(name, new MaxPool2dImpl(p));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
+            }
+        };
+    }
+
+    /**
+     * Returns a normalization layer that re-centers and normalizes the output
+     * of one layer before feeding it to another. Centering and scaling the
+     * intermediate tensors has a number of beneficial effects, such as allowing
+     * higher learning rates without exploding/vanishing gradients.
+     * @param in the number of input features.
+     * @return a normalization layer.
+     */
+    public static Layer batchNorm1d(int in) {
+        return new Layer() {
+            BatchNorm1dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(in);
+                this.net = net;
+                this.layer = net.register_module(name, new BatchNorm1dImpl(p));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
+            }
+        };
+    }
+
+    /**
+     * Returns a normalization layer that re-centers and normalizes the output
+     * of one layer before feeding it to another. Centering and scaling the
+     * intermediate tensors has a number of beneficial effects, such as allowing
+     * higher learning rates without exploding/vanishing gradients.
+     * @param in the number of input features.
+     * @param eps a value added to the denominator for numerical stability.
+     * @param momentum the value used for the running_mean and running_var
+     *                computation. Can be set to 0.0 for cumulative moving average
+     *                (i.e. simple average).
+     * @param affine when set to true, this layer has learnable affine parameters.
+     * @return a normalization layer.
+     */
+    public static Layer batchNorm1d(int in, double eps, double momentum, boolean affine) {
+        return new Layer() {
+            BatchNorm1dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(in);
+                BatchNormOptions options = new BatchNormOptions(p);
+                options.eps().put(eps);
+                if (momentum > 0.0) options.momentum().put(momentum);
+                options.affine().put(affine);
+                this.net = net;
+                this.layer = net.register_module(name, new BatchNorm1dImpl(options));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
+            }
+        };
+    }
+
+    /**
+     * Returns a normalization layer that re-centers and normalizes the output
+     * of one layer before feeding it to another. Centering and scaling the
+     * intermediate tensors has a number of beneficial effects, such as allowing
+     * higher learning rates without exploding/vanishing gradients.
+     * @param in the number of input features.
+     * @return a normalization layer.
+     */
+    public static Layer batchNorm2d(int in) {
+        return new Layer() {
+            BatchNorm2dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(in);
+                this.net = net;
+                this.layer = net.register_module(name, new BatchNorm2dImpl(p));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
+            }
+        };
+    }
+
+    /**
+     * Returns a normalization layer that re-centers and normalizes the output
+     * of one layer before feeding it to another. Centering and scaling the
+     * intermediate tensors has a number of beneficial effects, such as allowing
+     * higher learning rates without exploding/vanishing gradients.
+     * @param in the number of input features.
+     * @param eps a value added to the denominator for numerical stability.
+     * @param momentum the value used for the running_mean and running_var
+     *                computation. Can be set to 0.0 for cumulative moving average
+     *                (i.e. simple average).
+     * @param affine when set to true, this layer has learnable affine parameters.
+     * @return a normalization layer.
+     */
+    public static Layer batchNorm2d(int in, double eps, double momentum, boolean affine) {
+        return new Layer() {
+            BatchNorm2dImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                LongPointer p = new LongPointer(1).put(in);
+                BatchNormOptions options = new BatchNormOptions(p);
+                options.eps().put(eps);
+                if (momentum > 0.0) options.momentum().put(momentum);
+                options.affine().put(affine);
+                this.net = net;
+                this.layer = net.register_module(name, new BatchNorm2dImpl(options));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
             }
         };
     }
