@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.bytedeco.pytorch.*;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 
 /**
@@ -35,9 +36,16 @@ public interface Dataset extends Iterable<Sample> {
      */
     long size();
 
-    static Dataset of(double[][] x, int[] y, int batch) {
-        final int n = x.length;
-        final int p = x[0].length;
+    /**
+     * Returns a dataset.
+     * @param data the data.
+     * @param target the target.
+     * @param batch the mini-batch size.
+     * @return the dataset.
+     */
+    static Dataset of(double[][] data, int[] target, int batch) {
+        final int n = data.length;
+        final int p = data[0].length;
 
         return new Dataset() {
             @Override
@@ -50,8 +58,8 @@ public interface Dataset extends Iterable<Sample> {
                 final int[] permutation = MathEx.permutate(n);
                 return new Iterator<Sample>() {
                     int i = 0;
-                    float[] batchx = new float[batch * p];
-                    long[] batchy = new long[batch];
+                    float[] x = new float[batch * p];
+                    long[] y = new long[batch];
 
                     @Override
                     public boolean hasNext() {
@@ -63,16 +71,17 @@ public interface Dataset extends Iterable<Sample> {
                         int j = 0;
                         for (; j < batch && i < n; j++, i++) {
                             int k = permutation[i];
+                            y[j] = target[k];
+                            double[] xk = data[k];
                             for (int l = 0; l < p; l++) {
-                                batchx[j*p + l] = (float) x[k][l];
+                                x[j*p + l] = (float) xk[l];
                             }
-                            batchy[j] = y[k];
                         }
 
                         if (i == n) {
-                            return new Sample(Tensor.of(Arrays.copyOf(batchx, j*p), j, p), Tensor.of(Arrays.copyOf(batchy, j), j));
+                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
                         } else {
-                            return new Sample(Tensor.of(batchx, j, p), Tensor.of(batchy, j));
+                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
                         }
                     }
                 };
@@ -80,10 +89,74 @@ public interface Dataset extends Iterable<Sample> {
         };
     }
 
-    static Dataset of(DataFrame df, Formula formula, int batch) {
+    /**
+     * Returns a dataset.
+     * @param data the data.
+     * @param target the target.
+     * @param batch the mini-batch size.
+     * @return the dataset.
+     */
+    static Dataset of(double[][] data, double[] target, int batch) {
+        final int n = data.length;
+        final int p = data[0].length;
+
+        return new Dataset() {
+            @Override
+            public long size() {
+                return n;
+            }
+
+            @Override
+            public Iterator<Sample> iterator() {
+                final int[] permutation = MathEx.permutate(n);
+                return new Iterator<Sample>() {
+                    int i = 0;
+                    float[] x = new float[batch * p];
+                    float[] y = new float[batch];
+
+                    @Override
+                    public boolean hasNext() {
+                        return i < n;
+                    }
+
+                    @Override
+                    public Sample next() {
+                        int j = 0;
+                        for (; j < batch && i < n; j++, i++) {
+                            int k = permutation[i];
+                            y[j] = (float) target[k];
+                            double[] xk = data[k];
+                            for (int l = 0; l < p; l++) {
+                                x[j*p + l] = (float) xk[l];
+                            }
+                        }
+
+                        if (i == n) {
+                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
+                        } else {
+                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    /**
+     * Returns a dataset.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param df the data frame of the explanatory and response variables.
+     * @param batch the mini-batch size.
+     * @return the dataset.
+     */
+    static Dataset of(Formula formula, DataFrame df, int batch) {
         final double[][] x = formula.x(df).toArray();
-        final int[] y = formula.y(df).toIntArray();
-        return of(x, y, batch);
+        final BaseVector y = formula.y(df);
+        if (y.field().type.isIntegral()) {
+            return of(x, y.toIntArray(), batch);
+        } else {
+            return of(x, y.toDoubleArray(), batch);
+        }
     }
 
     /**
