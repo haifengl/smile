@@ -162,6 +162,7 @@ lazy val core = project.in(file("core"))
 
 lazy val deep = project.in(file("deep"))
   .settings(java8Settings: _*)
+  .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
   .settings(java8Settings: _*)

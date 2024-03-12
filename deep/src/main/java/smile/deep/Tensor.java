@@ -47,6 +47,16 @@ public class Tensor {
         return new Tensor(tensor.to(device.value, dtype.value));
     }
 
+    /** Prints the tensor on the standard output. */
+    public void print() {
+        value.print();
+    }
+
+    @Override
+    public String toString() {
+        return value.toString();
+    }
+
     @Override
     public Tensor clone() {
         return new Tensor(value.to());
@@ -513,6 +523,16 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor of(int[] data, long... shape) {
+        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
+    }
+
+    /**
+     * Returns a tensor with given data and shape.
+     * @param data the initialization data.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor of(long[] data, long... shape) {
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 

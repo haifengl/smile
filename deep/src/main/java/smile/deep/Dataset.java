@@ -16,7 +16,12 @@
  */
 package smile.deep;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import org.bytedeco.pytorch.*;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.math.MathEx;
 
 /**
  * A dataset consists of data and an associated target (label).
@@ -29,6 +34,57 @@ public interface Dataset extends Iterable<Sample> {
      * @return the size of dataset.
      */
     long size();
+
+    static Dataset of(double[][] x, int[] y, int batch) {
+        final int n = x.length;
+        final int p = x[0].length;
+
+        return new Dataset() {
+            @Override
+            public long size() {
+                return n;
+            }
+
+            @Override
+            public Iterator<Sample> iterator() {
+                final int[] permutation = MathEx.permutate(n);
+                return new Iterator<Sample>() {
+                    int i = 0;
+                    float[] batchx = new float[batch * p];
+                    long[] batchy = new long[batch];
+
+                    @Override
+                    public boolean hasNext() {
+                        return i < n;
+                    }
+
+                    @Override
+                    public Sample next() {
+                        int j = 0;
+                        for (; j < batch && i < n; j++, i++) {
+                            int k = permutation[i];
+                            for (int l = 0; l < p; l++) {
+                                batchx[j*p + l] = (float) x[k][l];
+                            }
+                            batchy[j] = y[k];
+                        }
+
+                        if (i == n) {
+                            return new Sample(Tensor.of(Arrays.copyOf(batchx, j*p), j, p), Tensor.of(Arrays.copyOf(batchy, j), j));
+                        } else {
+                            return new Sample(Tensor.of(batchx, j, p), Tensor.of(batchy, j));
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    static Dataset of(DataFrame df, Formula formula, int batch) {
+        final double[][] x = formula.x(df).toArray();
+        final int[] y = formula.y(df).toIntArray();
+        return of(x, y, batch);
+    }
 
     /**
      * MNIST contains 70,000 images of handwritten digits: 60,000 for
