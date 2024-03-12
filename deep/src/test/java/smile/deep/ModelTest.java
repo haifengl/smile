@@ -25,8 +25,6 @@ import org.junit.Test;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 
-import java.util.Iterator;
-
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.Assert.assertEquals;
 
