@@ -24,7 +24,85 @@ import static org.bytedeco.pytorch.global.torch.*;
  * @author Haifeng Li
  */
 public interface Loss {
-    static Tensor nll(Tensor prediction, Tensor truth) {
-        return new Tensor(nll_loss(prediction.value, truth.value));
+    /**
+     * Mean Absolute Error (L1) Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor l1(Tensor input, Tensor target) {
+        return new Tensor(l1_loss(input.value, target.value));
+    }
+
+    /**
+     * Mean Squared Error (L2) Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor mse(Tensor input, Tensor target) {
+        return new Tensor(mse_loss(input.value, target.value));
+    }
+
+    /**
+     * Negative Log-Likelihood Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor nll(Tensor input, Tensor target) {
+        return new Tensor(nll_loss(input.value, target.value));
+    }
+
+    /**
+     * Cross Entropy Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor crossEntropy(Tensor input, Tensor target) {
+        return new Tensor(cross_entropy_loss(input.value, target.value));
+    }
+
+    /**
+     * Hinge Embedding Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor hingeEmbedding(Tensor input, Tensor target) {
+        return new Tensor(hinge_embedding_loss(input.value, target.value));
+    }
+
+    /**
+     * Margin Ranking Loss Function.
+     * @param input1 the first input.
+     * @param input2 the second input.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor marginRanking(Tensor input1, Tensor input2, Tensor target) {
+        return new Tensor(margin_ranking_loss(input1.value, input2.value, target.value));
+    }
+
+    /**
+     * Triplet Margin Ranking Loss Function.
+     * @param anchor the first input.
+     * @param positive the second input.
+     * @param negative the third input.
+     * @return the loss.
+     */
+    static Tensor tripleMarginRanking(Tensor anchor, Tensor positive, Tensor negative) {
+        return new Tensor(triplet_margin_loss(anchor.value, positive.value, negative.value));
+    }
+
+    /**
+     * Kullback-Leibler Divergence Loss Function.
+     * @param input the input/prediction.
+     * @param target the target/truth.
+     * @return the loss.
+     */
+    static Tensor kl(Tensor input, Tensor target) {
+        return new Tensor(kl_div(input.value, target.value));
     }
 }
