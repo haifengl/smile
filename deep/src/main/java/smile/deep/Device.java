@@ -45,6 +45,43 @@ public class Device {
     }
 
     /**
+     * Returns the CPU device.
+     *
+     * @return the compute device.
+     */
+    public static Device CPU() {
+        return new Device(DeviceType.CPU);
+    }
+
+    /**
+     * Returns the GPU for MacOS devices with Metal programming framework.
+     *
+     * @return the compute device.
+     */
+    public static Device MPS() {
+        return new Device(DeviceType.MPS);
+    }
+
+    /**
+     * Returns the default NVIDIA CUDA device.
+     *
+     * @return the compute device.
+     */
+    public static Device CUDA() {
+        return CUDA((byte) 0);
+    }
+
+    /**
+     * Returns the NVIDIA CUDA device.
+     *
+     * @param index the CUDA device index.
+     * @return the compute device.
+     */
+    public static Device CUDA(byte index) {
+        return new Device(DeviceType.CUDA, index);
+    }
+
+    /**
      * Sets Tensor to be allocated on this device. This does not affect factory
      * function calls which are called with an explicit device argument.
      * Factory calls will be performed as if they were passed device as

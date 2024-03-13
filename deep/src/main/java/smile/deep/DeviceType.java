@@ -37,23 +37,4 @@ public enum DeviceType {
     DeviceType(torch.DeviceType device) {
         this.value = device;
     }
-
-    /**
-     * Returns the default device.
-     *
-     * @return the compute device.
-     */
-    Device device() {
-        return device((byte) 0);
-    }
-
-    /**
-     * Returns the device of given index.
-     *
-     * @param index the CUDA device index.
-     * @return the compute device.
-     */
-    Device device(byte index) {
-        return new Device(this, index);
-    }
 }
