@@ -3,7 +3,7 @@ name := "smile-deep"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.deep")
 
 libraryDependencies ++= Seq(
-  "org.slf4j"      % "slf4j-api"            % "1.7.30",
+  "org.slf4j"      % "slf4j-api"            % "2.0.12",
   "org.bytedeco"   % "pytorch-platform"     % "2.0.1-1.5.9" excludeAll(
     ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
     ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
