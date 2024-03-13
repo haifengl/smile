@@ -64,8 +64,8 @@ public class ModelTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        System.out.format("CUDA available: %s\n", cuda_is_available());
-        System.out.format("CUDA device count: %d\n", cuda_device_count());
+        System.out.format("CUDA available: %s\n", CUDA.isAvailable());
+        System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
 
         // try to use MKL when available
         System.setProperty("org.bytedeco.openblas.load", "mkl");
@@ -126,7 +126,7 @@ public class ModelTest {
 
     @Test
     public void testModel() {
-        Device device = cuda_is_available() ? DeviceType.CUDA.device() : DeviceType.CPU.device();
+        Device device = CUDA.isAvailable() ? Device.CUDA() : Device.CPU();
         device.setDefaultDevice();
 
         Model net = Model.of(
