@@ -70,7 +70,7 @@ public abstract class Model {
      * @return this model.
      */
     public Model to(Device device) {
-        net.to(device.value);
+        net.to(device.value, true);
         return this;
     }
 
