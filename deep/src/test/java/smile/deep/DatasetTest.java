@@ -64,7 +64,7 @@ public class DatasetTest {
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
 
         Dataset dataset = Dataset.of(x, y, 64);
-        Optimizer optimizer = Optimizer.sgd(net, 0.01);
+        Optimizer optimizer = Optimizer.SGD(net, 0.01);
         net.train();
         for (int epoch = 1; epoch <= 100; ++epoch) {
             int batchIndex = 0;
