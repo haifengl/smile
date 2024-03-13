@@ -139,7 +139,7 @@ public class ModelTest {
         Dataset testDataset = Dataset.mnist(mnist, false, 64);
 
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
-        Optimizer optimizer = Optimizer.sgd(net, 0.01);
+        Optimizer optimizer = Optimizer.SGD(net, 0.01);
         net.train();
         for (int epoch = 1; epoch <= 10; ++epoch) {
             int batchIndex = 0;
