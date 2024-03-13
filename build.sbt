@@ -15,10 +15,18 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "3.0.3",
 
+  autoAPIMappings := true,
   Test / fork := true,
   Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
   Test / parallelExecution := false,
-  autoAPIMappings := true,
+  Test / publishArtifact := false,
+  Test / javaOptions ++= Seq(
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
+  ),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -27,7 +35,6 @@ lazy val commonSettings = Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
-  Test / publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
   pomExtra := (
@@ -73,11 +80,6 @@ lazy val javaSettings = commonSettings ++ Seq(
     "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
-  ),
-  Test / javaOptions ++= Seq(
-    "--add-opens=java.base/java.lang=ALL-UNNAMED",
-    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
-    "--add-opens=java.base/java.nio=ALL-UNNAMED",
   ),
   Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 )
