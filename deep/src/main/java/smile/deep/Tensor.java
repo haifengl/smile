@@ -49,7 +49,7 @@ public class Tensor {
 
     /** Prints the tensor on the standard output. */
     public void print() {
-        value.print();
+        torch.print(value);
     }
 
     @Override
@@ -127,6 +127,62 @@ public class Tensor {
     /** Computes the gradients. */
     public void backward() {
         value.backward();
+    }
+
+    /**
+     * Returns the int value of element at given index.
+     *
+     * @param index the element index.
+     * @return the element value.
+     */
+    public int getInt(long... index) {
+        org.bytedeco.pytorch.Tensor x = value;
+        for (long i : index) {
+            x = x.get(i);
+        }
+        return x.item_int();
+    }
+
+    /**
+     * Returns the int value of element at given index.
+     *
+     * @param index the element index.
+     * @return the element value.
+     */
+    public long getLong(long... index) {
+        org.bytedeco.pytorch.Tensor x = value;
+        for (long i : index) {
+            x = x.get(i);
+        }
+        return x.item_long();
+    }
+
+    /**
+     * Returns the int value of element at given index.
+     *
+     * @param index the element index.
+     * @return the element value.
+     */
+    public float getFloat(long... index) {
+        org.bytedeco.pytorch.Tensor x = value;
+        for (long i : index) {
+            x = x.get(i);
+        }
+        return x.item_float();
+    }
+
+    /**
+     * Returns the int value of element at given index.
+     *
+     * @param index the element index.
+     * @return the element value.
+     */
+    public double getDouble(long... index) {
+        org.bytedeco.pytorch.Tensor x = value;
+        for (long i : index) {
+            x = x.get(i);
+        }
+        return x.item_double();
     }
 
     /** Returns the int value when the tensor holds a single value. */
@@ -576,19 +632,13 @@ public class Tensor {
             return this;
         }
 
-        /** Sets a compute device on which a tensor is stored. */
-        public Options device(DeviceType deviceType) {
-            return device(deviceType, (byte) 0);
-        }
-
         /**
          * Sets a compute device on which a tensor is stored.
-         * @param deviceType device type.
-         * @param index device ordinal.
+         * @param device a compute device.
          * @return this options object.
          */
-        public Options device(DeviceType deviceType, byte index) {
-            value = value.device(new DeviceOptional(deviceType.device(index).value));
+        public Options device(Device device) {
+            value = value.device(new DeviceOptional(device.value));
             return this;
         }
 
