@@ -119,6 +119,15 @@ public class Tensor {
     }
 
     /**
+     * Returns the size of given dimension.
+     * @param dim dimension index.
+     * @return the size of given dimension.
+     */
+    public long size(long dim) {
+        return value.size(dim);
+    }
+
+    /**
      * Returns a tensor with the same data and number of elements
      * but with the specified shape. This method returns a view
      * if shape is compatible with the current shape.
