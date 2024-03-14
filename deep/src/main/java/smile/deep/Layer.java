@@ -385,4 +385,36 @@ public abstract class Layer {
             }
         };
     }
+
+    /**
+     * Returns a dropout layer that randomly zeroes some of the elements of
+     * the input tensor with probability p during training. The zeroed
+     * elements are chosen independently for each forward call and are
+     * sampled from a Bernoulli distribution. Each channel will be zeroed
+     * out independently on every forward call.
+     *
+     * This has proven to be an effective technique for regularization
+     * and preventing the co-adaptation of neurons as described in the
+     * paper "Improving Neural Networks by Preventing Co-adaptation
+     * of Feature Detectors".
+     *
+     * @param p the probability of an element to be zeroed.
+     * @return a dropout layer.
+     */
+    public static Layer dropout(double p) {
+        return new Layer() {
+            DropoutImpl layer;
+
+            @Override
+            void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new DropoutImpl(p));
+            }
+
+            @Override
+            Tensor forward(Tensor x) {
+                return layer.forward(x);
+            }
+        };
+    }
 }
