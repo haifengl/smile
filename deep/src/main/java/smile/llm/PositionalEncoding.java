@@ -16,8 +16,9 @@
  */
 package smile.llm;
 
-import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+import smile.deep.Tensor;
+import static smile.deep.Index.*;
 import org.bytedeco.pytorch.global.torch;
 
 /**
@@ -30,33 +31,38 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public class PositionalEncoding {
-    Module module;
-    DropoutImpl dropout;
-    Tensor pe;
+    /** The module to register the buffer. */
+    private Module module;
+    /** The dropout probability. */
+    private double dropout;
+    /** The positional encoding tensor. */
+    private Tensor pe;
 
+    /**
+     * Constructor.
+     * @param dModel the number of expected features in the token embedding.
+     */
     public PositionalEncoding(int dModel) {
         this(dModel, 0.1, 5000);
     }
 
+    /**
+     * Constructor.
+     * @param dModel the number of expected features in the token embedding.
+     * @param dropout the dropout probability.
+     * @param maxLen the maximum length of token sequence.
+     */
     public PositionalEncoding(int dModel, double dropout, int maxLen) {
         this.module = new Module();
-        this.dropout = new DropoutImpl(dropout);
-        this.pe = torch.zeros(maxLen, dModel);
-        Tensor position = torch.arange(new Scalar(0), new Scalar(maxLen), new Scalar(1)).unsqueeze(1);
-        Tensor divTerm = torch.arange(new Scalar(0), new Scalar(dModel), new Scalar(2)).exp_().mul_(new Scalar(-Math.log(10000.0) / dModel));
+        this.dropout = dropout;
+        this.pe = Tensor.zeros(maxLen, dModel);
+        Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
+        Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel);
         position.mul_(divTerm);
-        TensorIndexVector i0 = new TensorIndexVector(
-                new TensorIndex(new Slice()),
-                new TensorIndex(new Slice(new SymIntOptional(new SymInt(0)), new SymIntOptional(), new SymIntOptional(new SymInt(2))))
-        );
-        TensorIndexVector i1 = new TensorIndexVector(
-                new TensorIndex(new Slice()),
-                new TensorIndex(new Slice(new SymIntOptional(new SymInt(1)), new SymIntOptional(), new SymIntOptional(new SymInt(2))))
-        );
-        pe.index_put_(i0, position.sin());
-        pe.index_put_(i1, position.cos());
+        pe.put_(position.sin(), Colon, slice(0L, null, 2L));
+        pe.put_(position.cos(), Colon, slice(1L, null, 2L));
         pe = pe.unsqueeze(0).transpose(0, 1);
-        module.register_buffer("pe", pe);
+        module.register_buffer("pe", pe.value());
     }
 
     /**
@@ -64,12 +70,12 @@ public class PositionalEncoding {
      * @param x the sequence fed to the positional encoder model.
      * @return the encoded tensor.
      */
-    public smile.deep.Tensor forward(smile.deep.Tensor x) {
-        org.bytedeco.pytorch.Tensor p = pe.index(new TensorIndexVector(
-                new TensorIndex(new Slice(new SymIntOptional(), new SymIntOptional(new SymInt(x.size(0))), new SymIntOptional())),
-                new TensorIndex(new Slice())
-        ));
-        org.bytedeco.pytorch.Tensor xp = x.value().add(p);
-        return smile.deep.Tensor.of(dropout.forward(xp));
+    public Tensor forward(Tensor x) {
+        Tensor p = pe.get(
+                slice(null, x.size(0)),
+                Colon
+        );
+        Tensor xp = x.add(p);
+        return smile.deep.Tensor.of(torch.dropout(xp.value(), dropout, true));
     }
 }
