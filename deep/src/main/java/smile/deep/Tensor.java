@@ -62,6 +62,11 @@ public class Tensor {
         return new Tensor(value.to());
     }
 
+    /** Returns the PyTorch tensor object. */
+    public org.bytedeco.pytorch.Tensor value() {
+        return this.value;
+    }
+
     /**
      * Returns a new Tensor, detached from the current graph.
      * The result will never require gradient.
@@ -206,6 +211,48 @@ public class Tensor {
     }
 
     /**
+     * Returns a new tensor with a dimension of size one inserted at the
+     * specified position.
+     *
+     * The returned tensor shares the same underlying data with this tensor.
+     *
+     * A dim value within the range [-input.dim() - 1, input.dim() + 1) can be
+     * used. Negative dim will correspond to unsqueeze() applied at
+     * dim = dim + input.dim() + 1.
+     *
+     * @param dim the index at which to insert the singleton dimension.
+     * @return the output tensor.
+     */
+    public Tensor unsqueeze(long dim) {
+        return new Tensor(value.unsqueeze(dim));
+    }
+
+    /**
+     * Returns a tensor that is a transposed version of input. The given
+     * dimensions dim0 and dim1 are swapped.
+     *
+     * If input is a strided tensor then the resulting out tensor shares
+     * its underlying storage with the input tensor, so changing the content
+     * of one would change the content of the other.
+     *
+     * If input is a sparse tensor then the resulting out tensor does not
+     * share the underlying storage with the input tensor.
+     *
+     * If input is a sparse tensor with compressed layout (SparseCSR,
+     * SparseBSR, SparseCSC or SparseBSC) the arguments dim0 and dim1 must
+     * be both batch dimensions, or must both be sparse dimensions. The
+     * batch dimensions of a sparse tensor are the dimensions preceding
+     * the sparse dimensions.
+     *
+     * @param dim0 the first dimension to be transposed.
+     * @param dim1 the second dimension to be transposed.
+     * @return the output tensor.
+     */
+    public Tensor transpose(long dim0, long dim1) {
+        return new Tensor(value.transpose(dim0, dim1));
+    }
+
+    /**
      * Returns the indices of the maximum value of a tensor across a dimension.
      *
      * @param dim the dimension to reduce.
@@ -234,20 +281,36 @@ public class Tensor {
     }
 
     /**
+     * Returns the exponential of elements in the tensor.
+     * @return the output tensor.
+     */
+    public Tensor exp() {
+        return new Tensor(value.exp());
+    }
+
+    /**
+     * Returns the exponential of elements in the tensor in place.
+     * @return this tensor.
+     */
+    public Tensor exp_() {
+        return new Tensor(value.exp_());
+    }
+
+    /**
      * Returns A + b.
      * @param other a scalar value.
      * @return the output tensor.
      */
-    public Tensor add(float other) {
+    public Tensor add(double other) {
         return new Tensor(value.add(new Scalar(other)));
     }
 
     /**
-     * A += b.
+     * Returns A += b.
      * @param other a scalar value.
      * @return this tensor.
      */
-    public Tensor add_(float other) {
+    public Tensor add_(double other) {
         value.add_(new Scalar(other));
         return this;
     }
@@ -262,7 +325,7 @@ public class Tensor {
     }
 
     /**
-     * A += B.
+     * Returns A += B.
      * @param other another tensor.
      * @return this tensor.
      */
@@ -277,17 +340,17 @@ public class Tensor {
      * @param alpha the scaling factor.
      * @return the output tensor.
      */
-    public Tensor add(Tensor other, float alpha) {
+    public Tensor add(Tensor other, double alpha) {
         return new Tensor(value.add(other.value, new Scalar(alpha)));
     }
 
     /**
-     * A += alpha * B.
+     * Returns A += alpha * B.
      * @param other another tensor.
      * @param alpha the scaling factor.
      * @return this tensor.
      */
-    public Tensor add_(Tensor other, float alpha) {
+    public Tensor add_(Tensor other, double alpha) {
         value.add_(other.value, new Scalar(alpha));
         return this;
     }
@@ -302,11 +365,11 @@ public class Tensor {
     }
 
     /**
-     * A -= b.
+     * Returns A -= b.
      * @param other a scalar value.
      * @return this tensor.
      */
-    public Tensor sub_(float other) {
+    public Tensor sub_(double other) {
         value.sub_(new Scalar(other));
         return this;
     }
@@ -321,7 +384,7 @@ public class Tensor {
     }
 
     /**
-     * A -= B.
+     * Returns A -= B.
      * @param other another tensor.
      * @return this tensor.
      */
@@ -336,23 +399,42 @@ public class Tensor {
      * @param alpha the scaling factor.
      * @return the output tensor.
      */
-    public Tensor sub(Tensor other, float alpha) {
+    public Tensor sub(Tensor other, double alpha) {
         return new Tensor(value.sub(other.value, new Scalar(alpha)));
     }
 
     /**
-     * A -= alpha * B.
+     * Returns A -= alpha * B.
      * @param other another tensor.
      * @param alpha the scaling factor.
      * @return this tensor.
      */
-    public Tensor sub_(Tensor other, float alpha) {
+    public Tensor sub_(Tensor other, double alpha) {
         value.sub_(other.value, new Scalar(alpha));
         return this;
     }
 
     /**
-     * Multiplies each element of the tensor by the corresponding element of other.
+     * Returns A * b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor mul(double other) {
+        return new Tensor(value.mul(new Scalar(other)));
+    }
+
+    /**
+     * Returns A *= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor mul_(double other) {
+        value.mul_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A * B element wisely.
      * @param other another tensor.
      * @return the output tensor.
      */
@@ -361,7 +443,7 @@ public class Tensor {
     }
 
     /**
-     * Multiplies each element of the tensor by the corresponding element of other in place.
+     * Returns A *= B element wisely.
      * @param other another tensor.
      * @return this tensor.
      */
@@ -371,7 +453,26 @@ public class Tensor {
     }
 
     /**
-     * Divides each element of the tensor by the corresponding element of other.
+     * Returns A / b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor div(double other) {
+        return new Tensor(value.div(new Scalar(other)));
+    }
+
+    /**
+     * Returns A /= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor div_(double other) {
+        value.div_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A / B element wisely.
      * @param other another tensor.
      * @return the output tensor.
      */
@@ -380,7 +481,7 @@ public class Tensor {
     }
 
     /**
-     * Divides each element of the tensor by the corresponding element of other in place.
+     * Returns A /= B element wisely.
      * @param other another tensor.
      * @return this tensor.
      */
@@ -553,6 +654,68 @@ public class Tensor {
     }
 
     /**
+     * Returns a 1-D tensor of size (end - start) / step with values from the
+     * interval [start, end) taken with common difference step beginning from
+     * start.
+     * @param start the starting value for the set of points.
+     * @param end the ending value for the set of points.
+     * @param step the gap between each pair of adjacent points.
+     * @return a 1-D tensor.
+     */
+    public static Tensor arange(int start, int end, int step) {
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+    }
+
+    /**
+     * Returns a 1-D tensor of size (end - start) / step with values from the
+     * interval [start, end) taken with common difference step beginning from
+     * start.
+     * @param start the starting value for the set of points.
+     * @param end the ending value for the set of points.
+     * @param step the gap between each pair of adjacent points.
+     * @return a 1-D tensor.
+     */
+    public static Tensor arange(long start, long end, long step) {
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+    }
+
+    /**
+     * Returns a 1-D tensor of size (end - start) / step with values from the
+     * interval [start, end) taken with common difference step beginning from
+     * start.
+     *
+     * Note that step is subject to floating point rounding errors when
+     * comparing against end. To avoid inconsistency, we advise subtracting
+     * a small epsilon from end in such cases.
+     *
+     * @param start the starting value for the set of points.
+     * @param end the ending value for the set of points.
+     * @param step the gap between each pair of adjacent points.
+     * @return a 1-D tensor.
+     */
+    public static Tensor arange(float start, float end, float step) {
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+    }
+
+    /**
+     * Returns a 1-D tensor of size (end - start) / step with values from the
+     * interval [start, end) taken with common difference step beginning from
+     * start.
+     *
+     * Note that step is subject to floating point rounding errors when
+     * comparing against end. To avoid inconsistency, we advise subtracting
+     * a small epsilon from end in such cases.
+     *
+     * @param start the starting value for the set of points.
+     * @param end the ending value for the set of points.
+     * @param step the gap between each pair of adjacent points.
+     * @return a 1-D tensor.
+     */
+    public static Tensor arange(double start, double end, double step) {
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+    }
+
+    /**
      * Returns a tensor with given data and shape.
      * @param data the initialization data.
      * @param shape the dimensional shape of the resulting tensor.
@@ -610,6 +773,15 @@ public class Tensor {
      */
     public static Tensor of(double[] data, long... shape) {
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
+    }
+
+    /**
+     * Returns a tensor with a PyTorch tensor object.
+     * @param tensor PyTorch tensor object.
+     * @return the created tensor.
+     */
+    public static Tensor of(org.bytedeco.pytorch.Tensor tensor) {
+        return new Tensor(tensor);
     }
 
     /**
