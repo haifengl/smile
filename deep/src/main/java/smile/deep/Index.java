@@ -56,7 +56,7 @@ public class Index {
      * @param i the element index.
      * @return the index.
      */
-    public static Index index(int i) {
+    public static Index index(long i) {
         return new Index(new TensorIndex(i));
     }
 
@@ -66,7 +66,7 @@ public class Index {
      * @param indices the indices of multiple elements.
      * @return the index.
      */
-    public static Index index(int... indices) {
+    public static Index index(long... indices) {
         return new Index(new TensorIndex(Tensor.create(indices)));
     }
 
@@ -77,8 +77,8 @@ public class Index {
      * @param end the end index.
      * @return the slice.
      */
-    public static Index slice(Integer start, Integer end) {
-        return index(start, end, 1);
+    public static Index slice(Long start, Long end) {
+        return index(start, end, 1L);
     }
 
     /**
@@ -89,7 +89,7 @@ public class Index {
      * @param step the incremental step.
      * @return the slice.
      */
-    public static Index slice(Integer start, Integer end, Integer step) {
+    public static Index slice(Long start, Long end, Long step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
                 start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start.longValue())),
                 end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end.longValue())),
