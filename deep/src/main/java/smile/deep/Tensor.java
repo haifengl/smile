@@ -144,6 +144,39 @@ public class Tensor {
     }
 
     /**
+     * Returns a tensor index vector.
+     * @param indices the indices along the dimensions.
+     * @return the index vector.
+     */
+    private TensorIndexVector index(Index... indices) {
+        TensorIndexVector index = new TensorIndexVector();
+        for (Index i : indices) {
+            index.put(new TensorIndex(i.value));
+        }
+        return index;
+    }
+
+    /**
+     * Updates a portion of tensor in place.
+     * @param x the new sub-tensor values.
+     * @param indices the indices along the dimensions.
+     * @return this tensor.
+     */
+    public Tensor put_(Tensor x, Index... indices) {
+        value.index_put_(index(indices), x.value);
+        return this;
+    }
+
+    /**
+     * Returns a portion of tensor given the indices.
+     * @param indices the indices along the dimensions.
+     * @return the sub-tensor.
+     */
+    public Tensor get(Index... indices) {
+        return new Tensor(value.index(index(indices)));
+    }
+
+    /**
      * Returns the int value of element at given index.
      *
      * @param index the element index.
