@@ -45,35 +45,34 @@ import smile.deep.Tensor;
  */
 public class Transformer {
     /** The transform architecture configuration. */
-    Options options;
+    private Options options;
     /** The transformer model. */
-    TransformerImpl transformer;
+    private TransformerImpl transformer;
     /** The token embedding layer. */
-    EmbeddingImpl embedding;
+    private EmbeddingImpl embedding;
     /** The positioning encoder. */
-    PositionalEncoding posEncoder;
+    private PositionalEncoding posEncoder;
     /** The decoding layer. */
-    LinearImpl decoder;
+    private LinearImpl decoder;
 
     /**
      * Creates a Transformer model with default architecture configuration.
      * @param numTokens the number of tokens in the vocabulary.
      */
     public Transformer(int numTokens) {
-        this(numTokens, new Options());
+        this(new Options(numTokens));
     }
 
     /**
      * Creates a Transformer model with custom architecture configuration.
-     * @param numTokens the number of tokens in the vocabulary.
      * @param options Transformer architecture configuration.
      */
-    public Transformer(int numTokens, Options options) {
+    public Transformer(Options options) {
         this.options = options;
         this.transformer = new TransformerImpl(options.value);
         this.posEncoder = new PositionalEncoding(options.dModel);
-        this.embedding = new EmbeddingImpl(numTokens, options.dModel);
-        this.decoder = new LinearImpl(options.dModel, numTokens);
+        this.embedding = new EmbeddingImpl(options.numTokens, options.dModel);
+        this.decoder = new LinearImpl(options.dModel, options.numTokens);
     }
 
     /**
@@ -94,6 +93,7 @@ public class Transformer {
     /** Transformer architecture configuration. */
     public static class Options {
         TransformerOptions value = new TransformerOptions();
+        int numTokens;
         int dModel = 512;
         int numHeads = 8;
         int numEncoderLayers = 6;
@@ -102,8 +102,12 @@ public class Transformer {
         double dropout = 0.1;
         String activation = "relu";
 
-        /** Default configuration. */
-        public Options() {
+        /**
+         * Default architecture configuration.
+         * @param numTokens the number of tokens in the vocabulary.
+         */
+        public Options(int numTokens) {
+            this.numTokens = numTokens;
         }
 
         /**
