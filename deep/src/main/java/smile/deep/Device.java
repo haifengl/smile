@@ -44,6 +44,11 @@ public class Device {
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
     }
 
+    /** Returns the PyTorch device object. */
+    public org.bytedeco.pytorch.Device toTorch() {
+        return this.value;
+    }
+
     /**
      * Returns the CPU device.
      *
