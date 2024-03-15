@@ -205,7 +205,7 @@ trait VegaLite {
        |<html>
        |<head>
        |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
        |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
        |</head>
        |<body>
@@ -249,9 +249,9 @@ trait VegaLite {
 
 object VegaLite {
   /** The schema of Vega-Lite. */
-  val $schema = "https://vega.github.io/schema/vega-lite/v4.json"
+  val $schema = "https://vega.github.io/schema/vega-lite/v5.json"
   /** The MIME type of Vega-Lite. */
-  val mime: String = "application/vnd.vegalite.v4+json"
+  val mime: String = "application/vnd.vegalite.v5+json"
 
   /** Returns a single view specification with inline data. */
   def apply(rows: JsObject*): View = {
