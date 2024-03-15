@@ -18,6 +18,7 @@ package smile.llm;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.Device;
 import smile.deep.Tensor;
 
 /**
@@ -82,12 +83,25 @@ public class Transformer {
      * @return the log probability of prediction.
      */
     public Tensor forward(Tensor source) {
-        source = Tensor.of(embedding.forward(source.value())).mul(Math.sqrt(options.dModel));
+        source = Tensor.of(embedding.forward(source.toTorch())).mul(Math.sqrt(options.dModel));
         source = posEncoder.forward(source);
-        org.bytedeco.pytorch.Tensor output = transformer.encoder().forward(source.value());
+        org.bytedeco.pytorch.Tensor output = transformer.encoder().forward(source.toTorch());
         output = decoder.forward(output);
         output = torch.log_softmax(output, -1);
         return Tensor.of(output);
+    }
+
+    /**
+     * Moves the model to a device.
+     * @param device the compute device.
+     * @return this model.
+     */
+    public Transformer to(Device device) {
+        transformer.to(device.toTorch(), true);
+        embedding.to(device.toTorch(), true);
+        posEncoder.to(device);
+        decoder.to(device.toTorch(), true);
+        return this;
     }
 
     /** Transformer architecture configuration. */
