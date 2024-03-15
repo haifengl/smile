@@ -17,6 +17,8 @@
 package smile.llm;
 
 import org.bytedeco.pytorch.Module;
+import smile.deep.Device;
+import smile.deep.Model;
 import smile.deep.Tensor;
 import static smile.deep.Index.*;
 import org.bytedeco.pytorch.global.torch;
@@ -62,7 +64,7 @@ public class PositionalEncoding {
         pe.put_(position.sin(), Colon, slice(0L, null, 2L));
         pe.put_(position.cos(), Colon, slice(1L, null, 2L));
         pe = pe.unsqueeze(0).transpose(0, 1);
-        module.register_buffer("pe", pe.value());
+        module.register_buffer("pe", pe.toTorch());
     }
 
     /**
@@ -76,6 +78,16 @@ public class PositionalEncoding {
                 Colon
         );
         Tensor xp = x.add(p);
-        return smile.deep.Tensor.of(torch.dropout(xp.value(), dropout, true));
+        return smile.deep.Tensor.of(torch.dropout(xp.toTorch(), dropout, true));
+    }
+
+    /**
+     * Moves the encoder to a device.
+     * @param device the compute device.
+     * @return this encoder.
+     */
+    public PositionalEncoding to(Device device) {
+        module.to(device.toTorch(), true);
+        return this;
     }
 }
