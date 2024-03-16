@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.util;
 
 import java.text.DecimalFormat;
@@ -108,6 +107,38 @@ public interface Strings {
             sb.append(ch);
         }
         return sb.toString();
+    }
+
+    /**
+     * Turn special characters into HTML character references.
+     *
+     * @param input the (unescaped) input string
+     * @return the escaped string
+     */
+    static String htmlEscape(String input) {
+        return htmlEscape(input, HtmlCharacter.DEFAULT_ENCODING);
+    }
+
+    /**
+     * Turn special characters into HTML character references.
+     *
+     * @param input    the (unescaped) input string
+     * @param encoding the name of a supported {@link java.nio.charset.Charset charset}
+     * @return the escaped string
+     */
+    static String htmlEscape(String input, String encoding) {
+        HtmlCharacter html = new HtmlCharacter();
+        StringBuilder escaped = new StringBuilder(input.length() * 2);
+        for (int i = 0; i < input.length(); i++) {
+            char character = input.charAt(i);
+            String reference = html.escape(character);
+            if (reference != null) {
+                escaped.append(reference);
+            } else {
+                escaped.append(character);
+            }
+        }
+        return escaped.toString();
     }
 
     /**
