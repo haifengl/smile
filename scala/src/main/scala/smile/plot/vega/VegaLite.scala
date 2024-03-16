@@ -150,7 +150,7 @@ trait VegaLite {
 
   /** Sets the url of the data source.
     *
-    * @param url An URL from which to load the data set.
+    * @param url A URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
     *               Default value: The default format type is determined
     *               by the extension of the file URL. If no extension is
@@ -274,9 +274,9 @@ object VegaLite {
     }
   }
 
-  /** Returns a single view specification with data from from URL.
+  /** Returns a single view specification with data from a URL.
     *
-    * @param url An URL from which to load the data set.
+    * @param url A URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
     *               Default value: The default format type is determined
     *               by the extension of the file URL. If no extension is
@@ -316,7 +316,7 @@ object VegaLite {
     facet(df.toJSON)
   }
 
-  /** Returns a facet specification with data from from URL.
+  /** Returns a facet specification with data from a URL.
     *
     * @param url An URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
