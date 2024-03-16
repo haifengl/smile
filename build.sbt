@@ -91,16 +91,11 @@ lazy val java8Settings = javaSettings ++ Seq(
   ),
 )
 
-lazy val java21Settings = javaSettings ++ Seq(
+lazy val java17Settings = javaSettings ++ Seq(
   Compile / compile / javacOptions ++= Seq(
-    "-source", "21",
-    "-target", "21",
-    "--enable-preview",
-    "-Xlint:preview"
+    "-source", "17",
+    "-target", "17"
   ),
-  Compile / doc / javacOptions ++= Seq(
-    "--enable-preview"
-  )
 )
 
 lazy val scalaSettings = commonSettings ++ Seq(
@@ -175,7 +170,7 @@ lazy val nlp = project.in(file("nlp"))
   .dependsOn(core)
 
 lazy val plot = project.in(file("plot"))
-  .settings(java8Settings: _*)
+  .settings(java17Settings: _*)
   .dependsOn(base)
 
 lazy val json = project.in(file("json"))
