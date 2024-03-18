@@ -460,7 +460,8 @@ public class VegaLite {
     }
 
     /**
-     * An array of data transformations such as filter and new field
+     * Returns the data transformation object.
+     * such as filter and new field
      * calculation. Data transformations in Vega-Lite are described
      * via either view-level transforms (the transform property) or
      * field transforms inside encoding (bin, timeUnit, aggregate,
@@ -470,13 +471,11 @@ public class VegaLite {
      * transforms are executed first based on the order in the
      * array. Then the inline transforms are executed in this order:
      * bin, timeUnit, aggregate, sort, and stack.
+     * @return the data transformation object.
      */
-    public VegaLite transform(Transform... transforms) {
-        ArrayNode node = spec.putArray("transform");
-        for (Transform transform : transforms) {
-            node.add(transform.spec);
-        }
-        return this;
+    public Transform transform() {
+        ArrayNode node = spec.has("transform") ? (ArrayNode) spec.get("transform") : spec.putArray("transform");
+        return new Transform(node);
     }
 
     /**
