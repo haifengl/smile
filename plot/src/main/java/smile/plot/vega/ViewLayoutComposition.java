@@ -45,8 +45,8 @@ public class ViewLayoutComposition extends ViewComposition {
      * sized identically based on the maximum observed size. String values
      * for this property will be applied to both grid rows and columns.
      */
-    public ViewLayoutComposition align(String align) {
-        spec.put("align", align);
+    public ViewLayoutComposition align(String strategy) {
+        spec.put("align", strategy);
         return this;
     }
 

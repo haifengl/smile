@@ -319,11 +319,11 @@ public class Axis {
 
     /**
      * Sets the horizontal text alignment of axis tick labels.
-     * @param align the horizontal text alignment of axis tick labels.
+     * @param strategy the horizontal text alignment of axis tick labels.
      * @return this object.
      */
-    public Axis labelAlign(String align) {
-        spec.put("labelAlign", align);
+    public Axis labelAlign(String strategy) {
+        spec.put("labelAlign", strategy);
         return this;
     }
 
