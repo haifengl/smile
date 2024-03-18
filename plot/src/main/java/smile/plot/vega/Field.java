@@ -38,6 +38,19 @@ public class Field {
         this.spec = spec;
     }
 
+    @Override
+    public String toString() {
+        return spec.toString();
+    }
+
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     /**
      * Sets the field's type of measurement.
      * @param type The encoded field's type of measurement ("quantitative",
@@ -139,6 +152,18 @@ public class Field {
      */
     public Field scale(String scale) {
         spec.put("scale", scale);
+        return this;
+    }
+
+    /**
+     * Sets the sorting property.
+     *
+     * @param value "ascending", "descending", or an encoding channel name to
+     *             sort by (e.g., "-x" to sort by x-field, descending).
+     * @return this object.
+     */
+    public Field sort(String value) {
+        spec.put("sort", value);
         return this;
     }
 }
