@@ -222,4 +222,13 @@ public class ViewConfig {
         spec.put("strokeWidth", width);
         return this;
     }
+
+    /**
+     * Returns the axis definition object.
+     * @return the axis definition object.
+     */
+    public Axis axis() {
+        ObjectNode node = spec.has("axis") ? (ObjectNode) spec.get("axis") : spec.putObject("axis");
+        return new Axis(node);
+    }
 }
