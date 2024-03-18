@@ -17,7 +17,6 @@
 
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -66,13 +65,9 @@ public class VegaTest {
       ]""");
 
         bar.mark("bar");
-        Field x = bar.encoding("x", "a");
-        x.type("ordinal");
-        ObjectNode axis = x.spec.putObject("axis");
-        axis.put("labelAngle", 0);
-        Field y = bar.encoding("y", "b");
-        y.type("quantitative");
-        bar.show();
+        Field x = bar.encoding("x", "a").type("ordinal");
+        x.axis().labelAngle(0);
+        bar.encoding("y", "b").type("quantitative");
     }
 
     @Test
@@ -89,8 +84,7 @@ public class VegaTest {
         bar.transform().filter("datum.year == 2000");
         bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
         bar.encoding("y", "age").type("ordinal");
-        System.out.println(bar.toPrettyString());
-        bar.show();
+        assertEquals("[{\"filter\":\"datum.year == 2000\"}]", bar.transform().toString());
     }
 
     @Test
