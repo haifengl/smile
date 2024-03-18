@@ -79,6 +79,14 @@ public class VegaLite {
         return spec.toString();
     }
 
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     // ====== Properties of Top-Level Specifications ======
     /**
      * Returns the configuration object that lists properties of
@@ -210,6 +218,31 @@ public class VegaLite {
     public VegaLite title(String title) {
         spec.put("title", title);
         return this;
+    }
+
+    /**
+     * Sets an array describing the data source. Set to null to ignore
+     * the parent's data source. If no data is set, it is derived from
+     * the parent.
+     */
+    public VegaLite data(JsonNode data) {
+        if (data == null) {
+            spec.remove("data");
+        } else {
+            ObjectNode node = spec.putObject("data");
+            node.set("values", data);
+        }
+        return this;
+    }
+
+    /**
+     * Sets an array describing the data source. Set to null to ignore
+     * the parent's data source. If no data is set, it is derived from
+     * the parent.
+     * @param data JSON content to parse.
+     */
+    public VegaLite json(String data) throws JsonProcessingException {
+        return data(mapper.readTree(data));
     }
 
     /**
@@ -460,7 +493,7 @@ public class VegaLite {
      * Returns the HTML of plot specification with Vega Embed.
      */
     public String embed() throws JsonProcessingException {
-        return """
+        return String.format("""
                    <!DOCTYPE html>
                    <html>
                    <head>
@@ -483,7 +516,7 @@ public class VegaLite {
                    </script>
                    </body>
                    </html>
-                """.format(mapper.writeValueAsString(spec));
+                """, mapper.writeValueAsString(spec));
     }
 
     /**
@@ -500,7 +533,7 @@ public class VegaLite {
      */
     public String iframe(String id) throws JsonProcessingException {
         String src = Strings.htmlEscape(embed());
-        return """
+        return String.format("""
                    <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>
                    <script>
                      (function() {
@@ -512,7 +545,7 @@ public class VegaLite {
                        resizeIFrame(document.getElementById("%s"), 1);
                      })(); // IIFE
                    </script>
-                """.format(id, src, id);
+                """, id, src, id);
     }
 
     /** Returns the encoding object. */
