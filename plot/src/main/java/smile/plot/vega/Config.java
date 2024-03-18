@@ -19,7 +19,7 @@ package smile.plot.vega;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * Vega-Lite’s config object lists configuration properties of
+ * Vega-Lite's config object lists configuration properties of
  * a visualization for creating a consistent theme.
  *
  * @author Haifeng Li

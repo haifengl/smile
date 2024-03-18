@@ -47,7 +47,7 @@ public class Projection {
     }
 
     /**
-     * Sets the projection’s center, a two-element array of longitude and latitude in degrees.
+     * Sets the projection's center, a two-element array of longitude and latitude in degrees.
      * @param longitude longitude in degrees.
      * @param latitude latitude in degrees.
      * @return this object.
@@ -60,7 +60,7 @@ public class Projection {
     }
 
     /**
-     * Sets the projection’s clipping circle radius to the specified angle
+     * Sets the projection's clipping circle radius to the specified angle
      * in degrees.
      * @param angle The clip angle in degrees.
      * @return this object.
