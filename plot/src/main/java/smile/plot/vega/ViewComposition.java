@@ -16,6 +16,8 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * All view composition specifications (layer, facet, concat, and repeat)
  * can have the resolve property for scale, axes, and legend resolution.
@@ -30,4 +32,66 @@ package smile.plot.vega;
  * @author Haifeng Li
  */
 public class ViewComposition extends VegaLite {
+    /** Resolve parent object. */
+    ObjectNode resolve;
+    /** Scale resolve specification object. */
+    ObjectNode scale;
+    /** Axis resolve specification object. */
+    ObjectNode axis;
+    /** Legend resolve specification object. */
+    ObjectNode legend;
+
+    /**
+     * Hides the constructor so that users cannot create the instances directly.
+     */
+    ViewComposition() {
+    }
+
+    /**
+     * Sets a scale resolution. For scales, resolution can be specified for every channel.
+     * @param channel positional or non-positional channel.
+     * @param resolution "shared" or "independent".
+     */
+    public ViewComposition resolveScale(String channel, String resolution) {
+        if (resolve == null) {
+            resolve = spec.putObject("resolve");
+        }
+        if (scale == null) {
+            scale = resolve.putObject("scale");
+        }
+        scale.put(channel, resolution);
+        return this;
+    }
+
+    /**
+     * Sets an axis resolution.
+     * @param channel positional channel: "x" or "y".
+     * @param resolution "shared" or "independent".
+     */
+    public ViewComposition resolveAxis(String channel, String resolution) {
+        if (resolve == null) {
+            resolve = spec.putObject("resolve");
+        }
+        if (axis == null) {
+            axis = resolve.putObject("axis");
+        }
+        axis.put(channel, resolution);
+        return this;
+    }
+
+    /**
+     * Sets a legend resolution.
+     * @param channel non-positional channel: "color", "opacity", "shape", or "size".
+     * @param resolution "shared" or "independent".
+     */
+    public ViewComposition resolveLegend(String channel, String resolution) {
+        if (resolve == null) {
+            resolve = spec.putObject("resolve");
+        }
+        if (legend == null) {
+            legend = resolve.putObject("legend");
+        }
+        legend.put(channel, resolution);
+        return this;
+    }
 }
