@@ -214,6 +214,8 @@ public class VegaLite {
 
     /**
      * Sets a descriptive title to a chart.
+     * @param title a descriptive title.
+     * @return this object.
      */
     public VegaLite title(String title) {
         spec.put("title", title);
