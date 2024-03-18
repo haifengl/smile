@@ -16,6 +16,7 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -95,5 +96,65 @@ public class Facet extends ViewLayoutComposition {
         ObjectNode node = facet.putObject("column");
         node.put("field", field);
         return new FacetField(node);
+    }
+
+    @Override
+    public Facet usermeta(JsonNode metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public Facet usermeta(Object metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public Facet background(String color) {
+        super.background(color);
+        return this;
+    }
+
+    @Override
+    public Facet padding(int size) {
+        super.padding(size);
+        return this;
+    }
+
+    @Override
+    public Facet padding(int left, int top, int right, int bottom) {
+        super.padding(left, top, right, bottom);
+        return this;
+    }
+
+    @Override
+    public Facet autosize() {
+        super.autosize();
+        return this;
+    }
+
+    @Override
+    public Facet autosize(String type, boolean resize, String contains) {
+        super.autosize(type, resize, contains);
+        return this;
+    }
+
+    @Override
+    public Facet name(String name) {
+        super.name(name);
+        return this;
+    }
+
+    @Override
+    public Facet description(String description) {
+        super.description(description);
+        return this;
+    }
+
+    @Override
+    public Facet title(String title) {
+        super.title(title);
+        return this;
     }
 }
