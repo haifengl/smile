@@ -16,6 +16,8 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * A facet is a trellis plot (or small multiple) of a series of similar
  * plots that displays different subsets of the same data, facilitating
@@ -27,5 +29,71 @@ package smile.plot.vega;
  *
  * @author Haifeng Li
  */
-public class Facet extends VegaLite {
+public class Facet extends ViewLayoutComposition {
+    /** Definition for how to facet the data. */
+    final ObjectNode facet = spec.putObject("facet");
+
+    /**
+     * Constructor.
+     */
+    public Facet(VegaLite view) {
+        spec.set("spec", view.spec);
+    }
+
+    /**
+     * Sets the number of columns to include in the view composition layout.
+     * @param columns The number of columns to include in the view composition layout.
+     * @return this object.
+     */
+    public Facet columns(int columns) {
+        spec.put("columns", columns);
+        return this;
+    }
+
+    /**
+     * Returns the field definition for faceting the plot by one field.
+     * @param field A string defining the name of the field from which to pull
+     *             a data value. Dots (.) and brackets ([ and ]) can be used to
+     *             access nested objects (e.g., "field": "foo.bar" and
+     *             "field": "foo['bar']"). If field names contain dots or
+     *             brackets but are not nested, you can use \\ to escape dots
+     *             and brackets (e.g., "a\\.b" and "a\\[0\\]").
+     * @return the facet field object.
+     */
+    public FacetField facet(String field) {
+        facet.put("field", field);
+        return new FacetField(facet);
+    }
+
+    /**
+     * Returns the field definition for the horizontal facet of trellis plots.
+     * @param field A string defining the name of the field from which to pull
+     *             a data value. Dots (.) and brackets ([ and ]) can be used to
+     *             access nested objects (e.g., "field": "foo.bar" and
+     *             "field": "foo['bar']"). If field names contain dots or
+     *             brackets but are not nested, you can use \\ to escape dots
+     *             and brackets (e.g., "a\\.b" and "a\\[0\\]").
+     * @return the facet field object.
+     */
+    public FacetField row(String field) {
+        ObjectNode node = facet.putObject("row");
+        node.put("field", field);
+        return new FacetField(node);
+    }
+
+    /**
+     * Returns the field definition for the vertical facet of trellis plots.
+     * @param field A string defining the name of the field from which to pull
+     *             a data value. Dots (.) and brackets ([ and ]) can be used to
+     *             access nested objects (e.g., "field": "foo.bar" and
+     *             "field": "foo['bar']"). If field names contain dots or
+     *             brackets but are not nested, you can use \\ to escape dots
+     *             and brackets (e.g., "a\\.b" and "a\\[0\\]").
+     * @return the facet field object.
+     */
+    public FacetField column(String field) {
+        ObjectNode node = facet.putObject("column");
+        node.put("field", field);
+        return new FacetField(node);
+    }
 }
