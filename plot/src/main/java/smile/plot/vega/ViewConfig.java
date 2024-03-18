@@ -35,6 +35,19 @@ public class ViewConfig {
         this.spec = spec;
     }
 
+    @Override
+    public String toString() {
+        return spec.toString();
+    }
+
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     /**
      * Sets the default width when the plot has a continuous field
      * for x or longitude, or has arc marks.

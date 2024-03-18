@@ -34,6 +34,19 @@ public class FacetField {
         this.spec = spec;
     }
 
+    @Override
+    public String toString() {
+        return spec.toString();
+    }
+
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     /**
      * Sets the field's type of measurement.
      * @param type The encoded field's type of measurement ("quantitative",
