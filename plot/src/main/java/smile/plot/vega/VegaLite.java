@@ -16,7 +16,11 @@
  */
 package smile.plot.vega;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,36 +40,38 @@ import smile.util.Strings;
  */
 public class VegaLite {
     /**
+     * The schema of Vega-Lite.
+     */
+    private static String schema = "https://vega.github.io/schema/vega-lite/v5.json";
+    /**
+     * The MIME type of Vega-Lite.
+     */
+    private static String mime = "application/vnd.vegalite.v5+json";
+    /**
      * JSON object mapping.
      */
-    ObjectMapper mapper = new ObjectMapper();
+    final ObjectMapper mapper = new ObjectMapper();
     /**
-     * The specification
+     * The Vega-Lite specification.
      */
-    ObjectNode spec = mapper.createObjectNode();
-    ;
-
+    final ObjectNode spec = mapper.createObjectNode();
     /**
-     * Constructor with default view width and height.
+     * The configuration object lists configuration properties
+     * of a visualization for creating a consistent theme.
      */
-    public VegaLite() {
-        this(400, 400);
-    }
+    final ObjectNode config = spec.putObject("config");
+    /**
+     * Default properties for single view plots.
+     */
+    final ObjectNode view = config.putObject("view");
 
     /**
      * Constructor.
-     *
-     * @param width  the view width.
-     * @param height the view height.
      */
-    public VegaLite(int width, int height) {
-        spec.put("$schema", $schema);
-        ObjectNode view = mapper.createObjectNode();
-        view.put("continuousWidth", width);
+    public VegaLite() {
+        spec.put("$schema", schema);
+        view.put("continuousWidth", 400);
         view.put("continuousHeight", 400);
-        ObjectNode config = mapper.createObjectNode();
-        config.set("view", view);
-        config(config);
     }
 
     @Override
@@ -74,9 +80,43 @@ public class VegaLite {
     }
 
     // ====== Properties of Top-Level Specifications ======
+    /**
+     * Returns the configuration object that lists properties of
+     * a visualization for creating a consistent theme. This property
+     * can only be defined at the top-level of a specification.
+     */
+    public Config config() {
+        return new Config(config);
+    }
 
     /**
-     * CSS color property to use as the background of the entire view.
+     * Returns the configuration object defining the style of
+     * a single view visualization.
+     */
+    public ViewConfig viewConfig() {
+        return new ViewConfig(view);
+    }
+
+    /**
+     * Optional metadata that will be passed to Vega. This object is completely
+     * ignored by Vega and Vega-Lite and can be used for custom metadata.
+     */
+    public VegaLite usermeta(JsonNode metadata) {
+        spec.set("usermeta", metadata);
+        return this;
+    }
+
+    /**
+     * Optional metadata that will be passed to Vega. This object is completely
+     * ignored by Vega and Vega-Lite and can be used for custom metadata.
+     */
+    public VegaLite usermeta(Object metadata) {
+        spec.putPOJO("usermeta", metadata);
+        return this;
+    }
+
+    /**
+     * Sets the background of the entire view with CSS color property.
      */
     public VegaLite background(String color) {
         spec.put("background", color);
@@ -99,12 +139,11 @@ public class VegaLite {
      * visualization canvas to the data rectangle.
      */
     public VegaLite padding(int left, int top, int right, int bottom) {
-        ObjectNode padding = mapper.createObjectNode();
+        ObjectNode padding = spec.putObject("padding");
         padding.put("left", left);
         padding.put("top", top);
         padding.put("right", right);
         padding.put("bottom", bottom);
-        spec.set("padding", padding);
         return this;
     }
 
@@ -140,39 +179,10 @@ public class VegaLite {
      * @link https://vega.github.io/vega-lite/docs/size.html#autosize
      */
     public VegaLite autosize(String type, boolean resize, String contains) {
-        ObjectNode autosize = mapper.createObjectNode();
+        ObjectNode autosize = spec.putObject("autosize");
         autosize.put("type", type);
         autosize.put("resize", resize);
         autosize.put("contains", contains);
-        spec.set("autosize", autosize);
-        return this;
-    }
-
-    /**
-     * Sets Vega-Lite configuration object that lists configuration properties
-     * of a visualization for creating a consistent theme. This property can
-     * only be defined at the top-level of a specification.
-     */
-    public VegaLite config(ObjectNode properties) {
-        spec.set("config", properties);
-        return this;
-    }
-
-    /**
-     * Optional metadata that will be passed to Vega. This object is completely
-     * ignored by Vega and Vega-Lite and can be used for custom metadata.
-     */
-    public VegaLite usermeta(JsonNode data) {
-        spec.set("usermeta", data);
-        return this;
-    }
-
-    /**
-     * Optional metadata that will be passed to Vega. This object is completely
-     * ignored by Vega and Vega-Lite and can be used for custom metadata.
-     */
-    public VegaLite usermeta(Object data) {
-        spec.set("usermeta", mapper.valueToTree(data));
         return this;
     }
 
@@ -204,32 +214,30 @@ public class VegaLite {
 
     /**
      * Sets an array describing the data source. Set to null to ignore
-     * the parent’s data source. If no data is set, it is derived from
+     * the parent's data source. If no data is set, it is derived from
      * the parent.
      */
     public <T> VegaLite data(T[] data) {
         if (data == null) {
             spec.remove("data");
         } else {
-            ObjectNode node = mapper.createObjectNode();
+            ObjectNode node = spec.putObject("data");
             node.set("values", mapper.valueToTree(data));
-            spec.set("data", node);
         }
         return this;
     }
 
     /**
      * Sets a list describing the data source. Set to null to ignore
-     * the parent’s data source. If no data is set, it is derived from
+     * the parent's data source. If no data is set, it is derived from
      * the parent.
      */
     public <T> VegaLite data(List<T> data) {
         if (data == null) {
             spec.remove("data");
         } else {
-            ObjectNode node = mapper.createObjectNode();
+            ObjectNode node = spec.putObject("data");
             node.set("values", mapper.valueToTree(data));
-            spec.set("data", node);
         }
         return this;
     }
@@ -242,37 +250,179 @@ public class VegaLite {
      * @param url A URL from which to load the data set.
      */
     public VegaLite data(String url) {
-        return data(url, (JsonNode) null);
-    }
-
-    /**
-     * Sets the url of the data source.
-     *
-     * @param url    A URL from which to load the data set.
-     * @param format Type of input data: "json", "csv", "tsv", "dsv".
-     *               Default value: The default format type is determined
-     *               by the extension of the file URL. If no extension is
-     *               detected, "json" will be used by default.
-     */
-    public VegaLite data(String url, String format) {
-        ObjectNode node = mapper.createObjectNode();
-        node.put("type", format);
-        return data(url, node);
-    }
-
-    /**
-     * Sets the url of the data source.
-     *
-     * @param url    A URL from which to load the data set.
-     * @param format Type of input data.
-     */
-    public VegaLite data(String url, JsonNode format) {
-        ObjectNode node = mapper.createObjectNode();
+        ObjectNode node = spec.putObject("data");
         node.put("url", url);
-        if (format != null) {
-            node.set("format", format);
+        return this;
+    }
+
+    /**
+     * Sets the url of the data source.
+     *
+     * @param url    A URL from which to load the data set.
+     * @param format File format: "json", "csv", "tsv", "dsv".
+     * @return the data format specification object.
+     */
+    private ObjectNode data(String url, String format) {
+        ObjectNode node = spec.putObject("data");
+        node.put("url", url);
+        ObjectNode dataFormat = node.putObject("format");
+        dataFormat.put("type", format);
+        return dataFormat;
+    }
+
+    /**
+     * Loads a JSON file. Assumes row-oriented data, where each row is an
+     * object with named attributes.
+     *
+     * @param url    A URL from which to load the data set.
+     * @param property The JSON property containing the desired data. This
+     *                parameter can be used when the loaded JSON file may
+     *                have surrounding structure or meta-data. For example
+     *                "values.features" is equivalent to retrieving
+     *                json.values.features from the loaded JSON object.
+     */
+    public VegaLite json(String url, String property) {
+        ObjectNode format = data(url, "json");
+        format.put("property", property);
+        return this;
+    }
+
+    /**
+     * Loads a JSON file using the TopoJSON format. The input file must
+     * contain valid TopoJSON data. The TopoJSON input is then converted
+     * into a GeoJSON format. There are two mutually exclusive properties
+     * that can be used to specify the conversion process: "feature" or
+     * "mesh".
+     *
+     * @param url    A URL from which to load the data set.
+     * @param conversion "feature" or "mesh".
+     * @param name The name of the TopoJSON object set to convert to a
+     *            GeoJSON feature collection (or mesh).
+     */
+    public VegaLite topojson(String url, String conversion, String name) {
+        ObjectNode format = data(url, "topojson");
+        format.put(conversion, name);
+        return this;
+    }
+
+    /**
+     * Sets explicit data types.
+     * @param format the data format specification object.
+     * @param type If set to null, disable type inference based on the spec
+     *            and only use type inference based on the data.
+     */
+    private void dataType(ObjectNode format, Map<String, String> type) {
+        if (type == null) {
+            format.putNull("parse");
+        } else {
+            ObjectNode parse = format.putObject("parse");
+            for (Map.Entry<String, String> entry : type.entrySet()) {
+                parse.put(entry.getKey(), entry.getValue());
+            }
         }
-        spec.set("data", node);
+    }
+
+    /**
+     * Loads a comma-separated values (CSV) file
+     *
+     * @param url    A URL from which to load the data set.
+     */
+    public VegaLite csv(String url) {
+        ObjectNode format = data(url, "csv");
+        return this;
+    }
+
+    /**
+     * Loads a comma-separated values (CSV) file
+     *
+     * @param url    A URL from which to load the data set.
+     * @param dataTypes If set to null, disable type inference based on the spec
+     *                 and only use type inference based on the data.
+     *                 Alternatively, a parsing directive object for explicit
+     *                 data types. Each property of the object corresponds to a
+     *                 field name, and the value to the desired data type (one
+     *                 of "number", "boolean", "date", or null (do not parse
+     *                 the field)). For "date", we parse data based using
+     *                 JavaScript's Date.parse(). For Specific date formats
+     *                 can be provided (e.g., {foo: "date:'%m%d%Y'"}), using
+     *                 the d3-time-format syntax. UTC date format parsing is
+     *                 supported similarly (e.g., {foo: "utc:'%m%d%Y'"}).
+     */
+    public VegaLite csv(String url, Map<String, String> dataTypes) {
+        ObjectNode format = data(url, "csv");
+        dataType(format, dataTypes);
+        return this;
+    }
+
+    /**
+     * Loads a tab-separated values (TSV) file
+     *
+     * @param url    A URL from which to load the data set..
+     */
+    public VegaLite tsv(String url) {
+        ObjectNode format = data(url, "tsv");
+        return this;
+    }
+
+    /**
+     * Loads a tab-separated values (TSV) file
+     *
+     * @param url    A URL from which to load the data set.
+     * @param dataTypes A parsing directive object for explicit data types.
+     *                 Each property of the object corresponds to a field name,
+     *                 and the value to the desired data type (one of "number",
+     *                 "boolean", "date", or null (do not parse the field)).
+     *                  For "date", we parse data based using JavaScript's
+     *                  Date.parse(). For Specific date formats can be provided
+     *                  (e.g., {foo: "date:'%m%d%Y'"}), using the d3-time-format
+     *                  syntax. UTC date format parsing is supported similarly
+     *                  (e.g., {foo: "utc:'%m%d%Y'"}).
+     */
+    public VegaLite tsv(String url, Map<String, String> dataTypes) {
+        ObjectNode format = data(url, "tsv");
+        dataType(format, dataTypes);
+        return this;
+    }
+
+    /**
+     * Loads a delimited text file with a custom delimiter.
+     * This is a general version of CSV and TSV.
+     *
+     * @param url    A URL from which to load the data set.
+     * @param delimiter The delimiter between records. The delimiter must be
+     *                 a single character (i.e., a single 16-bit code unit);
+     *                 so, ASCII delimiters are fine, but emoji delimiters
+     *                 are not.
+     */
+    public VegaLite dsv(String url, String delimiter) {
+        ObjectNode format = data(url, "dsv");
+        format.put("delimiter", delimiter);
+        return this;
+    }
+
+    /**
+     * Loads a delimited text file with a custom delimiter.
+     * This is a general version of CSV and TSV.
+     *
+     * @param url    A URL from which to load the data set.
+     * @param delimiter The delimiter between records. The delimiter must be
+     *                 a single character (i.e., a single 16-bit code unit);
+     *                 so, ASCII delimiters are fine, but emoji delimiters
+     *                 are not.
+     * @param dataTypes A parsing directive object for explicit data types.
+     *                 Each property of the object corresponds to a field name,
+     *                 and the value to the desired data type (one of "number",
+     *                 "boolean", "date", or null (do not parse the field)).
+     *                  For "date", we parse data based using JavaScript's
+     *                  Date.parse(). For Specific date formats can be provided
+     *                  (e.g., {foo: "date:'%m%d%Y'"}), using the d3-time-format
+     *                  syntax. UTC date format parsing is supported similarly
+     *                  (e.g., {foo: "utc:'%m%d%Y'"}).
+     */
+    public VegaLite dsv(String url, String delimiter, Map<String, String> dataTypes) {
+        ObjectNode format = data(url, "dsv");
+        format.put("delimiter", delimiter);
+        dataType(format, dataTypes);
         return this;
     }
 
@@ -288,19 +438,28 @@ public class VegaLite {
      * array. Then the inline transforms are executed in this order:
      * bin, timeUnit, aggregate, sort, and stack.
      */
-    public VegaLite transform(ObjectNode... transforms) {
-        ArrayNode array = mapper.createArrayNode();
-        for (ObjectNode node : transforms) {
-            array.add(node);
+    public VegaLite transform(Transform... transforms) {
+        ArrayNode node = spec.putArray("transform");
+        for (Transform transform : transforms) {
+            node.add(transform.spec);
         }
-        spec.set("transform", array);
         return this;
+    }
+
+    /**
+     * Displays the plot with the default browser.
+     */
+    public void show() throws IOException, JsonProcessingException {
+        Path path = Files.createTempFile("smile-plot-", ".html");
+        path.toFile().deleteOnExit();
+        Files.write(path, embed().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        java.awt.Desktop.getDesktop().browse(path.toUri());
     }
 
     /**
      * Returns the HTML of plot specification with Vega Embed.
      */
-    private String embed() throws JsonProcessingException {
+    public String embed() throws JsonProcessingException {
         return """
                    <!DOCTYPE html>
                    <html>
@@ -355,15 +514,6 @@ public class VegaLite {
                    </script>
                 """.format(id, src, id);
     }
-
-    /**
-     * The schema of Vega-Lite.
-     */
-    private String $schema = "https://vega.github.io/schema/vega-lite/v5.json";
-    /**
-     * The MIME type of Vega-Lite.
-     */
-    private String mime = "application/vnd.vegalite.v5+json";
 
     /**
      * Returns a single view specification with inline data.
