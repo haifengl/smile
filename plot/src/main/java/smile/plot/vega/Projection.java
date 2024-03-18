@@ -46,6 +46,19 @@ public class Projection {
         this.spec = spec;
     }
 
+    @Override
+    public String toString() {
+        return spec.toString();
+    }
+
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     /**
      * Sets the projection's center, a two-element array of longitude and latitude in degrees.
      * @param longitude longitude in degrees.

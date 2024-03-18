@@ -39,6 +39,19 @@ public class Transform {
         this.spec = spec;
     }
 
+    @Override
+    public String toString() {
+        return spec.toString();
+    }
+
+    /**
+     * Returns the specification in pretty print.
+     * @return the specification in pretty print.
+     */
+    public String toPrettyString() {
+        return spec.toPrettyString();
+    }
+
     /**
      * Adds a filter transform.
      * @param predicate an expression string, where datum can be used to refer
@@ -50,7 +63,6 @@ public class Transform {
     Transform filter(String predicate) {
         ObjectNode node = spec.addObject();
         node.put("filter", predicate);
-        spec.add(node);
         return this;
     }
 }
