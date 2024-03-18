@@ -127,4 +127,56 @@ public class FacetField {
         node.put("title", title);
         return this;
     }
+
+    /**
+     * Sets the alignment to apply to row/column facet's subplot.
+     * For "none", a flow layout will be used, in which adjacent subviews
+     * are simply placed one after the other.
+     *
+     * For "each", subviews will be aligned into a clean grid structure,
+     * but each row or column may be of variable size.
+     *
+     * For "all", subviews will be aligned and each row or column will be
+     * sized identically based on the maximum observed size. String values
+     * for this property will be applied to both grid rows and columns.
+     *
+     * @param alignment "all", "each", or "none".
+     * @return this object.
+     */
+    public FacetField align(String alignment) {
+        spec.put("align", alignment);
+        return this;
+    }
+
+    /**
+     * Sets if facet's subviews should be centered relative to their respective
+     * rows or columns.
+     * @param flag A flag indicating if facet's subviews should be centered
+     *            relative to their respective rows or columns.
+     * @return this object.
+     */
+    public FacetField center(boolean flag) {
+        spec.put("center", flag);
+        return this;
+    }
+
+    /**
+     * Sets the spacing in pixels between facet's sub-views.
+     * @param spacing the spacing in pixels between facet's sub-views.
+     * @return this object.
+     */
+    public FacetField spacing(double spacing) {
+        spec.put("spacing", spacing);
+        return this;
+    }
+
+    /**
+     * For the facet channel, sets the number of columns to include in the view composition layout.
+     * @param columns the number of columns to include in the view composition layout.
+     * @return this object.
+     */
+    public FacetField spacing(int columns) {
+        spec.put("columns", columns);
+        return this;
+    }
 }
