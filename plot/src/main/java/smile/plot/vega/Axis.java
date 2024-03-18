@@ -59,6 +59,16 @@ public class Axis {
     }
 
     /**
+     * Sets a descriptive title.
+     * @param title a descriptive title.
+     * @return this object.
+     */
+    public Axis title(String title) {
+        spec.put("title", title);
+        return this;
+    }
+
+    /**
      * Sets if ARIA attributes should be included (SVG output only).
      * @param flag A flag indicating if ARIA attributes should be
      *            included (SVG output only). If false, the "aria-hidden"
@@ -572,5 +582,64 @@ public class Axis {
         return this;
     }
 
-    // TODO: add Ticks, Title, Grid properties.
+    /**
+     * Sets if gridlines should be included as part of the axis.
+     * @param flag A flag indicating if gridlines should be included as part of the axis.
+     * @return this object.
+     */
+    public Axis grid(boolean flag) {
+        spec.put("grid", flag);
+        return this;
+    }
+
+    /**
+     * Sets the stroke cap for gridlines' ending style.
+     * @param cap "butt", "round" or "square".
+     * @return this object.
+     */
+    public Axis gridCap(String cap) {
+        spec.put("gridCap", cap);
+        return this;
+    }
+
+    /**
+     * Sets the color of gridlines.
+     * @param color the color of gridlines.
+     * @return this object.
+     */
+    public Axis gridColor(String color) {
+        spec.put("gridColor", color);
+        return this;
+    }
+
+    /**
+     * Sets the stroke opacity of grid.
+     * @param opacity the stroke opacity of grid.
+     * @return this object.
+     */
+    public Axis gridOpacity(double opacity) {
+        spec.put("gridOpacity", opacity);
+        return this;
+    }
+
+    /**
+     * Sets the grid width.
+     * @param width the grid width in pixels.
+     * @return this object.
+     */
+    public Axis gridWidth(double width) {
+        spec.put("gridWidth", width);
+        return this;
+    }
+
+    /**
+     * Sets the alternating [stroke, space] lengths for dashed gridlines.
+     * @param stroke the stroke length.
+     * @param space the space length.
+     * @return this object.
+     */
+    public Axis gridDash(double stroke, double space) {
+        spec.putArray("gridDash").add(stroke).add(space);
+        return this;
+    }
 }
