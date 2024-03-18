@@ -36,7 +36,7 @@ public class View extends VegaLite {
 
     /**
      * Sets the width of a plot with a continuous x-field,
-     * or the width per discrete step of a discrete x-field or no x-field.
+     * or the fixed width of a plot a discrete x-field or no x-field.
      */
     public View width(int width) {
         spec.put("width", width);
@@ -45,7 +45,7 @@ public class View extends VegaLite {
 
     /**
      * Sets the height of a plot with a continuous y-field,
-     * or the height per discrete step of a discrete y-field or no y-field.
+     * or the fixed height of a plot a discrete y-field or no y-field.
      */
     public View height(int height) {
         spec.put("height", height);
@@ -76,9 +76,8 @@ public class View extends VegaLite {
      * For a discrete x-field, sets the width per discrete step.
      */
     public View widthStep(int step) {
-        ObjectNode width = mapper.createObjectNode();
+        ObjectNode width = spec.putObject("width");
         width.put("step", step);
-        spec.set("width", width);
         return this;
     }
 
@@ -86,9 +85,8 @@ public class View extends VegaLite {
      * For a discrete y-field, sets the height per discrete step..
      */
     public View heightStep(int step) {
-        ObjectNode height = mapper.createObjectNode();
+        ObjectNode height = spec.putObject("height");
         height.put("step", step);
-        spec.set("height", height);
         return this;
     }
 
@@ -106,9 +104,24 @@ public class View extends VegaLite {
         return new Mark(node);
     }
 
-    /** Returns the encoding object. */
-    private ObjectNode encoding() {
-        return spec.has("encoding") ? (ObjectNode) spec.get("encoding") : spec.putObject("encoding");
+    /**
+     * Returns the view background's fill and stroke object.
+     */
+    public Background background() {
+        return new Background(spec.has("view") ? (ObjectNode) spec.get("view") : spec.putObject("view"));
+    }
+
+    /**
+     * Returns the defining properties of geographic projection, which will be
+     * applied to shape path for "geoshape" marks and to latitude and
+     * "longitude" channels for other marks.
+     * @param type The cartographic projection to use.
+     * @link https://vega.github.io/vega-lite/docs/projection.html#projection-types
+     */
+    public Projection projection(String type) {
+        ObjectNode node = spec.putObject("projection");
+        node.put("type", type);
+        return new Projection(node);
     }
 
     /**
@@ -127,8 +140,11 @@ public class View extends VegaLite {
      *   - Order Channel: order
      *   - Facet Channels: facet, row, column
      * @param field A string defining the name of the field from which to pull
-     *             a data value or an object defining iterated values from the
-     *             repeat operator.
+     *             a data value. Dots (.) and brackets ([ and ]) can be used to
+     *             access nested objects (e.g., "field": "foo.bar" and
+     *             "field": "foo['bar']"). If field names contain dots or
+     *             brackets but are not nested, you can use \\ to escape dots
+     *             and brackets (e.g., "a\\.b" and "a\\[0\\]").
      * @return the field object for encoding the channel.
      */
     public Field encoding(String channel, String field) {
@@ -214,42 +230,6 @@ public class View extends VegaLite {
         ObjectNode node = encoding.putObject(channel);
         node.put("datum", datum);
         return this;
-    }
-
-    /** Sets a mark property by value. */
-    public View setPropertyValue(String prop, JsonNode value) {
-        ObjectNode data = mapper.createObjectNode();
-        data.set("value", value);
-        encoding().set(prop, data);
-        return this;
-    }
-
-    /** Sets a mark property by datum. */
-    public View setPropertyDatum(String prop, JsonNode datum) {
-        ObjectNode data = mapper.createObjectNode();
-        data.set("datum", datum);
-        encoding().set(prop, data);
-        return this;
-    }
-
-    /**
-     * Returns the view background's fill and stroke object.
-     */
-    public Background background() {
-        return new Background(spec.has("view") ? (ObjectNode) spec.get("view") : spec.putObject("view"));
-    }
-
-    /**
-     * Returns the defining properties of geographic projection, which will be
-     * applied to shape path for "geoshape" marks and to latitude and
-     * "longitude" channels for other marks.
-     * @param type The cartographic projection to use.
-     * @link https://vega.github.io/vega-lite/docs/projection.html#projection-types
-     */
-    public Projection projection(String type) {
-        ObjectNode node = spec.putObject("projection");
-        node.put("type", type);
-        return new Projection(node);
     }
 
     @Override
