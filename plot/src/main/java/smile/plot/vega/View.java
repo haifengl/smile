@@ -16,6 +16,8 @@
  */
 package smile.plot.vega;
 
+import java.util.List;
+import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -33,7 +35,8 @@ public class View extends VegaLite {
     }
 
     /**
-     * Sets the width of the data rectangle (plotting) dimensions.
+     * Sets the width of a plot with a continuous x-field,
+     * or the width per discrete step of a discrete x-field or no x-field.
      */
     public View width(int width) {
         spec.put("width", width);
@@ -41,7 +44,8 @@ public class View extends VegaLite {
     }
 
     /**
-     * Sets the height of the data rectangle (plotting) dimensions.
+     * Sets the height of a plot with a continuous y-field,
+     * or the height per discrete step of a discrete y-field or no y-field.
      */
     public View height(int height) {
         spec.put("height", height);
@@ -49,19 +53,8 @@ public class View extends VegaLite {
     }
 
     /**
-     * Sets the top-level width properties to "container" to indicate
-     * that the width of the plot should be the same as its surrounding
-     * container. The width and height can be set independently,
-     * for example, you can have a responsive width and a fixed height
-     * by setting width to "container" and height to a number.
-     * <p>
-     * After setting width or height to "container", you need to ensure
-     * that the container's width or height is determined outside the plot.
-     * For example, the container can be a `<div>` element that has style
-     * width: 100%; height: 300px. When the container is not available
-     * or its size is not defined (e.g., in server-side rendering),
-     * the default width and height are config.view.continuousWidth
-     * and config.view.continuousHeight, respectively.
+     * To enable responsive sizing on width.
+     * @param width it should be set to "container".
      */
     public View width(String width) {
         assert width == "container" : "Invalid width: " + width;
@@ -70,19 +63,8 @@ public class View extends VegaLite {
     }
 
     /**
-     * Sets the top-level height properties to "container" to indicate
-     * that the height of the plot should be the same as its surrounding
-     * container. The width and height can be set independently,
-     * for example, you can have a responsive width and a fixed height
-     * by setting width to "container" and height to a number.
-     * <p>
-     * After setting width or height to "container", you need to ensure
-     * that the container's width or height is determined outside the plot.
-     * For example, the container can be a `<div>` element that has style
-     * width: 100%; height: 300px. When the container is not available
-     * or its size is not defined (e.g., in server-side rendering),
-     * the default width and height are config.view.continuousWidth
-     * and config.view.continuousHeight, respectively.
+     * To enable responsive sizing on height.
+     * @param height it should be set to "container".
      */
     public View height(String height) {
         assert height == "container" : "Invalid height: " + height;
@@ -268,5 +250,137 @@ public class View extends VegaLite {
         ObjectNode node = spec.putObject("projection");
         node.put("type", type);
         return new Projection(node);
+    }
+
+    @Override
+    public View usermeta(JsonNode metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public View usermeta(Object metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public View background(String color) {
+        super.background(color);
+        return this;
+    }
+
+    @Override
+    public View padding(int size) {
+        super.padding(size);
+        return this;
+    }
+
+    @Override
+    public View padding(int left, int top, int right, int bottom) {
+        super.padding(left, top, right, bottom);
+        return this;
+    }
+
+    @Override
+    public View autosize() {
+        super.autosize();
+        return this;
+    }
+
+    @Override
+    public View autosize(String type, boolean resize, String contains) {
+        super.autosize(type, resize, contains);
+        return this;
+    }
+
+    @Override
+    public View name(String name) {
+        super.name(name);
+        return this;
+    }
+
+    @Override
+    public View description(String description) {
+        super.description(description);
+        return this;
+    }
+
+    @Override
+    public View title(String title) {
+        super.title(title);
+        return this;
+    }
+
+    @Override
+    public <T> View data(T[] data) {
+        super.data(data);
+        return this;
+    }
+
+    @Override
+    public <T> View data(List<T> data) {
+        super.data(data);
+        return this;
+    }
+
+    @Override
+    public View data(String url) {
+        super.data(url);
+        return this;
+    }
+
+    @Override
+    public View json(String url, String property) {
+        super.json(url, property);
+        return this;
+    }
+
+    @Override
+    public View topojson(String url, String conversion, String name) {
+        super.topojson(url, conversion, name);
+        return this;
+    }
+
+    @Override
+    public View csv(String url) {
+        super.csv(url);
+        return this;
+    }
+
+    @Override
+    public View csv(String url, Map<String, String> dataTypes) {
+        super.csv(url, dataTypes);
+        return this;
+    }
+
+    @Override
+    public View tsv(String url) {
+        super.tsv(url);
+        return this;
+    }
+
+    @Override
+    public View tsv(String url, Map<String, String> dataTypes) {
+        super.tsv(url, dataTypes);
+        return this;
+    }
+
+    @Override
+    public View dsv(String url, String delimiter) {
+        super.dsv(url, delimiter);
+        return this;
+    }
+
+    @Override
+    public View dsv(String url, String delimiter, Map<String, String> dataTypes) {
+        super.dsv(url, delimiter, dataTypes);
+        return this;
+    }
+
+    @Override
+    public View transform(Transform... transforms) {
+        super.transform(transforms);
+        return this;
     }
 }
