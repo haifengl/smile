@@ -169,4 +169,13 @@ public class Config {
         ObjectNode node = spec.putObject("tooltipFormat");
         return new FormatConfig(node);
     }
+
+    /**
+     * Returns the axis definition object.
+     * @return the axis definition object.
+     */
+    public Axis axis() {
+        ObjectNode node = spec.has("axis") ? (ObjectNode) spec.get("axis") : spec.putObject("axis");
+        return new Axis(node);
+    }
 }
