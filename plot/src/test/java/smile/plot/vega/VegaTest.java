@@ -17,6 +17,7 @@
 
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -51,10 +52,10 @@ public class VegaTest {
 
     @Test
     public void testBar() throws Exception {
-        System.out.println("bar");
+        System.out.println("Bar");
 
         View bar = new View().
-                title("Bar Plot").
+                title("Simple Bar Plot").
                 description("A simple bar chart with embedded data.").
                 widthStep(30).
                 json("""
@@ -67,10 +68,28 @@ public class VegaTest {
         bar.mark("bar");
         Field x = bar.encoding("x", "a");
         x.type("ordinal");
+        ObjectNode axis = x.spec.putObject("axis");
+        axis.put("labelAngle", 0);
         Field y = bar.encoding("y", "b");
         y.type("quantitative");
-        // x(field = "a", `type` = "ordinal", axis = JsObject("labelAngel" -> JsInt(0))).
+        bar.show();
+    }
 
+    @Test
+    public void testAggregateBar() throws Exception {
+        System.out.println("Aggregate Bar");
+
+        View bar = new View().
+                title("Aggregate Bar Plot").
+                description("A bar chart showing the US population distribution of age groups in 2000.").
+                heightStep(20).
+                data("https://vega.github.io/vega-lite/examples/data/population.json");
+
+        bar.mark("bar");
+        bar.transform().filter("datum.year == 2000");
+        bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encoding("y", "age").type("ordinal");
+        System.out.println(bar.toPrettyString());
         bar.show();
     }
 }
