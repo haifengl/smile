@@ -16,6 +16,7 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -146,12 +147,73 @@ public class Field {
      * Sets the function that transforms values in the data domain (numbers,
      * dates, strings, etc.) to visual values (pixels, colors, sizes) for
      * position and mark property channels.
-     * @param scale the function name. If null, the scale will be disabled
+     *
+     * Vega-Lite supports the following categories of scale types:
+     *
+     * 1) Continuous Scales - mapping continuous domains to continuous output
+     * ranges ("linear", "pow", "sqrt", "symlog", "log", "time", "utc".
+     *
+     * 2) Discrete Scales - mapping discrete domains to discrete ("ordinal")
+     * or continuous ("band" and "point") output ranges.
+     *
+     * 3) Discretizing Scales - mapping continuous domains to discrete output
+     * ranges "bin-ordinal", "quantile", "quantize" and "threshold".
+     *
+     * @param type the function name. If null, the scale will be disabled
      *             and the data value will be directly encoded.
      * @return this object.
      */
-    public Field scale(String scale) {
-        spec.put("scale", scale);
+    public Field scale(String type) {
+        ObjectNode node = spec.putObject("scale");
+        node.put("type", type);
+        return this;
+    }
+
+    /**
+     * Sets the customize domain values.
+     * @param min the minimum value in the scale domain.
+     * @param max the maximum value in the scale domain.
+     * @return this object.
+     */
+    public Field scaleDomain(double min, double max) {
+        ObjectNode node = spec.putObject("scale");
+        node.putArray("domain").add(min).add(max);
+        return this;
+    }
+
+    /**
+     * Sets the customize domain values.
+     * @param min the minimum value in the scale domain.
+     * @param max the maximum value in the scale domain.
+     * @return this object.
+     */
+    public Field scaleDomain(String min, String max) {
+        ObjectNode node = spec.putObject("scale");
+        node.putArray("domain").add(min).add(max);
+        return this;
+    }
+
+    /**
+     * Sets the customize range values.
+     * @param min the minimum value in the scale range.
+     * @param max the maximum value in the scale range.
+     * @return this object.
+     */
+    public Field scaleRange(double min, double max) {
+        ObjectNode node = spec.putObject("scale");
+        node.putArray("range").add(min).add(max);
+        return this;
+    }
+
+    /**
+     * Sets the customize range values.
+     * @param min the minimum value in the scale range.
+     * @param max the maximum value in the scale range.
+     * @return this object.
+     */
+    public Field scaleRange(String min, String max) {
+        ObjectNode node = spec.putObject("scale");
+        node.putArray("range").add(min).add(max);
         return this;
     }
 
