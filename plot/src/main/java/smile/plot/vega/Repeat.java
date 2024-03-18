@@ -16,6 +16,7 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -79,13 +80,123 @@ public class Repeat extends ViewLayoutComposition {
         return this;
     }
 
-    /**
-     * Sets the default spacing in pixels between composed sub-views.
-     * @param spacing The default spacing in pixels between composed sub-views.
-     * @return this object.
-     */
-    public Repeat spacing(int spacing) {
-        spec.put("spacing", spacing);
+    @Override
+    public Repeat usermeta(JsonNode metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public Repeat usermeta(Object metadata) {
+        super.usermeta(metadata);
+        return this;
+    }
+
+    @Override
+    public Repeat background(String color) {
+        super.background(color);
+        return this;
+    }
+
+    @Override
+    public Repeat padding(int size) {
+        super.padding(size);
+        return this;
+    }
+
+    @Override
+    public Repeat padding(int left, int top, int right, int bottom) {
+        super.padding(left, top, right, bottom);
+        return this;
+    }
+
+    @Override
+    public Repeat autosize() {
+        super.autosize();
+        return this;
+    }
+
+    @Override
+    public Repeat autosize(String type, boolean resize, String contains) {
+        super.autosize(type, resize, contains);
+        return this;
+    }
+
+    @Override
+    public Repeat name(String name) {
+        super.name(name);
+        return this;
+    }
+
+    @Override
+    public Repeat description(String description) {
+        super.description(description);
+        return this;
+    }
+
+    @Override
+    public Repeat title(String title) {
+        super.title(title);
+        return this;
+    }
+
+    @Override
+    public Repeat resolveScale(String channel, String resolution) {
+        super.resolveScale(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Repeat resolveAxis(String channel, String resolution) {
+        super.resolveAxis(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Repeat resolveLegend(String channel, String resolution) {
+        super.resolveLegend(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Repeat align(String strategy) {
+        super.align(strategy);
+        return this;
+    }
+
+    @Override
+    public Repeat align(String row, String column) {
+        super.align(row, column);
+        return this;
+    }
+
+    @Override
+    public Repeat bounds(String bounds) {
+        super.bounds(bounds);
+        return this;
+    }
+
+    @Override
+    public Repeat center(boolean flag) {
+        super.center(flag);
+        return this;
+    }
+
+    @Override
+    public Repeat center(int row, int column) {
+        super.center(row, column);
+        return this;
+    }
+
+    @Override
+    public Repeat spacing(int size) {
+        super.spacing(size);
+        return this;
+    }
+
+    @Override
+    public Repeat spacing(int row, int column) {
+        super.spacing(row, column);
         return this;
     }
 }

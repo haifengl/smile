@@ -157,4 +157,64 @@ public class Facet extends ViewLayoutComposition {
         super.title(title);
         return this;
     }
+
+    @Override
+    public Facet resolveScale(String channel, String resolution) {
+        super.resolveScale(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Facet resolveAxis(String channel, String resolution) {
+        super.resolveAxis(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Facet resolveLegend(String channel, String resolution) {
+        super.resolveLegend(channel, resolution);
+        return this;
+    }
+
+    @Override
+    public Facet align(String strategy) {
+        super.align(strategy);
+        return this;
+    }
+
+    @Override
+    public Facet align(String row, String column) {
+        super.align(row, column);
+        return this;
+    }
+
+    @Override
+    public Facet bounds(String bounds) {
+        super.bounds(bounds);
+        return this;
+    }
+
+    @Override
+    public Facet center(boolean flag) {
+        super.center(flag);
+        return this;
+    }
+
+    @Override
+    public Facet center(int row, int column) {
+        super.center(row, column);
+        return this;
+    }
+
+    @Override
+    public Facet spacing(int size) {
+        super.spacing(size);
+        return this;
+    }
+
+    @Override
+    public Facet spacing(int row, int column) {
+        super.spacing(row, column);
+        return this;
+    }
 }
