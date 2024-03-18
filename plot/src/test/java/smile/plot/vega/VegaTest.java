@@ -53,16 +53,16 @@ public class VegaTest {
     public void testBar() throws Exception {
         System.out.println("Bar");
 
-        View bar = new View().
-                title("Simple Bar Plot").
-                description("A simple bar chart with embedded data.").
-                widthStep(30).
-                json("""
-      [
-        {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
-        {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
-        {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
-      ]""");
+        View bar = new View()
+                .title("Simple Bar Plot")
+                .description("A simple bar chart with embedded data.")
+                .widthStep(30)
+                .json("""
+        [
+          {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+          {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+          {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+        ]""");
 
         bar.mark("bar");
         Field x = bar.encoding("x", "a").type("ordinal");
@@ -74,11 +74,11 @@ public class VegaTest {
     public void testAggregateBar() throws Exception {
         System.out.println("Aggregate Bar");
 
-        View bar = new View().
-                title("Aggregate Bar Plot").
-                description("A bar chart showing the US population distribution of age groups in 2000.").
-                heightStep(20).
-                data("https://vega.github.io/vega-lite/examples/data/population.json");
+        View bar = new View()
+                .title("Aggregate Bar Plot")
+                .description("A bar chart showing the US population distribution of age groups in 2000.")
+                .heightStep(20)
+                .data("https://vega.github.io/vega-lite/examples/data/population.json");
 
         bar.mark("bar");
         bar.transform().filter("datum.year == 2000");
@@ -91,16 +91,38 @@ public class VegaTest {
     public void testSortedAggregateBar() throws Exception {
         System.out.println("Sorted Aggregate Bar");
 
-        View bar = new View().
-                title("Sorted Aggregate Bar Plot").
-                description("A bar chart that sorts the y-values by the x-values.").
-                heightStep(20).
-                data("https://vega.github.io/vega-lite/examples/data/population.json");
+        View bar = new View()
+                .title("Sorted Aggregate Bar Plot")
+                .description("A bar chart that sorts the y-values by the x-values.")
+                .heightStep(20)
+                .data("https://vega.github.io/vega-lite/examples/data/population.json");
 
         bar.mark("bar");
         bar.transform().filter("datum.year == 2000");
         bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
         bar.encoding("y", "age").type("ordinal").sort("-x");
+    }
+
+    @Test
+    public void testGroupBar() throws Exception {
+        System.out.println("Group Bar");
+
+        View bar = new View()
+                .title("Group Bar Plot")
+                .widthStep(12)
+                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+
+        bar.mark("bar");
+        bar.viewConfig().stroke("transparent").axis().domainWidth(1);
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encoding("x", "gender").type("nominal").title(null);
+        bar.encoding("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
+        bar.encoding("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+        bar.encoding("column", "age").type("ordinal").spacing(10);
+
         bar.show();
     }
 }
