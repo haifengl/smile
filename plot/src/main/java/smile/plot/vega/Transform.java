@@ -65,4 +65,19 @@ public class Transform {
         node.put("filter", predicate);
         return this;
     }
+
+    /**
+     * Adds a formula transform extends data objects with new fields
+     * (columns) according to an expression.
+     * @param expr an expression string. Use the variable datum to refer
+     *            to the current data object.
+     * @param field the field for storing the computed formula value.
+     * @return this object.
+     */
+    Transform calculate(String expr, String field) {
+        ObjectNode node = spec.addObject();
+        node.put("calculate", expr);
+        node.put("as", field);
+        return this;
+    }
 }
