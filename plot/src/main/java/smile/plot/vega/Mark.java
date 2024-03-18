@@ -89,7 +89,7 @@ public class Mark {
      * @return this object.
      */
     public Mark style(String... style) {
-        if (style.length == 0) {
+        if (style.length == 1) {
             spec.put("style", style[0]);
         } else {
             ArrayNode node = spec.putArray("style");
