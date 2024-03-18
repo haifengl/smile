@@ -163,15 +163,13 @@ public class ViewConfig {
     }
 
     /**
-     * Sets the stroke dash.
-     * @param dash An array of alternating stroke, space lengths for creating dashed or dotted lines.
+     * Sets the alternating [stroke, space] lengths for stroke dash.
+     * @param stroke the stroke length.
+     * @param space the space length.
      * @return this object.
      */
-    public ViewConfig strokeDash(int... dash) {
-        ArrayNode node = spec.putArray("strokeDash");
-        for (int d : dash) {
-            node.add(d);
-        }
+    public ViewConfig strokeDash(double stroke, double space) {
+        spec.putArray("strokeDash").add(stroke).add(space);
         return this;
     }
 
