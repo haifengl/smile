@@ -493,10 +493,22 @@ public class VegaLite {
      * Returns the HTML of plot specification with Vega Embed.
      */
     public String embed() throws JsonProcessingException {
+        return embed("en");
+    }
+
+    /**
+     * Returns the HTML of plot specification with Vega Embed.
+     * @param lang the primary language of document.
+     * @return the HTML of plot specification with Vega Embed.
+     */
+    public String embed(String lang) throws JsonProcessingException {
+        String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
-                   <html>
+                   <html lang=%s>
                    <head>
+                     <title>%s</title>
+                     <meta name="viewport" content="width=device-width, initial-scale=1">
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
@@ -516,7 +528,7 @@ public class VegaLite {
                    </script>
                    </body>
                    </html>
-                """, mapper.writeValueAsString(spec));
+                """, lang, title, spec.toPrettyString());
     }
 
     /**
