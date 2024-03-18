@@ -92,4 +92,21 @@ public class VegaTest {
         System.out.println(bar.toPrettyString());
         bar.show();
     }
+
+    @Test
+    public void testSortedAggregateBar() throws Exception {
+        System.out.println("Sorted Aggregate Bar");
+
+        View bar = new View().
+                title("Sorted Aggregate Bar Plot").
+                description("A bar chart that sorts the y-values by the x-values.").
+                heightStep(20).
+                data("https://vega.github.io/vega-lite/examples/data/population.json");
+
+        bar.mark("bar");
+        bar.transform().filter("datum.year == 2000");
+        bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encoding("y", "age").type("ordinal").sort("-x");
+        bar.show();
+    }
 }
