@@ -238,6 +238,17 @@ public class Field {
     }
 
     /**
+     * For facet, row and column channels, sets the spacing in pixels between
+     * facet's sub-views.
+     * @param spacing the spacing in pixels between facet's sub-views.
+     * @return this object.
+     */
+    public Field spacing(double spacing) {
+        spec.put("spacing", spacing);
+        return this;
+    }
+
+    /**
      * Returns the axis definition object.
      * @return the axis definition object.
      */
