@@ -374,10 +374,4 @@ public class View extends VegaLite {
         super.dsv(url, delimiter, dataTypes);
         return this;
     }
-
-    @Override
-    public View transform(Transform... transforms) {
-        super.transform(transforms);
-        return this;
-    }
 }
