@@ -242,7 +242,7 @@ public class Axis {
 
     /**
      * Sets the opacity of the axis domain line.
-     * @param opacity the opacity of the axis domain line.
+     * @param opacity a value between [0, 1].
      * @return this object.
      */
     public Axis domainOpacity(double opacity) {
@@ -614,7 +614,7 @@ public class Axis {
 
     /**
      * Sets the stroke opacity of grid.
-     * @param opacity the stroke opacity of grid.
+     * @param opacity a value between [0, 1].
      * @return this object.
      */
     public Axis gridOpacity(double opacity) {

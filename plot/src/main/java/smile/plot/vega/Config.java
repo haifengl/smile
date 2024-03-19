@@ -178,4 +178,13 @@ public class Config {
         ObjectNode node = spec.has("axis") ? (ObjectNode) spec.get("axis") : spec.putObject("axis");
         return new Axis(node);
     }
+
+    /**
+     * Returns the legend definition object.
+     * @return the legend definition object.
+     */
+    public Legend legend() {
+        ObjectNode node = spec.has("legend") ? (ObjectNode) spec.get("legend") : spec.putObject("legend");
+        return new Legend(node);
+    }
 }
