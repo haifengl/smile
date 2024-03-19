@@ -153,7 +153,6 @@ public class VegaTest {
         bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
         bar.encode("y", null).type("quantitative").aggregate("count");
         bar.encode("color", "weather").type("nominal");
-        bar.show();
     }
 
     @Test
@@ -168,7 +167,6 @@ public class VegaTest {
         bar.encode("x", "yield").type("quantitative").aggregate("sum");
         bar.encode("y", "variety").type("nominal");
         bar.encode("color", "site").type("nominal");
-        bar.show();
     }
 
     @Test
@@ -189,6 +187,98 @@ public class VegaTest {
         bar.encode("x", "age").type("ordinal");
         bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
         bar.encode("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+    }
+
+    @Test
+    public void testNormalizedStackedBar() throws Exception {
+        System.out.println("Normalized (Percentage) Stacked Bar");
+
+        View bar = new View()
+                .title("Normalized (Percentage) Stacked Bar")
+                .widthStep(17)
+                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+
+        bar.mark("bar");
+        bar.background().opacity(0.7);
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encode("x", "age").type("ordinal");
+        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack("normalize");
+        bar.encode("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+    }
+
+    @Test
+    public void testGanttChart() throws Exception {
+        System.out.println("Gantt Chart");
+
+        View gantt = new View()
+                .title("Gantt Chart")
+                .json("""
+        [
+          {"task": "A", "start": 1, "end": 3},
+          {"task": "B", "start": 3, "end": 8},
+          {"task": "C", "start": 8, "end": 10}
+        ]""");
+
+        gantt.mark("bar");
+        gantt.encode("x", "start").type("quantitative");
+        gantt.encode("x2", "end").type("quantitative");
+        gantt.encode("y", "task").type("ordinal");
+    }
+
+    @Test
+    public void testColorBarChart() throws Exception {
+        System.out.println("Color Bar Chart");
+
+        View bar = new View()
+                .title("Bar Chart Encoding Color Names in the Data")
+                .json("""
+        [
+          {"color": "red", "b": 28},
+          {"color": "green", "b": 55},
+          {"color": "blue", "b": 43}
+        ]""");
+
+        bar.mark("bar");
+        bar.encode("x", "color").type("nominal");
+        bar.encode("y", "b").type("quantitative");
+        bar.encode("color", "color").type("nominal").scale(null);
+    }
+
+    @Test
+    public void testHistogram() throws Exception {
+        System.out.println("Histogram");
+
+        View bar = new View()
+                .title("Histogram")
+                .data("https://vega.github.io/vega-lite/examples/data/movies.json");
+
+        bar.mark("bar");
+        bar.encode("x", "IMDB Rating").type("quantitative").bin(true);
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+    }
+
+    @Test
+    public void testRelativeFrequencyHistogram() throws Exception {
+        System.out.println("Relative Frequency Histogram");
+
+        View bar = new View()
+                .title("Relative Frequency Histogram")
+                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+
+        bar.mark("bar").tooltip(true);
+        bar.encode("x", "bin_Horsepwoer").type("quantitative").bin("binned").title("Horsepower");
+        bar.encode("x2", "bin_Horsepwoer_end").type("quantitative");
+        bar.encode("y", "PercentOfTotal").type("quantitative").title("Relative Frequency").axis().format(".1~%");
+
+        bar.transform()
+                .bin("Horsepower", "bin_Horsepwoer")
+                .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
+                .joinaggregate("sum", "Count","TotalCount")
+                .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
 
         bar.show();
     }
