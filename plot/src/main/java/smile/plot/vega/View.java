@@ -36,6 +36,14 @@ public class View extends VegaLite {
     }
 
     /**
+     * Constructor.
+     * @param title a descriptive title.
+     */
+    public View(String title) {
+        title(title);
+    }
+
+    /**
      * Sets the width of a plot with a continuous x-field,
      * or the fixed width of a plot a discrete x-field or no x-field.
      */
@@ -290,88 +298,6 @@ public class View extends VegaLite {
     @Override
     public View title(String title) {
         super.title(title);
-        return this;
-    }
-
-    @Override
-    public View data(JsonNode data) {
-        if (data == null) {
-            spec.remove("data");
-        } else {
-            ObjectNode node = spec.putObject("data");
-            node.set("values", data);
-        }
-        return this;
-    }
-
-    @Override
-    public View json(String data) throws JsonProcessingException {
-        return data(mapper.readTree(data));
-    }
-
-    @Override
-    public <T> View data(T[] data) {
-        super.data(data);
-        return this;
-    }
-
-    @Override
-    public <T> View data(List<T> data) {
-        super.data(data);
-        return this;
-    }
-
-    @Override
-    public View data(String url) {
-        super.data(url);
-        return this;
-    }
-
-    @Override
-    public View json(String url, String property) {
-        super.json(url, property);
-        return this;
-    }
-
-    @Override
-    public View topojson(String url, String conversion, String name) {
-        super.topojson(url, conversion, name);
-        return this;
-    }
-
-    @Override
-    public View csv(String url) {
-        super.csv(url);
-        return this;
-    }
-
-    @Override
-    public View csv(String url, Map<String, String> dataTypes) {
-        super.csv(url, dataTypes);
-        return this;
-    }
-
-    @Override
-    public View tsv(String url) {
-        super.tsv(url);
-        return this;
-    }
-
-    @Override
-    public View tsv(String url, Map<String, String> dataTypes) {
-        super.tsv(url, dataTypes);
-        return this;
-    }
-
-    @Override
-    public View dsv(String url, String delimiter) {
-        super.dsv(url, delimiter);
-        return this;
-    }
-
-    @Override
-    public View dsv(String url, String delimiter, Map<String, String> dataTypes) {
-        super.dsv(url, delimiter, dataTypes);
         return this;
     }
 }
