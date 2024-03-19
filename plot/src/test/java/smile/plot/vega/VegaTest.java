@@ -65,9 +65,9 @@ public class VegaTest {
         ]""");
 
         bar.mark("bar");
-        Field x = bar.encoding("x", "a").type("ordinal");
+        Field x = bar.encode("x", "a").type("ordinal");
         x.axis().labelAngle(0);
-        bar.encoding("y", "b").type("quantitative");
+        bar.encode("y", "b").type("quantitative");
     }
 
     @Test
@@ -82,8 +82,8 @@ public class VegaTest {
 
         bar.mark("bar");
         bar.transform().filter("datum.year == 2000");
-        bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
-        bar.encoding("y", "age").type("ordinal");
+        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encode("y", "age").type("ordinal");
         assertEquals("[{\"filter\":\"datum.year == 2000\"}]", bar.transform().toString());
     }
 
@@ -99,8 +99,8 @@ public class VegaTest {
 
         bar.mark("bar");
         bar.transform().filter("datum.year == 2000");
-        bar.encoding("x", "people").type("quantitative").aggregate("sum").title("population");
-        bar.encoding("y", "age").type("ordinal").sort("-x");
+        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encode("y", "age").type("ordinal").sort("-x");
     }
 
     @Test
@@ -118,10 +118,10 @@ public class VegaTest {
                 .filter("datum.year == 2000")
                 .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
 
-        bar.encoding("x", "gender").type("nominal").title(null);
-        bar.encoding("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
-        bar.encoding("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
-        bar.encoding("column", "age").type("ordinal").spacing(10);
+        bar.encode("x", "gender").type("nominal").title(null);
+        bar.encode("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
+        bar.encode("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+        bar.encode("column", "age").type("ordinal").spacing(10);
     }
 
     @Test
@@ -133,9 +133,9 @@ public class VegaTest {
                 .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
 
         bar.mark("bar");
-        bar.encoding("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
-        bar.encoding("y", null).type("quantitative").aggregate("count");
-        bar.encoding("color", "weather").type("nominal")
+        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "weather").type("nominal")
                 .scaleDomain("sun", "fog", "drizzle", "rain", "snow")
                 .scaleRange("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
                 .legend().title("Weather type");
@@ -150,9 +150,9 @@ public class VegaTest {
                 .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
 
         bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
-        bar.encoding("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
-        bar.encoding("y", null).type("quantitative").aggregate("count");
-        bar.encoding("color", "weather").type("nominal");
+        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "weather").type("nominal");
         bar.show();
     }
 
@@ -165,9 +165,9 @@ public class VegaTest {
                 .data("https://vega.github.io/vega-lite/examples/data/barley.json");
 
         bar.mark("bar");
-        bar.encoding("x", "yield").type("quantitative").aggregate("sum");
-        bar.encoding("y", "variety").type("nominal");
-        bar.encoding("color", "site").type("nominal");
+        bar.encode("x", "yield").type("quantitative").aggregate("sum");
+        bar.encode("y", "variety").type("nominal");
+        bar.encode("color", "site").type("nominal");
         bar.show();
     }
 
@@ -186,9 +186,9 @@ public class VegaTest {
                 .filter("datum.year == 2000")
                 .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
 
-        bar.encoding("x", "age").type("ordinal");
-        bar.encoding("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
-        bar.encoding("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+        bar.encode("x", "age").type("ordinal");
+        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
+        bar.encode("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
 
         bar.show();
     }
