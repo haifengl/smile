@@ -155,4 +155,41 @@ public class VegaTest {
         bar.encoding("color", "weather").type("nominal");
         bar.show();
     }
+
+    @Test
+    public void testHorizontalStackedBar() throws Exception {
+        System.out.println("Horizontal Stacked Bar");
+
+        View bar = new View()
+                .title("Horizontal Stacked Bar")
+                .data("https://vega.github.io/vega-lite/examples/data/barley.json");
+
+        bar.mark("bar");
+        bar.encoding("x", "yield").type("quantitative").aggregate("sum");
+        bar.encoding("y", "variety").type("nominal");
+        bar.encoding("color", "site").type("nominal");
+        bar.show();
+    }
+
+    @Test
+    public void testLayeredBar() throws Exception {
+        System.out.println("Layered Bar");
+
+        View bar = new View()
+                .title("Layered Bar")
+                .widthStep(17)
+                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+
+        bar.mark("bar");
+        bar.background().opacity(0.7);
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encoding("x", "age").type("ordinal");
+        bar.encoding("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
+        bar.encoding("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
+
+        bar.show();
+    }
 }
