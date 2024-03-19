@@ -19,6 +19,7 @@ package smile.plot.vega;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,11 +43,15 @@ public class VegaLite {
     /**
      * The schema of Vega-Lite.
      */
-    private static String schema = "https://vega.github.io/schema/vega-lite/v5.json";
+    private static final String schema = "https://vega.github.io/schema/vega-lite/v5.json";
     /**
      * The MIME type of Vega-Lite.
      */
-    private static String mime = "application/vnd.vegalite.v5+json";
+    private static final String mime = "application/vnd.vegalite.v5+json";
+    /**
+     * ISO 8601 format.
+     */
+    static final DateTimeFormatter ISO8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
     /**
      * JSON object mapping.
      */
