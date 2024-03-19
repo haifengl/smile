@@ -24,13 +24,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * @author Haifeng Li
  */
-public class ViewLayoutComposition extends ViewComposition {
-    /**
-     * Hides the constructor so that users cannot create the instances directly.
-     */
-    ViewLayoutComposition() {
-    }
-
+public interface ViewLayoutComposition extends ViewComposition {
     /**
      * Sets the alignment to apply to grid rows and columns. The supported string
      * values are "all" (the default), "each", and "none".
@@ -45,16 +39,16 @@ public class ViewLayoutComposition extends ViewComposition {
      * sized identically based on the maximum observed size. String values
      * for this property will be applied to both grid rows and columns.
      */
-    public ViewLayoutComposition align(String strategy) {
-        spec.put("align", strategy);
+    default ViewLayoutComposition align(String strategy) {
+        spec().put("align", strategy);
         return this;
     }
 
     /**
      * Sets different alignments for rows and columns.
      */
-    public ViewLayoutComposition align(String row, String column) {
-        ObjectNode node = spec.putObject("align");
+    default ViewLayoutComposition align(String row, String column) {
+        ObjectNode node = spec().putObject("align");
         node.put("row", row);
         node.put("column", column);
         return this;
@@ -72,8 +66,8 @@ public class ViewLayoutComposition extends ViewComposition {
      * when attempting to place sub-plots without axes or legends into
      * a uniform grid structure.
      */
-    public ViewLayoutComposition bounds(String bounds) {
-        spec.put("bounds", bounds);
+    default ViewLayoutComposition bounds(String bounds) {
+        spec().put("bounds", bounds);
         return this;
     }
 
@@ -81,16 +75,16 @@ public class ViewLayoutComposition extends ViewComposition {
      * Sets if subviews should be centered relative to
      * their respective rows or columns.
      */
-    public ViewLayoutComposition center(boolean flag) {
-        spec.put("center", flag);
+    default ViewLayoutComposition center(boolean flag) {
+        spec().put("center", flag);
         return this;
     }
 
     /**
      * Sets different spacing values for rows and columns.
      */
-    public ViewLayoutComposition center(int row, int column) {
-        ObjectNode node = spec.putObject("center");
+    default ViewLayoutComposition center(int row, int column) {
+        ObjectNode node = spec().putObject("center");
         node.put("row", row);
         node.put("column", column);
         return this;
@@ -99,16 +93,16 @@ public class ViewLayoutComposition extends ViewComposition {
     /**
      * Sets the spacing in pixels between sub-views of the composition operator.
      */
-    public ViewLayoutComposition spacing(int size) {
-        spec.put("spacing", size);
+    default ViewLayoutComposition spacing(int size) {
+        spec().put("spacing", size);
         return this;
     }
 
     /**
      * Sets different spacing values for rows and columns.
      */
-    public ViewLayoutComposition spacing(int row, int column) {
-        ObjectNode node = spec.putObject("spacing");
+    default ViewLayoutComposition spacing(int row, int column) {
+        ObjectNode node = spec().putObject("spacing");
         node.put("row", row);
         node.put("column", column);
         return this;

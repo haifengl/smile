@@ -31,34 +31,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * @author Haifeng Li
  */
-public class ViewComposition extends VegaLite {
-    /** Resolve parent object. */
-    ObjectNode resolve;
-    /** Scale resolve specification object. */
-    ObjectNode scale;
-    /** Axis resolve specification object. */
-    ObjectNode axis;
-    /** Legend resolve specification object. */
-    ObjectNode legend;
-
+public interface ViewComposition {
     /**
-     * Hides the constructor so that users cannot create the instances directly.
+     * Returns the top level Vega-Lite specification.
      */
-    ViewComposition() {
-    }
+    ObjectNode spec();
 
     /**
      * Sets a scale resolution. For scales, resolution can be specified for every channel.
      * @param channel positional or non-positional channel.
      * @param resolution "shared" or "independent".
      */
-    public ViewComposition resolveScale(String channel, String resolution) {
-        if (resolve == null) {
-            resolve = spec.putObject("resolve");
-        }
-        if (scale == null) {
-            scale = resolve.putObject("scale");
-        }
+    default ViewComposition resolveScale(String channel, String resolution) {
+        ObjectNode spec = spec();
+        ObjectNode resolve = spec.has("resolve") ? (ObjectNode) spec.get("resolve"): spec.putObject("resolve");
+        ObjectNode scale = resolve.has("scale") ? (ObjectNode) resolve.get("scale"): resolve.putObject("scale");
         scale.put(channel, resolution);
         return this;
     }
@@ -68,13 +55,10 @@ public class ViewComposition extends VegaLite {
      * @param channel positional channel: "x" or "y".
      * @param resolution "shared" or "independent".
      */
-    public ViewComposition resolveAxis(String channel, String resolution) {
-        if (resolve == null) {
-            resolve = spec.putObject("resolve");
-        }
-        if (axis == null) {
-            axis = resolve.putObject("axis");
-        }
+    default ViewComposition resolveAxis(String channel, String resolution) {
+        ObjectNode spec = spec();
+        ObjectNode resolve = spec.has("resolve") ? (ObjectNode) spec.get("resolve"): spec.putObject("resolve");
+        ObjectNode axis = resolve.has("axis") ? (ObjectNode) resolve.get("axis"): resolve.putObject("axis");
         axis.put(channel, resolution);
         return this;
     }
@@ -84,13 +68,10 @@ public class ViewComposition extends VegaLite {
      * @param channel non-positional channel: "color", "opacity", "shape", or "size".
      * @param resolution "shared" or "independent".
      */
-    public ViewComposition resolveLegend(String channel, String resolution) {
-        if (resolve == null) {
-            resolve = spec.putObject("resolve");
-        }
-        if (legend == null) {
-            legend = resolve.putObject("legend");
-        }
+    default ViewComposition resolveLegend(String channel, String resolution) {
+        ObjectNode spec = spec();
+        ObjectNode resolve = spec.has("resolve") ? (ObjectNode) spec.get("resolve"): spec.putObject("resolve");
+        ObjectNode legend = resolve.has("legend") ? (ObjectNode) resolve.get("legend"): resolve.putObject("legend");
         legend.put(channel, resolution);
         return this;
     }
