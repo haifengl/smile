@@ -148,7 +148,7 @@ public class View extends VegaLite {
      *             and brackets (e.g., "a\\.b" and "a\\[0\\]").
      * @return the field object for encoding the channel.
      */
-    public Field encoding(String channel, String field) {
+    public Field encode(String channel, String field) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("field", field);
@@ -161,7 +161,7 @@ public class View extends VegaLite {
      * @param value the constant visual value.
      * @return this object.
      */
-    public View encodingValue(String channel, int value) {
+    public View encodeValue(String channel, int value) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("value", value);
@@ -174,7 +174,7 @@ public class View extends VegaLite {
      * @param value the constant visual value.
      * @return this object.
      */
-    public View encodingValue(String channel, double value) {
+    public View encodeValue(String channel, double value) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("value", value);
@@ -187,7 +187,7 @@ public class View extends VegaLite {
      * @param value the constant visual value.
      * @return this object.
      */
-    public View encodingValue(String channel, String value) {
+    public View encodeValue(String channel, String value) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("value", value);
@@ -200,7 +200,7 @@ public class View extends VegaLite {
      * @param datum the constant data value.
      * @return this object.
      */
-    public View encodingDatum(String channel, int datum) {
+    public View encodeDatum(String channel, int datum) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("datum", datum);
@@ -213,7 +213,7 @@ public class View extends VegaLite {
      * @param datum the constant data value.
      * @return this object.
      */
-    public View encodingDatum(String channel, double datum) {
+    public View encodeDatum(String channel, double datum) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("datum", datum);
@@ -226,7 +226,7 @@ public class View extends VegaLite {
      * @param datum the constant data value.
      * @return this object.
      */
-    public View encodingDatum(String channel, String datum) {
+    public View encodeDatum(String channel, String datum) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
         node.put("datum", datum);
