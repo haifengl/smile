@@ -80,4 +80,83 @@ public class Transform {
         node.put("as", field);
         return this;
     }
+
+    /**
+     * Aggregate summarizes a table as one record for each group.
+     * To preserve the original table structure and instead add
+     * a new column with the aggregate values, use the join aggregate
+     * transform.
+     *
+     * @param op The aggregation operation to apply to the fields
+     *          (e.g., "sum", "average", or "count").
+     * @param field The data field for which to compute aggregate function.
+     *             This is required for all aggregation operations except "count".
+     * @param as The output field names to use for each aggregated field.
+     * @param groupby The data fields to group by. If not specified, a single
+     *               group containing all data objects will be used.
+     * @return this object.
+     */
+    Transform aggregate(String op, String field, String as, String... groupby) {
+        ObjectNode node = spec.addObject();
+        ArrayNode a = node.putArray("aggregate");
+        a.addObject()
+                .put("op", op)
+                .put("field", field)
+                .put("as", as);
+        ArrayNode g = node.putArray("groupby");
+        for (String f : groupby) {
+            g.add(f);
+        }
+        return this;
+    }
+
+    /**
+     * The join-aggregate transform extends the input data objects with
+     * aggregate values in a new field. Aggregation is performed and the
+     * results are then joined with the input data. This transform can be
+     * helpful for creating derived values that combine both raw data and
+     * aggregate calculations, such as percentages of group totals. This
+     * transform is a special case of the window transform where the frame
+     * is always [null, null]. Compared with the regular aggregate transform,
+     * join-aggregate preserves the original table structure and augments
+     * records with aggregate values rather than summarizing the data in
+     * one record for each group.
+     *
+     * @param op The aggregation operation to apply to the fields
+     *          (e.g., "sum", "average", or "count").
+     * @param field The data field for which to compute aggregate function.
+     *             This is required for all aggregation operations except "count".
+     * @param as The output field names to use for each aggregated field.
+     * @param groupby The data fields to group by. If not specified, a single
+     *               group containing all data objects will be used.
+     * @return this object.
+     */
+    Transform joinAggregate(String op, String field, String as, String... groupby) {
+        ObjectNode node = spec.addObject();
+        ArrayNode a = node.putArray("joinaggregate");
+        a.addObject()
+                .put("op", op)
+                .put("field", field)
+                .put("as", as);
+        ArrayNode g = node.putArray("groupby");
+        for (String f : groupby) {
+            g.add(f);
+        }
+        return this;
+    }
+
+    /**
+     * Adds a bin transformation.
+     *
+     * @param field The data field to bin.
+     * @param as The output fields at which to write the start and end bin values.
+     * @return this object.
+     */
+    Transform bin(String field, String as) {
+        ObjectNode node = spec.addObject();
+        node.put("bin", true)
+                .put("field", field)
+                .put("as", as);
+        return this;
+    }
 }
