@@ -59,7 +59,7 @@ public class View extends VegaLite {
      */
     public View width(String width) {
         assert width == "container" : "Invalid width: " + width;
-        spec.put("width", "container");
+        spec.put("width", width);
         return this;
     }
 
@@ -69,7 +69,7 @@ public class View extends VegaLite {
      */
     public View height(String height) {
         assert height == "container" : "Invalid height: " + height;
-        spec.put("height", "container");
+        spec.put("height", height);
         return this;
     }
 
