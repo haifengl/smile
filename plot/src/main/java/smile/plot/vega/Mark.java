@@ -165,67 +165,6 @@ public class Mark {
     }
 
     /**
-     * Sets the radius in pixels of rounded rectangles or arcs' corners.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadius(double radius) {
-        spec.put("cornerRadius", radius);
-        return this;
-    }
-
-    /**
-     * For vertical bars, sets the top-left and top-right corner radius.
-     * For horizontal bars, sets the top-right and bottom-right corner radius.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadiusEnd(double radius) {
-        spec.put("cornerRadiusEnd", radius);
-        return this;
-    }
-
-    /**
-     * Sets the radius in pixels of rounded rectangles' top left corner.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadiusTopLeft(double radius) {
-        spec.put("cornerRadiusTopLeft", radius);
-        return this;
-    }
-
-    /**
-     * Sets the radius in pixels of rounded rectangles' top right corner.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadiusTopRight(double radius) {
-        spec.put("cornerRadiusTopRight", radius);
-        return this;
-    }
-
-    /**
-     * Sets the radius in pixels of rounded rectangles' bottom left corner.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadiusBottomLeft(double radius) {
-        spec.put("cornerRadiusBottomLeft", radius);
-        return this;
-    }
-
-    /**
-     * Sets the radius in pixels of rounded rectangles' bottom right corner.
-     * @param radius the corner radius in pixels.
-     * @return this object.
-     */
-    public Mark cornerRadiusBottomRight(double radius) {
-        spec.put("cornerRadiusBottomRight", radius);
-        return this;
-    }
-
-    /**
      * Sets the X coordinates of the marks.
      * @param value the X coordinates.
      * @return this object.
@@ -511,6 +450,286 @@ public class Mark {
      */
     public Mark strokeWidth(double width) {
         spec.put("strokeWidth", width);
+        return this;
+    }
+
+    /**
+     * Sets whether overlaying points on top of line or area marks.
+     * @param flag A flag indicating whether overlaying points on top of line or area marks.
+     * @return this object.
+     */
+    public Mark point(boolean flag) {
+        spec.put("point", flag);
+        return this;
+    }
+
+    /**
+     * Sets the shape of the point marks.
+     * @param shape "circle", "square", "cross", "diamond", "triangle-up",
+     *             "triangle-down", "triangle-right", or "triangle-left".
+     * @return this object.
+     */
+    public Mark shape(String shape) {
+        spec.put("shape", shape);
+        return this;
+    }
+
+    /**
+     * Sets the size of the point marks.
+     * @param size the pixel area of the marks.
+     * @return this object.
+     */
+    public Mark size(int size) {
+        spec.put("size", size);
+        return this;
+    }
+
+    /**
+     * Sets the extent of the band. Available options include:
+     *
+     * "ci" - Extend the band to the confidence interval of the mean.
+     * "stderr" - The size of band are set to the value of standard error, extending from the mean.
+     * "stdev" - The size of band are set to the value of standard deviation, extending from the mean.
+     * "iqr" - Extend the band to the q1 and q3.
+     * @param extent "ci", "stderr", "stdev", or "iqr".
+     * @return this object.
+     */
+    public Mark extent(String extent) {
+        spec.put("extent", extent);
+        return this;
+    }
+
+    /**
+     * Sets whether the line mark is shown.
+     * @param flag A flag indicating whether the line mark is shown.
+     * @return this object.
+     */
+    public Mark line(boolean flag) {
+        spec.put("line", flag);
+        return this;
+    }
+
+    /**
+     * Sets the orientation of a non-stacked bar, tick, area, and line charts.
+     *
+     * @param orient "horizontal" or "vertical".
+     * @return this object.
+     */
+    public Mark orient(String orient) {
+        spec.put("orient", orient);
+        return this;
+    }
+
+    /**
+     * Sets the line interpolation method to use for line and area marks.
+     * Available options include:
+     *
+     * "linear" - piecewise linear segments, as in a polyline.
+     * "linear-closed" - close the linear segments to form a polygon.
+     * "step" - alternate between horizontal and vertical segments, as in a step function.
+     * "step-before" - alternate between vertical and horizontal segments, as in a step function.
+     * "step-after" - alternate between horizontal and vertical segments, as in a step function.
+     * "basis" - a B-spline, with control point duplication on the ends.
+     * "basis-open" - an open B-spline; may not intersect the start or end.
+     * "basis-closed" - a closed B-spline, as in a loop.
+     * "cardinal" - a Cardinal spline, with control point duplication on the ends.
+     * "cardinal-open" - an open Cardinal spline; may not intersect the start or end, but will intersect other control points.
+     * "cardinal-closed" - a closed Cardinal spline, as in a loop.
+     * "bundle" - equivalent to basis, except the tension parameter is used to straighten the spline.
+     * "monotone" - cubic interpolation that preserves monotonicity in y.
+     * @param method the line interpolation method.
+     * @return this object.
+     */
+    public Mark interpolate(String method) {
+        spec.put("interpolate", method);
+        return this;
+    }
+
+    /**
+     * Depending on the interpolation type, sets the tension parameter (for line and area marks).
+     * @param value the tension value.
+     * @return this object.
+     */
+    public Mark tension(double value) {
+        spec.put("tension", value);
+        return this;
+    }
+
+    /**
+     * Sets the primary (outer) radius in pixels for arc mark,
+     * or polar coordinate radial offset of the text from the
+     * origin determined by the x and y properties for text marks.
+     * @param radius the radius in pixels.
+     * @return this object.
+     */
+    public Mark radius(double radius) {
+        spec.put("radius", radius);
+        return this;
+    }
+
+    /**
+     * Sets the secondary (inner) radius in pixels for arc mark.
+     * @param radius the radius in pixels.
+     * @return this object.
+     */
+    public Mark radius2(double radius) {
+        spec.put("radius2", radius);
+        return this;
+    }
+
+    /**
+     * Sets the primary (inner) radius in pixels for arc mark.
+     * outerRadius is an alias for radius.
+     * @param radius the radius in pixels.
+     * @return this object.
+     */
+    public Mark outerRadius(double radius) {
+        spec.put("outerRadius", radius);
+        return this;
+    }
+
+    /**
+     * Sets the secondary (inner) radius in pixels for arc mark.
+     * innerRadius is an alias for radius2.
+     * @param radius the radius in pixels.
+     * @return this object.
+     */
+    public Mark innerRadius(double radius) {
+        spec.put("innerRadius", radius);
+        return this;
+    }
+
+    /**
+     * Sets the offset for radius.
+     * @param offset the offset for radius.
+     * @return this object.
+     */
+    public Mark radiusOffset(double offset) {
+        spec.put("radiusOffset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the offset for radius2.
+     * @param offset the offset for radius2.
+     * @return this object.
+     */
+    public Mark radius2Offset(double offset) {
+        spec.put("radius2Offset", offset);
+        return this;
+    }
+
+    /**
+     * For arc marks, sets the arc length in radians if theta2 is not specified,
+     * otherwise the start arc angle. (A value of 0 indicates up or "north",
+     * increasing values proceed clockwise.)
+     * @param angle the arc length in radians.
+     * @return this object.
+     */
+    public Mark theta(double angle) {
+        spec.put("theta", angle);
+        return this;
+    }
+
+    /**
+     * Sets the end angle of arc marks in radians. A value of 0 indicates
+     * up or "north", increasing values proceed clockwise.
+     * @param angle the end angle in radians.
+     * @return this object.
+     */
+    public Mark theta2(double angle) {
+        spec.put("theta2", angle);
+        return this;
+    }
+
+    /**
+     * Sets the offset for theta.
+     * @param offset the offset for theta.
+     * @return this object.
+     */
+    public Mark thetaOffset(double offset) {
+        spec.put("thetaOffset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the offset for theta2.
+     * @param offset the offset for theta2.
+     * @return this object.
+     */
+    public Mark theta2Offset(double offset) {
+        spec.put("theta2Offset", offset);
+        return this;
+    }
+
+    /**
+     * Setsthe angular padding applied to sides of the arc in radians.
+     * @param angle the angular padding applied to sides of the arc in radians.
+     * @return this object.
+     */
+    public Mark padAngle(double angle) {
+        spec.put("padAngle", angle);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles or arcs' corners.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadius(double radius) {
+        spec.put("cornerRadius", radius);
+        return this;
+    }
+
+    /**
+     * For vertical bars, sets the top-left and top-right corner radius.
+     * For horizontal bars, sets the top-right and bottom-right corner radius.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusEnd(double radius) {
+        spec.put("cornerRadiusEnd", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' top left corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusTopLeft(double radius) {
+        spec.put("cornerRadiusTopLeft", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' top right corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusTopRight(double radius) {
+        spec.put("cornerRadiusTopRight", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' bottom left corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusBottomLeft(double radius) {
+        spec.put("cornerRadiusBottomLeft", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' bottom right corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusBottomRight(double radius) {
+        spec.put("cornerRadiusBottomRight", radius);
         return this;
     }
 }
