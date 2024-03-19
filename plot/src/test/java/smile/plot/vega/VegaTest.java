@@ -53,16 +53,16 @@ public class VegaTest {
     public void testBar() throws Exception {
         System.out.println("Bar");
 
-        var bar = new View()
-                .title("Simple Bar Plot")
+        var bar = new View("Simple Bar Plot")
                 .description("A simple bar chart with embedded data.")
-                .widthStep(30)
-                .json("""
-                 [
-                   {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
-                   {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
-                   {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
-                 ]""");
+                .widthStep(30);
+
+        bar.data().values("""
+                [
+                  {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+                  {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+                  {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+                ]""");
 
         bar.mark("bar");
         Field x = bar.encode("x", "a").type("ordinal");
@@ -74,13 +74,12 @@ public class VegaTest {
     public void testAggregateBar() throws Exception {
         System.out.println("Aggregate Bar");
 
-        var bar = new View()
-                .title("Aggregate Bar Plot")
+        var bar = new View("Aggregate Bar Plot")
                 .description("A bar chart showing the US population distribution of age groups in 2000.")
-                .heightStep(20)
-                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+                .heightStep(20);
 
         bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
         bar.transform().filter("datum.year == 2000");
         bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
         bar.encode("y", "age").type("ordinal");
@@ -91,13 +90,12 @@ public class VegaTest {
     public void testSortedAggregateBar() throws Exception {
         System.out.println("Sorted Aggregate Bar");
 
-        var bar = new View()
-                .title("Sorted Aggregate Bar Plot")
+        var bar = new View("Sorted Aggregate Bar Plot")
                 .description("A bar chart that sorts the y-values by the x-values.")
-                .heightStep(20)
-                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+                .heightStep(20);
 
         bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
         bar.transform().filter("datum.year == 2000");
         bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
         bar.encode("y", "age").type("ordinal").sort("-x");
@@ -107,13 +105,11 @@ public class VegaTest {
     public void testGroupBar() throws Exception {
         System.out.println("Group Bar");
 
-        var bar = new View()
-                .title("Group Bar Plot")
-                .widthStep(12)
-                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+        var bar = new View("Group Bar Plot").widthStep(12);
 
         bar.mark("bar");
         bar.viewConfig().stroke("transparent").axis().domainWidth(1);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
         bar.transform()
                 .filter("datum.year == 2000")
                 .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
@@ -128,11 +124,9 @@ public class VegaTest {
     public void testStackedBar() throws Exception {
         System.out.println("Stacked Bar");
 
-        var bar = new View()
-                .title("Stacked Bar Plot")
-                .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-
+        var bar = new View("Stacked Bar Plot");
         bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
         bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
         bar.encode("y", null).type("quantitative").aggregate("count");
         bar.encode("color", "weather").type("nominal")
@@ -145,11 +139,9 @@ public class VegaTest {
     public void testStackedBarWithRoundedCorner() throws Exception {
         System.out.println("Stacked Bar with Rounded Corner");
 
-        var bar = new View()
-                .title("Stacked Bar with Rounded Corner")
-                .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-
+        var bar = new View("Stacked Bar with Rounded Corner");
         bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
         bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
         bar.encode("y", null).type("quantitative").aggregate("count");
         bar.encode("color", "weather").type("nominal");
@@ -159,11 +151,9 @@ public class VegaTest {
     public void testHorizontalStackedBar() throws Exception {
         System.out.println("Horizontal Stacked Bar");
 
-        var bar = new View()
-                .title("Horizontal Stacked Bar")
-                .data("https://vega.github.io/vega-lite/examples/data/barley.json");
-
+        var bar = new View("Horizontal Stacked Bar");
         bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/barley.json");
         bar.encode("x", "yield").type("quantitative").aggregate("sum");
         bar.encode("y", "variety").type("nominal");
         bar.encode("color", "site").type("nominal");
@@ -173,13 +163,11 @@ public class VegaTest {
     public void testLayeredBar() throws Exception {
         System.out.println("Layered Bar");
 
-        var bar = new View()
-                .title("Layered Bar")
-                .widthStep(17)
-                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+        var bar = new View("Layered Bar").widthStep(17);
 
         bar.mark("bar");
         bar.background().opacity(0.7);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
         bar.transform()
                 .filter("datum.year == 2000")
                 .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
@@ -193,13 +181,11 @@ public class VegaTest {
     public void testNormalizedStackedBar() throws Exception {
         System.out.println("Normalized (Percentage) Stacked Bar");
 
-        var bar = new View()
-                .title("Normalized (Percentage) Stacked Bar")
-                .widthStep(17)
-                .data("https://vega.github.io/vega-lite/examples/data/population.json");
+        var bar = new View("Normalized (Percentage) Stacked Bar").widthStep(17);
 
         bar.mark("bar");
         bar.background().opacity(0.7);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
         bar.transform()
                 .filter("datum.year == 2000")
                 .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
@@ -213,14 +199,13 @@ public class VegaTest {
     public void testGanttChart() throws Exception {
         System.out.println("Gantt Chart");
 
-        var gantt = new View()
-                .title("Gantt Chart")
-                .json("""
-                 [
-                   {"task": "A", "start": 1, "end": 3},
-                   {"task": "B", "start": 3, "end": 8},
-                   {"task": "C", "start": 8, "end": 10}
-                 ]""");
+        var gantt = new View("Gantt Chart");
+        gantt.data().values("""
+                [
+                  {"task": "A", "start": 1, "end": 3},
+                  {"task": "B", "start": 3, "end": 8},
+                  {"task": "C", "start": 8, "end": 10}
+                ]""");
 
         gantt.mark("bar");
         gantt.encode("x", "start").type("quantitative");
@@ -232,14 +217,13 @@ public class VegaTest {
     public void testColorBarChart() throws Exception {
         System.out.println("Color Bar Chart");
 
-        var bar = new View()
-                .title("Bar Chart Encoding Color Names in the Data")
-                .json("""
-                 [
-                   {"color": "red", "b": 28},
-                   {"color": "green", "b": 55},
-                   {"color": "blue", "b": 43}
-                 ]""");
+        var bar = new View("Bar Chart Encoding Color Names in the Data");
+        bar.data().values("""
+                [
+                  {"color": "red", "b": 28},
+                  {"color": "green", "b": 55},
+                  {"color": "blue", "b": 43}
+                ]""");
 
         bar.mark("bar");
         bar.encode("x", "color").type("nominal");
@@ -251,11 +235,9 @@ public class VegaTest {
     public void testHistogram() throws Exception {
         System.out.println("Histogram");
 
-        var bar = new View()
-                .title("Histogram")
-                .data("https://vega.github.io/vega-lite/examples/data/movies.json");
-
+        var bar = new View("Histogram");
         bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
         bar.encode("x", "IMDB Rating").type("quantitative").bin(true);
         bar.encode("y", null).type("quantitative").aggregate("count");
         bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
@@ -265,11 +247,10 @@ public class VegaTest {
     public void testRelativeFrequencyHistogram() throws Exception {
         System.out.println("Relative Frequency Histogram");
 
-        var bar = new View()
-                .title("Relative Frequency Histogram")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+        var bar = new View("Relative Frequency Histogram");
 
         bar.mark("bar").tooltip(true);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
         bar.encode("x", "bin_Horsepwoer").type("quantitative").bin("binned").title("Horsepower");
         bar.encode("x2", "bin_Horsepwoer_end").type("quantitative");
         bar.encode("y", "PercentOfTotal").type("quantitative").title("Relative Frequency").axis().format(".1~%");
@@ -277,7 +258,7 @@ public class VegaTest {
         bar.transform()
                 .bin("Horsepower", "bin_Horsepwoer")
                 .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
-                .joinAggregate("sum", "Count","TotalCount")
+                .joinAggregate("sum", "Count", "TotalCount")
                 .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
     }
 
@@ -285,11 +266,10 @@ public class VegaTest {
     public void testScatterPlot() throws Exception {
         System.out.println("Scatter Plot");
 
-        var bar = new View()
-                .title("Scatter Plot")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+        var bar = new View("Scatter Plot");
 
         bar.mark("point");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
         bar.encode("x", "Horsepower").type("quantitative");
         bar.encode("y", "Miles_per_Gallon").type("quantitative");
         bar.encode("color", "Origin").type("nominal");
@@ -300,11 +280,9 @@ public class VegaTest {
     public void testBubblePlot() throws Exception {
         System.out.println("Bubble Plot");
 
-        var bar = new View()
-                .title("Bubble Plot")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
-
+        var bar = new View("Bubble Plot");
         bar.mark("point");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
         bar.encode("x", "Horsepower").type("quantitative");
         bar.encode("y", "Miles_per_Gallon").type("quantitative");
         bar.encode("size", "Acceleration").type("quantitative");
@@ -314,13 +292,10 @@ public class VegaTest {
     public void testNaturalDisasters() throws Exception {
         System.out.println("Natural Disasters");
 
-        var bar = new View()
-                .title("Natural Disasters")
-                .width(600)
-                .height(400)
-                .data("https://vega.github.io/vega-lite/examples/data/disasters.csv");
+        var bar = new View("Natural Disasters").width(600).height(400);
 
         bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
         bar.transform().filter("datum.Entity !== 'All natural disasters'");
         bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
         bar.encode("y", "Entity").type("nominal").title(null);
@@ -334,11 +309,9 @@ public class VegaTest {
     public void testTextPlot() throws Exception {
         System.out.println("Text Plot");
 
-        var bar = new View()
-                .title("Text Plot")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
-
+        var bar = new View("Text Plot");
         bar.mark("text");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
         bar.transform().calculate("split(datum.Name, ' ')[0]", "Brand");
         bar.encode("x", "Horsepower").type("quantitative");
         bar.encode("y", "Miles_per_Gallon").type("quantitative");
@@ -350,11 +323,9 @@ public class VegaTest {
     public void testLineChart() throws Exception {
         System.out.println("Line Chart");
 
-        var line = new View()
-                .title("Line Chart")
-                .data("https://vega.github.io/vega-lite/examples/data/stocks.csv");
-
+        var line = new View("Line Chart");
         line.mark("line");
+        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
         line.transform().filter("datum.symbol==='GOOG'");
         line.encode("x", "date").type("temporal");
         line.encode("y", "price").type("quantitative");
@@ -364,11 +335,9 @@ public class VegaTest {
     public void testLineChartWithPointMark() throws Exception {
         System.out.println("Line Chart with Point Mark");
 
-        var line = new View()
-                .title("Line Chart with Point Mark")
-                .data("https://vega.github.io/vega-lite/examples/data/stocks.csv");
-
+        var line = new View("Line Chart with Point Mark");
         line.mark("line").point(true);
+        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
         line.encode("x", "date").type("temporal").timeUnit("year");
         line.encode("y", "price").type("quantitative").aggregate("mean");
         line.encode("color", "symbol").type("nominal");
@@ -388,11 +357,8 @@ public class VegaTest {
         band.encode("x", "Year").type("temporal").timeUnit("year");
         band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
 
-        var layer = new Layer(line, band)
-                .title("Line Chart with Confidence Interval Band")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
-
-        layer.show();
+        var layer = new Layer(line, band).title("Line Chart with Confidence Interval Band");
+        layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
     }
 
     @Test
@@ -409,9 +375,8 @@ public class VegaTest {
         band.encode("x", "Year").type("temporal").timeUnit("year");
         band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
 
-        var layer = new Layer(line, band)
-                .title("Rolling Averages over Raw Values")
-                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+        var layer = new Layer(line, band).title("Rolling Averages over Raw Values");
+        layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
 
         layer.show();
     }
@@ -420,10 +385,8 @@ public class VegaTest {
     public void testAreaChart() throws Exception {
         System.out.println("Area Chart with Overlaying Lines and Point Markers");
 
-        var area = new View()
-                .title("Area Chart with Overlaying Lines and Point Markers")
-                .data(("https://vega.github.io/vega-lite/examples/data/stocks.csv"));
-
+        var area = new View("Area Chart with Overlaying Lines and Point Markers");
+        area.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
         area.transform().filter("datum.symbol==='GOOG'");
         area.mark("area").line(true).point(true);
         area.encode("x", "date").type("temporal");
@@ -434,11 +397,10 @@ public class VegaTest {
     public void testHeatmap() throws Exception {
         System.out.println("Annual Weather Heatmap");
 
-        var heatmap = new View()
-                .title("2010 Daily Max Temperature (F) in Seattle, WA")
-                .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        var heatmap = new View("2010 Daily Max Temperature (F) in Seattle, WA");
 
         heatmap.mark("rect");
+        heatmap.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
         heatmap.encode("x", "date").type("ordinal").timeUnit("date").title("Day").axis().labelAngle(0).format("%e");
         heatmap.encode("y", "date").type("ordinal").timeUnit("month");
         heatmap.encode("color", "temp_max").type("quantitative").aggregate("max").legend().title(null);
@@ -451,17 +413,16 @@ public class VegaTest {
     public void testDonutChart() throws Exception {
         System.out.println("Donut Chart");
 
-        var donut = new View()
-                .title("Donut Chart")
-                .json("""
-                 [
-                   {"category": 1, "value": 4},
-                   {"category": 2, "value": 6},
-                   {"category": 3, "value": 10},
-                   {"category": 4, "value": 3},
-                   {"category": 5, "value": 7},
-                   {"category": 6, "value": 8}
-                 ]""");
+        var donut = new View("Donut Chart");
+        donut.data().values("""
+                [
+                  {"category": 1, "value": 4},
+                  {"category": 2, "value": 6},
+                  {"category": 3, "value": 10},
+                  {"category": 4, "value": 3},
+                  {"category": 5, "value": 7},
+                  {"category": 6, "value": 8}
+                ]""");
 
         donut.mark("arc").innerRadius(50);
         donut.encode("theta", "value").type("quantitative");
@@ -480,15 +441,75 @@ public class VegaTest {
         text.mark("text").radiusOffset(10);
         text.encode("text", "data").type("quantitative");
 
-        var layer = new Layer(arc, text)
-                .title("Radial Chart")
-                .json("""
-                        [12, 23, 47, 6, 52, 19]""");
-
+        var layer = new Layer(arc, text).title("Radial Chart");
         layer.background().stroke(null);
+        layer.data().values("[12, 23, 47, 6, 52, 19]");
         layer.encode("theta", "data").type("quantitative").stack("zero");
         layer.encode("radius", "data").type("quantitative").scale("sqrt").zero(true).range(20, 100);
         layer.encode("color", "data").type("nominal").removeLegend();
-        layer.show();
+    }
+
+    @Test
+    public void testBoxPlot() throws Exception {
+        System.out.println("Box Plot");
+
+        var boxplot = new View("Box Plot");
+        boxplot.background().stroke(null);
+        boxplot.mark("boxplot").extent("min-max");
+        boxplot.viewConfig().stroke(null);
+        boxplot.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        boxplot.encode("x", "age").type("ordinal");
+        boxplot.encode("y", "people").type("quantitative").title("population");
+    }
+
+    @Test
+    public void testConcat() throws Exception {
+        System.out.println("Concat");
+
+        var donut = new View("Donut Chart");
+        donut.data().values("""
+                [
+                  {"category": 1, "value": 4},
+                  {"category": 2, "value": 6},
+                  {"category": 3, "value": 10},
+                  {"category": 4, "value": 3},
+                  {"category": 5, "value": 7},
+                  {"category": 6, "value": 8}
+                ]""");
+
+        donut.mark("arc").innerRadius(50);
+        donut.encode("theta", "value").type("quantitative");
+        donut.encode("color", "category").type("nominal");
+        donut.viewConfig().stroke(null);
+
+        var boxplot = new View("Box Plot");
+        boxplot.background().stroke(null);
+        boxplot.mark("boxplot").extent("min-max");
+        boxplot.viewConfig().stroke(null);
+        boxplot.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        boxplot.encode("x", "age").type("ordinal");
+        boxplot.encode("y", "people").type("quantitative").title("population");
+
+        var concat = new Concat("vconcat", donut, boxplot).title("Vertical Concatenation");
+        concat.show();
+    }
+
+    @Test
+    public void testGeo() throws Exception {
+        System.out.println("Choropleth of Unemployment Rate per County");
+
+        var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
+        geo.mark("geoshape").extent("min-max");
+        geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
+        geo.encode("color", "rate").type("quantitative");
+        geo.projection("albersUsa");
+
+        var transform = geo.transform();
+        var lookupData = transform.lookupData(
+                "id",
+                transform.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv"),
+                "rate");
+        geo.transform().lookup("id", lookupData);
+        geo.show();
     }
 }
