@@ -235,6 +235,16 @@ public class VegaLite {
     }
 
     /**
+     * Creates a data specification object.
+     * @return a data specification object.
+     */
+    public Data data() {
+        Data data = new Data(mapper);
+        spec.set("data", data.spec);
+        return data;
+    }
+
+    /**
      * Sets an array describing the data source. Set to null to ignore
      * the parent's data source. If no data is set, it is derived from
      * the parent.
@@ -265,12 +275,8 @@ public class VegaLite {
      * the parent.
      */
     public <T> VegaLite data(T[] data) {
-        if (data == null) {
-            spec.remove("data");
-        } else {
-            ObjectNode node = spec.putObject("data");
-            node.set("values", mapper.valueToTree(data));
-        }
+        ObjectNode node = spec.putObject("data");
+        node.set("values", mapper.valueToTree(data));
         return this;
     }
 
@@ -280,12 +286,8 @@ public class VegaLite {
      * the parent.
      */
     public <T> VegaLite data(List<T> data) {
-        if (data == null) {
-            spec.remove("data");
-        } else {
-            ObjectNode node = spec.putObject("data");
-            node.set("values", mapper.valueToTree(data));
-        }
+        ObjectNode node = spec.putObject("data");
+        node.set("values", mapper.valueToTree(data));
         return this;
     }
 
@@ -498,15 +500,15 @@ public class VegaLite {
     public void show() throws IOException, JsonProcessingException {
         Path path = Files.createTempFile("smile-plot-", ".html");
         path.toFile().deleteOnExit();
-        Files.write(path, embed().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        Files.write(path, html().getBytes(java.nio.charset.StandardCharsets.UTF_8));
         java.awt.Desktop.getDesktop().browse(path.toUri());
     }
 
     /**
      * Returns the HTML of plot specification with Vega Embed.
      */
-    public String embed() throws JsonProcessingException {
-        return embed("en");
+    public String html() throws JsonProcessingException {
+        return html("en");
     }
 
     /**
@@ -514,7 +516,7 @@ public class VegaLite {
      * @param lang the primary language of document.
      * @return the HTML of plot specification with Vega Embed.
      */
-    public String embed(String lang) throws JsonProcessingException {
+    public String html(String lang) throws JsonProcessingException {
         String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
