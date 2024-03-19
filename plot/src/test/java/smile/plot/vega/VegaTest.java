@@ -122,7 +122,23 @@ public class VegaTest {
         bar.encoding("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
         bar.encoding("color", "gender").type("nominal").scaleRange("#675193", "#ca8861");
         bar.encoding("column", "age").type("ordinal").spacing(10);
+    }
 
+    @Test
+    public void testStackedBar() throws Exception {
+        System.out.println("Stacked Bar");
+
+        View bar = new View()
+                .title("Stacked Bar Plot")
+                .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+
+        bar.mark("bar");
+        bar.encoding("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encoding("y", null).type("quantitative").aggregate("count");
+        bar.encoding("color", "weather").type("nominal")
+                .scaleDomain("sun", "fog", "drizzle", "rain", "snow")
+                .scaleRange("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
+                .legend().title("Weather type");
         bar.show();
     }
 }
