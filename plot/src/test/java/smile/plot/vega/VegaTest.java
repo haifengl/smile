@@ -139,6 +139,20 @@ public class VegaTest {
                 .scaleDomain("sun", "fog", "drizzle", "rain", "snow")
                 .scaleRange("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
                 .legend().title("Weather type");
+    }
+
+    @Test
+    public void testStackedBarWithRoundedCorner() throws Exception {
+        System.out.println("Stacked Bar with Rounded Corner");
+
+        View bar = new View()
+                .title("Stacked Bar with Rounded Corner")
+                .data("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+
+        bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
+        bar.encoding("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encoding("y", null).type("quantitative").aggregate("count");
+        bar.encoding("color", "weather").type("nominal");
         bar.show();
     }
 }
