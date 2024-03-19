@@ -92,6 +92,13 @@ public class VegaLite {
         return spec.toPrettyString();
     }
 
+    /**
+     * Returns the Vega-Lite specification.
+     */
+    public ObjectNode spec() {
+        return spec;
+    }
+
     // ====== Properties of Top-Level Specifications ======
     /**
      * Returns the configuration object that lists properties of
