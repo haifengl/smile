@@ -238,6 +238,31 @@ public class Field {
     }
 
     /**
+     * Sets the type of stacking offset if the field should be stacked.
+     * stack is only applicable for x, y, theta, and radius channels with
+     * continuous domains. For example, stack of y can be used to customize
+     * stacking for a vertical bar chart.
+     *
+     * Stack can be one of the following values:
+     *
+     * "zero" - stacking with baseline offset at zero value of the scale
+     * (for creating typical stacked bar and area chart).
+     *
+     * "normalize" - stacking with normalized domain (for creating normalized
+     * stacked bar and area charts and pie charts with percentage tooltip).
+     *
+     * "center" - stacking with center baseline (for streamgraph).
+     *
+     * null - No-stacking. This will produce layered bar and area chart.
+     *
+     * @param type "zero", "normalize", "center", or null.
+     */
+    public Field stack(String type) {
+        spec.put("stack", type);
+        return this;
+    }
+
+    /**
      * For facet, row and column channels, sets the spacing in pixels between
      * facet's sub-views.
      * @param spacing the spacing in pixels between facet's sub-views.
