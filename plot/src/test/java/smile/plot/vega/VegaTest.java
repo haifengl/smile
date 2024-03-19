@@ -279,6 +279,55 @@ public class VegaTest {
                 .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
                 .joinAggregate("sum", "Count","TotalCount")
                 .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
+    }
+
+    @Test
+    public void testScatterPlot() throws Exception {
+        System.out.println("Scatter Plot");
+
+        View bar = new View()
+                .title("Scatter Plot")
+                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+
+        bar.mark("point");
+        bar.encode("x", "Horsepower").type("quantitative");
+        bar.encode("y", "Miles_per_Gallon").type("quantitative");
+        bar.encode("color", "Origin").type("nominal");
+        bar.encode("shape", "Origin").type("nominal");
+    }
+
+    @Test
+    public void testBubblePlot() throws Exception {
+        System.out.println("Bubble Plot");
+
+        View bar = new View()
+                .title("Bubble Plot")
+                .data("https://vega.github.io/vega-lite/examples/data/cars.json");
+
+        bar.mark("point");
+        bar.encode("x", "Horsepower").type("quantitative");
+        bar.encode("y", "Miles_per_Gallon").type("quantitative");
+        bar.encode("size", "Acceleration").type("quantitative");
+    }
+
+    @Test
+    public void testNaturalDisasters() throws Exception {
+        System.out.println("Natural Disasters");
+
+        View bar = new View()
+                .title("Natural Disasters")
+                .width(600)
+                .height(400)
+                .data("https://vega.github.io/vega-lite/examples/data/disasters.csv");
+
+        bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
+        bar.transform().filter("datum.Entity !== 'All natural disasters'");
+        bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
+        bar.encode("y", "Entity").type("nominal").title(null);
+        bar.encode("color", "Entity").type("nominal").removeLegend();
+        bar.encode("size", "Deaths").type("quantitative")
+                .scaleRange(0, 5000)
+                .legend().title("Annual Global Deaths").clipHeight(30);
 
         bar.show();
     }
