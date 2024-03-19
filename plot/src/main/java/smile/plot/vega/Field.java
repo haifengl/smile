@@ -164,18 +164,29 @@ public class Field {
      * @return this object.
      */
     public Field scale(String type) {
-        ObjectNode node = spec.putObject("scale");
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
         node.put("type", type);
         return this;
     }
 
     /**
+     * If true, ensures that a zero baseline value is included in the scale domain.
+     * @param flag If true, ensures that a zero baseline value is included in the scale domain.
+     * @return this object.
+     */
+    public Field zero(boolean flag) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("zero", flag);
+        return this;
+    }
+
+    /**
      * Sets the customize domain values.
      * @param values the domain values.
      * @return this object.
      */
-    public Field scaleDomain(double... values) {
-        ObjectNode node = spec.putObject("scale");
+    public Field domain(double... values) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
         ArrayNode domain = node.putArray("domain");
         for (double value : values) {
             domain.add(value);
@@ -188,8 +199,8 @@ public class Field {
      * @param values the domain values.
      * @return this object.
      */
-    public Field scaleDomain(String... values) {
-        ObjectNode node = spec.putObject("scale");
+    public Field domain(String... values) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
         ArrayNode domain = node.putArray("domain");
         for (String value : values) {
             domain.add(value);
@@ -198,12 +209,64 @@ public class Field {
     }
 
     /**
+     * Sets the minimum value in the scale domain, overriding the domain property
+     * or the default domain. This property is only intended for use with scales
+     * having continuous domains.
+     * @param min the minimum value in the scale domain.
+     * @return this object.
+     */
+    public Field domainMin(double min) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("domainMin", min);
+        return this;
+    }
+
+    /**
+     * Sets the minimum value in the scale domain, overriding the domain property
+     * or the default domain. This property is only intended for use with scales
+     * having continuous domains.
+     * @param min the minimum value in the scale domain.
+     * @return this object.
+     */
+    public Field domainMin(String min) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("domainMin", min);
+        return this;
+    }
+
+    /**
+     * Sets the maximum value in the scale domain, overriding the domain property
+     * or the default domain. This property is only intended for use with scales
+     * having continuous domains.
+     * @param max the maximum value in the scale domain.
+     * @return this object.
+     */
+    public Field domainMax(double max) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("domainMax", max);
+        return this;
+    }
+
+    /**
+     * Sets the maximum value in the scale domain, overriding the domain property
+     * or the default domain. This property is only intended for use with scales
+     * having continuous domains.
+     * @param max the maximum value in the scale domain.
+     * @return this object.
+     */
+    public Field domainMax(String max) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("domainMax", max);
+        return this;
+    }
+
+    /**
      * Sets the customize range values.
      * @param values the range values.
      * @return this object.
      */
-    public Field scaleRange(double... values) {
-        ObjectNode node = spec.putObject("scale");
+    public Field range(double... values) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
         ArrayNode range = node.putArray("range");
         for (double value : values) {
             range.add(value);
@@ -216,12 +279,64 @@ public class Field {
      * @param values the range values.
      * @return this object.
      */
-    public Field scaleRange(String... values) {
-        ObjectNode node = spec.putObject("scale");
+    public Field range(String... values) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
         ArrayNode range = node.putArray("range");
         for (String value : values) {
             range.add(value);
         }
+        return this;
+    }
+
+    /**
+     * Sets the minimum value in the scale range, overriding the range property
+     * or the default range. This property is only intended for use with scales
+     * having continuous ranges.
+     * @param min the minimum value in the scale range.
+     * @return this object.
+     */
+    public Field rangeMin(double min) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("rangeMin", min);
+        return this;
+    }
+
+    /**
+     * Sets the minimum value in the scale range, overriding the range property
+     * or the default range. This property is only intended for use with scales
+     * having continuous ranges.
+     * @param min the minimum value in the scale range.
+     * @return this object.
+     */
+    public Field rangeMin(String min) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("rangeMin", min);
+        return this;
+    }
+
+    /**
+     * Sets the maximum value in the scale range, overriding the range property
+     * or the default range. This property is only intended for use with scales
+     * having continuous ranges.
+     * @param max the maximum value in the scale range.
+     * @return this object.
+     */
+    public Field rangeMax(double max) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("rangeMax", max);
+        return this;
+    }
+
+    /**
+     * Sets the maximum value in the scale range, overriding the range property
+     * or the default range. This property is only intended for use with scales
+     * having continuous ranges.
+     * @param max the maximum value in the scale range.
+     * @return this object.
+     */
+    public Field rangeMax(String max) {
+        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+        node.put("rangeMax", max);
         return this;
     }
 
