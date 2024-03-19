@@ -163,4 +163,65 @@ public class Mark {
         spec.put("order", flag);
         return this;
     }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles or arcs' corners.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadius(double radius) {
+        spec.put("cornerRadius", radius);
+        return this;
+    }
+
+    /**
+     * For vertical bars, sets the top-left and top-right corner radius.
+     * For horizontal bars, sets the top-right and bottom-right corner radius.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusEnd(double radius) {
+        spec.put("cornerRadiusEnd", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' top left corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusTopLeft(double radius) {
+        spec.put("cornerRadiusTopLeft", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' top right corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusTopRight(double radius) {
+        spec.put("cornerRadiusTopRight", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' bottom left corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusBottomLeft(double radius) {
+        spec.put("cornerRadiusBottomLeft", radius);
+        return this;
+    }
+
+    /**
+     * Sets the radius in pixels of rounded rectangles' bottom right corner.
+     * @param radius the corner radius in pixels.
+     * @return this object.
+     */
+    public Mark cornerRadiusBottomRight(double radius) {
+        spec.put("cornerRadiusBottomRight", radius);
+        return this;
+    }
 }
