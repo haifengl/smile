@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * @author Haifeng Li
  */
-public class Repeat extends ViewLayoutComposition {
+public class Repeat extends VegaLite implements ViewLayoutComposition {
     /**
      * Creates a view for each entry in an array of fields. This operator
      * generates multiple plots like facet. However, unlike facet it allows
@@ -142,61 +142,61 @@ public class Repeat extends ViewLayoutComposition {
 
     @Override
     public Repeat resolveScale(String channel, String resolution) {
-        super.resolveScale(channel, resolution);
+        ViewLayoutComposition.super.resolveScale(channel, resolution);
         return this;
     }
 
     @Override
     public Repeat resolveAxis(String channel, String resolution) {
-        super.resolveAxis(channel, resolution);
+        ViewLayoutComposition.super.resolveAxis(channel, resolution);
         return this;
     }
 
     @Override
     public Repeat resolveLegend(String channel, String resolution) {
-        super.resolveLegend(channel, resolution);
+        ViewLayoutComposition.super.resolveLegend(channel, resolution);
         return this;
     }
 
     @Override
     public Repeat align(String strategy) {
-        super.align(strategy);
+        ViewLayoutComposition.super.align(strategy);
         return this;
     }
 
     @Override
     public Repeat align(String row, String column) {
-        super.align(row, column);
+        ViewLayoutComposition.super.align(row, column);
         return this;
     }
 
     @Override
     public Repeat bounds(String bounds) {
-        super.bounds(bounds);
+        ViewLayoutComposition.super.bounds(bounds);
         return this;
     }
 
     @Override
     public Repeat center(boolean flag) {
-        super.center(flag);
+        ViewLayoutComposition.super.center(flag);
         return this;
     }
 
     @Override
     public Repeat center(int row, int column) {
-        super.center(row, column);
+        ViewLayoutComposition.super.center(row, column);
         return this;
     }
 
     @Override
     public Repeat spacing(int size) {
-        super.spacing(size);
+        ViewLayoutComposition.super.spacing(size);
         return this;
     }
 
     @Override
     public Repeat spacing(int row, int column) {
-        super.spacing(row, column);
+        ViewLayoutComposition.super.spacing(row, column);
         return this;
     }
 }

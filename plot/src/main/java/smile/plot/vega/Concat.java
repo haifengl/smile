@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  *
  * @author Haifeng Li
  */
-public class Concat extends ViewLayoutComposition {
+public class Concat extends VegaLite implements ViewLayoutComposition {
 
     /**
      * Constructor for horizontal concatenation or vertical concatenation.
@@ -113,61 +113,61 @@ public class Concat extends ViewLayoutComposition {
 
     @Override
     public Concat resolveScale(String channel, String resolution) {
-        super.resolveScale(channel, resolution);
+        ViewLayoutComposition.super.resolveScale(channel, resolution);
         return this;
     }
 
     @Override
     public Concat resolveAxis(String channel, String resolution) {
-        super.resolveAxis(channel, resolution);
+        ViewLayoutComposition.super.resolveAxis(channel, resolution);
         return this;
     }
 
     @Override
     public Concat resolveLegend(String channel, String resolution) {
-        super.resolveLegend(channel, resolution);
+        ViewLayoutComposition.super.resolveLegend(channel, resolution);
         return this;
     }
 
     @Override
     public Concat align(String strategy) {
-        super.align(strategy);
+        ViewLayoutComposition.super.align(strategy);
         return this;
     }
 
     @Override
     public Concat align(String row, String column) {
-        super.align(row, column);
+        ViewLayoutComposition.super.align(row, column);
         return this;
     }
 
     @Override
     public Concat bounds(String bounds) {
-        super.bounds(bounds);
+        ViewLayoutComposition.super.bounds(bounds);
         return this;
     }
 
     @Override
     public Concat center(boolean flag) {
-        super.center(flag);
+        ViewLayoutComposition.super.center(flag);
         return this;
     }
 
     @Override
     public Concat center(int row, int column) {
-        super.center(row, column);
+        ViewLayoutComposition.super.center(row, column);
         return this;
     }
 
     @Override
     public Concat spacing(int size) {
-        super.spacing(size);
+        ViewLayoutComposition.super.spacing(size);
         return this;
     }
 
     @Override
     public Concat spacing(int row, int column) {
-        super.spacing(row, column);
+        ViewLayoutComposition.super.spacing(row, column);
         return this;
     }
 }
