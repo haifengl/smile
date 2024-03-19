@@ -642,4 +642,55 @@ public class Axis {
         spec.putArray("gridDash").add(stroke).add(space);
         return this;
     }
+
+    /**
+     * Sets whether the axis should include ticks.
+     * @param flag A flag indicating if the axis should include ticks.
+     * @return this object.
+     */
+    public Axis ticks(boolean flag) {
+        spec.put("ticks", flag);
+        return this;
+    }
+
+    /**
+     * For band scales, sets if ticks and grid lines should be placed at
+     * the "center" of a band or at the band "extent"s to indicate intervals.
+     * @param band "center" or "extent".
+     * @return this object.
+     */
+    public Axis tickBand(String band) {
+        spec.put("tickBand", band);
+        return this;
+    }
+
+    /**
+     * Sets the stroke cap for tick lines' ending style.
+     * @param cap "butt", "round" or "square".
+     * @return this object.
+     */
+    public Axis tickCap(String cap) {
+        spec.put("tickCap", cap);
+        return this;
+    }
+
+    /**
+     * Sets the color of the axis's tick.
+     * @param color the color of the axis's tick.
+     * @return this object.
+     */
+    public Axis tickColor(String color) {
+        spec.put("tickColor", color);
+        return this;
+    }
+
+    /**
+     * Sets a desired number of ticks, for axes visualizing quantitative scales.
+     * @param count A desired number of ticks, for axes visualizing quantitative scales.
+     * @return this object.
+     */
+    public Axis tickCount(int count) {
+        spec.put("tickCount", count);
+        return this;
+    }
 }

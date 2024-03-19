@@ -224,4 +224,293 @@ public class Mark {
         spec.put("cornerRadiusBottomRight", radius);
         return this;
     }
+
+    /**
+     * Sets the X coordinates of the marks.
+     * @param value the X coordinates.
+     * @return this object.
+     */
+    public Mark x(double value) {
+        spec.put("x", value);
+        return this;
+    }
+
+    /**
+     * Sets the width of horizontal "bar" and "area" without specified x2 or width.
+     * @param width "width" for the width of the plot.
+     * @return this object.
+     */
+    public Mark x(String width) {
+        assert width == "width" : "Invalid width: " + width;
+        spec.put("x", width);
+        return this;
+    }
+
+    /**
+     * Sets the X2 coordinates for ranged "area", "bar", "rect", and "rule".
+     * @param value the X2 coordinates.
+     * @return this object.
+     */
+    public Mark x2(double value) {
+        spec.put("x2", value);
+        return this;
+    }
+
+    /**
+     * Sets the width.
+     * @param width "width" for the width of the plot.
+     * @return this object.
+     */
+    public Mark x2(String width) {
+        assert width == "width" : "Invalid width: " + width;
+        spec.put("x2", width);
+        return this;
+    }
+
+    /**
+     * Sets the Y coordinates of the marks.
+     * @param value the Y coordinates.
+     * @return this object.
+     */
+    public Mark y(double value) {
+        spec.put("y", value);
+        return this;
+    }
+
+    /**
+     * Sets the height of horizontal "bar" and "area" without specified x2 or width.
+     * @param height "height" for the height of the plot.
+     * @return this object.
+     */
+    public Mark y(String height) {
+        assert height == "height" : "Invalid height: " + height;
+        spec.put("y", height);
+        return this;
+    }
+
+    /**
+     * Sets the Y2 coordinates for ranged "area", "bar", "rect", and "rule".
+     * @param value the Y2 coordinates.
+     * @return this object.
+     */
+    public Mark y2(double value) {
+        spec.put("y2", value);
+        return this;
+    }
+
+    /**
+     * Sets the width.
+     * @param height "height" for the height of the plot.
+     * @return this object.
+     */
+    public Mark y2(String height) {
+        assert height == "height" : "Invalid height: " + height;
+        spec.put("y2", height);
+        return this;
+    }
+
+    /**
+     * Sets the offset for x-position.
+     * @param offset the offset for x-position.
+     * @return this object.
+     */
+    public Mark xOffset(double offset) {
+        spec.put("xOffset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the offset for x2-position.
+     * @param offset the offset for x2-position.
+     * @return this object.
+     */
+    public Mark x2Offset(double offset) {
+        spec.put("x2Offset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the offset for y-position.
+     * @param offset the offset for y-position.
+     * @return this object.
+     */
+    public Mark yOffset(double offset) {
+        spec.put("yOffset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the offset for y2-position.
+     * @param offset the offset for y2-position.
+     * @return this object.
+     */
+    public Mark y2Offset(double offset) {
+        spec.put("y2Offset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the width of the marks.
+     * @param width the width of the marks.
+     * @return this object.
+     */
+    public Mark width(double width) {
+        spec.put("width", width);
+        return this;
+    }
+
+    /**
+     * Sets the height of the marks.
+     * @param height the height of the marks.
+     * @return this object.
+     */
+    public Mark height(double height) {
+        spec.put("height", height);
+        return this;
+    }
+
+    /**
+     * Sets whether the mark's color should be used as fill color instead of stroke color.
+     * @param flag A flag indicating whether the mark's color should be used as fill color instead of stroke color.
+     * @return this object.
+     */
+    public Mark filled(boolean flag) {
+        spec.put("filled", flag);
+        return this;
+    }
+
+    /**
+     * Sets the default color. The fill and stroke properties have higher
+     * precedence than color and will override color.
+     * @param color the default color.
+     * @return this object.
+     */
+    public Mark color(String color) {
+        spec.put("color", color);
+        return this;
+    }
+
+    /**
+     * Sets the default fill color. This property has higher precedence than config.color.
+     *
+     * @param color the default fill color.
+     * @return this object.
+     */
+    public Mark fill(String color) {
+        spec.put("fill", color);
+        return this;
+    }
+
+    /**
+     * Sets the default stroke color. This property has higher precedence than config.color.
+     *
+     * @param color the default stroke color.
+     * @return this object.
+     */
+    public Mark stroke(String color) {
+        spec.put("stroke", color);
+        return this;
+    }
+
+    /**
+     * Sets the color blend mode for drawing an item on its current background.
+     *
+     * @param mode Any valid CSS mix-blend-mode value can be used.
+     * @return this object.
+     */
+    public Mark blend(String mode) {
+        spec.put("blend", mode);
+        return this;
+    }
+
+    /**
+     * Sets the overall opacity.
+     * @param opacity a value between [0, 1].
+     * @return this object.
+     */
+    public Mark opacity(double opacity) {
+        spec.put("opacity", opacity);
+        return this;
+    }
+
+    /**
+     * Sets the fill opacity.
+     * @param opacity a value between [0, 1].
+     * @return this object.
+     */
+    public Mark fillOpacity(double opacity) {
+        spec.put("fillOpacity", opacity);
+        return this;
+    }
+
+    /**
+     * Sets the stroke opacity.
+     * @param opacity a value between [0, 1].
+     * @return this object.
+     */
+    public Mark strokeOpacity(double opacity) {
+        spec.put("strokeOpacity", opacity);
+        return this;
+    }
+
+    /**
+     * Sets the stroke cap for line ending style.
+     * @param cap "butt", "round" or "square".
+     * @return this object.
+     */
+    public Mark strokeCap(String cap) {
+        spec.put("strokeCap", cap);
+        return this;
+    }
+
+    /**
+     * Sets the alternating [stroke, space] lengths for dashed lines.
+     * @param stroke the stroke length.
+     * @param space the space length.
+     * @return this object.
+     */
+    public Mark strokeDash(double stroke, double space) {
+        spec.putArray("strokeDash").add(stroke).add(space);
+        return this;
+    }
+
+    /**
+     * Sets the pixel offset at which to start drawing with the dash array.
+     * @param offset the pixel offset at which to start drawing with the dash array.
+     * @return this object.
+     */
+    public Mark strokeDashOffset(double offset) {
+        spec.put("strokeDashOffset", offset);
+        return this;
+    }
+
+    /**
+     * Sets the stroke line join method.
+     * @param join "miter", "round" or "bevel".
+     * @return this object.
+     */
+    public Mark strokeJoin(String join) {
+        spec.put("strokeJoin", join);
+        return this;
+    }
+
+    /**
+     * Sets the miter limit at which to bevel a line join.
+     * @param limit the miter limit at which to bevel a line join.
+     * @return this object.
+     */
+    public Mark strokeMiterLimit(double limit) {
+        spec.put("strokeMiterLimit", limit);
+        return this;
+    }
+
+    /**
+     * Sets the stroke width of axis domain line.
+     * @param width the stroke width of axis domain line.
+     * @return this object.
+     */
+    public Mark strokeWidth(double width) {
+        spec.put("strokeWidth", width);
+        return this;
+    }
 }

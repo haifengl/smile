@@ -465,4 +465,67 @@ public class Legend {
         spec.put("labelOverlap", strategy);
         return this;
     }
+
+    /**
+     * Sets the height in pixels to clip symbol legend entries and limit their size.
+     * @param height the height in pixels.
+     * @return this object.
+     */
+    public Legend clipHeight(double height) {
+        spec.put("clipHeight", height);
+        return this;
+    }
+
+    /**
+     * Sets the horizontal padding in pixels between symbol legend entries.
+     * @param padding the horizontal padding in pixels.
+     * @return this object.
+     */
+    public Legend columnPadding(double padding) {
+        spec.put("columnPadding", padding);
+        return this;
+    }
+
+    /**
+     * Sets the vertical padding in pixels between symbol legend entries.
+     * @param padding the vertical padding in pixels.
+     * @return this object.
+     */
+    public Legend rowPadding(double padding) {
+        spec.put("rowPadding", padding);
+        return this;
+    }
+
+    /**
+     * Sets the number of columns in which to arrange symbol legend entries.
+     * A value of 0 or lower indicates a single row with one column per entry.
+     * @param columns the number of columns.
+     * @return this object.
+     */
+    public Legend columns(int columns) {
+        spec.put("columns", columns);
+        return this;
+    }
+
+    /**
+     * Sets the alignment to apply to symbol legends rows and columns.
+     *
+     * @param alignment "all", "each", or "none".
+     * @return this object.
+     */
+    public Legend gridAlign(String alignment) {
+        spec.put("gridAlign", alignment);
+        return this;
+    }
+
+    /**
+     * Sets the maximum number of allowed entries for a symbol legend.
+     * Additional entries will be dropped.
+     * @param limit the maximum number of allowed entries.
+     * @return this object.
+     */
+    public Legend symbolLimit(int limit) {
+        spec.put("symbolLimit", limit);
+        return this;
+    }
 }

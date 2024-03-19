@@ -290,4 +290,10 @@ public class Field {
         ObjectNode node = spec.has("legend") ? (ObjectNode) spec.get("legend") : spec.putObject("legend");
         return new Legend(node);
     }
+
+    /** Removes the legend for the encoding channel will be removed. */
+    public Field removeLegend() {
+        spec.putNull("legend");
+        return this;
+    }
 }
