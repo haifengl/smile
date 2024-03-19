@@ -1356,11 +1356,11 @@ val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
         <div class="tab-pane active" id="scala_26">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-temps.csv").
+val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
   mark("rect").
   x(field = "date", `type` = "ordinal", timeUnit = "date", title = "Day", axis = json"""{"labelAngle": 0, "format": "%e"}""").
   y(field = "date", `type` = "ordinal", timeUnit = "month", title = "Month").
-  color(field = "temp", `type` = "quantitative", aggregate = "max", legend = json"""{"title": null}""").
+  color(field = "temp_max", `type` = "quantitative", aggregate = "max", legend = json"""{"title": null}""").
   config(json"""
     {
       "view": {
@@ -1383,7 +1383,7 @@ val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-t
       var spec = {
   "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
   "data": {
-      "url": "https://vega.github.io/vega-lite/examples/data/seattle-temps.csv"
+      "url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"
   },
   "title": "2010 Daily Max Temperature (F) in Seattle, WA",
   "config": {
@@ -1414,7 +1414,7 @@ val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-t
           "title": "Month"
       },
       "color": {
-          "field": "temp",
+          "field": "temp_max",
           "aggregate": "max",
           "type": "quantitative",
           "legend": {
