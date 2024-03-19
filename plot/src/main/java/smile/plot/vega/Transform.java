@@ -16,6 +16,7 @@
  */
 package smile.plot.vega;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -29,13 +30,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @author Haifeng Li
  */
 public class Transform {
+    /** JSON object mapping. */
+    final ObjectMapper mapper;
     /** VegaLite's Transform definition object. */
     final ArrayNode spec;
 
     /**
      * Hides the constructor so that users cannot create the instances directly.
      */
-    Transform(ArrayNode spec) {
+    Transform(ObjectMapper mapper, ArrayNode spec) {
+        this.mapper = mapper;
         this.spec = spec;
     }
 
@@ -60,7 +64,7 @@ public class Transform {
      *                  values in the field b2 over 60.
      * @return this object.
      */
-    Transform filter(String predicate) {
+    public Transform filter(String predicate) {
         ObjectNode node = spec.addObject();
         node.put("filter", predicate);
         return this;
@@ -74,7 +78,7 @@ public class Transform {
      * @param field the field for storing the computed formula value.
      * @return this object.
      */
-    Transform calculate(String expr, String field) {
+    public Transform calculate(String expr, String field) {
         ObjectNode node = spec.addObject();
         node.put("calculate", expr);
         node.put("as", field);
@@ -96,7 +100,7 @@ public class Transform {
      *               group containing all data objects will be used.
      * @return this object.
      */
-    Transform aggregate(String op, String field, String as, String... groupby) {
+    public Transform aggregate(String op, String field, String as, String... groupby) {
         ObjectNode node = spec.addObject();
         ArrayNode a = node.putArray("aggregate");
         a.addObject()
@@ -131,7 +135,7 @@ public class Transform {
      *               group containing all data objects will be used.
      * @return this object.
      */
-    Transform joinAggregate(String op, String field, String as, String... groupby) {
+    public Transform joinAggregate(String op, String field, String as, String... groupby) {
         ObjectNode node = spec.addObject();
         ArrayNode a = node.putArray("joinaggregate");
         a.addObject()
@@ -152,11 +156,80 @@ public class Transform {
      * @param as The output fields at which to write the start and end bin values.
      * @return this object.
      */
-    Transform bin(String field, String as) {
+    public Transform bin(String field, String as) {
         ObjectNode node = spec.addObject();
         node.put("bin", true)
                 .put("field", field)
                 .put("as", as);
         return this;
+    }
+
+    /**
+     * Adds a lookup transformation.
+     * @param key the key in primary data source.
+     * @param from the data source or selection for secondary data reference.
+     * @return this object.
+     */
+    public Transform lookup(String key, ObjectNode from) {
+        ObjectNode node = spec.addObject();
+        node.put("lookup", key)
+                .set("from", from);
+        return this;
+    }
+
+    /**
+     * Adds a lookup transformation.
+     * @param key the key in primary data source.
+     * @param from the data source or selection for secondary data reference.
+     * @param as the output fields on which to store the looked up data values.
+     * @return this object.
+     */
+    public Transform lookup(String key, ObjectNode from, String as) {
+        ObjectNode node = spec.addObject();
+        node.put("lookup", key)
+                .put("as", as)
+                .set("from", from);
+        return this;
+    }
+
+    /**
+     * Creates a data specification object.
+     * @return a data specification object.
+     */
+    public Data data() {
+        return new Data(mapper);
+    }
+
+    /**
+     * Returns a Lookup Data object.
+     *
+     * @param key Key in data to lookup.
+     * @param data Secondary data source to lookup in.
+     * @param fields Fields in foreign data or selection to lookup.
+     *              If not specified, the entire object is queried.
+     * @return a Lookup Data object.
+     */
+    public ObjectNode lookupData(String key, Data data, String... fields) {
+        ObjectNode node = mapper.createObjectNode()
+                .put("key", key)
+                .set("data", data.spec);
+
+        if (fields.length > 0) {
+            ArrayNode array = node.putArray("fields");
+            for (String field : fields) {
+                array.add(field);
+            }
+        }
+
+        return node;
+    }
+
+    /**
+     * Returns a Lookup Selection object.
+     * @param param Selection parameter name to look up.
+     * @return a Lookup Selection object.
+     */
+    public ObjectNode lookupSelection(String param) {
+        return mapper.createObjectNode().put("param", param);
     }
 }
