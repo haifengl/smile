@@ -277,7 +277,7 @@ public class VegaTest {
         bar.transform()
                 .bin("Horsepower", "bin_Horsepwoer")
                 .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
-                .joinaggregate("sum", "Count","TotalCount")
+                .joinAggregate("sum", "Count","TotalCount")
                 .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
 
         bar.show();
