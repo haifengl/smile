@@ -593,7 +593,7 @@ val colorBar = VegaLite.view().
     <pre class="prettyprint lang-scala"><code>
 val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
   mark("bar").
-  x(field = "IMDB_Rating", `type` = "quantitative", bin = Left(true)).
+  x(field = "IMDB Rating", `type` = "quantitative", bin = Left(true)).
   y(field = null, `type` = "quantitative", aggregate = "count")
     </code></pre>
             </div>
@@ -609,7 +609,7 @@ val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.
   "encoding": {
     "x": {
       "bin": true,
-      "field": "IMDB_Rating",
+      "field": "IMDB Rating",
       "type": "quantitative"
     },
     "y": {
@@ -706,7 +706,7 @@ val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/car
     <pre class="prettyprint lang-scala"><code>
 val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
   mark("rect").
-  x(field = "IMDB_Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":60}"""), title = "IMDB Rating").
+  x(field = "IMDB Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":60}"""), title = "IMDB Rating").
   y(field = "Rotten_Tomatoes_Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":40}""")).
   color(field = null, `type` = "quantitative", aggregate = "count").
   width(300).
@@ -714,7 +714,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
   transform(json"""{
     "filter": {
       "and": [
-        {"field": "IMDB_Rating", "valid": true},
+        {"field": "IMDB Rating", "valid": true},
         {"field": "Rotten_Tomatoes_Rating", "valid": true}
       ]}}"""
   ).
@@ -731,7 +731,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "transform": [{
     "filter": {"and": [
-      {"field": "IMDB_Rating", "valid": true},
+      {"field": "IMDB Rating", "valid": true},
       {"field": "Rotten_Tomatoes_Rating", "valid": true}
     ]}
   }],
@@ -741,7 +741,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
   "encoding": {
     "x": {
       "bin": {"maxbins":60},
-      "field": "IMDB_Rating",
+      "field": "IMDB Rating",
       "type": "quantitative"
     },
     "y": {
@@ -780,7 +780,7 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
   height(100).
   transform(json"""
     {
-      "density": "IMDB_Rating",
+      "density": "IMDB Rating",
       "bandwidth": 0.3
     }"""
   )
@@ -798,7 +798,7 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
   "height": 100,
   "transform":[
     {
-      "density": "IMDB_Rating",
+      "density": "IMDB Rating",
       "bandwidth": 0.3
     }
   ],
@@ -829,11 +829,11 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
     <pre class="prettyprint lang-scala"><code>
 val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
   mark("area").
-  x(field = "IMDB_Rating", `type` = "quantitative").
+  x(field = "IMDB Rating", `type` = "quantitative").
   y(field = "cumulative_count", `type` = "quantitative").
   transform(json"""
     {
-      "sort": [{"field": "IMDB_Rating"}],
+      "sort": [{"field": "IMDB Rating"}],
       "window": [{"op": "count", "field": "count", "as": "cumulative_count"}],
       "frame": [null, 0]
     }"""
@@ -849,14 +849,14 @@ val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json")
   "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "transform": [{
-    "sort": [{"field": "IMDB_Rating"}],
+    "sort": [{"field": "IMDB Rating"}],
     "window": [{"op": "count", "field": "count", "as": "cumulative_count"}],
     "frame": [null, 0]
   }],
   "mark": "area",
   "encoding": {
     "x": {
-      "field": "IMDB_Rating",
+      "field": "IMDB Rating",
       "type": "quantitative"
     },
     "y": {
