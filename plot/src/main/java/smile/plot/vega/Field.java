@@ -204,9 +204,9 @@ public class Field {
      */
     public Field scaleRange(double... values) {
         ObjectNode node = spec.putObject("scale");
-        ArrayNode domain = node.putArray("range");
+        ArrayNode range = node.putArray("range");
         for (double value : values) {
-            domain.add(value);
+            range.add(value);
         }
         return this;
     }
@@ -218,9 +218,9 @@ public class Field {
      */
     public Field scaleRange(String... values) {
         ObjectNode node = spec.putObject("scale");
-        ArrayNode domain = node.putArray("range");
+        ArrayNode range = node.putArray("range");
         for (String value : values) {
-            domain.add(value);
+            range.add(value);
         }
         return this;
     }
@@ -255,5 +255,14 @@ public class Field {
     public Axis axis() {
         ObjectNode node = spec.has("axis") ? (ObjectNode) spec.get("axis") : spec.putObject("axis");
         return new Axis(node);
+    }
+
+    /**
+     * Returns the legend definition object.
+     * @return the legend definition object.
+     */
+    public Legend legend() {
+        ObjectNode node = spec.has("legend") ? (ObjectNode) spec.get("legend") : spec.putObject("legend");
+        return new Legend(node);
     }
 }
