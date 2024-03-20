@@ -57,35 +57,6 @@ public class Transform {
     }
 
     /**
-     * Adds a filter transform.
-     * @param predicate an expression string, where datum can be used to refer
-     *                 to the current data object. For example, "datum.b2 > 60"
-     *                  would make the output data includes only items that have
-     *                  values in the field b2 over 60.
-     * @return this object.
-     */
-    public Transform filter(String predicate) {
-        ObjectNode node = spec.addObject();
-        node.put("filter", predicate);
-        return this;
-    }
-
-    /**
-     * Adds a formula transform extends data objects with new fields
-     * (columns) according to an expression.
-     * @param expr an expression string. Use the variable datum to refer
-     *            to the current data object.
-     * @param field the field for storing the computed formula value.
-     * @return this object.
-     */
-    public Transform calculate(String expr, String field) {
-        ObjectNode node = spec.addObject();
-        node.put("calculate", expr);
-        node.put("as", field);
-        return this;
-    }
-
-    /**
      * Aggregate summarizes a table as one record for each group.
      * To preserve the original table structure and instead add
      * a new column with the aggregate values, use the join aggregate
@@ -161,6 +132,54 @@ public class Transform {
         node.put("bin", true)
                 .put("field", field)
                 .put("as", as);
+        return this;
+    }
+
+    /**
+     * Adds a formula transform extends data objects with new fields
+     * (columns) according to an expression.
+     * @param expr an expression string. Use the variable datum to refer
+     *            to the current data object.
+     * @param field the field for storing the computed formula value.
+     * @return this object.
+     */
+    public Transform calculate(String expr, String field) {
+        ObjectNode node = spec.addObject();
+        node.put("calculate", expr);
+        node.put("as", field);
+        return this;
+    }
+
+    /**
+     * Adds a density transformation.
+     *
+     * @param field The data field for which to perform density estimation.
+     * @param groupby The data fields to group by. If not specified, a single
+     *               group containing all data objects will be used.
+     * @return this object.
+     */
+    public Density density(String field, String... groupby) {
+        ObjectNode node = spec.addObject().put("density", field);
+        if (groupby.length > 0) {
+            ArrayNode array = node.putArray("groupby");
+            for (String f : groupby) {
+                array.add(f);
+            }
+        }
+        return new Density(node);
+    }
+
+    /**
+     * Adds a filter transform.
+     * @param predicate an expression string, where datum can be used to refer
+     *                 to the current data object. For example, "datum.b2 > 60"
+     *                  would make the output data includes only items that have
+     *                  values in the field b2 over 60.
+     * @return this object.
+     */
+    public Transform filter(String predicate) {
+        ObjectNode node = spec.addObject();
+        node.put("filter", predicate);
         return this;
     }
 
