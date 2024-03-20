@@ -139,7 +139,7 @@ public class DensityTransform {
      */
     public DensityTransform as(String... fields) {
         ArrayNode node = spec.putArray("as");
-        for (String field : fields) {
+        for (var field : fields) {
             node.add(field);
         }
         return this;
