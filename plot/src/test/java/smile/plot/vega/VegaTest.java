@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static smile.plot.vega.Predicate.*;
 
 /**
  *
@@ -263,6 +264,21 @@ public class VegaTest {
     }
 
     @Test
+    public void test2DHistogramHeatmap() throws Exception {
+        System.out.println("2D Histogram Heatmap");
+
+        var bar = new View("2D Histogram Heatmap").width(300).height(200);
+        bar.mark("rect");
+        bar.viewConfig().stroke("transparent");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        bar.encode("x", "IMDB Rating").type("quantitative").title("IMDB Rating").bin(new BinParams().maxBins(60));
+        bar.encode("y", "Rotten Tomatoes Rating").type("quantitative").bin(new BinParams().maxBins(40));
+        bar.encode("color", null).type("quantitative").aggregate("count");
+        bar.transform().filter(and(valid("IMDB Rating"), valid("Rotten Tomatoes Rating")));
+        bar.show();
+    }
+
+    @Test
     public void testDensityPlot() throws Exception {
         System.out.println("Density Plot");
 
@@ -392,18 +408,18 @@ public class VegaTest {
         System.out.println("Rolling Averages over Raw Values");
 
         var line = new View();
-        line.mark("line");
-        line.encode("x", "Year").type("temporal").timeUnit("year");
-        line.encode("y", "Miles_per_Gallon").type("quantitative").aggregate("mean");
+        line.mark("line").color("red").size(3);
+        line.encode("x", "date").type("temporal");
+        line.encode("y", "rolling_mean").type("quantitative");
 
-        var band = new View();
-        band.mark("errorband").extent("ci");
-        band.encode("x", "Year").type("temporal").timeUnit("year");
-        band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
+        var point = new View();
+        point.mark("point").opacity(0.3);
+        point.encode("x", "date").type("temporal").title("Date");
+        point.encode("y", "temp_max").type("quantitative").title("Max Temperature");
 
-        var layer = new Layer(line, band).title("Rolling Averages over Raw Values");
-        layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
-
+        var layer = new Layer(line, point).title("Rolling Averages over Raw Values").width(400).height(300);
+        layer.data().format("csv").url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        layer.transform().window(new WindowTransformField("mean", "temp_max", 0, "rolling_mean")).frame(-15, 15);
         layer.show();
     }
 
