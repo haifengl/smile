@@ -41,6 +41,7 @@ public interface ViewComposition {
      * Sets a scale resolution. For scales, resolution can be specified for every channel.
      * @param channel positional or non-positional channel.
      * @param resolution "shared" or "independent".
+     * @return this object.
      */
     default ViewComposition resolveScale(String channel, String resolution) {
         ObjectNode spec = spec();
@@ -54,6 +55,7 @@ public interface ViewComposition {
      * Sets an axis resolution.
      * @param channel positional channel: "x" or "y".
      * @param resolution "shared" or "independent".
+     * @return this object.
      */
     default ViewComposition resolveAxis(String channel, String resolution) {
         ObjectNode spec = spec();
@@ -67,6 +69,7 @@ public interface ViewComposition {
      * Sets a legend resolution.
      * @param channel non-positional channel: "color", "opacity", "shape", or "size".
      * @param resolution "shared" or "independent".
+     * @return this object.
      */
     default ViewComposition resolveLegend(String channel, String resolution) {
         ObjectNode spec = spec();
