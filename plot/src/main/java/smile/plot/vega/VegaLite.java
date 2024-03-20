@@ -53,7 +53,7 @@ public class VegaLite {
     /**
      * JSON object mapping.
      */
-    final ObjectMapper mapper = new ObjectMapper();
+    static final ObjectMapper mapper = new ObjectMapper();
     /**
      * The Vega-Lite specification.
      */
@@ -237,7 +237,7 @@ public class VegaLite {
      * @return the data specification object.
      */
     public Data data() {
-        Data data = new Data(mapper);
+        Data data = new Data();
         spec.set("data", data.spec);
         return data;
     }
@@ -258,7 +258,7 @@ public class VegaLite {
      */
     public Transform transform() {
         ArrayNode node = spec.has("transform") ? (ArrayNode) spec.get("transform") : spec.putArray("transform");
-        return new Transform(mapper, node);
+        return new Transform(node);
     }
 
     /**

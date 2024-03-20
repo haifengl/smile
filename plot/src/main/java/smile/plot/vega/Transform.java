@@ -16,7 +16,6 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -30,16 +29,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @author Haifeng Li
  */
 public class Transform {
-    /** JSON object mapping. */
-    final ObjectMapper mapper;
     /** VegaLite's Transform definition object. */
     final ArrayNode spec;
 
     /**
      * Hides the constructor so that users cannot create the instances directly.
      */
-    Transform(ObjectMapper mapper, ArrayNode spec) {
-        this.mapper = mapper;
+    Transform(ArrayNode spec) {
         this.spec = spec;
     }
 
@@ -184,6 +180,17 @@ public class Transform {
     }
 
     /**
+     * Adds a filter transform.
+     * @param predicate a predicate object.
+     * @return this object.
+     */
+    public Transform filter(Predicate predicate) {
+        ObjectNode node = spec.addObject();
+        node.set("filter", predicate.spec);
+        return this;
+    }
+
+    /**
      * Adds a lookup transformation.
      * @param key the key in primary data source.
      * @param param Selection parameter name to look up.
@@ -215,9 +222,9 @@ public class Transform {
      * @return a lookup data.
      */
     public LookupData lookupData(String key) {
-        ObjectNode node = mapper.createObjectNode().put("key", key);
-        Data data = new Data(mapper);
-        node.put("data", data.spec);
+        ObjectNode node = VegaLite.mapper.createObjectNode().put("key", key);
+        Data data = new Data();
+        node.set("data", data.spec);
         return new LookupData(node, data);
     }
 
@@ -230,10 +237,10 @@ public class Transform {
         ArrayNode array = node.putArray("window");
         for (var field : fields) {
             array.addObject()
-                    .put("op", field.op())
-                    .put("field", field.field())
-                    .put("param", field.param())
-                    .put("as", field.as());
+                 .put("op", field.op())
+                 .put("field", field.field())
+                 .put("param", field.param())
+                 .put("as", field.as());
         }
         return new WindowTransform(node);
     }

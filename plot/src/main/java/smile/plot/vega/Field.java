@@ -98,6 +98,16 @@ public class Field {
     }
 
     /**
+     * Sets custom binning parameters.
+     * @param params the binning parameters.
+     * @return this object.
+     */
+    public Field bin(BinParams params) {
+        spec.set("bin", params.spec);
+        return this;
+    }
+
+    /**
      * Sets the time unit for a temporal field. Vega-Lite supports the following time units:
      *
      * "year" - Gregorian calendar years.

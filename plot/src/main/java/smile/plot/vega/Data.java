@@ -19,7 +19,6 @@ package smile.plot.vega;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -34,17 +33,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @author Haifeng Li
  */
 public class Data {
-    /** JSON object mapping. */
-    final ObjectMapper mapper;
     /** Data specification object. */
     final ObjectNode spec;
 
     /**
      * Hides the constructor so that users cannot create the instances directly.
      */
-    Data(ObjectMapper mapper) {
-        this.mapper = mapper;
-        this.spec = mapper.createObjectNode();
+    Data() {
+        spec = VegaLite.mapper.createObjectNode();
     }
 
     @Override
@@ -127,7 +123,7 @@ public class Data {
      * @return this object.
      */
     public Data values(String json) throws JsonProcessingException {
-        spec.set("values", mapper.valueToTree(json));
+        spec.set("values", VegaLite.mapper.valueToTree(json));
         return this;
     }
 
@@ -139,7 +135,7 @@ public class Data {
      * @return this object.
      */
     public <T> Data values(T[] data) {
-        spec.set("values", mapper.valueToTree(data));
+        spec.set("values", VegaLite.mapper.valueToTree(data));
         return this;
     }
 
@@ -151,7 +147,7 @@ public class Data {
      * @return this object.
      */
     public <T> Data values(List<T> data) {
-        spec.set("values", mapper.valueToTree(data));
+        spec.set("values", VegaLite.mapper.valueToTree(data));
         return this;
     }
 
