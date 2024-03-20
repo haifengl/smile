@@ -505,10 +505,8 @@ public class VegaTest {
         geo.projection("albersUsa");
 
         var transform = geo.transform();
-        var lookupData = transform.lookupData(
-                "id",
-                transform.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv"),
-                "rate");
+        var lookupData = transform.lookupData("id").fields("rate");
+        lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
         geo.transform().lookup("id", lookupData);
         geo.show();
     }
