@@ -512,4 +512,21 @@ public class VegaTest {
         geo.transform().lookup("id", lookupData);
         geo.show();
     }
+
+    @Test
+    public void testSPLOM() throws Exception {
+        System.out.println("Scatter Plot Matrix");
+
+        var plot = new View().width(150).height(150);
+        plot.mark("point");
+        plot.encode("x", "repeat:column").type("quantitative").zero(false);
+        plot.encode("y", "repeat:row").type("quantitative").zero(false);
+        plot.encode("color", "species").type("nominal");
+
+        String[] row = {"petalWidth", "petalLength", "sepalWidth", "sepalLength"};
+        String[] column = {"sepalLength", "sepalWidth", "petalLength", "petalWidth"};
+        var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
+        splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
+        splom.show();
+    }
 }
