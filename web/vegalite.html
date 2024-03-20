@@ -10,8 +10,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>In previous section, we show how to visualize data in imperative way.
        Smile also support data visualization in declarative approach.
-       With <code>smile.plot.vega</code> package (in the artifact
-       <code>smile-scala</code>), we can create a specification
+       With <code>smile.plot.vega</code> package, we can create a specification
        that describes visualizations as mappings from data to properties
        of graphical marks (e.g., points or bars). The specification is
        based on <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
@@ -37,10 +36,33 @@ permalink: "{{ page.filePathStem }}.html"
     <h3 id="simple_bar" class="title">Simple Bar Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Simple Bar Plot")
+                .description("A simple bar chart with embedded data.")
+                .widthStep(30);
+
+        bar.data().values("""
+                [
+                  {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+                  {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+                  {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+                ]""");
+
+        bar.mark("bar");
+        Field x = bar.encode("x", "a").type("ordinal");
+        x.axis().labelAngle(0);
+        bar.encode("y", "b").type("quantitative");
+        bar.show();
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val bar = VegaLite.view().
@@ -85,10 +107,26 @@ val bar = VegaLite.view().
     <h3 id="aggregate_bar" class="title">Aggregate Bar Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Aggregate Bar Plot")
+                .description("A bar chart showing the US population distribution of age groups in 2000.")
+                .heightStep(20);
+
+        bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        bar.transform().filter("datum.year == 2000");
+        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encode("y", "age").type("ordinal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val aggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -128,10 +166,26 @@ val aggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popu
     <h3 id="sorted_aggregate_bar" class="title">Aggregate Bar Chart (Sorted)</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane active" id="java_3">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Sorted Aggregate Bar Plot")
+                .description("A bar chart that sorts the y-values by the x-values.")
+                .heightStep(20);
+
+        bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        bar.transform().filter("datum.year == 2000");
+        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+        bar.encode("y", "age").type("ordinal").sort("-x");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val sortedAggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -177,10 +231,30 @@ show(sortedAggregateBar)
     <h3 id="grouped_bar" class="title">Grouped Bar Chart</h3>
 
     <ul class="nav nav-tabs">
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane active" id="java_4">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Group Bar Plot").widthStep(12);
+
+        bar.mark("bar");
+        bar.viewConfig().stroke("transparent").axis().domainWidth(1);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encode("x", "gender").type("nominal").title(null);
+        bar.encode("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
+        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+        bar.encode("column", "age").type("ordinal").spacing(10);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val groupedBar = VegaLite.facet("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -239,10 +313,26 @@ val groupedBar = VegaLite.facet("https://vega.github.io/vega-lite/examples/data/
     <h3 id="stacked_bar" class="title">Stacked Bar Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane active" id="java_5">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Stacked Bar Plot");
+        bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "weather").type("nominal")
+                .domain("sun", "fog", "drizzle", "rain", "snow")
+                .range("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
+                .legend().title("Weather type");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val stackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
@@ -295,10 +385,23 @@ val stackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattl
     <h3 id="stacked_round_bar" class="title">Stacked Bar Chart with Rounded Corners</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane active" id="java_6">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Stacked Bar with Rounded Corner");
+        bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "weather").type("nominal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val stackedRoundedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
@@ -329,10 +432,23 @@ val stackedRoundedBar = VegaLite("https://vega.github.io/vega-lite/examples/data
     <h3 id="horizontal_stacked_bar" class="title">Horizontal Stacked Bar Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane active" id="java_7">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Horizontal Stacked Bar");
+        bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/barley.json");
+        bar.encode("x", "yield").type("quantitative").aggregate("sum");
+        bar.encode("y", "variety").type("nominal");
+        bar.encode("color", "site").type("nominal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val horizontalStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/barley.json").
@@ -363,10 +479,29 @@ val horizontalStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
     <h3 id="layered_bar" class="title">Layered Bar Chart</h3>
 
     <ul class="nav nav-tabs">
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
         <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane active" id="java_8">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Layered Bar").widthStep(17);
+
+        bar.mark("bar");
+        bar.background().opacity(0.7);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encode("x", "age").type("ordinal");
+        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
+        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val layeredBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -417,10 +552,29 @@ val layeredBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popula
     <h3 id="normalized_stacked_bar" class="title">Normalized (Percentage) Stacked Bar Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane active" id="java_9">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Normalized (Percentage) Stacked Bar").widthStep(17);
+
+        bar.mark("bar");
+        bar.background().opacity(0.7);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        bar.transform()
+                .filter("datum.year == 2000")
+                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+
+        bar.encode("x", "age").type("ordinal");
+        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack("normalize");
+        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val normalizedStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -468,10 +622,29 @@ val normalizedStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
     <h3 id="gantt_chart" class="title">Gantt Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane active" id="java_10">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var gantt = new View("Gantt Chart");
+        gantt.data().values("""
+                [
+                  {"task": "A", "start": 1, "end": 3},
+                  {"task": "B", "start": 3, "end": 8},
+                  {"task": "C", "start": 8, "end": 10}
+                ]""");
+
+        gantt.mark("bar");
+        gantt.encode("x", "start").type("quantitative");
+        gantt.encode("x2", "end").type("quantitative");
+        gantt.encode("y", "task").type("ordinal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val gantt = VegaLite.view().
@@ -516,10 +689,29 @@ val gantt = VegaLite.view().
     <h3 id="color_bar" class="title">A Bar Chart Encoding Color Names in the Data</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane active" id="java_11">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Bar Chart Encoding Color Names in the Data");
+        bar.data().values("""
+                [
+                  {"color": "red", "b": 28},
+                  {"color": "green", "b": 55},
+                  {"color": "blue", "b": 43}
+                ]""");
+
+        bar.mark("bar");
+        bar.encode("x", "color").type("nominal");
+        bar.encode("y", "b").type("quantitative");
+        bar.encode("color", "color").type("nominal").scale(null);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val colorBar = VegaLite.view().
@@ -585,10 +777,23 @@ val colorBar = VegaLite.view().
     <h3 id="histogram" class="title">Histogram</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane active" id="java_12">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Histogram");
+        bar.mark("bar");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        bar.encode("x", "IMDB Rating").type("quantitative").bin(true);
+        bar.encode("y", null).type("quantitative").aggregate("count");
+        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
@@ -624,10 +829,30 @@ val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.
     <h3 id="relative_frequency_histogram" class="title">Relative Frequency Histogram</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane active" id="java_13">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Relative Frequency Histogram");
+
+        bar.mark("bar").tooltip(true);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+        bar.encode("x", "bin_Horsepwoer").type("quantitative").bin("binned").title("Horsepower");
+        bar.encode("x2", "bin_Horsepwoer_end").type("quantitative");
+        bar.encode("y", "PercentOfTotal").type("quantitative").title("Relative Frequency").axis().format(".1~%");
+
+        bar.transform()
+                .bin("Horsepower", "bin_Horsepwoer")
+                .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
+                .joinAggregate("sum", "Count", "TotalCount")
+                .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
@@ -698,10 +923,25 @@ val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/car
     <h3 id="2d_histogram_heatmap" class="title">2D Histogram Heatmap</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane active" id="java_14">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("2D Histogram Heatmap").width(300).height(200);
+        bar.mark("rect");
+        bar.viewConfig().stroke("transparent");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        bar.encode("x", "IMDB Rating").type("quantitative").title("IMDB Rating").bin(new BinParams().maxBins(60));
+        bar.encode("y", "Rotten Tomatoes Rating").type("quantitative").bin(new BinParams().maxBins(40));
+        bar.encode("color", null).type("quantitative").aggregate("count");
+        bar.transform().filter(and(valid("IMDB Rating"), valid("Rotten Tomatoes Rating")));
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
@@ -766,10 +1006,23 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
     <h3 id="density_plot" class="title">Density Plot</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_15">
+        <div class="tab-pane active" id="java_15">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var plot = new View("Density Plot").width(400).height(100);
+        plot.mark("area");
+        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        plot.encode("x", "value").type("quantitative").title("IMDB Rating");
+        plot.encode("y", "density").type("quantitative");
+        plot.transform().density("IMDB Rating").bandwidth(0.3);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
@@ -821,10 +1074,25 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
     <h3 id="cumulative_frequency_distribution" class="title">Cumulative Frequency Distribution</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_16">
+        <div class="tab-pane active" id="java_16">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var plot = new View("Cumulative Frequency Distribution");
+        plot.mark("area");
+        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        plot.encode("x", "IMDB Rating").type("quantitative");
+        plot.encode("y", "Cumulative Count").type("quantitative");
+        plot.transform().aggregate("count", "*", "count", "IMDB Rating")
+            .window(new WindowTransformField("sum", "count", 0, "Cumulative Count"))
+            .sort("IMDB Rating").frame(null, 0);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
@@ -877,10 +1145,24 @@ val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json")
     <h3 id="scatterplot" class="title">Scatterplot</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_17">
+        <div class="tab-pane active" id="java_17">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Scatter Plot");
+        bar.mark("point");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+        bar.encode("x", "Horsepower").type("quantitative");
+        bar.encode("y", "Miles_per_Gallon").type("quantitative");
+        bar.encode("color", "Origin").type("nominal");
+        bar.encode("shape", "Origin").type("nominal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_17">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val scatter = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
@@ -914,10 +1196,23 @@ val scatter = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json
     <h3 id="bubble_plot" class="title">Bubble Plot</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_18">
+        <div class="tab-pane active" id="java_18">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Bubble Plot");
+        bar.mark("point");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+        bar.encode("x", "Horsepower").type("quantitative");
+        bar.encode("y", "Miles_per_Gallon").type("quantitative");
+        bar.encode("size", "Acceleration").type("quantitative");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val bubble = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
@@ -949,10 +1244,27 @@ val bubble = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json"
     <h3 id="natural_disasters" class="title">Natural Disasters</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_19">
+        <div class="tab-pane active" id="java_19">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Natural Disasters").width(600).height(400);
+        bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
+        bar.transform().filter("datum.Entity !== 'All natural disasters'");
+        bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
+        bar.encode("y", "Entity").type("nominal").title(null);
+        bar.encode("color", "Entity").type("nominal").removeLegend();
+        bar.encode("size", "Deaths").type("quantitative")
+                .range(0, 5000)
+                .legend().title("Annual Global Deaths").clipHeight(30);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_19">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val disaster = VegaLite("https://vega.github.io/vega-lite/examples/data/disasters.csv").
@@ -1017,10 +1329,25 @@ val disaster = VegaLite("https://vega.github.io/vega-lite/examples/data/disaster
     <h3 id="text_plot" class="title">Text Plot</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_20">
+        <div class="tab-pane active" id="java_20">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var bar = new View("Text Plot");
+        bar.mark("text");
+        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+        bar.transform().calculate("split(datum.Name, ' ')[0]", "Brand");
+        bar.encode("x", "Horsepower").type("quantitative");
+        bar.encode("y", "Miles_per_Gallon").type("quantitative");
+        bar.encode("color", "Brand").type("nominal");
+        bar.encode("text", "Brand").type("nominal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_20">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val textPlot = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
@@ -1085,10 +1412,23 @@ val textPlot = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.jso
     <h3 id="line_chart" class="title">Line Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_21">
+        <div class="tab-pane active" id="java_21">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var line = new View("Line Chart");
+        line.mark("line");
+        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+        line.transform().filter("datum.symbol==='GOOG'");
+        line.encode("x", "date").type("temporal");
+        line.encode("y", "price").type("quantitative");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_21">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val line = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
@@ -1120,10 +1460,23 @@ val line = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
     <h3 id="line_point_chart" class="title">Line Chart with Point Markers</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_22">
+        <div class="tab-pane active" id="java_22">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var line = new View("Line Chart with Point Mark");
+        line.mark("line").point(true);
+        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+        line.encode("x", "date").type("temporal").timeUnit("year");
+        line.encode("y", "price").type("quantitative").aggregate("mean");
+        line.encode("color", "symbol").type("nominal");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_22">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val pointLine = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
@@ -1158,10 +1511,29 @@ val pointLine = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.
     <h3 id="confidence_interval" class="title">Line Chart with Confidence Interval Band</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_23" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_23" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_23">
+        <div class="tab-pane active" id="java_23">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var line = new View();
+        line.mark("line");
+        line.encode("x", "Year").type("temporal").timeUnit("year");
+        line.encode("y", "Miles_per_Gallon").type("quantitative").aggregate("mean");
+
+        var band = new View();
+        band.mark("errorband").extent("ci");
+        band.encode("x", "Year").type("temporal").timeUnit("year");
+        band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
+
+        var layer = new Layer(line, band).title("Line Chart with Confidence Interval Band");
+        layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_23">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val confidenceInterval = VegaLite.layer(
@@ -1220,10 +1592,30 @@ val confidenceInterval = VegaLite.layer(
     <h3 id="rolling_averages" class="title">Rolling Averages over Raw Values</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_24">
+        <div class="tab-pane active" id="java_24">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var line = new View();
+        line.mark("line").color("red").size(3);
+        line.encode("x", "date").type("temporal");
+        line.encode("y", "rolling_mean").type("quantitative");
+
+        var point = new View();
+        point.mark("point").opacity(0.3);
+        point.encode("x", "date").type("temporal").title("Date");
+        point.encode("y", "temp_max").type("quantitative").title("Max Temperature");
+
+        var layer = new Layer(line, point).title("Rolling Averages over Raw Values").width(400).height(300);
+        layer.data().format("csv").url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        layer.transform().window(new WindowTransformField("mean", "temp_max", 0, "rolling_mean")).frame(-15, 15);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val rollingAverages = VegaLite.layer(
@@ -1317,10 +1709,23 @@ val rollingAverages = VegaLite.layer(
     <h3 id="area_chart" class="title">Area Chart with Overlaying Lines and Point Markers</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_25" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_25" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_25">
+        <div class="tab-pane active" id="java_25">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var area = new View("Area Chart with Overlaying Lines and Point Markers");
+        area.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+        area.transform().filter("datum.symbol==='GOOG'");
+        area.mark("area").line(true).point(true);
+        area.encode("x", "date").type("temporal");
+        area.encode("y", "price").type("quantitative");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_25">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
@@ -1354,10 +1759,27 @@ val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
     <h3 id="weather_heatmap" class="title">Annual Weather Heatmap</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_26" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_26" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_26">
+        <div class="tab-pane active" id="java_26">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var heatmap = new View("2010 Daily Max Temperature (F) in Seattle, WA");
+
+        heatmap.mark("rect");
+        heatmap.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+        heatmap.encode("x", "date").type("ordinal").timeUnit("date").title("Day").axis().labelAngle(0).format("%e");
+        heatmap.encode("y", "date").type("ordinal").timeUnit("month");
+        heatmap.encode("color", "temp_max").type("quantitative").aggregate("max").legend().title(null);
+
+        heatmap.config().axis().domain(false);
+        heatmap.viewConfig().strokeWidth(0).step(13);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_26">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
@@ -1434,10 +1856,32 @@ val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-w
     <h3 id="donut_chart" class="title">Donut Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_28" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_27" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_27" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_28">
+        <div class="tab-pane active" id="java_27">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var donut = new View("Donut Chart");
+        donut.data().values("""
+                [
+                  {"category": 1, "value": 4},
+                  {"category": 2, "value": 6},
+                  {"category": 3, "value": 10},
+                  {"category": 4, "value": 3},
+                  {"category": 5, "value": 7},
+                  {"category": 6, "value": 8}
+                ]""");
+
+        donut.mark("arc").innerRadius(50);
+        donut.encode("theta", "value").type("quantitative");
+        donut.encode("color", "category").type("nominal");
+        donut.viewConfig().stroke(null);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_27">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val donut = VegaLite(jsan"""
@@ -1487,10 +1931,30 @@ val donut = VegaLite(jsan"""
     <h3 id="radial_chart" class="title">Radial Chart</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_27" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_28" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_28" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_27">
+        <div class="tab-pane active" id="java_28">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var arc = new View();
+        arc.mark("arc").innerRadius(20).stroke("#fff");
+
+        var text = new View();
+        text.mark("text").radiusOffset(10);
+        text.encode("text", "data").type("quantitative");
+
+        var layer = new Layer(arc, text).title("Radial Chart");
+        layer.background().stroke(null);
+        layer.data().values("[12, 23, 47, 6, 52, 19]");
+        layer.encode("theta", "data").type("quantitative").stack("zero");
+        layer.encode("radius", "data").type("quantitative").scale("sqrt").zero(true).range(20, 100);
+        layer.encode("color", "data").type("nominal").removeLegend();
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_28">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val radial = VegaLite.layer(
@@ -1540,10 +2004,24 @@ val radial = VegaLite.layer(
     <h3 id="boxplot" class="title">Box Plot</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_29" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_29" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_29" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_29">
+        <div class="tab-pane active" id="java_29">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var boxplot = new View("Box Plot");
+        boxplot.background().stroke(null);
+        boxplot.mark("boxplot").extent("min-max");
+        boxplot.viewConfig().stroke(null);
+        boxplot.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+        boxplot.encode("x", "age").type("ordinal");
+        boxplot.encode("y", "people").type("quantitative").title("population");
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_29">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val boxplot = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
@@ -1581,10 +2059,18 @@ val boxplot = VegaLite("https://vega.github.io/vega-lite/examples/data/populatio
     <h3 id="vertical_concatenation" class="title">Vertical Concatenation</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_30" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_30" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_30" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_30">
+        <div class="tab-pane active" id="java_30">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+Concat.vconcat(bar, aggregateBar, groupedBar).show()
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_30">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
@@ -1744,10 +2230,28 @@ show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
     <h3 id="SPLOM" class="title">Scatterplot Matrix (SPLOM)</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_31" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_31" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_31" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_31">
+        <div class="tab-pane active" id="java_31">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var plot = new View().width(150).height(150);
+        plot.mark("point");
+        plot.encode("x", "repeat:column").type("quantitative").zero(false);
+        plot.encode("y", "repeat:row").type("quantitative").zero(false);
+        plot.encode("color", "species").type("nominal");
+
+        String[] row = {"petalWidth", "petalLength", "sepalWidth", "sepalLength"};
+        String[] column = {"sepalLength", "sepalWidth", "petalLength", "petalWidth"};
+        var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
+        splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
+        splom.show();
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_31">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val iris = read.arff("data/weka/iris.arff")
@@ -1791,10 +2295,27 @@ show(VegaLite.splom(iris, "class"))
     <h3 id="geo_choropleth" class="title">Choropleth of Unemployment Rate per County</h3>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_32" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_32" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_32" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_32">
+        <div class="tab-pane active" id="java_32">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+        var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
+        geo.mark("geoshape").extent("min-max");
+        geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
+        geo.encode("color", "rate").type("quantitative");
+        geo.projection("albersUsa");
+
+        var transform = geo.transform();
+        var lookupData = transform.lookupData("id").fields("rate");
+        lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
+        geo.transform().lookup("id", lookupData);
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_32">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val geo = VegaLite(
