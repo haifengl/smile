@@ -75,7 +75,7 @@ public class Transform {
                 .put("field", field)
                 .put("as", as);
         ArrayNode g = node.putArray("groupby");
-        for (String f : groupby) {
+        for (var f : groupby) {
             g.add(f);
         }
         return this;
@@ -110,7 +110,7 @@ public class Transform {
                 .put("field", field)
                 .put("as", as);
         ArrayNode g = node.putArray("groupby");
-        for (String f : groupby) {
+        for (var f : groupby) {
             g.add(f);
         }
         return this;
@@ -158,7 +158,7 @@ public class Transform {
         ObjectNode node = spec.addObject().put("density", field);
         if (groupby.length > 0) {
             ArrayNode array = node.putArray("groupby");
-            for (String f : groupby) {
+            for (var f : groupby) {
                 array.add(f);
             }
         }
@@ -270,6 +270,32 @@ public class Transform {
     }
 
     /**
+     * Adds an impute transform.
+     * @param field The data field for which the missing values should be imputed.
+     * @param key A key field that uniquely identifies data objects within a group.
+     *           Missing key values (those occurring in the data but not in the
+     *           current group) will be imputed.
+     * @return an impute transform object.
+     */
+    public ImputeTransform impute(String field, String key) {
+        ObjectNode node = spec.addObject().put("impute", field);
+        node.put("key", key);
+        return new ImputeTransform(node);
+    }
+
+    /**
+     * Adds a loess transform.
+     * @param field The data field of the dependent variable to smooth.
+     * @param on The data field of the independent variable to use a predictor.
+     * @return a loess transform object.
+     */
+    public LoessTransform loess(String field, String on) {
+        ObjectNode node = spec.addObject().put("loess", field);
+        node.put("on", on);
+        return new LoessTransform(node);
+    }
+
+    /**
      * Adds a lookup transformation.
      * @param key the key in primary data source.
      * @param param Selection parameter name to look up.
@@ -308,6 +334,42 @@ public class Transform {
     }
 
     /**
+     * Adds a pivot transform.
+     * @param field The data field to pivot on. The unique values of this
+     *             field become new field names in the output stream.
+     * @param value The data field to populate pivoted fields. The aggregate
+     *             values of this field become the values of the new pivoted
+     *             fields.
+     * @return a pivot transform object.
+     */
+    public PivotTransform pivot(String field, String value) {
+        ObjectNode node = spec.addObject().put("pivot", field);
+        node.put("value", value);
+        return new PivotTransform(node);
+    }
+    /**
+     * Adds a quantile transform.
+     * @param field The data field for which to perform quantile estimation.
+     * @return a quantile transform object.
+     */
+    public QuantileTransform quantile(String field) {
+        ObjectNode node = spec.addObject().put("quantile", field);
+        return new QuantileTransform(node);
+    }
+
+    /**
+     * Adds a regression transform.
+     * @param field The data field of the dependent variable to predict.
+     * @param on The data field of the independent variable to use a predictor.
+     * @return a regression transform object.
+     */
+    public RegressionTransform regression(String field, String on) {
+        ObjectNode node = spec.addObject().put("regression", field);
+        node.put("on", on);
+        return new RegressionTransform(node);
+    }
+
+    /**
      * Adds a sample transform. The sample transform filters random rows from
      * the data source to reduce its size. As input data objects are added and
      * removed, the sampled values may change in first-in, first-out manner.
@@ -320,6 +382,24 @@ public class Transform {
     public Transform sample(int size) {
         spec.addObject().put("sample", size);
         return this;
+    }
+
+    /**
+     * Adds a stack transform.
+     *
+     * @param field The field which is stacked.
+     * @param groupby The data fields to group by.
+     * @param as the output start field name. The end field will be "$as_end".
+     * @return a stack transform object.
+     */
+    public StackTransform stack(String field, String as, String... groupby) {
+        ObjectNode node = spec.addObject().put("stack", field);
+        ArrayNode g = node.putArray("groupby");
+        for (var f : groupby) {
+            g.add(f);
+        }
+        node.put("as", as);
+        return new StackTransform(node);
     }
 
     /**

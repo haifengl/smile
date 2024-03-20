@@ -105,7 +105,7 @@ public class WindowTransform {
      */
     public WindowTransform groupby(String... fields) {
         ArrayNode node = spec.putArray("groupby");
-        for (String field : fields) {
+        for (var field : fields) {
             node.add(field);
         }
         return this;
@@ -124,7 +124,7 @@ public class WindowTransform {
      */
     public WindowTransform sort(String... fields) {
         ArrayNode node = spec.putArray("sort");
-        for (String field : fields) {
+        for (var field : fields) {
             node.addObject().put("field", field);
         }
         return this;
@@ -143,7 +143,7 @@ public class WindowTransform {
      */
     public WindowTransform sort(SortField... fields) {
         ArrayNode node = spec.putArray("sort");
-        for (SortField field : fields) {
+        for (var field : fields) {
             node.addObject()
                 .put("field", field.field())
                 .put("order", field.order());
