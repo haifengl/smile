@@ -64,7 +64,7 @@ val bar = VegaLite.view().
     <div id="vis_1"></div>
     <script type="text/javascript">
       var spec = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A simple bar chart with embedded data.",
   "data": {
     "values": [
@@ -106,7 +106,7 @@ val aggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popu
     <div id="vis_2"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A bar chart showing the US population distribution of age groups in 2000.",
   "height": {"step": 17},
   "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
@@ -151,7 +151,7 @@ show(sortedAggregateBar)
     <div id="vis_3"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A bar chart that sorts the y-values by the x-values.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/population.json"},
   "transform": [{"filter": "datum.year == 2000"}],
@@ -203,7 +203,7 @@ val groupedBar = VegaLite.facet("https://vega.github.io/vega-lite/examples/data/
     <div id="vis_4"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
   "transform": [
     {"filter": "datum.year == 2000"},
@@ -264,7 +264,7 @@ val stackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattl
     <div id="vis_5"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"},
   "mark": "bar",
   "encoding": {
@@ -314,7 +314,7 @@ val stackedRoundedBar = VegaLite("https://vega.github.io/vega-lite/examples/data
     <div id="vis_6"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"},
   "mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3},
   "encoding": {
@@ -348,7 +348,7 @@ val horizontalStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
     <div id="vis_7"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/barley.json"},
   "mark": "bar",
   "encoding": {
@@ -388,7 +388,7 @@ val layeredBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popula
     <div id="vis_8"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A bar chart showing the US population distribution of age groups and gender in 2000.",
   "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
   "transform": [
@@ -441,7 +441,7 @@ val normalizedStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
     <div id="vis_9"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
   "transform": [
     {"filter": "datum.year == 2000"},
@@ -494,7 +494,7 @@ val gantt = VegaLite.view().
     <div id="vis_10"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A simple bar chart with ranged data (aka Gantt Chart).",
   "data": {
     "values": [
@@ -542,7 +542,7 @@ val colorBar = VegaLite.view().
     <div id="vis_11"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A bar chart that directly encodes color names in the data.",
   "data": {
     "values": [
@@ -603,7 +603,7 @@ val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.
     <div id="vis_12"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "mark": "bar",
   "encoding": {
@@ -659,7 +659,7 @@ val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/car
     <div id="vis_13"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Relative frequency histogram. The data is binned with first transform. The number of values per bin and the total number are calculated in the second and third transform to calculate the relative frequency in the last transformation step.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
   "transform": [{
@@ -727,7 +727,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
     <div id="vis_14"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "transform": [{
     "filter": {"and": [
@@ -792,7 +792,7 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
     <div id="vis_15"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "width": 400,
   "height": 100,
@@ -846,11 +846,15 @@ val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json")
     <div id="vis_16"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
   "transform": [{
+    "aggregate":[{"op": "count", "field": "*", "as": "count"}],
+    "groupby": ["IMDB Rating"]
+  },
+  {
     "sort": [{"field": "IMDB Rating"}],
-    "window": [{"op": "count", "field": "count", "as": "cumulative_count"}],
+    "window": [{"op": "sum", "field": "count", "as": "Cumulative Count"}],
     "frame": [null, 0]
   }],
   "mark": "area",
@@ -860,7 +864,7 @@ val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json")
       "type": "quantitative"
     },
     "y": {
-      "field": "cumulative_count",
+      "field": "Cumulative Count",
       "type": "quantitative"
     }
   }
@@ -893,7 +897,7 @@ val scatter = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json
     <div id="vis_17"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A scatterplot showing horsepower and miles per gallons.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
   "mark": "point",
@@ -929,7 +933,7 @@ val bubble = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json"
     <div id="vis_18"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A bubbleplot showing horsepower on x, miles per gallons on y, and binned acceleration on size.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
   "mark": "point",
@@ -976,7 +980,7 @@ val disaster = VegaLite("https://vega.github.io/vega-lite/examples/data/disaster
     <div id="vis_19"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {
     "url": "https://vega.github.io/vega-lite/examples/data/disasters.csv"
   },
@@ -1046,7 +1050,7 @@ val textPlot = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.jso
   "data": {
     "url": "https://vega.github.io/vega-lite/examples/data/cars.json"
   },
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "encoding": {
     "color": {
       "field": "Brand",
@@ -1100,7 +1104,7 @@ val line = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
     <div id="vis_21"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Google's stock price over time.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
   "transform": [{"filter": "datum.symbol==='GOOG'"}],
@@ -1135,7 +1139,7 @@ val pointLine = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.
     <div id="vis_22"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Stock prices of 5 Tech Companies over Time.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
   "mark": {
@@ -1178,7 +1182,7 @@ val confidenceInterval = VegaLite.layer(
     <div id="vis_23"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
   "encoding": {
     "x": {
@@ -1256,7 +1260,7 @@ val rollingAverages = VegaLite.layer(
     <div id="vis_24"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Plot showing a 30 day rolling average with raw values in the background.",
   "width": 400,
   "height": 300,
@@ -1332,7 +1336,7 @@ val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
     <div id="vis_25"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "Google's stock price over time.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
   "transform": [{"filter": "datum.symbol==='GOOG'"}],
@@ -1381,7 +1385,7 @@ val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-w
     <div id="vis_26"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "data": {
       "url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"
   },
@@ -1458,7 +1462,7 @@ val donut = VegaLite(jsan"""
     <div id="vis_28"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A simple donut chart with embedded data.",
   "data": {
     "values": [
@@ -1510,7 +1514,7 @@ val radial = VegaLite.layer(
     <div id="vis_27"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A simple radial chart with embedded data.",
   "data": {
     "values": [12, 23, 47, 6, 52, 19]
@@ -1555,7 +1559,7 @@ val boxplot = VegaLite("https://vega.github.io/vega-lite/examples/data/populatio
     <div id="vis_29"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "description": "A vertical 2D box plot showing median, min, and max in the US population distribution of age groups in 2000.",
   "data": {"url": "https://vega.github.io/vega-lite/examples/data/population.json"},
   "mark": {
@@ -1648,7 +1652,7 @@ show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
     "data": {
       "url": "https://vega.github.io/vega-lite/examples/data/population.json"
     },
-    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "description": "A bar chart showing the US population distribution of age groups in 2000.",
     "encoding": {
       "x": {
@@ -1682,7 +1686,7 @@ show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
     "data": {
       "url": "https://vega.github.io/vega-lite/examples/data/population.json"
     },
-    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "width": {
       "step": 12
     },
@@ -1726,7 +1730,7 @@ show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
     },
     "mark": "bar"
   }],
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "config": {
     "view": {
       "continuousWidth": 400,
@@ -1822,7 +1826,7 @@ val geo = VegaLite(
     <div id="vis_32"></div>
     <script type="text/javascript">
       var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "width": 500,
   "height": 300,
   "data": {
