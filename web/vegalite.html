@@ -43,22 +43,22 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Simple Bar Plot")
-                .description("A simple bar chart with embedded data.")
-                .widthStep(30);
+var bar = new View("Simple Bar Plot")
+        .description("A simple bar chart with embedded data.")
+        .widthStep(30);
 
-        bar.data().values("""
-                [
-                  {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
-                  {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
-                  {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
-                ]""");
+bar.data().values("""
+        [
+          {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+          {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+          {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+        ]""");
 
-        bar.mark("bar");
-        Field x = bar.encode("x", "a").type("ordinal");
-        x.axis().labelAngle(0);
-        bar.encode("y", "b").type("quantitative");
-        bar.show();
+bar.mark("bar");
+Field x = bar.encode("x", "a").type("ordinal");
+x.axis().labelAngle(0);
+bar.encode("y", "b").type("quantitative");
+bar.show();
             </code></pre>
             </div>
         </div>
@@ -114,15 +114,15 @@ val bar = VegaLite.view().
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Aggregate Bar Plot")
-                .description("A bar chart showing the US population distribution of age groups in 2000.")
-                .heightStep(20);
+var bar = new View("Aggregate Bar Plot")
+        .description("A bar chart showing the US population distribution of age groups in 2000.")
+        .heightStep(20);
 
-        bar.mark("bar");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        bar.transform().filter("datum.year == 2000");
-        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
-        bar.encode("y", "age").type("ordinal");
+bar.mark("bar");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+bar.transform().filter("datum.year == 2000");
+bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+bar.encode("y", "age").type("ordinal");
             </code></pre>
             </div>
         </div>
@@ -173,15 +173,15 @@ val aggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popu
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Sorted Aggregate Bar Plot")
-                .description("A bar chart that sorts the y-values by the x-values.")
-                .heightStep(20);
+var bar = new View("Sorted Aggregate Bar Plot")
+        .description("A bar chart that sorts the y-values by the x-values.")
+        .heightStep(20);
 
-        bar.mark("bar");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        bar.transform().filter("datum.year == 2000");
-        bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
-        bar.encode("y", "age").type("ordinal").sort("-x");
+bar.mark("bar");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+bar.transform().filter("datum.year == 2000");
+bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
+bar.encode("y", "age").type("ordinal").sort("-x");
             </code></pre>
             </div>
         </div>
@@ -238,19 +238,19 @@ show(sortedAggregateBar)
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Group Bar Plot").widthStep(12);
+var bar = new View("Group Bar Plot").widthStep(12);
 
-        bar.mark("bar");
-        bar.viewConfig().stroke("transparent").axis().domainWidth(1);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        bar.transform()
-                .filter("datum.year == 2000")
-                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+bar.mark("bar");
+bar.viewConfig().stroke("transparent").axis().domainWidth(1);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+bar.transform()
+        .filter("datum.year == 2000")
+        .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
 
-        bar.encode("x", "gender").type("nominal").title(null);
-        bar.encode("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
-        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
-        bar.encode("column", "age").type("ordinal").spacing(10);
+bar.encode("x", "gender").type("nominal").title(null);
+bar.encode("y", "people").type("quantitative").aggregate("sum").axis().title("population").grid(false);
+bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+bar.encode("column", "age").type("ordinal").spacing(10);
             </code></pre>
             </div>
         </div>
@@ -320,15 +320,15 @@ val groupedBar = VegaLite.facet("https://vega.github.io/vega-lite/examples/data/
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Stacked Bar Plot");
-        bar.mark("bar");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
-        bar.encode("y", null).type("quantitative").aggregate("count");
-        bar.encode("color", "weather").type("nominal")
-                .domain("sun", "fog", "drizzle", "rain", "snow")
-                .range("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
-                .legend().title("Weather type");
+var bar = new View("Stacked Bar Plot");
+bar.mark("bar");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+bar.encode("y", null).type("quantitative").aggregate("count");
+bar.encode("color", "weather").type("nominal")
+        .domain("sun", "fog", "drizzle", "rain", "snow")
+        .range("#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd")
+        .legend().title("Weather type");
             </code></pre>
             </div>
         </div>
@@ -392,12 +392,12 @@ val stackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattl
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Stacked Bar with Rounded Corner");
-        bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-        bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
-        bar.encode("y", null).type("quantitative").aggregate("count");
-        bar.encode("color", "weather").type("nominal");
+var bar = new View("Stacked Bar with Rounded Corner");
+bar.mark("bar").cornerRadiusTopLeft(3).cornerRadiusTopRight(3);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+bar.encode("x", "date").type("ordinal").timeUnit("month").title("Month of the year");
+bar.encode("y", null).type("quantitative").aggregate("count");
+bar.encode("color", "weather").type("nominal");
             </code></pre>
             </div>
         </div>
@@ -439,12 +439,12 @@ val stackedRoundedBar = VegaLite("https://vega.github.io/vega-lite/examples/data
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Horizontal Stacked Bar");
-        bar.mark("bar");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/barley.json");
-        bar.encode("x", "yield").type("quantitative").aggregate("sum");
-        bar.encode("y", "variety").type("nominal");
-        bar.encode("color", "site").type("nominal");
+var bar = new View("Horizontal Stacked Bar");
+bar.mark("bar");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/barley.json");
+bar.encode("x", "yield").type("quantitative").aggregate("sum");
+bar.encode("y", "variety").type("nominal");
+bar.encode("color", "site").type("nominal");
             </code></pre>
             </div>
         </div>
@@ -486,18 +486,18 @@ val horizontalStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Layered Bar").widthStep(17);
+var bar = new View("Layered Bar").widthStep(17);
 
-        bar.mark("bar");
-        bar.background().opacity(0.7);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        bar.transform()
-                .filter("datum.year == 2000")
-                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+bar.mark("bar");
+bar.background().opacity(0.7);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+bar.transform()
+        .filter("datum.year == 2000")
+        .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
 
-        bar.encode("x", "age").type("ordinal");
-        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
-        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+bar.encode("x", "age").type("ordinal");
+bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack(null);
+bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
             </code></pre>
             </div>
         </div>
@@ -559,18 +559,18 @@ val layeredBar = VegaLite("https://vega.github.io/vega-lite/examples/data/popula
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Normalized (Percentage) Stacked Bar").widthStep(17);
+var bar = new View("Normalized (Percentage) Stacked Bar").widthStep(17);
 
-        bar.mark("bar");
-        bar.background().opacity(0.7);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        bar.transform()
-                .filter("datum.year == 2000")
-                .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
+bar.mark("bar");
+bar.background().opacity(0.7);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+bar.transform()
+        .filter("datum.year == 2000")
+        .calculate("datum.sex == 2 ? 'Female' : 'Male'", "gender");
 
-        bar.encode("x", "age").type("ordinal");
-        bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack("normalize");
-        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+bar.encode("x", "age").type("ordinal");
+bar.encode("y", "people").type("quantitative").aggregate("sum").title("population").stack("normalize");
+bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
             </code></pre>
             </div>
         </div>
@@ -629,18 +629,18 @@ val normalizedStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/d
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var gantt = new View("Gantt Chart");
-        gantt.data().values("""
-                [
-                  {"task": "A", "start": 1, "end": 3},
-                  {"task": "B", "start": 3, "end": 8},
-                  {"task": "C", "start": 8, "end": 10}
-                ]""");
+var gantt = new View("Gantt Chart");
+gantt.data().values("""
+        [
+          {"task": "A", "start": 1, "end": 3},
+          {"task": "B", "start": 3, "end": 8},
+          {"task": "C", "start": 8, "end": 10}
+        ]""");
 
-        gantt.mark("bar");
-        gantt.encode("x", "start").type("quantitative");
-        gantt.encode("x2", "end").type("quantitative");
-        gantt.encode("y", "task").type("ordinal");
+gantt.mark("bar");
+gantt.encode("x", "start").type("quantitative");
+gantt.encode("x2", "end").type("quantitative");
+gantt.encode("y", "task").type("ordinal");
             </code></pre>
             </div>
         </div>
@@ -696,18 +696,18 @@ val gantt = VegaLite.view().
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Bar Chart Encoding Color Names in the Data");
-        bar.data().values("""
-                [
-                  {"color": "red", "b": 28},
-                  {"color": "green", "b": 55},
-                  {"color": "blue", "b": 43}
-                ]""");
+var bar = new View("Bar Chart Encoding Color Names in the Data");
+bar.data().values("""
+        [
+          {"color": "red", "b": 28},
+          {"color": "green", "b": 55},
+          {"color": "blue", "b": 43}
+        ]""");
 
-        bar.mark("bar");
-        bar.encode("x", "color").type("nominal");
-        bar.encode("y", "b").type("quantitative");
-        bar.encode("color", "color").type("nominal").scale(null);
+bar.mark("bar");
+bar.encode("x", "color").type("nominal");
+bar.encode("y", "b").type("quantitative");
+bar.encode("color", "color").type("nominal").scale(null);
             </code></pre>
             </div>
         </div>
@@ -784,12 +784,12 @@ val colorBar = VegaLite.view().
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Histogram");
-        bar.mark("bar");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
-        bar.encode("x", "IMDB Rating").type("quantitative").bin(true);
-        bar.encode("y", null).type("quantitative").aggregate("count");
-        bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
+var bar = new View("Histogram");
+bar.mark("bar");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+bar.encode("x", "IMDB Rating").type("quantitative").bin(true);
+bar.encode("y", null).type("quantitative").aggregate("count");
+bar.encode("color", "gender").type("nominal").range("#675193", "#ca8861");
             </code></pre>
             </div>
         </div>
@@ -836,19 +836,19 @@ val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Relative Frequency Histogram");
+var bar = new View("Relative Frequency Histogram");
 
-        bar.mark("bar").tooltip(true);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
-        bar.encode("x", "bin_Horsepwoer").type("quantitative").bin("binned").title("Horsepower");
-        bar.encode("x2", "bin_Horsepwoer_end").type("quantitative");
-        bar.encode("y", "PercentOfTotal").type("quantitative").title("Relative Frequency").axis().format(".1~%");
+bar.mark("bar").tooltip(true);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+bar.encode("x", "bin_Horsepwoer").type("quantitative").bin("binned").title("Horsepower");
+bar.encode("x2", "bin_Horsepwoer_end").type("quantitative");
+bar.encode("y", "PercentOfTotal").type("quantitative").title("Relative Frequency").axis().format(".1~%");
 
-        bar.transform()
-                .bin("Horsepower", "bin_Horsepwoer")
-                .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
-                .joinAggregate("sum", "Count", "TotalCount")
-                .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
+bar.transform()
+        .bin("Horsepower", "bin_Horsepwoer")
+        .aggregate("count", null, "Count", "bin_Horsepwoer", "bin_Horsepwoer_end")
+        .joinAggregate("sum", "Count", "TotalCount")
+        .calculate("datum.Count/datum.TotalCount", "PercentOfTotal");
             </code></pre>
             </div>
         </div>
@@ -930,14 +930,14 @@ val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/car
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("2D Histogram Heatmap").width(300).height(200);
-        bar.mark("rect");
-        bar.viewConfig().stroke("transparent");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
-        bar.encode("x", "IMDB Rating").type("quantitative").title("IMDB Rating").bin(new BinParams().maxBins(60));
-        bar.encode("y", "Rotten Tomatoes Rating").type("quantitative").bin(new BinParams().maxBins(40));
-        bar.encode("color", null).type("quantitative").aggregate("count");
-        bar.transform().filter(and(valid("IMDB Rating"), valid("Rotten Tomatoes Rating")));
+var bar = new View("2D Histogram Heatmap").width(300).height(200);
+bar.mark("rect");
+bar.viewConfig().stroke("transparent");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+bar.encode("x", "IMDB Rating").type("quantitative").title("IMDB Rating").bin(new BinParams().maxBins(60));
+bar.encode("y", "Rotten Tomatoes Rating").type("quantitative").bin(new BinParams().maxBins(40));
+bar.encode("color", null).type("quantitative").aggregate("count");
+bar.transform().filter(and(valid("IMDB Rating"), valid("Rotten Tomatoes Rating")));
             </code></pre>
             </div>
         </div>
@@ -1013,12 +1013,12 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
         <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var plot = new View("Density Plot").width(400).height(100);
-        plot.mark("area");
-        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
-        plot.encode("x", "value").type("quantitative").title("IMDB Rating");
-        plot.encode("y", "density").type("quantitative");
-        plot.transform().density("IMDB Rating").bandwidth(0.3);
+var plot = new View("Density Plot").width(400).height(100);
+plot.mark("area");
+plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+plot.encode("x", "value").type("quantitative").title("IMDB Rating");
+plot.encode("y", "density").type("quantitative");
+plot.transform().density("IMDB Rating").bandwidth(0.3);
             </code></pre>
             </div>
         </div>
@@ -1081,14 +1081,14 @@ val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.js
         <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var plot = new View("Cumulative Frequency Distribution");
-        plot.mark("area");
-        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
-        plot.encode("x", "IMDB Rating").type("quantitative");
-        plot.encode("y", "Cumulative Count").type("quantitative");
-        plot.transform().aggregate("count", "*", "count", "IMDB Rating")
-            .window(new WindowTransformField("sum", "count", 0, "Cumulative Count"))
-            .sort("IMDB Rating").frame(null, 0);
+var plot = new View("Cumulative Frequency Distribution");
+plot.mark("area");
+plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+plot.encode("x", "IMDB Rating").type("quantitative");
+plot.encode("y", "Cumulative Count").type("quantitative");
+plot.transform().aggregate("count", "*", "count", "IMDB Rating")
+    .window(new WindowTransformField("sum", "count", 0, "Cumulative Count"))
+    .sort("IMDB Rating").frame(null, 0);
             </code></pre>
             </div>
         </div>
@@ -1152,13 +1152,13 @@ val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json")
         <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Scatter Plot");
-        bar.mark("point");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
-        bar.encode("x", "Horsepower").type("quantitative");
-        bar.encode("y", "Miles_per_Gallon").type("quantitative");
-        bar.encode("color", "Origin").type("nominal");
-        bar.encode("shape", "Origin").type("nominal");
+var bar = new View("Scatter Plot");
+bar.mark("point");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+bar.encode("x", "Horsepower").type("quantitative");
+bar.encode("y", "Miles_per_Gallon").type("quantitative");
+bar.encode("color", "Origin").type("nominal");
+bar.encode("shape", "Origin").type("nominal");
             </code></pre>
             </div>
         </div>
@@ -1203,12 +1203,12 @@ val scatter = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json
         <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Bubble Plot");
-        bar.mark("point");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
-        bar.encode("x", "Horsepower").type("quantitative");
-        bar.encode("y", "Miles_per_Gallon").type("quantitative");
-        bar.encode("size", "Acceleration").type("quantitative");
+var bar = new View("Bubble Plot");
+bar.mark("point");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+bar.encode("x", "Horsepower").type("quantitative");
+bar.encode("y", "Miles_per_Gallon").type("quantitative");
+bar.encode("size", "Acceleration").type("quantitative");
             </code></pre>
             </div>
         </div>
@@ -1251,16 +1251,16 @@ val bubble = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json"
         <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Natural Disasters").width(600).height(400);
-        bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
-        bar.transform().filter("datum.Entity !== 'All natural disasters'");
-        bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
-        bar.encode("y", "Entity").type("nominal").title(null);
-        bar.encode("color", "Entity").type("nominal").removeLegend();
-        bar.encode("size", "Deaths").type("quantitative")
-                .range(0, 5000)
-                .legend().title("Annual Global Deaths").clipHeight(30);
+var bar = new View("Natural Disasters").width(600).height(400);
+bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
+bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
+bar.transform().filter("datum.Entity !== 'All natural disasters'");
+bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
+bar.encode("y", "Entity").type("nominal").title(null);
+bar.encode("color", "Entity").type("nominal").removeLegend();
+bar.encode("size", "Deaths").type("quantitative")
+        .range(0, 5000)
+        .legend().title("Annual Global Deaths").clipHeight(30);
             </code></pre>
             </div>
         </div>
@@ -1336,14 +1336,14 @@ val disaster = VegaLite("https://vega.github.io/vega-lite/examples/data/disaster
         <div class="tab-pane active" id="java_20">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var bar = new View("Text Plot");
-        bar.mark("text");
-        bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
-        bar.transform().calculate("split(datum.Name, ' ')[0]", "Brand");
-        bar.encode("x", "Horsepower").type("quantitative");
-        bar.encode("y", "Miles_per_Gallon").type("quantitative");
-        bar.encode("color", "Brand").type("nominal");
-        bar.encode("text", "Brand").type("nominal");
+var bar = new View("Text Plot");
+bar.mark("text");
+bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+bar.transform().calculate("split(datum.Name, ' ')[0]", "Brand");
+bar.encode("x", "Horsepower").type("quantitative");
+bar.encode("y", "Miles_per_Gallon").type("quantitative");
+bar.encode("color", "Brand").type("nominal");
+bar.encode("text", "Brand").type("nominal");
             </code></pre>
             </div>
         </div>
@@ -1419,12 +1419,12 @@ val textPlot = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.jso
         <div class="tab-pane active" id="java_21">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var line = new View("Line Chart");
-        line.mark("line");
-        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
-        line.transform().filter("datum.symbol==='GOOG'");
-        line.encode("x", "date").type("temporal");
-        line.encode("y", "price").type("quantitative");
+var line = new View("Line Chart");
+line.mark("line");
+line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+line.transform().filter("datum.symbol==='GOOG'");
+line.encode("x", "date").type("temporal");
+line.encode("y", "price").type("quantitative");
             </code></pre>
             </div>
         </div>
@@ -1467,12 +1467,12 @@ val line = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
         <div class="tab-pane active" id="java_22">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var line = new View("Line Chart with Point Mark");
-        line.mark("line").point(true);
-        line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
-        line.encode("x", "date").type("temporal").timeUnit("year");
-        line.encode("y", "price").type("quantitative").aggregate("mean");
-        line.encode("color", "symbol").type("nominal");
+var line = new View("Line Chart with Point Mark");
+line.mark("line").point(true);
+line.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+line.encode("x", "date").type("temporal").timeUnit("year");
+line.encode("y", "price").type("quantitative").aggregate("mean");
+line.encode("color", "symbol").type("nominal");
             </code></pre>
             </div>
         </div>
@@ -1518,18 +1518,18 @@ val pointLine = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.
         <div class="tab-pane active" id="java_23">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var line = new View();
-        line.mark("line");
-        line.encode("x", "Year").type("temporal").timeUnit("year");
-        line.encode("y", "Miles_per_Gallon").type("quantitative").aggregate("mean");
+var line = new View();
+line.mark("line");
+line.encode("x", "Year").type("temporal").timeUnit("year");
+line.encode("y", "Miles_per_Gallon").type("quantitative").aggregate("mean");
 
-        var band = new View();
-        band.mark("errorband").extent("ci");
-        band.encode("x", "Year").type("temporal").timeUnit("year");
-        band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
+var band = new View();
+band.mark("errorband").extent("ci");
+band.encode("x", "Year").type("temporal").timeUnit("year");
+band.encode("y", "Miles_per_Gallon").type("quantitative").title("Mean of Miles per Gallon (95% CIs)");
 
-        var layer = new Layer(line, band).title("Line Chart with Confidence Interval Band");
-        layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
+var layer = new Layer(line, band).title("Line Chart with Confidence Interval Band");
+layer.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
             </code></pre>
             </div>
         </div>
@@ -1599,19 +1599,19 @@ val confidenceInterval = VegaLite.layer(
         <div class="tab-pane active" id="java_24">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var line = new View();
-        line.mark("line").color("red").size(3);
-        line.encode("x", "date").type("temporal");
-        line.encode("y", "rolling_mean").type("quantitative");
+var line = new View();
+line.mark("line").color("red").size(3);
+line.encode("x", "date").type("temporal");
+line.encode("y", "rolling_mean").type("quantitative");
 
-        var point = new View();
-        point.mark("point").opacity(0.3);
-        point.encode("x", "date").type("temporal").title("Date");
-        point.encode("y", "temp_max").type("quantitative").title("Max Temperature");
+var point = new View();
+point.mark("point").opacity(0.3);
+point.encode("x", "date").type("temporal").title("Date");
+point.encode("y", "temp_max").type("quantitative").title("Max Temperature");
 
-        var layer = new Layer(line, point).title("Rolling Averages over Raw Values").width(400).height(300);
-        layer.data().format("csv").url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-        layer.transform().window(new WindowTransformField("mean", "temp_max", 0, "rolling_mean")).frame(-15, 15);
+var layer = new Layer(line, point).title("Rolling Averages over Raw Values").width(400).height(300);
+layer.data().format("csv").url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+layer.transform().window(new WindowTransformField("mean", "temp_max", 0, "rolling_mean")).frame(-15, 15);
             </code></pre>
             </div>
         </div>
@@ -1716,12 +1716,12 @@ val rollingAverages = VegaLite.layer(
         <div class="tab-pane active" id="java_25">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var area = new View("Area Chart with Overlaying Lines and Point Markers");
-        area.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
-        area.transform().filter("datum.symbol==='GOOG'");
-        area.mark("area").line(true).point(true);
-        area.encode("x", "date").type("temporal");
-        area.encode("y", "price").type("quantitative");
+var area = new View("Area Chart with Overlaying Lines and Point Markers");
+area.data().url("https://vega.github.io/vega-lite/examples/data/stocks.csv");
+area.transform().filter("datum.symbol==='GOOG'");
+area.mark("area").line(true).point(true);
+area.encode("x", "date").type("temporal");
+area.encode("y", "price").type("quantitative");
             </code></pre>
             </div>
         </div>
@@ -1766,16 +1766,16 @@ val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv")
         <div class="tab-pane active" id="java_26">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var heatmap = new View("2010 Daily Max Temperature (F) in Seattle, WA");
+var heatmap = new View("2010 Daily Max Temperature (F) in Seattle, WA");
 
-        heatmap.mark("rect");
-        heatmap.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
-        heatmap.encode("x", "date").type("ordinal").timeUnit("date").title("Day").axis().labelAngle(0).format("%e");
-        heatmap.encode("y", "date").type("ordinal").timeUnit("month");
-        heatmap.encode("color", "temp_max").type("quantitative").aggregate("max").legend().title(null);
+heatmap.mark("rect");
+heatmap.data().url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
+heatmap.encode("x", "date").type("ordinal").timeUnit("date").title("Day").axis().labelAngle(0).format("%e");
+heatmap.encode("y", "date").type("ordinal").timeUnit("month");
+heatmap.encode("color", "temp_max").type("quantitative").aggregate("max").legend().title(null);
 
-        heatmap.config().axis().domain(false);
-        heatmap.viewConfig().strokeWidth(0).step(13);
+heatmap.config().axis().domain(false);
+heatmap.viewConfig().strokeWidth(0).step(13);
             </code></pre>
             </div>
         </div>
@@ -1863,21 +1863,21 @@ val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-w
         <div class="tab-pane active" id="java_27">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var donut = new View("Donut Chart");
-        donut.data().values("""
-                [
-                  {"category": 1, "value": 4},
-                  {"category": 2, "value": 6},
-                  {"category": 3, "value": 10},
-                  {"category": 4, "value": 3},
-                  {"category": 5, "value": 7},
-                  {"category": 6, "value": 8}
-                ]""");
+var donut = new View("Donut Chart");
+donut.data().values("""
+        [
+          {"category": 1, "value": 4},
+          {"category": 2, "value": 6},
+          {"category": 3, "value": 10},
+          {"category": 4, "value": 3},
+          {"category": 5, "value": 7},
+          {"category": 6, "value": 8}
+        ]""");
 
-        donut.mark("arc").innerRadius(50);
-        donut.encode("theta", "value").type("quantitative");
-        donut.encode("color", "category").type("nominal");
-        donut.viewConfig().stroke(null);
+donut.mark("arc").innerRadius(50);
+donut.encode("theta", "value").type("quantitative");
+donut.encode("color", "category").type("nominal");
+donut.viewConfig().stroke(null);
             </code></pre>
             </div>
         </div>
@@ -1938,19 +1938,19 @@ val donut = VegaLite(jsan"""
         <div class="tab-pane active" id="java_28">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var arc = new View();
-        arc.mark("arc").innerRadius(20).stroke("#fff");
+var arc = new View();
+arc.mark("arc").innerRadius(20).stroke("#fff");
 
-        var text = new View();
-        text.mark("text").radiusOffset(10);
-        text.encode("text", "data").type("quantitative");
+var text = new View();
+text.mark("text").radiusOffset(10);
+text.encode("text", "data").type("quantitative");
 
-        var layer = new Layer(arc, text).title("Radial Chart");
-        layer.background().stroke(null);
-        layer.data().values("[12, 23, 47, 6, 52, 19]");
-        layer.encode("theta", "data").type("quantitative").stack("zero");
-        layer.encode("radius", "data").type("quantitative").scale("sqrt").zero(true).range(20, 100);
-        layer.encode("color", "data").type("nominal").removeLegend();
+var layer = new Layer(arc, text).title("Radial Chart");
+layer.background().stroke(null);
+layer.data().values("[12, 23, 47, 6, 52, 19]");
+layer.encode("theta", "data").type("quantitative").stack("zero");
+layer.encode("radius", "data").type("quantitative").scale("sqrt").zero(true).range(20, 100);
+layer.encode("color", "data").type("nominal").removeLegend();
             </code></pre>
             </div>
         </div>
@@ -2011,13 +2011,13 @@ val radial = VegaLite.layer(
         <div class="tab-pane active" id="java_29">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var boxplot = new View("Box Plot");
-        boxplot.background().stroke(null);
-        boxplot.mark("boxplot").extent("min-max");
-        boxplot.viewConfig().stroke(null);
-        boxplot.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
-        boxplot.encode("x", "age").type("ordinal");
-        boxplot.encode("y", "people").type("quantitative").title("population");
+var boxplot = new View("Box Plot");
+boxplot.background().stroke(null);
+boxplot.mark("boxplot").extent("min-max");
+boxplot.viewConfig().stroke(null);
+boxplot.data().url("https://vega.github.io/vega-lite/examples/data/population.json");
+boxplot.encode("x", "age").type("ordinal");
+boxplot.encode("y", "people").type("quantitative").title("population");
             </code></pre>
             </div>
         </div>
@@ -2237,17 +2237,17 @@ show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
         <div class="tab-pane active" id="java_31">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var plot = new View().width(150).height(150);
-        plot.mark("point");
-        plot.encode("x", "repeat:column").type("quantitative").zero(false);
-        plot.encode("y", "repeat:row").type("quantitative").zero(false);
-        plot.encode("color", "species").type("nominal");
+var plot = new View().width(150).height(150);
+plot.mark("point");
+plot.encode("x", "repeat:column").type("quantitative").zero(false);
+plot.encode("y", "repeat:row").type("quantitative").zero(false);
+plot.encode("color", "species").type("nominal");
 
-        String[] row = {"petalWidth", "petalLength", "sepalWidth", "sepalLength"};
-        String[] column = {"sepalLength", "sepalWidth", "petalLength", "petalWidth"};
-        var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
-        splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
-        splom.show();
+String[] row = {"petalWidth", "petalLength", "sepalWidth", "sepalLength"};
+String[] column = {"sepalLength", "sepalWidth", "petalLength", "petalWidth"};
+var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
+splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
+splom.show();
             </code></pre>
             </div>
         </div>
@@ -2302,16 +2302,16 @@ show(VegaLite.splom(iris, "class"))
         <div class="tab-pane active" id="java_32">
             <div class="code" style="text-align: left;">
             <pre class="prettyprint lang-java"><code>
-        var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
-        geo.mark("geoshape").extent("min-max");
-        geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
-        geo.encode("color", "rate").type("quantitative");
-        geo.projection("albersUsa");
+var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
+geo.mark("geoshape").extent("min-max");
+geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
+geo.encode("color", "rate").type("quantitative");
+geo.projection("albersUsa");
 
-        var transform = geo.transform();
-        var lookupData = transform.lookupData("id").fields("rate");
-        lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
-        geo.transform().lookup("id", lookupData);
+var transform = geo.transform();
+var lookupData = transform.lookupData("id").fields("rate");
+lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
+geo.transform().lookup("id", lookupData);
             </code></pre>
             </div>
         </div>
