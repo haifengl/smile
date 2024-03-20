@@ -159,7 +159,11 @@ public class View extends VegaLite {
     public Field encode(String channel, String field) {
         ObjectNode encoding = encoding();
         ObjectNode node = encoding.putObject(channel);
-        node.put("field", field);
+        if (field.startsWith("repeat:")) {
+            node.putObject("field").put("repeat", field.substring(7));
+        } else {
+            node.put("field", field);
+        }
         return new Field(node);
     }
 
