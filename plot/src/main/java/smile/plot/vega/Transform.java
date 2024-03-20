@@ -186,13 +186,13 @@ public class Transform {
     /**
      * Adds a lookup transformation.
      * @param key the key in primary data source.
-     * @param from the data source or selection for secondary data reference.
+     * @param param Selection parameter name to look up.
      * @return this object.
      */
-    public Transform lookup(String key, ObjectNode from) {
+    public Transform lookup(String key, String param) {
         ObjectNode node = spec.addObject();
-        node.put("lookup", key)
-                .set("from", from);
+        node.put("lookup", key);
+        node.putObject("from").put("param", param);
         return this;
     }
 
@@ -200,15 +200,25 @@ public class Transform {
      * Adds a lookup transformation.
      * @param key the key in primary data source.
      * @param from the data source or selection for secondary data reference.
-     * @param as the output fields on which to store the looked up data values.
      * @return this object.
      */
-    public Transform lookup(String key, ObjectNode from, String as) {
+    public Transform lookup(String key, LookupData from) {
         ObjectNode node = spec.addObject();
-        node.put("lookup", key)
-                .put("as", as)
-                .set("from", from);
+        node.put("lookup", key).set("from", from.spec);
         return this;
+    }
+
+    /**
+     * Creates a lookup data.
+     *
+     * @param key the key in data to lookup.
+     * @return a lookup data.
+     */
+    public LookupData lookupData(String key) {
+        ObjectNode node = mapper.createObjectNode().put("key", key);
+        Data data = new Data(mapper);
+        node.put("data", data.spec);
+        return new LookupData(node, data);
     }
 
     /**
@@ -217,38 +227,5 @@ public class Transform {
      */
     public Data data() {
         return new Data(mapper);
-    }
-
-    /**
-     * Returns a Lookup Data object.
-     *
-     * @param key Key in data to lookup.
-     * @param data Secondary data source to lookup in.
-     * @param fields Fields in foreign data or selection to lookup.
-     *              If not specified, the entire object is queried.
-     * @return a Lookup Data object.
-     */
-    public ObjectNode lookupData(String key, Data data, String... fields) {
-        ObjectNode node = mapper.createObjectNode()
-                .put("key", key)
-                .set("data", data.spec);
-
-        if (fields.length > 0) {
-            ArrayNode array = node.putArray("fields");
-            for (String field : fields) {
-                array.add(field);
-            }
-        }
-
-        return node;
-    }
-
-    /**
-     * Returns a Lookup Selection object.
-     * @param param Selection parameter name to look up.
-     * @return a Lookup Selection object.
-     */
-    public ObjectNode lookupSelection(String param) {
-        return mapper.createObjectNode().put("param", param);
     }
 }
