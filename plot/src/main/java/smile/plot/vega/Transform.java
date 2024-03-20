@@ -158,7 +158,7 @@ public class Transform {
      *               group containing all data objects will be used.
      * @return this object.
      */
-    public Density density(String field, String... groupby) {
+    public DensityTransform density(String field, String... groupby) {
         ObjectNode node = spec.addObject().put("density", field);
         if (groupby.length > 0) {
             ArrayNode array = node.putArray("groupby");
@@ -166,7 +166,7 @@ public class Transform {
                 array.add(f);
             }
         }
-        return new Density(node);
+        return new DensityTransform(node);
     }
 
     /**
@@ -225,7 +225,16 @@ public class Transform {
      * Creates a data specification object.
      * @return a data specification object.
      */
-    public Data data() {
-        return new Data(mapper);
+    public WindowTransform window(WindowTransformField... fields) {
+        ObjectNode node = spec.addObject();
+        ArrayNode array = node.putArray("window");
+        for (var field : fields) {
+            array.addObject()
+                    .put("op", field.op())
+                    .put("field", field.field())
+                    .put("param", field.param())
+                    .put("as", field.as());
+        }
+        return new WindowTransform(node);
     }
 }
