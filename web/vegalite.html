@@ -707,7 +707,7 @@ val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/car
 val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
   mark("rect").
   x(field = "IMDB Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":60}"""), title = "IMDB Rating").
-  y(field = "Rotten_Tomatoes_Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":40}""")).
+  y(field = "Rotten Tomatoes Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":40}""")).
   color(field = null, `type` = "quantitative", aggregate = "count").
   width(300).
   height(200).
@@ -715,7 +715,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
     "filter": {
       "and": [
         {"field": "IMDB Rating", "valid": true},
-        {"field": "Rotten_Tomatoes_Rating", "valid": true}
+        {"field": "Rotten Tomatoes Rating", "valid": true}
       ]}}"""
   ).
   config(JsObject("view" -> json"""{"stroke": "transparent"}"""))
@@ -732,7 +732,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
   "transform": [{
     "filter": {"and": [
       {"field": "IMDB Rating", "valid": true},
-      {"field": "Rotten_Tomatoes_Rating", "valid": true}
+      {"field": "Rotten Tomatoes Rating", "valid": true}
     ]}
   }],
   "mark": "rect",
@@ -746,7 +746,7 @@ val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movie
     },
     "y": {
       "bin": {"maxbins": 40},
-      "field": "Rotten_Tomatoes_Rating",
+      "field": "Rotten Tomatoes Rating",
       "type": "quantitative"
     },
     "color": {
