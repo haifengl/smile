@@ -166,6 +166,85 @@ public class Transform {
     }
 
     /**
+     * Adds an extent transform. The extent transform finds the extent
+     * of a field and stores the result in a parameter.
+     *
+     * @param field The field of which to get the extent.
+     * @param param The output parameter produced by the extent transform.
+     * @return this object.
+     */
+    public Transform extent(String field, String param) {
+        ObjectNode node = spec.addObject();
+        node.put("extent", field).put("param", param);
+        return this;
+    }
+
+    /**
+     * Adds a flatten transform. The flatten transform maps array-valued fields
+     * to a set of individual data objects, one per array entry. This transform
+     * generates a new data stream in which each data object consists of an
+     * extracted array value as well as all the original fields of the
+     * corresponding input data object.
+     *
+     * @param fields An array of one or more data fields containing arrays to
+     *              flatten. If multiple fields are specified, their array
+     *              values should have a parallel structure, ideally with the
+     *              same length. If the lengths of parallel arrays do not
+     *              match, the longest array will be used with null values
+     *              added for missing entries.
+     * @param output The output parameter produced by the extent transform.
+     * @return this object.
+     */
+    public Transform flatten(String[] fields, String[] output) {
+        ObjectNode node = spec.addObject();
+        ArrayNode array = node.putArray("flatten");
+        for (var field : fields) {
+            array.add(field);
+        }
+
+        array = node.putArray("as");
+        for (var field : output) {
+            array.add(field);
+        }
+        return this;
+    }
+
+    /**
+     * Adds a fold transform. The fold transform collapses (or "folds") one or
+     * more data fields into two properties: a key property (containing the
+     * original data field name) and a value property (containing the data value).
+     *
+     * The fold transform is useful for mapping matrix or cross-tabulation data
+     * into a standardized format.
+     *
+     * This transform generates a new data stream in which each data object
+     * consists of the key and value properties as well as all the original
+     * fields of the corresponding input data object.
+     *
+     * Note: The fold transform only applies to a list of known fields (set
+     * using the fields parameter). If your data objects instead contain
+     * array-typed fields, you may wish to use the flatten transform instead.
+     *
+     * @param fields An array of data fields indicating the properties to fold.
+     * @param output The output field names for the key and value properties
+     *              produced by the fold transform.
+     * @return this object.
+     */
+    public Transform fold(String[] fields, String[] output) {
+        ObjectNode node = spec.addObject();
+        ArrayNode array = node.putArray("fold");
+        for (var field : fields) {
+            array.add(field);
+        }
+
+        array = node.putArray("as");
+        for (var field : output) {
+            array.add(field);
+        }
+        return this;
+    }
+
+    /**
      * Adds a filter transform.
      * @param predicate an expression string, where datum can be used to refer
      *                 to the current data object. For example, "datum.b2 > 60"
@@ -226,6 +305,34 @@ public class Transform {
         Data data = new Data();
         node.set("data", data.spec);
         return new LookupData(node, data);
+    }
+
+    /**
+     * Adds a sample transform. The sample transform filters random rows from
+     * the data source to reduce its size. As input data objects are added and
+     * removed, the sampled values may change in first-in, first-out manner.
+     * This transform uses reservoir sampling to maintain a representative
+     * sample of the stream.
+     *
+     * @param size The maximum number of data objects to include in the sample.
+     * @return this object.
+     */
+    public Transform sample(int size) {
+        spec.addObject().put("sample", size);
+        return this;
+    }
+
+    /**
+     * Adds a time unit transform.
+     *
+     * @param timeUnit The timeUnit.
+     * @param field The data field to apply time unit.
+     * @param as The output field to write the timeUnit value.
+     * @return this object.
+     */
+    public Transform timeUnit(String timeUnit, String field, String as) {
+        spec.addObject().put("timeUnit", timeUnit).put("field", field).put("as", as);
+        return this;
     }
 
     /**
