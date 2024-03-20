@@ -25,19 +25,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  * @author Haifeng Li
  */
 public class Concat extends VegaLite implements ViewLayoutComposition {
-
-    /**
-     * Constructor for horizontal concatenation or vertical concatenation.
-     * @param layout "hconcat" or "vconcat".
-     * @param views multiple views.
-     */
-    public Concat(String layout, VegaLite... views) {
-        ArrayNode node = spec.putArray(layout);
-        for (VegaLite view : views) {
-            node.add(view.spec);
-        }
-    }
-
     /**
      * Constructor to put multiple views into a flexible flow layout.
      * @param columns the number of columns.
@@ -49,6 +36,36 @@ public class Concat extends VegaLite implements ViewLayoutComposition {
         for (VegaLite view : views) {
             node.add(view.spec);
         }
+    }
+
+    /**
+     * Constructor for horizontal concatenation or vertical concatenation.
+     * @param layout "hconcat" or "vconcat".
+     * @param views multiple views.
+     */
+    Concat(String layout, VegaLite... views) {
+        ArrayNode node = spec.putArray(layout);
+        for (VegaLite view : views) {
+            node.add(view.spec);
+        }
+    }
+
+    /**
+     * Returns a horizontal concatenation of views.
+     * @param views multiple views.
+     * @return a horizontal concatenation of views.
+     */
+    public static Concat horizontal(VegaLite... views) {
+        return new Concat("hconcat", views);
+    }
+
+    /**
+     * Returns a vertical concatenation of views.
+     * @param views multiple views.
+     * @return a vertical concatenation of views.
+     */
+    public static Concat vertical(VegaLite... views) {
+        return new Concat("vconcat", views);
     }
 
     @Override
