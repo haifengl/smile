@@ -309,7 +309,6 @@ public class VegaTest {
         System.out.println("Scatter Plot");
 
         var bar = new View("Scatter Plot");
-
         bar.mark("point");
         bar.data().url("https://vega.github.io/vega-lite/examples/data/cars.json");
         bar.encode("x", "Horsepower").type("quantitative");
@@ -335,7 +334,6 @@ public class VegaTest {
         System.out.println("Natural Disasters");
 
         var bar = new View("Natural Disasters").width(600).height(400);
-
         bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
         bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
         bar.transform().filter("datum.Entity !== 'All natural disasters'");
@@ -532,25 +530,8 @@ public class VegaTest {
         boxplot.encode("x", "age").type("ordinal");
         boxplot.encode("y", "people").type("quantitative").title("population");
 
-        var concat = new Concat("vconcat", donut, boxplot).title("Vertical Concatenation");
+        var concat = Concat.vertical(donut, boxplot).title("Vertical Concatenation");
         concat.show();
-    }
-
-    @Test
-    public void testGeo() throws Exception {
-        System.out.println("Choropleth of Unemployment Rate per County");
-
-        var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
-        geo.mark("geoshape").extent("min-max");
-        geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
-        geo.encode("color", "rate").type("quantitative");
-        geo.projection("albersUsa");
-
-        var transform = geo.transform();
-        var lookupData = transform.lookupData("id").fields("rate");
-        lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
-        geo.transform().lookup("id", lookupData);
-        geo.show();
     }
 
     @Test
@@ -568,5 +549,22 @@ public class VegaTest {
         var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
         splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
         splom.show();
+    }
+
+    @Test
+    public void testGeo() throws Exception {
+        System.out.println("Choropleth of Unemployment Rate per County");
+
+        var geo = new View("Choropleth of Unemployment Rate per County").width(500).height(300);
+        geo.mark("geoshape").extent("min-max");
+        geo.data().topojson("https://vega.github.io/vega-lite/examples/data/us-10m.json", "feature", "counties");
+        geo.encode("color", "rate").type("quantitative");
+        geo.projection("albersUsa");
+
+        var transform = geo.transform();
+        var lookupData = transform.lookupData("id").fields("rate");
+        lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
+        geo.transform().lookup("id", lookupData);
+        geo.show();
     }
 }
