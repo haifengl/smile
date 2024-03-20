@@ -26,14 +26,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * @author Haifeng Li
  */
-public class Density {
+public class DensityTransform {
     /** VegaLite's Density definition object. */
     final ObjectNode spec;
 
     /**
      * Hides the constructor so that users cannot create the instances directly.
      */
-    Density(ObjectNode spec) {
+    DensityTransform(ObjectNode spec) {
         this.spec = spec;
     }
 
@@ -55,7 +55,7 @@ public class Density {
      * @param flag If true, produce cumulative density estimates. Otherwise, density estimates.
      * @return this object.
      */
-    public Density cumulative(boolean flag) {
+    public DensityTransform cumulative(boolean flag) {
         spec.put("cumulative", flag);
         return this;
     }
@@ -65,7 +65,7 @@ public class Density {
      * @param flag If true, produce smoothed counts. Otherwise, probability estimates.
      * @return this object.
      */
-    public Density counts(boolean flag) {
+    public DensityTransform counts(boolean flag) {
         spec.put("counts", flag);
         return this;
     }
@@ -77,7 +77,7 @@ public class Density {
      * @param width the bandwidth (standard deviation) of the Gaussian kernel.
      * @return this object.
      */
-    public Density bandwidth(double width) {
+    public DensityTransform bandwidth(double width) {
         spec.put("bandwidth", width);
         return this;
     }
@@ -90,7 +90,7 @@ public class Density {
      * @param max the maximum value of the density value field.
      * @return this object.
      */
-    public Density extent(double min, double max) {
+    public DensityTransform extent(double min, double max) {
         spec.putArray("extent").add(min).add(max);
         return this;
     }
@@ -101,7 +101,7 @@ public class Density {
      * @param steps the minimum number of samples to take.
      * @return this object.
      */
-    public Density minSteps(int steps) {
+    public DensityTransform minSteps(int steps) {
         spec.put("minsteps", steps);
         return this;
     }
@@ -112,7 +112,7 @@ public class Density {
      * @param steps the maximum number of samples to take.
      * @return this object.
      */
-    public Density maxSteps(int steps) {
+    public DensityTransform maxSteps(int steps) {
         spec.put("maxsteps", steps);
         return this;
     }
@@ -126,7 +126,7 @@ public class Density {
      * @param steps the exact number of samples to take.
      * @return this object.
      */
-    public Density steps(int steps) {
+    public DensityTransform steps(int steps) {
         spec.put("steps", steps);
         return this;
     }
@@ -137,7 +137,7 @@ public class Density {
      * @param fields the output fields.
      * @return this object.
      */
-    public Density as(String... fields) {
+    public DensityTransform as(String... fields) {
         ArrayNode node = spec.putArray("as");
         for (String field : fields) {
             node.add(field);

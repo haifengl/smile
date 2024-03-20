@@ -263,6 +263,32 @@ public class VegaTest {
     }
 
     @Test
+    public void testDensityPlot() throws Exception {
+        System.out.println("Density Plot");
+
+        var plot = new View("Density Plot").width(400).height(100);
+        plot.mark("area");
+        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        plot.encode("x", "value").type("quantitative").title("IMDB Rating");
+        plot.encode("y", "density").type("quantitative");
+        plot.transform().density("IMDB Rating").bandwidth(0.3);
+    }
+
+    @Test
+    public void testCumulativeFrequencyDistribution() throws Exception {
+        System.out.println("Cumulative Frequency Distribution");
+
+        var plot = new View("Cumulative Frequency Distribution");
+        plot.mark("area");
+        plot.data().url("https://vega.github.io/vega-lite/examples/data/movies.json");
+        plot.encode("x", "IMDB Rating").type("quantitative");
+        plot.encode("y", "Cumulative Count").type("quantitative");
+        plot.transform().aggregate("count", "*", "count", "IMDB Rating")
+            .window(new WindowTransformField("sum", "count", 0, "Cumulative Count"))
+            .sort("IMDB Rating").frame(null, 0);
+    }
+
+    @Test
     public void testScatterPlot() throws Exception {
         System.out.println("Scatter Plot");
 
