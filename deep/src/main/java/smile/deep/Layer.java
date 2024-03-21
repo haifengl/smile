@@ -29,14 +29,14 @@ import org.bytedeco.pytorch.global.torch;
  */
 public abstract class Layer {
     /** The neural network that this layer is registered to. */
-    Module net;
+    protected Module net;
 
     /**
      * Registers this layer to a neural network.
      * @param name the name of this layer.
      * @param net the neural network that this layer is registered to.
      */
-    abstract void register(String name, Module net);
+    public abstract void register(String name, Module net);
 
     /**
      * Forward propagation (or forward pass) through the layer.
@@ -44,7 +44,7 @@ public abstract class Layer {
      * @param x the input tensor.
      * @return the output tensor.
      */
-    abstract Tensor forward(Tensor x);
+    public abstract Tensor forward(Tensor x);
 
     /**
      * Returns a linear (fully connected) layer.
@@ -57,13 +57,13 @@ public abstract class Layer {
             LinearImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new LinearImpl(in, out));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -94,13 +94,13 @@ public abstract class Layer {
             LinearImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new LinearImpl(in, out));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -124,13 +124,13 @@ public abstract class Layer {
             LinearImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new LinearImpl(in, out));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -151,13 +151,13 @@ public abstract class Layer {
             LinearImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new LinearImpl(in, out));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -180,14 +180,14 @@ public abstract class Layer {
             Conv2dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(size);
                 this.net = net;
                 this.layer = net.register_module(name, new Conv2dImpl(in, out, p));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 x = torch.relu(layer.forward(x));
                 if (pool > 0) {
                     x = torch.max_pool2d(x, pool, pool);
@@ -217,7 +217,7 @@ public abstract class Layer {
             Conv2dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(size);
                 Conv2dOptions options = new Conv2dOptions(in, out, p);
                 options.stride().put(stride);
@@ -230,7 +230,7 @@ public abstract class Layer {
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 x = torch.relu(layer.forward(x));
                 if (pool > 0) {
                     x = torch.max_pool2d(x, pool, pool);
@@ -251,14 +251,14 @@ public abstract class Layer {
             MaxPool2dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(size);
                 this.net = net;
                 this.layer = net.register_module(name, new MaxPool2dImpl(p));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
             }
         };
@@ -277,14 +277,14 @@ public abstract class Layer {
             BatchNorm1dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(in);
                 this.net = net;
                 this.layer = net.register_module(name, new BatchNorm1dImpl(p));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
             }
         };
@@ -308,7 +308,7 @@ public abstract class Layer {
             BatchNorm1dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(in);
                 BatchNormOptions options = new BatchNormOptions(p);
                 options.eps().put(eps);
@@ -319,7 +319,7 @@ public abstract class Layer {
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
             }
         };
@@ -338,14 +338,14 @@ public abstract class Layer {
             BatchNorm2dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(in);
                 this.net = net;
                 this.layer = net.register_module(name, new BatchNorm2dImpl(p));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
             }
         };
@@ -369,7 +369,7 @@ public abstract class Layer {
             BatchNorm2dImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 LongPointer p = new LongPointer(1).put(in);
                 BatchNormOptions options = new BatchNormOptions(p);
                 options.eps().put(eps);
@@ -380,7 +380,7 @@ public abstract class Layer {
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
             }
         };
@@ -406,14 +406,65 @@ public abstract class Layer {
             DropoutImpl layer;
 
             @Override
-            void register(String name, Module net) {
+            public void register(String name, Module net) {
                 this.net = net;
                 this.layer = net.register_module(name, new DropoutImpl(p));
             }
 
             @Override
-            Tensor forward(Tensor x) {
+            public Tensor forward(Tensor x) {
                 return layer.forward(x);
+            }
+        };
+    }
+
+    /**
+     * Returns an embedding layer that is a simple lookup table that stores
+     * embeddings of a fixed dictionary and size.
+     *
+     * This layer is often used to store word embeddings and retrieve them
+     * using indices. The input to the module is a list of indices, and the
+     * output is the corresponding word embeddings.
+     *
+     * @param numTokens the size of the dictionary of embeddings.
+     * @param dim the size of each embedding vector.
+     * @return a dropout layer.
+     */
+    public static Layer embedding(int numTokens, int dim) {
+        return embedding(numTokens, dim, 1.0);
+    }
+
+    /**
+     * Returns an embedding layer that is a simple lookup table that stores
+     * embeddings of a fixed dictionary and size.
+     *
+     * This layer is often used to store word embeddings and retrieve them
+     * using indices. The input to the module is a list of indices, and the
+     * output is the corresponding word embeddings.
+     *
+     * @param numTokens the size of the dictionary of embeddings.
+     * @param dim the size of each embedding vector.
+     * @param alpha optional scaling factor.
+     * @return a dropout layer.
+     */
+    public static Layer embedding(int numTokens, int dim, double alpha) {
+        return new Layer() {
+            EmbeddingImpl layer;
+            Scalar scaler = new Scalar(alpha);
+
+            @Override
+            public void register(String name, Module net) {
+                this.net = net;
+                this.layer = net.register_module(name, new EmbeddingImpl(numTokens, dim));
+            }
+
+            @Override
+            public Tensor forward(Tensor x) {
+                Tensor output = layer.forward(x);
+                if (alpha != 1.0) {
+                    output.mul_(scaler);
+                }
+                return output;
             }
         };
     }
