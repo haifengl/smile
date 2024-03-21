@@ -16,6 +16,7 @@
  */
 package smile.deep;
 
+import smile.deep.tensor.Tensor;
 import static org.bytedeco.pytorch.global.torch.*;
 
 /**
@@ -31,7 +32,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor l1(Tensor input, Tensor target) {
-        return new Tensor(l1_loss(input.value, target.value));
+        return Tensor.of(l1_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -41,7 +42,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor mse(Tensor input, Tensor target) {
-        return new Tensor(mse_loss(input.value, target.value));
+        return Tensor.of(mse_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -51,7 +52,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor nll(Tensor input, Tensor target) {
-        return new Tensor(nll_loss(input.value, target.value));
+        return Tensor.of(nll_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -61,7 +62,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor crossEntropy(Tensor input, Tensor target) {
-        return new Tensor(cross_entropy_loss(input.value, target.value));
+        return Tensor.of(cross_entropy_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -71,7 +72,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor hingeEmbedding(Tensor input, Tensor target) {
-        return new Tensor(hinge_embedding_loss(input.value, target.value));
+        return Tensor.of(hinge_embedding_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -82,7 +83,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor marginRanking(Tensor input1, Tensor input2, Tensor target) {
-        return new Tensor(margin_ranking_loss(input1.value, input2.value, target.value));
+        return Tensor.of(margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
     }
 
     /**
@@ -93,7 +94,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor tripleMarginRanking(Tensor anchor, Tensor positive, Tensor negative) {
-        return new Tensor(triplet_margin_loss(anchor.value, positive.value, negative.value));
+        return Tensor.of(triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
     }
 
     /**
@@ -103,6 +104,6 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor kl(Tensor input, Tensor target) {
-        return new Tensor(kl_div(input.value, target.value));
+        return Tensor.of(kl_div(input.asTorch(), target.asTorch()));
     }
 }

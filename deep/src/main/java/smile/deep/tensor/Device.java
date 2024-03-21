@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.deep;
+package smile.deep.tensor;
 
 import org.bytedeco.pytorch.global.torch;
 
@@ -24,15 +24,17 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public class Device {
+    /** Device type. */
+    final DeviceType type;
     /** PyTorch device. */
-    org.bytedeco.pytorch.Device value;
+    final org.bytedeco.pytorch.Device value;
 
     /**
      * Constructor.
      * @param type the compute device type.
      */
     public Device(DeviceType type) {
-        this(type, (byte) 0);
+        this(type, (byte) (type == DeviceType.CPU ? 0 : -1));
     }
 
     /**
@@ -41,6 +43,7 @@ public class Device {
      * @param index the CUDA device index.
      */
     public Device(DeviceType type, byte index) {
+        this.type = type;
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
     }
 
@@ -99,5 +102,25 @@ public class Device {
      */
     public void setDefaultDevice() {
         torch.device(value);
+    }
+
+    public DeviceType type() {
+        return type;
+    }
+
+    /**
+     * Returns the device index or ordinal, which identifies the specific
+     * compute device when there is more than one of a certain type. The
+     * device index is optional, and in its defaulted state represents
+     * (abstractly) "the current device". Further, there are two constraints
+     * on the value of the device index, if one is explicitly stored:
+     * 1. A negative index represents the current device, a non-negative
+     * index represents a specific, concrete device, 2. When the device
+     * type is CPU, the device index must be zero.
+     *
+     * @return the device index.
+     */
+    public byte index() {
+        return value.index();
     }
 }

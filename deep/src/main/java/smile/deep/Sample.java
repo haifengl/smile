@@ -16,6 +16,8 @@
  */
 package smile.deep;
 
+import smile.deep.tensor.*;
+
 /**
  * A min-batch dataset consists of data and an associated target (label).
  *
@@ -43,8 +45,8 @@ public class Sample {
      * @param target the sample labels.
      */
     Sample(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
-        this.data = new Tensor(data);
-        this.target = new Tensor(target);
+        this.data = Tensor.of(data);
+        this.target = Tensor.of(target);
     }
 
     /**

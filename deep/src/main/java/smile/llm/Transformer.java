@@ -18,8 +18,8 @@ package smile.llm;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
-import smile.deep.Device;
-import smile.deep.Tensor;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
 
 /**
  * A transformer is a deep learning architecture developed based on the

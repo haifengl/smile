@@ -14,30 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.deep;
+package smile.deep.tensor;
 
 import org.bytedeco.pytorch.global.torch;
 
-/** The memory layout of a Tensor. */
-public enum Layout {
-    /** Dense tensor. */
-    Strided (torch.Layout.Strided),
-    /** Sparse tensor in COO format. */
-    SparseCOO(torch.Layout.Sparse),
-    /** Sparse tensor in BSC format. */
-    SparseBSC(torch.Layout.SparseBsc),
-    /** Sparse tensor in BSR format. */
-    SparseBSR(torch.Layout.SparseBsr),
-    /** Sparse tensor in CSC format. */
-    SparseCSC(torch.Layout.SparseCsc),
-    /** Sparse tensor in CSR format. */
-    SparseCSR(torch.Layout.SparseCsr);
+/**
+ * The compute device type.
+ *
+ * @author Haifeng Li
+ */
+public enum DeviceType {
+    CPU(torch.DeviceType.CPU),
+    /** NVIDIA GPU */
+    CUDA(torch.DeviceType.CUDA),
+    /** GPU for MacOS devices with Metal programming framework. */
+    MPS(torch.DeviceType.MPS);
 
-    /** PyTorch tensor layout type. */
-    torch.Layout value;
+    /** PyTorch device type. */
+    torch.DeviceType value;
 
     /** Constructor. */
-    private Layout(torch.Layout layout) {
-        this.value = layout;
+    DeviceType(torch.DeviceType device) {
+        this.value = device;
+    }
+
+    /**
+     * Returns the byte value of device type,
+     * which is compatible with PyTorch.
+     */
+    public byte value() {
+        return value.value;
     }
 }

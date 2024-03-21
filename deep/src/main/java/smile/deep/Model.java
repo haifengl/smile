@@ -18,6 +18,8 @@ package smile.deep;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
 
 /**
  * The abstract base class of deep learning models.
@@ -70,7 +72,7 @@ public abstract class Model implements Layer {
      * @return this model.
      */
     public Model to(Device device) {
-        net.to(device.value, true);
+        net.to(device.asTorch(), true);
         return this;
     }
 
