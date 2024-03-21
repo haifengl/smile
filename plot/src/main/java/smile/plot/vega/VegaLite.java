@@ -16,7 +16,9 @@
  */
 package smile.plot.vega;
 
+import java.awt.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
@@ -38,6 +40,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class VegaLite {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VegaLite.class);
     /**
      * The schema of Vega-Lite.
      */
@@ -264,11 +267,27 @@ public class VegaLite {
     /**
      * Displays the plot with the default browser.
      */
-    public void show() throws IOException, JsonProcessingException {
-        Path path = Files.createTempFile("smile-plot-", ".html");
-        path.toFile().deleteOnExit();
-        Files.write(path, html().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        java.awt.Desktop.getDesktop().browse(path.toUri());
+    public void show() throws IOException, HeadlessException {
+        show(false);
+    }
+
+    /**
+     * Displays the plot with the default browser.
+     * @param silent If true, silently swallow any exception.
+     */
+    public void show(boolean silent) throws IOException, HeadlessException {
+        try {
+            Path path = Files.createTempFile("smile-plot-", ".html");
+            path.toFile().deleteOnExit();
+            Files.write(path, html().getBytes(StandardCharsets.UTF_8));
+            Desktop.getDesktop().browse(path.toUri());
+        } catch (Exception ex) {
+            if (silent) {
+                logger.warn("Failed to show " + this.getClass().getSimpleName(), ex);
+            } else {
+                throw ex;
+            }
+        }
     }
 
     /**
