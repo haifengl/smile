@@ -63,7 +63,7 @@ public class Tensor {
     }
 
     /** Returns the PyTorch tensor object. */
-    public org.bytedeco.pytorch.Tensor toTorch() {
+    public org.bytedeco.pytorch.Tensor asTorch() {
         return this.value;
     }
 
