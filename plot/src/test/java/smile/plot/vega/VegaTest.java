@@ -275,7 +275,7 @@ public class VegaTest {
         bar.encode("y", "Rotten Tomatoes Rating").type("quantitative").bin(new BinParams().maxBins(40));
         bar.encode("color", null).type("quantitative").aggregate("count");
         bar.transform().filter(and(valid("IMDB Rating"), valid("Rotten Tomatoes Rating")));
-        bar.show();
+        bar.show(true);
     }
 
     @Test
@@ -418,7 +418,7 @@ public class VegaTest {
         var layer = new Layer(line, point).title("Rolling Averages over Raw Values").width(400).height(300);
         layer.data().format("csv").url("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv");
         layer.transform().window(new WindowTransformField("mean", "temp_max", 0, "rolling_mean")).frame(-15, 15);
-        layer.show();
+        layer.show(true);
     }
 
     @Test
@@ -531,7 +531,7 @@ public class VegaTest {
         boxplot.encode("y", "people").type("quantitative").title("population");
 
         var concat = Concat.vertical(donut, boxplot).title("Vertical Concatenation");
-        concat.show();
+        concat.show(true);
     }
 
     @Test
@@ -548,7 +548,7 @@ public class VegaTest {
         String[] column = {"sepalLength", "sepalWidth", "petalLength", "petalWidth"};
         var splom = new Repeat(plot, row, column).title("Scatter Plot Matrix");
         splom.data().url("https://raw.githubusercontent.com/domoritz/maps/master/data/iris.json");
-        splom.show();
+        splom.show(true);
     }
 
     @Test
@@ -565,6 +565,6 @@ public class VegaTest {
         var lookupData = transform.lookupData("id").fields("rate");
         lookupData.data().url("https://vega.github.io/vega-lite/examples/data/unemployment.tsv");
         geo.transform().lookup("id", lookupData);
-        geo.show();
+        geo.show(true);
     }
 }
