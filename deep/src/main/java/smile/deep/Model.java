@@ -24,7 +24,7 @@ import org.bytedeco.pytorch.Module;
  *
  * @author Haifeng Li
  */
-public abstract class Model {
+public abstract class Model implements Layer {
     /** The neural network. */
     protected Module net;
 
@@ -36,15 +36,15 @@ public abstract class Model {
         this.net = net;
     }
 
-    /**
-     * Forward propagation (or forward pass) refers to the calculation
-     * and storage of intermediate variables (including outputs) for
-     * a neural network in order from the input layer to the output layer.
-     *
-     * @param x the input tensor.
-     * @return the output tensor.
-     */
-    public abstract Tensor forward(Tensor x);
+    @Override
+    public Module asTorch() {
+        return net;
+    }
+
+    @Override
+    public void register(String name, Layer parent) {
+        parent.asTorch().register_module(name, net);
+    }
 
     /**
      * Sets the model in the training mode.
@@ -107,18 +107,20 @@ public abstract class Model {
         int depth = layers.length;
         Module net = new Module();
 
-        for (int i = 0; i < depth; i++) {
-            layers[i].register("Layer-" + (i+1), net);
-        }
-
         return new Model(net) {
+            // instance initializer
+            {
+                for (int i = 0; i < depth; i++) {
+                    layers[i].register("Layer-" + (i+1), this);
+                }
+            }
+
             @Override
             public Tensor forward(Tensor x) {
-                org.bytedeco.pytorch.Tensor tensor = x.value;
                 for (Layer layer : layers) {
-                    tensor = layer.forward(tensor);
+                    x = layer.forward(x);
                 }
-                return new Tensor(tensor);
+                return x;
             }
         };
     }
