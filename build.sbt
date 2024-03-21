@@ -162,7 +162,8 @@ lazy val core = project.in(file("core"))
   .dependsOn(base % "compile->compile;test->test")
 
 lazy val deep = project.in(file("deep"))
-  .settings(java8Settings: _*)
+  .settings(java17Settings: _*)
+  .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
