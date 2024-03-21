@@ -22,6 +22,7 @@ import org.bytedeco.pytorch.*;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.BaseVector;
+import smile.deep.tensor.Tensor;
 import smile.math.MathEx;
 
 /**

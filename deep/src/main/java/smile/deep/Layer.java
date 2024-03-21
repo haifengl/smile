@@ -20,6 +20,7 @@ import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * A layer in the neural network.
@@ -62,7 +63,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -106,7 +107,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -141,7 +142,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -173,7 +174,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 if (x.dim() > 1) {
                     x = x.reshape(x.size(0), in);
                 }
@@ -208,7 +209,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 x = torch.relu(module.forward(x));
                 if (pool > 0) {
                     x = torch.max_pool2d(x, pool, pool);
@@ -256,7 +257,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 x = torch.relu(module.forward(x));
                 if (pool > 0) {
                     x = torch.max_pool2d(x, pool, pool);
@@ -288,8 +289,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -318,8 +319,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -357,8 +358,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -387,8 +388,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -426,8 +427,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -462,8 +463,8 @@ public interface Layer {
             }
 
             @Override
-            public Tensor forward(Tensor x) {
-                return Tensor.of(module.forward(x.value));
+            public Tensor forward(Tensor input) {
+                return Tensor.of(module.forward(input.asTorch()));
             }
 
             @Override
@@ -514,7 +515,7 @@ public interface Layer {
 
             @Override
             public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.value;
+                org.bytedeco.pytorch.Tensor x = input.asTorch();
                 x = module.forward(x);
                 if (alpha != 1.0) {
                     x.mul_(scaler);

@@ -25,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.io.Read;
 import smile.util.Paths;
+import smile.deep.tensor.Tensor;
 
 /**
  *
@@ -52,7 +53,7 @@ public class DatasetTest {
     }
 
     @Test
-    public void testDataset() throws IOException {
+    public void test() throws IOException {
         Model net = Model.of(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),

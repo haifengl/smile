@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.deep;
+package smile.deep.tensor;
 
 import org.bytedeco.pytorch.SymInt;
 import org.bytedeco.pytorch.SymIntOptional;

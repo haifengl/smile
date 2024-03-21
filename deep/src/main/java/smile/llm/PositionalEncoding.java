@@ -17,9 +17,9 @@
 package smile.llm;
 
 import org.bytedeco.pytorch.Module;
-import smile.deep.Device;
-import smile.deep.Tensor;
-import static smile.deep.Index.*;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
+import static smile.deep.tensor.Index.*;
 import org.bytedeco.pytorch.global.torch;
 
 /**
