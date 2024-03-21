@@ -131,7 +131,7 @@ public interface Strings {
         StringBuilder escaped = new StringBuilder(input.length() * 2);
         for (int i = 0; i < input.length(); i++) {
             char character = input.charAt(i);
-            String reference = html.escape(character);
+            String reference = html.escape(character, encoding);
             if (reference != null) {
                 escaped.append(reference);
             } else {
