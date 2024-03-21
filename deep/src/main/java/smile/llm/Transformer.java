@@ -77,15 +77,25 @@ public class Transformer {
     }
 
     /**
+     * Initializes the model weights.
+     */
+    public void init() {
+        double range = 0.1;
+        torch.uniform_(embedding.weight(), -range, range);
+        torch.zeros_(decoder.bias());
+        torch.uniform_(decoder.weight(), -range, range);
+    }
+
+    /**
      * Forward propagation (or forward pass).
      *
      * @param source the source sequence.
      * @return the log probability of prediction.
      */
     public Tensor forward(Tensor source) {
-        source = Tensor.of(embedding.forward(source.toTorch())).mul(Math.sqrt(options.dModel));
+        source = Tensor.of(embedding.forward(source.asTorch())).mul(Math.sqrt(options.dModel));
         source = posEncoder.forward(source);
-        org.bytedeco.pytorch.Tensor output = transformer.encoder().forward(source.toTorch());
+        org.bytedeco.pytorch.Tensor output = transformer.encoder().forward(source.asTorch());
         output = decoder.forward(output);
         output = torch.log_softmax(output, -1);
         return Tensor.of(output);
@@ -97,10 +107,10 @@ public class Transformer {
      * @return this model.
      */
     public Transformer to(Device device) {
-        transformer.to(device.toTorch(), true);
-        embedding.to(device.toTorch(), true);
+        transformer.to(device.asTorch(), true);
+        embedding.to(device.asTorch(), true);
         posEncoder.to(device);
-        decoder.to(device.toTorch(), true);
+        decoder.to(device.asTorch(), true);
         return this;
     }
 

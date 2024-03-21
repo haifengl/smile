@@ -45,7 +45,7 @@ public class Device {
     }
 
     /** Returns the PyTorch device object. */
-    public org.bytedeco.pytorch.Device toTorch() {
+    public org.bytedeco.pytorch.Device asTorch() {
         return this.value;
     }
 
