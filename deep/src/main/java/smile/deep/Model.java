@@ -26,13 +26,13 @@ import org.bytedeco.pytorch.Module;
  */
 public abstract class Model {
     /** The neural network. */
-    Module net;
+    protected Module net;
 
     /**
      * Constructor.
      * @param net the neural network module.
      */
-    private Model(Module net) {
+    protected Model(Module net) {
         this.net = net;
     }
 
