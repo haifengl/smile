@@ -28,8 +28,11 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public abstract class Model implements Layer {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Model.class);
     /** The neural network. */
     protected Module net;
+    /** The compute device on which the model is stored. */
+    private Device device;
 
     /**
      * Constructor.
@@ -73,6 +76,7 @@ public abstract class Model implements Layer {
      * @return this model.
      */
     public Model to(Device device) {
+        this.device = device;
         net.to(device.asTorch(), true);
         return this;
     }
@@ -99,6 +103,82 @@ public abstract class Model implements Layer {
         net.save(archive);
         archive.save_to(path);
         return this;
+    }
+
+    /**
+     * Trains the model.
+     * @param epochs the number of training epochs.
+     * @param optimizer the optimization algorithm.
+     * @param loss the loss function.
+     * @param train the training data.
+     */
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train) {
+        train(epochs, optimizer, loss, train, null, null, 100);
+    }
+
+    /**
+     * Trains the model.
+     * @param epochs the number of training epochs.
+     * @param optimizer the optimization algorithm.
+     * @param loss the loss function.
+     * @param train the training data.
+     * @param eval optional evaluation data.
+     * @param checkpoint optional checkpoint file path.
+     * @param batches run evaluation and save checkpoint per this number of batches.
+     */
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, int batches) {
+        train(); // training mode
+        for (int epoch = 1; epoch <= epochs; ++epoch) {
+            int batchIndex = 0;
+            // Iterate the data loader to yield batches from the dataset.
+            for (Sample batch : train) {
+                Tensor data = device == null ? batch.data : batch.data.to(device);
+                Tensor target = device == null ? batch.target : batch.target.to(device);
+                // Reset gradients.
+                optimizer.reset();
+                // Execute the model on the input data.
+                Tensor prediction = forward(data);
+                // Compute a loss value to judge the prediction of our model.
+                Tensor error = loss.apply(prediction, target);
+                // Compute gradients of the loss w.r.t. the parameters of our model.
+                error.backward();
+                // Update the parameters based on the calculated gradients.
+                optimizer.step();
+
+                // Output the loss and checkpoint every 20 batches.
+                if (++batchIndex % batches == 0) {
+                    if (eval != null) {
+                        double accuracy = accuracy(eval);
+                        logger.info("Epoch: {} | Batch: {} | Loss: {} | Eval: {}", epoch, batchIndex, error.toFloat(), accuracy);
+                    } else {
+                        logger.info("Epoch: {} | Batch: {} | Loss: {}", epoch, batchIndex, error.toFloat());
+                    }
+
+                    if (checkpoint != null) {
+                        save(checkpoint);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Evaluates the model accuracy on a test dataset.
+     * @param dataset the test dataset.
+     * @return the accuracy.
+     */
+    public double accuracy(Dataset dataset) {
+        eval(); // evaluation mode
+        double correct = 0;
+        for (Sample batch : dataset) {
+            Tensor data = device == null ? batch.data : batch.data.to(device);
+            Tensor target = device == null ? batch.target : batch.target.to(device);
+            Tensor output = forward(data);
+            Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
+            correct += pred.eq(target).sum().toInt();
+        }
+
+        return correct / dataset.size();
     }
 
     /**
