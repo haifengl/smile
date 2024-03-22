@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.deep.tensor.Device;
 import smile.io.Read;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
@@ -61,45 +62,16 @@ public class DatasetTest {
                 Layer.logSoftmax(32, 10)
         );
 
+        if (CUDA.isAvailable()) net.to(Device.CUDA());
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
 
         Dataset dataset = Dataset.of(x, y, 64);
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
-        net.train();
-        for (int epoch = 1; epoch <= 100; ++epoch) {
-            int batchIndex = 0;
-            // Iterate the data loader to yield batches from the dataset.
-            for (Sample batch : dataset) {
-                // Reset gradients.
-                optimizer.reset();
-                // Execute the model on the input data.
-                Tensor prediction = net.forward(batch.data);
-                // Compute a loss value to judge the prediction of our model.
-                Tensor loss = Loss.nll(prediction, batch.target);
-                // Compute gradients of the loss w.r.t. the parameters of our model.
-                loss.backward();
-                // Update the parameters based on the calculated gradients.
-                optimizer.step();
-
-                // Output the loss and checkpoint every 20 batches.
-                if (++batchIndex % 20 == 0) {
-                    System.out.println("Epoch: " + epoch + " | Batch: " + batchIndex + " | Loss: " + loss.toFloat());
-                }
-            }
-        }
-
-        // Inference mode
-        net.eval();
-        double correct = 0;
-        for (Sample batch : dataset) {
-            Tensor output = net.forward(batch.data);
-            Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
-            correct += pred.eq(batch.target).sum().toInt();
-        }
-
-        double accuracy = correct / dataset.size();
-        System.out.println("Training Accuracy: " + accuracy);
+        Loss loss = Loss.nll();
+        net.train(100, optimizer, loss, dataset, null, null, 38);
+        net.accuracy(dataset);
+        System.out.println("Training Accuracy: " + net.accuracy(dataset));
     }
 }
