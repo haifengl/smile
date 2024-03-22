@@ -52,6 +52,17 @@ public class Device {
         return this.value;
     }
 
+    /** Returns the preferred (most powerful) device. */
+    public static Device preferredDevice() {
+        if (torch.cuda_is_available()) {
+            return Device.CUDA();
+        } else if (torch.hasMPS()) {
+            return Device.MPS();
+        } else {
+            return Device.CPU();
+        }
+    }
+
     /**
      * Returns the CPU device.
      *

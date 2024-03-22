@@ -61,8 +61,7 @@ public class ModelTest {
 
     @Test
     public void test() {
-        Device device = CUDA.isAvailable() ? Device.CUDA() : Device.CPU();
-        device.setDefaultDevice();
+        Device device = Device.preferredDevice();
 
         Model net = Model.of(
                 Layer.relu(784, 64, 0.5),
