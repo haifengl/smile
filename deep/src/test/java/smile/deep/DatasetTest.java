@@ -25,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.io.Read;
 import smile.util.Paths;
+import smile.deep.layer.Layer;
 import smile.deep.tensor.Tensor;
 
 /**

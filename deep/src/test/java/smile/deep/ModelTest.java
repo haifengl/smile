@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.util.Paths;
+import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
 import static org.junit.Assert.assertEquals;
 
