@@ -16,11 +16,13 @@
  */
 package smile.deep;
 
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.deep.metric.Accuracy;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
@@ -77,8 +79,8 @@ public class ModelTest {
         net.train(100, optimizer, loss, train, test, null, 100);
 
         // Inference mode
-        double accuracy = net.accuracy(test);
-        System.out.println("Test Accuracy: " + accuracy);
+        Map<String, Double> metrics = net.eval(test, new Accuracy());
+        System.out.format("Test Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
 
         // Serialize your model periodically as a checkpoint.
         net.save("mnist.pt");
@@ -91,6 +93,6 @@ public class ModelTest {
         );
 
         model.load("mnist.pt").to(device).eval();
-        assertEquals(accuracy, model.accuracy(test), 0.01);
+        assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
     }
 }
