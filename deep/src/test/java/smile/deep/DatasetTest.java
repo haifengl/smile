@@ -71,7 +71,7 @@ public class DatasetTest {
         Dataset dataset = Dataset.of(x, y, 64);
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
-        net.train(100, optimizer, loss, dataset, null, null, 38);
+        net.train(100, optimizer, loss, dataset);
         Map<String, Double> metrics = net.eval(dataset, new Accuracy());
         System.out.format("Training Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
     }
