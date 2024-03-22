@@ -68,53 +68,20 @@ public class ModelTest {
                 Layer.logSoftmax(32, 10)
         ).to(device);
 
-        Dataset trainDataset = Dataset.mnist(mnist, true, 64);
-        Dataset testDataset = Dataset.mnist(mnist, false, 64);
+        Dataset train = Dataset.mnist(mnist, true, 64);
+        Dataset test = Dataset.mnist(mnist, false, 64);
 
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
-        net.train();
-        for (int epoch = 1; epoch <= 10; ++epoch) {
-            int batchIndex = 0;
-            // Iterate the data loader to yield batches from the dataset.
-            for (Sample batch : trainDataset) {
-                Tensor data = batch.data.to(device, ScalarType.Float32);
-                Tensor target = batch.target.to(device, ScalarType.Int8);
-
-                // Reset gradients.
-                optimizer.reset();
-                // Execute the model on the input data.
-                Tensor prediction = net.forward(data);
-                // Compute a loss value to judge the prediction of our model.
-                Tensor loss = Loss.nll(prediction, target);
-                // Compute gradients of the loss w.r.t. the parameters of our model.
-                loss.backward();
-                // Update the parameters based on the calculated gradients.
-                optimizer.step();
-
-                // Output the loss and checkpoint every 100 batches.
-                if (++batchIndex % 100 == 0) {
-                    System.out.println("Epoch: " + epoch + " | Batch: " + batchIndex + " | Loss: " + loss.toFloat());
-                }
-            }
-        }
-
-        // Serialize your model periodically as a checkpoint.
-        net.save("net.pt");
+        Loss loss = Loss.nll();
+        net.train(100, optimizer, loss, train, test, null, 100);
 
         // Inference mode
-        net.eval();
-        double correct = 0;
-        for (Sample batch : testDataset) {
-            Tensor data = batch.data.to(device, ScalarType.Float32);
-            Tensor target = batch.target.to(device, ScalarType.Int8);
-            Tensor output = net.forward(data);
-            Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
-            correct += pred.eq(target).sum().toInt();
-        }
-
-        double accuracy = correct / testDataset.size();
+        double accuracy = net.accuracy(test);
         System.out.println("Test Accuracy: " + accuracy);
+
+        // Serialize your model periodically as a checkpoint.
+        net.save("mnist.pt");
 
         // Loads the model from checkpoint.
         Model model = Model.of(
@@ -123,20 +90,7 @@ public class ModelTest {
                 Layer.logSoftmax(32, 10)
         );
 
-        model.load("net.pt").to(device).eval();
-
-        correct = 0;
-        for (Sample batch : testDataset) {
-            Tensor data = batch.data.to(device, ScalarType.Float32);
-            Tensor target = batch.target.to(device, ScalarType.Int8);
-
-            Tensor output = model.forward(data);
-            Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
-            correct += pred.eq(target).sum().toInt();
-        }
-
-        double accuracy2 = correct / testDataset.size();
-        System.out.println("Checkpoint Accuracy: " + accuracy2);
-        assertEquals(accuracy, accuracy2, 0.01);
+        model.load("mnist.pt").to(device).eval();
+        assertEquals(accuracy, model.accuracy(test), 0.01);
     }
 }
