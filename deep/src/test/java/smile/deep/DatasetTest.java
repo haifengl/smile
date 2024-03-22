@@ -17,17 +17,18 @@
 package smile.deep;
 
 import java.io.IOException;
+import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.deep.metric.Accuracy;
 import smile.deep.tensor.Device;
 import smile.io.Read;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
-import smile.deep.tensor.Tensor;
 
 /**
  *
@@ -71,7 +72,7 @@ public class DatasetTest {
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset, null, null, 38);
-        net.accuracy(dataset);
-        System.out.println("Training Accuracy: " + net.accuracy(dataset));
+        Map<String, Double> metrics = net.eval(dataset, new Accuracy());
+        System.out.format("Training Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
     }
 }

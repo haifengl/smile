@@ -16,9 +16,12 @@
  */
 package smile.deep;
 
+import java.util.Map;
+import java.util.TreeMap;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
+import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
@@ -126,7 +129,7 @@ public abstract class Model implements Layer {
      * @param checkpoint optional checkpoint file path.
      * @param batches run evaluation and save checkpoint per this number of batches.
      */
-    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, int batches) {
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, int batches, Metric... metrics) {
         train(); // training mode
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             int batchIndex = 0;
@@ -145,15 +148,22 @@ public abstract class Model implements Layer {
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
 
-                // Output the loss and checkpoint every 20 batches.
+                // Output the loss and checkpoint.
                 if (++batchIndex % batches == 0) {
+                    String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, error.toFloat());
                     if (eval != null) {
-                        double accuracy = accuracy(eval);
-                        logger.info("Epoch: {} | Batch: {} | Loss: {} | Eval: {}", epoch, batchIndex, error.toFloat(), accuracy);
-                    } else {
-                        logger.info("Epoch: {} | Batch: {} | Loss: {}", epoch, batchIndex, error.toFloat());
+                        Map<String, Double> result = eval(eval, metrics);
+                        StringBuilder sb = new StringBuilder(msg);
+                        train(); // return to training mode
+                        for (var metric : metrics) {
+                            String name = metric.name();
+                            sb.append(String.format(" | %s: %.2f", name, 100 * result.get(name)));
+                            metric.reset();
+                        }
+                        msg = sb.toString();
                     }
 
+                    logger.info(msg);
                     if (checkpoint != null) {
                         save(checkpoint);
                     }
@@ -167,18 +177,22 @@ public abstract class Model implements Layer {
      * @param dataset the test dataset.
      * @return the accuracy.
      */
-    public double accuracy(Dataset dataset) {
+    public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
-        double correct = 0;
         for (Sample batch : dataset) {
             Tensor data = device == null ? batch.data : batch.data.to(device);
             Tensor target = device == null ? batch.target : batch.target.to(device);
             Tensor output = forward(data);
-            Tensor pred = output.argmax(1, false);  // get the index of the max log - probability
-            correct += pred.eq(target).sum().toInt();
+            for (var metric : metrics) {
+                metric.update(output, target);
+            }
         }
 
-        return correct / dataset.size();
+        Map<String, Double> map = new TreeMap<>();
+        for (var metric : metrics) {
+            map.put(metric.name(), metric.compute());
+        }
+        return map;
     }
 
     /**

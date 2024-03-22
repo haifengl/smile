@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.util.Paths;
-
 import static org.bytedeco.pytorch.global.torch.*;
 
 /**
