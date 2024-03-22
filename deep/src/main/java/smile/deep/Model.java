@@ -116,7 +116,7 @@ public abstract class Model implements Layer {
      * @param train the training data.
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train) {
-        train(epochs, optimizer, loss, train, null, null, 100);
+        train(epochs, optimizer, loss, train, null, null);
     }
 
     /**
@@ -127,12 +127,12 @@ public abstract class Model implements Layer {
      * @param train the training data.
      * @param eval optional evaluation data.
      * @param checkpoint optional checkpoint file path.
-     * @param batches run evaluation and save checkpoint per this number of batches.
      */
-    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, int batches, Metric... metrics) {
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, Metric... metrics) {
         train(); // training mode
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             int batchIndex = 0;
+            double lossValue = 0;
             // Iterate the data loader to yield batches from the dataset.
             for (Sample batch : train) {
                 Tensor data = device == null ? batch.data : batch.data.to(device);
@@ -143,31 +143,31 @@ public abstract class Model implements Layer {
                 Tensor prediction = forward(data);
                 // Compute a loss value to judge the prediction of our model.
                 Tensor error = loss.apply(prediction, target);
+                lossValue = error.toFloat();
                 // Compute gradients of the loss w.r.t. the parameters of our model.
                 error.backward();
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
+                batchIndex++;
+            }
 
-                // Output the loss and checkpoint.
-                if (++batchIndex % batches == 0) {
-                    String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, error.toFloat());
-                    if (eval != null) {
-                        Map<String, Double> result = eval(eval, metrics);
-                        StringBuilder sb = new StringBuilder(msg);
-                        train(); // return to training mode
-                        for (var metric : metrics) {
-                            String name = metric.name();
-                            sb.append(String.format(" | %s: %.2f", name, 100 * result.get(name)));
-                            metric.reset();
-                        }
-                        msg = sb.toString();
-                    }
-
-                    logger.info(msg);
-                    if (checkpoint != null) {
-                        save(checkpoint);
-                    }
+            // Output the loss and checkpoint.
+            String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
+            if (eval != null) {
+                Map<String, Double> result = eval(eval, metrics);
+                StringBuilder sb = new StringBuilder(msg);
+                train(); // return to training mode
+                for (var metric : metrics) {
+                    String name = metric.name();
+                    sb.append(String.format(" | %s: %.2f", name, 100 * result.get(name)));
+                    metric.reset();
                 }
+                msg = sb.toString();
+            }
+
+            logger.info(msg);
+            if (checkpoint != null) {
+                save(checkpoint);
             }
         }
     }
