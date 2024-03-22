@@ -47,6 +47,11 @@ public class Device {
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
     }
 
+    @Override
+    public String toString() {
+        return value.str().getString();
+    }
+
     /** Returns the PyTorch device object. */
     public org.bytedeco.pytorch.Device asTorch() {
         return this.value;
