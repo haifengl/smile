@@ -167,7 +167,7 @@ public abstract class Model implements Layer {
 
             logger.info(msg);
             if (checkpoint != null) {
-                save(checkpoint);
+                save(String.format("%s-%d.pt", checkpoint, epoch));
             }
         }
     }
