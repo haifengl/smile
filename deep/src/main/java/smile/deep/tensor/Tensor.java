@@ -76,6 +76,15 @@ public class Tensor {
     }
 
     /**
+     * Clone the tensor to a device.
+     * @param device the compute device of new tensor.
+     * @return The cloned tensor.
+     */
+    public Tensor to(Device device) {
+        return Tensor.of(value.to(device.value, value.dtype()));
+    }
+
+    /**
      * Clone the tensor to a device with a different data type.
      * @param device the compute device of new tensor.
      * @param dtype the element data type of new tensor.
