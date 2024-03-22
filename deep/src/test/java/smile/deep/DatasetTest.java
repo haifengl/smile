@@ -63,7 +63,7 @@ public class DatasetTest {
                 Layer.logSoftmax(32, 10)
         );
 
-        if (CUDA.isAvailable()) net.to(Device.CUDA());
+        net.to(Device.preferredDevice());
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
