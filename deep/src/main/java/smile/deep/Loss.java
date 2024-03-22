@@ -16,63 +16,62 @@
  */
 package smile.deep;
 
+import java.util.function.BiFunction;
 import smile.deep.tensor.Tensor;
-import static org.bytedeco.pytorch.global.torch.*;
+import org.bytedeco.pytorch.global.torch;
 
 /**
  * Loss functions.
  *
  * @author Haifeng Li
  */
-public interface Loss {
+public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
     /**
      * Mean Absolute Error (L1) Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
+     * @return the loss functor.
      */
-    static Tensor l1(Tensor input, Tensor target) {
-        return Tensor.of(l1_loss(input.asTorch(), target.asTorch()));
+    static Loss l1() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.l1_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
      * Mean Squared Error (L2) Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
+     * @return the loss functor.
      */
-    static Tensor mse(Tensor input, Tensor target) {
-        return Tensor.of(mse_loss(input.asTorch(), target.asTorch()));
+    static Loss mse() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.mse_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
      * Negative Log-Likelihood Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
+     * @return the loss functor.
      */
-    static Tensor nll(Tensor input, Tensor target) {
-        return Tensor.of(nll_loss(input.asTorch(), target.asTorch()));
+    static Loss nll() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.nll_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
      * Cross Entropy Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
+     * @return the loss functor.
      */
-    static Tensor crossEntropy(Tensor input, Tensor target) {
-        return Tensor.of(cross_entropy_loss(input.asTorch(), target.asTorch()));
+    static Loss crossEntropy() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
      * Hinge Embedding Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
+     * @return the loss functor.
      */
-    static Tensor hingeEmbedding(Tensor input, Tensor target) {
-        return Tensor.of(hinge_embedding_loss(input.asTorch(), target.asTorch()));
+    static Loss hingeEmbedding() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
+    }
+
+    /**
+     * Kullback-Leibler Divergence Loss Function.
+     * @return the loss functor.
+     */
+    static Loss kl() {
+        return (Tensor input, Tensor target) -> Tensor.of(torch.kl_div(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -83,7 +82,7 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor marginRanking(Tensor input1, Tensor input2, Tensor target) {
-        return Tensor.of(margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
+        return Tensor.of(torch.margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
     }
 
     /**
@@ -94,16 +93,6 @@ public interface Loss {
      * @return the loss.
      */
     static Tensor tripleMarginRanking(Tensor anchor, Tensor positive, Tensor negative) {
-        return Tensor.of(triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
-    }
-
-    /**
-     * Kullback-Leibler Divergence Loss Function.
-     * @param input the input/prediction.
-     * @param target the target/truth.
-     * @return the loss.
-     */
-    static Tensor kl(Tensor input, Tensor target) {
-        return Tensor.of(kl_div(input.asTorch(), target.asTorch()));
+        return Tensor.of(torch.triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
     }
 }
