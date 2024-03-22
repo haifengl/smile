@@ -18,6 +18,7 @@ package smile.deep;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+import smile.deep.layer.Layer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
