@@ -216,9 +216,9 @@ public class Predicate {
     }
 
     /**
-     * Logical and composition to combine predicates.
+     * Logical AND composition to combine predicates.
      * @param predicates the predicates.
-     * @return and predicate.
+     * @return AND predicate.
      */
     public static Predicate and(Predicate... predicates) {
         ObjectNode node = VegaLite.mapper.createObjectNode();
@@ -234,9 +234,9 @@ public class Predicate {
     }
 
     /**
-     * Logical or composition to combine predicates.
+     * Logical OR composition to combine predicates.
      * @param predicates the predicates.
-     * @return or predicate.
+     * @return OR predicate.
      */
     public static Predicate or(Predicate... predicates) {
         ObjectNode node = VegaLite.mapper.createObjectNode();
@@ -252,11 +252,11 @@ public class Predicate {
     }
 
     /**
-     * Logical not operation.
+     * Logical NOT operation.
      * @param predicate the predicate.
-     * @return not predicate.
+     * @return NOT predicate.
      */
-    public static Predicate or(Predicate predicate) {
+    public static Predicate not(Predicate predicate) {
         ObjectNode node = VegaLite.mapper.createObjectNode();
         if (predicate.expr != null) {
             node.put("not", predicate.expr);
