@@ -25,19 +25,31 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Accuracy implements Metric {
+    /** The threshold for converting input into binary labels. */
+    final double threshold;
+    /** The number of correct predictions. */
     long correct = 0;
+    /** The number of samples. */
     long size = 0;
 
     /**
      * Constructor.
      */
     public Accuracy() {
+        this(0.5);
+    }
 
+    /**
+     * Constructor.
+     * @param threshold The threshold for converting input into binary labels.
+     */
+    public Accuracy(double threshold) {
+        this.threshold = threshold;
     }
 
     @Override
     public String toString() {
-        return String.format("Accuracy %.2f", 100 * compute());
+        return String.format("Accuracy = %.2f", 100 * compute());
     }
 
     @Override
@@ -47,7 +59,9 @@ public class Accuracy implements Metric {
 
     @Override
     public void update(Tensor output, Tensor target) {
-        Tensor prediction = output.argmax(1, false);  // get the index of the max log - probability
+        Tensor prediction = output.dim() == 2 ?
+                output.argmax(1, false) : // get the index of the max log-probability
+                output.where(output.lt(threshold), 0, 1);  // get class label by thresholding
         correct += prediction.eq(target).sum().toInt();
         size += target.size(0);
     }
@@ -61,17 +75,5 @@ public class Accuracy implements Metric {
     public void reset() {
         correct = 0;
         size = 0;
-    }
-
-    /**
-     * Calculates the classification accuracy.
-     * @param output the model output.
-     * @param target the ground truth.
-     * @return the metric.
-     */
-    public static double of(Tensor output, Tensor target) {
-        Tensor prediction = output.argmax(1, false);  // get the index of the max log - probability
-        long correct = prediction.eq(target).sum().toInt();
-        return (double) correct / target.size(1);
     }
 }
