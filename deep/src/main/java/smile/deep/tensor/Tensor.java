@@ -154,12 +154,45 @@ public class Tensor {
      * @param indices the indices along the dimensions.
      * @return the index vector.
      */
-    private TensorIndexVector index(Index... indices) {
-        TensorIndexVector index = new TensorIndexVector();
-        for (Index i : indices) {
-            index.put(new TensorIndex(i.value));
+    private TensorIndexVector indexVector(Index... indices) {
+        TensorIndexVector vector = new TensorIndexVector();
+        for (Index index : indices) {
+            vector.put(new TensorIndex(index.value));
         }
-        return index;
+        return vector;
+    }
+
+    /**
+     * Returns a tensor index vector.
+     * @param indices the indices along the dimensions.
+     * @return the index vector.
+     */
+    private TensorOptionalList indexList(Index... indices) {
+        TensorOptionalList list = new TensorOptionalList();
+        for (Index index : indices) {
+            list.push_back(new TensorOptional(index.value));
+        }
+        return list;
+    }
+
+    /**
+     * Updates a portion of tensor in place.
+     * @param x the new sub-tensor values.
+     * @param indices the indices along the dimensions.
+     * @return this tensor.
+     */
+    public Tensor put(Tensor x, Index... indices) {
+        return Tensor.of(value.index_put(indexList(indices), x.value));
+    }
+
+    /**
+     * Updates a portion of tensor in place.
+     * @param index the sub-tensor index.
+     * @param source the sub-tensor value.
+     * @return this tensor.
+     */
+    public Tensor put(Tensor index, Tensor source) {
+        return Tensor.of(value.put(index.value, source.value));
     }
 
     /**
@@ -169,7 +202,18 @@ public class Tensor {
      * @return this tensor.
      */
     public Tensor put_(Tensor x, Index... indices) {
-        value.index_put_(index(indices), x.value);
+        value.index_put_(indexVector(indices), x.value);
+        return this;
+    }
+
+    /**
+     * Updates a portion of tensor in place.
+     * @param index the sub-tensor index.
+     * @param source the sub-tensor value.
+     * @return this tensor.
+     */
+    public Tensor put_(Tensor index, Tensor source) {
+        value.put_(index.value, source.value);
         return this;
     }
 
@@ -179,7 +223,16 @@ public class Tensor {
      * @return the sub-tensor.
      */
     public Tensor get(Index... indices) {
-        return Tensor.of(value.index(index(indices)));
+        return Tensor.of(value.index(indexVector(indices)));
+    }
+
+    /**
+     * Returns a portion of tensor given the indices.
+     * @param index the indices of elements to copy.
+     * @return the sub-tensor.
+     */
+    public Tensor get(Tensor index) {
+        return Tensor.of(value.get(index.value));
     }
 
     /**
@@ -319,7 +372,7 @@ public class Tensor {
      *                 otherwise yield other.
      * @param input value selected at indices where condition is true.
      * @param other value selected at indices where condition is false.
-     * @return
+     * @return the output tensor.
      */
     public Tensor where(Tensor condition, int input, int other) {
         return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
@@ -333,7 +386,7 @@ public class Tensor {
      *                 otherwise yield other.
      * @param input value selected at indices where condition is true.
      * @param other value selected at indices where condition is false.
-     * @return
+     * @return the output tensor.
      */
     public Tensor where(Tensor condition, double input, double other) {
         return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
@@ -364,6 +417,33 @@ public class Tensor {
      */
     public Tensor eq(Tensor other) {
         return Tensor.of(value.eq(other.value));
+    }
+
+    /**
+     * Computes element-wise inequality.
+     * @param other the sclar to compare.
+     * @return the output tensor.
+     */
+    public Tensor ne(int other) {
+        return Tensor.of(value.ne(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise inequality.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor ne(double other) {
+        return Tensor.of(value.ne(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise inequality.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor ne(Tensor other) {
+        return Tensor.of(value.ne(other.value));
     }
 
     /**
@@ -483,6 +563,14 @@ public class Tensor {
     }
 
     /**
+     * Returns the mean of all elements in the tensor.
+     * @return the mean of all elements.
+     */
+    public Tensor mean() {
+        return Tensor.of(value.mean());
+    }
+
+    /**
      * Returns the exponential of elements in the tensor.
      * @return the output tensor.
      */
@@ -496,6 +584,58 @@ public class Tensor {
      */
     public Tensor exp_() {
         return Tensor.of(value.exp_());
+    }
+
+    /**
+     * Writes all values from the tensor src into this tensor at the indices
+     * specified in the index tensor. For each value in src, its output index
+     * is specified by its index in src for dimension != dim and by the
+     * corresponding value in index for dimension = dim.
+     *
+     * This is the reverse operation of the manner described in gather().
+     *
+     * @param dim the axis along which to index.
+     * @param index the indices of elements to scatter, can be either empty or
+     *             of the same dimensionality as src. When empty, the operation
+     *             returns self unchanged.
+     * @param src the source element(s) to scatter.
+     * @param reduce reduction operation to apply, can be either "add" or "multiply".
+     * @return the output tensor.
+     */
+    public Tensor scatter(int dim, Tensor index, Tensor src, String reduce) {
+        return Tensor.of(value.scatter(dim, index.value, src.value, reduce));
+    }
+
+    /**
+     * Writes all values from the tensor src into this tensor at the indices
+     * specified in the index tensor. For each value in src, its output index
+     * is specified by its index in src for dimension != dim and by the
+     * corresponding value in index for dimension = dim.
+     *
+     * This is the reverse operation of the manner described in gather().
+     *
+     * @param dim the axis along which to index.
+     * @param index the indices of elements to scatter, can be either empty or
+     *             of the same dimensionality as src. When empty, the operation
+     *             returns self unchanged.
+     * @param src the source element(s) to scatter.
+     * @param reduce reduction operation to apply, can be either "add" or "multiply".
+     * @return this tensor.
+     */
+    public Tensor scatter_(int dim, Tensor index, Tensor src, String reduce) {
+        value.scatter_(dim, index.value, src.value, reduce);
+        return this;
+    }
+
+    /**
+     * Gathers values along an axis specified by dim.
+     *
+     * @param dim the axis along which to index.
+     * @param index the indices of elements to gather.
+     * @return the output tensor.
+     */
+    public Tensor gather(int dim, Tensor index) {
+        return Tensor.of(value.gather(dim, index.value));
     }
 
     /**
@@ -761,6 +901,40 @@ public class Tensor {
     }
 
     /**
+     * Returns logical AND of two boolean tensors.
+     * @return a new tensor of logical and results.
+     */
+    public Tensor and(Tensor other) {
+        return Tensor.of(value.logical_and(other.value));
+    }
+
+    /**
+     * Returns logical AND of two boolean tensors.
+     * @return this tensor.
+     */
+    public Tensor and_(Tensor other) {
+        value.logical_and_(other.value);
+        return this;
+    }
+
+    /**
+     * Returns logical OR of two boolean tensors.
+     * @return a new tensor of logical and results.
+     */
+    public Tensor or(Tensor other) {
+        return Tensor.of(value.logical_or(other.value));
+    }
+
+    /**
+     * Returns logical OR of two boolean tensors.
+     * @return this tensor.
+     */
+    public Tensor or_(Tensor other) {
+        value.logical_or_(other.value);
+        return this;
+    }
+
+    /**
      * Randomly zeroes some of the elements of the input tensor
      * with probability p.
      *
@@ -781,6 +955,26 @@ public class Tensor {
     public Tensor dropout_(double p) {
         torch.dropout(value, p, true);
         return this;
+    }
+
+    /**
+     * Returns a tensor filled with all zeros. The returned Tensor has the
+     * data type and device as this tensor.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public Tensor newZeros(long... shape) {
+        return Tensor.of(value.new_zeros(shape));
+    }
+
+    /**
+     * Returns a tensor filled with all ones. The returned Tensor has the
+     * data type and device as this tensor.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public Tensor newOnes(long... shape) {
+        return Tensor.of(value.new_ones(shape));
     }
 
     /**
