@@ -109,6 +109,14 @@ public class Tensor {
     }
 
     /**
+     * Returns the number of dimensions of tensor.
+     * @return the number of dimensions of tensor
+     */
+    public long dim() {
+        return value.dim();
+    }
+
+    /**
      * Returns the shape of the tensor.
      * @return the shape of the tensor.
      */
@@ -304,12 +312,166 @@ public class Tensor {
     }
 
     /**
+     * Returns a tensor of elements selected from either input or other,
+     * depending on condition.
+     *
+     * @param condition a boolean tensor. When true (nonzero), yield input,
+     *                 otherwise yield other.
+     * @param input value selected at indices where condition is true.
+     * @param other value selected at indices where condition is false.
+     * @return
+     */
+    public Tensor where(Tensor condition, int input, int other) {
+        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+    }
+
+    /**
+     * Returns a tensor of elements selected from either input or other,
+     * depending on condition.
+     *
+     * @param condition a boolean tensor. When true (nonzero), yield input,
+     *                 otherwise yield other.
+     * @param input value selected at indices where condition is true.
+     * @param other value selected at indices where condition is false.
+     * @return
+     */
+    public Tensor where(Tensor condition, double input, double other) {
+        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise equality.
+     * @param other the sclar to compare.
+     * @return the output tensor.
+     */
+    public Tensor eq(int other) {
+        return Tensor.of(value.eq(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise equality.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor eq(double other) {
+        return Tensor.of(value.eq(new Scalar(other)));
+    }
+
+    /**
      * Computes element-wise equality.
      * @param other the tensor to compare.
      * @return the output tensor.
      */
     public Tensor eq(Tensor other) {
         return Tensor.of(value.eq(other.value));
+    }
+
+    /**
+     * Computes element-wise less-than comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor lt(double other) {
+        return Tensor.of(value.lt(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise less-than comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor lt(int other) {
+        return Tensor.of(value.lt(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise less-than comparison.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor lt(Tensor other) {
+        return Tensor.of(value.lt(other.value));
+    }
+
+    /**
+     * Computes element-wise less-than-or-equal-to comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor le(int other) {
+        return Tensor.of(value.le(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise less-than-or-equal-to comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor le(double other) {
+        return Tensor.of(value.le(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise less-than-or-equal-to comparison.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor le(Tensor other) {
+        return Tensor.of(value.le(other.value));
+    }
+
+    /**
+     * Computes element-wise greater-than comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor gt(int other) {
+        return Tensor.of(value.gt(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise greater-than comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor gt(double other) {
+        return Tensor.of(value.gt(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise greater-than comparison.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor gt(Tensor other) {
+        return Tensor.of(value.gt(other.value));
+    }
+
+    /**
+     * Computes element-wise greater-than-or-equal-to comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor ge(int other) {
+        return Tensor.of(value.ge(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise greater-than-or-equal-to comparison.
+     * @param other the scalar to compare.
+     * @return the output tensor.
+     */
+    public Tensor ge(double other) {
+        return Tensor.of(value.ge(new Scalar(other)));
+    }
+
+    /**
+     * Computes element-wise greater-than-or-equal-to comparison.
+     * @param other the tensor to compare.
+     * @return the output tensor.
+     */
+    public Tensor ge(Tensor other) {
+        return Tensor.of(value.ge(other.value));
     }
 
     /**
