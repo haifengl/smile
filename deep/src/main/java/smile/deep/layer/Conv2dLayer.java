@@ -19,7 +19,6 @@ package smile.deep.layer;
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.Conv2dImpl;
 import org.bytedeco.pytorch.Conv2dOptions;
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -30,8 +29,6 @@ import smile.deep.tensor.Tensor;
 public class Conv2dLayer implements Layer {
     /** The layer configuration. */
     Conv2dOptions options;
-    /** The max pooling kernel size. */
-    int pool;
     /** Implementation. */
     Conv2dImpl module;
 
@@ -47,10 +44,8 @@ public class Conv2dLayer implements Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
-     * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
      */
-    public Conv2dLayer(int in, int out, int size, int stride, int dilation, int groups, boolean bias, int pool) {
-        this.pool = pool;
+    public Conv2dLayer(int in, int out, int size, int stride, int dilation, int groups, boolean bias) {
         LongPointer p = new LongPointer(1).put(size);
         this.options = new Conv2dOptions(in, out, p);
         options.stride().put(stride);
@@ -67,12 +62,7 @@ public class Conv2dLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        org.bytedeco.pytorch.Tensor x = input.asTorch();
-        x = torch.relu(module.forward(x));
-        if (pool > 0) {
-            x = torch.max_pool2d(x, pool, pool);
-        }
-        return Tensor.of(x);
+        return Tensor.of(module.forward(input.asTorch()));
     }
 
     @Override
