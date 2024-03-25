@@ -19,30 +19,36 @@ package smile.deep.metric;
 import smile.deep.tensor.Tensor;
 
 /**
- * The precision or positive predictive value (PPV) is ratio of true positives
- * to combined true and false positives, which is different from sensitivity.
+ * Recall or true positive rate (TPR) (also called hit rate, sensitivity) is
+ * a statistical measures of the performance of a binary classification test.
+ * Recall is the proportion of actual positives which are correctly identified
+ * as such.
  * <pre>
- *     PPV = TP / (TP + FP)
+ *     TPR = TP / P = TP / (TP + FN)
  * </pre>
+ * Recall and precision are closely related to the concepts of type I and
+ * type II errors. For any test, there is usually a trade-off between the
+ * measures. This trade-off can be represented graphically using an ROC curve.
+ * <p>
+ * In this implementation, the class label 1 is regarded as positive and 0
+ * is regarded as negative.
  *
  * @author Haifeng Li
  */
-public class Precision implements Metric {
+public class Recall implements Metric {
     /** The aggregating strategy for multi-classes. */
     final Averaging strategy;
     /** The threshold for converting input into binary labels. */
     final double threshold;
     /** True positive. */
     Tensor tp;
-    /** False positive. */
-    Tensor fp;
     /** Sample size per class. */
     Tensor size;
 
     /**
      * Constructor.
      */
-    public Precision() {
+    public Recall() {
         this(0.5);
     }
 
@@ -50,7 +56,7 @@ public class Precision implements Metric {
      * Constructor.
      * @param threshold The threshold for converting input into binary labels.
      */
-    public Precision(double threshold) {
+    public Recall(double threshold) {
         this.strategy = null;
         this.threshold = threshold;
     }
@@ -59,7 +65,7 @@ public class Precision implements Metric {
      * Constructor.
      * @param strategy The aggregating strategy for multi-classes.
      */
-    public Precision(Averaging strategy) {
+    public Recall(Averaging strategy) {
         this.strategy = strategy;
         this.threshold = 0.5;
     }
@@ -71,7 +77,7 @@ public class Precision implements Metric {
 
     @Override
     public String name() {
-        return strategy == null ? "Precision" : strategy + "-Precision";
+        return strategy == null ? "Recall" : strategy + "-Recall";
     }
 
     @Override
@@ -80,7 +86,6 @@ public class Precision implements Metric {
         if (this.tp == null) {
             long length = strategy == Averaging.Macro || strategy == Averaging.Weighted ? numClasses : 1;
             this.tp = output.newZeros(length);
-            this.fp = output.newZeros(length);
             this.size = output.newZeros(numClasses);
         }
 
@@ -88,45 +93,39 @@ public class Precision implements Metric {
                 output.argmax(1, false) : // get the index of the max log-probability
                 output.where(output.lt(threshold), 0, 1);  // get class label by thresholding
 
-        Tensor tp, fp;
+        Tensor tp;
         Tensor one = target.newOnes(target.size(0));
         Tensor size = target.newZeros(numClasses).scatterReduce_(0, target, one, "sum");
         if (numClasses == 2) {
             tp = prediction.mul(target).sum();
-            fp = prediction.sum().sub(tp);
         } else {
             Tensor eq = prediction.eq(target);
-            Tensor ne = prediction.ne(target);
             if (strategy == Averaging.Micro) {
                 tp = prediction.eq(target).sum();
-                fp = prediction.ne(target).sum();
             } else {
                 tp = target.newZeros(numClasses).scatterReduce_(0, target.get(eq), one, "sum");
-                fp = target.newZeros(numClasses).scatterReduce_(0, prediction.get(ne), one, "sum");
             }
         }
 
         this.tp.add_(tp);
-        this.fp.add_(fp);
         this.size.add_(size);
     }
 
     @Override
     public double compute() {
-        Tensor precision = tp.div(tp.add(fp));
+        Tensor recall = tp.size(0) == 1 ? tp.div(size.sum()) : tp.div(size);
         if (strategy == Averaging.Macro) {
-            precision = precision.mean();
+            recall = recall.mean();
         } else if (strategy == Averaging.Weighted) {
-            precision = precision.mul(size).sum().div(size.sum());
+            recall = recall.mul(size).sum().div(size.sum());
         }
-        return precision.getDouble();
+        return recall.getDouble();
     }
 
     @Override
     public void reset() {
         if (tp != null) {
             tp.fill_(0);
-            fp.fill_(0);
             size.fill_(0);
         }
     }
