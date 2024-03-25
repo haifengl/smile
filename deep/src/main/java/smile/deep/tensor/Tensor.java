@@ -150,6 +150,26 @@ public class Tensor {
     }
 
     /**
+     * Fills this tensor with the specified value.
+     * @param x the value.
+     * @return this tensor.
+     */
+    public Tensor fill_(int x) {
+        value.fill_(new Scalar(x));
+        return this;
+    }
+
+    /**
+     * Fills this tensor with the specified value.
+     * @param x the value.
+     * @return this tensor.
+     */
+    public Tensor fill_(double x) {
+        value.fill_(new Scalar(x));
+        return this;
+    }
+
+    /**
      * Returns a tensor index vector.
      * @param indices the indices along the dimensions.
      * @return the index vector.
@@ -176,20 +196,20 @@ public class Tensor {
     }
 
     /**
-     * Updates a portion of tensor in place.
+     * Updates a portion of tensor.
      * @param x the new sub-tensor values.
      * @param indices the indices along the dimensions.
-     * @return this tensor.
+     * @return the output tensor.
      */
     public Tensor put(Tensor x, Index... indices) {
         return Tensor.of(value.index_put(indexList(indices), x.value));
     }
 
     /**
-     * Updates a portion of tensor in place.
+     * Updates a portion of tensor.
      * @param index the sub-tensor index.
      * @param source the sub-tensor value.
-     * @return this tensor.
+     * @return the output tensor.
      */
     public Tensor put(Tensor index, Tensor source) {
         return Tensor.of(value.put(index.value, source.value));
@@ -232,7 +252,8 @@ public class Tensor {
      * @return the sub-tensor.
      */
     public Tensor get(Tensor index) {
-        return Tensor.of(value.get(index.value));
+        TensorIndexVector vector = new TensorIndexVector(new TensorIndex(index.value));
+        return Tensor.of(value.index(vector));
     }
 
     /**
@@ -598,12 +619,13 @@ public class Tensor {
      * @param index the indices of elements to scatter, can be either empty or
      *             of the same dimensionality as src. When empty, the operation
      *             returns self unchanged.
-     * @param src the source element(s) to scatter.
-     * @param reduce reduction operation to apply, can be either "add" or "multiply".
+     * @param source the source elements to scatter and reduce.
+     * @param reduce the reduction operation to apply for non-unique indices
+     *              ("sum", "prod", "mean", "amax", or "amin").
      * @return the output tensor.
      */
-    public Tensor scatter(int dim, Tensor index, Tensor src, String reduce) {
-        return Tensor.of(value.scatter(dim, index.value, src.value, reduce));
+    public Tensor scatterReduce(int dim, Tensor index, Tensor source, String reduce) {
+        return Tensor.of(value.scatter_reduce(dim, index.value, source.value, reduce));
     }
 
     /**
@@ -618,12 +640,13 @@ public class Tensor {
      * @param index the indices of elements to scatter, can be either empty or
      *             of the same dimensionality as src. When empty, the operation
      *             returns self unchanged.
-     * @param src the source element(s) to scatter.
-     * @param reduce reduction operation to apply, can be either "add" or "multiply".
+     * @param source the source elements to scatter and reduce.
+     * @param reduce the reduction operation to apply for non-unique indices
+     *              ("sum", "prod", "mean", "amax", or "amin").
      * @return this tensor.
      */
-    public Tensor scatter_(int dim, Tensor index, Tensor src, String reduce) {
-        value.scatter_(dim, index.value, src.value, reduce);
+    public Tensor scatterReduce_(int dim, Tensor index, Tensor source, String reduce) {
+        value.scatter_reduce_(dim, index.value, source.value, reduce);
         return this;
     }
 
