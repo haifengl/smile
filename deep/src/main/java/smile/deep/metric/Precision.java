@@ -66,7 +66,7 @@ public class Precision implements Metric {
 
     @Override
     public String toString() {
-        return String.format("Precision = %.2f", 100 * compute());
+        return String.format("%s = %.2f", name(), 100 * compute());
     }
 
     @Override

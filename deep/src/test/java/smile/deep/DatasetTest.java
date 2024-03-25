@@ -27,6 +27,7 @@ import org.junit.Test;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
 import smile.deep.metric.Precision;
+import smile.deep.metric.Recall;
 import smile.deep.tensor.Device;
 import smile.io.Read;
 import smile.util.Paths;
@@ -80,10 +81,12 @@ public class DatasetTest {
                 new Accuracy(),
                 new Precision(Averaging.Micro),
                 new Precision(Averaging.Macro),
-                new Precision(Averaging.Weighted));
-        System.out.format("Training Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
-        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Micro-Precision"));
-        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Macro-Precision"));
-        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Weighted-Precision"));
+                new Precision(Averaging.Weighted),
+                new Recall(Averaging.Micro),
+                new Recall(Averaging.Macro),
+                new Recall(Averaging.Weighted));
+        for (var entry : metrics.entrySet()) {
+            System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+        }
     }
 }

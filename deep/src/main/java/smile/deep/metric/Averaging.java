@@ -36,11 +36,12 @@ public enum Averaging {
      * the performance metric based on the total counts. So, the micro-average
      * gives equal weight to each instance, regardless of the class label
      * and the number of samples in the class. Note that micro-average
-     * precision equals micro-average recall and equals accuracy.
+     * precision and micro-average recall are equal to accuracy.
      */
     Micro,
     /**
-     * Weighted macro for imbalanced classes.
+     * Weighted macro for imbalanced classes. Note that weighted recall is
+     * equal to accuracy.
      */
     Weighted
 }
