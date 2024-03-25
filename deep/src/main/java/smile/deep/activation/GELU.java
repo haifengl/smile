@@ -21,18 +21,18 @@ import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
 
 /**
- * Rectified Linear Unit activation function.
+ * Gaussian Error Linear Unit activation function.
  *
  * @author Haifeng Li
  */
-public class ReLU implements ActivationFunction {
+public class GELU implements ActivationFunction {
     @Override
     public String name() {
-        return "ReLU";
+        return "GELU";
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.relu(x);
+        return torch.silu(x);
     }
 }

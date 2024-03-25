@@ -16,13 +16,8 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
-import org.bytedeco.pytorch.global.torch;
-import smile.deep.activation.LogSoftmax;
-import smile.deep.activation.ReLU;
-import smile.deep.activation.Softmax;
+import smile.deep.activation.*;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -50,51 +45,114 @@ public interface Layer {
     Module asTorch();
 
     /**
-     * Returns a linear (fully connected) layer.
+     * Returns a linear fully connected layer.
      * @param in the number of input features.
      * @param out the number of output features.
-     * @return a linear layer.
+     * @return a fully connected layer.
      */
     static FullyConnectedLayer linear(int in, int out) {
         return new FullyConnectedLayer(in, out);
     }
 
     /**
-     * Returns a ReLU layer.
+     * Returns a fully connected layer with ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
-     * @return a ReLU layer.
+     * @return a fully connected layer.
      */
     static FullyConnectedLayer relu(int in, int out) {
         return relu(in, out, 0.0);
     }
 
     /**
-     * Returns a ReLU layer.
+     * Returns a fully connected layer with ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
      * @param dropout the optional dropout probability.
-     * @return a ReLU layer.
+     * @return a fully connected layer.
      */
     static FullyConnectedLayer relu(int in, int out, double dropout) {
         return new FullyConnectedLayer(in, out, new ReLU(), dropout);
     }
 
     /**
-     * Returns a softmax layer.
+     * Returns a fully connected layer with leaky ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
-     * @return a softmax layer.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer leaky(int in, int out) {
+        return leaky(in, out, 0.0);
+    }
+
+    /**
+     * Returns a fully connected layer with leaky ReLU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param dropout the optional dropout probability.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer leaky(int in, int out, double dropout) {
+        return new FullyConnectedLayer(in, out, new LeakyReLU(), dropout);
+    }
+
+    /**
+     * Returns a fully connected layer with GELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer gelu(int in, int out) {
+        return silu(in, out, 0.0);
+    }
+
+    /**
+     * Returns a fully connected layer with GELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param dropout the optional dropout probability.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer gelu(int in, int out, double dropout) {
+        return new FullyConnectedLayer(in, out, new GELU(), dropout);
+    }
+
+    /**
+     * Returns a fully connected layer with SiLU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer silu(int in, int out) {
+        return silu(in, out, 0.0);
+    }
+
+    /**
+     * Returns a fully connected layer with SiLU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param dropout the optional dropout probability.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer silu(int in, int out, double dropout) {
+        return new FullyConnectedLayer(in, out, new SiLU(), dropout);
+    }
+
+    /**
+     * Returns a fully connected layer with softmax activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
      */
     static FullyConnectedLayer softmax(int in, int out) {
         return new FullyConnectedLayer(in, out, new Softmax());
     }
 
     /**
-     * Returns a log softmax layer.
+     * Returns a fully connected layer with log softmax activation function.
      * @param in the number of input features.
      * @param out the number of output features.
-     * @return a log softmax layer.
+     * @return a fully connected layer.
      */
     static FullyConnectedLayer logSoftmax(int in, int out) {
         return new FullyConnectedLayer(in, out, new LogSoftmax());
@@ -105,11 +163,10 @@ public interface Layer {
      * @param in the number of input channels.
      * @param out the number of output features.
      * @param size the window size.
-     * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
      * @return a convolutional layer.
      */
     static Conv2dLayer conv2d(int in, int out, int size, int pool) {
-        return new Conv2dLayer(in, out, size, 1, 1, 1, true, pool);
+        return new Conv2dLayer(in, out, size, 1, 1, 1, true);
     }
 
     /**
@@ -124,11 +181,10 @@ public interface Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
-     * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int stride, int dilation, int groups, boolean bias, int pool) {
-        return new Conv2dLayer(in, out, size, stride, dilation, groups, bias, pool);
+    static Conv2dLayer conv2d(int in, int out, int size, int stride, int dilation, int groups, boolean bias) {
+        return new Conv2dLayer(in, out, size, stride, dilation, groups, bias);
     }
 
     /**

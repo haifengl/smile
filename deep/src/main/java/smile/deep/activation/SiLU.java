@@ -21,18 +21,18 @@ import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
 
 /**
- * Rectified Linear Unit activation function.
+ * Sigmoid Linear Unit activation function.
  *
  * @author Haifeng Li
  */
-public class ReLU implements ActivationFunction {
+public class SiLU implements ActivationFunction {
     @Override
     public String name() {
-        return "ReLU";
+        return "SiLU";
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.relu(x);
+        return torch.silu(x);
     }
 }

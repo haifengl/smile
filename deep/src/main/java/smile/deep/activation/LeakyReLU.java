@@ -21,18 +21,37 @@ import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
 
 /**
- * Rectified Linear Unit activation function.
+ * Sigmoid Linear Unit activation function.
  *
  * @author Haifeng Li
  */
-public class ReLU implements ActivationFunction {
+public class LeakyReLU implements ActivationFunction {
+    /** Controls the angle of the negative slope. */
+    final double negativeSlop;
+
+    /**
+     * Constructor.
+     */
+    public LeakyReLU() {
+        this(0.01);
+    }
+
+    /**
+     * Constructor.
+     * @param negativeSlope Controls the angle of the negative slope, which is
+     *                     used for negative input values.
+     */
+    public LeakyReLU(double negativeSlope) {
+        this.negativeSlop = negativeSlope;
+    }
+
     @Override
     public String name() {
-        return "ReLU";
+        return String.format("LeakyReLU(%.4f)", negativeSlop);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.relu(x);
+        return torch.leaky_relu(x, negativeSlop, false);
     }
 }
