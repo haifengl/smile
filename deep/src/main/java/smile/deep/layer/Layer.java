@@ -20,6 +20,9 @@ import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.activation.LogSoftmax;
+import smile.deep.activation.ReLU;
+import smile.deep.activation.Softmax;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -52,8 +55,8 @@ public interface Layer {
      * @param out the number of output features.
      * @return a linear layer.
      */
-    static LinearLayer linear(int in, int out) {
-        return new LinearLayer(in, out);
+    static FullyConnectedLayer linear(int in, int out) {
+        return new FullyConnectedLayer(in, out);
     }
 
     /**
@@ -62,7 +65,7 @@ public interface Layer {
      * @param out the number of output features.
      * @return a ReLU layer.
      */
-    static ReLULayer relu(int in, int out) {
+    static FullyConnectedLayer relu(int in, int out) {
         return relu(in, out, 0.0);
     }
 
@@ -73,8 +76,8 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a ReLU layer.
      */
-    static ReLULayer relu(int in, int out, double dropout) {
-        return new ReLULayer(in, out, dropout);
+    static FullyConnectedLayer relu(int in, int out, double dropout) {
+        return new FullyConnectedLayer(in, out, new ReLU(), dropout);
     }
 
     /**
@@ -83,8 +86,8 @@ public interface Layer {
      * @param out the number of output features.
      * @return a softmax layer.
      */
-    static SoftmaxLayer softmax(int in, int out) {
-        return new SoftmaxLayer(in, out);
+    static FullyConnectedLayer softmax(int in, int out) {
+        return new FullyConnectedLayer(in, out, new Softmax());
     }
 
     /**
@@ -93,8 +96,8 @@ public interface Layer {
      * @param out the number of output features.
      * @return a log softmax layer.
      */
-    static LogSoftmaxLayer logSoftmax(int in, int out) {
-        return new LogSoftmaxLayer(in, out);
+    static FullyConnectedLayer logSoftmax(int in, int out) {
+        return new FullyConnectedLayer(in, out, new LogSoftmax());
     }
 
     /**
@@ -105,31 +108,8 @@ public interface Layer {
      * @param pool the max pooling kernel size. Sets it to zero to skip pooling.
      * @return a convolutional layer.
      */
-    static Layer conv2d(int in, int out, int size, int pool) {
-        return new Layer() {
-            Conv2dImpl module;
-
-            @Override
-            public void register(String name, Layer parent) {
-                LongPointer p = new LongPointer(1).put(size);
-                this.module = parent.asTorch().register_module(name, new Conv2dImpl(in, out, p));
-            }
-
-            @Override
-            public Tensor forward(Tensor input) {
-                org.bytedeco.pytorch.Tensor x = input.asTorch();
-                x = torch.relu(module.forward(x));
-                if (pool > 0) {
-                    x = torch.max_pool2d(x, pool, pool);
-                }
-                return Tensor.of(x);
-            }
-
-            @Override
-            public Conv2dImpl asTorch() {
-                return module;
-            }
-        };
+    static Conv2dLayer conv2d(int in, int out, int size, int pool) {
+        return new Conv2dLayer(in, out, size, 1, 1, 1, true, pool);
     }
 
     /**
