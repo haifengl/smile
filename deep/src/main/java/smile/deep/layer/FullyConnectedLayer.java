@@ -18,20 +18,23 @@ package smile.deep.layer;
 
 import org.bytedeco.pytorch.LinearImpl;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.activation.ActivationFunction;
 import smile.deep.tensor.Tensor;
 
 /**
- * A layer with rectified linear unit (ReLU) activation function.
+ * A fully connected layer with nonlinear activation function.
  *
  * @author Haifeng Li
  */
-public class ReLULayer implements Layer {
+public class FullyConnectedLayer implements Layer {
     /** The number of input features. */
-    int in;
+    final int in;
     /** The number of output features. */
-    int out;
-    /** The dropout probability. */
-    double dropout;
+    final int out;
+    /** The optional activation function. */
+    final ActivationFunction activation;
+    /** The optional dropout probability. */
+    final double dropout;
     /** Implementation. */
     LinearImpl module;
 
@@ -40,19 +43,31 @@ public class ReLULayer implements Layer {
      * @param in the number of input features.
      * @param out the number of output features.
      */
-    public ReLULayer(int in, int out) {
-        this(in, out, 0.0);
+    public FullyConnectedLayer(int in, int out) {
+        this(in, out, null, 0.0);
     }
 
     /**
      * Constructor.
      * @param in the number of input features.
      * @param out the number of output features.
+     * @param activation the non-linear activation function.
+     */
+    public FullyConnectedLayer(int in, int out, ActivationFunction activation) {
+        this(in, out, activation, 0.0);
+    }
+
+    /**
+     * Constructor.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param activation the non-linear activation function.
      * @param dropout the optional dropout probability.
      */
-    public ReLULayer(int in, int out, double dropout) {
+    public FullyConnectedLayer(int in, int out, ActivationFunction activation, double dropout) {
         this.in = in;
         this.out = out;
+        this.activation = activation;
         this.dropout = dropout;
         this.module = new LinearImpl(in, out);
     }
@@ -68,7 +83,10 @@ public class ReLULayer implements Layer {
         if (x.dim() > 1) {
             x = x.reshape(x.size(0), in);
         }
-        x = torch.relu(module.forward(x));
+        x = module.forward(x);
+        if (activation != null) {
+            x = activation.apply(x);
+        }
         if (dropout > 0.0) {
             x = torch.dropout(x, dropout, module.is_training());
         }
