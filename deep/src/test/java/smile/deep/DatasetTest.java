@@ -25,6 +25,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.deep.metric.Accuracy;
+import smile.deep.metric.Averaging;
+import smile.deep.metric.Precision;
 import smile.deep.tensor.Device;
 import smile.io.Read;
 import smile.util.Paths;
@@ -57,13 +59,15 @@ public class DatasetTest {
 
     @Test
     public void test() throws IOException {
+        Device device = Device.preferredDevice();
+        device.setDefaultDevice();
         Model net = Model.of(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
                 Layer.logSoftmax(32, 10)
         );
 
-        net.to(Device.preferredDevice());
+        net.to(device);
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
@@ -72,7 +76,14 @@ public class DatasetTest {
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset);
-        Map<String, Double> metrics = net.eval(dataset, new Accuracy());
+        Map<String, Double> metrics = net.eval(dataset,
+                new Accuracy(),
+                new Precision(Averaging.Micro),
+                new Precision(Averaging.Macro),
+                new Precision(Averaging.Weighted));
         System.out.format("Training Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
+        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Micro-Precision"));
+        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Macro-Precision"));
+        System.out.format("Training Micro-Precision: %.2f%%\n", 100 * metrics.get("Weighted-Precision"));
     }
 }
