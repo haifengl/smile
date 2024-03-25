@@ -21,7 +21,7 @@ import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
 
 /**
- * Rectified linear unit (ReLU) activation function.
+ * Rectified Linear Unit activation function.
  *
  * @author Haifeng Li
  */
