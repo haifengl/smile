@@ -52,6 +52,21 @@ public class Device {
         return value.str().getString();
     }
 
+    /** Returns true if the device is CUDA. */
+    public boolean isCUDA() {
+        return value.is_cuda();
+    }
+
+    /** Returns true if the device is CPU. */
+    public boolean isCPU() {
+        return value.is_cpu();
+    }
+
+    /** Returns true if the device is MPS. */
+    public boolean isMPS() {
+        return value.is_mps();
+    }
+
     /** Returns the PyTorch device object. */
     public org.bytedeco.pytorch.Device asTorch() {
         return this.value;
