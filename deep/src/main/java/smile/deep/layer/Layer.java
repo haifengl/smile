@@ -139,6 +139,36 @@ public interface Layer {
     }
 
     /**
+     * Returns a fully connected layer with tanh activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer tanh(int in, int out) {
+        return new FullyConnectedLayer(in, out, new Tanh());
+    }
+
+    /**
+     * Returns a fully connected layer with sigmoid activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer sigmoid(int in, int out) {
+        return new FullyConnectedLayer(in, out, new Sigmoid());
+    }
+
+    /**
+     * Returns a fully connected layer with log sigmoid activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer logSigmoid(int in, int out) {
+        return new FullyConnectedLayer(in, out, new LogSigmoid());
+    }
+
+    /**
      * Returns a fully connected layer with softmax activation function.
      * @param in the number of input features.
      * @param out the number of output features.
@@ -156,6 +186,36 @@ public interface Layer {
      */
     static FullyConnectedLayer logSoftmax(int in, int out) {
         return new FullyConnectedLayer(in, out, new LogSoftmax());
+    }
+
+    /**
+     * Returns a fully connected layer with tanh shrink activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer tanhShrink(int in, int out) {
+        return new FullyConnectedLayer(in, out, new TanhShrink());
+    }
+
+    /**
+     * Returns a fully connected layer with soft shrink activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer softShrink(int in, int out) {
+        return new FullyConnectedLayer(in, out, new SoftShrink());
+    }
+
+    /**
+     * Returns a fully connected layer with hard shrink activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static FullyConnectedLayer hardShrink(int in, int out) {
+        return new FullyConnectedLayer(in, out, new HardShrink());
     }
 
     /**
