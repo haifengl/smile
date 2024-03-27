@@ -148,6 +148,9 @@ public abstract class Model implements Layer {
                 error.backward();
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
+                // Explicitly free native memory
+                data.deallocate();
+                target.deallocate();
                 batchIndex++;
             }
 
@@ -168,6 +171,12 @@ public abstract class Model implements Layer {
             logger.info(msg);
             if (checkpoint != null) {
                 save(String.format("%s-%d.pt", checkpoint, epoch));
+            }
+
+            // Free up device cache
+            System.gc();
+            if (device != null) {
+                device.emptyCache();
             }
         }
     }
