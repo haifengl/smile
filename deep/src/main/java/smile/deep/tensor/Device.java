@@ -17,6 +17,7 @@
 package smile.deep.tensor;
 
 import org.bytedeco.pytorch.global.torch;
+import org.bytedeco.pytorch.global.torch_cuda;
 
 /**
  * The compute device on which a tensor is stored.
@@ -65,6 +66,15 @@ public class Device {
     /** Returns true if the device is MPS. */
     public boolean isMPS() {
         return value.is_mps();
+    }
+
+    /** Releases all unoccupied cached memory. */
+    public void emptyCache() {
+        if (isCUDA()) {
+            torch_cuda.getAllocator().emptyCache();
+        } else if (isMPS()) {
+            torch.getMPSHooks().emptyCache();
+        }
     }
 
     /** Returns the PyTorch device object. */
