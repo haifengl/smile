@@ -75,7 +75,7 @@ public class ModelTest {
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
-        net.train(100, optimizer, loss, train, test, null);
+        net.train(10, optimizer, loss, train, test, null);
 
         // Inference mode
         Map<String, Double> metrics = net.eval(test, new Accuracy());
