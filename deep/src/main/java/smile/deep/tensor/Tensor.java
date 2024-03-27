@@ -95,6 +95,16 @@ public class Tensor {
     }
 
     /**
+     * Explicitly releases native memory without waiting after
+     * the garbage collector. The caller should not use this tensor
+     * any more.
+     */
+    public void deallocate() {
+        value.deallocate();
+        value = null;
+    }
+
+    /**
      * Returns the element data type.
      * @return the element data type.
      */
