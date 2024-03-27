@@ -17,6 +17,7 @@
 package smile.llm;
 
 import org.bytedeco.pytorch.Module;
+import smile.deep.layer.Layer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
@@ -31,7 +32,7 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class PositionalEncoding {
+public class PositionalEncoding implements Layer {
     /** The module to register the buffer. */
     private Module module;
     /** The dropout probability. */
@@ -66,11 +67,7 @@ public class PositionalEncoding {
         module.register_buffer("pe", pe.asTorch());
     }
 
-    /**
-     * Returns the positional encoding of a sequence.
-     * @param x the sequence fed to the positional encoder model.
-     * @return the encoded tensor.
-     */
+    @Override
     public Tensor forward(Tensor x) {
         Tensor p = pe.get(
                 slice(null, x.size(0)),
@@ -78,6 +75,16 @@ public class PositionalEncoding {
         );
         Tensor xp = x.add(p);
         return Tensor.of(torch.dropout(xp.asTorch(), dropout, true));
+    }
+
+    @Override
+    public void register(String name, Layer parent) {
+        module = parent.asTorch().register_module(name, module);
+    }
+
+    @Override
+    public Module asTorch() {
+        return module;
     }
 
     /**
