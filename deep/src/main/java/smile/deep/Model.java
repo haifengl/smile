@@ -127,6 +127,7 @@ public abstract class Model implements Layer {
      * @param train the training data.
      * @param eval optional evaluation data.
      * @param checkpoint optional checkpoint file path.
+     * @param metrics the evaluation metrics.
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, Metric... metrics) {
         train(); // training mode
@@ -184,6 +185,7 @@ public abstract class Model implements Layer {
     /**
      * Evaluates the model accuracy on a test dataset.
      * @param dataset the test dataset.
+     * @param metrics the evaluation metrics.
      * @return the accuracy.
      */
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {

@@ -26,7 +26,10 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public interface Metric {
-    /** Returns the name of metric. */
+    /**
+     * Returns the name of metric.
+     * @return the name of metric.
+     */
     String name();
 
     /**
@@ -39,9 +42,10 @@ public interface Metric {
     void update(Tensor output, Tensor target);
 
     /**
-     * Computes the metric values from the metric state, which are updated by
+     * Computes the metric value from the metric state, which are updated by
      * previous update() calls. The compute frequency can be less than the
      * update frequency.
+     * @return the metric value.
      */
     double compute();
 
