@@ -51,7 +51,10 @@ public class Tensor {
         return Tensor.of(value.to());
     }
 
-    /** Returns the PyTorch tensor object. */
+    /**
+     * Returns the PyTorch tensor object.
+     * @return the PyTorch tensor object.
+     */
     public org.bytedeco.pytorch.Tensor asTorch() {
         return this.value;
     }
@@ -148,6 +151,7 @@ public class Tensor {
      * but with the specified shape. This method returns a view
      * if shape is compatible with the current shape.
      *
+     * @param shape the new shape of tensor.
      * @return the tensor with the specified shape.
      */
     public Tensor reshape(long... shape) {
@@ -322,22 +326,34 @@ public class Tensor {
         return x.item_double();
     }
 
-    /** Returns the int value when the tensor holds a single value. */
+    /**
+     * Returns the int value when the tensor holds a single value.
+     * @return the int value when the tensor holds a single value.
+     */
     public int toInt() {
         return value.item_int();
     }
 
-    /** Returns the long value when the tensor holds a single value. */
+    /**
+     * Returns the long value when the tensor holds a single value.
+     * @return the long value when the tensor holds a single value.
+     */
     public long toLong() {
         return value.item_long();
     }
 
-    /** Returns the float value when the tensor holds a single value. */
+    /**
+     * Returns the float value when the tensor holds a single value.
+     * @return the float value when the tensor holds a single value.
+     */
     public float toFloat() {
         return value.item_float();
     }
 
-    /** Returns the double value when the tensor holds a single value. */
+    /**
+     * Returns the double value when the tensor holds a single value.
+     * @return the double value when the tensor holds a single value.
+     */
     public double toDouble() {
         return value.item_double();
     }
@@ -935,6 +951,7 @@ public class Tensor {
 
     /**
      * Returns logical AND of two boolean tensors.
+     * @param other another tensor.
      * @return a new tensor of logical and results.
      */
     public Tensor and(Tensor other) {
@@ -943,6 +960,7 @@ public class Tensor {
 
     /**
      * Returns logical AND of two boolean tensors.
+     * @param other another tensor.
      * @return this tensor.
      */
     public Tensor and_(Tensor other) {
@@ -952,6 +970,7 @@ public class Tensor {
 
     /**
      * Returns logical OR of two boolean tensors.
+     * @param other another tensor.
      * @return a new tensor of logical and results.
      */
     public Tensor or(Tensor other) {
@@ -960,6 +979,7 @@ public class Tensor {
 
     /**
      * Returns logical OR of two boolean tensors.
+     * @param other another tensor.
      * @return this tensor.
      */
     public Tensor or_(Tensor other) {
@@ -968,7 +988,7 @@ public class Tensor {
     }
 
     /**
-     * Randomly zeroes some of the elements of the input tensor
+     * Randomly zeroes some elements of the input tensor
      * with probability p.
      *
      * @param p the probability of an element to be zeroed.
@@ -979,7 +999,7 @@ public class Tensor {
     }
 
     /**
-     * Randomly zeroes some of the elements in place
+     * Randomly zeroes some elements in place
      * with probability p.
      *
      * @param p the probability of an element to be zeroed.
@@ -1261,7 +1281,11 @@ public class Tensor {
             this.value = new TensorOptions();
         }
 
-        /** Sets the data type of the elements stored in the tensor. */
+        /**
+         * Sets the data type of the elements stored in the tensor.
+         * @param type the data type.
+         * @return this options object.
+         */
         public Options dtype(ScalarType type) {
             value = value.dtype(new ScalarTypeOptional(type.value));
             return this;
@@ -1277,13 +1301,22 @@ public class Tensor {
             return this;
         }
 
-        /** Sets strided (dense) or sparse tensor. */
+        /**
+         * Sets strided (dense) or sparse tensor.
+         * @param layout the tensor layout.
+         * @return this options object.
+         */
         public Options layout(Layout layout) {
             value = value.layout(new LayoutOptional(layout.value));
             return this;
         }
 
-        /** Set true if gradients need to be computed for this Tensor. */
+        /**
+         * Set true if gradients need to be computed for this tensor.
+         * @param required the flag indicating if gradients need to be
+         *                computed for this tensor.
+         * @return this options object.
+         */
         public Options requireGradients(boolean required) {
             value = value.requires_grad(new BoolOptional(required));
             return this;

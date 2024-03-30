@@ -24,6 +24,7 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public enum DeviceType {
+    /** CPU */
     CPU(torch.DeviceType.CPU),
     /** NVIDIA GPU */
     CUDA(torch.DeviceType.CUDA),
@@ -41,6 +42,7 @@ public enum DeviceType {
     /**
      * Returns the byte value of device type,
      * which is compatible with PyTorch.
+     * @return the byte value of device type.
      */
     public byte value() {
         return value.value;

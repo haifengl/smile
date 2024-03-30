@@ -53,17 +53,26 @@ public class Device {
         return value.str().getString();
     }
 
-    /** Returns true if the device is CUDA. */
+    /**
+     * Returns true if the device is CUDA.
+     * @return true if the device is CUDA.
+     */
     public boolean isCUDA() {
         return value.is_cuda();
     }
 
-    /** Returns true if the device is CPU. */
+    /**
+     * Returns true if the device is CPU.
+     * @return true if the device is CPU.
+     */
     public boolean isCPU() {
         return value.is_cpu();
     }
 
-    /** Returns true if the device is MPS. */
+    /**
+     * Returns true if the device is MPS.
+     * @return true if the device is MPS.
+     */
     public boolean isMPS() {
         return value.is_mps();
     }
@@ -77,12 +86,18 @@ public class Device {
         }
     }
 
-    /** Returns the PyTorch device object. */
+    /**
+     * Returns the PyTorch device object.
+     * @return the PyTorch device object.
+     */
     public org.bytedeco.pytorch.Device asTorch() {
         return this.value;
     }
 
-    /** Returns the preferred (most powerful) device. */
+    /**
+     * Returns the preferred (most powerful) device.
+     * @return the preferred (most powerful) device.
+     */
     public static Device preferredDevice() {
         if (torch.cuda_is_available()) {
             return Device.CUDA();
@@ -145,6 +160,10 @@ public class Device {
         torch.device(value);
     }
 
+    /**
+     * Returns the device type.
+     * @return the device type.
+     */
     public DeviceType type() {
         return type;
     }

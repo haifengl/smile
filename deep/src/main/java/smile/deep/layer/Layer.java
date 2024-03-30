@@ -41,7 +41,10 @@ public interface Layer {
      */
     Tensor forward(Tensor input);
 
-    /** Returns the PyTorch Module object. */
+    /**
+     * Returns the PyTorch Module object.
+     * @return the PyTorch Module object.
+     */
     Module asTorch();
 
     /**
@@ -225,7 +228,7 @@ public interface Layer {
      * @param size the window size.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int pool) {
+    static Conv2dLayer conv2d(int in, int out, int size) {
         return new Conv2dLayer(in, out, size, 1, 1, 1, true);
     }
 
