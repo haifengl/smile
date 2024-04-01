@@ -65,7 +65,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>3.0.3</version>
+      <version>3.1.0</version>
     </dependency>
 ```
 
@@ -73,18 +73,18 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.0.3"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:3.0.3")
+    implementation("com.github.haifengl:smile-kotlin:3.1.0")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "3.0.3"]
+    [org.clojars.haifengl/smile "3.1.0"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
@@ -170,7 +170,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>3.0.3</version>
+      <version>3.1.0</version>
     </dependency>
 ```
 
