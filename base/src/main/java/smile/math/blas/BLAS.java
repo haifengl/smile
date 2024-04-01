@@ -39,26 +39,7 @@ public interface BLAS {
      * @return a BLAS instance.
      */
     static BLAS getInstance() {
-        BLAS mkl = MKL();
-        return mkl != null ? mkl : new smile.math.blas.openblas.OpenBLAS();
-    }
-
-    /**
-     * Creates an MKL instance.
-     * @return a BLAS instance of MKL.
-     */
-    static BLAS MKL() {
-        org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BLAS.class);
-
-        try {
-            Class<?> clazz = Class.forName("smile.math.blas.mkl.MKL");
-            logger.info("smile-mkl module is available.");
-            return (BLAS) clazz.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            logger.debug("Failed to create MKL instance: ", e);
-        }
-
-        return null;
+        return new smile.math.blas.openblas.OpenBLAS();
     }
 
     /**
