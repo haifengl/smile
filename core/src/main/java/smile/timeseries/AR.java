@@ -49,7 +49,7 @@ import smile.stat.Hypothesis;
  * and the second approach is to use some information criteria.
  * <p>
  * Autoregression is a good start point for more complicated models.
- * They often fit quite well (don’t need the MA terms).
+ * They often fit quite well (don't need the MA terms).
  * And the fitting process is fast (MLEs require some iterations).
  * In applications, easily fitting autoregressions is important
  * for obtaining initial values of parameters and in getting estimates of

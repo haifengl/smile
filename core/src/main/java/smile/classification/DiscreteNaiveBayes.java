@@ -119,7 +119,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
         /**
          * Complement Naive Bayes.
          * To deal with skewed training data, CNB estimates parameters
-         * of a class c using data from all classes except c. CNB’s estimates
+         * of a class c using data from all classes except c. CNB's estimates
          * may be more effective because each uses a more even amount of
          * training data per class, which will lessen the bias in the weight
          * estimates.
@@ -129,7 +129,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
         /**
          * Weight-normalized Complement Naive Bayes.
          * In practice, it is often the case that weights tend to lean toward
-         * one class or the other. When the magnitude of Naive Bayes’ weight
+         * one class or the other. When the magnitude of Naive Bayes' weight
          * vector is larger in one class than the others, the larger magnitude
          * class may be preferred. To correct for the fact that some classes
          * have greater dependencies, WCNB normalizes the weight vectors.

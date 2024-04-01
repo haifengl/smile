@@ -24,7 +24,7 @@ import smile.json._
   *
   * Vega-Lite determines whether scale domains should be unioned.
   * If the scale domain is unioned, axes and legends can be merged.
-  * Otherwise they have to be independent.
+  * Otherwise, they have to be independent.
   *
   * There are two options to resolve a scale, axis, or legend: "shared"
   * and "independent". Independent scales imply independent axes and legends.
