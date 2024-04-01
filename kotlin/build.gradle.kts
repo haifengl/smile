@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "com.github.haifengl"
-version = "3.0.3"
+version = "3.1.0"
 
 repositories {
     mavenCentral()
@@ -24,8 +24,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:3.0.3")
-    api("com.github.haifengl:smile-nlp:3.0.3")
+    api("com.github.haifengl:smile-core:3.1.0")
+    api("com.github.haifengl:smile-nlp:3.1.0")
 }
 
 // Copy jar to shell lib
