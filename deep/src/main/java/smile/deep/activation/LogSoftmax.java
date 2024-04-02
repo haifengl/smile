@@ -25,10 +25,12 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class LogSoftmax implements ActivationFunction {
-    @Override
-    public String name() {
-        return "LogSoftmax";
+public class LogSoftmax extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public LogSoftmax() {
+        super("LogSoftmax", false);
     }
 
     @Override

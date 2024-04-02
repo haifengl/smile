@@ -25,14 +25,17 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class SiLU implements ActivationFunction {
-    @Override
-    public String name() {
-        return "SiLU";
+public class SiLU extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public SiLU(boolean inplace) {
+        super("SiLU", inplace);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.silu(x);
+        return isInplace() ? torch.silu_(x) : torch.silu(x);
     }
 }

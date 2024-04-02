@@ -25,10 +25,12 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class TanhShrink implements ActivationFunction {
-    @Override
-    public String name() {
-        return "TanhShrink";
+public class TanhShrink extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public TanhShrink() {
+        super("TanhShrink", false);
     }
 
     @Override

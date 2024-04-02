@@ -25,14 +25,17 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class ReLU implements ActivationFunction {
-    @Override
-    public String name() {
-        return "ReLU";
+public class ReLU extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public ReLU(boolean inplace) {
+        super("ReLU", inplace);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.relu(x);
+        return isInplace() ? torch.relu_(x) : torch.relu(x);
     }
 }

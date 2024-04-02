@@ -25,14 +25,17 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class Sigmoid implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Sigmoid";
+public class Sigmoid extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public Sigmoid(boolean inplace) {
+        super("Sigmoid", inplace);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.sigmoid(x);
+        return isInplace() ? torch.sigmoid_(x) : torch.sigmoid(x);
     }
 }

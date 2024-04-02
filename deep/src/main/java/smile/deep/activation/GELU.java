@@ -25,14 +25,17 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class GELU implements ActivationFunction {
-    @Override
-    public String name() {
-        return "GELU";
+public class GELU extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public GELU(boolean inplace) {
+        super("GELU", inplace);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.silu(x);
+        return isInplace() ? torch.gelu_(x) : torch.gelu(x);
     }
 }
