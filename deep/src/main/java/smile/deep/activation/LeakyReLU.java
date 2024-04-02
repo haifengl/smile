@@ -25,33 +25,30 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class LeakyReLU implements ActivationFunction {
+public class LeakyReLU extends ActivationFunction {
     /** Controls the angle of the negative slope. */
-    final double negativeSlop;
+    final double negativeSlope;
 
     /**
      * Constructor.
      */
     public LeakyReLU() {
-        this(0.01);
+        this(0.01, false);
     }
 
     /**
      * Constructor.
      * @param negativeSlope Controls the angle of the negative slope, which is
      *                     used for negative input values.
+     * @param inplace true if the operation executes in-place.
      */
-    public LeakyReLU(double negativeSlope) {
-        this.negativeSlop = negativeSlope;
-    }
-
-    @Override
-    public String name() {
-        return String.format("LeakyReLU(%.4f)", negativeSlop);
+    public LeakyReLU(double negativeSlope, boolean inplace) {
+        super(String.format("LeakyReLU(%.4f)", negativeSlope), inplace);
+        this.negativeSlope = negativeSlope;
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.leaky_relu(x, negativeSlop, false);
+        return torch.leaky_relu(x, negativeSlope, isInplace());
     }
 }

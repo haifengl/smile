@@ -25,14 +25,17 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class Tanh implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Tanh";
+public class Tanh extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public Tanh(boolean inplace) {
+        super("Tanh", inplace);
     }
 
     @Override
     public Tensor apply(Tensor x) {
-        return torch.tanh(x);
+        return isInplace() ? torch.tanh_(x) : torch.tanh(x);
     }
 }

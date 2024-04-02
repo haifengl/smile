@@ -25,10 +25,12 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class Softmax implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Softmax";
+public class Softmax extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public Softmax() {
+        super("Softmax", false);
     }
 
     @Override

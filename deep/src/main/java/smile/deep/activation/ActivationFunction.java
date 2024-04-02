@@ -26,21 +26,46 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public interface ActivationFunction extends
+public abstract class ActivationFunction implements
         Function<org.bytedeco.pytorch.Tensor, org.bytedeco.pytorch.Tensor>,
         Serializable {
+    /** The function name. */
+    private final String name;
+    /** True if the operation executes in-place. */
+    private final boolean inplace;
+
+    /**
+     * Constructor.
+     * @param name the function name.
+     * @param inplace true if the operation executes in-place.
+     */
+    public ActivationFunction(String name, boolean inplace) {
+        this.name = name;
+        this.inplace = inplace;
+    }
+
     /**
      * Returns the name of activation function.
      * @return the name of activation function.
      */
-    String name();
+    public String name() {
+        return name;
+    }
+
+    /**
+     * Returns true if the operation executes in-place.
+     * @return true if the operation executes in-place.
+     */
+    public boolean isInplace() {
+        return inplace;
+    }
 
     /**
      * Applies this function to the given argument.
      * @param x a tensor.
      * @return the output tensor.
      */
-    default Tensor apply(Tensor x) {
+    public Tensor apply(Tensor x) {
         return Tensor.of(apply(x.asTorch()));
     }
 }

@@ -25,10 +25,12 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class LogSigmoid implements ActivationFunction {
-    @Override
-    public String name() {
-        return "LogSigmoid";
+public class LogSigmoid extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public LogSigmoid() {
+        super("LogSigmoid", false);
     }
 
     @Override

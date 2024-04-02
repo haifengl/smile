@@ -25,7 +25,7 @@ import org.bytedeco.pytorch.global.torch;
  *
  * @author Haifeng Li
  */
-public class SoftShrink implements ActivationFunction {
+public class SoftShrink extends ActivationFunction {
     /** The lambda value in the formulation. */
     final double lambda;
 
@@ -39,15 +39,11 @@ public class SoftShrink implements ActivationFunction {
      * @param lambda The lambda value in the formulation.
      */
     public SoftShrink(double lambda) {
+        super(String.format("SoftShrink(%.4f)", lambda), false);
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid lambda: " + lambda);
         }
         this.lambda = lambda;
-    }
-
-    @Override
-    public String name() {
-        return String.format("SoftShrink(%.4f)", lambda);
     }
 
     @Override
