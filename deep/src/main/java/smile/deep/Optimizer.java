@@ -67,7 +67,7 @@ public class Optimizer {
         options.weight_decay().put(decay);
         options.dampening().put(dampening);
         options.nesterov().put(nesterov);
-        return new Optimizer(new SGD(model.net.parameters(), options));
+        return new Optimizer(new SGD(model.asTorch().parameters(), options));
     }
 
     /**
@@ -97,7 +97,7 @@ public class Optimizer {
         options.eps().put(eps);
         options.weight_decay().put(decay);
         options.amsgrad().put(amsgrad);
-        return new Optimizer(new Adam(model.net.parameters(), options));
+        return new Optimizer(new Adam(model.asTorch().parameters(), options));
     }
 
     /**
@@ -127,7 +127,7 @@ public class Optimizer {
         options.eps().put(eps);
         options.weight_decay().put(decay);
         options.amsgrad().put(amsgrad);
-        return new Optimizer(new AdamW(model.net.parameters(), options));
+        return new Optimizer(new AdamW(model.asTorch().parameters(), options));
     }
 
     /**
@@ -158,6 +158,6 @@ public class Optimizer {
         options.momentum().put(momentum);
         options.weight_decay().put(decay);
         options.centered().put(centered);
-        return new Optimizer(new RMSprop(model.net.parameters(), options));
+        return new Optimizer(new RMSprop(model.asTorch().parameters(), options));
     }
 }
