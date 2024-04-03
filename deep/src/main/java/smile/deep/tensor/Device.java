@@ -48,6 +48,23 @@ public class Device {
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
     }
 
+    /**
+     * Constructor.
+     * @param device PyTorch device object.
+     */
+    Device(org.bytedeco.pytorch.Device device) {
+        this.value = device;
+        if (device.is_cpu()) {
+            type = DeviceType.CPU;
+        } else if (device.is_cuda()) {
+            type = DeviceType.CUDA;
+        } else if (device.is_mps()) {
+            type = DeviceType.MPS;
+        } else {
+            throw new IllegalArgumentException("Unsupported device: " + device);
+        }
+    }
+
     @Override
     public String toString() {
         return value.str().getString();
