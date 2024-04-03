@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.DropoutImpl;
+import org.bytedeco.pytorch.DropoutOptions;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -34,18 +35,27 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class DropoutLayer implements Layer {
-    /** The dropout probability. */
-    double p;
     /** Implementation. */
-    DropoutImpl module;
+    private DropoutImpl module;
 
     /**
      * Constructor.
      * @param p the dropout probability.
      */
     public DropoutLayer(double p) {
-        this.p = p;
-        this.module = new DropoutImpl(p);
+        this(p, true);
+    }
+
+    /**
+     * Constructor.
+     * @param p the dropout probability.
+     * @param inplace true if the operation executes in-place.
+     */
+    public DropoutLayer(double p, boolean inplace) {
+        DropoutOptions options = new DropoutOptions();
+        options.p().put(p);
+        options.inplace().put(inplace);
+        this.module = new DropoutImpl(options);
     }
 
     @Override
