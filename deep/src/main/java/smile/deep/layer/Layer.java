@@ -16,7 +16,6 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Tensor;
 
@@ -31,7 +30,7 @@ public interface Layer {
      * @param name the name of this layer.
      * @param parent the parent layer that this layer is registered to.
      */
-    void register(String name, Layer parent);
+    void register(String name, LayerBlock parent);
 
     /**
      * Forward propagation (or forward pass) through the layer.
@@ -40,12 +39,6 @@ public interface Layer {
      * @return the output tensor.
      */
     Tensor forward(Tensor input);
-
-    /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
-     */
-    Module asTorch();
 
     /**
      * Returns a linear fully connected layer.
@@ -75,7 +68,7 @@ public interface Layer {
      * @return a fully connected layer.
      */
     static FullyConnectedLayer relu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new ReLU(), dropout);
+        return new FullyConnectedLayer(in, out, new ReLU(true), dropout);
     }
 
     /**
@@ -117,7 +110,7 @@ public interface Layer {
      * @return a fully connected layer.
      */
     static FullyConnectedLayer gelu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new GELU(), dropout);
+        return new FullyConnectedLayer(in, out, new GELU(true), dropout);
     }
 
     /**
@@ -138,7 +131,7 @@ public interface Layer {
      * @return a fully connected layer.
      */
     static FullyConnectedLayer silu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new SiLU(), dropout);
+        return new FullyConnectedLayer(in, out, new SiLU(true), dropout);
     }
 
     /**
@@ -148,7 +141,7 @@ public interface Layer {
      * @return a fully connected layer.
      */
     static FullyConnectedLayer tanh(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Tanh());
+        return new FullyConnectedLayer(in, out, new Tanh(true));
     }
 
     /**
@@ -158,7 +151,7 @@ public interface Layer {
      * @return a fully connected layer.
      */
     static FullyConnectedLayer sigmoid(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Sigmoid());
+        return new FullyConnectedLayer(in, out, new Sigmoid(true));
     }
 
     /**
@@ -225,29 +218,31 @@ public interface Layer {
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output features.
-     * @param size the window size.
+     * @param size the window/kernel size.
      * @return a convolutional layer.
      */
     static Conv2dLayer conv2d(int in, int out, int size) {
-        return new Conv2dLayer(in, out, size, 1, 1, 1, true);
+        return new Conv2dLayer(in, out, size, 1, 0, 1, 1, true);
     }
 
     /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window size.
+     * @param size the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
+     * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
-     *                It is harder to describe, but this link has a nice
-     *                visualization of what dilation does.
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int stride, int dilation, int groups, boolean bias) {
-        return new Conv2dLayer(in, out, size, stride, dilation, groups, bias);
+    static Conv2dLayer conv2d(int in, int out, int size, int stride, int padding, int dilation, int groups, boolean bias) {
+        if (padding < 0) {
+            padding = (size - 1) / 2 * dilation;
+        }
+        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias);
     }
 
     /**
@@ -258,6 +253,35 @@ public interface Layer {
      */
     static MaxPool2dLayer maxPool2d(int size) {
         return new MaxPool2dLayer(size);
+    }
+
+    /**
+     * Returns an average pooling layer that reduces a tensor by combining cells,
+     * and assigning the average value of the input cells to the output cell.
+     * @param size the window/kernel size.
+     * @return a max pooling layer.
+     */
+    static AvgPool2dLayer avgPool2d(int size) {
+        return new AvgPool2dLayer(size);
+    }
+
+    /**
+     * Returns an adaptive average pooling layer.
+     * @param size the output size.
+     * @return an adaptive average pooling layer.
+     */
+    static AdaptiveAvgPool2dLayer adaptiveAvgPool2d(int size) {
+        return new AdaptiveAvgPool2dLayer(size);
+    }
+
+    /**
+     * Returns an adaptive average pooling layer.
+     * @param height the output height.
+     * @param width the output width.
+     * @return an adaptive average pooling layer.
+     */
+    static AdaptiveAvgPool2dLayer adaptiveAvgPool2d(int height, int width) {
+        return new AdaptiveAvgPool2dLayer(height, width);
     }
 
     /**

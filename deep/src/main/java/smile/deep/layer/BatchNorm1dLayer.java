@@ -22,7 +22,7 @@ import org.bytedeco.pytorch.BatchNormOptions;
 import smile.deep.tensor.Tensor;
 
 /**
- * A normalization layer that re-centers and normalizes the output
+ * A batch normalization layer that re-centers and normalizes the output
  * of one layer before feeding it to another. Centering and scaling the
  * intermediate tensors has a number of beneficial effects, such as allowing
  * higher learning rates without exploding/vanishing gradients.
@@ -61,18 +61,21 @@ public class BatchNorm1dLayer implements Layer {
         this.module = new BatchNorm1dImpl(options);
     }
 
+    /**
+     * Returns the batch normalization layer configuration.
+     * @return the batch normalization layer configuration.
+     */
+    public BatchNormOptions options() {
+        return options;
+    }
+
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public BatchNorm1dImpl asTorch() {
-        return module;
     }
 }

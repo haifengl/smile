@@ -17,29 +17,29 @@
 package smile.deep.layer;
 
 import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.pytorch.MaxPool2dImpl;
+import org.bytedeco.pytorch.AvgPool2dImpl;
 import smile.deep.tensor.Tensor;
 
 /**
- * A max pooling layer that reduces a tensor by combining cells,
- * and assigning the maximum value of the input cells to the output cell.
+ * An average pooling layer that reduces a tensor by combining cells,
+ * and assigning the average value of the input cells to the output cell.
  *
  * @author Haifeng Li
  */
-public class MaxPool2dLayer implements Layer {
+public class AvgPool2dLayer implements Layer {
     /** The window/kernel size. */
     int size;
     /** Implementation. */
-    MaxPool2dImpl module;
+    AvgPool2dImpl module;
 
     /**
      * Constructor.
      * @param size the window/kernel size.
      */
-    public MaxPool2dLayer(int size) {
+    public AvgPool2dLayer(int size) {
         this.size = size;
         LongPointer p = new LongPointer(1).put(size);
-        this.module = new MaxPool2dImpl(p);
+        this.module = new AvgPool2dImpl(p);
     }
 
     @Override

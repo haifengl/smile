@@ -61,18 +61,21 @@ public class BatchNorm2dLayer implements Layer {
         this.module = new BatchNorm2dImpl(options);
     }
 
+    /**
+     * Returns the batch normalization layer configuration.
+     * @return the batch normalization layer configuration.
+     */
+    public BatchNormOptions options() {
+        return options;
+    }
+
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public BatchNorm2dImpl asTorch() {
-        return module;
     }
 }
