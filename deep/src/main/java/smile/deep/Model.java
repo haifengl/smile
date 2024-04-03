@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
-import smile.deep.layer.Layer;
+import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
@@ -30,29 +30,27 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public abstract class Model implements Layer {
+public class Model {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Model.class);
     /** The neural network. */
-    protected Module net;
+    private LayerBlock net;
     /** The compute device on which the model is stored. */
     private Device device;
 
     /**
      * Constructor.
-     * @param net the neural network module.
+     * @param net the neural network.
      */
-    protected Model(Module net) {
+    public Model(LayerBlock net) {
         this.net = net;
     }
 
-    @Override
+    /**
+     * Returns the PyTorch Module object.
+     * @return the PyTorch Module object.
+     */
     public Module asTorch() {
-        return net;
-    }
-
-    @Override
-    public void register(String name, Layer parent) {
-        parent.asTorch().register_module(name, net);
+        return net.asTorch();
     }
 
     /**
@@ -60,7 +58,7 @@ public abstract class Model implements Layer {
      * @return this model.
      */
     public Model train() {
-        net.train(true);
+        net.asTorch().train(true);
         return this;
     }
 
@@ -69,7 +67,7 @@ public abstract class Model implements Layer {
      * @return this model.
      */
     public Model eval() {
-        net.eval();
+        net.asTorch().eval();
         return this;
     }
 
@@ -80,7 +78,7 @@ public abstract class Model implements Layer {
      */
     public Model to(Device device) {
         this.device = device;
-        net.to(device.asTorch(), true);
+        net.asTorch().to(device.asTorch(), true);
         return this;
     }
 
@@ -92,7 +90,7 @@ public abstract class Model implements Layer {
     public Model load(String path) {
         InputArchive archive = new InputArchive();
         archive.load_from(path);
-        net.load(archive);
+        net.asTorch().load(archive);
         return this;
     }
 
@@ -103,7 +101,7 @@ public abstract class Model implements Layer {
      */
     public Model save(String path) {
         OutputArchive archive = new OutputArchive();
-        net.save(archive);
+        net.asTorch().save(archive);
         archive.save_to(path);
         return this;
     }
@@ -141,7 +139,7 @@ public abstract class Model implements Layer {
                 // Reset gradients.
                 optimizer.reset();
                 // Execute the model on the input data.
-                Tensor prediction = forward(data);
+                Tensor prediction = net.forward(data);
                 // Compute a loss value to judge the prediction of our model.
                 Tensor error = loss.apply(prediction, target);
                 lossValue = error.toFloat();
@@ -152,7 +150,11 @@ public abstract class Model implements Layer {
                 // Explicitly free native memory
                 data.deallocate();
                 target.deallocate();
-                batchIndex++;
+                if (++batchIndex % 100 == 0) {
+                    String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
+                    logger.info(msg);
+                    free();
+                }
             }
 
             // Output the loss and checkpoint.
@@ -173,12 +175,15 @@ public abstract class Model implements Layer {
             if (checkpoint != null) {
                 save(String.format("%s-%d.pt", checkpoint, epoch));
             }
+            free();
+        }
+    }
 
-            // Free up device cache
-            System.gc();
-            if (device != null) {
-                device.emptyCache();
-            }
+    /** Free up memory and device cache. */
+    private void free() {
+        System.gc();
+        if (device != null) {
+            device.emptyCache();
         }
     }
 
@@ -193,7 +198,7 @@ public abstract class Model implements Layer {
         for (Sample batch : dataset) {
             Tensor data = device == null ? batch.data : batch.data.to(device);
             Tensor target = device == null ? batch.target : batch.target.to(device);
-            Tensor output = forward(data);
+            Tensor output = net.forward(data);
             for (var metric : metrics) {
                 metric.update(output, target);
             }
@@ -204,32 +209,5 @@ public abstract class Model implements Layer {
             map.put(metric.name(), metric.compute());
         }
         return map;
-    }
-
-    /**
-     * Creates a model.
-     * @param layers the neural network layers.
-     * @return the model.
-     */
-    public static Model of(Layer... layers) {
-        int depth = layers.length;
-        Module net = new Module();
-
-        return new Model(net) {
-            // instance initializer
-            {
-                for (int i = 0; i < depth; i++) {
-                    layers[i].register("Layer-" + (i+1), this);
-                }
-            }
-
-            @Override
-            public Tensor forward(Tensor x) {
-                for (Layer layer : layers) {
-                    x = layer.forward(x);
-                }
-                return x;
-            }
-        };
     }
 }
