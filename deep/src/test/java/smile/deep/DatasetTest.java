@@ -24,6 +24,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
 import smile.deep.metric.Precision;
@@ -63,10 +64,10 @@ public class DatasetTest {
     public void test() throws IOException {
         Device device = Device.preferredDevice();
         device.setDefaultDevice();
-        Model net = Model.of(
+        Model net = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10)
+                Layer.logSoftmax(32, 10))
         );
 
         net.to(device);
