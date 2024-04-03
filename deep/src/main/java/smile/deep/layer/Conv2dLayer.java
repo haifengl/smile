@@ -38,35 +38,37 @@ public class Conv2dLayer implements Layer {
      * @param out the number of output channels/features.
      * @param size the window size.
      * @param stride controls the stride for the cross-correlation.
+     * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
-     *                It is harder to describe, but this link has a nice
-     *                visualization of what dilation does.
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
      */
-    public Conv2dLayer(int in, int out, int size, int stride, int dilation, int groups, boolean bias) {
-        LongPointer p = new LongPointer(1).put(size);
-        this.options = new Conv2dOptions(in, out, p);
+    public Conv2dLayer(int in, int out, int size, int stride, int padding, int dilation, int groups, boolean bias) {
+        this.options = new Conv2dOptions(in, out, new LongPointer(1).put(size));
         options.stride().put(stride);
+        options.padding().put(new LongPointer(1).put(padding));
         options.dilation().put(dilation);
         options.groups().put(groups);
         options.bias().put(bias);
         this.module = new Conv2dImpl(options);
     }
 
+    /**
+     * Returns the convolutional layer configuration.
+     * @return the convolutional layer configuration.
+     */
+    public Conv2dOptions options() {
+        return options;
+    }
+
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public Conv2dImpl asTorch() {
-        return module;
     }
 }

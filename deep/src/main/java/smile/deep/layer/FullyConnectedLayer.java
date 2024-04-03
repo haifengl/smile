@@ -73,8 +73,8 @@ public class FullyConnectedLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
@@ -91,10 +91,5 @@ public class FullyConnectedLayer implements Layer {
             x = torch.dropout(x, dropout, module.is_training());
         }
         return Tensor.of(x);
-    }
-
-    @Override
-    public LinearImpl asTorch() {
-        return module;
     }
 }

@@ -66,8 +66,8 @@ public class EmbeddingLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, new EmbeddingImpl(numTokens, dim));
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, new EmbeddingImpl(numTokens, dim));
     }
 
     @Override
@@ -78,10 +78,5 @@ public class EmbeddingLayer implements Layer {
             x.mul_(scale);
         }
         return Tensor.of(x);
-    }
-
-    @Override
-    public EmbeddingImpl asTorch() {
-        return module;
     }
 }

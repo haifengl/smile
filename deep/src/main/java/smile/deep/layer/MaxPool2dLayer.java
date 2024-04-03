@@ -43,17 +43,12 @@ public class MaxPool2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public void register(String name, LayerBlock block) {
+        this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public MaxPool2dImpl asTorch() {
-        return module;
     }
 }
