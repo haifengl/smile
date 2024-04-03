@@ -100,7 +100,7 @@ public class Tensor {
     /**
      * Explicitly releases native memory without waiting after
      * the garbage collector. The caller should not use this tensor
-     * any more.
+     * any longer.
      */
     public void deallocate() {
         value.deallocate();
@@ -122,11 +122,19 @@ public class Tensor {
     }
 
     /**
+     * Returns the device on which the tensor is.
+     * @return the device.
+     */
+    public Device device() {
+        return new Device(value.device());
+    }
+
+    /**
      * Returns the number of dimensions of tensor.
      * @return the number of dimensions of tensor
      */
-    public long dim() {
-        return value.dim();
+    public int dim() {
+        return (int) value.dim();
     }
 
     /**
@@ -142,7 +150,7 @@ public class Tensor {
      * @param dim dimension index.
      * @return the size of given dimension.
      */
-    public long size(long dim) {
+    public long size(int dim) {
         return value.size(dim);
     }
 
@@ -180,6 +188,16 @@ public class Tensor {
      */
     public Tensor fill_(double x) {
         value.fill_(new Scalar(x));
+        return this;
+    }
+
+    /**
+     * Draws binary random numbers (0 or 1) from a Bernoulli distribution.
+     * @param p Bernoulli probability.
+     * @return this tensor.
+     */
+    public Tensor bernoulli_(double p) {
+        value.bernoulli_(p, null);
         return this;
     }
 
@@ -1047,6 +1065,25 @@ public class Tensor {
      */
     public static Tensor eye(Options options, long shape) {
         return Tensor.of(torch.eye(shape, options.value));
+    }
+
+    /**
+     * Returns a tensor with uninitialized data.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor empty(long... shape) {
+        return Tensor.of(torch.empty(shape));
+    }
+
+    /**
+     * Returns a tensor with uninitialized data.
+     * @param options Tensor creation options.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor empty(Options options, long... shape) {
+        return Tensor.of(torch.empty(shape, options.value, null));
     }
 
     /**
