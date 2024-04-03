@@ -16,8 +16,8 @@
  */
 package smile.llm;
 
-import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
+import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
@@ -33,8 +33,6 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public class PositionalEncoding implements Layer {
-    /** The module to register the buffer. */
-    private Module module;
     /** The dropout probability. */
     private double dropout;
     /** The positional encoding tensor. */
@@ -55,7 +53,6 @@ public class PositionalEncoding implements Layer {
      * @param maxLen the maximum length of token sequence.
      */
     public PositionalEncoding(int dModel, double dropout, int maxLen) {
-        this.module = new Module();
         this.dropout = dropout;
         this.pe = Tensor.zeros(maxLen, dModel);
         Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
@@ -64,27 +61,21 @@ public class PositionalEncoding implements Layer {
         pe.put_(position.sin(), Colon, slice(0L, null, 2L));
         pe.put_(position.cos(), Colon, slice(1L, null, 2L));
         pe = pe.unsqueeze(0).transpose(0, 1);
-        module.register_buffer("pe", pe.asTorch());
     }
 
     @Override
-    public Tensor forward(Tensor x) {
+    public Tensor forward(Tensor input) {
         Tensor p = pe.get(
-                slice(null, x.size(0)),
+                slice(null, input.size(0)),
                 Colon
         );
-        Tensor xp = x.add(p);
+        Tensor xp = input.add(p);
         return Tensor.of(torch.dropout(xp.asTorch(), dropout, true));
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        module = parent.asTorch().register_module(name, module);
-    }
-
-    @Override
-    public Module asTorch() {
-        return module;
+    public void register(String name, LayerBlock block) {
+        block.asTorch().register_buffer(name, pe.asTorch());
     }
 
     /**
@@ -93,7 +84,7 @@ public class PositionalEncoding implements Layer {
      * @return this encoder.
      */
     public PositionalEncoding to(Device device) {
-        module.to(device.asTorch(), true);
+        pe.to(device);
         return this;
     }
 }
