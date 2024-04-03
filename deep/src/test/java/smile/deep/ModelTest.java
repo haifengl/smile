@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
@@ -63,10 +64,10 @@ public class ModelTest {
     public void test() {
         Device device = Device.preferredDevice();
 
-        Model net = Model.of(
+        Model net = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10)
+                Layer.logSoftmax(32, 10))
         ).to(device);
 
         Dataset train = Dataset.mnist(mnist, true, 64);
@@ -85,10 +86,10 @@ public class ModelTest {
         net.save("mnist.pt");
 
         // Loads the model from checkpoint.
-        Model model = Model.of(
+        Model model = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10)
+                Layer.logSoftmax(32, 10))
         );
 
         model.load("mnist.pt").to(device).eval();
