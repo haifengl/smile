@@ -43,7 +43,7 @@ public interface CacheFiles {
             if (os.startsWith("Windows")) {
                 String localAppData = System.getenv("LocalAppData");
                 path = localAppData + smile;
-            } else if (os.startsWith("Darwin")) {
+            } else if (os.startsWith("Mac")) {
                 path = home + "/Library/Caches" + smile;
             } else {
                 // Linux or others
