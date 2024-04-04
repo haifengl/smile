@@ -53,8 +53,7 @@ public class BatchNorm1dLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public BatchNorm1dLayer(int in, double eps, double momentum, boolean affine) {
-        LongPointer p = new LongPointer(1).put(in);
-        this.options = new BatchNormOptions(p);
+        this.options = new BatchNormOptions(new LongPointer(1).put(in));
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);

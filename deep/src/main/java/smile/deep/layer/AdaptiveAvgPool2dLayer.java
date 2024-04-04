@@ -36,7 +36,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
      * @param size the output size.
      */
     public AdaptiveAvgPool2dLayer(int size) {
-        LongPointer p = new LongPointer(1).put(size);
+        LongPointer p = new LongPointer(size, size);
         this.module = new AdaptiveAvgPool2dImpl(p);
     }
 
@@ -46,7 +46,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
      * @param width the output width.
      */
     public AdaptiveAvgPool2dLayer(int height, int width) {
-        LongPointer p = new LongPointer(2).put(height, width);
+        LongPointer p = new LongPointer(height, width);
         this.module = new AdaptiveAvgPool2dImpl(p);
     }
 

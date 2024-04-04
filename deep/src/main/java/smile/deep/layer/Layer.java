@@ -246,6 +246,29 @@ public interface Layer {
     }
 
     /**
+     * Returns a convolutional layer.
+     * @param in the number of input channels.
+     * @param out the number of output channels/features.
+     * @param size the window/kernel size.
+     * @param stride controls the stride for the cross-correlation.
+     * @param padding "valid" or "same". With "valid" padding, there's no
+     *               "made-up" padding inputs. It drops the right-most columns
+     *               (or bottom-most rows). "same" tries to pad evenly left
+     *               and right, but if the amount of columns to be added
+     *               is odd, it will add the extra column to the right.
+     *               If stride is 1, the layer's outputs will have the
+     *               same spatial dimensions as its inputs.
+     * @param dilation controls the spacing between the kernel points.
+     * @param groups controls the connections between inputs and outputs.
+     *              The in channels and out channels must both be divisible by groups.
+     * @param bias If true, adds a learnable bias to the output.
+     * @return a convolutional layer.
+     */
+    static Conv2dLayer conv2d(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias) {
+        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias);
+    }
+
+    /**
      * Returns a max pooling layer that reduces a tensor by combining cells,
      * and assigning the maximum value of the input cells to the output cell.
      * @param size the window/kernel size.
