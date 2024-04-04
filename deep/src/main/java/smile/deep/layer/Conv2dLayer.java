@@ -36,7 +36,7 @@ public class Conv2dLayer implements Layer {
      * Constructor.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window size.
+     * @param size the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
      * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
@@ -45,13 +45,16 @@ public class Conv2dLayer implements Layer {
      * @param bias If true, adds a learnable bias to the output.
      */
     public Conv2dLayer(int in, int out, int size, int stride, int padding, int dilation, int groups, boolean bias) {
-        this.options = new Conv2dOptions(in, out, new LongPointer(1).put(size));
+        // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
+        // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
+        LongPointer kernel = new LongPointer(size, size);
+        options = new Conv2dOptions(in, out, kernel);
         options.stride().put(stride);
         options.padding().put(new LongPointer(1).put(padding));
         options.dilation().put(dilation);
         options.groups().put(groups);
         options.bias().put(bias);
-        this.module = new Conv2dImpl(options);
+        module = new Conv2dImpl(options);
     }
 
     /**
