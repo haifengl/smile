@@ -17,12 +17,9 @@
 
 package smile.plot.vega;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import static smile.plot.vega.Predicate.*;
 
 /**
@@ -34,19 +31,19 @@ public class VegaTest {
     public VegaTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -84,7 +81,7 @@ public class VegaTest {
         bar.transform().filter("datum.year == 2000");
         bar.encode("x", "people").type("quantitative").aggregate("sum").title("population");
         bar.encode("y", "age").type("ordinal");
-        assertEquals("[{\"filter\":\"datum.year == 2000\"}]", bar.transform().toString());
+        Assertions.assertEquals("[{\"filter\":\"datum.year == 2000\"}]", bar.transform().toString());
     }
 
     @Test

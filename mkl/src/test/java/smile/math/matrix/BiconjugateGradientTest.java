@@ -17,13 +17,12 @@
 
 package smile.math.matrix;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Haifeng Li
@@ -41,15 +40,15 @@ public class BiconjugateGradientTest {
     public BiconjugateGradientTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         System.out.println("setUp");
 
@@ -58,7 +57,7 @@ public class BiconjugateGradientTest {
         x = lu.solve(b);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
