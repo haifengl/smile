@@ -17,9 +17,8 @@
 
 package smile.math.matrix.fp32;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.BeforeAll;
 import smile.math.blas.UPLO;
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

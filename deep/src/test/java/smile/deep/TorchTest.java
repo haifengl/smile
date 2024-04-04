@@ -17,8 +17,6 @@
 package smile.deep;
 
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.util.Paths;

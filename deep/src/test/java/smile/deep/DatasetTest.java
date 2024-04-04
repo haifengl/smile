@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.AfterAll;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;

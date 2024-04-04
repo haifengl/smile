@@ -18,8 +18,6 @@
 package smile.plot.vega;
 
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import static smile.plot.vega.Predicate.*;
 
 /**
