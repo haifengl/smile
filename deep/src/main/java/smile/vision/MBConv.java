@@ -46,7 +46,7 @@ public class MBConv implements Layer {
      */
     public MBConv(MBConvConfig config, double stochasticDepthProb) {
         int stride = config.stride();
-        if (stride >= 1 && stride <= 2) {
+        if (stride < 1 || stride > 2) {
             throw new IllegalArgumentException("Illegal stride value: " + stride);
         }
 
