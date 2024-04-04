@@ -17,18 +17,11 @@
 
 package smile.nlp.collocation;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.tokenizer.SimpleParagraphSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
@@ -38,24 +31,24 @@ import smile.nlp.tokenizer.SimpleTokenizer;
  *
  * @author Haifeng Li
  */
-public class NGramTest {
+public class  NGramTest {
 
     public NGramTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

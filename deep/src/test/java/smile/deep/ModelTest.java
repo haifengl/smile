@@ -18,8 +18,6 @@ package smile.deep;
 
 import java.util.Map;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.util.Paths;

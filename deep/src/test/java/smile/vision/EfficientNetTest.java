@@ -19,8 +19,6 @@ package smile.vision;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import smile.deep.tensor.Device;
 import smile.util.CacheFiles;
 

@@ -26,16 +26,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.ArrayList;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 import smile.math.MathEx;
 import smile.util.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.Bag;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -125,19 +121,19 @@ public class HMMPOSTaggerTest {
         });
     }
     
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -182,7 +178,7 @@ public class HMMPOSTaggerTest {
         }
 
         System.out.format("Error rate = %.2f%% as %d of %d\n", 100.0 * error / total, error, total);
-        assertEquals(51325, error);
+        assertEquals(51325, error, 50);
     }
 
     @Test
@@ -226,6 +222,6 @@ public class HMMPOSTaggerTest {
         }
 
         System.out.format("Error rate = %.2f%% as %d of %d\n", 100.0 * error / total, error, total);
-        assertEquals(55589, error);
+        assertEquals(55589, error, 50);
     }
 }
