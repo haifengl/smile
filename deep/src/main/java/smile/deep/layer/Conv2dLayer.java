@@ -19,6 +19,8 @@ package smile.deep.layer;
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.Conv2dImpl;
 import org.bytedeco.pytorch.Conv2dOptions;
+import org.bytedeco.pytorch.kSame;
+import org.bytedeco.pytorch.kValid;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -50,7 +52,42 @@ public class Conv2dLayer implements Layer {
         LongPointer kernel = new LongPointer(size, size);
         options = new Conv2dOptions(in, out, kernel);
         options.stride().put(stride);
-        options.padding().put(new LongPointer(1).put(padding));
+        options.padding().put(new LongPointer(padding, padding));
+        options.dilation().put(dilation);
+        options.groups().put(groups);
+        options.bias().put(bias);
+        module = new Conv2dImpl(options);
+    }
+
+    /**
+     * Constructor.
+     * @param in the number of input channels.
+     * @param out the number of output channels/features.
+     * @param size the window/kernel size.
+     * @param stride controls the stride for the cross-correlation.
+     * @param padding "valid" or "same". With "valid" padding, there's no
+     *               "made-up" padding inputs. It drops the right-most columns
+     *               (or bottom-most rows). "same" tries to pad evenly left
+     *               and right, but if the amount of columns to be added
+     *               is odd, it will add the extra column to the right.
+     *               If stride is 1, the layer's outputs will have the
+     *               same spatial dimensions as its inputs.
+     * @param dilation controls the spacing between the kernel points.
+     * @param groups controls the connections between inputs and outputs.
+     *              The in channels and out channels must both be divisible by groups.
+     * @param bias If true, adds a learnable bias to the output.
+     */
+    public Conv2dLayer(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias) {
+        if (!(padding.equals("valid") || padding.equals("same"))) {
+            throw new IllegalArgumentException("padding has to be either 'valid' or 'same', but got " + padding);
+        }
+
+        // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
+        // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
+        LongPointer kernel = new LongPointer(size, size);
+        options = new Conv2dOptions(in, out, kernel);
+        options.stride().put(stride);
+        options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
         options.dilation().put(dilation);
         options.groups().put(groups);
         options.bias().put(bias);

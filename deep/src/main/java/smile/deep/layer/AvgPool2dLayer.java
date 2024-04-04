@@ -27,8 +27,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class AvgPool2dLayer implements Layer {
-    /** The window/kernel size. */
-    int size;
     /** Implementation. */
     AvgPool2dImpl module;
 
@@ -37,9 +35,8 @@ public class AvgPool2dLayer implements Layer {
      * @param size the window/kernel size.
      */
     public AvgPool2dLayer(int size) {
-        this.size = size;
-        LongPointer p = new LongPointer(1).put(size);
-        this.module = new AvgPool2dImpl(p);
+        LongPointer kernel = new LongPointer(size, size);
+        this.module = new AvgPool2dImpl(kernel);
     }
 
     @Override
