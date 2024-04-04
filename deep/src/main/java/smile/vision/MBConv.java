@@ -86,7 +86,7 @@ public class MBConv implements Layer {
             expand.register(name + "-expand", block);
         }
         depthwise.register(name + "-depthwise", block);
-        se.register(name + "-se", block);
+        se.register(name + "-squeeze-excitation", block);
         project.register(name + "-project", block);
         stochasticDepth.register(name + "-stochastic-depth", block);
     }
