@@ -18,16 +18,12 @@
 package smile.ica;
 
 import org.apache.commons.csv.CSVFormat;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.data.CategoricalEncoder;
 import smile.io.CSV;
 import smile.math.MathEx;
 import smile.util.Paths;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -39,23 +35,23 @@ public class ICATest {
 
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("ICA");
         MathEx.setSeed(19650218); // to get repeatable results.

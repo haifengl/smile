@@ -17,15 +17,8 @@
 
 package smile.math;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.sql.Time;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -36,19 +29,19 @@ public class TimeFunctionTest {
     public TimeFunctionTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -218,7 +211,7 @@ public class TimeFunctionTest {
         assertEquals(0.0801511, t.apply(21), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testParse() {
         System.out.println("parse");
         System.out.println(TimeFunction.of("0.01"));
@@ -232,7 +225,7 @@ public class TimeFunctionTest {
         System.out.println(TimeFunction.of("exp(0.1, 10, 0.9, false)"));
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseToString() {
         System.out.println("parse");
         int[] boundaries = {5, 10};

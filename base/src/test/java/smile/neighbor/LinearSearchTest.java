@@ -19,13 +19,6 @@ package smile.neighbor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.math.distance.EuclideanDistance;
@@ -34,8 +27,8 @@ import smile.test.data.GaussianMixture;
 import smile.test.data.IndexNoun;
 import smile.test.data.SwissRoll;
 import smile.test.data.USPS;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -48,19 +41,19 @@ public class LinearSearchTest {
     }
 
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

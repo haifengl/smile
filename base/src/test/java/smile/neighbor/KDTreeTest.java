@@ -20,18 +20,13 @@ package smile.neighbor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.test.data.GaussianMixture;
 import smile.test.data.USPS;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -43,19 +38,19 @@ public class KDTreeTest {
 
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -172,7 +167,7 @@ public class KDTreeTest {
         System.out.format("Range: %.2fs%n", time);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testBenchmark() throws Exception {
         System.out.println("----- Benchmark -----");
 
@@ -202,7 +197,7 @@ public class KDTreeTest {
         assertTrue(time < 0.25);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("----- USPS -----");
 

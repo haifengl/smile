@@ -17,12 +17,11 @@
 
 package smile.io;
 
-import org.junit.*;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.util.SparseArray;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -33,19 +32,19 @@ public class LibsvmTest {
     public LibsvmTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

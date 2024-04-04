@@ -19,12 +19,8 @@ package smile.taxonomy;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -39,11 +35,11 @@ public class TaxonomyTest {
 
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
@@ -58,7 +54,7 @@ public class TaxonomyTest {
    *  |   |  |  |
    *  B   C  D  E
    */
-    @Before
+    @BeforeEach
     public void setUp() {
         // Creating Taxonomy
         String[] concepts = {"A", "B", "C", "D", "E", "F"};
@@ -91,7 +87,7 @@ public class TaxonomyTest {
         System.out.println();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
