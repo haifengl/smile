@@ -16,16 +16,10 @@
  */
 package smile.data.formula;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
 import smile.data.DataFrame;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
@@ -35,9 +29,8 @@ import smile.data.type.StructType;
 import smile.io.Read;
 import smile.math.matrix.Matrix;
 import smile.util.Paths;
-
 import static smile.data.formula.Terms.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -89,19 +82,19 @@ public class FormulaTest {
         }
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

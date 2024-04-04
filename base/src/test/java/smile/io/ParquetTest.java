@@ -17,19 +17,14 @@
 
 package smile.io;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.matrix.Matrix;
 import smile.util.Paths;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -47,19 +42,19 @@ public class ParquetTest {
         }
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

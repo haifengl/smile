@@ -17,12 +17,6 @@
 
 package smile.io;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.measure.NominalScale;
@@ -30,6 +24,8 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.util.Paths;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -40,19 +36,19 @@ public class ArffTest {
     public ArffTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
