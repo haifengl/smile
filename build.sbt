@@ -21,6 +21,10 @@ lazy val commonSettings = Seq(
   Test / parallelExecution := false,
   Test / publishArtifact := false,
   Test / javaOptions ++= Seq(
+    "-XX:+UseG1GC",
+    "-XX:MaxMetaspaceSize=1024M",
+    "-Xmx16G",
+    "-Xss4M",
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
