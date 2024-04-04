@@ -16,11 +16,9 @@
  */
 package smile.deep;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.util.Paths;
@@ -59,7 +57,7 @@ public class TorchTest {
         final LinearImpl fc1, fc2, fc3;
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
@@ -68,15 +66,15 @@ public class TorchTest {
         System.setProperty("org.bytedeco.openblas.load", "mkl");
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

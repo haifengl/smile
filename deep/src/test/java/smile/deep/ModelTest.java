@@ -17,17 +17,14 @@
 package smile.deep;
 
 import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -39,7 +36,7 @@ public class ModelTest {
     public ModelTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
@@ -48,15 +45,15 @@ public class ModelTest {
         System.setProperty("org.bytedeco.openblas.load", "mkl");
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -93,6 +90,6 @@ public class ModelTest {
         );
 
         model.load("mnist.pt").to(device).eval();
-        assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+        Assertions.assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
     }
 }
