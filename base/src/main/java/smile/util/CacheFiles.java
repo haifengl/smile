@@ -19,6 +19,8 @@ package smile.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.Paths;
@@ -58,7 +60,7 @@ public interface CacheFiles {
      * @param url the url of online file.
      * @return the path to the cache file.
      */
-    static Path download(String url) throws IOException {
+    static Path download(String url) throws IOException, URISyntaxException {
         return download(url, false);
     }
 
@@ -68,14 +70,14 @@ public interface CacheFiles {
      * @param force flag indicating if download even when cache file exists.
      * @return the path to the cache file.
      */
-    static Path download(String url, boolean force) throws IOException {
-        URL uri = new URL(url);
+    static Path download(String url, boolean force) throws IOException, URISyntaxException {
+        URI uri = new URI(url);
         Path path = Paths.get(dir(), uri.getPath());
         File file = path.toFile();
         if (force || !(file.exists() && !file.isDirectory())) {
             file.getParentFile().mkdirs();
             Files.copy(
-                    uri.openStream(),
+                    uri.toURL().openStream(),
                     path,
                     StandardCopyOption.REPLACE_EXISTING);
         }
@@ -83,7 +85,7 @@ public interface CacheFiles {
     }
 
     /** Cleans up the cache directory. */
-    static void clear() throws IOException {
+    static void clean() throws IOException {
         Files.walk(Paths.get(dir()))
                 .sorted(Comparator.reverseOrder())
                 .map(Path::toFile)
