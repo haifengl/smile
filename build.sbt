@@ -23,7 +23,6 @@ lazy val commonSettings = Seq(
   Test / javaOptions ++= Seq(
     "-XX:+UseG1GC",
     "-XX:MaxMetaspaceSize=1024M",
-    "-Xmx16G",
     "-Xss4M",
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
@@ -83,7 +82,6 @@ lazy val javaSettings = commonSettings ++ Seq(
     "org.slf4j" % "slf4j-api" % "2.0.12",
     "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
     "org.junit.jupiter" % "junit-jupiter-engine" % "5.9.1" % Test,
-    "org.junit.vintage" % "junit-vintage-engine" % "5.9.1" % Test,
     "net.aichler"       % "jupiter-interface"    % "0.9.0" % Test
   )
 )
