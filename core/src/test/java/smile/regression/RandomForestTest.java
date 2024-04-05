@@ -18,7 +18,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-import org.junit.*;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
@@ -27,10 +26,8 @@ import smile.math.MathEx;
 import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.RMSE;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -76,19 +73,19 @@ public class RandomForestTest {
     public RandomForestTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

@@ -17,19 +17,14 @@
 
 package smile.regression;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.CPU;
 import smile.test.data.Longley;
 import smile.math.MathEx;
 import smile.validation.*;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -39,19 +34,19 @@ public class RidgeRegressionTest {
     public RidgeRegressionTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

@@ -17,11 +17,6 @@
 
 package smile.classification;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import java.util.Arrays;
 import smile.data.SparseDataset;
 import smile.io.Read;
@@ -29,7 +24,8 @@ import smile.io.Write;
 import smile.test.data.*;
 import smile.util.SparseArray;
 import smile.validation.metric.Error;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -40,19 +36,19 @@ public class SparseLogisticRegressionTest {
     public SparseLogisticRegressionTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

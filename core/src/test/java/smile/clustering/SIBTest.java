@@ -17,13 +17,6 @@
 
 package smile.clustering;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.io.Read;
@@ -31,6 +24,8 @@ import smile.io.Write;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.metric.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -41,19 +36,19 @@ public class SIBTest {
     public SIBTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

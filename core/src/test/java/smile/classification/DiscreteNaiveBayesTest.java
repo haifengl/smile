@@ -27,12 +27,8 @@ import smile.math.MathEx;
 import smile.validation.Bag;
 import smile.validation.CrossValidation;
 import smile.validation.metric.Error;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -59,7 +55,7 @@ public class DiscreteNaiveBayesTest {
 
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
         try (BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < x.length; i++) {
@@ -86,15 +82,15 @@ public class DiscreteNaiveBayesTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
