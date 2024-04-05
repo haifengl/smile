@@ -17,11 +17,6 @@
 
 package smile.regression;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.DataFrame;
@@ -34,7 +29,8 @@ import smile.math.Scaler;
 import smile.math.TimeFunction;
 import smile.test.data.*;
 import smile.validation.*;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 
@@ -43,19 +39,19 @@ import static org.junit.Assert.assertEquals;
 public class MLPTest {
     public MLPTest(){
     }
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

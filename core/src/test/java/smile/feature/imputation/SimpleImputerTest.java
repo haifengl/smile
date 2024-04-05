@@ -18,15 +18,11 @@
 package smile.feature.imputation;
 
 import java.util.function.Function;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.test.data.*;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -37,19 +33,19 @@ public class SimpleImputerTest {
     public SimpleImputerTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -97,7 +93,7 @@ public class SimpleImputerTest {
         System.out.println(imputer);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testAverage() throws Exception {
         System.out.println("Column Average Imputation");
         double[][] data = SyntheticControl.x;
@@ -110,7 +106,7 @@ public class SimpleImputerTest {
         impute(SimpleImputer::impute, data, 0.25, 44.77);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testSimpleImputer() throws Exception {
         System.out.println("SimpleImputer");
         double[][] data = SyntheticControl.x;

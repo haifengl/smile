@@ -17,13 +17,6 @@
 
 package smile.feature.selection;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import smile.classification.DecisionTree;
 import smile.classification.LDA;
 import smile.test.data.Abalone;
@@ -34,6 +27,8 @@ import smile.regression.RegressionTree;
 import smile.math.MathEx;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.RMSE;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -44,19 +39,19 @@ public class GAFETest {
     public GAFETest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
