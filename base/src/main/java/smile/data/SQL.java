@@ -77,8 +77,10 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame tables() throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
-        DataFrame df = DataFrame.of(meta.getTables(null, null, null, null));
-        return df.select("TABLE_NAME", "REMARKS");
+        try (ResultSet rs = meta.getTables(null, null, null, null)) {
+            DataFrame df = DataFrame.of(rs);
+            return df.select("TABLE_NAME", "REMARKS");
+        }
     }
 
     /**
@@ -89,8 +91,10 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame describe(String table) throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
-        DataFrame df = DataFrame.of(meta.getColumns(null,null, table, null));
-        return df.select("COLUMN_NAME", "TYPE_NAME", "IS_NULLABLE");
+        try (ResultSet rs = meta.getColumns(null, null, table, null)) {
+            DataFrame df = DataFrame.of(rs);
+            return df.select("COLUMN_NAME", "TYPE_NAME", "IS_NULLABLE");
+        }
     }
 
     /**
@@ -131,7 +135,9 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        db.createStatement().execute(query);
+        try (Statement stmt = db.createStatement()) {
+            stmt.execute(query);
+        }
         return this;
     }
 
@@ -184,7 +190,9 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        db.createStatement().execute(query);
+        try (Statement stmt = db.createStatement()) {
+            stmt.execute(query);
+        }
         return this;
     }
 
@@ -232,7 +240,9 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        db.createStatement().execute(query);
+        try (Statement stmt = db.createStatement()) {
+            stmt.execute(query);
+        }
         return this;
     }
 
@@ -276,18 +286,35 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame query(String sql) throws SQLException {
         logger.info(sql);
-        return DataFrame.of(db.createStatement().executeQuery(sql));
+        try (Statement stmt = db.createStatement()) {
+            return DataFrame.of(stmt.executeQuery(sql));
+        }
     }
 
     /**
      * Executes an INSERT, UPDATE, or DELETE statement.
-     * It returns an integer value representing the number of rows affected by the SQL statement.
      * @param sql an INSERT, UPDATE, or DELETE statement.
      * @return the number of rows affected by the SQL statement.
      * @throws SQLException
      */
     public int update(String sql) throws SQLException {
         logger.info(sql);
-        return db.createStatement().executeUpdate(sql);
+        try (Statement stmt = db.createStatement()) {
+            return stmt.executeUpdate(sql);
+        }
+    }
+
+    /**
+     * Executes an SQL statement, which may return multiple results.
+     * @param sql an SQL statement.
+     * @return true if the first result is a ResultSet object;
+     *         false if it is an update count or there are no results.
+     * @throws SQLException
+     */
+    public boolean execute(String sql) throws SQLException {
+        logger.info(sql);
+        try (Statement stmt = db.createStatement()) {
+            return stmt.execute(sql);
+        }
     }
 }
