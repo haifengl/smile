@@ -134,8 +134,8 @@ public class Model {
             double lossValue = 0;
             // Iterate the data loader to yield batches from the dataset.
             for (Sample batch : train) {
-                Tensor data = device == null ? batch.data : batch.data.to(device);
-                Tensor target = device == null ? batch.target : batch.target.to(device);
+                Tensor data = device == null ? batch.data() : batch.data().to(device);
+                Tensor target = device == null ? batch.target() : batch.target().to(device);
                 // Reset gradients.
                 optimizer.reset();
                 // Execute the model on the input data.
@@ -196,8 +196,8 @@ public class Model {
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
         for (Sample batch : dataset) {
-            Tensor data = device == null ? batch.data : batch.data.to(device);
-            Tensor target = device == null ? batch.target : batch.target.to(device);
+            Tensor data = device == null ? batch.data() : batch.data().to(device);
+            Tensor target = device == null ? batch.target() : batch.target().to(device);
             Tensor output = net.forward(data);
             for (var metric : metrics) {
                 metric.update(output, target);
