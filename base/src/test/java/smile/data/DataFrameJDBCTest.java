@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data;
 
 import java.sql.DriverManager;
@@ -35,9 +34,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DataFrameJDBCTest {
 
-    DataFrame df;
+    static DataFrame df;
 
     public DataFrameJDBCTest() {
+    }
+
+    @BeforeAll
+    public static void setUpClass() throws Exception {
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException ex) {
@@ -57,10 +60,6 @@ public class DataFrameJDBCTest {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
     }
 
     @AfterAll

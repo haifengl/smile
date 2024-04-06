@@ -5,6 +5,7 @@ packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.b
 libraryDependencies ++= {
   val arrowV = "15.0.2"
   Seq(
+    "org.duckdb" % "duckdb_jdbc" % "0.10.1",
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory-netty" % arrowV % Provided,
