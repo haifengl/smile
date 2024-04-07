@@ -70,7 +70,7 @@ public interface SAS {
      * Reads a limited number of records from a SAS7BDAT file.
      *
      * @param input a SAS7BDAT file input stream.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to write the file.
      * @return the data frame.
      */

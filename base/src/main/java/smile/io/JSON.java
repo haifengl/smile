@@ -112,7 +112,7 @@ public class JSON {
     /**
      * Reads a JSON file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -139,7 +139,7 @@ public class JSON {
     /**
      * Reads a JSON file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
@@ -156,7 +156,7 @@ public class JSON {
     /**
      * Reads a limited number of records from a JSON file.
      * @param reader the file reader.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -215,7 +215,7 @@ public class JSON {
      * </ol>
      *
      * @param reader the file reader.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
