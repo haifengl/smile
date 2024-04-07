@@ -411,7 +411,7 @@ public class Arff implements AutoCloseable {
     /**
      * Reads a limited number of records.
      *
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      * @return the data frame.
