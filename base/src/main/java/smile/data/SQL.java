@@ -19,7 +19,6 @@ package smile.data;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.duckdb.DuckDBConnection;
 
 /**
  * An in-process SQL database management interface.
@@ -29,7 +28,7 @@ import org.duckdb.DuckDBConnection;
 public class SQL implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SQL.class);
     /** JDBC connection. */
-    private DuckDBConnection db;
+    private Connection db;
 
     static {
         try {
@@ -44,7 +43,7 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to create an in-memory database.
      */
     public SQL() throws SQLException {
-        db = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+        db = DriverManager.getConnection("jdbc:duckdb:");
     }
 
     /**
@@ -53,7 +52,7 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to open or create the DuckDB file.
      */
     public SQL(String path) throws SQLException {
-        db = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:" + path);
+        db = DriverManager.getConnection("jdbc:duckdb:" + path);
     }
 
     @Override

@@ -84,5 +84,6 @@ public class SQLTest {
         System.out.println(join.toString(100));
         assertEquals(user.nrow(), join.nrow());
         assertEquals(17, join.ncol());
+        sql.close();
     }
 }
