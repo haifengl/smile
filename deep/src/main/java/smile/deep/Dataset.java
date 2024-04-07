@@ -30,7 +30,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public interface Dataset extends Iterable<Sample> {
+public interface Dataset extends Iterable<SampleBatch> {
     /**
      * Returns the size of dataset.
      * @return the size of dataset.
@@ -55,9 +55,9 @@ public interface Dataset extends Iterable<Sample> {
             }
 
             @Override
-            public Iterator<Sample> iterator() {
+            public Iterator<SampleBatch> iterator() {
                 final int[] permutation = MathEx.permutate(n);
-                return new Iterator<Sample>() {
+                return new Iterator<>() {
                     int i = 0;
                     float[] x = new float[batch * p];
                     long[] y = new long[batch];
@@ -68,7 +68,7 @@ public interface Dataset extends Iterable<Sample> {
                     }
 
                     @Override
-                    public Sample next() {
+                    public SampleBatch next() {
                         int j = 0;
                         for (; j < batch && i < n; j++, i++) {
                             int k = permutation[i];
@@ -80,9 +80,9 @@ public interface Dataset extends Iterable<Sample> {
                         }
 
                         if (i == n) {
-                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
+                            return new SampleBatch(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
                         } else {
-                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
+                            return new SampleBatch(Tensor.of(x, j, p), Tensor.of(y, j));
                         }
                     }
                 };
@@ -108,9 +108,9 @@ public interface Dataset extends Iterable<Sample> {
             }
 
             @Override
-            public Iterator<Sample> iterator() {
+            public Iterator<SampleBatch> iterator() {
                 final int[] permutation = MathEx.permutate(n);
-                return new Iterator<Sample>() {
+                return new Iterator<>() {
                     int i = 0;
                     float[] x = new float[batch * p];
                     float[] y = new float[batch];
@@ -121,7 +121,7 @@ public interface Dataset extends Iterable<Sample> {
                     }
 
                     @Override
-                    public Sample next() {
+                    public SampleBatch next() {
                         int j = 0;
                         for (; j < batch && i < n; j++, i++) {
                             int k = permutation[i];
@@ -133,9 +133,9 @@ public interface Dataset extends Iterable<Sample> {
                         }
 
                         if (i == n) {
-                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
+                            return new SampleBatch(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
                         } else {
-                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
+                            return new SampleBatch(Tensor.of(x, j, p), Tensor.of(y, j));
                         }
                     }
                 };
