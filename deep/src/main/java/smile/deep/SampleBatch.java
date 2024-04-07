@@ -26,13 +26,13 @@ import smile.deep.tensor.*;
  *
  * @author Haifeng Li
  */
-public record Sample(Tensor data, Tensor target) {
+public record SampleBatch(Tensor data, Tensor target) {
     /**
      * Constructor.
      * @param data the data samples.
      * @param target the sample labels.
      */
-    Sample(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
+    SampleBatch(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
         this(Tensor.of(data), Tensor.of(target));
     }
 }
