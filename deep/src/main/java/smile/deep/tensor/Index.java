@@ -56,7 +56,7 @@ public class Index {
      * @param i the element index.
      * @return the index.
      */
-    public static Index index(long i) {
+    public static Index of(long i) {
         return new Index(new TensorIndex(i));
     }
 
@@ -66,7 +66,7 @@ public class Index {
      * @param indices the indices of multiple elements.
      * @return the index.
      */
-    public static Index index(long... indices) {
+    public static Index of(long... indices) {
         return new Index(new TensorIndex(Tensor.create(indices)));
     }
 
@@ -78,7 +78,7 @@ public class Index {
      * @return the slice.
      */
     public static Index slice(Long start, Long end) {
-        return index(start, end, 1L);
+        return slice(start, end, 1L);
     }
 
     /**
