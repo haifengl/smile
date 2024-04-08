@@ -31,7 +31,7 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public interface Dataset<T> {
+public interface Dataset<T> extends Iterable<T> {
     /**
      * Returns true if the dataset is distributed over multiple machines.
      * @return true if the dataset is distributed over multiple machines.

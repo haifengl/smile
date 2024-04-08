@@ -19,6 +19,7 @@ package smile.data;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
@@ -103,6 +104,11 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     @Override
     public Stream<int[]> stream() {
         return Arrays.stream(data);
+    }
+
+    @Override
+    public Iterator<int[]> iterator() {
+        return Arrays.stream(data).iterator();
     }
 
     @Override

@@ -342,11 +342,6 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public Iterator<BaseVector> iterator() {
-        return columns.iterator();
-    }
-
-    @Override
     public int indexOf(String name) {
         return schema.indexOf(name);
     }
@@ -370,6 +365,11 @@ class DataFrameImpl implements DataFrame, Serializable {
     public Stream<Tuple> stream() {
         Spliterator<Tuple> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
+    }
+
+    @Override
+    public Iterator<Tuple> iterator() {
+        return stream().iterator();
     }
 
     @Override
