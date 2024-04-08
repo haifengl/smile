@@ -131,4 +131,9 @@ class SparseDatasetImpl implements SparseDataset {
     public Stream<SparseArray> stream() {
         return Arrays.stream(data);
     }
+
+    @Override
+    public Iterator<SparseArray> iterator() {
+        return stream().iterator();
+    }
 }
