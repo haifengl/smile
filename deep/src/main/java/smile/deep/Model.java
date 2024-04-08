@@ -142,7 +142,7 @@ public class Model {
                 Tensor prediction = net.forward(data);
                 // Compute a loss value to judge the prediction of our model.
                 Tensor error = loss.apply(prediction, target);
-                lossValue = error.toFloat();
+                lossValue = error.floatValue();
                 // Compute gradients of the loss w.r.t. the parameters of our model.
                 error.backward();
                 // Update the parameters based on the calculated gradients.
