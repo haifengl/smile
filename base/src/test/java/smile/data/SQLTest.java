@@ -51,10 +51,10 @@ public class SQLTest {
     public void test() throws SQLException {
         System.out.println("SQL");
         SQL sql = new SQL();
-        sql.openParquet("user", Paths.getTestData("kylo/userdata1.parquet").toString());
-        sql.openJSON("books", Paths.getTestData("kylo/books_array.json").toString());
-        sql.openCSV("gdp", Paths.getTestData("regression/gdp.csv").toString());
-        sql.openCSV("diabetes", Paths.getTestData("regression/diabetes.csv").toString());
+        sql.parquet("user", Paths.getTestData("kylo/userdata1.parquet").toString());
+        sql.json("books", Paths.getTestData("kylo/books_array.json").toString());
+        sql.csv("gdp", Paths.getTestData("regression/gdp.csv").toString());
+        sql.csv("diabetes", Paths.getTestData("regression/diabetes.csv").toString());
 
         DataFrame tables = sql.tables();
         System.out.println(tables);
