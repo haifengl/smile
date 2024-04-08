@@ -70,7 +70,9 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-encoding", "UTF8",
     "-g:lines,vars,source",
     "-Xlint:deprecation",
-    "-Xlint:unchecked"
+    "-Xlint:unchecked",
+    "-source", "17",
+    "-target", "17"
   ),
   Compile / doc / javacOptions ++= Seq(
     "-Xdoclint:none",
@@ -84,20 +86,6 @@ lazy val javaSettings = commonSettings ++ Seq(
     "org.junit.jupiter" % "junit-jupiter-engine" % "5.9.1" % Test,
     "net.aichler"       % "jupiter-interface"    % "0.9.0" % Test
   )
-)
-
-lazy val java8Settings = javaSettings ++ Seq(
-  Compile / compile / javacOptions ++= Seq(
-    "-source", "1.8",
-    "-target", "1.8"
-  ),
-)
-
-lazy val java17Settings = javaSettings ++ Seq(
-  Compile / compile / javacOptions ++= Seq(
-    "-source", "17",
-    "-target", "17"
-  ),
 )
 
 lazy val scalaSettings = commonSettings ++ Seq(
@@ -149,31 +137,31 @@ lazy val root = project.in(file("."))
   .aggregate(core, base, mkl, nlp, deep, plot, json, scala, spark, shell)
 
 lazy val base = project.in(file("base"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .settings(javaCppSettings: _*)
 
 lazy val mkl = project.in(file("mkl"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .settings(javaCppTestSettings: _*)
   .settings(Test / envVars += ("MKL_VERBOSE" -> "1"))
   .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val core = project.in(file("core"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .dependsOn(base % "compile->compile;test->test")
 
 lazy val deep = project.in(file("deep"))
-  .settings(java17Settings: _*)
+  .settings(javaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .dependsOn(core)
 
 lazy val plot = project.in(file("plot"))
-  .settings(java17Settings: _*)
+  .settings(javaSettings: _*)
   .dependsOn(base)
 
 lazy val json = project.in(file("json"))
