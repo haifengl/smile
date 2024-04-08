@@ -363,7 +363,7 @@ class DataFrameImpl implements DataFrame, Serializable {
 
     @Override
     public Stream<Tuple> stream() {
-        Spliterator<Tuple> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
+        Spliterator<Tuple> spliterator = new DataFrameSpliterator(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
     }
 

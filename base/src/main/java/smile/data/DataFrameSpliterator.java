@@ -25,9 +25,9 @@ import java.util.Spliterator;
  *
  * @author Haifeng Li
  */
-class DatasetSpliterator<T> implements Spliterator<T> {
+class DataFrameSpliterator implements Spliterator<Tuple> {
     /** The underlying Dataset. */
-    private final Dataset<T> data;
+    private final DataFrame data;
     /** These may be employed by Spliterator clients to control, specialize or simplify computation. */
     private int characteristics = IMMUTABLE | SIZED | SUBSIZED;
     /** Current index, advanced on split or traversal */
@@ -40,11 +40,7 @@ class DatasetSpliterator<T> implements Spliterator<T> {
      * @param data the underlying Dataset.
      * @param additionalCharacteristics properties of this spliterator's source.
      */
-    public DatasetSpliterator(Dataset<T> data, int additionalCharacteristics) {
-        if (data.distributed()) {
-            throw new UnsupportedOperationException("The LocalDatasetSpliterator is applied to a distributed Dataset.");
-        }
-
+    public DataFrameSpliterator(DataFrame data, int additionalCharacteristics) {
         this.data = data;
         this.characteristics |= additionalCharacteristics;
         this.origin = 0;
@@ -54,7 +50,7 @@ class DatasetSpliterator<T> implements Spliterator<T> {
     /**
      * Constructor.
      */
-    public DatasetSpliterator(DatasetSpliterator<T> spliterator, int origin, int fence) {
+    public DataFrameSpliterator(DataFrameSpliterator spliterator, int origin, int fence) {
         this.data = spliterator.data;
         this.characteristics = spliterator.characteristics;
         this.origin = origin;
@@ -62,7 +58,7 @@ class DatasetSpliterator<T> implements Spliterator<T> {
     }
 
     @Override
-    public boolean tryAdvance(Consumer<? super T> action) {
+    public boolean tryAdvance(Consumer<? super Tuple> action) {
         if (origin < fence) {
             action.accept(data.get(origin));
             origin += 1;
@@ -74,13 +70,13 @@ class DatasetSpliterator<T> implements Spliterator<T> {
     }
 
     @Override
-    public Spliterator<T> trySplit() {
+    public Spliterator<Tuple> trySplit() {
         int lo = origin; // divide range in half
         int mid = ((lo + fence) >>> 1);
         if (lo < mid) {
             origin = mid; // reset this Spliterator's origin
             // split out left half
-            return new DatasetSpliterator<>(this, lo, mid);
+            return new DataFrameSpliterator(this, lo, mid);
         }
 
         // too small to split
