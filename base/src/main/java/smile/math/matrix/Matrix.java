@@ -19,7 +19,10 @@ package smile.math.matrix;
 
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collector;
 
 import smile.math.MathEx;
 import smile.math.blas.*;
@@ -393,6 +396,27 @@ public class Matrix extends IMatrix {
         }
 
         return toeplitz;
+    }
+
+    /**
+     * Returns a stream collector that accumulates elements into a Matrix.
+     *
+     * @return the stream collector.
+     */
+    public static Collector<double[], List<double[]>, Matrix> collector() {
+        return Collector.of(
+                // supplier
+                ArrayList::new,
+                // accumulator
+                List::add,
+                // combiner
+                (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                },
+                // finisher
+                (container) -> Matrix.of(container.toArray(new double[container.size()][]))
+        );
     }
 
     @Override

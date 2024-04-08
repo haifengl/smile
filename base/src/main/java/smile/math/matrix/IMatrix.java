@@ -109,7 +109,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
     /**
      * Returns the number of stored matrix elements. For conventional matrix,
-     * it is simplify nrow * ncol. But it is usually much less for band,
+     * it is simply nrow * ncol. But it is usually much less for band,
      * packed or sparse matrix.
      * @return the number of stored matrix elements.
      */
