@@ -38,7 +38,7 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public interface DataFrame extends Dataset<Tuple> {
+public interface DataFrame extends Iterable<Tuple> {
     /**
      * Returns the schema of DataFrame.
      * @return the schema.
@@ -68,6 +68,43 @@ public interface DataFrame extends Dataset<Tuple> {
     default Measure[] measures() {
         return schema().measures();
     }
+
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
+    int size();
+
+    /**
+     * Returns true if the data frame is empty.
+     * @return true if the data frame is empty.
+     */
+    default boolean isEmpty() {
+        return size() == 0;
+    }
+
+    /**
+     * Returns the row at the specified index.
+     * @param i the row index.
+     * @return the i-th row.
+     */
+    Tuple get(int i);
+
+    /**
+     * Returns the row at the specified index. For Scala's convenience.
+     * @param i the row index.
+     * @return the i-th row.
+     */
+    default Tuple apply(int i) {
+        return get(i);
+    }
+
+    /**
+     * Returns a (possibly parallel) Stream of rows.
+     *
+     * @return a (possibly parallel) Stream of rows.
+     */
+    Stream<Tuple> stream();
 
     /**
      * Returns the number of rows.
