@@ -357,7 +357,7 @@ public class Tensor {
      * Returns the int value when the tensor holds a single value.
      * @return the int value when the tensor holds a single value.
      */
-    public int toInt() {
+    public int intValue() {
         return value.item_int();
     }
 
@@ -365,7 +365,7 @@ public class Tensor {
      * Returns the long value when the tensor holds a single value.
      * @return the long value when the tensor holds a single value.
      */
-    public long toLong() {
+    public long longValue() {
         return value.item_long();
     }
 
@@ -373,7 +373,7 @@ public class Tensor {
      * Returns the float value when the tensor holds a single value.
      * @return the float value when the tensor holds a single value.
      */
-    public float toFloat() {
+    public float floatValue() {
         return value.item_float();
     }
 
@@ -381,7 +381,7 @@ public class Tensor {
      * Returns the double value when the tensor holds a single value.
      * @return the double value when the tensor holds a single value.
      */
-    public double toDouble() {
+    public double doubleValue() {
         return value.item_double();
     }
 
