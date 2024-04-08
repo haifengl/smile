@@ -33,6 +33,7 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
 import smile.data.Instance;
+import smile.data.SparseDataset;
 import smile.data.type.StructType;
 import smile.util.SparseArray;
 import smile.util.Strings;
@@ -507,7 +508,7 @@ public interface Read {
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
      * {@code index} is an integer starting from 1, and {@code value}
-     * is a real number. The indices must be in an ascending order. The labels in
+     * is a real number. The indices must be in ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
      *
@@ -516,7 +517,7 @@ public interface Read {
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
      */
-    static Dataset<Instance<SparseArray>> libsvm(String path) throws IOException, URISyntaxException {
+    static SparseDataset<Integer> libsvm(String path) throws IOException, URISyntaxException {
         return libsvm(Input.reader(path));
     }
 
@@ -531,7 +532,7 @@ public interface Read {
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
      * {@code index} is an integer starting from 1, and {@code value}
-     * is a real number. The indices must be in an ascending order. The labels in
+     * is a real number. The indices must be in ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
      *
@@ -539,7 +540,7 @@ public interface Read {
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
-    static Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException {
+    static SparseDataset<Integer> libsvm(Path path) throws IOException {
         return libsvm(Files.newBufferedReader(path));
     }
 
@@ -554,7 +555,7 @@ public interface Read {
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
      * {@code index} is an integer starting from 1, and {@code value}
-     * is a real number. The indices must be in an ascending order. The labels in
+     * is a real number. The indices must be in ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
      *
@@ -562,31 +563,13 @@ public interface Read {
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
-    static Dataset<Instance<SparseArray>> libsvm(BufferedReader reader) throws IOException {
-        try {
+    static SparseDataset<Integer> libsvm(BufferedReader reader) throws IOException {
+        try (reader) {
+            List<Instance<SparseArray, Integer>> data = new ArrayList<>();
             String line = reader.readLine();
-            if (line == null) {
-                throw new IOException("Empty data source.");
-            }
-
-            // detect if the response variable is read or integer label.
-            String token = line.trim().split("\\s+")[0];
-            boolean classification = true;
-            try {
-                Integer.valueOf(token);
-            } catch (NumberFormatException e) {
-                try {
-                    Double.valueOf(token);
-                    classification = false;
-                } catch (NumberFormatException ex) {
-                    throw new NumberFormatException("Unrecognized response variable value: " + token);
-                }
-            }
-
-            List<Instance<SparseArray>> data = new ArrayList<>();
-            do {
+            while (line != null) {
                 String[] tokens = line.trim().split("\\s+");
-                String firstToken = tokens[0];
+                int y = Integer.parseInt(tokens[0]);
 
                 SparseArray row = new SparseArray();
                 for (int k = 1; k < tokens.length; k++) {
@@ -600,40 +583,11 @@ public interface Read {
                     row.set(j, x);
                 }
 
-                if (classification) {
-                    data.add(new Instance<SparseArray>() {
-                        final int y = Integer.parseInt(firstToken);
-                        @Override
-                        public SparseArray x() {
-                            return row;
-                        }
-
-                        @Override
-                        public int label() {
-                            return y;
-                        }
-                    });
-                } else {
-                    data.add(new Instance<SparseArray>() {
-                        final double y = Double.parseDouble(firstToken);
-                        @Override
-                        public SparseArray x() {
-                            return row;
-                        }
-
-                        @Override
-                        public double y() {
-                            return y;
-                        }
-                    });
-                }
-
+                data.add(new Instance<>(row, y));
                 line = reader.readLine();
-            } while (line != null);
+            }
 
-            return Dataset.of(data);
-        } finally {
-            reader.close();
+            return SparseDataset.of(data);
         }
     }    
 }

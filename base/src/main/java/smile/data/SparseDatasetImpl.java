@@ -34,13 +34,13 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-class SparseDatasetImpl implements SparseDataset {
+class SparseDatasetImpl<T> implements SparseDataset<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseDatasetImpl.class);
 
     /**
      * The data objects.
      */
-    private final SparseArray[] data;
+    private final ArrayList<Instance<SparseArray, T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -53,29 +53,27 @@ class SparseDatasetImpl implements SparseDataset {
      * The number of nonzero entries in each column.
      */
     private int[] colSize;
+
     /**
      * Constructor.
-     * @param data Each row is a data item which are the indices
-     *             of nonzero elements. Every row will be sorted
-     *             into ascending order.
+     * @param data The sample instances.
      */
-    public SparseDatasetImpl(Collection<SparseArray> data) {
-        this(data, 1 + data.stream().flatMap(SparseArray::stream).mapToInt(e -> e.i).max().orElse(0));
+    public SparseDatasetImpl(Collection<Instance<SparseArray, T>> data) {
+        this(data, 1 + data.stream().flatMap(instance -> instance.x.stream()).mapToInt(e -> e.i).max().orElse(0));
     }
 
     /**
      * Constructor.
-     * @param data Each row is a data item which are the indices
-     *             of nonzero elements. Every row will be sorted
-     *             into ascending order.
+     * @param data The sample instances.
      * @param ncol The number of columns.
      */
-    public SparseDatasetImpl(Collection<SparseArray> data, int ncol) {
-        this.data = data.toArray(new SparseArray[0]);
+    public SparseDatasetImpl(Collection<Instance<SparseArray, T>> data, int ncol) {
+        this.instances = new ArrayList<>(data);
         this.ncol = ncol;
         colSize = new int[ncol];
 
-        for (SparseArray x : data) {
+        for (var instance : data) {
+            var x = instance.x;
             x.sort(); // sort array index into ascending order.
 
             int i = -1; // index of previous element
@@ -104,7 +102,7 @@ class SparseDatasetImpl implements SparseDataset {
 
     @Override
     public int size() {
-        return data.length;
+        return instances.size();
     }
 
     @Override
@@ -123,17 +121,17 @@ class SparseDatasetImpl implements SparseDataset {
     }
 
     @Override
-    public SparseArray get(int i) {
-        return data[i];
+    public Instance<SparseArray, T> get(int i) {
+        return instances.get(i);
     }
 
     @Override
-    public Stream<SparseArray> stream() {
-        return Arrays.stream(data);
+    public Stream<Instance<SparseArray, T>> stream() {
+        return instances.stream();
     }
 
     @Override
-    public Iterator<SparseArray> iterator() {
-        return stream().iterator();
+    public Iterator<Instance<SparseArray, T>> iterator() {
+        return instances.iterator();
     }
 }

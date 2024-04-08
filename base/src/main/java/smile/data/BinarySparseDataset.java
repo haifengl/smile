@@ -18,17 +18,21 @@
 package smile.data;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Binary sparse dataset. Each item is stored as an integer array, which
  * are the indices of nonzero elements in ascending order.
  *
+ * @param <T> the target type.
+ *
  * @author Haifeng Li
  */
-public interface BinarySparseDataset extends Dataset<int[]> {
+public interface BinarySparseDataset<T> extends Dataset<int[], T> {
     /**
      * Returns the number of nonzero entries.
      * @return the number of nonzero entries.
@@ -52,7 +56,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
             throw new IllegalArgumentException("Invalid index: i = " + i);
         }
 
-        int[] x = get(i);
+        int[] x = get(i).x;
         if (x.length == 0) {
             return 0;
         }
@@ -83,15 +87,27 @@ public interface BinarySparseDataset extends Dataset<int[]> {
     smile.math.matrix.SparseMatrix toMatrix();
 
     /**
-     * Returns a default implementation of BinarySparseDataset from a collection.
+     * Returns a default implementation of BinarySparseDataset.
+     *
+     * @param data The sample instances.
+     * @return the sparse dataset.
+     */
+    static <T> BinarySparseDataset<T> of(Collection<Instance<int[], T>> data) {
+        return new BinarySparseDatasetImpl<>(data);
+    }
+
+    /**
+     * Returns a default implementation of BinarySparseDataset without targets.
      *
      * @param data Each row is a data item which are the indices of
      *             nonzero elements. Every row will be sorted into
      *             ascending order.
      * @return the sparse dataset.
      */
-    static BinarySparseDataset of(Collection<int[]> data) {
-        return new BinarySparseDatasetImpl(data);
+    static BinarySparseDataset<Void> of(int[][] data) {
+        return new BinarySparseDatasetImpl<>(Arrays.stream(data)
+                .map(x -> new Instance<int[], Void>(x, null))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -103,18 +119,18 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * @exception NumberFormatException if an entry is not an integer.
      * @return the sparse dataset.
      */
-    static BinarySparseDataset from(java.nio.file.Path path) throws IOException, NumberFormatException {
+    static BinarySparseDataset<Void> from(java.nio.file.Path path) throws IOException, NumberFormatException {
         try (Stream<String> stream = java.nio.file.Files.lines(path)) {
-            List<int[]> rows = stream.map(line -> {
+            List<Instance<int[], Void>> rows = stream.map(line -> {
                 String[] s = line.split("\\s+");
                 int[] index = new int[s.length];
                 for (int i = 0; i < s.length; i++) {
                     index[i] = Integer.parseInt(s[i]);
                 }
-                return index;
+                return new Instance<int[], Void>(index, null);
             }).collect(java.util.stream.Collectors.toList());
 
-            return new BinarySparseDatasetImpl(rows);
+            return new BinarySparseDatasetImpl<>(rows);
         }
     }
 }
