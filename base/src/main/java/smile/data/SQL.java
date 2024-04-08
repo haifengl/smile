@@ -76,7 +76,7 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame tables() throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
-        try (ResultSet rs = meta.getTables(null, null, null, null)) {
+        try (var rs = meta.getTables(null, null, null, null)) {
             DataFrame df = DataFrame.of(rs);
             return df.select("TABLE_NAME", "REMARKS");
         }
@@ -90,7 +90,7 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame describe(String table) throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
-        try (ResultSet rs = meta.getColumns(null, null, table, null)) {
+        try (var rs = meta.getColumns(null, null, table, null)) {
             DataFrame df = DataFrame.of(rs);
             return df.select("COLUMN_NAME", "TYPE_NAME", "IS_NULLABLE");
         }
@@ -104,8 +104,8 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openCSV(String name, String... path) throws SQLException {
-        return openCSV(name, ',', null, path);
+    public SQL csv(String name, String... path) throws SQLException {
+        return csv(name, ',', null, path);
     }
 
     /**
@@ -120,9 +120,11 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openCSV(String name, char delimiter, Map<String, String> columns, String... path) throws SQLException {
+    public SQL csv(String name, char delimiter, Map<String, String> columns, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("CREATE TABLE %s AS SELECT * FROM read_csv(%s, delim='%c', ",
+        sb.append(String.format("""
+                CREATE TABLE %s AS
+                SELECT * FROM read_csv(%s, delim='%c', """,
                 name, fileList(path), delimiter));
         if (columns == null) {
             sb.append("header = true");
@@ -134,7 +136,7 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             stmt.execute(query);
         }
         return this;
@@ -150,8 +152,8 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openParquet(String name, String... path) throws SQLException {
-        return openParquet(name, null, path);
+    public SQL parquet(String name, String... path) throws SQLException {
+        return parquet(name, null, path);
     }
 
     /**
@@ -177,9 +179,11 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openParquet(String name, Map<String, String> options, String... path) throws SQLException {
+    public SQL parquet(String name, Map<String, String> options, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("CREATE TABLE %s AS SELECT * FROM read_parquet(%s",
+        sb.append(String.format("""
+                CREATE TABLE %s AS
+                SELECT * FROM read_parquet(%s""",
                 name, fileList(path)));
         if (options != null) {
             sb.append(", ");
@@ -189,7 +193,7 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             stmt.execute(query);
         }
         return this;
@@ -206,8 +210,8 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openJSON(String name, String... path) throws SQLException {
-        return openJSON(name, "auto", null, path);
+    public SQL json(String name, String... path) throws SQLException {
+        return json(name, "auto", null, path);
     }
 
     /**
@@ -227,9 +231,11 @@ public class SQL implements AutoCloseable {
      * @return this object.
      * @throws SQLException
      */
-    public SQL openJSON(String name, String format, Map<String, String> columns, String... path) throws SQLException {
+    public SQL json(String name, String format, Map<String, String> columns, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("CREATE TABLE %s AS SELECT * FROM read_json(%s, format = '%s'",
+        sb.append(String.format("""
+                CREATE TABLE %s AS
+                SELECT * FROM read_json(%s, format = '%s'""",
                 name, fileList(path), format));
         if (columns != null) {
             sb.append(", columns = ");
@@ -239,7 +245,7 @@ public class SQL implements AutoCloseable {
 
         String query = sb.toString();
         logger.info(query);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             stmt.execute(query);
         }
         return this;
@@ -285,7 +291,7 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame query(String sql) throws SQLException {
         logger.info(sql);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             return DataFrame.of(stmt.executeQuery(sql));
         }
     }
@@ -298,7 +304,7 @@ public class SQL implements AutoCloseable {
      */
     public int update(String sql) throws SQLException {
         logger.info(sql);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             return stmt.executeUpdate(sql);
         }
     }
@@ -312,7 +318,7 @@ public class SQL implements AutoCloseable {
      */
     public boolean execute(String sql) throws SQLException {
         logger.info(sql);
-        try (Statement stmt = db.createStatement()) {
+        try (var stmt = db.createStatement()) {
             return stmt.execute(sql);
         }
     }
