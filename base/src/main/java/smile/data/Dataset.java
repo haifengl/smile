@@ -19,9 +19,11 @@ package smile.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 /**
@@ -78,6 +80,33 @@ public interface Dataset<T> extends Iterable<T> {
     Stream<T> stream();
 
     /**
+     * Returns an iterator of mini-batches.
+     * @param size the batch size.
+     * @return an iterator of mini-batches.
+     */
+    default Iterator<List<T>> batch(int size) {
+        return new Iterator<>() {
+            int[] permutation = MathEx.permutate(size());
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < size();
+            }
+
+            @Override
+            public List<T> next() {
+                int length = Math.min(size, size() - i);
+                ArrayList<T> batch = new ArrayList<>(length);
+                for (int j = 0; j < length; j++, i++) {
+                    batch.add(get(permutation[i]));
+                }
+                return batch;
+            }
+        };
+    }
+
+    /**
      * Returns the <code>List</code> of data items.
      * @return the <code>List</code> of data items.
      */
@@ -92,13 +121,13 @@ public interface Dataset<T> extends Iterable<T> {
      */
     default String toString(int numRows) {
         StringBuilder sb = new StringBuilder();
-        String top = stream().limit(numRows).map(Object::toString).collect(java.util.stream.Collectors.joining("\n"));
+        String top = stream().limit(numRows).map(Object::toString).collect(java.util.stream.Collectors.joining(System.lineSeparator()));
         sb.append(top);
 
         int rest = size() - numRows;
         if (rest > 0) {
             String rowsString = (rest == 1) ? "row" : "rows";
-            sb.append(String.format("\n%d more %s...\n", rest, rowsString));
+            sb.append(String.format("%n%d more %s...%n", rest, rowsString));
         }
 
         return sb.toString();
