@@ -26,46 +26,47 @@ import java.util.stream.Stream;
 /**
  * A simple implementation of Dataset that store data in single machine's memory.
  *
- * @param <T> the type of data objects.
+ * @param <D> the data type.
+ * @param <T> the target type.
  *
  * @author Haifeng Li
  */
-class DatasetImpl<T> implements Dataset<T> {
+class DatasetImpl<D, T> implements Dataset<D, T> {
     /**
-     * The data objects.
+     * The sample instances.
      */
-    private final ArrayList<T> data;
+    private final ArrayList<Instance<D, T>> instances;
 
     /**
      * Constructor
-     * @param data The underlying data collection.
+     * @param instances The sample instances.
      */
-    public DatasetImpl(Collection<T> data) {
-        this.data = new ArrayList<>(data);
+    public DatasetImpl(Collection<Instance<D, T>> instances) {
+        this.instances = new ArrayList<>(instances);
     }
 
     @Override
     public int size() {
-        return data.size();
+        return instances.size();
     }
 
     @Override
-    public T get(int i) {
-        return data.get(i);
+    public Instance<D, T> get(int i) {
+        return instances.get(i);
     }
 
     @Override
-    public Stream<T> stream() {
-        return data.stream();
+    public Stream<Instance<D, T>> stream() {
+        return instances.stream();
     }
 
     @Override
-    public Iterator<T> iterator() {
-        return data.iterator();
+    public Iterator<Instance<D, T>> iterator() {
+        return instances.iterator();
     }
 
     @Override
-    public List<T> toList() {
-        return new ArrayList<>(data);
+    public List<Instance<D, T>> toList() {
+        return new ArrayList<>(instances);
     }
 }

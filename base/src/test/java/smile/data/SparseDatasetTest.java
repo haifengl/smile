@@ -38,14 +38,15 @@ public class SparseDatasetTest {
     };
 
     public SparseDatasetTest() {
-        List<SparseArray> rows = new ArrayList<>();
-        for (double[] a : A) {
+        SparseArray[] rows = new SparseArray[A.length];
+        for (int i = 0; i < A.length; i++) {
+            double[] a = A[i];
             SparseArray row = new SparseArray();
             for (int j = 0; j < a.length; j++) {
                 row.append(j, a[j]);
             }
 
-            rows.add(row);
+            rows[i] = row;
         }
 
         SparseDataset lil = SparseDataset.of(rows);

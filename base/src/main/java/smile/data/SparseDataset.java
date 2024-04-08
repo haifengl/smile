@@ -22,10 +22,8 @@ import java.io.LineNumberReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
@@ -44,7 +42,7 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public interface SparseDataset extends Dataset<SparseArray> {
+public interface SparseDataset<T> extends Dataset<SparseArray, T> {
     /**
      * Returns the number of nonzero entries.
      * @return the number of nonzero entries.
@@ -83,7 +81,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
 
-        for (SparseArray.Entry e : get(i)) {
+        for (SparseArray.Entry e : get(i).x) {
             if (e.i == j) {
                 return e.x;
             }
@@ -96,16 +94,16 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Unitize each row so that L2 norm of x = 1.
      */
     default void unitize() {
-        stream().forEach(x -> {
+        stream().forEach(instance -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : x) {
+            for (SparseArray.Entry e : instance.x) {
                 sum += MathEx.pow2(e.x);
             }
 
             sum = Math.sqrt(sum);
 
-            for (SparseArray.Entry e : x) {
+            for (SparseArray.Entry e : instance.x) {
                 e.update(e.x / sum);
             }
         });
@@ -115,14 +113,14 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Unitize each row so that L1 norm of x is 1.
      */
     default void unitize1() {
-        stream().forEach(x -> {
+        stream().forEach(instance -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : x) {
+            for (SparseArray.Entry e : instance.x) {
                 sum += Math.abs(e.x);
             }
 
-            for (SparseArray.Entry e : x) {
+            for (SparseArray.Entry e : instance.x) {
                 e.update(e.x / sum);
             }
         });
@@ -147,7 +145,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
         double[] x = new double[nz];
 
         for (int i = 0; i < nrow; i++) {
-            for (SparseArray.Entry e : get(i)) {
+            for (SparseArray.Entry e : get(i).x) {
                 int j = e.i;
                 int k = colIndex[j] + pos[j];
 
@@ -161,43 +159,60 @@ public interface SparseDataset extends Dataset<SparseArray> {
     }
 
     /**
-     * Returns a default implementation of SparseDataset from a collection.
+     * Returns a default implementation of SparseDataset without targets.
      *
      * @param data sparse arrays.
      * @return the sparse dataset.
      */
-    static SparseDataset of(Stream<SparseArray> data) {
-        return of(data.collect(java.util.stream.Collectors.toList()));
+    static <T> SparseDataset<T> of(Collection<Instance<SparseArray, T>> data) {
+        return new SparseDatasetImpl<>(data);
     }
 
     /**
-     * Returns a default implementation of SparseDataset from a collection.
-     *
-     * @param data sparse arrays.
-     * @return the sparse dataset.
-     */
-    static SparseDataset of(Collection<SparseArray> data) {
-        return new SparseDatasetImpl(data);
-    }
-
-    /**
-     * Returns a default implementation of SparseDataset from a collection.
+     * Returns a default implementation of SparseDataset without targets.
      *
      * @param data sparse arrays.
      * @param ncol the number of columns.
      * @return the sparse dataset.
      */
-    static SparseDataset of(Collection<SparseArray> data, int ncol) {
-        return new SparseDatasetImpl(data, ncol);
+    static <T> SparseDataset<T> of(Collection<Instance<SparseArray, T>> data, int ncol) {
+        return new SparseDatasetImpl<>(data, ncol);
     }
 
     /**
-     * Strips the response variable and returns a SparseDataset.
-     * @param data the dataset of sparse arrays.
+     * Returns a default implementation of SparseDataset without targets.
+     *
+     * @param data sparse arrays.
      * @return the sparse dataset.
      */
-    static SparseDataset of(Dataset<Instance<SparseArray>> data) {
-        return of(data.stream().map(Instance::x).collect(java.util.stream.Collectors.toList()));
+    static SparseDataset<Void> of(SparseArray[] data) {
+        return new SparseDatasetImpl<>(Arrays.stream(data)
+                .map(x -> new Instance<SparseArray, Void>(x, null))
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * Returns a default implementation of SparseDataset without targets.
+     *
+     * @param data sparse arrays.
+     * @param ncol the number of columns.
+     * @return the sparse dataset.
+     */
+    static SparseDataset<Void> of(SparseArray[] data, int ncol) {
+        return new SparseDatasetImpl<>(Arrays.stream(data)
+                .map(x -> new Instance<SparseArray, Void>(x, null))
+                .collect(Collectors.toList()), ncol);
+    }
+
+    /**
+     * Returns a default implementation of SparseDataset.
+     *
+     * @param data sparse arrays.
+     * @return the sparse dataset.
+     */
+    static SparseDataset<Void> of(Stream<SparseArray> data) {
+        return of(data.map(x -> new Instance<SparseArray, Void>(x, null))
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -250,15 +265,15 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * @exception ParseException if an index is not an integer or the value is not a double.
      * @return the sparse dataset.
      */
-    static SparseDataset from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
+    static SparseDataset<Void> from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
              Scanner scanner = new Scanner(reader)) {
             int nrow = scanner.nextInt();
             int ncol = scanner.nextInt();
             int nz = scanner.nextInt();
-            List<SparseArray> rows = new ArrayList<>(nrow);
+            SparseArray[] rows = new SparseArray[nrow];
             for (int i = 0; i < nrow; i++) {
-                rows.add(new SparseArray());
+                rows[i] = new SparseArray();
             }
 
             // read the EOL of header line(s).
@@ -275,7 +290,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
                 int j = Integer.parseInt(tokens[1]) - arrayIndexOrigin;
                 double x = Double.parseDouble(tokens[2]);
 
-                SparseArray row = rows.get(i);
+                SparseArray row = rows[i];
                 row.set(j, x);
             } while (scanner.hasNextLine());
 

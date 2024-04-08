@@ -17,49 +17,32 @@
 package smile.data;
 
 /**
- * An immutable instance.
+ * An immutable sample instance.
  *
- * @param <T> the type of instance.
+ * @param <D> the data type.
+ * @param <T> the target type.
  *
  * @author Haifeng Li
  */
-public interface Instance <T> {
+public class Instance<D, T> {
     /**
      * Returns the instance.
      * @return the instance.
      */
-    T x();
+    public final D x;
 
     /**
      * Returns the response variable of instance.
      * @return the response variable.
      */
-    default double y() {
-        throw new UnsupportedOperationException("The instance doesn't have response variable.");
+    public final T y;
+
+    public Instance(D x, T y) {
+        this.x = x;
+        this.y = y;
     }
 
-    /**
-     * Returns the class label of instance.
-     * @return the class label.
-     */
-    default int label() {
-        throw new UnsupportedOperationException("The instance doesn't have class label.");
-    }
-
-    /**
-     * Return the (optional) name associated with instance.
-     * Note that this is not the class label.
-     * @return the name of instance.
-     */
-    default String name() {
-        return null;
-    }
-
-    /**
-     * Return the (optional) weight associated with instance.
-     * @return the weight of instance.
-     */
-    default double weight() {
-        return 1.0;
+    public Instance(D x) {
+        this(x, null);
     }
 }

@@ -18,6 +18,7 @@
 package smile.data;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -28,15 +29,17 @@ import smile.math.matrix.SparseMatrix;
  * Binary sparse dataset. Each item is stored as an integer array, which
  * are the indices of nonzero elements in ascending order.
  *
+ * @param <T> the target type.
+ *
  * @author Haifeng Li
  */
-class BinarySparseDatasetImpl implements BinarySparseDataset {
+class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDatasetImpl.class);
 
     /**
-     * The data objects.
+     * The sample instances.
      */
-    private final int[][] data;
+    private final ArrayList<Instance<int[], T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -52,16 +55,20 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
 
     /**
      * Constructor.
-     * @param data Each row is a data item which are the indices
-     *             of nonzero elements. Every row will be sorted
-     *             into ascending order.
+     * @param data The sample instances.
      */
-    public BinarySparseDatasetImpl(Collection<int[]> data) {
-        this.data = data.toArray(new int[data.size()][]);
+    public BinarySparseDatasetImpl(Collection<Instance<int[], T>> data) {
+        this.instances = new ArrayList<>(data);
 
-        ncol = MathEx.max(this.data) + 1;
+        int p = 0;
+        for (var instance : instances) {
+            p = Math.max(p, MathEx.max(instance.x));
+        }
+        ncol = p + 1;
         colSize = new int[ncol];
-        for (int[] x : this.data) {
+
+        for (var instance : instances) {
+            var x = instance.x;
             Arrays.sort(x);
 
             int prev = -1; // index of previous element
@@ -83,7 +90,7 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
 
     @Override
     public int size() {
-        return data.length;
+        return instances.size();
     }
 
     @Override
@@ -97,18 +104,18 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     }
 
     @Override
-    public int[] get(int i) {
-        return data[i];
+    public Instance<int[], T> get(int i) {
+        return instances.get(i);
     }
 
     @Override
-    public Stream<int[]> stream() {
-        return Arrays.stream(data);
+    public Stream<Instance<int[], T>> stream() {
+        return instances.stream();
     }
 
     @Override
-    public Iterator<int[]> iterator() {
-        return Arrays.stream(data).iterator();
+    public Iterator<Instance<int[], T>> iterator() {
+        return instances.iterator();
     }
 
     @Override
@@ -119,12 +126,12 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
             colIndex[i + 1] = colIndex[i] + colSize[i];
         }
 
-        int nrow = data.length;
+        int nrow = instances.size();
         int[] rowIndex = new int[n];
         double[] x = new double[n];
 
         for (int i = 0; i < nrow; i++) {
-            for (int j : data[i]) {
+            for (int j : instances.get(i).x) {
                 int k = colIndex[j] + pos[j];
 
                 rowIndex[k] = i;
