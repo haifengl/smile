@@ -270,6 +270,15 @@ public class Tensor {
     }
 
     /**
+     * Returns multiple rows of tensor.
+     * @param index the indices of selected rows.
+     * @return the sub-tensor.
+     */
+    public Tensor get(long... index) {
+        return get(Tensor.of(index, index.length));
+    }
+
+    /**
      * Returns a portion of tensor given the indices.
      * @param indices the indices along the dimensions.
      * @return the sub-tensor.
