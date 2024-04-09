@@ -35,13 +35,13 @@ class DatasetImpl<D, T> implements Dataset<D, T> {
     /**
      * The sample instances.
      */
-    private final ArrayList<Instance<D, T>> instances;
+    private final ArrayList<SampleInstance<D, T>> instances;
 
     /**
      * Constructor
      * @param instances The sample instances.
      */
-    public DatasetImpl(Collection<Instance<D, T>> instances) {
+    public DatasetImpl(Collection<SampleInstance<D, T>> instances) {
         this.instances = new ArrayList<>(instances);
     }
 
@@ -51,22 +51,22 @@ class DatasetImpl<D, T> implements Dataset<D, T> {
     }
 
     @Override
-    public Instance<D, T> get(int i) {
+    public SampleInstance<D, T> get(int i) {
         return instances.get(i);
     }
 
     @Override
-    public Stream<Instance<D, T>> stream() {
+    public Stream<SampleInstance<D, T>> stream() {
         return instances.stream();
     }
 
     @Override
-    public Iterator<Instance<D, T>> iterator() {
+    public Iterator<SampleInstance<D, T>> iterator() {
         return instances.iterator();
     }
 
     @Override
-    public List<Instance<D, T>> toList() {
+    public List<SampleInstance<D, T>> toList() {
         return new ArrayList<>(instances);
     }
 }

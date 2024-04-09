@@ -39,7 +39,7 @@ class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
     /**
      * The sample instances.
      */
-    private final ArrayList<Instance<int[], T>> instances;
+    private final ArrayList<SampleInstance<int[], T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -57,18 +57,18 @@ class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
      * Constructor.
      * @param data The sample instances.
      */
-    public BinarySparseDatasetImpl(Collection<Instance<int[], T>> data) {
+    public BinarySparseDatasetImpl(Collection<SampleInstance<int[], T>> data) {
         this.instances = new ArrayList<>(data);
 
         int p = 0;
         for (var instance : instances) {
-            p = Math.max(p, MathEx.max(instance.x));
+            p = Math.max(p, MathEx.max(instance.x()));
         }
         ncol = p + 1;
         colSize = new int[ncol];
 
         for (var instance : instances) {
-            var x = instance.x;
+            var x = instance.x();
             Arrays.sort(x);
 
             int prev = -1; // index of previous element
@@ -104,17 +104,17 @@ class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
     }
 
     @Override
-    public Instance<int[], T> get(int i) {
+    public SampleInstance<int[], T> get(int i) {
         return instances.get(i);
     }
 
     @Override
-    public Stream<Instance<int[], T>> stream() {
+    public Stream<SampleInstance<int[], T>> stream() {
         return instances.stream();
     }
 
     @Override
-    public Iterator<Instance<int[], T>> iterator() {
+    public Iterator<SampleInstance<int[], T>> iterator() {
         return instances.iterator();
     }
 
@@ -131,7 +131,7 @@ class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
         double[] x = new double[n];
 
         for (int i = 0; i < nrow; i++) {
-            for (int j : instances.get(i).x) {
+            for (int j : instances.get(i).x()) {
                 int k = colIndex[j] + pos[j];
 
                 rowIndex[k] = i;

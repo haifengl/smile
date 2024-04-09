@@ -40,7 +40,7 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
     /**
      * The data objects.
      */
-    private final ArrayList<Instance<SparseArray, T>> instances;
+    private final ArrayList<SampleInstance<SparseArray, T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -58,8 +58,8 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
      * Constructor.
      * @param data The sample instances.
      */
-    public SparseDatasetImpl(Collection<Instance<SparseArray, T>> data) {
-        this(data, 1 + data.stream().flatMap(instance -> instance.x.stream()).mapToInt(e -> e.i).max().orElse(0));
+    public SparseDatasetImpl(Collection<SampleInstance<SparseArray, T>> data) {
+        this(data, 1 + data.stream().flatMap(instance -> instance.x().stream()).mapToInt(e -> e.i).max().orElse(0));
     }
 
     /**
@@ -67,13 +67,13 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
      * @param data The sample instances.
      * @param ncol The number of columns.
      */
-    public SparseDatasetImpl(Collection<Instance<SparseArray, T>> data, int ncol) {
+    public SparseDatasetImpl(Collection<SampleInstance<SparseArray, T>> data, int ncol) {
         this.instances = new ArrayList<>(data);
         this.ncol = ncol;
         colSize = new int[ncol];
 
         for (var instance : data) {
-            var x = instance.x;
+            var x = instance.x();
             x.sort(); // sort array index into ascending order.
 
             int i = -1; // index of previous element
@@ -121,17 +121,17 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
     }
 
     @Override
-    public Instance<SparseArray, T> get(int i) {
+    public SampleInstance<SparseArray, T> get(int i) {
         return instances.get(i);
     }
 
     @Override
-    public Stream<Instance<SparseArray, T>> stream() {
+    public Stream<SampleInstance<SparseArray, T>> stream() {
         return instances.stream();
     }
 
     @Override
-    public Iterator<Instance<SparseArray, T>> iterator() {
+    public Iterator<SampleInstance<SparseArray, T>> iterator() {
         return instances.iterator();
     }
 }

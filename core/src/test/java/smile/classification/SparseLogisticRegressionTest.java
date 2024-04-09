@@ -17,8 +17,9 @@
 
 package smile.classification;
 
-import java.util.Arrays;
+import java.util.stream.IntStream;
 import smile.data.SparseDataset;
+import smile.data.SampleInstance;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -53,17 +54,18 @@ public class SparseLogisticRegressionTest {
     }
 
     /** Returns the sparse data. */
-    private SparseDataset sparse(double[][] x) {
+    private SparseDataset<Integer> sparse(double[][] x, int[] y) {
         return SparseDataset.of(
-                Arrays.stream(x).map(xi -> {
+                IntStream.range(0, x.length).mapToObj(i -> {
+                    double[] xi = x[i];
                     SparseArray a = new SparseArray();
-                    for (int i = 0; i < xi.length; i++) {
-                        if (xi[i] != 0.0) {
-                            a.append(i, xi[i]);
+                    for (int j = 0; j < xi.length; j++) {
+                        if (xi[j] != 0.0) {
+                            a.append(j, xi[j]);
                         }
                     }
-                    return a;
-                })
+                    return new SampleInstance<>(a, y[i]);
+                }).toList()
         );
     }
 
@@ -71,14 +73,14 @@ public class SparseLogisticRegressionTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        SparseDataset x = sparse(USPS.x);
-        SparseDataset testx = sparse(USPS.testx);
+        SparseDataset<Integer> train = sparse(USPS.x, USPS.y);
+        SparseDataset<Integer> test = sparse(USPS.testx, USPS.testy);
 
-        SparseLogisticRegression model = SparseLogisticRegression.fit(x, USPS.y, 0.3, 1E-3, 1000);
+        SparseLogisticRegression model = SparseLogisticRegression.fit(train, 0.3, 1E-3, 1000);
 
-        int[] prediction = new int[testx.size()];
-        for (int i = 0; i < testx.size(); i++) {
-            prediction[i] = model.predict(testx.get(i));
+        int[] prediction = new int[test.size()];
+        for (int i = 0; i < test.size(); i++) {
+            prediction[i] = model.predict(test.get(i).x());
         }
 
         int error = Error.of(USPS.testy, prediction);
@@ -92,13 +94,13 @@ public class SparseLogisticRegressionTest {
             System.out.format("Set learning rate at %.5f%n", eta);
             model.setLearningRate(eta);
             for (int i = 0; i < USPS.testx.length; i++) {
-                model.update(testx.get(i), USPS.testy[i]);
+                model.update(test.get(i).x(), test.get(i).y());
             }
             t += USPS.testx.length;
         }
 
-        for (int i = 0; i < testx.size(); i++) {
-            prediction[i] = model.predict(testx.get(i));
+        for (int i = 0; i < test.size(); i++) {
+            prediction[i] = model.predict(test.get(i).x());
         }
 
         error = Error.of(USPS.testy, prediction);

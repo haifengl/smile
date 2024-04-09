@@ -107,6 +107,14 @@ public interface DataFrame extends Iterable<Tuple> {
     Stream<Tuple> stream();
 
     /**
+     * Returns the <code>List</code> of rows.
+     * @return the <code>List</code> of rows.
+     */
+    default List<Tuple> toList() {
+        return stream().toList();
+    }
+
+    /**
      * Returns the number of rows.
      * @return the number of rows.
      */

@@ -33,7 +33,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
+public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
     /**
      * Returns the number of elements in this collection.
      * @return the number of elements in this collection.
@@ -53,14 +53,14 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @param i the index of the instance to be returned.
      * @return the i-th instance.
      */
-    Instance<D, T> get(int i);
+    SampleInstance<D, T> get(int i);
 
     /**
      * Returns the index at the specified index.  For Scala's convenience.
      * @param i the index of the instance to be returned.
      * @return the i-th instance.
      */
-    default Instance<D, T> apply(int i) {
+    default SampleInstance<D, T> apply(int i) {
         return get(i);
     }
 
@@ -69,14 +69,14 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      *
      * @return a (possibly parallel) Stream with this collection as its source.
      */
-    Stream<Instance<D, T>> stream();
+    Stream<SampleInstance<D, T>> stream();
 
     /**
      * Returns an iterator of mini-batches.
      * @param size the batch size.
      * @return an iterator of mini-batches.
      */
-    default Iterator<List<Instance<D, T>>> batch(int size) {
+    default Iterator<List<SampleInstance<D, T>>> batch(int size) {
         return new Iterator<>() {
             int[] permutation = MathEx.permutate(size());
             int i = 0;
@@ -87,9 +87,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
             }
 
             @Override
-            public List<Instance<D, T>> next() {
+            public List<SampleInstance<D, T>> next() {
                 int length = Math.min(size, size() - i);
-                ArrayList<Instance<D, T>> batch = new ArrayList<>(length);
+                ArrayList<SampleInstance<D, T>> batch = new ArrayList<>(length);
                 for (int j = 0; j < length; j++, i++) {
                     batch.add(get(permutation[i]));
                 }
@@ -102,7 +102,7 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * Returns the <code>List</code> of data items.
      * @return the <code>List</code> of data items.
      */
-    default List<Instance<D, T>> toList() {
+    default List<SampleInstance<D, T>> toList() {
         return stream().collect(java.util.stream.Collectors.toList());
     }
 
@@ -132,7 +132,7 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @param <T> the target type.
      * @return the dataset.
      */
-    static <D, T> Dataset<D, T> of(Collection<Instance<D, T>> instances) {
+    static <D, T> Dataset<D, T> of(Collection<SampleInstance<D, T>> instances) {
         return new DatasetImpl<>(instances);
     }
 
@@ -145,9 +145,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @return the dataset.
      */
     static <D, T> Dataset<D, T> of(List<D> data, List<T> target) {
-        List<Instance<D, T>> instances = new ArrayList<>();
+        List<SampleInstance<D, T>> instances = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
-            instances.add(new Instance<>(data.get(i), target.get(i)));
+            instances.add(new SampleInstance<>(data.get(i), target.get(i)));
         }
         return new DatasetImpl<>(instances);
     }
@@ -161,9 +161,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @return the dataset.
      */
     static <D, T> Dataset<D, T> of(D[] data, T[] target) {
-        List<Instance<D, T>> instances = new ArrayList<>();
+        List<SampleInstance<D, T>> instances = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
-            instances.add(new Instance<>(data[i], target[i]));
+            instances.add(new SampleInstance<>(data[i], target[i]));
         }
         return new DatasetImpl<>(instances);
     }
@@ -176,9 +176,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @return the dataset.
      */
     static <D> Dataset<D, Integer> of(D[] data, int[] target) {
-        List<Instance<D, Integer>> instances = new ArrayList<>();
+        List<SampleInstance<D, Integer>> instances = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
-            instances.add(new Instance<>(data[i], target[i]));
+            instances.add(new SampleInstance<>(data[i], target[i]));
         }
         return new DatasetImpl<>(instances);
     }
@@ -191,9 +191,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @return the dataset.
      */
     static <D> Dataset<D, Float> of(D[] data, float[] target) {
-        List<Instance<D, Float>> instances = new ArrayList<>();
+        List<SampleInstance<D, Float>> instances = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
-            instances.add(new Instance<>(data[i], target[i]));
+            instances.add(new SampleInstance<>(data[i], target[i]));
         }
         return new DatasetImpl<>(instances);
     }
@@ -206,9 +206,9 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @return the dataset.
      */
     static <D> Dataset<D, Double> of(D[] data, double[] target) {
-        List<Instance<D, Double>> instances = new ArrayList<>();
+        List<SampleInstance<D, Double>> instances = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
-            instances.add(new Instance<>(data[i], target[i]));
+            instances.add(new SampleInstance<>(data[i], target[i]));
         }
         return new DatasetImpl<>(instances);
     }
@@ -219,7 +219,7 @@ public interface Dataset<D, T> extends Iterable<Instance<D, T>> {
      * @param <T> the type of input elements.
      * @return the stream collector.
      */
-    static <D, T> Collector<Instance<D, T>, List<Instance<D, T>>, Dataset<D, T>> collector() {
+    static <D, T> Collector<SampleInstance<D, T>, List<SampleInstance<D, T>>, Dataset<D, T>> collector() {
         return Collector.of(
                 // supplier
                 ArrayList::new,

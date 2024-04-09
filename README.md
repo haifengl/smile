@@ -106,7 +106,7 @@ If you prefer other BLAS implementations, you can use any library found on
 the "java.library.path" or on the class path, by specifying it with the
 "org.bytedeco.openblas.load" system property. For example, to use the BLAS
 library from the Accelerate framework on Mac OS X, we can pass options such
-as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.
+as `-Dorg.bytedeco.openblas.load=blas`.
 
 If you have a default installation of MKL or simply include the following
 modules that include the full version of MKL binaries, Smile will automatically

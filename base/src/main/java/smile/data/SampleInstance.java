@@ -19,30 +19,19 @@ package smile.data;
 /**
  * An immutable sample instance.
  *
+ * @param x the sample data.
+ * @param y the sample target.
  * @param <D> the data type.
  * @param <T> the target type.
  *
  * @author Haifeng Li
  */
-public class Instance<D, T> {
+public record SampleInstance<D, T>(D x, T y) {
     /**
-     * Returns the instance.
-     * @return the instance.
+     * Constructor without target.
+     * @param x the sample data.
      */
-    public final D x;
-
-    /**
-     * Returns the response variable of instance.
-     * @return the response variable.
-     */
-    public final T y;
-
-    public Instance(D x, T y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public Instance(D x) {
+    public SampleInstance(D x) {
         this(x, null);
     }
 }
