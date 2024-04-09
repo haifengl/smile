@@ -155,7 +155,7 @@ public class LaplacianEigenmap implements Serializable {
         double[] D = new double[n];
         double gamma = -1.0 / t;
 
-        ArrayList<SparseArray> W = new ArrayList<>(n);
+        SparseArray[] W = new SparseArray[n];
         for (int i = 0; i < n; i++) {
             SparseArray row = new SparseArray();
             Collection<Edge> edges = graph.getEdges(i);
@@ -168,11 +168,11 @@ public class LaplacianEigenmap implements Serializable {
                 D[i] += w;
             }
             D[i] = 1 / Math.sqrt(D[i]);
-            W.add(i, row);
+            W[i] = row;
         }
 
         for (int i = 0; i < n; i++) {
-            SparseArray row = W.get(i);
+            SparseArray row = W[i];
             for (SparseArray.Entry e : row) {
                 e.update(-D[i] * e.x * D[e.i]);
             }

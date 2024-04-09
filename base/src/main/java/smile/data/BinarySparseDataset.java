@@ -56,7 +56,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
             throw new IllegalArgumentException("Invalid index: i = " + i);
         }
 
-        int[] x = get(i).x;
+        int[] x = get(i).x();
         if (x.length == 0) {
             return 0;
         }
@@ -92,7 +92,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      * @param data The sample instances.
      * @return the sparse dataset.
      */
-    static <T> BinarySparseDataset<T> of(Collection<Instance<int[], T>> data) {
+    static <T> BinarySparseDataset<T> of(Collection<SampleInstance<int[], T>> data) {
         return new BinarySparseDatasetImpl<>(data);
     }
 
@@ -106,7 +106,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      */
     static BinarySparseDataset<Void> of(int[][] data) {
         return new BinarySparseDatasetImpl<>(Arrays.stream(data)
-                .map(x -> new Instance<int[], Void>(x, null))
+                .map(x -> new SampleInstance<int[], Void>(x, null))
                 .collect(Collectors.toList()));
     }
 
@@ -121,13 +121,13 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      */
     static BinarySparseDataset<Void> from(java.nio.file.Path path) throws IOException, NumberFormatException {
         try (Stream<String> stream = java.nio.file.Files.lines(path)) {
-            List<Instance<int[], Void>> rows = stream.map(line -> {
+            List<SampleInstance<int[], Void>> rows = stream.map(line -> {
                 String[] s = line.split("\\s+");
                 int[] index = new int[s.length];
                 for (int i = 0; i < s.length; i++) {
                     index[i] = Integer.parseInt(s[i]);
                 }
-                return new Instance<int[], Void>(index, null);
+                return new SampleInstance<int[], Void>(index, null);
             }).collect(java.util.stream.Collectors.toList());
 
             return new BinarySparseDatasetImpl<>(rows);

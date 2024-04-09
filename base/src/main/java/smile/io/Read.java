@@ -31,8 +31,7 @@ import java.util.Locale;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.data.Dataset;
-import smile.data.Instance;
+import smile.data.SampleInstance;
 import smile.data.SparseDataset;
 import smile.data.type.StructType;
 import smile.util.SparseArray;
@@ -565,7 +564,7 @@ public interface Read {
      */
     static SparseDataset<Integer> libsvm(BufferedReader reader) throws IOException {
         try (reader) {
-            List<Instance<SparseArray, Integer>> data = new ArrayList<>();
+            List<SampleInstance<SparseArray, Integer>> data = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
                 String[] tokens = line.trim().split("\\s+");
@@ -583,7 +582,7 @@ public interface Read {
                     row.set(j, x);
                 }
 
-                data.add(new Instance<>(row, y));
+                data.add(new SampleInstance<>(row, y));
                 line = reader.readLine();
             }
 

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import smile.data.Dataset;
-import smile.data.Instance;
+import smile.data.SampleInstance;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -103,8 +103,8 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      * @param x the dataset to be classified.
      * @return the predicted class labels.
      */
-    default double[] predict(Dataset<T> x) {
-        return x.stream().mapToDouble(this::predict).toArray();
+    default double[] predict(Dataset<T, ?> x) {
+        return x.stream().mapToDouble(sample -> predict(sample.x())).toArray();
     }
 
     /**
@@ -153,7 +153,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      * Updates the model with a mini-batch of new samples.
      * @param batch the training instances.
      */
-    default void update(Dataset<Instance<T>> batch) {
+    default void update(Dataset<T, Double> batch) {
         batch.stream().forEach(sample -> update(sample.x(), sample.y()));
     }
 

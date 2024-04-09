@@ -81,7 +81,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
 
-        for (SparseArray.Entry e : get(i).x) {
+        for (SparseArray.Entry e : get(i).x()) {
             if (e.i == j) {
                 return e.x;
             }
@@ -97,13 +97,13 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
         stream().forEach(instance -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : instance.x) {
+            for (SparseArray.Entry e : instance.x()) {
                 sum += MathEx.pow2(e.x);
             }
 
             sum = Math.sqrt(sum);
 
-            for (SparseArray.Entry e : instance.x) {
+            for (SparseArray.Entry e : instance.x()) {
                 e.update(e.x / sum);
             }
         });
@@ -116,11 +116,11 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
         stream().forEach(instance -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : instance.x) {
+            for (SparseArray.Entry e : instance.x()) {
                 sum += Math.abs(e.x);
             }
 
-            for (SparseArray.Entry e : instance.x) {
+            for (SparseArray.Entry e : instance.x()) {
                 e.update(e.x / sum);
             }
         });
@@ -145,7 +145,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
         double[] x = new double[nz];
 
         for (int i = 0; i < nrow; i++) {
-            for (SparseArray.Entry e : get(i).x) {
+            for (SparseArray.Entry e : get(i).x()) {
                 int j = e.i;
                 int k = colIndex[j] + pos[j];
 
@@ -164,7 +164,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @param data sparse arrays.
      * @return the sparse dataset.
      */
-    static <T> SparseDataset<T> of(Collection<Instance<SparseArray, T>> data) {
+    static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data) {
         return new SparseDatasetImpl<>(data);
     }
 
@@ -175,7 +175,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @param ncol the number of columns.
      * @return the sparse dataset.
      */
-    static <T> SparseDataset<T> of(Collection<Instance<SparseArray, T>> data, int ncol) {
+    static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data, int ncol) {
         return new SparseDatasetImpl<>(data, ncol);
     }
 
@@ -187,7 +187,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      */
     static SparseDataset<Void> of(SparseArray[] data) {
         return new SparseDatasetImpl<>(Arrays.stream(data)
-                .map(x -> new Instance<SparseArray, Void>(x, null))
+                .map(x -> new SampleInstance<SparseArray, Void>(x, null))
                 .collect(Collectors.toList()));
     }
 
@@ -200,7 +200,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      */
     static SparseDataset<Void> of(SparseArray[] data, int ncol) {
         return new SparseDatasetImpl<>(Arrays.stream(data)
-                .map(x -> new Instance<SparseArray, Void>(x, null))
+                .map(x -> new SampleInstance<SparseArray, Void>(x, null))
                 .collect(Collectors.toList()), ncol);
     }
 
@@ -211,7 +211,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @return the sparse dataset.
      */
     static SparseDataset<Void> of(Stream<SparseArray> data) {
-        return of(data.map(x -> new Instance<SparseArray, Void>(x, null))
+        return of(data.map(x -> new SampleInstance<SparseArray, Void>(x, null))
                 .collect(Collectors.toList()));
     }
 

@@ -20,6 +20,7 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import smile.data.Dataset;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
@@ -87,6 +88,20 @@ public class ClassLabels implements Serializable {
             x[i] = classes.indexOf(y[i]);
         }
         return x;
+    }
+
+    /**
+     * Fits the class label mapping.
+     * @param data the sample instances.
+     * @return the class label mapping.
+     */
+    public static ClassLabels fit(Dataset<?, Integer> data) {
+        int n = data.size();
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            y[i] = data.get(i).y();
+        }
+        return fit(y);
     }
 
     /**

@@ -18,10 +18,8 @@
 package smile.feature.selection;
 
 import smile.classification.DecisionTree;
-import smile.classification.LDA;
 import smile.test.data.Abalone;
 import smile.test.data.Segment;
-import smile.test.data.USPS;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
 import smile.math.MathEx;
@@ -54,11 +52,10 @@ public class GAFETest {
     @AfterEach
     public void tearDown() {
     }
-/* TODO: this test hangs.
+/* GAFE with LDA is too slow on Windows as OpenBlas is 4X slower on Windows.
     @Test
     public void testLDA() {
         System.out.println("LDA");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
@@ -75,7 +72,6 @@ public class GAFETest {
     @Test
     public void testDecisionTree() {
         System.out.println("DecisionTree");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
@@ -92,7 +88,6 @@ public class GAFETest {
     @Test
     public void testRegressionTree() {
         System.out.println("RegressionTree");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
