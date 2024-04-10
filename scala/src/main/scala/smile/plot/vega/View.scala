@@ -24,13 +24,13 @@ import smile.json._
   */
 trait View extends VegaLite {
   /** Sets the width of the data rectangle (plotting) dimensions. */
-  def width(width: Int): View = {
+  def width(width: Int): this.type = {
     spec.width = width
     this
   }
 
   /** Sets the height of the data rectangle (plotting) dimensions. */
-  def height(height: Int): View = {
+  def height(height: Int): this.type = {
     spec.height = height
     this
   }
@@ -49,7 +49,7 @@ trait View extends VegaLite {
     * the default width and height are config.view.continuousWidth
     * and config.view.continuousHeight, respectively.
     */
-  def width(width: String): View = {
+  def width(width: String): this.type = {
     assert(width == "container", "Invalid width: " + width)
     spec.width = "container"
     this
@@ -69,20 +69,20 @@ trait View extends VegaLite {
     * the default width and height are config.view.continuousWidth
     * and config.view.continuousHeight, respectively.
     */
-  def height(height: String): View = {
+  def height(height: String): this.type = {
     assert(height == "container", "Invalid height: " + height)
     spec.height = "container"
     this
   }
 
   /** For a discrete x-field, sets the width per discrete step. */
-  def widthStep(step: Int): View = {
+  def widthStep(step: Int): this.type = {
     spec.width = JsObject("step" -> JsInt(step))
     this
   }
 
   /** For a discrete y-field, sets the height per discrete step.. */
-  def heightStep(step: Int): View = {
+  def heightStep(step: Int): this.type = {
     spec.height = JsObject("step" -> JsInt(step))
     this
   }
@@ -93,7 +93,7 @@ trait View extends VegaLite {
     * size, and color) can be used to visually encode data, either
     * from a data field, or a constant value.
     */
-  def mark(mark: JsObject): View = {
+  def mark(mark: JsObject): this.type = {
     spec.mark = mark
     this
   }
@@ -101,7 +101,7 @@ trait View extends VegaLite {
   /** Sets the mark property of a string (one of "bar", "circle",
     * "square", "tick", "line", "area", "point", "rule", "geoshape",
     * and "text"). */
-  def mark(mark: String): View = {
+  def mark(mark: String): this.type = {
     spec.mark = mark
     this
   }
@@ -109,7 +109,7 @@ trait View extends VegaLite {
   /** Sets the channels x and y (quantitative),
     * and optional color with default properties.
     */
-  def encode(x: String, y: String, color: Option[(String, String)] = None): View = {
+  def encode(x: String, y: String, color: Option[(String, String)] = None): this.type = {
     this.x(x, "quantitative")
     this.y(y, "quantitative")
     color match {
@@ -120,13 +120,13 @@ trait View extends VegaLite {
   }
 
   /** Sets the x channel as a datum field. */
-  def x(datum: JsValue): View = {
+  def x(datum: JsValue): this.type = {
     setPropertyDatum("x", datum)
     this
   }
 
   /** Sets the y channel as a datum field. */
-  def y(datum: JsValue): View = {
+  def y(datum: JsValue): this.type = {
     setPropertyDatum("y", datum)
     this
   }
@@ -134,16 +134,16 @@ trait View extends VegaLite {
   /** Sets the x field. */
   def x(field: JsValue,
         `type`: String,
-        bin: Either[Boolean, JsObject] = Left(false),
+        bin: JsValue = JsUndefined,
         timeUnit: String = "",
         aggregate: String = "",
         title: String = "",
         scale: JsValue = JsUndefined,
         axis: JsValue = JsUndefined,
-        sort: Option[String] = None,
-        band: Option[Double] = None,
+        sort: JsValue = JsUndefined,
+        band: Double = -1,
         impute: JsValue = JsUndefined,
-        stack: JsValue = JsUndefined): View = {
+        stack: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x = View.positionField(field, `type`, bin, timeUnit,
       aggregate, title, scale, axis, sort, band, impute, stack)
@@ -153,16 +153,16 @@ trait View extends VegaLite {
   /** Sets the y field. */
   def y(field: JsValue,
         `type`: String,
-        bin: Either[Boolean, JsObject] = Left(false),
+        bin: JsValue = JsUndefined,
         timeUnit: String = "",
         aggregate: String = "",
         title: String = "",
         scale: JsValue = JsUndefined,
         axis: JsValue = JsUndefined,
-        sort: Option[String] = None,
-        band: Option[Double] = None,
+        sort: JsValue = JsUndefined,
+        band: Double = -1,
         impute: JsValue = JsUndefined,
-        stack: JsValue = JsUndefined): View = {
+        stack: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y = View.positionField(field, `type`, bin, timeUnit,
       aggregate, title, scale, axis, sort, band, impute, stack)
@@ -171,10 +171,10 @@ trait View extends VegaLite {
 
   /** Sets the x2 field. */
   def x2(field: JsValue,
-         bin: Either[Boolean, JsObject] = Left(false),
+         bin: JsValue = JsUndefined,
          timeUnit: String = "",
          aggregate: String = "",
-         title: String = ""): View = {
+         title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -182,10 +182,10 @@ trait View extends VegaLite {
 
   /** Sets the y2 field. */
   def y2(field: JsValue,
-         bin: Either[Boolean, JsObject] = Left(false),
+         bin: JsValue = JsUndefined,
          timeUnit: String = "",
          aggregate: String = "",
-         title: String = ""): View = {
+         title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -193,10 +193,10 @@ trait View extends VegaLite {
 
   /** Sets the xError field. */
   def xError(field: JsValue,
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              aggregate: String = "",
-             title: String = ""): View = {
+             title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -204,10 +204,10 @@ trait View extends VegaLite {
 
   /** Sets the yError field. */
   def yError(field: JsValue,
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              aggregate: String = "",
-             title: String = ""): View = {
+             title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -215,10 +215,10 @@ trait View extends VegaLite {
 
   /** Sets the xError2 field. */
   def xError2(field: JsValue,
-              bin: Either[Boolean, JsObject] = Left(false),
+              bin: JsValue = JsUndefined,
               timeUnit: String = "",
               aggregate: String = "",
-              title: String = ""): View = {
+              title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.xError2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -226,10 +226,10 @@ trait View extends VegaLite {
 
   /** Sets the yError2 field. */
   def yError2(field: JsValue,
-              bin: Either[Boolean, JsObject] = Left(false),
+              bin: JsValue = JsUndefined,
               timeUnit: String = "",
               aggregate: String = "",
-              title: String = ""): View = {
+              title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.yError2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -238,10 +238,10 @@ trait View extends VegaLite {
   /** Sets the longitude field. */
   def longitude(field: JsValue,
                 `type`: String = "quantitative",
-                bin: Either[Boolean, JsObject] = Left(false),
+                bin: JsValue = JsUndefined,
                 timeUnit: String = "",
                 aggregate: String = "",
-                title: String = ""): View = {
+                title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.longitude = View.field(field, `type`, bin, timeUnit, aggregate, title)
     this
@@ -250,10 +250,10 @@ trait View extends VegaLite {
   /** Sets the latitude field. */
   def latitude(field: JsValue,
                `type`: String = "quantitative",
-               bin: Either[Boolean, JsObject] = Left(false),
+               bin: JsValue = JsUndefined,
                timeUnit: String = "",
                aggregate: String = "",
-               title: String = ""): View = {
+               title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.latitude = View.field(field, `type`, bin, timeUnit, aggregate, title)
     this
@@ -261,10 +261,10 @@ trait View extends VegaLite {
 
   /** Sets the longitude2 field. */
   def longitude2(field: JsValue,
-                 bin: Either[Boolean, JsObject] = Left(false),
+                 bin: JsValue = JsUndefined,
                  timeUnit: String = "",
                  aggregate: String = "",
-                 title: String = ""): View = {
+                 title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.longitude2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -272,10 +272,10 @@ trait View extends VegaLite {
 
   /** Sets the latitude2 field. */
   def latitude2(field: JsValue,
-                bin: Either[Boolean, JsObject] = Left(false),
+                bin: JsValue = JsUndefined,
                 timeUnit: String = "",
                 aggregate: String = "",
-                title: String = ""): View = {
+                title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.latitude2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -284,13 +284,13 @@ trait View extends VegaLite {
   /** Sets the theta field. */
   def theta(field: JsValue,
             `type`: String = "quantitative",
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             aggregate: String = "",
             title: String = "",
             scale: JsValue = JsUndefined,
-            sort: Option[String] = None,
-            stack: JsValue = JsUndefined): View = {
+            sort: String = "",
+            stack: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.theta = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
     this
@@ -299,13 +299,13 @@ trait View extends VegaLite {
   /** Sets the radius field. */
   def radius(field: JsValue,
              `type`: String = "quantitative",
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              aggregate: String = "",
              title: String = "",
              scale: JsValue = JsUndefined,
-             sort: Option[String] = None,
-             stack: JsValue = JsUndefined): View = {
+             sort: String = "",
+             stack: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.radius = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
     this
@@ -313,10 +313,10 @@ trait View extends VegaLite {
 
   /** Sets the theta2 field. */
   def theta2(field: JsValue,
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              aggregate: String = "",
-             title: String = ""): View = {
+             title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.theta2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -324,10 +324,10 @@ trait View extends VegaLite {
 
   /** Sets the radius2 field. */
   def radius2(field: JsValue,
-              bin: Either[Boolean, JsObject] = Left(false),
+              bin: JsValue = JsUndefined,
               timeUnit: String = "",
               aggregate: String = "",
-              title: String = ""): View = {
+              title: String = ""): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.radius2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
@@ -337,26 +337,26 @@ trait View extends VegaLite {
   def setProperty(prop: String,
           field: JsValue,
           `type`: String,
-          bin: Either[Boolean, JsObject] = Left(false),
+          bin: JsValue = JsUndefined,
           timeUnit: String = "",
           aggregate: String = "",
           scale: JsValue = JsUndefined,
           legend: JsValue = JsUndefined,
-          condition: JsValue = JsUndefined): View = {
+          condition: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = View.markPropField(field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
     this
   }
 
   /** Sets a mark property by value. */
-  def setPropertyValue(prop: String, value: JsValue): View = {
+  def setPropertyValue(prop: String, value: JsValue): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = JsObject("value" -> value)
     this
   }
 
   /** Sets a mark property by datum. */
-  def setPropertyDatum(prop: String, datum: JsValue): View = {
+  def setPropertyDatum(prop: String, datum: JsValue): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = JsObject("datum" -> datum)
     this
@@ -365,136 +365,136 @@ trait View extends VegaLite {
   /** Sets the color property. */
   def color(field: JsValue,
             `type`: String,
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             aggregate: String = "",
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
-            condition: JsValue = JsUndefined): View = {
+            condition: JsValue = JsUndefined): this.type = {
     setProperty("color", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the color value. */
-  def color(value: JsValue): View = {
+  def color(value: JsValue): this.type = {
     setPropertyValue("color", value)
   }
 
   /** Sets the angle property. */
   def angle(field: JsValue,
             `type`: String,
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             aggregate: String = "",
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
-            condition: JsValue = JsUndefined): View = {
+            condition: JsValue = JsUndefined): this.type = {
     setProperty("angle", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the angle value. */
-  def angle(value: JsValue): View = {
+  def angle(value: JsValue): this.type = {
     setPropertyValue("angle", value)
   }
 
   /** Sets the fill property. */
   def fill(field: JsValue,
            `type`: String,
-           bin: Either[Boolean, JsObject] = Left(false),
+           bin: JsValue = JsUndefined,
            timeUnit: String = "",
            aggregate: String = "",
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
-           condition: JsValue = JsUndefined): View = {
+           condition: JsValue = JsUndefined): this.type = {
     setProperty("fill", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the fill value. */
-  def fill(value: JsValue): View = {
+  def fill(value: JsValue): this.type = {
     setPropertyValue("fill", value)
   }
 
   /** Sets the stroke property. */
   def stroke(field: JsValue,
              `type`: String,
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              aggregate: String = "",
              scale: JsValue = JsUndefined,
              legend: JsValue = JsUndefined,
-             condition: JsValue = JsUndefined): View = {
+             condition: JsValue = JsUndefined): this.type = {
     setProperty("stroke", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the stroke value. */
-  def stroke(value: JsValue): View = {
+  def stroke(value: JsValue): this.type = {
     setPropertyValue("stroke", value)
   }
 
   /** Sets the shape property. */
   def shape(field: JsValue,
             `type`: String,
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             aggregate: String = "",
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
-            condition: JsValue = JsUndefined): View = {
+            condition: JsValue = JsUndefined): this.type = {
     setProperty("shape", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the shape value. */
-  def shape(value: JsValue): View = {
+  def shape(value: JsValue): this.type = {
     setPropertyValue("shape", value)
   }
 
   /** Sets the size property. */
   def size(field: JsValue,
            `type`: String,
-           bin: Either[Boolean, JsObject] = Left(false),
+           bin: JsValue = JsUndefined,
            timeUnit: String = "",
            aggregate: String = "",
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
-           condition: JsValue = JsUndefined): View = {
+           condition: JsValue = JsUndefined): this.type = {
     setProperty("size", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the size value. */
-  def size(value: JsValue): View = {
+  def size(value: JsValue): this.type = {
     setPropertyValue("size", value)
   }
 
   /** Sets the text property. */
   def text(field: JsValue,
            `type`: String,
-           bin: Either[Boolean, JsObject] = Left(false),
+           bin: JsValue = JsUndefined,
            timeUnit: String = "",
            aggregate: String = "",
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
-           condition: JsValue = JsUndefined): View = {
+           condition: JsValue = JsUndefined): this.type = {
     setProperty("text", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the text value. */
-  def text(value: JsValue): View = {
+  def text(value: JsValue): this.type = {
     setPropertyValue("text", value)
   }
 
   /** Sets the opacity property. */
   def opacity(field: JsValue,
               `type`: String,
-              bin: Either[Boolean, JsObject] = Left(false),
+              bin: JsValue = JsUndefined,
               timeUnit: String = "",
               aggregate: String = "",
               scale: JsValue = JsUndefined,
               legend: JsValue = JsUndefined,
-              condition: JsValue = JsUndefined): View = {
+              condition: JsValue = JsUndefined): this.type = {
     setProperty("opacity", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the opacity value. */
-  def opacity(value: JsValue): View = {
+  def opacity(value: JsValue): this.type = {
     setPropertyValue("opacity", value)
   }
 
@@ -504,7 +504,7 @@ trait View extends VegaLite {
     * property of a single-view or layer specification can define the
     * background of the view.
     */
-  def view(background: JsObject): View = {
+  def view(background: JsObject): this.type = {
     spec.view = background
     this
   }
@@ -528,7 +528,7 @@ trait View extends VegaLite {
     *
     * @param selections (name, type) pairs
     */
-  def selection(selections: (String, String)*): View = {
+  def selection(selections: (String, String)*): this.type = {
     spec.selection = JsObject(
       selections.map { case (name, t) =>
           name -> JsObject("type" -> JsString(t))
@@ -550,7 +550,7 @@ trait View extends VegaLite {
     * encoding. Geographic coordinate data can then be mapped to longitude
     * and latitude channels (and longitude2 and latitude2 for ranged marks).
     */
-  def projection(projection: JsObject): View = {
+  def projection(projection: JsObject): this.type = {
     spec.projection = projection
     this
   }
@@ -600,7 +600,7 @@ object View {
     */
   def field(field: JsValue,
             `type`: String,
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             aggregate: String = "",
             title: String = ""): JsObject = {
@@ -612,12 +612,7 @@ object View {
 
     if (field != null) json.field = field
     if (`type` != null) json("type") = `type`
-
-    bin match {
-      case Left(flag) => if (flag && `type` == "quantitative") json.bin = flag
-      case Right(params) => json.bin = params
-    }
-
+    if (bin != JsUndefined) json.bin = bin
     if (timeUnit.nonEmpty) json.timeUnit = timeUnit
     if (aggregate.nonEmpty) json.aggregate = aggregate
     if (title == null) json.title = JsNull
@@ -729,22 +724,22 @@ object View {
     */
   def positionField(field: JsValue,
                     `type`: String,
-                    bin: Either[Boolean, JsObject] = Left(false),
+                    bin: JsValue = JsUndefined,
                     timeUnit: String = "",
                     aggregate: String = "",
                     title: String = "",
                     scale: JsValue = JsUndefined,
                     axis: JsValue = JsUndefined,
-                    sort: Option[String] = None,
-                    band: Option[Double] = None,
+                    sort: JsValue = JsUndefined,
+                    band: Double = -1,
                     impute: JsValue = JsUndefined,
                     stack: JsValue = JsUndefined): JsObject = {
     val json = this.field(field, `type`, bin, timeUnit, aggregate, title)
 
     if (scale != JsUndefined) json.scale = scale
     if (axis != JsUndefined) json.axis = axis
-    if (sort.isDefined) json.sort = sort.get
-    if (band.isDefined) json.band = band.get
+    if (sort != JsUndefined) json.sort = sort
+    if (band >= 0) json.band = band
     if (impute != JsUndefined) json.impute = impute
     if (stack != JsUndefined) json.stack = stack
 
@@ -829,17 +824,17 @@ object View {
     */
   def polarField(field: JsValue,
                  `type`: String,
-                 bin: Either[Boolean, JsObject] = Left(false),
+                 bin: JsValue = JsUndefined,
                  timeUnit: String = "",
                  aggregate: String = "",
                  title: String = "",
                  scale: JsValue = JsUndefined,
-                 sort: Option[String] = None,
+                 sort: String = "",
                  stack: JsValue = JsUndefined): JsObject = {
     val json = this.field(field, `type`, bin, timeUnit, aggregate, title)
 
     if (scale != JsUndefined) json.scale = scale
-    if (sort.isDefined) json.sort = sort.get
+    if (!sort.isEmpty) json.sort = sort
     if (stack != JsUndefined) json.stack = stack
 
     json
@@ -899,7 +894,7 @@ object View {
     */
   def markPropField(field: JsValue,
                     `type`: String,
-                    bin: Either[Boolean, JsObject] = Left(false),
+                    bin: JsValue = JsUndefined,
                     timeUnit: String = "",
                     aggregate: String = "",
                     scale: JsValue = JsUndefined,

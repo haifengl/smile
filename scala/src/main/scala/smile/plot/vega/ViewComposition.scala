@@ -33,7 +33,7 @@ trait ViewComposition extends VegaLite {
   /** Scale resolutions.
     * For scales, resolution can be specified for every channel.
     */
-  def resolveScale(scale: JsObject): ViewComposition = {
+  def resolveScale(scale: JsObject): this.type = {
     if (!spec.contains("resolve")) spec.resolve = JsObject()
     spec.resolve.scale = scale
     this
@@ -42,7 +42,7 @@ trait ViewComposition extends VegaLite {
   /** Axis resolutions.
     * For axes, resolutions can be defined for x and y (positional channels).
     */
-  def resolveAxis(axis: JsObject): ViewComposition = {
+  def resolveAxis(axis: JsObject): this.type = {
     if (!spec.contains("resolve")) spec.resolve = JsObject()
     spec.resolve.axis = axis
     this
@@ -52,7 +52,7 @@ trait ViewComposition extends VegaLite {
     * For legends, resolutions can be defined for color, opacity, shape,
     * and size (non-positional channels).
     */
-  def resolveLegend(legend: JsObject): ViewComposition = {
+  def resolveLegend(legend: JsObject): this.type = {
     if (!spec.contains("resolve")) spec.resolve = JsObject()
     spec.resolve.legend = legend
     this

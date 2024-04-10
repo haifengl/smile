@@ -76,26 +76,26 @@ trait Facet extends View {
     */
   def facet(field: String,
             `type`: String = "quantitative",
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             align: String = "all",
             center: Boolean = false,
-            spacing: Option[Int] = None,
-            columns: Option[Int] = None): Facet = {
+            spacing: Int = -1,
+            columns: Int = -1): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.facet = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
-    if (columns.isDefined) spec.facet.columns = columns.get
+    if (columns > 0) spec.facet.columns = columns
     this
   }
 
   /** A field definition for the vertical facet of trellis plots. */
   def row(field: String,
           `type`: String = "quantitative",
-          bin: Either[Boolean, JsObject] = Left(false),
+          bin: JsValue = JsUndefined,
           timeUnit: String = "",
           align: String = "all",
           center: Boolean = false,
-          spacing: Option[Int] = None): Facet = {
+          spacing: Int = -1): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.row = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
     this
@@ -104,11 +104,11 @@ trait Facet extends View {
   /** A field definition for the horizontal facet of trellis plots. */
   def column(field: String,
              `type`: String = "quantitative",
-             bin: Either[Boolean, JsObject] = Left(false),
+             bin: JsValue = JsUndefined,
              timeUnit: String = "",
              align: String = "all",
              center: Boolean = false,
-             spacing: Option[Int] = None): Facet = {
+             spacing: Int = -1): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.column = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
     this
@@ -161,17 +161,15 @@ object Facet {
     */
   def field(field: String,
             `type`: String = "quantitative",
-            bin: Either[Boolean, JsObject] = Left(false),
+            bin: JsValue = JsUndefined,
             timeUnit: String = "",
             align: String = "all",
             center: Boolean = false,
-            spacing: Option[Int] = None): JsObject = {
+            spacing: Int = -1): JsObject = {
     val json = View.field(field, `type`, bin, timeUnit)
-
     json.align = align
     json.center = center
-    if (spacing.isDefined) json.spacing = spacing.get
-
+    if (spacing >= 0) json.spacing = spacing
     json
   }
 }
