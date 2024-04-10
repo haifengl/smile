@@ -101,7 +101,7 @@ public class EfficientNet extends Model {
         // building last several layers
         int lastConvInputChannels = invertedResidualSetting[invertedResidualSetting.length-1].outputChannels();
         int lastConvOutputChannels = lastChannel > 0 ? lastChannel : 4 * lastConvInputChannels;
-        layers[invertedResidualSetting.length] = new Conv2dNormActivation(
+        layers[invertedResidualSetting.length + 1] = new Conv2dNormActivation(
                 Layer.conv2d(lastConvInputChannels, firstconvOutputChannels, 1),
                 new BatchNorm2dLayer(firstconvOutputChannels),
                 new SiLU(true));
