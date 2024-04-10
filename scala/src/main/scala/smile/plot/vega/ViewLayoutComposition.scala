@@ -34,13 +34,13 @@ trait ViewLayoutComposition extends ViewComposition {
     *   sized identically based on the maximum observed size. String values
     *   for this property will be applied to both grid rows and columns.
     */
-  def align(align: String): ViewLayoutComposition = {
+  def align(align: String): this.type = {
     spec.align = align
     this
   }
 
   /** Sets different alignments for rows and columns.. */
-  def align(row: String, column: String): ViewLayoutComposition = {
+  def align(row: String, column: String): this.type = {
     spec.align = JsObject(
       "row" -> row,
       "column" -> column
@@ -58,7 +58,7 @@ trait ViewLayoutComposition extends ViewComposition {
     *   when attempting to place sub-plots without axes or legends into
     *   a uniform grid structure.
     */
-  def bounds(bounds: String): ViewLayoutComposition = {
+  def bounds(bounds: String): this.type = {
     spec.bounds = bounds
     this
   }
@@ -66,13 +66,13 @@ trait ViewLayoutComposition extends ViewComposition {
   /** Boolean flag indicating if subviews should be centered relative to
     * their respective rows or columns.
     */
-  def center(flag: Boolean): ViewLayoutComposition = {
+  def center(flag: Boolean): this.type = {
     spec.center = flag
     this
   }
 
   /** Sets different spacing values for rows and columns.. */
-  def center(row: Int, column: Int): ViewLayoutComposition = {
+  def center(row: Int, column: Int): this.type = {
     spec.center = JsObject(
       "row" -> row,
       "column" -> column
@@ -81,13 +81,13 @@ trait ViewLayoutComposition extends ViewComposition {
   }
 
   /** The spacing in pixels between sub-views of the composition operator. */
-  def spacing(size: Int): ViewLayoutComposition = {
+  def spacing(size: Int): this.type = {
     spec.spacing = size
     this
   }
 
   /** Sets different spacing values for rows and columns.. */
-  def spacing(row: Int, column: Int): ViewLayoutComposition = {
+  def spacing(row: Int, column: Int): this.type = {
     spec.spacing = JsObject(
       "row" -> row,
       "column" -> column

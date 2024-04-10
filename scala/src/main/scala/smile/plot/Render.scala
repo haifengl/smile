@@ -34,10 +34,6 @@ object Render {
 
   /** Desktop renderer of vega-lite plot with the default browser. */
   def desktop(spec: VegaLite): Unit = {
-    import java.nio.file.Files
-    val path = Files.createTempFile("smile-plot-", ".html")
-    path.toFile.deleteOnExit()
-    Files.write(path, spec.embed.getBytes(java.nio.charset.StandardCharsets.UTF_8))
-    java.awt.Desktop.getDesktop.browse(path.toUri)
+    spec.show()
   }
 }

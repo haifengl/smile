@@ -332,7 +332,7 @@ public class VegaTest {
         bar.mark("circle").opacity(0.8).stroke("black").strokeWidth(1);
         bar.data().url("https://vega.github.io/vega-lite/examples/data/disasters.csv");
         bar.transform().filter("datum.Entity !== 'All natural disasters'");
-        bar.encode("x", "Year").type("ordinal").axis().labelOverlap("greedy");
+        bar.encode("x", "Year").type("ordinal").axis().labelAngle(90).labelOverlap("greedy");
         bar.encode("y", "Entity").type("nominal").title(null);
         bar.encode("color", "Entity").type("nominal").removeLegend();
         bar.encode("size", "Deaths").type("quantitative")
