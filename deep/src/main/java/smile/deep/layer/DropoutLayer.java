@@ -60,7 +60,8 @@ public class DropoutLayer implements Layer {
 
     @Override
     public void register(String name, LayerBlock block) {
-        this.module = block.asTorch().register_module(name, module);
+        // This module has no parameters or buffers. So it is safe not to register.
+        // this.module = block.asTorch().register_module(name, module);
     }
 
     @Override
