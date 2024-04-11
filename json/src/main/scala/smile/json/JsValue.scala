@@ -654,7 +654,7 @@ case class JsObject(fields: collection.mutable.SeqMap[String, JsValue]) extends 
   /** Deep merge another object into this object.
    *
    * @param that the object to merge into this object.
-   * @return the merged object
+   * @return the merged object.
    */
   def ++=(that: JsObject): JsObject = {
     that.fields foreach {
@@ -686,6 +686,11 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
   // Traversable.toString overloads JsValue.toString.
   // Get it back.
   override def toString: String = compactPrint
+
+  /** Returns string representation in JSON Lines text format,
+    * also called newline-delimited JSON.
+    */
+  def jsonl: String = elements.mkString("\n")
 
   override def size: Int = elements.size
 
