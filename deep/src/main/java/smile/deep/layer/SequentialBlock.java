@@ -30,7 +30,7 @@ import smile.deep.tensor.Tensor;
  */
 public class SequentialBlock implements LayerBlock {
     final Layer[] layers;
-    final Module block = new Module();
+    Module block = new Module();
 
     /**
      * Creates a sequential layer block.
@@ -39,7 +39,7 @@ public class SequentialBlock implements LayerBlock {
     public SequentialBlock(Layer... layers) {
         this.layers = layers;
         for (int i = 0; i < layers.length; i++) {
-            layers[i].register("Layer-" + (i+1), this);
+            layers[i].register(Integer.toString(i), this);
         }
     }
 
@@ -49,8 +49,8 @@ public class SequentialBlock implements LayerBlock {
     }
 
     @Override
-    public void register(String name, LayerBlock parent) {
-        parent.asTorch().register_module(name, block);
+    public void register(String name, Module parent) {
+        this.block = parent.register_module(name, block);
     }
 
     @Override

@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.EmbeddingImpl;
+import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.Scalar;
 import smile.deep.tensor.Tensor;
 
@@ -66,8 +67,8 @@ public class EmbeddingLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        this.module = block.asTorch().register_module(name, new EmbeddingImpl(numTokens, dim));
+    public void register(String name, Module parent) {
+        this.module = parent.register_module(name, new EmbeddingImpl(numTokens, dim));
     }
 
     @Override

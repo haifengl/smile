@@ -19,6 +19,7 @@ package smile.deep.layer;
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.BatchNorm1dImpl;
 import org.bytedeco.pytorch.BatchNormOptions;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -69,8 +70,8 @@ public class BatchNorm1dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        this.module = block.asTorch().register_module(name, module);
+    public void register(String name, Module parent) {
+        this.module = parent.register_module(name, module);
     }
 
     @Override

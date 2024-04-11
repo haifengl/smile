@@ -16,6 +16,7 @@
  */
 package smile.deep.layer;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Tensor;
 
@@ -26,11 +27,20 @@ import smile.deep.tensor.Tensor;
  */
 public interface Layer {
     /**
-     * Registers this layer to a neural network.
+     * Registers this layer to a parent layer block.
      * @param name the name of this layer.
-     * @param parent the parent layer that this layer is registered to.
+     * @param parent the parent layer block.
      */
-    void register(String name, LayerBlock parent);
+    default void register(String name, LayerBlock parent) {
+        register(name, parent.asTorch());
+    }
+
+    /**
+     * Registers this layer to a parent module.
+     * @param name the name of this layer.
+     * @param parent the parent module.
+     */
+    void register(String name, Module parent);
 
     /**
      * Forward propagation (or forward pass) through the layer.

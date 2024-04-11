@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.LinearImpl;
+import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.global.torch;
 import smile.deep.activation.ActivationFunction;
 import smile.deep.tensor.Tensor;
@@ -73,8 +74,8 @@ public class FullyConnectedLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        this.module = block.asTorch().register_module(name, module);
+    public void register(String name, Module parent) {
+        this.module = parent.register_module(name, module);
     }
 
     @Override

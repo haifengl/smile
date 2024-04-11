@@ -18,6 +18,7 @@ package smile.deep.layer;
 
 import org.bytedeco.pytorch.DropoutImpl;
 import org.bytedeco.pytorch.DropoutOptions;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -59,9 +60,9 @@ public class DropoutLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
+    public void register(String name, Module parent) {
         // This module has no parameters or buffers. So it is safe not to register.
-        // this.module = block.asTorch().register_module(name, module);
+        this.module = parent.register_module(name, module);
     }
 
     @Override
