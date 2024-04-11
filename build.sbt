@@ -97,7 +97,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-release:8"
+    "-release:11"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
