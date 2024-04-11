@@ -60,7 +60,7 @@ public class VegaLite {
     /**
      * The Vega-Lite specification.
      */
-    final ObjectNode spec = mapper.createObjectNode();
+    final ObjectNode spec = mapper.createObjectNode().put("$schema", schema);
     /**
      * The configuration object lists configuration properties
      * of a visualization for creating a consistent theme.
@@ -75,7 +75,6 @@ public class VegaLite {
      * Constructor.
      */
     public VegaLite() {
-        spec.put("$schema", schema);
         view.put("continuousWidth", 400);
         view.put("continuousHeight", 400);
     }
