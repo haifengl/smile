@@ -21,7 +21,7 @@ import scala.language.implicitConversions
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.sql.Timestamp
-import java.time.{LocalDate, LocalTime}
+import java.time.{Instant, LocalDate, LocalTime}
 import com.typesafe.scalalogging.LazyLogging
 
 /** JSON Serializer in BSON format as defined by http://bsonspec.org/spec.html.
@@ -60,10 +60,11 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
       case TYPE_INT64     => long(buffer)
       case TYPE_DOUBLE    => double(buffer)
       case TYPE_BIGDECIMAL=> decimal(buffer)
-      case TYPE_DATE      => date(buffer)
-      case TYPE_TIME      => time(buffer)
-      case TYPE_DATETIME  => datetime(buffer)
-      case TYPE_TIMESTAMP => timestamp(buffer)
+      case TYPE_DATETIME        => date(buffer)
+      case TYPE_LOCAL_DATE      => localDate(buffer)
+      case TYPE_LOCAL_TIME      => localTime(buffer)
+      case TYPE_LOCAL_DATETIME  => localDatetime(buffer)
+      case TYPE_TIMESTAMP       => timestamp(buffer)
       case TYPE_STRING    => string(buffer)
       case TYPE_BINARY    => binary(buffer)
       case TYPE_OBJECTID  => objectId(buffer)
@@ -138,23 +139,30 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   }
 
   private def serialize(buffer: ByteBuffer, json: JsDate, ename: Option[String]): Unit = {
-    buffer.put(TYPE_DATE)
+    buffer.put(TYPE_DATETIME)
+    serialize(buffer, ename)
+    val value = json.value.toEpochMilli
+    buffer.putLong(value)
+  }
+
+  private def serialize(buffer: ByteBuffer, json: JsLocalDate, ename: Option[String]): Unit = {
+    buffer.put(TYPE_LOCAL_DATE)
     serialize(buffer, ename)
     val value = json.value
     val date = value.getYear * 10000 + value.getMonthValue * 100 + value.getDayOfMonth
     buffer.putInt(date)
   }
 
-  private def serialize(buffer: ByteBuffer, json: JsTime, ename: Option[String]): Unit = {
-    buffer.put(TYPE_TIME)
+  private def serialize(buffer: ByteBuffer, json: JsLocalTime, ename: Option[String]): Unit = {
+    buffer.put(TYPE_LOCAL_TIME)
     serialize(buffer, ename)
     val value = json.value
     val time = value.getHour * 10000 + value.getMinute * 100 + value.getSecond
     buffer.putInt(time)
   }
 
-  private def serialize(buffer: ByteBuffer, json: JsDateTime, ename: Option[String]): Unit = {
-    buffer.put(TYPE_DATETIME)
+  private def serialize(buffer: ByteBuffer, json: JsLocalDateTime, ename: Option[String]): Unit = {
+    buffer.put(TYPE_LOCAL_DATETIME)
     serialize(buffer, ename)
     val value = json.value
     val date = value.getYear * 10000 + value.getMonthValue * 100 + value.getDayOfMonth
@@ -230,24 +238,29 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   }
 
   private def date(buffer: ByteBuffer): JsDate = {
+    val date = Instant.ofEpochMilli(buffer.getLong)
+    JsDate(date)
+  }
+
+  private def localDate(buffer: ByteBuffer): JsLocalDate = {
     val value = buffer.getInt
     val year = value / 10000
     val month = (value % 10000) / 100
     val day = value % 100
     val date = LocalDate.of(year, month, day)
-    JsDate(date)
+    JsLocalDate(date)
   }
 
-  private def time(buffer: ByteBuffer): JsTime = {
+  private def localTime(buffer: ByteBuffer): JsLocalTime = {
     val value = buffer.getInt
     val hour = value / 10000
     val minute = (value % 10000) / 100
     val second = value % 100
     val time = LocalTime.of(hour, minute, second)
-    JsTime(time)
+    JsLocalTime(time)
   }
 
-  private def datetime(buffer: ByteBuffer): JsDateTime = {
+  private def localDatetime(buffer: ByteBuffer): JsLocalDateTime = {
     val value = buffer.getInt
     val year = value / 10000
     val month = (value % 10000) / 100
@@ -259,7 +272,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
     val minute = (value2 % 10000) / 100
     val second = value2 % 100
     val time = LocalTime.of(hour, minute, second)
-    JsDateTime(date, time)
+    JsLocalDateTime(date, time)
   }
 
   private def timestamp(buffer: ByteBuffer): JsTimestamp = {
@@ -334,8 +347,9 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
       case x: JsDecimal  => serialize(buffer, x, ename)
       case x: JsString   => serialize(buffer, x, ename)
       case x: JsDate     => serialize(buffer, x, ename)
-      case x: JsTime     => serialize(buffer, x, ename)
-      case x: JsDateTime => serialize(buffer, x, ename)
+      case x: JsLocalDate     => serialize(buffer, x, ename)
+      case x: JsLocalTime     => serialize(buffer, x, ename)
+      case x: JsLocalDateTime => serialize(buffer, x, ename)
       case x: JsTimestamp=> serialize(buffer, x, ename)
       case x: JsUUID     => serialize(buffer, x, ename)
       case x: JsObjectId => serialize(buffer, x, ename)
@@ -362,9 +376,10 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
           case TYPE_INT64      => json(ename(buffer)) = long(buffer)
           case TYPE_DOUBLE     => json(ename(buffer)) = double(buffer)
           case TYPE_BIGDECIMAL => json(ename(buffer)) = decimal(buffer)
-          case TYPE_DATE       => json(ename(buffer)) = date(buffer)
-          case TYPE_TIME       => json(ename(buffer)) = time(buffer)
-          case TYPE_DATETIME   => json(ename(buffer)) = datetime(buffer)
+          case TYPE_DATETIME         => json(ename(buffer)) = date(buffer)
+          case TYPE_LOCAL_DATE       => json(ename(buffer)) = localDate(buffer)
+          case TYPE_LOCAL_TIME       => json(ename(buffer)) = localTime(buffer)
+          case TYPE_LOCAL_DATETIME   => json(ename(buffer)) = localDatetime(buffer)
           case TYPE_TIMESTAMP  => json(ename(buffer)) = timestamp(buffer)
           case TYPE_STRING     => json(ename(buffer)) = string(buffer)
           case TYPE_OBJECTID   => json(ename(buffer)) = objectId(buffer)
@@ -411,7 +426,7 @@ object JsonSerializer {
   val TYPE_UNDEFINED              : Byte = 0x06
   val TYPE_OBJECTID               : Byte = 0x07
   val TYPE_BOOLEAN                : Byte = 0x08
-  val TYPE_TIMESTAMP              : Byte = 0x09 // Called UTC datetime in BSON, UTC milliseconds since the Unix epoch.
+  val TYPE_DATETIME               : Byte = 0x09 // Called UTC datetime in BSON, UTC milliseconds since the Unix epoch.
   val TYPE_NULL                   : Byte = 0x0A
   val TYPE_REGEX                  : Byte = 0x0B
   val TYPE_DBPOINTER              : Byte = 0x0C
@@ -422,10 +437,11 @@ object JsonSerializer {
   val TYPE_MONGODB_TIMESTAMP      : Byte = 0x11 // Special internal type used by MongoDB.
   val TYPE_INT64                  : Byte = 0x12
   val TYPE_DECIMAL128             : Byte = 0x13 // 128-bit IEEE 754-2008 decimal floating point
-  val TYPE_DATE                   : Byte = 0x20 // Java8 LocalDate
-  val TYPE_TIME                   : Byte = 0x21 // Java8 LocalTime
-  val TYPE_DATETIME               : Byte = 0x22 // Java8 LocalDateTime
-  val TYPE_BIGDECIMAL             : Byte = 0x23 // Java BigDecimal
+  val TYPE_LOCAL_DATE             : Byte = 0x20 // Java8 LocalDate
+  val TYPE_LOCAL_TIME             : Byte = 0x21 // Java8 LocalTime
+  val TYPE_LOCAL_DATETIME         : Byte = 0x22 // Java8 LocalDateTime
+  val TYPE_TIMESTAMP              : Byte = 0x23 // Java8 Timestamp
+  val TYPE_BIGDECIMAL             : Byte = 0x30 // Java BigDecimal
   val TYPE_MINKEY                 : Byte = 0xFF.toByte
   val TYPE_MAXKEY                 : Byte = 0x7F
 
