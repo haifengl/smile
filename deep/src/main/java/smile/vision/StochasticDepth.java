@@ -19,7 +19,6 @@ package smile.vision;
 import java.util.Arrays;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
-import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -29,9 +28,10 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class StochasticDepth implements Layer {
+    /** A placeholder to get training mode. */
+    private Module module = new Module();
     private final double p;
     private final String mode;
-    private final Module module;
 
     /**
      * Constructor.
@@ -48,12 +48,11 @@ public class StochasticDepth implements Layer {
         }
         this.p = p;
         this.mode = mode;
-        this.module = new Module();
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        block.asTorch().register_module(name, module);
+    public void register(String name, Module parent) {
+        module = parent.register_module(name, module);
     }
 
     @Override

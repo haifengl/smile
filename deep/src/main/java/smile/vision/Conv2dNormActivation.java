@@ -16,12 +16,12 @@
  */
 package smile.vision;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.ActivationFunction;
 import smile.deep.activation.ReLU;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Conv2dLayer;
 import smile.deep.layer.Layer;
-import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -30,9 +30,10 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Conv2dNormActivation implements Layer {
-    private Conv2dLayer conv;
-    private BatchNorm2dLayer norm;
-    private ActivationFunction activation;
+    private Module block = new Module();
+    private final Conv2dLayer conv;
+    private final BatchNorm2dLayer norm;
+    private final ActivationFunction activation;
 
     /**
      * Constructor with default batch normalization and ReLU activation.
@@ -52,12 +53,13 @@ public class Conv2dNormActivation implements Layer {
         this.conv = conv;
         this.norm = norm;
         this.activation = activation;
+        conv.register("conv", block);
+        norm.register("norm", block);
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        conv.register(name + "-conv2d", block);
-        norm.register(name + "-norm2d", block);
+    public void register(String name, Module parent) {
+        block = parent.register_module(name, block);
     }
 
     @Override

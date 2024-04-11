@@ -16,10 +16,10 @@
  */
 package smile.vision;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Layer;
-import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -29,6 +29,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class FusedMBConv implements Layer {
+    private Module block = new Module();
     private final Conv2dNormActivation expand;
     private final Conv2dNormActivation project;
     private final StochasticDepth stochasticDepth;
@@ -69,15 +70,17 @@ public class FusedMBConv implements Layer {
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
         stochasticDepth = new StochasticDepth(stochasticDepthProb, "row");
+
+        expand.register("expand", block);
+        if (project != null) {
+            project.register("project", block);
+        }
+        stochasticDepth.register("stochastic-depth", block);
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        expand.register(name + "-expand", block);
-        if (project != null) {
-            project.register(name + "-project", block);
-        }
-        stochasticDepth.register(name + "-stochastic-depth", block);
+    public void register(String name, Module parent) {
+        block = parent.register_module(name, block);
     }
 
     @Override
