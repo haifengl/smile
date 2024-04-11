@@ -42,7 +42,7 @@ trait View extends VegaLite {
     * by setting width to "container" and height to a number.
     *
     * After setting width or height to "container", you need to ensure
-    * that the container’s width or height is determined outside the plot.
+    * that the container's width or height is determined outside the plot.
     * For example, the container can be a `<div>` element that has style
     * width: 100%; height: 300px. When the container is not available
     * or its size is not defined (e.g., in server-side rendering),
@@ -62,7 +62,7 @@ trait View extends VegaLite {
     * by setting width to "container" and height to a number.
     *
     * After setting width or height to "container", you need to ensure
-    * that the container’s width or height is determined outside the plot.
+    * that the container's width or height is determined outside the plot.
     * For example, the container can be a `<div>` element that has style
     * width: 100%; height: 300px. When the container is not available
     * or its size is not defined (e.g., in server-side rendering),
@@ -498,7 +498,7 @@ trait View extends VegaLite {
     setPropertyValue("opacity", value)
   }
 
-  /** Sets the view background’s fill and stroke.
+  /** Sets the view background's fill and stroke.
     * The background property of a top-level view specification defines the
     * background of the whole visualization canvas. Meanwhile, the view
     * property of a single-view or layer specification can define the
@@ -509,7 +509,7 @@ trait View extends VegaLite {
     this
   }
 
-  /** Selections are the basic building block in Vega-Lite’s grammar of
+  /** Selections are the basic building block in Vega-Lite's grammar of
     * interaction. They map user input (e.g., mouse moves and clicks,
     * touch presses, etc.) into data queries, which can subsequently
     * be used to drive conditional encoding rules, filter data points,
@@ -559,16 +559,16 @@ trait View extends VegaLite {
 object View {
   /** Returns a field definition.
     * To encode a particular field in the data set with an encoding channel,
-    * the channel’s field definition must describe the field name and its
+    * the channel's field definition must describe the field name and its
     * data type.
     *
     * @param field A string defining the name of the field from which to
     *              pull a data value or an object defining iterated values
     *              from the repeat operator. field is not required if
     *              aggregate is count.
-    * @param `type`    The encoded field’s type of measurement ("quantitative",
+    * @param `type`    The encoded field's type of measurement ("quantitative",
     *                  "temporal", "ordinal", or "nominal"). It can also be a
-    *                  "geojson" type for encoding ‘geoshape’.
+    *                  "geojson" type for encoding ‘geoshape'.
     *
     *                  Data type describes the semantics of the data rather than
     *                  the primitive data types (number, string, etc.). The same
@@ -595,7 +595,7 @@ object View {
     *                  "sum", "median", "min", "max", "count").
     * @param title     A title for the field. If null, the title will be
     *                  removed. The default value is derived from the
-    *                  field’s name and transformation function (aggregate,
+    *                  field's name and transformation function (aggregate,
     *                  bin and timeUnit).
     */
   def field(field: JsValue,
@@ -631,9 +631,9 @@ object View {
     *              pull a data value or an object defining iterated values
     *              from the repeat operator. field is not required if
     *              aggregate is count
-    * @param `type` The encoded field’s type of measurement ("quantitative",
+    * @param `type` The encoded field's type of measurement ("quantitative",
     *               "temporal", "ordinal", or "nominal"). It can also be a
-    *               "geojson" type for encoding ‘geoshape’.
+    *               "geojson" type for encoding ‘geoshape'.
     *
     *               Data type describes the semantics of the data rather than
     *               the primitive data types (number, string, etc.). The same
@@ -656,9 +656,9 @@ object View {
     *                  "sum", "median", "min", "max", "count").
     * @param title     A title for the field. If null, the title will be
     *                  removed. The default value is derived from the
-    *                  field’s name and transformation function (aggregate,
+    *                  field's name and transformation function (aggregate,
     *                  bin and timeUnit).
-    * @param scale An object defining properties of the channel’s scale,
+    * @param scale An object defining properties of the channel's scale,
     *              which is the function that transforms values in the data
     *              domain (numbers, dates, strings, etc) to visual values
     *              (pixels, colors, sizes) of the encoding channels.
@@ -667,7 +667,7 @@ object View {
     *              will be directly encoded.
     *
     *              If undefined, default scale properties are applied.
-    * @param axis  An object defining properties of axis’s gridlines, ticks
+    * @param axis  An object defining properties of axis's gridlines, ticks
     *              and labels.
     *
     *              If null, the axis for the encoding channel will be
@@ -680,7 +680,7 @@ object View {
     *              can be either "ascending" or "descending".
     *
     *              For discrete fields, sort can be one of the following:
-    *              - "ascending" or "descending" – for sorting by the values’
+    *              - "ascending" or "descending" - for sorting by the values'
     *              natural order in JavaScript.
     *              - A string indicating an encoding channel name to sort
     *              by (e.g., "x" or "y") with an optional minus prefix for
@@ -754,9 +754,9 @@ object View {
     *              pull a data value or an object defining iterated values
     *              from the repeat operator. field is not required if
     *              aggregate is count
-    * @param `type` The encoded field’s type of measurement ("quantitative",
+    * @param `type` The encoded field's type of measurement ("quantitative",
     *               "temporal", "ordinal", or "nominal"). It can also be a
-    *               "geojson" type for encoding ‘geoshape’.
+    *               "geojson" type for encoding ‘geoshape'.
     *
     *               Data type describes the semantics of the data rather than
     *               the primitive data types (number, string, etc.). The same
@@ -779,9 +779,9 @@ object View {
     *                  "sum", "median", "min", "max", "count").
     * @param title     A title for the field. If null, the title will be
     *                  removed. The default value is derived from the
-    *                  field’s name and transformation function (aggregate,
+    *                  field's name and transformation function (aggregate,
     *                  bin and timeUnit).
-    * @param scale An object defining properties of the channel’s scale,
+    * @param scale An object defining properties of the channel's scale,
     *              which is the function that transforms values in the data
     *              domain (numbers, dates, strings, etc) to visual values
     *              (pixels, colors, sizes) of the encoding channels.
@@ -796,7 +796,7 @@ object View {
     *              can be either "ascending" or "descending".
     *
     *              For discrete fields, sort can be one of the following:
-    *              - "ascending" or "descending" – for sorting by the values’
+    *              - "ascending" or "descending" – for sorting by the values'
     *              natural order in JavaScript.
     *              - A string indicating an encoding channel name to sort
     *              by (e.g., "x" or "y") with an optional minus prefix for
@@ -850,9 +850,9 @@ object View {
     *              pull a data value or an object defining iterated values
     *              from the repeat operator. field is not required if
     *              aggregate is count
-    * @param `type` The encoded field’s type of measurement ("quantitative",
+    * @param `type` The encoded field's type of measurement ("quantitative",
     *               "temporal", "ordinal", or "nominal"). It can also be a
-    *               "geojson" type for encoding ‘geoshape’.
+    *               "geojson" type for encoding ‘geoshape'.
     *
     *               Data type describes the semantics of the data rather than
     *               the primitive data types (number, string, etc.). The same
@@ -873,7 +873,7 @@ object View {
     *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
-    * @param scale     An object defining properties of the channel’s scale,
+    * @param scale     An object defining properties of the channel's scale,
     *                  which is the function that transforms values in the data
     *                  domain (numbers, dates, strings, etc) to visual values
     *                  (pixels, colors, sizes) of the encoding channels.
@@ -887,7 +887,7 @@ object View {
     * @param condition One or more value definition(s) with a selection or
     *                  a test predicate.
     *
-    *                  Note: A field definition’s condition property can only
+    *                  Note: A field definition's condition property can only
     *                  contain conditional value definitions since Vega-Lite
     *                  only allows at most one encoded field per encoding
     *                  channel.
