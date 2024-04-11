@@ -128,7 +128,7 @@ trait VegaLite extends LazyLogging {
   }
 
   /** Sets a JSON array describing the data source. Set to null to ignore
-    * the parent’s data source. If no data is set, it is derived from
+    * the parent's data source. If no data is set, it is derived from
     * the parent.
     */
   def data(json: JsArray): this.type = {

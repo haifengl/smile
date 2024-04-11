@@ -34,9 +34,9 @@ trait Facet extends View {
     * @param field A string defining the name of the field from which to
     *              pull a data value or an object defining iterated values
     *              from the repeat operator.
-    * @param `type`   The encoded field’s type of measurement ("quantitative",
+    * @param `type`   The encoded field's type of measurement ("quantitative",
     *                 "temporal", "ordinal", or "nominal"). It can also be a
-    *                 "geojson" type for encoding ‘geoshape’.
+    *                 "geojson" type for encoding 'geoshape'.
     *
     *                 Data type describes the semantics of the data rather than
     *                 the primitive data types (number, string, etc.). The same
@@ -55,7 +55,7 @@ trait Facet extends View {
     * @param timeUnit Time unit (e.g., year, yearmonth, month, hours) for a
     *                 temporal field, or a temporal field that gets casted
     *                 as ordinal.
-    * @param align    The alignment to apply to row/column facet’s subplot.
+    * @param align    The alignment to apply to row/column facet's subplot.
     *                 The supported string values are "all", "each", and "none".
     *
     *                 - For "none", a flow layout will be used, in which
@@ -68,11 +68,26 @@ trait Facet extends View {
     *                   maximum observed size. String values for this
     *                   property will be applied to both grid rows and
     *                   columns.
-    * @param center   Boolean flag indicating if facet’s subviews should
+    * @param center   Boolean flag indicating if facet's subviews should
     *                 be centered relative to their respective rows or columns.
-    * @param spacing  The spacing in pixels between facet’s sub-views.
+    * @param spacing  The spacing in pixels between facet's sub-views.
     * @param columns  The number of columns to include in the view
     *                 composition layout.
+    * @param header An object defining properties of a facet's header.
+    * @param sort  Sort order for the encoded field.
+    *
+    *              For continuous fields (quantitative or temporal), sort
+    *              can be either "ascending" or "descending".
+    *
+    *              For discrete fields, sort can be one of the following:
+    *              - "ascending" or "descending" - for sorting by the values'
+    *              natural order in JavaScript.
+    *              - A string indicating an encoding channel name to sort
+    *              by (e.g., "x" or "y") with an optional minus prefix for
+    *              descending sort (e.g., "-x" to sort by x-field, descending).
+    *              This channel string is short-form of a sort-by-encoding
+    *              definition. For example, "sort": "-x" is equivalent to
+    *              "sort": {"encoding": "x", "order": "descending"}.
     */
   def facet(field: String,
             `type`: String = "quantitative",
@@ -81,9 +96,11 @@ trait Facet extends View {
             align: String = "all",
             center: Boolean = false,
             spacing: Int = -1,
-            columns: Int = -1): this.type = {
+            columns: Int = -1,
+            header: JsValue = JsUndefined,
+            sort: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.facet = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
+    spec.encoding.facet = Facet.field(field, `type`, bin, timeUnit, align, center, spacing, header, sort)
     if (columns > 0) spec.facet.columns = columns
     this
   }
@@ -95,9 +112,11 @@ trait Facet extends View {
           timeUnit: String = "",
           align: String = "all",
           center: Boolean = false,
-          spacing: Int = -1): this.type = {
+          spacing: Int = -1,
+          header: JsValue = JsUndefined,
+          sort: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.row = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
+    spec.encoding.row = Facet.field(field, `type`, bin, timeUnit, align, center, spacing, header, sort)
     this
   }
 
@@ -108,9 +127,11 @@ trait Facet extends View {
              timeUnit: String = "",
              align: String = "all",
              center: Boolean = false,
-             spacing: Int = -1): this.type = {
+             spacing: Int = -1,
+             header: JsValue = JsUndefined,
+             sort: JsValue = JsUndefined): this.type = {
     if (!spec.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.column = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
+    spec.encoding.column = Facet.field(field, `type`, bin, timeUnit, align, center, spacing, header, sort)
     this
   }
 }
@@ -121,9 +142,9 @@ object Facet {
     * @param field A string defining the name of the field from which to
     *              pull a data value or an object defining iterated values
     *              from the repeat operator.
-    * @param `type`   The encoded field’s type of measurement ("quantitative",
+    * @param `type`   The encoded field's type of measurement ("quantitative",
     *                 "temporal", "ordinal", or "nominal"). It can also be a
-    *                 "geojson" type for encoding ‘geoshape’.
+    *                 "geojson" type for encoding 'geoshape'.
     *
     *                 Data type describes the semantics of the data rather than
     *                 the primitive data types (number, string, etc.). The same
@@ -142,7 +163,7 @@ object Facet {
     * @param timeUnit Time unit (e.g., year, yearmonth, month, hours) for a
     *                 temporal field, or a temporal field that gets casted
     *                 as ordinal.
-    * @param align    The alignment to apply to row/column facet’s subplot.
+    * @param align    The alignment to apply to row/column facet's subplot.
     *                 The supported string values are "all", "each", and "none".
     *
     *                 - For "none", a flow layout will be used, in which
@@ -155,9 +176,24 @@ object Facet {
     *                   maximum observed size. String values for this
     *                   property will be applied to both grid rows and
     *                   columns.
-    * @param center   Boolean flag indicating if facet’s subviews should
+    * @param center   Boolean flag indicating if facet's subviews should
     *                 be centered relative to their respective rows or columns.
-    * @param spacing  The spacing in pixels between facet’s sub-views.
+    * @param spacing  The spacing in pixels between facet's sub-views.
+    * @param header An object defining properties of a facet's header.
+    * @param sort  Sort order for the encoded field.
+    *
+    *              For continuous fields (quantitative or temporal), sort
+    *              can be either "ascending" or "descending".
+    *
+    *              For discrete fields, sort can be one of the following:
+    *              - "ascending" or "descending" - for sorting by the values'
+    *              natural order in JavaScript.
+    *              - A string indicating an encoding channel name to sort
+    *              by (e.g., "x" or "y") with an optional minus prefix for
+    *              descending sort (e.g., "-x" to sort by x-field, descending).
+    *              This channel string is short-form of a sort-by-encoding
+    *              definition. For example, "sort": "-x" is equivalent to
+    *              "sort": {"encoding": "x", "order": "descending"}.
     */
   def field(field: String,
             `type`: String = "quantitative",
@@ -165,11 +201,15 @@ object Facet {
             timeUnit: String = "",
             align: String = "all",
             center: Boolean = false,
-            spacing: Int = -1): JsObject = {
+            spacing: Int = -1,
+            header: JsValue = JsUndefined,
+            sort: JsValue = JsUndefined): JsObject = {
     val json = View.field(field, `type`, bin, timeUnit)
     json.align = align
     json.center = center
     if (spacing >= 0) json.spacing = spacing
+    if (header != JsUndefined) json.header = header
+    if (sort != JsUndefined) json.sort = sort
     json
   }
 }
