@@ -18,6 +18,7 @@ package smile.deep.layer;
 
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.AdaptiveAvgPool2dImpl;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -51,10 +52,10 @@ public class AdaptiveAvgPool2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
+    public void register(String name, Module parent) {
         // This module has no parameters or buffers. So it is safe not to register.
         // Meanwhile, it causes core dump for unknown reasons.
-        // this.module = block.asTorch().register_module(name, module);
+        this.module = parent.register_module(name, module);
     }
 
     @Override

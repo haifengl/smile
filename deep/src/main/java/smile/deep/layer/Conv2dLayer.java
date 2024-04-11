@@ -19,6 +19,7 @@ package smile.deep.layer;
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.Conv2dImpl;
 import org.bytedeco.pytorch.Conv2dOptions;
+import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.kSame;
 import org.bytedeco.pytorch.kValid;
 import smile.deep.tensor.Tensor;
@@ -103,8 +104,8 @@ public class Conv2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        this.module = block.asTorch().register_module(name, module);
+    public void register(String name, Module parent) {
+        this.module = parent.register_module(name, module);
     }
 
     @Override
