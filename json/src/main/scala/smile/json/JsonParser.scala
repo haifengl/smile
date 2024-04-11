@@ -17,8 +17,9 @@
 
 package smile.json
 
-import scala.annotation.{switch, tailrec}
 import scala.language.implicitConversions
+import scala.annotation.{switch, tailrec}
+import scala.collection.mutable.SeqMap
 import java.lang.{StringBuilder => JStringBuilder}
 import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.charset.Charset
@@ -87,17 +88,16 @@ class JsonParser(input: ParserInput) {
   private def `object`(): Unit = {
     ws()
     jsValue = if (cursorChar != '}') {
-      @tailrec def members(map: Map[String, JsValue]): Map[String, JsValue] = {
+      @tailrec def members(map: SeqMap[String, JsValue]): SeqMap[String, JsValue] = {
         `string`()
         require(':')
         ws()
         val key = sb.toString
         `value`()
-        val nextMap = map.updated(key, jsValue)
-        if (ws(',')) members(nextMap) else nextMap
+        map.put(key, jsValue)
+        if (ws(',')) members(map) else map
       }
-      var map = Map.empty[String, JsValue]
-      map = members(map)
+      val map = members(SeqMap.empty[String, JsValue])
       require('}')
       JsObject(map)
     } else {

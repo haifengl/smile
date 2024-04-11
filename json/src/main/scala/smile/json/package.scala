@@ -18,11 +18,12 @@
 package smile
 
 import java.math.BigDecimal
-import java.time.{LocalDate, LocalTime, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.sql.Timestamp
 import java.util.{Date, UUID}
 import scala.language.implicitConversions
 import scala.collection.immutable.ArraySeq
+import scala.collection.mutable.SeqMap
 
 /**
  * @author Haifeng Li
@@ -69,7 +70,7 @@ package object json {
   implicit def array2JsValue[T <: JsValue](x: Array[T]): JsArray = seq2JsValue(ArraySeq.unsafeWrapArray(x))
   implicit def seq2JsValue[T <: JsValue](x: Seq[T]): JsArray = JsArray(x: _*)
   implicit def map2JsValue[T <: JsValue](x: Seq[(String, T)]): JsObject = JsObject(x: _*)
-  implicit def map2JsValue(x: collection.mutable.Map[String, JsValue]): JsObject = JsObject(x)
+  implicit def map2JsValue(x: collection.mutable.Map[String, JsValue]): JsObject = JsObject(SeqMap.empty[String, JsValue].addAll(x))
   implicit def map2JsValue[T <: JsValue](x: collection.immutable.Map[String, T]): JsObject = JsObject(x)
 
   implicit def pimpBooleanSeq(x: Seq[Boolean]): PimpedBooleanSeq = new PimpedBooleanSeq(x)
@@ -224,79 +225,79 @@ package json {
   }
 
   private[json] class PimpedBooleanMutableMap(map: collection.mutable.Map[String, Boolean]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsBoolean(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsBoolean(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedIntMutableMap(map: collection.mutable.Map[String, Int]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsInt(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsInt(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedLongMutableMap(map: collection.mutable.Map[String, Long]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsLong(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsLong(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedDoubleMutableMap(map: collection.mutable.Map[String, Double]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsDouble(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsDouble(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedBigDecimalMutableMap(map: collection.mutable.Map[String, BigDecimal]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsDecimal(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsDecimal(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedStringMutableMap(map: collection.mutable.Map[String, String]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsString(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsString(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedDLocalateMutableMap(map: collection.mutable.Map[String, LocalDate]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsDate(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsDate(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedLocalTimeMutableMap(map: collection.mutable.Map[String, LocalTime]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsTime(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsTime(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedLocalDateTimeMutableMap(map: collection.mutable.Map[String, LocalDateTime]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsDateTime(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsDateTime(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedTimestampMutableMap(map: collection.mutable.Map[String, Timestamp]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsTimestamp(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsTimestamp(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 
   private[json] class PimpedDateMutableMap(map: collection.mutable.Map[String, Date]) {
-    def toJsObject: JsObject = JsObject(map.map { case (k, v) =>
-      val js: JsValue = JsTimestamp(v)
-      (k, js)
-    })
+    val fields = SeqMap.empty[String, JsValue].addAll(
+      map.map { case (k, v) => (k, JsTimestamp(v)) }
+    )
+    def toJsObject: JsObject = JsObject(fields)
   }
 }

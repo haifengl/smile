@@ -58,7 +58,7 @@ trait JsonPrinter extends (JsValue => String) {
       case JsString(x)   => printString(x, sb)
       case JsUUID(x)     => sb.append('"').append(x.toString).append('"')
       case JsObjectId(x) => sb.append('"').append(x.toString).append('"')
-      case _               => throw new IllegalStateException
+      case _             => throw new IllegalStateException
     }
   }
 
