@@ -567,7 +567,7 @@ case class JsBinary(value: Array[Byte]) extends JsValue {
   }
 }
 
-case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsValue {
+case class JsObject(fields: collection.mutable.SeqMap[String, JsValue]) extends JsValue {
   /** Filter out undefined fields. */
   fields.foreach { case (key, value) =>
     if (value == JsUndefined) fields.remove(key)
@@ -614,8 +614,8 @@ case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsV
 }
 
 object JsObject {
-  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.Map(fields: _*))
-  def apply(map: Map[String, JsValue]) = new JsObject(collection.mutable.Map() ++ map)
+  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.SeqMap(fields: _*))
+  def apply(map: Map[String, JsValue]) = new JsObject(collection.mutable.SeqMap() ++ map)
 }
 
 case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends JsValue with Iterable[JsValue] {
