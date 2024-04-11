@@ -16,6 +16,7 @@
  */
 package smile.vision;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.ActivationFunction;
 import smile.deep.activation.ReLU;
 import smile.deep.activation.Sigmoid;
@@ -28,6 +29,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class SqueezeExcitation implements Layer {
+    private Module block = new Module();
     private final AdaptiveAvgPool2dLayer avgpool;
     private final Conv2dLayer conv1, conv2;
     private final ActivationFunction delta, sigma;
@@ -49,18 +51,19 @@ public class SqueezeExcitation implements Layer {
      * @param sigma the sigma activation function.
      */
     public SqueezeExcitation(int inputChannels, int squeezeChannels, ActivationFunction delta, ActivationFunction sigma) {
-        avgpool = new AdaptiveAvgPool2dLayer(1);
-        conv1 = Layer.conv2d(inputChannels, squeezeChannels, 1);
-        conv2 = Layer.conv2d(squeezeChannels, inputChannels, 1);
+        this.avgpool = new AdaptiveAvgPool2dLayer(1);
+        this.conv1 = Layer.conv2d(inputChannels, squeezeChannels, 1);
+        this.conv2 = Layer.conv2d(squeezeChannels, inputChannels, 1);
         this.delta = delta;
         this.sigma = sigma;
+        avgpool.register("avgpool", block);
+        conv1.register("conv1", block);
+        conv2.register("conv2", block);
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        avgpool.register(name + "-avgpool", block);
-        conv1.register(name + "-conv1", block);
-        conv2.register(name + "-conv2", block);
+    public void register(String name, Module parent) {
+        block = parent.register_module(name, block);
     }
 
     @Override

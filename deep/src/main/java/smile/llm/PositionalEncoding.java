@@ -16,8 +16,8 @@
  */
 package smile.llm;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
-import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
@@ -74,8 +74,8 @@ public class PositionalEncoding implements Layer {
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        block.asTorch().register_buffer(name, pe.asTorch());
+    public void register(String name, Module block) {
+        block.register_buffer(name, pe.asTorch());
     }
 
     /**

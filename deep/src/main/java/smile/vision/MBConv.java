@@ -16,11 +16,11 @@
  */
 package smile.vision;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.activation.Sigmoid;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Layer;
-import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -31,6 +31,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class MBConv implements Layer {
+    private Module block = new Module();
     private final Conv2dNormActivation expand;
     private final Conv2dNormActivation depthwise;
     private final SqueezeExcitation se;
@@ -78,17 +79,19 @@ public class MBConv implements Layer {
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
         stochasticDepth = new StochasticDepth(stochasticDepthProb, "row");
+
+        if (expand != null) {
+            expand.register("expand", block);
+        }
+        depthwise.register("depthwise", block);
+        se.register("squeeze-excitation", block);
+        project.register("project", block);
+        stochasticDepth.register("stochastic-depth", block);
     }
 
     @Override
-    public void register(String name, LayerBlock block) {
-        if (expand != null) {
-            expand.register(name + "-expand", block);
-        }
-        depthwise.register(name + "-depthwise", block);
-        se.register(name + "-squeeze-excitation", block);
-        project.register(name + "-project", block);
-        stochasticDepth.register(name + "-stochastic-depth", block);
+    public void register(String name, Module parent) {
+        block = parent.register_module(name, block);
     }
 
     @Override
