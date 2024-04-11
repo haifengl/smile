@@ -17,7 +17,7 @@
 
 package smile.json
 
-import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZoneOffset}
 import java.sql.Timestamp
 import java.util.{Date, UUID}
 import java.math.BigDecimal
@@ -115,15 +115,19 @@ sealed trait JsValue extends Dynamic {
     throw new UnsupportedOperationException
   }
 
-  def asDate: LocalDate = {
+  def asInstant: Instant = {
     throw new UnsupportedOperationException
   }
 
-  def asTime: LocalTime = {
+  def asLocalDate: LocalDate = {
     throw new UnsupportedOperationException
   }
 
-  def asDateTime: LocalDateTime = {
+  def asLocalTime: LocalTime = {
+    throw new UnsupportedOperationException
+  }
+
+  def asLocalDateTime: LocalDateTime = {
     throw new UnsupportedOperationException
   }
 
@@ -335,9 +339,10 @@ case class JsString(value: String) extends JsValue with Ordered[JsString] {
   override def asLong: Long = java.lang.Long.parseLong(value)
   override def asDouble: Double = java.lang.Double.parseDouble(value)
   override def asDecimal: BigDecimal = new BigDecimal(value)
-  override def asDate: LocalDate = LocalDate.parse(value)
-  override def asTime: LocalTime = LocalTime.parse(value)
-  override def asDateTime: LocalDateTime = LocalDateTime.parse(value)
+  override def asInstant: Instant = Instant.parse(value)
+  override def asLocalDate: LocalDate = LocalDate.parse(value)
+  override def asLocalTime: LocalTime = LocalTime.parse(value)
+  override def asLocalDateTime: LocalDateTime = LocalDateTime.parse(value)
   override def asTimestamp: Timestamp = Timestamp.valueOf(value)
 
   override def compare(that: JsString): Int = {
@@ -349,18 +354,65 @@ object JsString {
   val empty: JsString = JsString("")
 }
 
+
+/** A single moment in time. Date objects encapsulate an integral number that
+  * represents milliseconds since the midnight at the beginning of January 1,
+  * 1970, UTC (the epoch).
+  */
+case class JsDate(value: Instant) extends JsValue with Ordered[JsDate] {
+  /** The output will be in the ISO-8601 format uuuu-MM-dd. */
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
+    case that: Instant => value == that
+    case JsDate(that) => value == that
+    case _ => false
+  }
+
+  override def asInstant: Instant = value
+  override def asLocalDate: LocalDate = LocalDate.ofInstant(value, ZoneOffset.UTC)
+  override def asLocalDateTime: LocalDateTime = LocalDateTime.ofInstant(value, ZoneOffset.UTC)
+  override def asLocalTime: LocalTime = LocalTime.ofInstant(value, ZoneOffset.UTC)
+  override def asTimestamp: Timestamp = Timestamp.from(value)
+  /** Converts this date to the Epoch Day.
+    * The Epoch Day count is a simple incrementing count of days
+    * where day 0 is 1970-01-01 (ISO).
+    */
+  override def asLong: Long = value.toEpochMilli
+  /** Converts this date to the Epoch Day.
+    * The Epoch Day count is a simple incrementing count of days
+    * where day 0 is 1970-01-01 (ISO).
+    */
+  override def asDouble: Double = value.toEpochMilli.toDouble
+
+  override def compare(that: JsDate): Int = {
+    value.compareTo(that.value)
+  }
+}
+
+object JsDate {
+  /** Obtains an instance from the epoch. */
+  def apply(epoch: Long): JsDate = new JsDate(Instant.ofEpochMilli(epoch))
+  /** The string must represent a valid date and is parsed using DateTimeFormatter.ISO_INSTANT. */
+  def apply(date: String): JsDate = new JsDate(Instant.parse(date))
+}
+
 /** An immutable date without a time-zone in the ISO-8601 calendar system,
   * often viewed as year-month-day such as 2007-12-03.
   */
-case class JsDate(value: LocalDate) extends JsValue with Ordered[JsDate] {
+case class JsLocalDate(value: LocalDate) extends JsValue with Ordered[JsLocalDate] {
   /** The output will be in the ISO-8601 format uuuu-MM-dd. */
   override def toString: String = value.toString
   override def equals(o: Any): Boolean = o match {
     case that: LocalDate => value == that
-    case JsDate(that) => value == that
+    case JsLocalDate(that) => value == that
     case _ => false
   }
-  override def asDate: LocalDate = value
+
+  override def asInstant: Instant = value.asInstant
+  override def asLocalDate: LocalDate = value
+  override def asLocalDateTime: LocalDateTime = value.asLocalDateTime
+  override def asLocalTime: LocalTime = value.asLocalTime
+  override def asTimestamp: Timestamp = value.asTimestamp
   /** Converts this date to the Epoch Day.
     * The Epoch Day count is a simple incrementing count of days
     * where day 0 is 1970-01-01 (ISO).
@@ -372,16 +424,16 @@ case class JsDate(value: LocalDate) extends JsValue with Ordered[JsDate] {
     */
   override def asDouble: Double = value.toEpochDay.toDouble
 
-  override def compare(that: JsDate): Int = {
+  override def compare(that: JsLocalDate): Int = {
     value.compareTo(that.value)
   }
 }
 
-object JsDate {
+object JsLocalDate {
   /** Obtains an instance from the epoch day count. */
-  def apply(date: Long): JsDate = new JsDate(LocalDate.ofEpochDay(date))
+  def apply(date: Long): JsLocalDate = new JsLocalDate(LocalDate.ofEpochDay(date))
   /** The string must represent a valid date and is parsed using DateTimeFormatter.ISO_LOCAL_DATE. */
-  def apply(date: String): JsDate = new JsDate(LocalDate.parse(date))
+  def apply(date: String): JsLocalDate = new JsLocalDate(LocalDate.parse(date))
 }
 
 /** An immutable time without a time-zone in the ISO-8601 calendar system,
@@ -390,7 +442,7 @@ object JsDate {
   * store the nano-of-second field to save the space. To preserve the high
   * precision of time, JsTimestamp should be employed.
   */
-case class JsTime(value: LocalTime) extends JsValue with Ordered[JsTime] {
+case class JsLocalTime(value: LocalTime) extends JsValue with Ordered[JsLocalTime] {
   /** The output will be one of the following ISO-8601 formats:
     *  - HH:mm
     *  - HH:mm:ss
@@ -404,11 +456,11 @@ case class JsTime(value: LocalTime) extends JsValue with Ordered[JsTime] {
   override def toString: String = value.toString
   override def equals(o: Any): Boolean = o match {
     case that: LocalTime => value == that
-    case JsTime(that) => value == that
+    case JsLocalTime(that) => value == that
     case _ => false
   }
-  override def asTime: LocalTime = value
 
+  override def asLocalTime: LocalTime = value
   /** Converts this time as seconds of day, from 0 to 24 * 60 * 60 - 1. */
   override def asInt: Int = value.toSecondOfDay
   /** Converts this time as nanos of day, from 0 to 24 * 60 * 60 * 1,000,000,000 - 1. */
@@ -416,16 +468,16 @@ case class JsTime(value: LocalTime) extends JsValue with Ordered[JsTime] {
   /** Converts this time as nanos of day, from 0 to 24 * 60 * 60 * 1,000,000,000 - 1. */
   override def asDouble: Double = value.toNanoOfDay.toDouble
 
-  override def compare(that: JsTime): Int = {
+  override def compare(that: JsLocalTime): Int = {
     value.compareTo(that.value)
   }
 }
 
-object JsTime {
+object JsLocalTime {
   /** Obtains an instance from a nanos-of-day value. */
-  def apply(time: Long): JsTime = new JsTime(LocalTime.ofNanoOfDay(time))
+  def apply(time: Long): JsLocalTime = new JsLocalTime(LocalTime.ofNanoOfDay(time))
   /** The string must represent a valid time and is parsed using DateTimeFormatter.ISO_LOCAL_TIME. */
-  def apply(time: String): JsTime = new JsTime(LocalTime.parse(time))
+  def apply(time: String): JsLocalTime = new JsLocalTime(LocalTime.parse(time))
 }
 
 /** An immutable date-time without a time-zone in the ISO-8601 calendar system,
@@ -434,7 +486,7 @@ object JsTime {
   * store the nano-of-second field to save the space. To preserve the high
   * precision of time, JsTimestamp should be employed.
   */
-case class JsDateTime(value: LocalDateTime) extends JsValue with Ordered[JsDateTime] {
+case class JsLocalDateTime(value: LocalDateTime) extends JsValue with Ordered[JsLocalDateTime] {
   /** The output will be one of the following ISO-8601 formats:
     *  - uuuu-MM-dd'T'HH:mm
     *  - uuuu-MM-dd'T'HH:mm:ss
@@ -448,28 +500,30 @@ case class JsDateTime(value: LocalDateTime) extends JsValue with Ordered[JsDateT
   override def toString: String = value.toString
   override def equals(o: Any): Boolean = o match {
     case that: LocalDateTime => value == that
-    case JsDateTime(that) => value == that
+    case JsLocalDateTime(that) => value == that
     case _ => false
   }
-  override def asDate: LocalDate = value.toLocalDate
-  override def asTime: LocalTime = value.toLocalTime
-  override def asDateTime: LocalDateTime = value
+
+  override def asInstant: Instant = value.toInstant(ZoneOffset.UTC)
+  override def asLocalDate: LocalDate = value.toLocalDate
+  override def asLocalDateTime: LocalDateTime = value
+  override def asLocalTime: LocalTime = value.toLocalTime
   override def asTimestamp: Timestamp = Timestamp.valueOf(value)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
   override def asLong: Long = value.toEpochSecond(ZoneOffset.UTC)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
   override def asDouble: Double = value.toEpochSecond(ZoneOffset.UTC).toDouble
 
-  override def compare(that: JsDateTime): Int = {
+  override def compare(that: JsLocalDateTime): Int = {
     value.compareTo(that.value)
   }
 }
 
-object JsDateTime {
+object JsLocalDateTime {
   /** Obtains an instance from a date and time. */
-  def apply(date: LocalDate, time: LocalTime): JsDateTime = new JsDateTime(LocalDateTime.of(date, time))
+  def apply(date: LocalDate, time: LocalTime): JsLocalDateTime = new JsLocalDateTime(LocalDateTime.of(date, time))
   /** The string must represent a valid date-time and is parsed using DateTimeFormatter.ISO_LOCAL_DATE_TIME. */
-  def apply(datetime: String): JsDateTime = new JsDateTime(LocalDateTime.parse(datetime))
+  def apply(datetime: String): JsLocalDateTime = new JsLocalDateTime(LocalDateTime.parse(datetime))
 }
 
 /** An SQL TIMESTAMP value. It adds the ability to hold the SQL TIMESTAMP
@@ -490,9 +544,11 @@ case class JsTimestamp(value: Timestamp) extends JsValue with Ordered[JsTimestam
     case JsTimestamp(that) => value == that
     case _ => false
   }
-  override def asDate: LocalDate = value.toLocalDateTime.toLocalDate
-  override def asTime: LocalTime = value.toLocalDateTime.toLocalTime
-  override def asDateTime: LocalDateTime = value.toLocalDateTime
+
+  override def asInstant: Instant = value.toInstant
+  override def asLocalDate: LocalDate = value.toLocalDateTime.toLocalDate
+  override def asLocalTime: LocalTime = value.toLocalDateTime.toLocalTime
+  override def asLocalDateTime: LocalDateTime = value.toLocalDateTime
   override def asLong: Long = value.getTime
   override def asDouble: Double = value.getTime.toDouble
 
