@@ -78,7 +78,7 @@ public record MBConvConfig(double expandRatio,
                                       double depthMultiplier) {
         inputChannels = adjustChannels(inputChannels, widthMultiplier);
         outputChannels = adjustChannels(outputChannels, widthMultiplier);
-        numLayers = adjustChannels(numLayers, depthMultiplier);
+        numLayers = adjustDepth(numLayers, depthMultiplier);
         return new MBConvConfig(expandRatio, kernel, stride, inputChannels, outputChannels, numLayers, "MBConv");
     }
 
@@ -103,13 +103,23 @@ public record MBConvConfig(double expandRatio,
     }
 
     /**
+     * Adjusts the depth.
+     * @param x the input value.
+     * @param scale the scaling factor.
+     * @return the output value.
+     */
+    static int adjustDepth(int x, double scale) {
+        return (int) Math.ceil(x * scale);
+    }
+
+    /**
      * The building blocks of EfficientNet demands channel size
      * to be multiples of 8.
      * @param x the input value.
      * @param scale the scaling factor.
      * @return the output value divisible by 8.
      */
-    static int adjustChannels(double x, double scale) {
+    static int adjustChannels(int x, double scale) {
         return makeDivisible(x * scale, 8);
     }
 
@@ -120,7 +130,7 @@ public record MBConvConfig(double expandRatio,
      * @return the output value divisible by divisor.
      */
     static int makeDivisible(double x, int divisor) {
-        int v = Math.max(divisor, (int) (x + divisor / 2) / divisor * divisor);
+        int v = Math.max(divisor, (int) (x + divisor / 2.0) / divisor * divisor);
         // Make sure that round down does not go down by more than 10%.
         if (v < 0.9 * x) {
             v += divisor;
