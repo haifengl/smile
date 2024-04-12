@@ -308,16 +308,6 @@ public interface Layer {
     }
 
     /**
-     * Returns an adaptive average pooling layer.
-     * @param height the output height.
-     * @param width the output width.
-     * @return an adaptive average pooling layer.
-     */
-    static AdaptiveAvgPool2dLayer adaptiveAvgPool2d(int height, int width) {
-        return new AdaptiveAvgPool2dLayer(height, width);
-    }
-
-    /**
      * Returns a normalization layer that re-centers and normalizes the output
      * of one layer before feeding it to another. Centering and scaling the
      * intermediate tensors has a number of beneficial effects, such as allowing
