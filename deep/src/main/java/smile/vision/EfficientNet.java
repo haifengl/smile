@@ -28,6 +28,8 @@ import smile.deep.layer.*;
  * @author Haifeng Li
  */
 public class EfficientNet extends Model {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EfficientNet.class);
+
     /**
      * Constructor.
      * @param invertedResidualSetting the network structure.
@@ -76,6 +78,7 @@ public class EfficientNet extends Model {
         int stageBlockId = 0;
         for (int i = 1; i <= invertedResidualSetting.length; i++) {
             var config = invertedResidualSetting[i - 1];
+            logger.debug("Layer {}: {}", i, config);
             Layer[] stage = new Layer[config.numLayers()];
             for (int j = 0; j < stage.length; j++) {
                 // overwrite info if not the first conv in the stage
@@ -92,6 +95,7 @@ public class EfficientNet extends Model {
                 }
                 // adjust stochastic depth probability based on the depth of the stage block
                 double sdprob = stochasticDepthProb * stageBlockId / totalStageBlocks;
+                logger.debug("Stage {} BlockId {}: {} sdprob = {}", j, stageBlockId, config, sdprob);
                 stage[j] = config.block().equals("MBConv") ? new MBConv(config, sdprob) : new FusedMBConv(config, sdprob);
                 stageBlockId++;
             }
