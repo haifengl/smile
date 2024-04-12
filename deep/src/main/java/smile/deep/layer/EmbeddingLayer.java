@@ -33,15 +33,15 @@ import smile.deep.tensor.Tensor;
  */
 public class EmbeddingLayer implements Layer {
     /** The size of the dictionary of embeddings. */
-    int numTokens;
+    private final int numTokens;
     /** The size of each embedding vector. */
-    int dim;
+    private final int dim;
     /** The optional scaling factor. */
-    double alpha;
+    private final double alpha;
     /** The wrapper of alpha. */
-    Scalar scale;
+    private final Scalar scale;
     /** Implementation. */
-    EmbeddingImpl module;
+    private final EmbeddingImpl module;
 
     /**
      * Constructor.
@@ -68,7 +68,7 @@ public class EmbeddingLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        this.module = parent.register_module(name, new EmbeddingImpl(numTokens, dim));
+        parent.register_module(name, new EmbeddingImpl(numTokens, dim));
     }
 
     @Override

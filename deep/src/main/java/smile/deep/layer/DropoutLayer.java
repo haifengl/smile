@@ -37,7 +37,7 @@ import smile.deep.tensor.Tensor;
  */
 public class DropoutLayer implements Layer {
     /** Implementation. */
-    private DropoutImpl module;
+    private final DropoutImpl module;
 
     /**
      * Constructor.
@@ -61,8 +61,7 @@ public class DropoutLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        // This module has no parameters or buffers. So it is safe not to register.
-        this.module = parent.register_module(name, module);
+        parent.register_module(name, module);
     }
 
     @Override

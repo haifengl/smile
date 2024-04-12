@@ -29,15 +29,15 @@ import smile.deep.tensor.Tensor;
  */
 public class FullyConnectedLayer implements Layer {
     /** The number of input features. */
-    final int in;
+    private final int in;
     /** The number of output features. */
-    final int out;
+    private final int out;
     /** The optional activation function. */
-    final ActivationFunction activation;
+    private final ActivationFunction activation;
     /** The optional dropout probability. */
-    final double dropout;
+    private final double dropout;
     /** Implementation. */
-    LinearImpl module;
+    private final LinearImpl module;
 
     /**
      * Constructor.
@@ -75,7 +75,7 @@ public class FullyConnectedLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        this.module = parent.register_module(name, module);
+        parent.register_module(name, module);
     }
 
     @Override

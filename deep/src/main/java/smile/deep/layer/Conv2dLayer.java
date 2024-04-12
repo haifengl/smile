@@ -31,9 +31,9 @@ import smile.deep.tensor.Tensor;
  */
 public class Conv2dLayer implements Layer {
     /** The layer configuration. */
-    Conv2dOptions options;
+    private final Conv2dOptions options;
     /** Implementation. */
-    Conv2dImpl module;
+    private final Conv2dImpl module;
 
     /**
      * Constructor.
@@ -105,7 +105,7 @@ public class Conv2dLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        this.module = parent.register_module(name, module);
+        parent.register_module(name, module);
     }
 
     @Override
