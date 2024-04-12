@@ -18,6 +18,7 @@ package smile.deep.layer;
 
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.AdaptiveAvgPool2dImpl;
+import org.bytedeco.pytorch.LongOptional;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
@@ -37,18 +38,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
      * @param size the output size.
      */
     public AdaptiveAvgPool2dLayer(int size) {
-        LongPointer p = new LongPointer(size, size);
-        this.module = new AdaptiveAvgPool2dImpl(p);
-    }
-
-    /**
-     * Constructor.
-     * @param height the output height.
-     * @param width the output width.
-     */
-    public AdaptiveAvgPool2dLayer(int height, int width) {
-        LongPointer p = new LongPointer(height, width);
-        this.module = new AdaptiveAvgPool2dImpl(p);
+        this.module = new AdaptiveAvgPool2dImpl(new LongOptional(size));
     }
 
     @Override
