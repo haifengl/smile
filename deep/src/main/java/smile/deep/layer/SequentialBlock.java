@@ -16,6 +16,8 @@
  */
 package smile.deep.layer;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
@@ -29,18 +31,36 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class SequentialBlock implements LayerBlock {
-    final Layer[] layers;
-    Module block = new Module();
+    private final List<Layer> layers = new ArrayList<>();
+    private final Module block = new Module();
 
     /**
-     * Creates a sequential layer block.
+     * Constructor.
+     */
+    public SequentialBlock() {
+
+    }
+
+    /**
+     * Constructor.
      * @param layers the neural network layers.
      */
     public SequentialBlock(Layer... layers) {
-        this.layers = layers;
         for (int i = 0; i < layers.length; i++) {
-            layers[i].register(Integer.toString(i), this);
+            this.layers.add(layers[i]);
+            layers[i].register(Integer.toString(i), block);
         }
+    }
+
+    /**
+     * Adds a layer to the sequential block.
+     * @param layer a layer.
+     * @return this object.
+     */
+    public SequentialBlock add(Layer layer) {
+        layer.register(Integer.toString(layers.size()), block);
+        layers.add(layer);
+        return this;
     }
 
     @Override
@@ -50,7 +70,7 @@ public class SequentialBlock implements LayerBlock {
 
     @Override
     public void register(String name, Module parent) {
-        this.block = parent.register_module(name, block);
+       parent.register_module(name, block);
     }
 
     @Override
