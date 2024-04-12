@@ -24,6 +24,7 @@ lazy val commonSettings = Seq(
     "-XX:+UseG1GC",
     "-XX:MaxMetaspaceSize=1024M",
     "-Xss4M",
+    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
