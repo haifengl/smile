@@ -32,9 +32,9 @@ import smile.deep.tensor.Tensor;
  */
 public class BatchNorm1dLayer implements Layer {
     /** The layer configuration. */
-    BatchNormOptions options;
+    private final BatchNormOptions options;
     /** Implementation. */
-    BatchNorm1dImpl module;
+    private final BatchNorm1dImpl module;
 
     /**
      * Constructor.
@@ -71,7 +71,7 @@ public class BatchNorm1dLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        this.module = parent.register_module(name, module);
+        parent.register_module(name, module);
     }
 
     @Override

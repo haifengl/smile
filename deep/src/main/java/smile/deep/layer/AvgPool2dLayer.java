@@ -28,8 +28,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class AvgPool2dLayer implements Layer {
-    /** Implementation. */
-    AvgPool2dImpl module;
+    private final AvgPool2dImpl module;
 
     /**
      * Constructor.
@@ -42,8 +41,7 @@ public class AvgPool2dLayer implements Layer {
 
     @Override
     public void register(String name, Module parent) {
-        // This module has no parameters or buffers. So it is safe not to register.
-        this.module = parent.register_module(name, module);
+        parent.register_module(name, module);
     }
 
     @Override
