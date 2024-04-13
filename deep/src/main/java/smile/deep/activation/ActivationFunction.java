@@ -68,4 +68,13 @@ public abstract class ActivationFunction implements
     public Tensor apply(Tensor x) {
         return Tensor.of(apply(x.asTorch()));
     }
+
+    /**
+     * Applies this function to the given argument.
+     * @param x a tensor.
+     * @return the output tensor.
+     */
+    public Tensor forward(Tensor x) {
+        return apply(x);
+    }
 }
