@@ -19,6 +19,8 @@ package smile.deep.activation;
 
 import java.io.Serializable;
 import java.util.function.Function;
+import org.bytedeco.pytorch.Module;
+import smile.deep.layer.Layer;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -27,8 +29,10 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public abstract class ActivationFunction implements
-        Function<org.bytedeco.pytorch.Tensor, org.bytedeco.pytorch.Tensor>,
-        Serializable {
+        Layer, Serializable,
+        Function<org.bytedeco.pytorch.Tensor, org.bytedeco.pytorch.Tensor> {
+
+    private final Module module;
     /** The function name. */
     private final String name;
     /** True if the operation executes in-place. */
@@ -40,6 +44,7 @@ public abstract class ActivationFunction implements
      * @param inplace true if the operation executes in-place.
      */
     public ActivationFunction(String name, boolean inplace) {
+        this.module = new Module(name);
         this.name = name;
         this.inplace = inplace;
     }
@@ -69,11 +74,12 @@ public abstract class ActivationFunction implements
         return Tensor.of(apply(x.asTorch()));
     }
 
-    /**
-     * Applies this function to the given argument.
-     * @param x a tensor.
-     * @return the output tensor.
-     */
+    @Override
+    public void register(String name, Module parent) {
+        parent.register_module(name, module);
+    }
+
+    @Override
     public Tensor forward(Tensor x) {
         return apply(x);
     }
