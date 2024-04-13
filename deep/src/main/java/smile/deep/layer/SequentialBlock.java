@@ -18,7 +18,6 @@ package smile.deep.layer;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -30,15 +29,22 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class SequentialBlock implements LayerBlock {
+public class SequentialBlock extends LayerBlock {
     private final List<Layer> layers = new ArrayList<>();
-    private final Module block = new Module();
 
     /**
      * Constructor.
      */
     public SequentialBlock() {
+        this("Sequential");
+    }
 
+    /**
+     * Constructor.
+     * @param name the module name.
+     */
+    public SequentialBlock(String name) {
+        super(name);
     }
 
     /**
@@ -46,9 +52,10 @@ public class SequentialBlock implements LayerBlock {
      * @param layers the neural network layers.
      */
     public SequentialBlock(Layer... layers) {
+        super("Sequential");
         for (int i = 0; i < layers.length; i++) {
             this.layers.add(layers[i]);
-            layers[i].register(Integer.toString(i), block);
+            layers[i].register(Integer.toString(i), asTorch());
         }
     }
 
@@ -58,19 +65,9 @@ public class SequentialBlock implements LayerBlock {
      * @return this object.
      */
     public SequentialBlock add(Layer layer) {
-        layer.register(Integer.toString(layers.size()), block);
+        layer.register(Integer.toString(layers.size()), asTorch());
         layers.add(layer);
         return this;
-    }
-
-    @Override
-    public Module asTorch() {
-        return block;
-    }
-
-    @Override
-    public void register(String name, Module parent) {
-       parent.register_module(name, block);
     }
 
     @Override
