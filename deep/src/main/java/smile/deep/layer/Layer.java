@@ -232,7 +232,7 @@ public interface Layer {
      * @return a convolutional layer.
      */
     static Conv2dLayer conv2d(int in, int out, int kernel) {
-        return new Conv2dLayer(in, out, kernel, 1, "same", 1, 1, true, "zeros");
+        return new Conv2dLayer(in, out, kernel, 1, 0, 1, 1, true, "zeros");
     }
 
     /**
