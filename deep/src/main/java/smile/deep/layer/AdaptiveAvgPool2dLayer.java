@@ -18,6 +18,7 @@ package smile.deep.layer;
 
 import org.bytedeco.pytorch.AdaptiveAvgPool2dImpl;
 import org.bytedeco.pytorch.LongOptional;
+import org.bytedeco.pytorch.LongOptionalVector;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
@@ -41,7 +42,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
     public AdaptiveAvgPool2dLayer(int size) {
         this.height = size;
         this.width = size;
-        this.module = new AdaptiveAvgPool2dImpl(new LongOptional(size));
+        this.module = new AdaptiveAvgPool2dImpl(new LongOptionalVector(new LongOptional(size), new LongOptional(size)).front());
     }
 
     /**
@@ -54,7 +55,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
         this.width = width;
         // JavaCPP doesn't generate correct constructor.
         // https://github.com/bytedeco/javacpp-presets/issues/1492
-        this.module = new AdaptiveAvgPool2dImpl(new LongOptional(height));
+        this.module = new AdaptiveAvgPool2dImpl(new LongOptionalVector(new LongOptional(height), new LongOptional(width)).front());
     }
 
     @Override
@@ -64,7 +65,7 @@ public class AdaptiveAvgPool2dLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        //return Tensor.of(module.forward(input.asTorch()));
+        // return Tensor.of(module.forward(input.asTorch()));
         // work around with functional API
         return Tensor.of(torch.adaptive_avg_pool2d(input.asTorch(), height, width));
     }
