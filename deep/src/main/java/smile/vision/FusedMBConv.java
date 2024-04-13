@@ -20,6 +20,7 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Layer;
+import smile.deep.layer.LayerBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -28,8 +29,8 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class FusedMBConv implements Layer {
-    private Module block = new Module();
+public class FusedMBConv extends LayerBlock {
+    private final Module block = new Module("Sequential");
     private final Conv2dNormActivation expand;
     private final Conv2dNormActivation project;
     private final StochasticDepth stochasticDepth;
@@ -42,6 +43,7 @@ public class FusedMBConv implements Layer {
      *                           in stochastic depth layer.
      */
     public FusedMBConv(MBConvConfig config, double stochasticDepthProb) {
+        super("FusedMBConv");
         int stride = config.stride();
         if (stride < 1 || stride > 2) {
             throw new IllegalArgumentException("Illegal stride value: " + stride);
@@ -75,12 +77,9 @@ public class FusedMBConv implements Layer {
         if (project != null) {
             project.register("project", block);
         }
-        stochasticDepth.register("stochastic-depth", block);
-    }
 
-    @Override
-    public void register(String name, Module parent) {
-        block = parent.register_module(name, block);
+        add("block", block);
+        add("stochastic_depth", stochasticDepth);
     }
 
     @Override
