@@ -45,6 +45,11 @@ public class Model {
         this.net = net;
     }
 
+    @Override
+    public String toString() {
+        return net.toString();
+    }
+
     /**
      * Returns the PyTorch Module object.
      * @return the PyTorch Module object.
