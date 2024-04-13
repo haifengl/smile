@@ -17,11 +17,8 @@
 package smile.deep.layer;
 
 import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.pytorch.Conv2dImpl;
-import org.bytedeco.pytorch.Conv2dOptions;
+import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
-import org.bytedeco.pytorch.kSame;
-import org.bytedeco.pytorch.kValid;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -46,8 +43,13 @@ public class Conv2dLayer implements Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      */
-    public Conv2dLayer(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias) {
+    public Conv2dLayer(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
+        if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
+            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular, but got " + paddingMode);
+        }
+
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
         LongPointer size = new LongPointer(kernel, kernel);
@@ -57,6 +59,14 @@ public class Conv2dLayer implements Layer {
         options.dilation().put(dilation);
         options.groups().put(groups);
         options.bias().put(bias);
+        options.padding_mode().put(
+                switch (paddingMode) {
+                    case "reflect" -> new kReflect();
+                    case "replicate" -> new kReplicate();
+                    case "circular" -> new kCircular();
+                    default -> new kZeros();
+                }
+        );
         module = new Conv2dImpl(options);
     }
 
@@ -77,10 +87,15 @@ public class Conv2dLayer implements Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      */
-    public Conv2dLayer(int in, int out, int kernel, int stride, String padding, int dilation, int groups, boolean bias) {
+    public Conv2dLayer(int in, int out, int kernel, int stride, String padding, int dilation, int groups, boolean bias, String paddingMode) {
         if (!(padding.equals("valid") || padding.equals("same"))) {
             throw new IllegalArgumentException("padding has to be either 'valid' or 'same', but got " + padding);
+        }
+
+        if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
+            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular, but got " + paddingMode);
         }
 
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
@@ -92,6 +107,14 @@ public class Conv2dLayer implements Layer {
         options.dilation().put(dilation);
         options.groups().put(groups);
         options.bias().put(bias);
+        options.padding_mode().put(
+                switch (paddingMode) {
+                    case "reflect" -> new kReflect();
+                    case "replicate" -> new kReplicate();
+                    case "circular" -> new kCircular();
+                    default -> new kZeros();
+                }
+        );
         module = new Conv2dImpl(options);
     }
 

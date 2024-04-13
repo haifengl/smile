@@ -59,14 +59,14 @@ public class MBConv extends LayerBlock {
             expand = null;
         } else {
             expand = new Conv2dNormActivation(
-                            Layer.conv2d(config.inputChannels(), expandedChannels, 1, 1, -1, 1, 1, false),
+                            Layer.conv2d(config.inputChannels(), expandedChannels, 1, 1, -1, 1, 1, false, "zeros"),
                             new BatchNorm2dLayer(expandedChannels),
                             new SiLU(true));
         }
 
         // depthwise
         depthwise = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, expandedChannels, config.kernel(), config.stride(), -1, 1, expandedChannels, false),
+                Layer.conv2d(expandedChannels, expandedChannels, config.kernel(), config.stride(), -1, 1, expandedChannels, false, "zeros"),
                 new BatchNorm2dLayer(expandedChannels),
                 new SiLU(true));
 
@@ -76,7 +76,7 @@ public class MBConv extends LayerBlock {
 
         // project
         project = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false),
+                Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false, "zeros"),
                 new BatchNorm2dLayer(config.outputChannels()), null);
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
