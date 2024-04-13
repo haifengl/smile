@@ -39,6 +39,16 @@ public class AvgPool2dLayer implements Layer {
         this.module = new AvgPool2dImpl(kernel);
     }
 
+    /**
+     * Constructor.
+     * @param height the window/kernel height.
+     * @param width the window/kernel width.
+     */
+    public AvgPool2dLayer(int height, int width) {
+        LongPointer kernel = new LongPointer(height, width);
+        this.module = new AvgPool2dImpl(kernel);
+    }
+
     @Override
     public void register(String name, Module parent) {
         parent.register_module(name, module);
