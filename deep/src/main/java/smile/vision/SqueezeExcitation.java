@@ -28,8 +28,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class SqueezeExcitation implements Layer {
-    private Module block = new Module();
+public class SqueezeExcitation extends LayerBlock {
     private final AdaptiveAvgPool2dLayer avgpool;
     private final Conv2dLayer conv1, conv2;
     private final ActivationFunction delta, sigma;
@@ -51,19 +50,15 @@ public class SqueezeExcitation implements Layer {
      * @param sigma the sigma activation function.
      */
     public SqueezeExcitation(int inputChannels, int squeezeChannels, ActivationFunction delta, ActivationFunction sigma) {
+        super("SqueezeExcitation");
         this.avgpool = new AdaptiveAvgPool2dLayer(1);
         this.conv1 = Layer.conv2d(inputChannels, squeezeChannels, 1);
         this.conv2 = Layer.conv2d(squeezeChannels, inputChannels, 1);
         this.delta = delta;
         this.sigma = sigma;
-        avgpool.register("avgpool", block);
-        conv1.register("conv1", block);
-        conv2.register("conv2", block);
-    }
-
-    @Override
-    public void register(String name, Module parent) {
-        block = parent.register_module(name, block);
+        add("avgpool", avgpool);
+        add("conv1", conv1);
+        add("conv2", conv2);
     }
 
     @Override
