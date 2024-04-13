@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
+import smile.deep.Model;
 import smile.util.CacheFiles;
 
 /**
@@ -52,6 +53,8 @@ public class EfficientNetTest {
         Device device = Device.preferredDevice();
         device.setDefaultDevice();
         var enet = new EfficientNet(EfficientNet.V2S, 0.5);
-        enet.load(CacheFiles.download("https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth").toString());
+        System.out.println(enet);
+        var model = new Model(enet);
+        model.load("deep/src/universal/models/efficientnet_v2_s.pt");
     }
 }

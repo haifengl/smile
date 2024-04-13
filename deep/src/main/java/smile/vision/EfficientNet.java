@@ -16,9 +16,9 @@
  */
 package smile.vision;
 
-import smile.deep.Model;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
+import smile.deep.tensor.Tensor;
 
 /**
  * EfficientNet is an image classification model family. It was first
@@ -27,9 +27,11 @@ import smile.deep.layer.*;
  *
  * @author Haifeng Li
  */
-public class EfficientNet extends Model {
+public class EfficientNet extends LayerBlock {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EfficientNet.class);
-
+    private final AdaptiveAvgPool2dLayer avgpool;
+    private final SequentialBlock features;
+    private final SequentialBlock classifier;
     /**
      * Constructor.
      * @param invertedResidualSetting the network structure.
@@ -48,18 +50,7 @@ public class EfficientNet extends Model {
      * @param lastChannel the number of channels on the penultimate layer.
      */
     public EfficientNet(MBConvConfig[] invertedResidualSetting, double dropout, double stochasticDepthProb, int numClasses, int lastChannel) {
-        super(init(invertedResidualSetting, dropout, stochasticDepthProb, numClasses, lastChannel));
-    }
-
-    /**
-     * Constructor.
-     * @param invertedResidualSetting the network structure.
-     * @param dropout the dropout probability.
-     * @param stochasticDepthProb the stochastic depth probability.
-     * @param numClasses the number of classes.
-     * @param lastChannel the number of channels on the penultimate layer.
-     */
-    private static SequentialBlock init(MBConvConfig[] invertedResidualSetting, double dropout, double stochasticDepthProb, int numClasses, int lastChannel) {
+        super("EfficientNet");
         Layer[] layers = new Layer[invertedResidualSetting.length + 2];
 
         // building first layer
@@ -110,11 +101,19 @@ public class EfficientNet extends Model {
                 new BatchNorm2dLayer(firstconvOutputChannels),
                 new SiLU(true));
 
-        return new SequentialBlock(
-                new SequentialBlock(layers),
-                new AdaptiveAvgPool2dLayer(1),
-                new DropoutLayer(dropout, true),
-                new FullyConnectedLayer(lastConvOutputChannels, numClasses));
+        features = new SequentialBlock(layers);
+        avgpool = new AdaptiveAvgPool2dLayer(1);
+        classifier = new SequentialBlock(new DropoutLayer(dropout, true), new FullyConnectedLayer(lastConvOutputChannels, numClasses));
+        add("features", features);
+        add("avgpool", avgpool);
+        add("classifier", classifier);
+    }
+
+    @Override
+    public Tensor forward(Tensor input) {
+        Tensor output = features.forward(input);
+        output = avgpool.forward(output);
+        return classifier.forward(output);
     }
 
     /**
