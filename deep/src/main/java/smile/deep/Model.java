@@ -107,6 +107,16 @@ public class Model {
     }
 
     /**
+     * Forward propagation (or forward pass) through the model.
+     *
+     * @param input the input tensor.
+     * @return the output tensor.
+     */
+    public Tensor forward(Tensor input) {
+        return net.forward(input);
+    }
+
+    /**
      * Trains the model.
      * @param epochs the number of training epochs.
      * @param optimizer the optimization algorithm.
