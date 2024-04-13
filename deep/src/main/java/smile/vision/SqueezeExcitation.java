@@ -16,7 +16,6 @@
  */
 package smile.vision;
 
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.ActivationFunction;
 import smile.deep.activation.ReLU;
 import smile.deep.activation.Sigmoid;
@@ -57,8 +56,8 @@ public class SqueezeExcitation extends LayerBlock {
         this.delta = delta;
         this.sigma = sigma;
         add("avgpool", avgpool);
-        add("conv1", conv1);
-        add("conv2", conv2);
+        add("fc1", conv1);
+        add("fc2", conv2);
     }
 
     @Override

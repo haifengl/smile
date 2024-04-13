@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
 import smile.deep.Model;
-import smile.util.CacheFiles;
 
 /**
  *
@@ -56,5 +56,7 @@ public class EfficientNetTest {
         System.out.println(enet);
         var model = new Model(enet);
         model.load("deep/src/universal/models/efficientnet_v2_s.pt");
+        Tensor example = Tensor.rand(1, 3, 384, 384);
+        Tensor output = model.forward(example);
     }
 }

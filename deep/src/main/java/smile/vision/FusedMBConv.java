@@ -16,11 +16,11 @@
  */
 package smile.vision;
 
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Layer;
 import smile.deep.layer.LayerBlock;
+import smile.deep.layer.SequentialBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -30,7 +30,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class FusedMBConv extends LayerBlock {
-    private final Module block = new Module("Sequential");
+    private final SequentialBlock block = new SequentialBlock();
     private final Conv2dNormActivation expand;
     private final Conv2dNormActivation project;
     private final StochasticDepth stochasticDepth;
@@ -53,29 +53,29 @@ public class FusedMBConv extends LayerBlock {
         int expandedChannels = MBConvConfig.adjustChannels(config.inputChannels(), config.expandRatio());
         if (expandedChannels == config.inputChannels()) {
             expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, true),
+                    Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, false),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
             project = null;
         } else {
             // fused expand
             expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, true),
+                    Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, false),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
 
             // project
             project = new Conv2dNormActivation(
-                    Layer.conv2d(expandedChannels, config.outputChannels(), 1),
+                    Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false),
                     new BatchNorm2dLayer(config.outputChannels()), null);
         }
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
         stochasticDepth = new StochasticDepth(stochasticDepthProb, "row");
 
-        expand.register("expand", block);
+        block.add(expand);
         if (project != null) {
-            project.register("project", block);
+            block.add(project);
         }
 
         add("block", block);

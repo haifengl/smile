@@ -16,12 +16,12 @@
  */
 package smile.vision;
 
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.activation.Sigmoid;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.layer.Layer;
 import smile.deep.layer.LayerBlock;
+import smile.deep.layer.SequentialBlock;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -32,7 +32,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class MBConv extends LayerBlock {
-    private Module block = new Module("Sequential");
+    private final SequentialBlock block = new SequentialBlock();
     private final Conv2dNormActivation expand;
     private final Conv2dNormActivation depthwise;
     private final SqueezeExcitation se;
@@ -59,14 +59,14 @@ public class MBConv extends LayerBlock {
             expand = null;
         } else {
             expand = new Conv2dNormActivation(
-                            Layer.conv2d(config.inputChannels(), expandedChannels, 1),
+                            Layer.conv2d(config.inputChannels(), expandedChannels, 1, 1, -1, 1, 1, false),
                             new BatchNorm2dLayer(expandedChannels),
                             new SiLU(true));
         }
 
         // depthwise
         depthwise = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, expandedChannels, config.kernel(), config.stride(), -1, 1, expandedChannels, true),
+                Layer.conv2d(expandedChannels, expandedChannels, config.kernel(), config.stride(), -1, 1, expandedChannels, false),
                 new BatchNorm2dLayer(expandedChannels),
                 new SiLU(true));
 
@@ -76,18 +76,18 @@ public class MBConv extends LayerBlock {
 
         // project
         project = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, config.outputChannels(), 1),
+                Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false),
                 new BatchNorm2dLayer(config.outputChannels()), null);
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
         stochasticDepth = new StochasticDepth(stochasticDepthProb, "row");
 
         if (expand != null) {
-            expand.register("expand", block);
+            block.add(expand);
         }
-        depthwise.register("depthwise", block);
-        se.register("squeeze-excitation", block);
-        project.register("project", block);
+        block.add(depthwise);
+        block.add(se);
+        block.add(project);
 
         add("block", block);
         add("stochastic_depth", stochasticDepth);

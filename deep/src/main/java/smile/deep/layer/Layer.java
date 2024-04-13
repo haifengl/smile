@@ -228,18 +228,18 @@ public interface Layer {
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output features.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size) {
-        return new Conv2dLayer(in, out, size, 1, 0, 1, 1, true);
+    static Conv2dLayer conv2d(int in, int out, int kernel) {
+        return new Conv2dLayer(in, out, kernel, 1, 0, 1, 1, true);
     }
 
     /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
      * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
@@ -248,11 +248,11 @@ public interface Layer {
      * @param bias If true, adds a learnable bias to the output.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int stride, int padding, int dilation, int groups, boolean bias) {
+    static Conv2dLayer conv2d(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias) {
         if (padding < 0) {
-            padding = (size - 1) / 2 * dilation;
+            padding = (kernel - 1) / 2 * dilation;
         }
-        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias);
+        return new Conv2dLayer(in, out, kernel, stride, padding, dilation, groups, bias);
     }
 
     /**
