@@ -39,7 +39,7 @@ public class Conv2dLayer implements Layer {
      * Constructor.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
      * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
@@ -47,11 +47,11 @@ public class Conv2dLayer implements Layer {
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
      */
-    public Conv2dLayer(int in, int out, int size, int stride, int padding, int dilation, int groups, boolean bias) {
+    public Conv2dLayer(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias) {
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        LongPointer kernel = new LongPointer(size, size);
-        options = new Conv2dOptions(in, out, kernel);
+        LongPointer size = new LongPointer(kernel, kernel);
+        options = new Conv2dOptions(in, out, size);
         options.stride().put(stride);
         options.padding().put(new LongPointer(padding, padding));
         options.dilation().put(dilation);
@@ -64,7 +64,7 @@ public class Conv2dLayer implements Layer {
      * Constructor.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
      * @param padding "valid" or "same". With "valid" padding, there's no
      *               "made-up" padding inputs. It drops the right-most columns
@@ -78,15 +78,15 @@ public class Conv2dLayer implements Layer {
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
      */
-    public Conv2dLayer(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias) {
+    public Conv2dLayer(int in, int out, int kernel, int stride, String padding, int dilation, int groups, boolean bias) {
         if (!(padding.equals("valid") || padding.equals("same"))) {
             throw new IllegalArgumentException("padding has to be either 'valid' or 'same', but got " + padding);
         }
 
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        LongPointer kernel = new LongPointer(size, size);
-        options = new Conv2dOptions(in, out, kernel);
+        LongPointer size = new LongPointer(kernel, kernel);
+        options = new Conv2dOptions(in, out, size);
         options.stride().put(stride);
         options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
         options.dilation().put(dilation);
