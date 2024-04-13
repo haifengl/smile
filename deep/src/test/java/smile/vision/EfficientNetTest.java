@@ -16,8 +16,6 @@
  */
 package smile.vision;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
@@ -49,7 +47,7 @@ public class EfficientNetTest {
     }
 
     @Test
-    public void test() throws IOException, URISyntaxException {
+    public void test() {
         Device device = Device.preferredDevice();
         device.setDefaultDevice();
         var enet = new EfficientNet(EfficientNet.V2S, 0.5);

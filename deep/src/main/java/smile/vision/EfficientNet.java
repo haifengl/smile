@@ -56,7 +56,7 @@ public class EfficientNet extends LayerBlock {
         // building first layer
         int firstconvOutputChannels = invertedResidualSetting[0].inputChannels();
         layers[0] = new Conv2dNormActivation(
-                Layer.conv2d(3, firstconvOutputChannels, 3, 2, -1, 1, 1, false),
+                Layer.conv2d(3, firstconvOutputChannels, 3, 2, -1, 1, 1, false, "zeros"),
                 new BatchNorm2dLayer(firstconvOutputChannels),
                 new SiLU(true));
 
@@ -97,7 +97,7 @@ public class EfficientNet extends LayerBlock {
         int lastConvInputChannels = invertedResidualSetting[invertedResidualSetting.length-1].outputChannels();
         int lastConvOutputChannels = lastChannel > 0 ? lastChannel : 4 * lastConvInputChannels;
         layers[invertedResidualSetting.length + 1] = new Conv2dNormActivation(
-                Layer.conv2d(lastConvInputChannels, firstconvOutputChannels, 1, 1, -1, 1, 1, false),
+                Layer.conv2d(lastConvInputChannels, firstconvOutputChannels, 1, 1, -1, 1, 1, false, "zeros"),
                 new BatchNorm2dLayer(firstconvOutputChannels),
                 new SiLU(true));
 

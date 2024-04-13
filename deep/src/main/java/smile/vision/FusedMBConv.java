@@ -53,20 +53,20 @@ public class FusedMBConv extends LayerBlock {
         int expandedChannels = MBConvConfig.adjustChannels(config.inputChannels(), config.expandRatio());
         if (expandedChannels == config.inputChannels()) {
             expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, false),
+                    Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
             project = null;
         } else {
             // fused expand
             expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, false),
+                    Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
 
             // project
             project = new Conv2dNormActivation(
-                    Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false),
+                    Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(config.outputChannels()), null);
         }
 

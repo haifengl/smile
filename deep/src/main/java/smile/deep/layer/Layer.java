@@ -232,7 +232,7 @@ public interface Layer {
      * @return a convolutional layer.
      */
     static Conv2dLayer conv2d(int in, int out, int kernel) {
-        return new Conv2dLayer(in, out, kernel, 1, 0, 1, 1, true);
+        return new Conv2dLayer(in, out, kernel, 1, "same", 1, 1, true, "zeros");
     }
 
     /**
@@ -246,13 +246,14 @@ public interface Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias) {
+    static Conv2dLayer conv2d(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
         if (padding < 0) {
             padding = (kernel - 1) / 2 * dilation;
         }
-        return new Conv2dLayer(in, out, kernel, stride, padding, dilation, groups, bias);
+        return new Conv2dLayer(in, out, kernel, stride, padding, dilation, groups, bias, paddingMode);
     }
 
     /**
@@ -272,10 +273,11 @@ public interface Layer {
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias) {
-        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias);
+    static Conv2dLayer conv2d(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias, String paddingMode) {
+        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias, paddingMode);
     }
 
     /**
