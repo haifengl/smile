@@ -31,8 +31,6 @@ import smile.deep.tensor.Tensor;
  */
 public class FusedMBConv extends LayerBlock {
     private final SequentialBlock block = new SequentialBlock();
-    private final Conv2dNormActivation expand;
-    private final Conv2dNormActivation project;
     private final StochasticDepth stochasticDepth;
     private final boolean useResidual;
 
@@ -52,31 +50,28 @@ public class FusedMBConv extends LayerBlock {
         // expand
         int expandedChannels = MBConvConfig.adjustChannels(config.inputChannels(), config.expandRatio());
         if (expandedChannels == config.inputChannels()) {
-            expand = new Conv2dNormActivation(
+            Conv2dNormActivation expand = new Conv2dNormActivation(
                     Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
-            project = null;
+            block.add(expand);
         } else {
             // fused expand
-            expand = new Conv2dNormActivation(
+            Conv2dNormActivation expand = new Conv2dNormActivation(
                     Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(expandedChannels),
                     new SiLU(true));
 
             // project
-            project = new Conv2dNormActivation(
+            Conv2dNormActivation project = new Conv2dNormActivation(
                     Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false, "zeros"),
                     new BatchNorm2dLayer(config.outputChannels()), null);
+            block.add(expand);
+            block.add(project);
         }
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
         stochasticDepth = new StochasticDepth(stochasticDepthProb, "row");
-
-        block.add(expand);
-        if (project != null) {
-            block.add(project);
-        }
 
         add("block", block);
         add("stochastic_depth", stochasticDepth);
@@ -84,10 +79,7 @@ public class FusedMBConv extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor output = expand.forward(input);
-        if (project != null) {
-            output = project.forward(output);
-        }
+        Tensor output = block.forward(input);
         if (useResidual) {
             output = stochasticDepth.forward(output);
             output.add_(input);
