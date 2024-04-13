@@ -54,6 +54,9 @@ public class Conv2dNormActivation extends SequentialBlock {
         this.activation = activation;
         add(conv);
         add(norm);
+        if (activation != null) {
+            add(activation);
+        }
     }
 
     @Override

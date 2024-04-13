@@ -58,6 +58,8 @@ public class SqueezeExcitation extends LayerBlock {
         add("avgpool", avgpool);
         add("fc1", conv1);
         add("fc2", conv2);
+        add("activation", delta);
+        add("scale_activation", sigma);
     }
 
     @Override
