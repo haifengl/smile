@@ -27,12 +27,102 @@ import org.bytedeco.pytorch.Module;
  *
  * @author Haifeng Li
  */
-public interface LayerBlock extends Layer {
+public abstract class LayerBlock implements Layer {
+    final Module module;
+
+    /**
+     * Constructor.
+     */
+    public LayerBlock() {
+        this(new Module());
+    }
+
+    /**
+     * Constructor.
+     * @param name the module name.
+     */
+    public LayerBlock(String name) {
+        this(new Module(name));
+    }
+
+    /**
+     * Constructor.
+     * @param module a module.
+     */
+    public LayerBlock(Module module) {
+        this.module = module;
+    }
+
     /**
      * Returns the PyTorch Module object.
      * @return the PyTorch Module object.
      */
-    Module asTorch();
+    public Module asTorch() {
+        return module;
+    }
+
+    @Override
+    public void register(String name, Module parent) {
+        parent.register_module(name, module);
+    }
+
+    @Override
+    public String toString() {
+        return toString(asTorch(), new StringBuilder(), 0);
+    }
+
+    /**
+     * Returns the string representation of a module.
+     * @param module the module.
+     * @param sb string builder.
+     * @param indent indent space.
+     * @return the string representation.
+     */
+    private String toString(Module module, StringBuilder sb, int indent) {
+        sb.append(module.name().getString());
+        var children = module.named_children();
+        if (children.size() > 0) {
+            sb.append('(');
+            sb.append(System.lineSeparator());
+
+            var keys = children.keys();
+            for (int i = 0; i < keys.size(); i++) {
+                var key = keys.get(i);
+                var child = children.get(key);
+
+                for (int j = 0; j < indent + 2; j++) sb.append(' ');
+                sb.append(String.format("(%s): ", key.getString()));
+                toString(child, sb, indent + 2);
+                sb.append(System.lineSeparator());
+            }
+
+            for (int j = 0; j < indent; j++) sb.append(' ');
+            sb.append(')');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Adds a sub-layer.
+     * @param name the name of sub-layer.
+     * @param layer the sub-layer.
+     * @return this object.
+     */
+    public LayerBlock add(String name, Layer layer) {
+        layer.register(name, module);
+        return this;
+    }
+
+    /**
+     * Adds a sub-layer.
+     * @param name the name of sub-layer.
+     * @param layer the sub-layer.
+     * @return this object.
+     */
+    public LayerBlock add(String name, Module layer) {
+        module.register_module(name, layer);
+        return this;
+    }
 
     /**
      * Creates a sequential layer block.
