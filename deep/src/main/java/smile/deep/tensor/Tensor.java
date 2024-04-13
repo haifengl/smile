@@ -467,6 +467,15 @@ public class Tensor {
     }
 
     /**
+     * Returns the matrix product of two tensors.
+     * @param other another tensor.
+     * @return the matrix product of two tensors.
+     */
+    public Tensor matmul(Tensor other) {
+        return Tensor.of(value.matmul(other.value));
+    }
+
+    /**
      * Computes element-wise equality.
      * @param other the sclar to compare.
      * @return the output tensor.
