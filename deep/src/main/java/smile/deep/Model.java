@@ -126,7 +126,10 @@ public class Model {
      * @return the output tensor.
      */
     public Tensor forward(Tensor input) {
-        return net.forward(input.to(device()));
+        if (device != null && !device.equals(input.device())) {
+            input = input.to(device);
+        }
+        return net.forward(input);
     }
 
     /**
