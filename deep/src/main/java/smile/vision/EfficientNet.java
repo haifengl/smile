@@ -16,9 +16,11 @@
  */
 package smile.vision;
 
+import java.awt.Image;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
+import smile.vision.transform.Transform;
 
 /**
  * EfficientNet is an image classification model family. It was first
@@ -32,6 +34,7 @@ public class EfficientNet extends LayerBlock {
     private final AdaptiveAvgPool2dLayer avgpool;
     private final SequentialBlock features;
     private final SequentialBlock classifier;
+
     /**
      * Constructor.
      * @param invertedResidualSetting the network structure.
@@ -128,6 +131,10 @@ public class EfficientNet extends LayerBlock {
             MBConvConfig.MBConv(6,3,1,128,160,9),
             MBConvConfig.MBConv(6,3,2,160,256,15)
     };
+    /**
+     * EfficientNet-V2 S (baseline) model image transform.
+     */
+    public static Transform V2STransform = Transform.classification(384, 384);
 
     /**
      * EfficientNet-V2 M (larger) model configuration based on compound
@@ -142,6 +149,10 @@ public class EfficientNet extends LayerBlock {
             MBConvConfig.MBConv(6, 3, 2, 176, 304, 18),
             MBConvConfig.MBConv(6, 3, 1, 304, 512, 5)
     };
+    /**
+     * EfficientNet-V2 M (larger) model image transform.
+     */
+    public static Transform V2MTransform = Transform.classification(480, 480);
 
     /**
      * EfficientNet-V2 L (largest) model configuration based on compound
@@ -156,4 +167,8 @@ public class EfficientNet extends LayerBlock {
             MBConvConfig.MBConv(6, 3, 2, 224, 384, 25),
             MBConvConfig.MBConv(6, 3, 1, 384, 640, 7)
     };
+    /**
+     * EfficientNet-V2 L (largest) model image transform.
+     */
+    public static Transform V2LTransform = Transform.classification(480, 480, new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
 }
