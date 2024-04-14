@@ -26,7 +26,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
 /**
- * The abstract base class of deep learning models.
+ * The deep learning models.
  *
  * @author Haifeng Li
  */
@@ -77,6 +77,14 @@ public class Model {
     }
 
     /**
+     * Returns the device on which the model is stored.
+     * @return the compute device.
+     */
+    public Device device() {
+        return device;
+    }
+
+    /**
      * Moves the model to a device.
      * @param device the compute device.
      * @return this model.
@@ -118,7 +126,7 @@ public class Model {
      * @return the output tensor.
      */
     public Tensor forward(Tensor input) {
-        return net.forward(input);
+        return net.forward(input.to(device()));
     }
 
     /**
