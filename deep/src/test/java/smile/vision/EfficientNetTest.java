@@ -16,10 +16,12 @@
  */
 package smile.vision;
 
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
-import smile.deep.Model;
 
 /**
  *
@@ -47,14 +49,21 @@ public class EfficientNetTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         Device device = Device.preferredDevice();
         device.setDefaultDevice();
         var enet = new EfficientNet(EfficientNet.V2S, 0.5);
         System.out.println(enet);
-        var model = new Model(enet);
+
+        var model = new VisionModel(enet, EfficientNet.V2STransform);
         model.load("deep/src/universal/models/efficientnet_v2_s.pt");
-        Tensor example = Tensor.rand(1, 3, 384, 384);
-        Tensor output = model.forward(example);
+        model.to(device);
+
+        var example = Tensor.rand(1, 3, 384, 384).to(device);
+        var output = model.forward(example);
+
+        var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
+        var rorschach = ImageIO.read(new File("deep/src/universal/data/image/Rorschach.jpg"));
+        //output = model.forward(lenna, rorschach);
     }
 }
