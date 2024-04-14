@@ -20,6 +20,9 @@ import java.util.Map;
 import org.junit.jupiter.api.*;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
+import smile.deep.metric.Averaging;
+import smile.deep.metric.Precision;
+import smile.deep.metric.Recall;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
@@ -74,8 +77,20 @@ public class ModelTest {
         net.train(10, optimizer, loss, train, test, null);
 
         // Inference mode
-        Map<String, Double> metrics = net.eval(test, new Accuracy());
-        System.out.format("Test Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
+        Map<String, Double> metrics = net.eval(test,
+                new Accuracy(),
+                new Precision(Averaging.Micro),
+                new Precision(Averaging.Macro),
+                new Precision(Averaging.Weighted),
+                new Recall(Averaging.Micro),
+                new Recall(Averaging.Macro),
+                new Recall(Averaging.Weighted));
+        for (var entry : metrics.entrySet()) {
+            System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+        }
+        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
 
         // Serialize your model periodically as a checkpoint.
         net.save("mnist.pt");
