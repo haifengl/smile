@@ -605,12 +605,12 @@ class DataFrameImpl implements DataFrame, Serializable {
 
         @Override
         public boolean getBoolean(int j) {
-            return ((BooleanVector) columns.get(j)).getBoolean(i);
+            return columns.get(j).getBoolean(i);
         }
 
         @Override
         public char getChar(int j) {
-            return ((CharVector) columns.get(j)).getChar(i);
+            return columns.get(j).getChar(i);
         }
 
         @Override

@@ -78,6 +78,16 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
     }
 
     @Override
+    default boolean getBoolean(int i) {
+        return ((Boolean) get(i)).booleanValue();
+    }
+
+    @Override
+    default char getChar(int i) {
+        return ((Character) get(i)).charValue();
+    }
+
+    @Override
     default byte getByte(int i) {
         return ((Number) get(i)).byteValue();
     }

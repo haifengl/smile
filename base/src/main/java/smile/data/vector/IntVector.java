@@ -22,6 +22,7 @@ import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.math.MathEx;
 
 /**
  * An immutable integer vector.
@@ -41,13 +42,23 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     IntVector get(int... index);
 
     @Override
+    default boolean getBoolean(int i) {
+        return getInt(i) != 0;
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (char) getInt(i);
+    }
+
+    @Override
     default byte getByte(int i) {
-        throw new UnsupportedOperationException("cast int to byte");
+        return (byte) getInt(i);
     }
 
     @Override
     default short getShort(int i) {
-        throw new UnsupportedOperationException("cast int to short");
+        return (short) getInt(i);
     }
 
     @Override
