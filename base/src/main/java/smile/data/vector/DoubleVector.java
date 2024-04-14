@@ -22,6 +22,7 @@ import java.util.stream.DoubleStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.math.MathEx;
 
 /**
  * An immutable double vector.
@@ -41,28 +42,38 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     DoubleVector get(int... index);
 
     @Override
+    default boolean getBoolean(int i) {
+        return MathEx.isZero(getDouble(i));
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (char) getDouble(i);
+    }
+
+    @Override
     default byte getByte(int i) {
-        throw new UnsupportedOperationException("cast double to byte");
+        return (byte) getDouble(i);
     }
 
     @Override
     default short getShort(int i) {
-        throw new UnsupportedOperationException("cast double to short");
+        return (short) getDouble(i);
     }
 
     @Override
     default int getInt(int i) {
-        throw new UnsupportedOperationException("cast double to int");
+        return (int) getDouble(i);
     }
 
     @Override
     default long getLong(int i) {
-        throw new UnsupportedOperationException("cast double to long");
+        return (long) getDouble(i);
     }
 
     @Override
     default float getFloat(int i) {
-        throw new UnsupportedOperationException("cast double to float");
+        return (float) getDouble(i);
     }
 
     /**

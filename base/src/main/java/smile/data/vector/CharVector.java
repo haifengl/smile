@@ -40,21 +40,19 @@ public interface CharVector extends BaseVector<Character, Integer, IntStream> {
     @Override
     CharVector get(int... index);
 
-    /**
-     * Returns the value at position i.
-     * @param i the index.
-     * @return the value.
-     */
-    char getChar(int i);
+    @Override
+    default boolean getBoolean(int i) {
+        return getChar(i) == 'T';
+    }
 
     @Override
     default byte getByte(int i) {
-        throw new UnsupportedOperationException("cast char to byte");
+        return (byte) getChar(i);
     }
 
     @Override
     default short getShort(int i) {
-        throw new UnsupportedOperationException("cast char to byte");
+        return (short) getChar(i);
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
+import smile.math.MathEx;
 
 /**
  * An immutable string vector.
@@ -34,6 +35,47 @@ import smile.data.type.StructField;
 public interface StringVector extends Vector<String> {
     @Override
     StringVector get(int... index);
+
+    @Override
+    default boolean getBoolean(int i) {
+        return Boolean.valueOf(get(i));
+    }
+
+    @Override
+    default char getChar(int i) {
+        String s = get(i);
+        return s.isEmpty() ? '\u0000' : s.charAt(0);
+    }
+
+    @Override
+    default byte getByte(int i) {
+        return Byte.valueOf(get(i));
+    }
+
+    @Override
+    default short getShort(int i) {
+        return Short.valueOf(get(i));
+    }
+
+    @Override
+    default int getInt(int i) {
+        return Integer.valueOf(get(i));
+    }
+
+    @Override
+    default long getLong(int i) {
+        return Long.valueOf(get(i));
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return Float.valueOf(get(i));
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return Double.valueOf(get(i));
+    }
 
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and

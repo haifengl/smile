@@ -146,6 +146,20 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     BaseVector<T, TS, S> get(int... index);
 
     /**
+     * Returns the boolean value at position i.
+     * @param i the index.
+     * @return the value.
+     */
+    boolean getBoolean(int i);
+
+    /**
+     * Returns the character value at position i.
+     * @param i the index.
+     * @return the value.
+     */
+    char getChar(int i);
+
+    /**
      * Returns the byte value at position i.
      * @param i the index.
      * @return the value.
