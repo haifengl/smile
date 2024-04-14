@@ -202,6 +202,15 @@ public class Tensor {
     }
 
     /**
+     * Returns a view of the original tensor input with its dimensions permuted.
+     * @param dims The desired ordering of dimensions.
+     * @return the permuted tensor.
+     */
+    public Tensor permute(long... dims) {
+        return Tensor.of(value.permute(dims));
+    }
+
+    /**
      * Returns a tensor index vector.
      * @param indices the indices along the dimensions.
      * @return the index vector.
@@ -728,6 +737,25 @@ public class Tensor {
      * @param other a scalar value.
      * @return the output tensor.
      */
+    public Tensor add(float other) {
+        return Tensor.of(value.add(new Scalar(other)));
+    }
+
+    /**
+     * Returns A += b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor add_(float other) {
+        value.add_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A + b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
     public Tensor add(double other) {
         return Tensor.of(value.add(new Scalar(other)));
     }
@@ -792,6 +820,25 @@ public class Tensor {
     }
 
     /**
+     * Returns A - b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor sub_(float other) {
+        return Tensor.of(value.sub(new Scalar(other)));
+    }
+
+    /**
+     * Returns A -= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor sub(double other) {
+        value.sub_(new Scalar(other));
+        return this;
+    }
+
+    /**
      * Returns A -= b.
      * @param other a scalar value.
      * @return this tensor.
@@ -846,6 +893,25 @@ public class Tensor {
      * @param other a scalar value.
      * @return the output tensor.
      */
+    public Tensor mul(float other) {
+        return Tensor.of(value.mul(new Scalar(other)));
+    }
+
+    /**
+     * Returns A *= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor mul_(float other) {
+        value.mul_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A * b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
     public Tensor mul(double other) {
         return Tensor.of(value.mul(new Scalar(other)));
     }
@@ -876,6 +942,25 @@ public class Tensor {
      */
     public Tensor mul_(Tensor other) {
         value.mul_(other.value);
+        return this;
+    }
+
+    /**
+     * Returns A / b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor div(float other) {
+        return Tensor.of(value.div(new Scalar(other)));
+    }
+
+    /**
+     * Returns A /= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor div_(float other) {
+        value.div_(new Scalar(other));
         return this;
     }
 
