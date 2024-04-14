@@ -66,6 +66,14 @@ public class Device {
     }
 
     @Override
+    public boolean equals(Object other) {
+        if (other instanceof Device x) {
+            return value.equals(x.value);
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         return value.str().getString();
     }
