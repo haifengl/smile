@@ -141,7 +141,7 @@ class DatasetImpl implements Dataset {
     public Iterator<SampleBatch> iterator() {
         return new Iterator<>() {
             final int[] permutation = MathEx.permutate(size);
-            long[] index = new long[batch];
+            int[] index = new int[batch];
             int i = 0;
 
             @Override
