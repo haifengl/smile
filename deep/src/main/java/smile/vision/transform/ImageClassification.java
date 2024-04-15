@@ -29,8 +29,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 class ImageClassification implements Transform {
-    private static float[] DEFAULT_MEAN = {0.485f, 0.456f, 0.406f};
-    private static float[] DEFAULT_STD = {0.229f, 0.224f, 0.225f};
     private final int cropSize;
     private final int resizeSize;
     private final float[] mean;

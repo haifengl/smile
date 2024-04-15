@@ -37,6 +37,17 @@ public interface Transform {
     Tensor forward(BufferedImage... images);
 
     /**
+     * The default mean value of pixel RGB after normalized to [0, 1].
+     * Calculated on ImageNet data.
+     */
+    float[] DEFAULT_MEAN = {0.485f, 0.456f, 0.406f};
+    /**
+     * The default standard deviation of pixel RGB after normalized to [0, 1].
+     * Calculated on ImageNet data.
+     */
+    float[] DEFAULT_STD = {0.229f, 0.224f, 0.225f};
+
+    /**
      * Resizes an image and keeps the aspect ratio.
      * @param image the input image.
      * @param size the image size of the shorter side.
@@ -139,8 +150,7 @@ public interface Transform {
             }
         }
 
-        Tensor tensor = Tensor.of(result, images.length, 3, height, width);
-        return tensor;
+        return Tensor.of(result, images.length, 3, height, width);
     }
 
     /**
