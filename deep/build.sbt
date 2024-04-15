@@ -10,11 +10,11 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
     ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
   ),
-  "org.bytedeco"   % "pytorch-platform-gpu" % "2.2.1-1.5.11-SNAPSHOT" excludeAll(
+  "org.bytedeco"   % "pytorch-platform-gpu" % "2.2.1-1.5.11-SNAPSHOT" % Provided excludeAll(
     ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
     ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
   ),
-  "org.bytedeco"   % "cuda-platform-redist" % "12.3-8.9-1.5.11-SNAPSHOT" excludeAll(
+  "org.bytedeco"   % "cuda-platform-redist" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided excludeAll(
     ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
     ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
   )
