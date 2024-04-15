@@ -19,7 +19,6 @@ package smile.deep;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
-import org.junit.jupiter.api.*;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
@@ -29,6 +28,8 @@ import smile.deep.tensor.Device;
 import smile.io.Read;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -85,8 +86,8 @@ public class DatasetTest {
         for (var entry : metrics.entrySet()) {
             System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
         }
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
     }
 }

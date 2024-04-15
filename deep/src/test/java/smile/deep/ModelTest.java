@@ -17,7 +17,6 @@
 package smile.deep;
 
 import java.util.Map;
-import org.junit.jupiter.api.*;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
@@ -26,6 +25,8 @@ import smile.deep.metric.Recall;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -88,9 +89,9 @@ public class ModelTest {
         for (var entry : metrics.entrySet()) {
             System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
         }
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-        Assertions.assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+        assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
 
         // Serialize your model periodically as a checkpoint.
         net.save("mnist.pt");
@@ -103,6 +104,6 @@ public class ModelTest {
         );
 
         model.load("mnist.pt").to(device).eval();
-        Assertions.assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+        assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
     }
 }

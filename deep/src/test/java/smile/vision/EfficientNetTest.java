@@ -65,6 +65,15 @@ public class EfficientNetTest {
 
         var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
         var rorschach = ImageIO.read(new File("deep/src/universal/data/image/Rorschach.jpg"));
-        var output = model.forward(lenna, rorschach);
+        var output = model.forward(lenna);
+        var topk = output.topk(5);
+        topk._1().print();
+        topk._2().print();
+        System.out.println(ImageNet.labels[751]);
+        System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
+        System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
+        System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
+        System.out.println(ImageNet.labels[topk._2().getInt(0, 3)]);
+        System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);
     }
 }
