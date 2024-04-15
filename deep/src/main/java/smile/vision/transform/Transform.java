@@ -19,7 +19,8 @@ package smile.vision.transform;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferInt;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -29,9 +30,9 @@ import smile.deep.tensor.Tensor;
  */
 public interface Transform {
     /**
-     * Transforms an image to tensor.
-     * @param image the input image.
-     * @return the tensor representation of image.
+     * Transforms images to 4-D tensor with shape [samples, channels, height, width].
+     * @param images the input images.
+     * @return the 4-D tensor representation of images.
      */
     Tensor forward(BufferedImage... images);
 
@@ -49,7 +50,8 @@ public interface Transform {
         Image resizedImage = image.getHeight() > image.getWidth() ?
                 image.getScaledInstance(size, -1, hints) :
                 image.getScaledInstance(-1, size, hints);
-        BufferedImage output = new BufferedImage(resizedImage.getWidth(null), resizedImage.getHeight(null), BufferedImage.TYPE_INT_RGB);
+        BufferedImage output = new BufferedImage(resizedImage.getWidth(null),
+                resizedImage.getHeight(null), BufferedImage.TYPE_3BYTE_BGR);
         output.getGraphics().drawImage(resizedImage, 0, 0, null);
         return output;
     }
@@ -58,25 +60,40 @@ public interface Transform {
      * Crops an image.
      * @param image the image size.
      * @param size the cropped image size.
+     * @param deep If false, the returned BufferedImage shares the same data
+     *            array as the original image. Otherwise, returns a deep copy.
      * @return the cropped image.
      */
-    default BufferedImage crop(BufferedImage image, int size) {
-        return image.getSubimage((image.getWidth() - size) / 2, (image.getHeight() - size) / 2, size, size);
+    default BufferedImage crop(BufferedImage image, int size, boolean deep) {
+        return crop(image, size, size, deep);
     }
 
     /**
-     * Crops an image.
+     * Crops an image. The returned BufferedImage shares the same data array
+     * as the original image.
      * @param image the image size.
      * @param width the cropped image width.
      * @param height the cropped image height.
+     * @param deep If false, the returned BufferedImage shares the same data
+     *            array as the original image. Otherwise, returns a deep copy.
      * @return the cropped image.
      */
-    default BufferedImage crop(BufferedImage image, int width, int height) {
-        return image.getSubimage((image.getWidth() - width) / 2, (image.getHeight() - height) / 2, width, height);
+    default BufferedImage crop(BufferedImage image, int width, int height, boolean deep) {
+        int x = (image.getWidth() - width) / 2;
+        int y = (image.getHeight() - height) / 2;
+        if (deep) {
+            // Get sub-raster, cast to writable and translate it to 0,0
+            WritableRaster data = ((WritableRaster) image.getData(new Rectangle(x, y, width, height)))
+                    .createWritableTranslatedChild(0, 0);
+            // Create new image with data
+            return new BufferedImage(image.getColorModel(), data, image.isAlphaPremultiplied(), null);
+        } else {
+            return image.getSubimage(x, y, width, height);
+        }
     }
 
     /**
-     * Returns the tensor with shape [channels, height, width] of the image.
+     * Returns the tensor with shape [samples, channels, height, width] of the images.
      * The values of tensor are first rescaled to [0.0, 1.0] and then normalized.
      * @param images the input images that should have same size.
      * @param mean the normalization mean.
@@ -87,29 +104,43 @@ public interface Transform {
         final int width = images[0].getWidth();
         final int height = images[0].getHeight();
         final int length = height * width;
-        final int green = length;
+        final int green = 1 * length;
         final int blue  = 2 * length;
-        float[] result = new float[3 * length * images.length];
+        float[] result = new float[images.length * length * 3];
 
-        for (int k = 0, offset = 0; k < images.length; k++, offset+=length) {
-            int[] pixels;
-            DataBuffer buffer = images[k].getData().getDataBuffer();
-            if (buffer.getDataType() == DataBuffer.TYPE_INT && buffer.getNumBanks() == 1) {
+        for (int k = 0, offset = 0; k < images.length; k++, offset += 3*length) {
+            BufferedImage image = images[k];
+            DataBuffer buffer = image.getData().getDataBuffer();
+
+            if (image.getType() == BufferedImage.TYPE_3BYTE_BGR && buffer.getNumBanks() == 1) {
                 // faster as it avoids data copying.
-                pixels = ((DataBufferInt) buffer).getData();
+                byte[] pixels = ((DataBufferByte) buffer).getData();
+                for (int i = 0, j = 0; i < length; i++, j+=3) {
+                    result[i + offset]         = ((pixels[j + 2] & 0xff) / 255.0f - mean[0]) / std[0]; // red
+                    result[i + offset + green] = ((pixels[j + 1] & 0xff) / 255.0f - mean[1]) / std[1]; // green
+                    result[i + offset + blue]  = ((pixels[j]     & 0xff) / 255.0f - mean[2]) / std[2]; // blue
+                }
+            } else if ((image.getType() == BufferedImage.TYPE_4BYTE_ABGR || image.getType() == BufferedImage.TYPE_4BYTE_ABGR_PRE) && buffer.getNumBanks() == 1) {
+                // faster as it avoids data copying.
+                byte[] pixels = ((DataBufferByte) buffer).getData();
+                for (int i = 0, j = 0; i < length; i++, j+=4) {
+                    result[i + offset]         = ((pixels[j + 3] & 0xff) / 255.0f - mean[0]) / std[0]; // red
+                    result[i + offset + green] = ((pixels[j + 2] & 0xff) / 255.0f - mean[1]) / std[1]; // green
+                    result[i + offset + blue]  = ((pixels[j + 1] & 0xff) / 255.0f - mean[2]) / std[2]; // blue
+                }
             } else {
-                pixels = images[k].getRGB(0, 0, width, height, null, 0, width);
-            }
-
-            for (int i = 0; i < length; i++) {
-                int pixel = pixels[i];
-                result[i + offset]         = (((pixel >> 16) & 0xff) / 255.0f - mean[0]) / std[0]; // red
-                result[i + offset + green] = (((pixel >>  8) & 0xff) / 255.0f - mean[1]) / std[1]; // green
-                result[i + offset + blue]  = (((pixel      ) & 0xff) / 255.0f - mean[2]) / std[2]; // blue
+                int[] pixels = image.getRGB(0, 0, width, height, null, 0, width);
+                for (int i = 0; i < length; i++) {
+                    int pixel = pixels[i];
+                    result[i + offset]         = (((pixel >> 16) & 0xff) / 255.0f - mean[0]) / std[0]; // red
+                    result[i + offset + green] = (((pixel >>  8) & 0xff) / 255.0f - mean[1]) / std[1]; // green
+                    result[i + offset + blue]  = (((pixel      ) & 0xff) / 255.0f - mean[2]) / std[2]; // blue
+                }
             }
         }
 
-        return Tensor.of(result, images.length, 3, height, width);
+        Tensor tensor = Tensor.of(result, images.length, 3, height, width);
+        return tensor;
     }
 
     /**
