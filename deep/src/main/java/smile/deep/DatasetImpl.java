@@ -18,6 +18,7 @@ package smile.deep;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
 import smile.math.MathEx;
 
@@ -160,7 +161,8 @@ class DatasetImpl implements Dataset {
                     index = Arrays.copyOf(index, j);
                 }
 
-                return new SampleBatch(data.get(index), target.get(index));
+                var idx = Index.of(index);
+                return new SampleBatch(data.get(idx), target.get(idx));
             }
         };
     }
