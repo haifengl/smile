@@ -124,6 +124,32 @@ public class Index {
      * @param end the end index.
      * @return the slice.
      */
+    public static Index slice(Integer start, Integer end) {
+        return slice(start, end, 1);
+    }
+
+    /**
+     * Returns the slice index for [start, end) with step 1.
+     *
+     * @param start the start index.
+     * @param end the end index.
+     * @return the slice.
+     */
+    public static Index slice(Integer start, Integer end, Integer step) {
+        return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
+                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start.intValue())),
+                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end.intValue())),
+                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step.intValue()))
+        )));
+    }
+
+    /**
+     * Returns the slice index for [start, end) with step 1.
+     *
+     * @param start the start index.
+     * @param end the end index.
+     * @return the slice.
+     */
     public static Index slice(Long start, Long end) {
         return slice(start, end, 1L);
     }
