@@ -18,6 +18,7 @@ package smile.deep.tensor;
 
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
+import smile.util.Tuple2;
 
 /**
  * A Tensor is a multi-dimensional array containing elements of a single data type.
@@ -227,9 +228,9 @@ public class Tensor {
      * @return the index vector.
      */
     private TensorIndexVector indexVector(int... indices) {
-        TensorIndexVector vector = new TensorIndexVector(indices.length);
+        TensorIndexVector vector = new TensorIndexVector();
         for (var index : indices) {
-            vector.put(new TensorIndex(index));
+            vector.push_back(new TensorIndex(index));
         }
         return vector;
     }
@@ -240,9 +241,9 @@ public class Tensor {
      * @return the index vector.
      */
     private TensorIndexVector indexVector(long... indices) {
-        TensorIndexVector vector = new TensorIndexVector(indices.length);
+        TensorIndexVector vector = new TensorIndexVector();
         for (var index : indices) {
-            vector.put(new TensorIndex(index));
+            vector.push_back(new TensorIndex(index));
         }
         return vector;
     }
@@ -253,9 +254,9 @@ public class Tensor {
      * @return the index vector.
      */
     private TensorIndexVector indexVector(Index... indices) {
-        TensorIndexVector vector = new TensorIndexVector(indices.length);
+        TensorIndexVector vector = new TensorIndexVector();
         for (var index : indices) {
-            vector.put(new TensorIndex(index.value));
+            vector.push_back(index.value);
         }
         return vector;
     }
@@ -319,11 +320,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(byte x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(byte x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -331,11 +332,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(byte x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(byte x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -343,11 +344,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(short x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(short x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -355,11 +356,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(short x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(short x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -367,11 +368,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(int x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(int x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -379,11 +380,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(int x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(int x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -391,11 +392,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(long x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(long x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -403,11 +404,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(long x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(long x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -415,11 +416,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(float x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(float x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -427,11 +428,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(float x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(float x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -439,11 +440,11 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(double x, int... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(double x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
@@ -451,30 +452,30 @@ public class Tensor {
      * Updates an element in place.
      *
      * @param x the new element value.
-     * @param index the element index.
+     * @param indices the element indices.
      * @return this tensor.
      */
-    public Tensor put_(double x, long... index) {
-        value.index_put_(indexVector(index), new Scalar((x)));
+    public Tensor put_(double x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
 
     /**
-     * Returns multiple rows of tensor.
-     * @param index the indices of selected rows.
+     * Returns a portion of tensor given the indices.
+     * @param indices the indices along the dimensions.
      * @return the sub-tensor.
      */
-    public Tensor get(int... index) {
-        return get(Tensor.of(index, index.length));
+    public Tensor get(int... indices) {
+        return Tensor.of(value.index(indexVector(indices)));
     }
 
     /**
-     * Returns multiple rows of tensor.
-     * @param index the indices of selected rows.
+     * Returns a portion of tensor given the indices.
+     * @param indices the indices along the dimensions.
      * @return the sub-tensor.
      */
-    public Tensor get(long... index) {
-        return get(Tensor.of(index, index.length));
+    public Tensor get(long... indices) {
+        return Tensor.of(value.index(indexVector(indices)));
     }
 
     /**
@@ -488,132 +489,132 @@ public class Tensor {
 
     /**
      * Returns a portion of tensor given the indices.
-     * @param index the indices of elements to copy.
+     * @param index the tensor index.
      * @return the sub-tensor.
      */
     public Tensor get(Tensor index) {
-        TensorIndexVector vector = new TensorIndexVector(new TensorIndex(index.value));
-        return Tensor.of(value.index(vector));
+        TensorIndexVector indexVector = new TensorIndexVector(new TensorIndex(index.value));
+        return Tensor.of(value.index(indexVector));
     }
 
     /**
      * Returns the byte value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public byte getByte(int... index) {
-        return value.index(indexVector(index)).item_byte();
+    public byte getByte(int... indices) {
+        return value.index(indexVector(indices)).item_byte();
     }
 
     /**
      * Returns the byte value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public byte getByte(long... index) {
-        return value.index(indexVector(index)).item_byte();
+    public byte getByte(long... indices) {
+        return value.index(indexVector(indices)).item_byte();
     }
 
     /**
      * Returns the short value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public short getShort(int... index) {
-        return value.index(indexVector(index)).item_short();
+    public short getShort(int... indices) {
+        return value.index(indexVector(indices)).item_short();
     }
 
     /**
      * Returns the short value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public short getShort(long... index) {
-        return value.index(indexVector(index)).item_short();
+    public short getShort(long... indices) {
+        return value.index(indexVector(indices)).item_short();
     }
 
     /**
      * Returns the int value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public int getInt(int... index) {
-        return value.index(indexVector(index)).item_int();
+    public int getInt(int... indices) {
+        return value.index(indexVector(indices)).item_int();
     }
 
     /**
      * Returns the int value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public int getInt(long... index) {
-        return value.index(indexVector(index)).item_int();
+    public int getInt(long... indices) {
+        return value.index(indexVector(indices)).item_int();
     }
 
     /**
      * Returns the long value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public long getLong(int... index) {
-        return value.index(indexVector(index)).item_long();
+    public long getLong(int... indices) {
+        return value.index(indexVector(indices)).item_long();
     }
 
     /**
      * Returns the long value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public long getLong(long... index) {
-        return value.index(indexVector(index)).item_long();
+    public long getLong(long... indices) {
+        return value.index(indexVector(indices)).item_long();
     }
 
     /**
      * Returns the float value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public float getFloat(int... index) {
-        return value.index(indexVector(index)).item_float();
+    public float getFloat(int... indices) {
+        return value.index(indexVector(indices)).item_float();
     }
 
     /**
      * Returns the float value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public float getFloat(long... index) {
-        return value.index(indexVector(index)).item_float();
+    public float getFloat(long... indices) {
+        return value.index(indexVector(indices)).item_float();
     }
 
     /**
      * Returns the double value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public double getDouble(int... index) {
-        return value.index(indexVector(index)).item_double();
+    public double getDouble(int... indices) {
+        return value.index(indexVector(indices)).item_double();
     }
 
     /**
      * Returns the double value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public double getDouble(long... index) {
-        return value.index(indexVector(index)).item_double();
+    public double getDouble(long... indices) {
+        return value.index(indexVector(indices)).item_double();
     }
 
     /**
@@ -715,6 +716,31 @@ public class Tensor {
      */
     public Tensor argmax(int dim, boolean keepDim) {
         return Tensor.of(value.argmax(new LongOptional(dim), keepDim));
+    }
+
+    /**
+     * Returns the k largest elements.
+     *
+     * @param k the number of largest elements.
+     * @return the values and indices of the largest k elements.
+     */
+    public Tuple2<Tensor, Tensor> topk(int k) {
+        var topk = value.topk(k);
+        return new Tuple2<>(Tensor.of(topk.get0()), Tensor.of(topk.get1()));
+    }
+
+    /**
+     * Returns the k largest elements along a given dimension.
+     *
+     * @param k the number of largest elements.
+     * @param dim the dimension to sort along.
+     * @param largest controls whether to return largest or smallest elements.
+     * @param sorted  controls whether to return the elements in sorted order.
+     * @return the values and indices of the largest k elements.
+     */
+    public Tuple2<Tensor, Tensor> topk(int k, int dim, boolean largest, boolean sorted) {
+        var topk = value.topk(k, dim, largest, sorted);
+        return new Tuple2<>(Tensor.of(topk.get0()), Tensor.of(topk.get1()));
     }
 
     /**
