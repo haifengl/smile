@@ -54,9 +54,9 @@ public class Conv2dLayer implements Layer {
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
         LongPointer size = new LongPointer(kernel, kernel);
         options = new Conv2dOptions(in, out, size);
-        options.stride().put(stride);
+        options.stride().put(stride, stride);
         options.padding().put(new LongPointer(padding, padding));
-        options.dilation().put(dilation);
+        options.dilation().put(dilation, dilation);
         options.groups().put(groups);
         options.bias().put(bias);
         options.padding_mode().put(
@@ -102,9 +102,9 @@ public class Conv2dLayer implements Layer {
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
         LongPointer size = new LongPointer(kernel, kernel);
         options = new Conv2dOptions(in, out, size);
-        options.stride().put(stride);
+        options.stride().put(stride, stride);
         options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
-        options.dilation().put(dilation);
+        options.dilation().put(dilation, dilation);
         options.groups().put(groups);
         options.bias().put(bias);
         options.padding_mode().put(
