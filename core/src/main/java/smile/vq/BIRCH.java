@@ -340,7 +340,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             Node[] sister = new Node[B];
             for (int i = 0; i <= B; i++) {
-                if (dist[i][farthest.i] < dist[i][farthest.j]) {
+                if (dist[i][farthest._1()] < dist[i][farthest._2()]) {
                     children[k++] = nodes[i];
                 } else {
                     sister[n++] = nodes[i];
@@ -428,7 +428,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             ClusteringFeature[] sister = new ClusteringFeature[L];
             for (int i = 0; i <= L; i++) {
-                if (dist[i][farthest.i] < dist[i][farthest.j]) {
+                if (dist[i][farthest._1()] < dist[i][farthest._2()]) {
                     this.clusters[k++] = clusters[i];
                 } else {
                     sister[n++] = clusters[i];
