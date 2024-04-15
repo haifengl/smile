@@ -58,8 +58,8 @@ public class PositionalEncoding implements Layer {
         Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
         Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel);
         position.mul_(divTerm);
-        pe.put_(position.sin(), Colon, slice(0L, null, 2L));
-        pe.put_(position.cos(), Colon, slice(1L, null, 2L));
+        pe.put_(position.sin(), Colon, slice(0, null, 2));
+        pe.put_(position.cos(), Colon, slice(1, null, 2));
         pe = pe.unsqueeze(0).transpose(0, 1);
     }
 
