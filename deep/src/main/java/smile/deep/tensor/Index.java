@@ -16,10 +16,9 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.pytorch.SymInt;
-import org.bytedeco.pytorch.SymIntOptional;
-import org.bytedeco.pytorch.TensorIndex;
+import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Tensor;
+import org.bytedeco.pytorch.global.torch;
 
 /**
  * Indexing a tensor.
@@ -28,7 +27,7 @@ import org.bytedeco.pytorch.Tensor;
  */
 public class Index {
     /** PyTorch tensor index. */
-    TensorIndex value;
+    final TensorIndex value;
 
     /**
      * Constructor.
@@ -43,12 +42,28 @@ public class Index {
      * It's designed to mean at this point, insert as many full slices (:) to extend
      * the multi-dimensional slice to all dimensions.
      */
-    public static Index Ellipsis = new Index(new TensorIndex("..."));
+    public static Index Ellipsis = new Index(new TensorIndex(torch.Ellipsis()));
 
     /**
      * The colon (:) is used to slice all elements of a dimension.
      */
-    public static Index Colon = new Index(new TensorIndex(":"));
+    public static Index Colon = new Index(new TensorIndex(new Slice()));
+
+    /**
+     * The None is used to insert a singleton dimension ("unsqueeze"
+     * a dimension).
+     */
+    public static Index None = new Index(new TensorIndex(torch.None()));
+
+    /**
+     * Returns the index of a single element in a dimension.
+     *
+     * @param i the element index.
+     * @return the index.
+     */
+    public static Index of(int i) {
+        return new Index(new TensorIndex(i));
+    }
 
     /**
      * Returns the index of a single element in a dimension.
@@ -66,8 +81,40 @@ public class Index {
      * @param indices the indices of multiple elements.
      * @return the index.
      */
+    public static Index of(int... indices) {
+        return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the index of multiple elements in a dimension.
+     *
+     * @param indices the indices of multiple elements.
+     * @return the index.
+     */
     public static Index of(long... indices) {
         return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the index of multiple elements in a dimension.
+     *
+     * @param indices the boolean flags to select multiple elements.
+     *               The length of array should match that of the
+     *               corresponding dimension of tensor.
+     * @return the index.
+     */
+    public static Index of(boolean... indices) {
+        return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the tensor index along a dimension.
+     *
+     * @param index the tensor index.
+     * @return the index.
+     */
+    public static Index of(smile.deep.tensor.Tensor index) {
+        return new Index(new TensorIndex(index.value));
     }
 
     /**
