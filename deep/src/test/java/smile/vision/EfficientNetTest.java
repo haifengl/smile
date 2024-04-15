@@ -57,13 +57,14 @@ public class EfficientNetTest {
 
         var model = new VisionModel(enet, EfficientNet.V2STransform);
         model.load("deep/src/universal/models/efficientnet_v2_s.pt");
+        model.eval();
         model.to(device);
 
-        var example = Tensor.rand(1, 3, 384, 384).to(device);
-        var output = model.forward(example);
+        //var example = Tensor.rand(2, 3, 384, 384);
+        //var output = model.forward(example);
 
         var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
         var rorschach = ImageIO.read(new File("deep/src/universal/data/image/Rorschach.jpg"));
-        //output = model.forward(lenna, rorschach);
+        var output = model.forward(lenna, rorschach);
     }
 }
