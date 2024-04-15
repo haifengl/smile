@@ -60,6 +60,17 @@ public class Tensor {
     }
 
     /**
+     * Sets if autograd should record operations on this tensor.
+     * @param required the flag indicating if autograd should record
+     *                operations on this tensor.
+     * @return this tensor.
+     */
+    public Tensor requireGradient(boolean required) {
+        value.set_requires_grad(required);
+        return this;
+    }
+
+    /**
      * Returns a new tensor, detached from the current graph.
      * The result will never require gradient.
      *
