@@ -34,24 +34,47 @@ public class Conv2dNormActivation extends SequentialBlock {
     private final ActivationFunction activation;
 
     /**
-     * Constructor with default batch normalization and ReLU activation.
-     * @param conv the convolutional layer.
+     * Conv2dNormActivation configurations.
+     * @param in the number of input channels.
+     * @param out the number of output channels/features.
+     * @param kernel the window/kernel size.
+     * @param stride controls the stride for the cross-correlation.
+     * @param padding controls the amount of padding applied on both sides.
+     * @param dilation controls the spacing between the kernel points.
+     * @param groups controls the connections between inputs and outputs.
+     *              The in channels and out channels must both be divisible by groups.
+     * @param activation the activation function.
      */
-    public Conv2dNormActivation(Conv2dLayer conv) {
-        this(conv, new BatchNorm2dLayer((int) conv.options().out_channels().get()), new ReLU(true));
+    public record Options(int in, int out, int kernel, int stride, int padding, int dilation, int groups, ActivationFunction activation) {
+        public Options {
+            if (padding < 0) {
+                padding = (kernel - 1) / 2 * dilation;
+            }
+        }
+
+        public Options(int in, int out, int kernel, ActivationFunction activation) {
+            this(in, out, kernel, 1, activation);
+        }
+
+        public Options(int in, int out, int kernel, int stride, ActivationFunction activation) {
+            this(in, out, kernel, stride, 1, activation);
+        }
+
+        public Options(int in, int out, int kernel, int stride, int groups, ActivationFunction activation) {
+            this(in, out, kernel, stride, -1, 1, groups, activation);
+        }
     }
 
     /**
      * Constructor.
-     * @param conv the convolutional layer.
-     * @param norm the batch normalization layer.
-     * @param activation the activation function.
      */
-    public Conv2dNormActivation(Conv2dLayer conv, BatchNorm2dLayer norm, ActivationFunction activation) {
+    public Conv2dNormActivation(Options options) {
         super("Conv2dNormActivation");
-        this.conv = conv;
-        this.norm = norm;
-        this.activation = activation;
+
+        this.conv = new Conv2dLayer(options.in, options.out, options.kernel, options.stride, options.padding,
+                options.dilation, options.groups, false, "zeros");
+        this.norm = new BatchNorm2dLayer(options.out);
+        this.activation = options.activation;
         add(conv);
         add(norm);
         if (activation != null) {

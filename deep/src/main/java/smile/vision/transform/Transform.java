@@ -104,7 +104,7 @@ public interface Transform {
     }
 
     /**
-     * Returns the tensor with shape [samples, channels, height, width] of the images.
+     * Returns the tensor with NCHW shape [samples, channels, height, width] of the images.
      * The values of tensor are first rescaled to [0.0, 1.0] and then normalized.
      * @param images the input images that should have same size.
      * @param mean the normalization mean.

@@ -18,8 +18,6 @@ package smile.vision;
 
 import smile.deep.activation.SiLU;
 import smile.deep.activation.Sigmoid;
-import smile.deep.layer.BatchNorm2dLayer;
-import smile.deep.layer.Layer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.tensor.Tensor;
@@ -52,18 +50,15 @@ public class MBConv extends LayerBlock {
         // expand
         int expandedChannels = MBConvConfig.adjustChannels(config.inputChannels(), config.expandRatio());
         if (expandedChannels != config.inputChannels()) {
-            Conv2dNormActivation expand = new Conv2dNormActivation(
-                            Layer.conv2d(config.inputChannels(), expandedChannels, 1, 1, -1, 1, 1, false, "zeros"),
-                            new BatchNorm2dLayer(expandedChannels),
-                            new SiLU(true));
+            Conv2dNormActivation expand = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                    config.inputChannels(), expandedChannels, 1, new SiLU(true)));
             block.add(expand);
         }
 
         // depthwise
-        Conv2dNormActivation depthwise = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, expandedChannels, config.kernel(), config.stride(), -1, 1, expandedChannels, false, "zeros"),
-                new BatchNorm2dLayer(expandedChannels),
-                new SiLU(true));
+        Conv2dNormActivation depthwise = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                expandedChannels, expandedChannels, config.kernel(), config.stride(),
+                expandedChannels, new SiLU(true)));
         block.add(depthwise);
 
         // squeeze and excitation
@@ -72,9 +67,8 @@ public class MBConv extends LayerBlock {
         block.add(se);
 
         // project
-        Conv2dNormActivation project = new Conv2dNormActivation(
-                Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false, "zeros"),
-                new BatchNorm2dLayer(config.outputChannels()), null);
+        Conv2dNormActivation project = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                expandedChannels, config.outputChannels(), 1, null));
         block.add(project);
 
         useResidual = stride == 1 && config.inputChannels() == config.outputChannels();
@@ -91,6 +85,8 @@ public class MBConv extends LayerBlock {
             output = stochasticDepth.forward(output);
             output.add_(input);
         }
+        // Release intermediate tensor outputs.
+        System.gc();
         return output;
     }
 }

@@ -17,8 +17,6 @@
 package smile.vision;
 
 import smile.deep.activation.SiLU;
-import smile.deep.layer.BatchNorm2dLayer;
-import smile.deep.layer.Layer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.tensor.Tensor;
@@ -50,22 +48,16 @@ public class FusedMBConv extends LayerBlock {
         // expand
         int expandedChannels = MBConvConfig.adjustChannels(config.inputChannels(), config.expandRatio());
         if (expandedChannels == config.inputChannels()) {
-            Conv2dNormActivation expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
-                    new BatchNorm2dLayer(expandedChannels),
-                    new SiLU(true));
+            Conv2dNormActivation expand = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                    config.inputChannels(), config.outputChannels(), config.kernel(), config.stride(), new SiLU(true)));
             block.add(expand);
         } else {
             // fused expand
-            Conv2dNormActivation expand = new Conv2dNormActivation(
-                    Layer.conv2d(config.inputChannels(), expandedChannels, config.kernel(), config.stride(), -1, 1, 1, false, "zeros"),
-                    new BatchNorm2dLayer(expandedChannels),
-                    new SiLU(true));
-
+            Conv2dNormActivation expand = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                    config.inputChannels(), expandedChannels, config.kernel(), config.stride(), new SiLU(true)));
             // project
-            Conv2dNormActivation project = new Conv2dNormActivation(
-                    Layer.conv2d(expandedChannels, config.outputChannels(), 1, 1, -1, 1, 1, false, "zeros"),
-                    new BatchNorm2dLayer(config.outputChannels()), null);
+            Conv2dNormActivation project = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                    expandedChannels, config.outputChannels(), 1, null));
             block.add(expand);
             block.add(project);
         }
