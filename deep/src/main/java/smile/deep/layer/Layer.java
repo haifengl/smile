@@ -250,9 +250,6 @@ public interface Layer {
      * @return a convolutional layer.
      */
     static Conv2dLayer conv2d(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
-        if (padding < 0) {
-            padding = (kernel - 1) / 2 * dilation;
-        }
         return new Conv2dLayer(in, out, kernel, stride, padding, dilation, groups, bias, paddingMode);
     }
 
