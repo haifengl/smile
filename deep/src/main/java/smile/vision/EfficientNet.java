@@ -58,10 +58,8 @@ public class EfficientNet extends LayerBlock {
 
         // building first layer
         int firstconvOutputChannels = invertedResidualSetting[0].inputChannels();
-        layers[0] = new Conv2dNormActivation(
-                Layer.conv2d(3, firstconvOutputChannels, 3, 2, -1, 1, 1, false, "zeros"),
-                new BatchNorm2dLayer(firstconvOutputChannels),
-                new SiLU(true));
+        layers[0] = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                3, firstconvOutputChannels, 3, 2, new SiLU(true)));
 
         // building inverted residual blocks
         int totalStageBlocks = 0;
@@ -99,10 +97,8 @@ public class EfficientNet extends LayerBlock {
         // building last several layers
         int lastConvInputChannels = invertedResidualSetting[invertedResidualSetting.length-1].outputChannels();
         int lastConvOutputChannels = lastChannel > 0 ? lastChannel : 4 * lastConvInputChannels;
-        layers[invertedResidualSetting.length + 1] = new Conv2dNormActivation(
-                Layer.conv2d(lastConvInputChannels, firstconvOutputChannels, 1, 1, -1, 1, 1, false, "zeros"),
-                new BatchNorm2dLayer(firstconvOutputChannels),
-                new SiLU(true));
+        layers[invertedResidualSetting.length + 1] = new Conv2dNormActivation(new Conv2dNormActivation.Options(
+                lastConvInputChannels, lastConvOutputChannels, 1, new SiLU(true)));
 
         features = new SequentialBlock(layers);
         avgpool = new AdaptiveAvgPool2dLayer(1);
@@ -170,5 +166,6 @@ public class EfficientNet extends LayerBlock {
     /**
      * EfficientNet-V2 L (largest) model image transform.
      */
-    public static Transform V2LTransform = Transform.classification(480, 480, new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
+    public static Transform V2LTransform = Transform.classification(480, 480,
+            new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
 }
