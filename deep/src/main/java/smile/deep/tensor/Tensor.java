@@ -79,6 +79,7 @@ public class Tensor {
         return value.requires_grad();
     }
 
+    // TODO: may be replaced by a ScopedValue in JDK20+.
     /** Thread-local guard. */
     private static final ThreadLocal<NoGradGuard> noGradGuard =
             ThreadLocal.withInitial(() -> new NoGradGuard());
