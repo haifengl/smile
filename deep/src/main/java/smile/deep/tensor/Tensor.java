@@ -66,9 +66,45 @@ public class Tensor {
      *                operations on this tensor.
      * @return this tensor.
      */
-    public Tensor requireGradient(boolean required) {
+    public Tensor requireGrad(boolean required) {
         value.set_requires_grad(required);
         return this;
+    }
+
+    /**
+     * Returns true if autograd should record operations on this tensor.
+     * @return true if autograd should record operations on this tensor.
+     */
+    public boolean requireGrad() {
+        return value.requires_grad();
+    }
+
+    /** Thread-local guard. */
+    private static final ThreadLocal<NoGradGuard> noGradGuard =
+            ThreadLocal.withInitial(() -> new NoGradGuard());
+
+    /**
+     * Disables gradient calculation. Disabling gradient calculation is useful
+     * for inference, when you are sure that you will not call backward.
+     * It will reduce memory consumption for computations that would otherwise
+     * have requireGrad(true).
+     *
+     * In this mode, the result of every computation will have requireGrad(false),
+     * even when the inputs have requireGrad(true).
+     *
+     * This context manager is thread-local; it will not affect computation in
+     * other threads.
+     */
+    public static void disableGrad() {
+        noGradGuard.get();
+    }
+
+    /**
+     * Enables gradient calculation.
+     */
+    public static void enableGrad() {
+        noGradGuard.get().deallocate();
+        noGradGuard.remove();
     }
 
     /**
