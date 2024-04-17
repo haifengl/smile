@@ -25,7 +25,7 @@ import smile.util.Tuple2;
  *
  * @author Haifeng Li
  */
-public class Tensor {
+public class Tensor implements AutoCloseable {
     /** PyTorch Tensor handle. */
     org.bytedeco.pytorch.Tensor value;
 
@@ -40,6 +40,12 @@ public class Tensor {
     /** Prints the tensor on the standard output. */
     public void print() {
         torch.print(value);
+    }
+
+    @Override
+    public void close() {
+        value.close();
+        //value.deallocate();
     }
 
     @Override
