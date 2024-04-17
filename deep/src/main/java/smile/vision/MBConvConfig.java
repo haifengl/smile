@@ -26,6 +26,7 @@ package smile.vision;
  * @param inputChannels the number of input channels.
  * @param outputChannels the number of output channels.
  * @param numLayers the number of layers.
+ * @param block the block type: "FusedMBConv" or "MBConv".
  */
 public record MBConvConfig(double expandRatio,
                            int kernel,
