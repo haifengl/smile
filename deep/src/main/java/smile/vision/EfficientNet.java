@@ -102,7 +102,9 @@ public class EfficientNet extends LayerBlock {
 
         features = new SequentialBlock(layers);
         avgpool = new AdaptiveAvgPool2dLayer(1);
-        classifier = new SequentialBlock(new DropoutLayer(dropout, true), new FullyConnectedLayer(lastConvOutputChannels, numClasses));
+        classifier = new SequentialBlock(
+                new DropoutLayer(dropout, true),
+                new FullyConnectedLayer(lastConvOutputChannels, numClasses));
         add("features", features);
         add("avgpool", avgpool);
         add("classifier", classifier);
@@ -116,56 +118,95 @@ public class EfficientNet extends LayerBlock {
     }
 
     /**
-     * EfficientNet-V2 S (baseline) model configuration.
-     * Produced by neural architecture search.
+     * EfficientNet-V2_S (baseline) model.
+     * @return the model.
      */
-    public static MBConvConfig[] V2S = {
-            MBConvConfig.FusedMBConv(1,3,1,24,24,2),
-            MBConvConfig.FusedMBConv(4,3,2,24,48,4),
-            MBConvConfig.FusedMBConv(4,3,2,48,64,4),
-            MBConvConfig.MBConv(4,3,2,64,128,6),
-            MBConvConfig.MBConv(6,3,1,128,160,9),
-            MBConvConfig.MBConv(6,3,2,160,256,15)
-    };
-    /**
-     * EfficientNet-V2 S (baseline) model image transform.
-     */
-    public static Transform V2STransform = Transform.classification(384, 384);
+    public static VisionModel V2S() {
+        return V2S("deep/src/universal/models/efficientnet_v2_s.pt");
+    }
 
     /**
-     * EfficientNet-V2 M (larger) model configuration based on compound
-     * scaling method. Higher accuracy at the cost of increased latency.
+     * EfficientNet-V2_S (baseline) model.
+     * @param path the pre-trained model file path.
+     * @return the model.
      */
-    public static MBConvConfig[] V2M = {
-            MBConvConfig.FusedMBConv(1, 3, 1, 24, 24, 3),
-            MBConvConfig.FusedMBConv(4, 3, 2, 24, 48, 5),
-            MBConvConfig.FusedMBConv(4, 3, 2, 48, 80, 5),
-            MBConvConfig.MBConv(4, 3, 2, 80, 160, 7),
-            MBConvConfig.MBConv(6, 3, 1, 160, 176, 14),
-            MBConvConfig.MBConv(6, 3, 2, 176, 304, 18),
-            MBConvConfig.MBConv(6, 3, 1, 304, 512, 5)
-    };
-    /**
-     * EfficientNet-V2 M (larger) model image transform.
-     */
-    public static Transform V2MTransform = Transform.classification(480, 480);
+    public static VisionModel V2S(String path) {
+        MBConvConfig[] config = {
+                MBConvConfig.FusedMBConv(1,3,1,24,24,2),
+                MBConvConfig.FusedMBConv(4,3,2,24,48,4),
+                MBConvConfig.FusedMBConv(4,3,2,48,64,4),
+                MBConvConfig.MBConv(4,3,2,64,128,6),
+                MBConvConfig.MBConv(6,3,1,128,160,9),
+                MBConvConfig.MBConv(6,3,2,160,256,15)
+        };
+        Transform transform = Transform.classification(384, 384);
+
+        var net = new EfficientNet(config, 0.2);
+        var model = new VisionModel(net, transform);
+        model.load(path);
+        return model;
+    }
 
     /**
-     * EfficientNet-V2 L (largest) model configuration based on compound
-     * scaling method. Higher accuracy at the cost of increased latency.
+     * EfficientNet-V2_M (larger) model.
+     * @return the model.
      */
-    public static MBConvConfig[] V2L = {
-            MBConvConfig.FusedMBConv(1, 3, 1, 32, 32, 4),
-            MBConvConfig.FusedMBConv(4, 3, 2, 32, 64, 7),
-            MBConvConfig.FusedMBConv(4, 3, 2, 64, 96, 7),
-            MBConvConfig.MBConv(4, 3, 2, 96, 192, 10),
-            MBConvConfig.MBConv(6, 3, 1, 192, 224, 19),
-            MBConvConfig.MBConv(6, 3, 2, 224, 384, 25),
-            MBConvConfig.MBConv(6, 3, 1, 384, 640, 7)
-    };
+    public static VisionModel V2M() {
+        return V2M("deep/src/universal/models/efficientnet_v2_m.pt");
+    }
+
     /**
-     * EfficientNet-V2 L (largest) model image transform.
+     * EfficientNet-V2_M (larger) model.
+     * @param path the pre-trained model file path.
+     * @return the model.
      */
-    public static Transform V2LTransform = Transform.classification(480, 480,
-            new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
+    public static VisionModel V2M(String path) {
+        MBConvConfig[] config = {
+                MBConvConfig.FusedMBConv(1, 3, 1, 24, 24, 3),
+                MBConvConfig.FusedMBConv(4, 3, 2, 24, 48, 5),
+                MBConvConfig.FusedMBConv(4, 3, 2, 48, 80, 5),
+                MBConvConfig.MBConv(4, 3, 2, 80, 160, 7),
+                MBConvConfig.MBConv(6, 3, 1, 160, 176, 14),
+                MBConvConfig.MBConv(6, 3, 2, 176, 304, 18),
+                MBConvConfig.MBConv(6, 3, 1, 304, 512, 5)
+        };
+        Transform transform = Transform.classification(480, 480);
+
+        var net = new EfficientNet(config, 0.3);
+        var model = new VisionModel(net, transform);
+        model.load(path);
+        return model;
+    }
+
+    /**
+     * EfficientNet-V2_L (largest) model.
+     * @return the model.
+     */
+    public static VisionModel V2L() {
+        return V2L("deep/src/universal/models/efficientnet_v2_l.pt");
+    }
+
+    /**
+     * EfficientNet-V2_L (largest) model.
+     * @param path the pre-trained model file path.
+     * @return the model.
+     */
+    public static VisionModel V2L(String path) {
+        MBConvConfig[] config = {
+                MBConvConfig.FusedMBConv(1, 3, 1, 32, 32, 4),
+                MBConvConfig.FusedMBConv(4, 3, 2, 32, 64, 7),
+                MBConvConfig.FusedMBConv(4, 3, 2, 64, 96, 7),
+                MBConvConfig.MBConv(4, 3, 2, 96, 192, 10),
+                MBConvConfig.MBConv(6, 3, 1, 192, 224, 19),
+                MBConvConfig.MBConv(6, 3, 2, 224, 384, 25),
+                MBConvConfig.MBConv(6, 3, 1, 384, 640, 7)
+        };
+        Transform transform = Transform.classification(480, 480,
+                new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
+
+        var net = new EfficientNet(config, 0.4);
+        var model = new VisionModel(net, transform);
+        model.load(path);
+        return model;
+    }
 }
