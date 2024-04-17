@@ -76,9 +76,7 @@ public class DatasetTest {
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset);
-        try {
-            // This creates a Guard object for inference mode.
-            Tensor.disableGrad();
+        try (var guard = Tensor.noGradGuard()) {
             Map<String, Double> metrics = net.eval(dataset,
                     new Accuracy(),
                     new Precision(Averaging.Micro),
@@ -93,8 +91,6 @@ public class DatasetTest {
             assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
             assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
             assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
-        } finally {
-            Tensor.enableGrad();
         }
     }
 }

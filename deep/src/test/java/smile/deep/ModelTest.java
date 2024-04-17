@@ -77,10 +77,8 @@ public class ModelTest {
         Loss loss = Loss.nll();
         net.train(10, optimizer, loss, train, test, null);
 
-        double accuracy = 0.0;
-        try {
-            // This creates a Guard object for inference mode.
-            Tensor.disableGrad();
+        double accuracy;
+        try (var guard = Tensor.noGradGuard()) {
             Map<String, Double> metrics = net.eval(test,
                     new Accuracy(),
                     new Precision(Averaging.Micro),
@@ -96,8 +94,6 @@ public class ModelTest {
             assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
             assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
             assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
-        } finally {
-            Tensor.enableGrad();
         }
 
         // Serialize your model periodically as a checkpoint.
