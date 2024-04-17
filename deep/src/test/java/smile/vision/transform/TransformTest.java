@@ -52,18 +52,53 @@ public class TransformTest {
     @Test
     public void test() throws IOException {
         var t = Transform.classification(384, 384);
-        var img = ImageIO.read(new File("deep/src/universal/data/image/Rorschach.jpg"));
-        var resized = t.resize(img, 384, Image.SCALE_FAST);
-        assertEquals(384, resized.getHeight());
-        assertEquals(586, resized.getWidth());
+        var img = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
 
+        // warm up AWT
+        var resized = t.resize(img, 384, Image.SCALE_FAST);
+        long startTime = System.nanoTime();
+        resized = t.resize(img, 384, Image.SCALE_FAST);
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+        System.out.println("Resize time: " + duration + "ms");
+
+        assertEquals(384, resized.getHeight());
+        assertEquals(435, resized.getWidth());
+
+        startTime = System.nanoTime();
         var cropped = t.crop(img, 384, true);
+        endTime = System.nanoTime();
+        duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+        System.out.println("Crop time: " + duration + "ms");
+
         assertEquals(384, cropped.getHeight());
         assertEquals(384, cropped.getWidth());
 
-        var tensor = t.forward(cropped);
-        tensor.get(Ellipsis, slice(0,5), slice(0,5)).print();
+        // warm up PyTorch
+        var tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
+        startTime = System.nanoTime();
+        tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
+        endTime = System.nanoTime();
+        duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+        System.out.println("toTensor time: " + duration + "ms");
+
         long[] shape = {1, 3, 384, 384};
         assertArrayEquals(shape, tensor.shape());
+
+        tensor.get(Ellipsis, slice(0,5), slice(0,5)).print();
+        assertEquals(-0.3712, tensor.getFloat(0, 0, 0, 0), 0.0001);
+        assertEquals( 0.2453, tensor.getFloat(0, 0, 0, 1), 0.0001);
+        assertEquals(-0.5424, tensor.getFloat(0, 0, 1, 0), 0.0001);
+        assertEquals(-0.5082, tensor.getFloat(0, 0, 1, 1), 0.0001);
+
+        assertEquals(-0.3901, tensor.getFloat(0, 1, 0, 0), 0.0001);
+        assertEquals( 0.2577, tensor.getFloat(0, 1, 0, 1), 0.0001);
+        assertEquals(-0.4601, tensor.getFloat(0, 1, 1, 0), 0.0001);
+        assertEquals(-0.4251, tensor.getFloat(0, 1, 1, 1), 0.0001);
+
+        assertEquals(-0.8458, tensor.getFloat(0, 2, 0, 0), 0.0001);
+        assertEquals(-0.2532, tensor.getFloat(0, 2, 0, 1), 0.0001);
+        assertEquals(-0.8981, tensor.getFloat(0, 2, 1, 0), 0.0001);
+        assertEquals(-0.8807, tensor.getFloat(0, 2, 1, 1), 0.0001);
     }
 }
