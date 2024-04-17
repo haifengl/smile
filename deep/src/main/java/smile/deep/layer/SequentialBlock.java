@@ -71,10 +71,21 @@ public class SequentialBlock extends LayerBlock {
     }
 
     @Override
-    public Tensor forward(Tensor x) {
+    public Tensor forward(Tensor input) {
+        ArrayList<Tensor> list = new ArrayList<>(layers.size());
+        Tensor output = input;
         for (Layer layer : layers) {
-            x = layer.forward(x);
+            output = layer.forward(output);
+            list.add(output);
         }
-        return x;
+
+        if (!isTraining()) {
+            for (var tensor : list) {
+                if (tensor != output) {
+                    tensor.close();
+                }
+            }
+        }
+        return output;
     }
 }
