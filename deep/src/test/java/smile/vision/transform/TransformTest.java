@@ -66,7 +66,7 @@ public class TransformTest {
         assertEquals(435, resized.getWidth());
 
         startTime = System.nanoTime();
-        var cropped = t.crop(img, 384, true);
+        var cropped = t.crop(resized, 384, true);
         endTime = System.nanoTime();
         duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
         System.out.println("Crop time: " + duration + "ms");
@@ -86,19 +86,19 @@ public class TransformTest {
         assertArrayEquals(shape, tensor.shape());
 
         tensor.get(Ellipsis, slice(0,5), slice(0,5)).print();
-        assertEquals(-0.3712, tensor.getFloat(0, 0, 0, 0), 0.0001);
-        assertEquals( 0.2453, tensor.getFloat(0, 0, 0, 1), 0.0001);
-        assertEquals(-0.5424, tensor.getFloat(0, 0, 1, 0), 0.0001);
-        assertEquals(-0.5082, tensor.getFloat(0, 0, 1, 1), 0.0001);
+        assertEquals( 0.6906, tensor.getFloat(0, 0, 0, 0), 0.0001);
+        assertEquals( 0.1426, tensor.getFloat(0, 0, 0, 1), 0.0001);
+        assertEquals( 0.1254, tensor.getFloat(0, 0, 1, 0), 0.0001);
+        assertEquals(-0.2342, tensor.getFloat(0, 0, 1, 1), 0.0001);
 
-        assertEquals(-0.3901, tensor.getFloat(0, 1, 0, 0), 0.0001);
-        assertEquals( 0.2577, tensor.getFloat(0, 1, 0, 1), 0.0001);
-        assertEquals(-0.4601, tensor.getFloat(0, 1, 1, 0), 0.0001);
-        assertEquals(-0.4251, tensor.getFloat(0, 1, 1, 1), 0.0001);
+        assertEquals( 0.6254, tensor.getFloat(0, 1, 0, 0), 0.0001);
+        assertEquals( 0.1001, tensor.getFloat(0, 1, 0, 1), 0.0001);
+        assertEquals( 0.0126, tensor.getFloat(0, 1, 1, 0), 0.0001);
+        assertEquals(-0.3375, tensor.getFloat(0, 1, 1, 1), 0.0001);
 
-        assertEquals(-0.8458, tensor.getFloat(0, 2, 0, 0), 0.0001);
-        assertEquals(-0.2532, tensor.getFloat(0, 2, 0, 1), 0.0001);
-        assertEquals(-0.8981, tensor.getFloat(0, 2, 1, 0), 0.0001);
-        assertEquals(-0.8807, tensor.getFloat(0, 2, 1, 1), 0.0001);
+        assertEquals( 0.1476, tensor.getFloat(0, 2, 0, 0), 0.0001);
+        assertEquals(-0.3055, tensor.getFloat(0, 2, 0, 1), 0.0001);
+        assertEquals(-0.4101, tensor.getFloat(0, 2, 1, 0), 0.0001);
+        assertEquals(-0.7238, tensor.getFloat(0, 2, 1, 1), 0.0001);
     }
 }

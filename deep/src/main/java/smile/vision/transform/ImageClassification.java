@@ -65,7 +65,7 @@ class ImageClassification implements Transform {
         BufferedImage[] output = new BufferedImage[images.length];
         for (int i = 0; i < images.length; i++) {
             BufferedImage image = resize(images[i], resizeSize, hints);
-            output[i] = crop(image, cropSize, cropSize, true);
+            output[i] = crop(image, cropSize, true);
         }
         return toTensor(mean, std, output);
     }
