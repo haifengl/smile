@@ -30,6 +30,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Conv2dNormActivation extends SequentialBlock {
+    private final Options options;
     private final Conv2dLayer conv;
     private final BatchNorm2dLayer norm;
     private final ActivationFunction activation;
@@ -79,6 +80,7 @@ public class Conv2dNormActivation extends SequentialBlock {
     public Conv2dNormActivation(Options options) {
         super("Conv2dNormActivation");
 
+        this.options = options;
         this.conv = new Conv2dLayer(options.in, options.out, options.kernel, options.stride, options.padding,
                 options.dilation, options.groups, false, "zeros");
         this.norm = options.norm.apply(options.out);
@@ -88,6 +90,11 @@ public class Conv2dNormActivation extends SequentialBlock {
         if (activation != null) {
             add(activation);
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Conv2dNormActivation(%s)", options.toString());
     }
 
     @Override
