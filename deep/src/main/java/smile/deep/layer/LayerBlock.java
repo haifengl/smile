@@ -54,6 +54,14 @@ public abstract class LayerBlock implements Layer {
     }
 
     /**
+     * Returns true if the layer is in training mode.
+     * @return true if the layer is in training mode.
+     */
+    public boolean isTraining() {
+        return module.is_training();
+    }
+
+    /**
      * Returns the PyTorch Module object.
      * @return the PyTorch Module object.
      */
