@@ -19,9 +19,10 @@ package smile.vision;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -52,11 +53,8 @@ public class EfficientNetTest {
     public void test() throws IOException {
         Device device = Device.preferredDevice();
         device.setDefaultDevice();
-        var enet = new EfficientNet(EfficientNet.V2S, 0.5);
-        System.out.println(enet);
 
-        var model = new VisionModel(enet, EfficientNet.V2STransform);
-        model.load("deep/src/universal/models/efficientnet_v2_s.pt");
+        var model = EfficientNet.V2S();
         model.eval();
         model.to(device);
 
@@ -64,16 +62,27 @@ public class EfficientNetTest {
         //var output = model.forward(example);
 
         var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
-        var rorschach = ImageIO.read(new File("deep/src/universal/data/image/Rorschach.jpg"));
-        var output = model.forward(lenna);
-        var topk = output.topk(5);
-        topk._1().print();
-        topk._2().print();
-        System.out.println(ImageNet.labels[751]);
-        System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
-        System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
-        System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
-        System.out.println(ImageNet.labels[topk._2().getInt(0, 3)]);
-        System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);
+        var panda = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
+        try {
+            // This creates a Guard object.
+            Tensor.disableGrad();
+            long startTime = System.nanoTime();
+            var output = model.forward(panda);
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+            System.out.println("Elapsed time: " + duration + "ms");
+            /*
+            var topk = output.topk(5);
+            topk._1().print();
+            topk._2().print();
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 3)]);
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);*/
+        } finally {
+            // Release Guard object
+            Tensor.enableGrad();
+        }
     }
 }

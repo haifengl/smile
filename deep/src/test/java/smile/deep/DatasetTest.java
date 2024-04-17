@@ -25,6 +25,7 @@ import smile.deep.metric.Averaging;
 import smile.deep.metric.Precision;
 import smile.deep.metric.Recall;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
 import smile.io.Read;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
@@ -75,19 +76,25 @@ public class DatasetTest {
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset);
-        Map<String, Double> metrics = net.eval(dataset,
-                new Accuracy(),
-                new Precision(Averaging.Micro),
-                new Precision(Averaging.Macro),
-                new Precision(Averaging.Weighted),
-                new Recall(Averaging.Micro),
-                new Recall(Averaging.Macro),
-                new Recall(Averaging.Weighted));
-        for (var entry : metrics.entrySet()) {
-            System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+        try {
+            // This creates a Guard object for inference mode.
+            Tensor.disableGrad();
+            Map<String, Double> metrics = net.eval(dataset,
+                    new Accuracy(),
+                    new Precision(Averaging.Micro),
+                    new Precision(Averaging.Macro),
+                    new Precision(Averaging.Weighted),
+                    new Recall(Averaging.Micro),
+                    new Recall(Averaging.Macro),
+                    new Recall(Averaging.Weighted));
+            for (var entry : metrics.entrySet()) {
+                System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+            }
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        } finally {
+            Tensor.enableGrad();
         }
-        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-        assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
     }
 }
