@@ -64,11 +64,16 @@ public class SqueezeExcitation extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor output = avgpool.forward(input);
-        output = conv1.forward(output);
-        output = delta.forward(output);
-        output = conv2.forward(output);
-        output = sigma.forward(output);
-        return output.mul(input);
+        Tensor t1 = avgpool.forward(input);
+        Tensor t2 = conv1.forward(t1);
+        t2 = delta.forward(t2);
+        Tensor t3 = conv2.forward(t2);
+        t3 = sigma.forward(t3);
+        Tensor output = t3.mul(input);
+        input.close();
+        t1.close();
+        t2.close();
+        t3.close();
+        return output;
     }
 }
