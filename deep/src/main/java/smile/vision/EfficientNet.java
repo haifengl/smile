@@ -17,6 +17,7 @@
 package smile.vision;
 
 import java.awt.Image;
+import java.util.function.IntFunction;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
@@ -39,27 +40,20 @@ public class EfficientNet extends LayerBlock {
      * Constructor.
      * @param invertedResidualSetting the network structure.
      * @param dropout the dropout probability.
-     */
-    public EfficientNet(MBConvConfig[] invertedResidualSetting, double dropout) {
-        this(invertedResidualSetting, dropout, 0.2, 1000, 1280);
-    }
-
-    /**
-     * Constructor.
-     * @param invertedResidualSetting the network structure.
-     * @param dropout the dropout probability.
      * @param stochasticDepthProb the stochastic depth probability.
      * @param numClasses the number of classes.
+     * @param norm the functor to create the normalization layer.
      * @param lastChannel the number of channels on the penultimate layer.
      */
-    public EfficientNet(MBConvConfig[] invertedResidualSetting, double dropout, double stochasticDepthProb, int numClasses, int lastChannel) {
+    public EfficientNet(MBConvConfig[] invertedResidualSetting, double dropout, double stochasticDepthProb, int numClasses,
+                        IntFunction<BatchNorm2dLayer> norm, int lastChannel) {
         super("EfficientNet");
         Layer[] layers = new Layer[invertedResidualSetting.length + 2];
 
         // building first layer
         int firstconvOutputChannels = invertedResidualSetting[0].inputChannels();
         layers[0] = new Conv2dNormActivation(new Conv2dNormActivation.Options(
-                3, firstconvOutputChannels, 3, 2, new SiLU(true)));
+                3, firstconvOutputChannels, 3, 2, norm, new SiLU(true)));
 
         // building inverted residual blocks
         int totalStageBlocks = 0;
@@ -88,7 +82,7 @@ public class EfficientNet extends LayerBlock {
                 // adjust stochastic depth probability based on the depth of the stage block
                 double sdprob = stochasticDepthProb * stageBlockId / totalStageBlocks;
                 logger.debug("Stage {} BlockId {}: {} sdprob = {}", j, stageBlockId, config, sdprob);
-                stage[j] = config.block().equals("MBConv") ? new MBConv(config, sdprob) : new FusedMBConv(config, sdprob);
+                stage[j] = config.block().equals("MBConv") ? new MBConv(config, sdprob, norm) : new FusedMBConv(config, sdprob, norm);
                 stageBlockId++;
             }
             layers[i] = new SequentialBlock(stage);
@@ -98,7 +92,7 @@ public class EfficientNet extends LayerBlock {
         int lastConvInputChannels = invertedResidualSetting[invertedResidualSetting.length-1].outputChannels();
         int lastConvOutputChannels = lastChannel > 0 ? lastChannel : 4 * lastConvInputChannels;
         layers[invertedResidualSetting.length + 1] = new Conv2dNormActivation(new Conv2dNormActivation.Options(
-                lastConvInputChannels, lastConvOutputChannels, 1, new SiLU(true)));
+                lastConvInputChannels, lastConvOutputChannels, 1, norm, new SiLU(true)));
 
         features = new SequentialBlock(layers);
         avgpool = new AdaptiveAvgPool2dLayer(1);
@@ -141,7 +135,8 @@ public class EfficientNet extends LayerBlock {
         };
         Transform transform = Transform.classification(384, 384);
 
-        var net = new EfficientNet(config, 0.2);
+        var net = new EfficientNet(config, 0.2, 0.2, 1000,
+                n -> new BatchNorm2dLayer(n, 1E-3, 0.1, true), 1280);
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
@@ -172,7 +167,8 @@ public class EfficientNet extends LayerBlock {
         };
         Transform transform = Transform.classification(480, 480);
 
-        var net = new EfficientNet(config, 0.3);
+        var net = new EfficientNet(config, 0.3, 0.2, 1000,
+                n -> new BatchNorm2dLayer(n, 1E-3, 0.1, true), 1280);
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
@@ -204,7 +200,8 @@ public class EfficientNet extends LayerBlock {
         Transform transform = Transform.classification(480, 480,
                 new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
 
-        var net = new EfficientNet(config, 0.4);
+        var net = new EfficientNet(config, 0.4, 0.2, 1000,
+                n -> new BatchNorm2dLayer(n, 1E-3, 0.1, true), 1280);
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
