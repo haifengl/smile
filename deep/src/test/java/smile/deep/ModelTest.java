@@ -77,21 +77,28 @@ public class ModelTest {
         Loss loss = Loss.nll();
         net.train(10, optimizer, loss, train, test, null);
 
-        // Inference mode
-        Map<String, Double> metrics = net.eval(test,
-                new Accuracy(),
-                new Precision(Averaging.Micro),
-                new Precision(Averaging.Macro),
-                new Precision(Averaging.Weighted),
-                new Recall(Averaging.Micro),
-                new Recall(Averaging.Macro),
-                new Recall(Averaging.Weighted));
-        for (var entry : metrics.entrySet()) {
-            System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+        double accuracy = 0.0;
+        try {
+            // This creates a Guard object for inference mode.
+            Tensor.disableGrad();
+            Map<String, Double> metrics = net.eval(test,
+                    new Accuracy(),
+                    new Precision(Averaging.Micro),
+                    new Precision(Averaging.Macro),
+                    new Precision(Averaging.Weighted),
+                    new Recall(Averaging.Micro),
+                    new Recall(Averaging.Macro),
+                    new Recall(Averaging.Weighted));
+            for (var entry : metrics.entrySet()) {
+                System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+            }
+            accuracy = metrics.get("Accuracy");
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        } finally {
+            Tensor.enableGrad();
         }
-        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-        assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-        assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
 
         // Serialize your model periodically as a checkpoint.
         net.save("mnist.pt");
@@ -104,6 +111,6 @@ public class ModelTest {
         );
 
         model.load("mnist.pt").to(device).eval();
-        assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+        assertEquals(accuracy, model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
     }
 }
