@@ -20,7 +20,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -92,15 +91,16 @@ public interface Transform {
     default BufferedImage crop(BufferedImage image, int width, int height, boolean deep) {
         int x = (image.getWidth() - width) / 2;
         int y = (image.getHeight() - height) / 2;
+        BufferedImage output = image.getSubimage(x, y, width, height);
+
         if (deep) {
-            // Get sub-raster, cast to writable and translate it to 0,0
-            WritableRaster data = ((WritableRaster) image.getData(new Rectangle(x, y, width, height)))
-                    .createWritableTranslatedChild(0, 0);
-            // Create new image with data
-            return new BufferedImage(image.getColorModel(), data, image.isAlphaPremultiplied(), null);
-        } else {
-            return image.getSubimage(x, y, width, height);
+            BufferedImage croppedImage = output;
+            output = new BufferedImage(croppedImage.getWidth(null),
+                    croppedImage.getHeight(null), BufferedImage.TYPE_3BYTE_BGR);
+            output.getGraphics().drawImage(croppedImage, 0, 0, null);
         }
+
+        return output;
     }
 
     /**
