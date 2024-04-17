@@ -85,11 +85,6 @@ public class Tensor implements AutoCloseable {
         return value.requires_grad();
     }
 
-    // TODO: may be replaced by a ScopedValue in JDK20+.
-    /** Thread-local guard. */
-    private static final ThreadLocal<NoGradGuard> noGradGuard =
-            ThreadLocal.withInitial(() -> new NoGradGuard());
-
     /**
      * Disables gradient calculation. Disabling gradient calculation is useful
      * for inference, when you are sure that you will not call backward.
@@ -102,16 +97,8 @@ public class Tensor implements AutoCloseable {
      * This context manager is thread-local; it will not affect computation in
      * other threads.
      */
-    public static void disableGrad() {
-        noGradGuard.get();
-    }
-
-    /**
-     * Enables gradient calculation.
-     */
-    public static void enableGrad() {
-        noGradGuard.get().deallocate();
-        noGradGuard.remove();
+    public static NoGradGuard noGradGuard() {
+        return new NoGradGuard();
     }
 
     /**

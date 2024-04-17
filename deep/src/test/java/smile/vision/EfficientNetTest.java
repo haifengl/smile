@@ -22,6 +22,8 @@ import javax.imageio.ImageIO;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
+import static smile.deep.tensor.Index.Ellipsis;
+import static smile.deep.tensor.Index.slice;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -63,15 +65,14 @@ public class EfficientNetTest {
 
         var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
         var panda = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
-        try {
-            // This creates a Guard object.
-            Tensor.disableGrad();
+        try (var guard = Tensor.noGradGuard()) {
             long startTime = System.nanoTime();
             var output = model.forward(panda);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
             System.out.println("Elapsed time: " + duration + "ms");
-            /*
+            output.get(Ellipsis, slice(0,5)).print();
+
             var topk = output.topk(5);
             topk._1().print();
             topk._2().print();
@@ -79,10 +80,8 @@ public class EfficientNetTest {
             System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
             System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
             System.out.println(ImageNet.labels[topk._2().getInt(0, 3)]);
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);*/
-        } finally {
-            // Release Guard object
-            Tensor.enableGrad();
+            System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);
+            assertEquals(388, topk._2().getInt(0, 0));
         }
     }
 }
