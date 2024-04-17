@@ -16,6 +16,7 @@
  */
 package smile.vision;
 
+import java.util.function.IntFunction;
 import smile.deep.activation.ActivationFunction;
 import smile.deep.activation.ReLU;
 import smile.deep.layer.BatchNorm2dLayer;
@@ -43,25 +44,32 @@ public class Conv2dNormActivation extends SequentialBlock {
      * @param dilation controls the spacing between the kernel points.
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
+     * @param norm the functor to create the normalization layer.
      * @param activation the activation function.
      */
-    public record Options(int in, int out, int kernel, int stride, int padding, int dilation, int groups, ActivationFunction activation) {
+    public record Options(int in, int out, int kernel, int stride, int padding, int dilation, int groups,
+                          IntFunction<BatchNorm2dLayer> norm,
+                          ActivationFunction activation) {
         public Options {
             if (padding < 0) {
                 padding = (kernel - 1) / 2 * dilation;
             }
         }
 
-        public Options(int in, int out, int kernel, ActivationFunction activation) {
-            this(in, out, kernel, 1, activation);
+        public Options(int in, int out, int kernel) {
+            this(in, out, kernel, channels -> new BatchNorm2dLayer(channels), new ReLU(true));
         }
 
-        public Options(int in, int out, int kernel, int stride, ActivationFunction activation) {
-            this(in, out, kernel, stride, 1, activation);
+        public Options(int in, int out, int kernel, IntFunction<BatchNorm2dLayer> norm, ActivationFunction activation) {
+            this(in, out, kernel, 1, norm, activation);
         }
 
-        public Options(int in, int out, int kernel, int stride, int groups, ActivationFunction activation) {
-            this(in, out, kernel, stride, -1, 1, groups, activation);
+        public Options(int in, int out, int kernel, int stride, IntFunction<BatchNorm2dLayer> norm, ActivationFunction activation) {
+            this(in, out, kernel, stride, 1, norm, activation);
+        }
+
+        public Options(int in, int out, int kernel, int stride, int groups, IntFunction<BatchNorm2dLayer> norm, ActivationFunction activation) {
+            this(in, out, kernel, stride, -1, 1, groups, norm, activation);
         }
     }
 
@@ -73,7 +81,7 @@ public class Conv2dNormActivation extends SequentialBlock {
 
         this.conv = new Conv2dLayer(options.in, options.out, options.kernel, options.stride, options.padding,
                 options.dilation, options.groups, false, "zeros");
-        this.norm = new BatchNorm2dLayer(options.out);
+        this.norm = options.norm.apply(options.out);
         this.activation = options.activation;
         add(conv);
         add(norm);
@@ -84,10 +92,16 @@ public class Conv2dNormActivation extends SequentialBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor output = conv.forward(input);
-        output = norm.forward(output);
+        Tensor t1 = conv.forward(input);
+        Tensor t2 = norm.forward(t1);
+        t1.close();
+
+        Tensor output = t2;
         if (activation != null) {
-            output = activation.apply(output);
+            output = activation.apply(t2);
+            if (!activation.isInplace()) {
+                t2.close();
+            }
         }
         return output;
     }
