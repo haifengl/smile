@@ -38,23 +38,23 @@ public class BatchNorm2dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param c the number of input channels in (N,C,H,W).
      */
-    public BatchNorm2dLayer(int in) {
-        this(in, 1E-05, 0.1, true);
+    public BatchNorm2dLayer(int c) {
+        this(c, 1E-05, 0.1, true);
     }
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param c the number of input channels in (N,C,H,W).
      * @param eps a value added to the denominator for numerical stability.
      * @param momentum the value used for the running_mean and running_var
      *                computation. Can be set to 0.0 for cumulative moving average
      *                (i.e. simple average).
      * @param affine when set to true, this layer has learnable affine parameters.
      */
-    public BatchNorm2dLayer(int in, double eps, double momentum, boolean affine) {
-        this.options = new BatchNormOptions(in);
+    public BatchNorm2dLayer(int c, double eps, double momentum, boolean affine) {
+        this.options = new BatchNormOptions(c);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);
