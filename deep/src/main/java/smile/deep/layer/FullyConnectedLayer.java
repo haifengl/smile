@@ -84,13 +84,23 @@ public class FullyConnectedLayer implements Layer {
         if (x.dim() > 1) {
             x = x.reshape(x.size(0), in);
         }
-        x = module.forward(x);
+
+        Tensor output = new Tensor(module.forward(x));
+
         if (activation != null) {
-            x = activation.apply(x);
+            Tensor temp = output;
+            output = activation.forward(output);
+            if (!activation.isInplace()) {
+                temp.close();
+            }
         }
-        if (dropout > 0.0) {
-            x = torch.dropout(x, dropout, module.is_training());
+
+        if (module.is_training() && dropout > 0.0) {
+            Tensor temp = output;
+            output = new Tensor(torch.dropout(output.asTorch(), dropout, true));
+            temp.close();
         }
-        return new Tensor(x);
+
+        return output;
     }
 }
