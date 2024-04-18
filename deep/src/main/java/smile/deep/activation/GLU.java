@@ -35,6 +35,6 @@ public class GLU extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new smile.deep.tensor.Tensor(torch.glu(x.asTorch()));
+        return new Tensor(torch.glu(x.asTorch()));
     }
 }

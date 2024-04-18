@@ -35,6 +35,6 @@ public class LogSoftmax extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new smile.deep.tensor.Tensor(torch.log_softmax(x.asTorch(), 1));
+        return new Tensor(torch.log_softmax(x.asTorch(), 1));
     }
 }

@@ -35,12 +35,13 @@ public class SiLU extends ActivationFunction {
     }
 
     @Override
-    public Tensor forward(Tensor x) {
-        if (inplace) {
-            torch.silu_(x.asTorch());
-            return x;
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!isTraining() && inplace) {
+            torch.silu_(x);
+            return input;
         } else {
-            return new Tensor(torch.silu(x.asTorch()));
+            return new Tensor(torch.silu(x));
         }
     }
 }
