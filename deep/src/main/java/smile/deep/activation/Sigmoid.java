@@ -35,12 +35,13 @@ public class Sigmoid extends ActivationFunction {
     }
 
     @Override
-    public Tensor forward(Tensor x) {
-        if (inplace) {
-            torch.sigmoid_(x.asTorch());
-            return x;
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!isTraining() && inplace) {
+            torch.sigmoid_(x);
+            return input;
         } else {
-            return new Tensor(torch.sigmoid(x.asTorch()));
+            return new Tensor(torch.sigmoid(x));
         }
     }
 }

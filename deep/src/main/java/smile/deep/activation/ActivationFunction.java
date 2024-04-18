@@ -27,7 +27,6 @@ import smile.deep.layer.Layer;
  * @author Haifeng Li
  */
 public abstract class ActivationFunction implements Layer, Serializable {
-
     private final Module module;
     /** The function name. */
     private final String name;
@@ -62,7 +61,7 @@ public abstract class ActivationFunction implements Layer, Serializable {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 }

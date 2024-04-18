@@ -36,7 +36,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class DropoutLayer implements Layer {
-    /** Implementation. */
     private final DropoutImpl module;
 
     /**
@@ -44,7 +43,7 @@ public class DropoutLayer implements Layer {
      * @param p the dropout probability.
      */
     public DropoutLayer(double p) {
-        this(p, true);
+        this(p, false);
     }
 
     /**
@@ -60,13 +59,13 @@ public class DropoutLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        if (!module.is_training()) return input;
+        if (!isTraining()) return input;
         return new Tensor(module.forward(input.asTorch()));
     }
 }

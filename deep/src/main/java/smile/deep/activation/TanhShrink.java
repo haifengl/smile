@@ -35,6 +35,6 @@ public class TanhShrink extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new smile.deep.tensor.Tensor(torch.tanhshrink(x.asTorch()));
+        return new Tensor(torch.tanhshrink(x.asTorch()));
     }
 }

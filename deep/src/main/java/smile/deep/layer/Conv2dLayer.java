@@ -50,13 +50,18 @@ public class Conv2dLayer implements Layer {
             throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular, but got " + paddingMode);
         }
 
-        // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
-        // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        LongPointer size = new LongPointer(kernel, kernel);
-        options = new Conv2dOptions(in, out, size);
-        options.stride().put(stride, stride);
-        options.padding().put(new LongPointer(padding, padding));
-        options.dilation().put(dilation, dilation);
+        // kernel_size, stride, padding, dilation are ExpandingArray in C++,
+        // which would "expand" to {x, y}. However, JavaCpp maps it to
+        // LongPointer. So we have to manually expand it.
+        LongPointer kernelPointer = new LongPointer(kernel, kernel);
+        LongPointer stridePointer = new LongPointer(stride, stride);
+        LongPointer paddingPointer = new LongPointer(padding, padding);
+        LongPointer dilationPointer = new LongPointer(dilation, dilation);
+
+        options = new Conv2dOptions(in, out, kernelPointer);
+        options.stride().put(stridePointer);
+        options.padding().put(paddingPointer);
+        options.dilation().put(dilationPointer);
         options.groups().put(groups);
         options.bias().put(bias);
         options.padding_mode().put(
@@ -68,6 +73,11 @@ public class Conv2dLayer implements Layer {
                 }
         );
         module = new Conv2dImpl(options);
+
+        kernelPointer.close();
+        stridePointer.close();
+        paddingPointer.close();
+        dilationPointer.close();
     }
 
     /**
@@ -100,11 +110,14 @@ public class Conv2dLayer implements Layer {
 
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        LongPointer size = new LongPointer(kernel, kernel);
-        options = new Conv2dOptions(in, out, size);
-        options.stride().put(stride, stride);
+        LongPointer kernelPointer = new LongPointer(kernel, kernel);
+        LongPointer stridePointer = new LongPointer(stride, stride);
+        LongPointer dilationPointer = new LongPointer(dilation, dilation);
+
+        options = new Conv2dOptions(in, out, kernelPointer);
+        options.stride().put(stridePointer);
         options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
-        options.dilation().put(dilation, dilation);
+        options.dilation().put(dilationPointer);
         options.groups().put(groups);
         options.bias().put(bias);
         options.padding_mode().put(
@@ -116,6 +129,10 @@ public class Conv2dLayer implements Layer {
                 }
         );
         module = new Conv2dImpl(options);
+
+        kernelPointer.close();
+        stridePointer.close();
+        dilationPointer.close();
     }
 
     /**
@@ -127,8 +144,8 @@ public class Conv2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override

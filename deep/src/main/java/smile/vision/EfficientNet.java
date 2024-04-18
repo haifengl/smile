@@ -18,6 +18,8 @@ package smile.vision;
 
 import java.awt.Image;
 import java.util.function.IntFunction;
+import org.bytedeco.pytorch.*;
+import org.bytedeco.pytorch.global.torch;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
@@ -108,13 +110,51 @@ public class EfficientNet extends LayerBlock {
         add("features", features);
         add("avgpool", avgpool);
         add("classifier", classifier);
+
+        // Initialization
+        var modules = asTorch().modules();
+        for (int i = 0; i < modules.size(); i++) {
+            var module = modules.get(i);
+            var name = module.name().getString();
+            switch (name) {
+                case "torch::nn::Conv2dImpl":
+                    var conv2d = module.asConv2d();
+                    torch.kaiming_normal_(conv2d.weight(), 0.0, new FanModeType(new kFanOut()), new Nonlinearity(new kLeakyReLU()));
+                    var bias = conv2d.bias();
+                    if (bias.defined()) {
+                        bias.detach().zero_();
+                    }
+                    break;
+                case "torch::nn::BatchNorm2dImpl":
+                    var batchNorm2d = module.asBatchNorm2d();
+                    torch.ones_(batchNorm2d.weight());
+                    batchNorm2d.bias().detach().zero_();
+                    break;
+                case "torch::nn::GroupNormImpl":
+                    var groupNorm = module.asGroupNorm();
+                    torch.ones_(groupNorm.weight());
+                    groupNorm.bias().detach().zero_();
+                    break;
+                case "torch::nn::LinearImpl":
+                    var linear = module.asLinear();
+                    double range = 1.0 / Math.sqrt(linear.options().out_features().get());
+                    torch.uniform_(linear.weight(), -range, range);
+                    torch.zeros_(linear.bias());
+                    break;
+            }
+        }
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor output = features.forward(input);
-        output = avgpool.forward(output);
-        return classifier.forward(output);
+        Tensor t1 = features.forward(input);
+        Tensor t2 = avgpool.forward(t1);
+        t1.close();
+        Tensor t3 = t2.flatten(1);
+        Tensor output = classifier.forward(t3);
+        t2.close();
+        t3.close();
+        return output;
     }
 
     /**

@@ -32,11 +32,12 @@ public class AvgPool2dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      */
-    public AvgPool2dLayer(int size) {
-        LongPointer kernel = new LongPointer(size, size);
-        this.module = new AvgPool2dImpl(kernel);
+    public AvgPool2dLayer(int kernel) {
+        LongPointer kernelPointer = new LongPointer(kernel, kernel);
+        this.module = new AvgPool2dImpl(kernelPointer);
+        kernelPointer.close();
     }
 
     /**
@@ -50,8 +51,8 @@ public class AvgPool2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override

@@ -48,12 +48,13 @@ public class LeakyReLU extends ActivationFunction {
     }
 
     @Override
-    public Tensor forward(Tensor x) {
-        if (inplace) {
-            torch.leaky_relu(x.asTorch(), negativeSlope, true);
-            return x;
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!isTraining() && inplace) {
+            torch.leaky_relu(x, negativeSlope, true);
+            return input;
         } else {
-            return new Tensor(torch.leaky_relu(x.asTorch(), negativeSlope, false));
+            return new Tensor(torch.leaky_relu(x, negativeSlope, false));
         }
     }
 }

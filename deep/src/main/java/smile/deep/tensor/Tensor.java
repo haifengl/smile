@@ -218,6 +218,42 @@ public class Tensor implements AutoCloseable {
         return new Tensor(value.reshape(shape));
     }
 
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * This function may return the original object, a view, or copy.
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten() {
+        return flatten(0);
+    }
+
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * Only dimensions starting with startDim and ending with endDim are
+     * flattened. The order of elements in input is unchanged.
+     * This function may return the original object, a view, or copy.
+     *
+     * @param startDim the first dim to flatten.
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten(int startDim) {
+        return new Tensor(value.flatten(startDim, -1));
+    }
+
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * Only dimensions starting with startDim and ending with endDim are
+     * flattened. The order of elements in input is unchanged.
+     * This function may return the original object, a view, or copy.
+     *
+     * @param startDim the first dim to flatten.
+     * @param endDim the last dim to flatten
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten(int startDim, int endDim) {
+        return new Tensor(value.flatten(startDim, endDim));
+    }
+
     /** Computes the gradients. */
     public void backward() {
         value.backward();

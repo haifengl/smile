@@ -33,10 +33,11 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public class PositionalEncoding implements Layer {
+    private final Module module = new Module("PositionalEncoding");
     /** The dropout probability. */
-    private double dropout;
+    private final double dropout;
     /** The positional encoding tensor. */
-    private Tensor pe;
+    private final Tensor pe;
 
     /**
      * Constructor.
@@ -54,13 +55,14 @@ public class PositionalEncoding implements Layer {
      */
     public PositionalEncoding(int dModel, double dropout, int maxLen) {
         this.dropout = dropout;
-        this.pe = Tensor.zeros(maxLen, dModel);
+        Tensor tensor = Tensor.zeros(maxLen, dModel);
         Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
         Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel);
         position.mul_(divTerm);
-        pe.put_(position.sin(), Colon, slice(0, null, 2));
-        pe.put_(position.cos(), Colon, slice(1, null, 2));
-        pe = pe.unsqueeze(0).transpose(0, 1);
+        tensor.put_(position.sin(), Colon, slice(0, null, 2));
+        tensor.put_(position.cos(), Colon, slice(1, null, 2));
+        pe = tensor.unsqueeze(0).transpose(0, 1);
+        module.register_buffer("pe", pe.asTorch());
     }
 
     @Override
@@ -74,8 +76,8 @@ public class PositionalEncoding implements Layer {
     }
 
     @Override
-    public void register(String name, Module block) {
-        block.register_buffer(name, pe.asTorch());
+    public Module asTorch() {
+        return module;
     }
 
     /**
