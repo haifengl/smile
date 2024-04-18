@@ -121,21 +121,19 @@ public class EfficientNet extends LayerBlock {
                     var conv2d = module.asConv2d();
                     torch.kaiming_normal_(conv2d.weight(), 0.0, new FanModeType(new kFanOut()), new Nonlinearity(new kLeakyReLU()));
                     var bias = conv2d.bias();
-                    if (torch.numel(bias) > 0) {
-                        // RuntimeException: a leaf Variable that requires grad is being used in an in-place operation.
-                        // torch.zero_(bias);
+                    if (bias.defined()) {
+                        bias.detach().zero_();
                     }
                     break;
                 case "torch::nn::BatchNorm2dImpl":
                     var batchNorm2d = module.asBatchNorm2d();
                     torch.ones_(batchNorm2d.weight());
-                    // RuntimeException: a leaf Variable that requires grad is being used in an in-place operation.
-                    // torch.zero_(batchNorm2d.bias());
+                    batchNorm2d.bias().detach().zero_();
                     break;
                 case "torch::nn::GroupNormImpl":
                     var groupNorm = module.asGroupNorm();
                     torch.ones_(groupNorm.weight());
-                    torch.zero_(groupNorm.bias());
+                    groupNorm.bias().detach().zero_();
                     break;
                 case "torch::nn::LinearImpl":
                     var linear = module.asLinear();
