@@ -17,8 +17,8 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Sigmoid Linear Unit activation function.
@@ -48,7 +48,12 @@ public class LeakyReLU extends ActivationFunction {
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.leaky_relu(x, negativeSlope, isInplace());
+    public Tensor forward(Tensor x) {
+        if (inplace) {
+            torch.leaky_relu(x.asTorch(), negativeSlope, true);
+            return x;
+        } else {
+            return new Tensor(torch.leaky_relu(x.asTorch(), negativeSlope, false));
+        }
     }
 }
