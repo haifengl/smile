@@ -32,11 +32,12 @@ public class MaxPool2dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      */
-    public MaxPool2dLayer(int size) {
-        LongPointer kernel = new LongPointer(size, size);
-        this.module = new MaxPool2dImpl(kernel);
+    public MaxPool2dLayer(int kernel) {
+        LongPointer kernelPointer = new LongPointer(kernel, kernel);
+        this.module = new MaxPool2dImpl(kernelPointer);
+        kernelPointer.close();
     }
 
     /**

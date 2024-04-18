@@ -32,17 +32,13 @@ import smile.deep.tensor.Tensor;
  */
 public class AdaptiveAvgPool2dLayer implements Layer {
     private final AdaptiveAvgPool2dImpl module;
-    private final int height;
-    private final int width;
 
     /**
      * Constructor.
      * @param size the output size.
      */
     public AdaptiveAvgPool2dLayer(int size) {
-        this.height = size;
-        this.width = size;
-        this.module = new AdaptiveAvgPool2dImpl(new LongOptionalVector(new LongOptional(size), new LongOptional(size)).front());
+        this(size, size);
     }
 
     /**
@@ -51,11 +47,15 @@ public class AdaptiveAvgPool2dLayer implements Layer {
      * @param width the output width.
      */
     public AdaptiveAvgPool2dLayer(int height, int width) {
-        this.height = height;
-        this.width = width;
         // JavaCPP doesn't generate correct constructor.
         // https://github.com/bytedeco/javacpp-presets/issues/1492
-        this.module = new AdaptiveAvgPool2dImpl(new LongOptionalVector(new LongOptional(height), new LongOptional(width)).front());
+        var p1 = new LongOptional(height);
+        var p2 = new LongOptional(width);
+        var outputSize = new LongOptionalVector(p1, p2);
+        this.module = new AdaptiveAvgPool2dImpl(outputSize.front());
+        p1.close();
+        p2.close();
+        outputSize.close();
     }
 
     @Override
@@ -65,8 +65,6 @@ public class AdaptiveAvgPool2dLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        // return Tensor.of(module.forward(input.asTorch()));
-        // work around with functional API
-        return new Tensor(torch.adaptive_avg_pool2d(input.asTorch(), height, width));
+        return new Tensor(module.forward(input.asTorch()));
     }
 }
