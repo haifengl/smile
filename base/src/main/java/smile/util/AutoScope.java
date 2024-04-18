@@ -26,6 +26,7 @@ import java.util.LinkedList;
  * associated with that scope to be called.
  */
 public class AutoScope implements AutoCloseable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AutoScope.class);
     private List<AutoCloseable> resources = new LinkedList<>();
 
     /**
@@ -61,9 +62,13 @@ public class AutoScope implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         for (var resource : resources) {
-            resource.close();
+            try {
+                resource.close();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 }
