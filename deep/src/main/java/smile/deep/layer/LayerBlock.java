@@ -53,14 +53,6 @@ public abstract class LayerBlock implements Layer {
         this.module = module;
     }
 
-    /**
-     * Returns true if the layer is in training mode.
-     * @return true if the layer is in training mode.
-     */
-    public boolean isTraining() {
-        return module.is_training();
-    }
-
     @Override
     public Module asTorch() {
         return module;

@@ -18,8 +18,6 @@ package smile.deep.layer;
 
 import org.bytedeco.pytorch.LinearImpl;
 import org.bytedeco.pytorch.Module;
-import org.bytedeco.pytorch.global.torch;
-import smile.deep.activation.ActivationFunction;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -28,15 +26,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class FullyConnectedLayer implements Layer {
-    /** The number of input features. */
     private final int in;
-    /** The number of output features. */
-    private final int out;
-    /** The optional activation function. */
-    private final ActivationFunction activation;
-    /** The optional dropout probability. */
-    private final double dropout;
-    /** Implementation. */
     private final LinearImpl module;
 
     /**
@@ -45,31 +35,7 @@ public class FullyConnectedLayer implements Layer {
      * @param out the number of output features.
      */
     public FullyConnectedLayer(int in, int out) {
-        this(in, out, null, 0.0);
-    }
-
-    /**
-     * Constructor.
-     * @param in the number of input features.
-     * @param out the number of output features.
-     * @param activation the non-linear activation function.
-     */
-    public FullyConnectedLayer(int in, int out, ActivationFunction activation) {
-        this(in, out, activation, 0.0);
-    }
-
-    /**
-     * Constructor.
-     * @param in the number of input features.
-     * @param out the number of output features.
-     * @param activation the non-linear activation function.
-     * @param dropout the optional dropout probability.
-     */
-    public FullyConnectedLayer(int in, int out, ActivationFunction activation, double dropout) {
         this.in = in;
-        this.out = out;
-        this.activation = activation;
-        this.dropout = dropout;
         this.module = new LinearImpl(in, out);
     }
 
@@ -85,22 +51,6 @@ public class FullyConnectedLayer implements Layer {
             x = x.reshape(x.size(0), in);
         }
 
-        Tensor output = new Tensor(module.forward(x));
-
-        if (activation != null) {
-            Tensor temp = output;
-            output = activation.forward(output);
-            if (!activation.isInplace()) {
-                temp.close();
-            }
-        }
-
-        if (module.is_training() && dropout > 0.0) {
-            Tensor temp = output;
-            output = new Tensor(torch.dropout(output.asTorch(), dropout, true));
-            temp.close();
-        }
-
-        return output;
+        return new Tensor(module.forward(x));
     }
 }

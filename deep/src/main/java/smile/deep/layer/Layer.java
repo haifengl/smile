@@ -41,6 +41,14 @@ public interface Layer {
     Module asTorch();
 
     /**
+     * Returns true if the layer is in training mode.
+     * @return true if the layer is in training mode.
+     */
+    default boolean isTraining() {
+        return asTorch().is_training();
+    }
+
+    /**
      * Returns a linear fully connected layer.
      * @param in the number of input features.
      * @param out the number of output features.
@@ -56,8 +64,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer relu(int in, int out) {
-        return relu(in, out, 0.0);
+    static SequentialBlock relu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new ReLU(true)
+        );
     }
 
     /**
@@ -67,29 +78,44 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer relu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new ReLU(true), dropout);
+    static SequentialBlock relu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new ReLU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
      * Returns a fully connected layer with leaky ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
+     * @param negativeSlope Controls the angle of the negative slope in leaky ReLU,
+     *                     which is used for negative input values.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer leaky(int in, int out) {
-        return leaky(in, out, 0.0);
+    static SequentialBlock leaky(int in, int out, double negativeSlope) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LeakyReLU(negativeSlope, true)
+        );
     }
 
     /**
      * Returns a fully connected layer with leaky ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
+     * @param negativeSlope Controls the angle of the negative slope in leaky ReLU,
+     *                     which is used for negative input values.
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer leaky(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new LeakyReLU(), dropout);
+    static SequentialBlock leaky(int in, int out, double negativeSlope, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LeakyReLU(negativeSlope, true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -98,8 +124,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer gelu(int in, int out) {
-        return silu(in, out, 0.0);
+    static SequentialBlock gelu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true)
+        );
     }
 
     /**
@@ -109,8 +138,12 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer gelu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new GELU(true), dropout);
+    static SequentialBlock gelu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -119,8 +152,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer silu(int in, int out) {
-        return silu(in, out, 0.0);
+    static SequentialBlock silu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true)
+        );
     }
 
     /**
@@ -130,8 +166,12 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer silu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new SiLU(true), dropout);
+    static SequentialBlock silu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new SiLU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -140,8 +180,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer tanh(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Tanh(true));
+    static SequentialBlock tanh(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Tanh(true)
+        );
     }
 
     /**
@@ -150,8 +193,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer sigmoid(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Sigmoid(true));
+    static SequentialBlock sigmoid(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Sigmoid(true)
+        );
     }
 
     /**
@@ -160,8 +206,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer logSigmoid(int in, int out) {
-        return new FullyConnectedLayer(in, out, new LogSigmoid());
+    static SequentialBlock logSigmoid(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LogSigmoid()
+        );
     }
 
     /**
@@ -170,8 +219,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer softmax(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Softmax());
+    static SequentialBlock softmax(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Softmax()
+        );
     }
 
     /**
@@ -180,8 +232,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer logSoftmax(int in, int out) {
-        return new FullyConnectedLayer(in, out, new LogSoftmax());
+    static SequentialBlock logSoftmax(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LogSoftmax()
+        );
     }
 
     /**
@@ -190,8 +245,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer tanhShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new TanhShrink());
+    static SequentialBlock tanhShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new TanhShrink()
+        );
     }
 
     /**
@@ -200,8 +258,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer softShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new SoftShrink());
+    static SequentialBlock softShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new SoftShrink()
+        );
     }
 
     /**
@@ -210,8 +271,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer hardShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new HardShrink());
+    static SequentialBlock hardShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new HardShrink()
+        );
     }
 
     /**

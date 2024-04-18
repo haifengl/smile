@@ -48,6 +48,6 @@ public class SoftShrink extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new smile.deep.tensor.Tensor(torch.softshrink(x.asTorch(), lambda));
+        return new Tensor(torch.softshrink(x.asTorch(), lambda));
     }
 }
