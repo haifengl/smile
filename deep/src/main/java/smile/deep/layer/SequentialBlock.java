@@ -19,6 +19,7 @@ package smile.deep.layer;
 import java.util.ArrayList;
 import java.util.List;
 import smile.deep.tensor.Tensor;
+import smile.util.AutoScope;
 
 /**
  * A block of sequential layers. Layers will be added to it in the order
@@ -72,20 +73,14 @@ public class SequentialBlock extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        ArrayList<Tensor> list = new ArrayList<>(layers.size());
-        Tensor output = input;
-        for (Layer layer : layers) {
-            output = layer.forward(output);
-            list.add(output);
-        }
-
-        if (!isTraining()) {
-            for (var tensor : list) {
-                if (tensor != output) {
-                    tensor.close();
-                }
+        try (var scope = new AutoScope()) {
+            Tensor output = input;
+            for (int i = 0; i < layers.size(); i++) {
+                output = layers.get(i).forward(output);
+                scope.attach(output);
             }
+            scope.detach(output);
+            return output;
         }
-        return output;
     }
 }
