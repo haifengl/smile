@@ -54,9 +54,8 @@ public class SequentialBlock extends LayerBlock {
      */
     public SequentialBlock(Layer... layers) {
         super("Sequential");
-        for (int i = 0; i < layers.length; i++) {
-            this.layers.add(layers[i]);
-            layers[i].register(Integer.toString(i), asTorch());
+        for (var layer : layers) {
+            add(layer);
         }
     }
 
@@ -66,7 +65,7 @@ public class SequentialBlock extends LayerBlock {
      * @return this object.
      */
     public SequentialBlock add(Layer layer) {
-        layer.register(Integer.toString(layers.size()), asTorch());
+        super.add(Integer.toString(layers.size()), layer);
         layers.add(layer);
         return this;
     }

@@ -27,28 +27,18 @@ import smile.deep.tensor.Tensor;
  */
 public interface Layer {
     /**
-     * Registers this layer to a parent layer block.
-     * @param name the name of this layer.
-     * @param parent the parent layer block.
-     */
-    default void register(String name, LayerBlock parent) {
-        register(name, parent.asTorch());
-    }
-
-    /**
-     * Registers this layer to a parent module.
-     * @param name the name of this layer.
-     * @param parent the parent module.
-     */
-    void register(String name, Module parent);
-
-    /**
      * Forward propagation (or forward pass) through the layer.
      *
      * @param input the input tensor.
      * @return the output tensor.
      */
     Tensor forward(Tensor input);
+
+    /**
+     * Returns the PyTorch Module object.
+     * @return the PyTorch Module object.
+     */
+    Module asTorch();
 
     /**
      * Returns a linear fully connected layer.

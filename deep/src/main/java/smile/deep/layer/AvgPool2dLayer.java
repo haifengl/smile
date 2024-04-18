@@ -51,8 +51,8 @@ public class AvgPool2dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
