@@ -64,17 +64,39 @@ public class EfficientNetTest {
         var panda = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
 
         try (var guard = Tensor.noGradGuard()) {
+            // https://discuss.pytorch.org/t/libtorchs-cpu-inference-is-much-slower-on-windows-than-on-linux/166194/2
+            // The first iteration(s) are slow due to multiple reasons:
+            //
+            // The very first CUDA call (it could be a tensor creation etc.)
+            // is creating the CUDA context, which loads the driver etc.
+            // In older CUDA versions (<11.7) all kernels for your GPU
+            // architecture were also directly loaded into the context,
+            // which takes time and uses memory. Since CUDA 11.7 PyTorch has
+            // enabled "lazy module loading", which will only load the called
+            // kernel into the context if needed. This will reduce the startup
+            // time as well as the memory usage significantly.
+            //
+            // The first iterations of your actual workload need to allocate
+            // new memory, which will then be reused through the CUDACachingAllocator.
+            // However, the initial cudaMalloc calls are also "expensive" (compared
+            // to just reusing the already allocated memory) and you would thus also
+            // see a slow iteration time until your workload reached the peak memory
+            // and is able to reuse the GPU memory. Note that new cudaMalloc calls
+            // could of course still happen during the training e.g. if your input
+            // size increases etc.
+            //
+            // If you are using conv layers and are allowing cuDNN to benchmark valid
+            // kernels and select the fastest one (via torch.backends.cudnn.benchmark = True)
+            // the profiling and kernel selection for each new workload (i.e. new input shape,
+            // new dtype etc. to the conv layer) will also see an overhead.
             long startTime = System.nanoTime();
             var output = model.forward(panda);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
             System.out.println("Elapsed time: " + duration + "ms");
-            output.get(Ellipsis, slice(0,5)).print();
 
             var topk = output.topk(5);
             topk._2().to(Device.CPU());
-            //topk._1().print();
-            topk._2().print();
             System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
             System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
             System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
