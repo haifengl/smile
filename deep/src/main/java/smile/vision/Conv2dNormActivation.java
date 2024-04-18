@@ -105,7 +105,7 @@ public class Conv2dNormActivation extends SequentialBlock {
 
         Tensor output = t2;
         if (activation != null) {
-            output = activation.apply(t2);
+            output = activation.forward(t2);
             if (!activation.isInplace()) {
                 t2.close();
             }

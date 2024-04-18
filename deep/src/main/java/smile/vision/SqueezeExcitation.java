@@ -66,14 +66,17 @@ public class SqueezeExcitation extends LayerBlock {
     public Tensor forward(Tensor input) {
         Tensor t1 = avgpool.forward(input);
         Tensor t2 = conv1.forward(t1);
+        t1.close();
+
         t2 = delta.forward(t2);
         Tensor t3 = conv2.forward(t2);
+        t2.close();
+
         t3 = sigma.forward(t3);
         Tensor output = t3.mul(input);
-        input.close();
-        t1.close();
-        t2.close();
         t3.close();
+        input.close();
+
         return output;
     }
 }
