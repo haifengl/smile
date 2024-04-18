@@ -61,17 +61,9 @@ public abstract class LayerBlock implements Layer {
         return module.is_training();
     }
 
-    /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
-     */
+    @Override
     public Module asTorch() {
         return module;
-    }
-
-    @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
     }
 
     @Override
@@ -117,8 +109,7 @@ public abstract class LayerBlock implements Layer {
      * @return this object.
      */
     public LayerBlock add(String name, Layer layer) {
-        layer.register(name, module);
-        return this;
+        return add(name, layer.asTorch());
     }
 
     /**

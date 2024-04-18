@@ -67,8 +67,8 @@ public class EmbeddingLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, new EmbeddingImpl(numTokens, dim));
+    public Module asTorch() {
+        return module;
     }
 
     @Override
