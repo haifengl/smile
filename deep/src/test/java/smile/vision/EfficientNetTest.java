@@ -105,7 +105,7 @@ public class EfficientNetTest {
             topk._2().to(Device.CPU());
             String[] images = {"Lenna", "Panda"};
             for (int i = 0; i < 2; i++) {
-                System.out.format("======== %s ========%n", images[i]);
+                System.out.println("======== " + images[i] + " ========");
                 for (int j = 0; j < 5; j++) {
                     System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
                 }

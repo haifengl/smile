@@ -18,6 +18,8 @@ package smile.vision;
 
 import java.awt.Image;
 import java.util.function.IntFunction;
+import org.bytedeco.pytorch.*;
+import org.bytedeco.pytorch.global.torch;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
@@ -108,6 +110,41 @@ public class EfficientNet extends LayerBlock {
         add("features", features);
         add("avgpool", avgpool);
         add("classifier", classifier);
+
+        // Initialization
+        var modules = asTorch().modules();
+        for (int i = 0; i < modules.size(); i++) {
+            var module = modules.get(i);
+            var name = module.name().getString();
+            switch (name) {
+                case "torch::nn::Conv2dImpl":
+                    var conv2d = module.asConv2d();
+                    torch.kaiming_normal_(conv2d.weight(), 0.0, new FanModeType(new kFanOut()), new Nonlinearity(new kLeakyReLU()));
+                    var bias = conv2d.bias();
+                    if (torch.numel(bias) > 0) {
+                        // RuntimeException: a leaf Variable that requires grad is being used in an in-place operation.
+                        // torch.zero_(bias);
+                    }
+                    break;
+                case "torch::nn::BatchNorm2dImpl":
+                    var batchNorm2d = module.asBatchNorm2d();
+                    torch.ones_(batchNorm2d.weight());
+                    // RuntimeException: a leaf Variable that requires grad is being used in an in-place operation.
+                    // torch.zero_(batchNorm2d.bias());
+                    break;
+                case "torch::nn::GroupNormImpl":
+                    var groupNorm = module.asGroupNorm();
+                    torch.ones_(groupNorm.weight());
+                    torch.zero_(groupNorm.bias());
+                    break;
+                case "torch::nn::LinearImpl":
+                    var linear = module.asLinear();
+                    double range = 1.0 / Math.sqrt(linear.options().out_features().get());
+                    torch.uniform_(linear.weight(), -range, range);
+                    torch.zeros_(linear.bias());
+                    break;
+            }
+        }
     }
 
     @Override
