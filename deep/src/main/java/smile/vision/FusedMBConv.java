@@ -82,7 +82,7 @@ public class FusedMBConv extends LayerBlock {
         }
 
         if (!block.isTraining()) {
-            // System.gc();
+            System.gc();
             input.close();
         }
 

@@ -33,6 +33,6 @@ public record SampleBatch(Tensor data, Tensor target) {
      * @param target the sample labels.
      */
     SampleBatch(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
-        this(Tensor.of(data), Tensor.of(target));
+        this(new Tensor(data), new Tensor(target));
     }
 }

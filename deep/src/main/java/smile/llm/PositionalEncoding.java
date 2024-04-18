@@ -70,7 +70,7 @@ public class PositionalEncoding implements Layer {
                 Colon
         );
         Tensor xp = input.add(p);
-        return Tensor.of(torch.dropout(xp.asTorch(), dropout, true));
+        return new Tensor(torch.dropout(xp.asTorch(), dropout, true));
     }
 
     @Override

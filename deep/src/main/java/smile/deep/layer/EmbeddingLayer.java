@@ -78,6 +78,6 @@ public class EmbeddingLayer implements Layer {
         if (alpha != 1.0) {
             x.mul_(scale);
         }
-        return Tensor.of(x);
+        return new Tensor(x);
     }
 }
