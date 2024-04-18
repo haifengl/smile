@@ -110,6 +110,7 @@ public class Conv2dNormActivation extends SequentialBlock {
                 t2.close();
             }
         }
+
         return output;
     }
 }

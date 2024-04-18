@@ -35,6 +35,6 @@ public class LogSigmoid extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new smile.deep.tensor.Tensor(torch.log_sigmoid(x.asTorch()));
+        return new Tensor(torch.log_sigmoid(x.asTorch()));
     }
 }

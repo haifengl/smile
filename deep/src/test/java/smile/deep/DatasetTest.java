@@ -67,6 +67,7 @@ public class DatasetTest {
                 Layer.logSoftmax(32, 10))
         );
 
+        System.out.println(net);
         net.to(device);
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();

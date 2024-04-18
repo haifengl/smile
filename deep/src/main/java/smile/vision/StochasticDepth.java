@@ -28,7 +28,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class StochasticDepth implements Layer {
-    /** A placeholder to get training mode. */
     private final Module module = new Module("StochasticDepth");
     private final double p;
     private final String mode;
@@ -51,8 +50,8 @@ public class StochasticDepth implements Layer {
     }
 
     @Override
-    public void register(String name, Module parent) {
-        parent.register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
