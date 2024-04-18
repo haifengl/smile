@@ -93,16 +93,25 @@ public class EfficientNetTest {
             var output = model.forward(panda);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-            System.out.println("Elapsed time: " + duration + "ms");
+            System.out.println("1st run elapsed time: " + duration + "ms");
+
+            startTime = System.nanoTime();
+            output = model.forward(lenna, panda);
+            endTime = System.nanoTime();
+            duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+            System.out.println("2nd run elapsed time: " + duration + "ms");
 
             var topk = output.topk(5);
             topk._2().to(Device.CPU());
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 2)]);
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 3)]);
-            System.out.println(ImageNet.labels[topk._2().getInt(0, 4)]);
-            assertEquals(388, topk._2().getInt(0, 0));
+            String[] images = {"Lenna", "Panda"};
+            for (int i = 0; i < 2; i++) {
+                System.out.format("======== %s ========%n", images[i]);
+                for (int j = 0; j < 5; j++) {
+                    System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
+                }
+            }
+            assertEquals(515, topk._2().getInt(0, 0));
+            assertEquals(388, topk._2().getInt(1, 0));
         }
     }
 }
