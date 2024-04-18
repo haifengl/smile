@@ -16,6 +16,7 @@
  */
 package smile.deep.tensor;
 
+import java.util.Arrays;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
 import smile.util.Tuple2;
@@ -43,13 +44,23 @@ public class Tensor implements AutoCloseable {
     }
 
     @Override
+    public boolean equals(java.lang.Object other) {
+        if (other instanceof Tensor t) {
+            return value == t.value;
+        }
+        return false;
+    }
+
+    @Override
     public void close() {
-        value.close();
+        if (!value.isNull()) {
+            value.close();
+        }
     }
 
     @Override
     public String toString() {
-        return value.toString();
+        return String.format("%s%s", value, Arrays.toString(value.shape()));
     }
 
     @Override
