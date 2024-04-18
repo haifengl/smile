@@ -48,6 +48,8 @@ public class VisionModel extends Model {
      * @return the output tensor.
      */
     public Tensor forward(BufferedImage... images) {
-        return forward(transform.forward(images));
+        try (var input = transform.forward(images)) {
+            return forward(input);
+        }
     }
 }
