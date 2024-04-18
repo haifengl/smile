@@ -17,8 +17,8 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Log softmax activation function.
@@ -34,7 +34,7 @@ public class LogSoftmax extends ActivationFunction {
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.log_softmax(x, 1);
+    public Tensor forward(Tensor x) {
+        return new smile.deep.tensor.Tensor(torch.log_softmax(x.asTorch(), 1));
     }
 }

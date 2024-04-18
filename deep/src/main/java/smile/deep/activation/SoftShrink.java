@@ -17,8 +17,8 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Soft Shrink activation function.
@@ -47,7 +47,7 @@ public class SoftShrink extends ActivationFunction {
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.softshrink(x, lambda);
+    public Tensor forward(Tensor x) {
+        return new smile.deep.tensor.Tensor(torch.softshrink(x.asTorch(), lambda));
     }
 }

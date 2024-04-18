@@ -18,25 +18,21 @@
 package smile.deep.activation;
 
 import java.io.Serializable;
-import java.util.function.Function;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
-import smile.deep.tensor.Tensor;
 
 /**
  * The non-linear activation function.
  *
  * @author Haifeng Li
  */
-public abstract class ActivationFunction implements
-        Layer, Serializable,
-        Function<org.bytedeco.pytorch.Tensor, org.bytedeco.pytorch.Tensor> {
+public abstract class ActivationFunction implements Layer, Serializable {
 
     private final Module module;
     /** The function name. */
     private final String name;
     /** True if the operation executes in-place. */
-    private final boolean inplace;
+    final boolean inplace;
 
     /**
      * Constructor.
@@ -65,22 +61,8 @@ public abstract class ActivationFunction implements
         return inplace;
     }
 
-    /**
-     * Applies this function to the given argument.
-     * @param x a tensor.
-     * @return the output tensor.
-     */
-    public Tensor apply(Tensor x) {
-        return new Tensor(apply(x.asTorch()));
-    }
-
     @Override
     public void register(String name, Module parent) {
         parent.register_module(name, module);
-    }
-
-    @Override
-    public Tensor forward(Tensor x) {
-        return apply(x);
     }
 }
