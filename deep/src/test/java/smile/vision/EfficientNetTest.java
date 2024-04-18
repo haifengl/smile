@@ -60,11 +60,9 @@ public class EfficientNetTest {
         model.eval();
         model.to(device);
 
-        //var example = Tensor.rand(2, 3, 384, 384);
-        //var output = model.forward(example);
-
         var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
         var panda = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
+
         try (var guard = Tensor.noGradGuard()) {
             long startTime = System.nanoTime();
             var output = model.forward(panda);
@@ -74,7 +72,8 @@ public class EfficientNetTest {
             output.get(Ellipsis, slice(0,5)).print();
 
             var topk = output.topk(5);
-            topk._1().print();
+            topk._2().to(Device.CPU());
+            //topk._1().print();
             topk._2().print();
             System.out.println(ImageNet.labels[topk._2().getInt(0, 0)]);
             System.out.println(ImageNet.labels[topk._2().getInt(0, 1)]);

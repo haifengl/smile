@@ -31,7 +31,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss l1() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.l1_loss(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.l1_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -39,7 +39,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss mse() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.mse_loss(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.mse_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -47,7 +47,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss nll() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.nll_loss(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.nll_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -55,7 +55,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss crossEntropy() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -63,7 +63,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss hingeEmbedding() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -71,7 +71,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss kl() {
-        return (Tensor input, Tensor target) -> Tensor.of(torch.kl_div(input.asTorch(), target.asTorch()));
+        return (Tensor input, Tensor target) -> new Tensor(torch.kl_div(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -82,7 +82,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss.
      */
     static Tensor marginRanking(Tensor input1, Tensor input2, Tensor target) {
-        return Tensor.of(torch.margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
+        return new Tensor(torch.margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
     }
 
     /**
@@ -93,6 +93,6 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss.
      */
     static Tensor tripleMarginRanking(Tensor anchor, Tensor positive, Tensor negative) {
-        return Tensor.of(torch.triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
+        return new Tensor(torch.triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
     }
 }

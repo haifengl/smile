@@ -56,6 +56,6 @@ public class MaxPool2dLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        return Tensor.of(module.forward(input.asTorch()));
+        return new Tensor(module.forward(input.asTorch()));
     }
 }

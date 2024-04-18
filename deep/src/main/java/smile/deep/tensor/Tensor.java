@@ -33,7 +33,7 @@ public class Tensor implements AutoCloseable {
      * Constructor.
      * @param tensor PyTorch Tensor object.
      */
-    Tensor(org.bytedeco.pytorch.Tensor tensor) {
+    public Tensor(org.bytedeco.pytorch.Tensor tensor) {
         this.value = tensor;
     }
 
@@ -45,7 +45,6 @@ public class Tensor implements AutoCloseable {
     @Override
     public void close() {
         value.close();
-        //value.deallocate();
     }
 
     @Override
@@ -55,7 +54,7 @@ public class Tensor implements AutoCloseable {
 
     @Override
     public Tensor clone() {
-        return Tensor.of(value.to());
+        return new Tensor(value.detach().clone());
     }
 
     /**
@@ -108,7 +107,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor that doesn't require gradient.
      */
     public Tensor detach() {
-        return Tensor.of(value.detach());
+        return new Tensor(value.detach());
     }
 
     /**
@@ -126,7 +125,7 @@ public class Tensor implements AutoCloseable {
      * @return The cloned tensor.
      */
     public Tensor to(Device device) {
-        return Tensor.of(value.to(device.value, value.dtype()));
+        return new Tensor(value.to(device.value, value.dtype()));
     }
 
     /**
@@ -136,7 +135,7 @@ public class Tensor implements AutoCloseable {
      * @return The cloned tensor.
      */
     public Tensor to(Device device, ScalarType dtype) {
-        return Tensor.of(value.to(device.value, dtype.value));
+        return new Tensor(value.to(device.value, dtype.value));
     }
 
     /**
@@ -205,7 +204,7 @@ public class Tensor implements AutoCloseable {
      * @return the tensor with the specified shape.
      */
     public Tensor reshape(long... shape) {
-        return Tensor.of(value.reshape(shape));
+        return new Tensor(value.reshape(shape));
     }
 
     /** Computes the gradients. */
@@ -249,7 +248,7 @@ public class Tensor implements AutoCloseable {
      * @return the permuted tensor.
      */
     public Tensor permute(long... dims) {
-        return Tensor.of(value.permute(dims));
+        return new Tensor(value.permute(dims));
     }
 
     /**
@@ -311,7 +310,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor put(Tensor source, Index... indices) {
-        return Tensor.of(value.index_put(indexList(indices), source.value));
+        return new Tensor(value.index_put(indexList(indices), source.value));
     }
 
     /**
@@ -321,7 +320,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor put(Tensor source, Tensor index) {
-        return Tensor.of(value.put(index.value, source.value));
+        return new Tensor(value.put(index.value, source.value));
     }
 
     /**
@@ -496,7 +495,7 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(int... indices) {
-        return Tensor.of(value.index(indexVector(indices)));
+        return new Tensor(value.index(indexVector(indices)));
     }
 
     /**
@@ -505,7 +504,7 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(long... indices) {
-        return Tensor.of(value.index(indexVector(indices)));
+        return new Tensor(value.index(indexVector(indices)));
     }
 
     /**
@@ -514,7 +513,7 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(Index... indices) {
-        return Tensor.of(value.index(indexVector(indices)));
+        return new Tensor(value.index(indexVector(indices)));
     }
 
     /**
@@ -524,7 +523,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor get(Tensor index) {
         TensorIndexVector indexVector = new TensorIndexVector(new TensorIndex(index.value));
-        return Tensor.of(value.index(indexVector));
+        return new Tensor(value.index(indexVector));
     }
 
     /**
@@ -709,7 +708,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor unsqueeze(long dim) {
-        return Tensor.of(value.unsqueeze(dim));
+        return new Tensor(value.unsqueeze(dim));
     }
 
     /**
@@ -734,7 +733,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor transpose(long dim0, long dim1) {
-        return Tensor.of(value.transpose(dim0, dim1));
+        return new Tensor(value.transpose(dim0, dim1));
     }
 
     /**
@@ -745,7 +744,7 @@ public class Tensor implements AutoCloseable {
      * @return the indices of the maximum value of a tensor across a dimension.
      */
     public Tensor argmax(int dim, boolean keepDim) {
-        return Tensor.of(value.argmax(new LongOptional(dim), keepDim));
+        return new Tensor(value.argmax(new LongOptional(dim), keepDim));
     }
 
     /**
@@ -756,7 +755,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tuple2<Tensor, Tensor> topk(int k) {
         var topk = value.topk(k);
-        return new Tuple2<>(Tensor.of(topk.get0()), Tensor.of(topk.get1()));
+        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
     }
 
     /**
@@ -770,7 +769,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tuple2<Tensor, Tensor> topk(int k, int dim, boolean largest, boolean sorted) {
         var topk = value.topk(k, dim, largest, sorted);
-        return new Tuple2<>(Tensor.of(topk.get0()), Tensor.of(topk.get1()));
+        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
     }
 
     /**
@@ -784,7 +783,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor where(Tensor condition, int input, int other) {
-        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
     }
 
     /**
@@ -798,7 +797,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor where(Tensor condition, double input, double other) {
-        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
     }
 
     /**
@@ -807,7 +806,7 @@ public class Tensor implements AutoCloseable {
      * @return the matrix product of two tensors.
      */
     public Tensor matmul(Tensor other) {
-        return Tensor.of(value.matmul(other.value));
+        return new Tensor(value.matmul(other.value));
     }
 
     /**
@@ -816,7 +815,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(int other) {
-        return Tensor.of(value.eq(new Scalar(other)));
+        return new Tensor(value.eq(new Scalar(other)));
     }
 
     /**
@@ -825,7 +824,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(double other) {
-        return Tensor.of(value.eq(new Scalar(other)));
+        return new Tensor(value.eq(new Scalar(other)));
     }
 
     /**
@@ -834,7 +833,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(Tensor other) {
-        return Tensor.of(value.eq(other.value));
+        return new Tensor(value.eq(other.value));
     }
 
     /**
@@ -843,7 +842,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(int other) {
-        return Tensor.of(value.ne(new Scalar(other)));
+        return new Tensor(value.ne(new Scalar(other)));
     }
 
     /**
@@ -852,7 +851,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(double other) {
-        return Tensor.of(value.ne(new Scalar(other)));
+        return new Tensor(value.ne(new Scalar(other)));
     }
 
     /**
@@ -861,7 +860,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(Tensor other) {
-        return Tensor.of(value.ne(other.value));
+        return new Tensor(value.ne(other.value));
     }
 
     /**
@@ -870,7 +869,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(double other) {
-        return Tensor.of(value.lt(new Scalar(other)));
+        return new Tensor(value.lt(new Scalar(other)));
     }
 
     /**
@@ -879,7 +878,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(int other) {
-        return Tensor.of(value.lt(new Scalar(other)));
+        return new Tensor(value.lt(new Scalar(other)));
     }
 
     /**
@@ -888,7 +887,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(Tensor other) {
-        return Tensor.of(value.lt(other.value));
+        return new Tensor(value.lt(other.value));
     }
 
     /**
@@ -897,7 +896,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(int other) {
-        return Tensor.of(value.le(new Scalar(other)));
+        return new Tensor(value.le(new Scalar(other)));
     }
 
     /**
@@ -906,7 +905,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(double other) {
-        return Tensor.of(value.le(new Scalar(other)));
+        return new Tensor(value.le(new Scalar(other)));
     }
 
     /**
@@ -915,7 +914,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(Tensor other) {
-        return Tensor.of(value.le(other.value));
+        return new Tensor(value.le(other.value));
     }
 
     /**
@@ -924,7 +923,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(int other) {
-        return Tensor.of(value.gt(new Scalar(other)));
+        return new Tensor(value.gt(new Scalar(other)));
     }
 
     /**
@@ -933,7 +932,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(double other) {
-        return Tensor.of(value.gt(new Scalar(other)));
+        return new Tensor(value.gt(new Scalar(other)));
     }
 
     /**
@@ -942,7 +941,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(Tensor other) {
-        return Tensor.of(value.gt(other.value));
+        return new Tensor(value.gt(other.value));
     }
 
     /**
@@ -951,7 +950,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(int other) {
-        return Tensor.of(value.ge(new Scalar(other)));
+        return new Tensor(value.ge(new Scalar(other)));
     }
 
     /**
@@ -960,7 +959,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(double other) {
-        return Tensor.of(value.ge(new Scalar(other)));
+        return new Tensor(value.ge(new Scalar(other)));
     }
 
     /**
@@ -969,7 +968,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(Tensor other) {
-        return Tensor.of(value.ge(other.value));
+        return new Tensor(value.ge(other.value));
     }
 
     /**
@@ -977,7 +976,7 @@ public class Tensor implements AutoCloseable {
      * @return the sum of all elements.
      */
     public Tensor sum() {
-        return Tensor.of(value.sum());
+        return new Tensor(value.sum());
     }
 
     /**
@@ -985,7 +984,7 @@ public class Tensor implements AutoCloseable {
      * @return the mean of all elements.
      */
     public Tensor mean() {
-        return Tensor.of(value.mean());
+        return new Tensor(value.mean());
     }
 
     /**
@@ -993,7 +992,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor exp() {
-        return Tensor.of(value.exp());
+        return new Tensor(value.exp());
     }
 
     /**
@@ -1001,7 +1000,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor exp_() {
-        return Tensor.of(value.exp_());
+        return new Tensor(value.exp_());
     }
 
     /**
@@ -1022,7 +1021,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor scatterReduce(int dim, Tensor index, Tensor source, String reduce) {
-        return Tensor.of(value.scatter_reduce(dim, index.value, source.value, reduce));
+        return new Tensor(value.scatter_reduce(dim, index.value, source.value, reduce));
     }
 
     /**
@@ -1055,7 +1054,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gather(int dim, Tensor index) {
-        return Tensor.of(value.gather(dim, index.value));
+        return new Tensor(value.gather(dim, index.value));
     }
 
     /**
@@ -1064,7 +1063,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(float other) {
-        return Tensor.of(value.add(new Scalar(other)));
+        return new Tensor(value.add(new Scalar(other)));
     }
 
     /**
@@ -1083,7 +1082,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(double other) {
-        return Tensor.of(value.add(new Scalar(other)));
+        return new Tensor(value.add(new Scalar(other)));
     }
 
     /**
@@ -1102,7 +1101,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(Tensor other) {
-        return Tensor.of(value.add(other.value));
+        return new Tensor(value.add(other.value));
     }
 
     /**
@@ -1122,7 +1121,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(Tensor other, double alpha) {
-        return Tensor.of(value.add(other.value, new Scalar(alpha)));
+        return new Tensor(value.add(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -1142,7 +1141,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(float other) {
-        return Tensor.of(value.sub(new Scalar(other)));
+        return new Tensor(value.sub(new Scalar(other)));
     }
 
     /**
@@ -1151,7 +1150,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub_(float other) {
-        return Tensor.of(value.sub(new Scalar(other)));
+        return new Tensor(value.sub(new Scalar(other)));
     }
 
     /**
@@ -1180,7 +1179,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other) {
-        return Tensor.of(value.sub(other.value));
+        return new Tensor(value.sub(other.value));
     }
 
     /**
@@ -1200,7 +1199,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other, double alpha) {
-        return Tensor.of(value.sub(other.value, new Scalar(alpha)));
+        return new Tensor(value.sub(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -1220,7 +1219,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(float other) {
-        return Tensor.of(value.mul(new Scalar(other)));
+        return new Tensor(value.mul(new Scalar(other)));
     }
 
     /**
@@ -1239,7 +1238,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(double other) {
-        return Tensor.of(value.mul(new Scalar(other)));
+        return new Tensor(value.mul(new Scalar(other)));
     }
 
     /**
@@ -1258,7 +1257,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(Tensor other) {
-        return Tensor.of(value.mul(other.value));
+        return new Tensor(value.mul(other.value));
     }
 
     /**
@@ -1277,7 +1276,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(float other) {
-        return Tensor.of(value.div(new Scalar(other)));
+        return new Tensor(value.div(new Scalar(other)));
     }
 
     /**
@@ -1296,7 +1295,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(double other) {
-        return Tensor.of(value.div(new Scalar(other)));
+        return new Tensor(value.div(new Scalar(other)));
     }
 
     /**
@@ -1315,7 +1314,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(Tensor other) {
-        return Tensor.of(value.div(other.value));
+        return new Tensor(value.div(other.value));
     }
 
     /**
@@ -1333,7 +1332,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the cosine of the elements of input.
      */
     public Tensor cos() {
-        return Tensor.of(value.cos());
+        return new Tensor(value.cos());
     }
 
     /**
@@ -1350,7 +1349,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the sine of the elements of input.
      */
     public Tensor sin() {
-        return Tensor.of(value.cos());
+        return new Tensor(value.cos());
     }
 
     /**
@@ -1367,7 +1366,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the arccosine of the elements of input.
      */
     public Tensor acos() {
-        return Tensor.of(value.acos());
+        return new Tensor(value.acos());
     }
 
     /**
@@ -1384,7 +1383,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the arcsine of the elements of input.
      */
     public Tensor asin() {
-        return Tensor.of(value.acos());
+        return new Tensor(value.acos());
     }
 
     /**
@@ -1402,7 +1401,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor of logical and results.
      */
     public Tensor and(Tensor other) {
-        return Tensor.of(value.logical_and(other.value));
+        return new Tensor(value.logical_and(other.value));
     }
 
     /**
@@ -1421,7 +1420,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor of logical and results.
      */
     public Tensor or(Tensor other) {
-        return Tensor.of(value.logical_or(other.value));
+        return new Tensor(value.logical_or(other.value));
     }
 
     /**
@@ -1442,7 +1441,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor after random dropouts.
      */
     public Tensor dropout(double p) {
-        return Tensor.of(torch.dropout(value, p, false));
+        return new Tensor(torch.dropout(value, p, false));
     }
 
     /**
@@ -1464,7 +1463,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public Tensor newZeros(long... shape) {
-        return Tensor.of(value.new_zeros(shape));
+        return new Tensor(value.new_zeros(shape));
     }
 
     /**
@@ -1474,7 +1473,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public Tensor newOnes(long... shape) {
-        return Tensor.of(value.new_ones(shape));
+        return new Tensor(value.new_ones(shape));
     }
 
     /**
@@ -1483,7 +1482,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor eye(long shape) {
-        return Tensor.of(torch.eye(shape));
+        return new Tensor(torch.eye(shape));
     }
 
     /**
@@ -1493,7 +1492,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor eye(Options options, long shape) {
-        return Tensor.of(torch.eye(shape, options.value));
+        return new Tensor(torch.eye(shape, options.value));
     }
 
     /**
@@ -1502,7 +1501,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor empty(long... shape) {
-        return Tensor.of(torch.empty(shape));
+        return new Tensor(torch.empty(shape));
     }
 
     /**
@@ -1512,7 +1511,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor empty(Options options, long... shape) {
-        return Tensor.of(torch.empty(shape, options.value, null));
+        return new Tensor(torch.empty(shape, options.value, null));
     }
 
     /**
@@ -1521,7 +1520,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor zeros(long... shape) {
-        return Tensor.of(torch.zeros(shape));
+        return new Tensor(torch.zeros(shape));
     }
 
     /**
@@ -1531,7 +1530,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor zeros(Options options, long... shape) {
-        return Tensor.of(torch.zeros(shape, options.value));
+        return new Tensor(torch.zeros(shape, options.value));
     }
 
     /**
@@ -1540,7 +1539,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor ones(long... shape) {
-        return Tensor.of(torch.ones(shape));
+        return new Tensor(torch.ones(shape));
     }
 
     /**
@@ -1550,7 +1549,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor ones(Options options, long... shape) {
-        return Tensor.of(torch.ones(shape, options.value));
+        return new Tensor(torch.ones(shape, options.value));
     }
 
     /**
@@ -1559,7 +1558,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor rand(long... shape) {
-        return Tensor.of(torch.rand(shape));
+        return new Tensor(torch.rand(shape));
     }
 
     /**
@@ -1569,7 +1568,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor rand(Options options, long... shape) {
-        return Tensor.of(torch.rand(shape, options.value));
+        return new Tensor(torch.rand(shape, options.value));
     }
 
     /**
@@ -1578,7 +1577,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor randn(long... shape) {
-        return Tensor.of(torch.randn(shape));
+        return new Tensor(torch.randn(shape));
     }
 
     /**
@@ -1588,7 +1587,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor randn(Options options, long... shape) {
-        return Tensor.of(torch.randn(shape, options.value));
+        return new Tensor(torch.randn(shape, options.value));
     }
 
     /**
@@ -1601,7 +1600,7 @@ public class Tensor implements AutoCloseable {
      * @return a 1-D tensor.
      */
     public static Tensor arange(int start, int end, int step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1614,7 +1613,7 @@ public class Tensor implements AutoCloseable {
      * @return a 1-D tensor.
      */
     public static Tensor arange(long start, long end, long step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1632,7 +1631,7 @@ public class Tensor implements AutoCloseable {
      * @return a 1-D tensor.
      */
     public static Tensor arange(float start, float end, float step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1650,7 +1649,7 @@ public class Tensor implements AutoCloseable {
      * @return a 1-D tensor.
      */
     public static Tensor arange(double start, double end, double step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1711,26 +1710,6 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor of(double[] data, long... shape) {
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
-    }
-
-    /**
-     * Returns a tensor with a PyTorch tensor object.
-     * @param tensor PyTorch tensor object.
-     * @return the created tensor.
-     */
-    public static Tensor of(org.bytedeco.pytorch.Tensor tensor) {
-        return new Tensor(tensor);
-    }
-
-    /**
-     * Creates a tensor instance.
-     * @param tensor PyTorch Tensor object.
-     * @param device the compute device of this Tensor.
-     * @param dtype the element data type of this Tensor.
-     * @return the tensor instance.
-     */
-    public static Tensor of(org.bytedeco.pytorch.Tensor tensor, Device device, ScalarType dtype) {
-        return new Tensor(tensor.to(device.value, dtype.value));
     }
 
     /**

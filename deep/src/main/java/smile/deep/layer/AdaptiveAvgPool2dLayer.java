@@ -67,6 +67,6 @@ public class AdaptiveAvgPool2dLayer implements Layer {
     public Tensor forward(Tensor input) {
         // return Tensor.of(module.forward(input.asTorch()));
         // work around with functional API
-        return Tensor.of(torch.adaptive_avg_pool2d(input.asTorch(), height, width));
+        return new Tensor(torch.adaptive_avg_pool2d(input.asTorch(), height, width));
     }
 }

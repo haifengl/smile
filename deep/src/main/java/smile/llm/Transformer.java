@@ -93,12 +93,12 @@ public class Transformer {
      * @return the log probability of prediction.
      */
     public Tensor forward(Tensor source) {
-        source = Tensor.of(embedding.forward(source.asTorch())).mul(Math.sqrt(options.dModel));
+        source = new Tensor(embedding.forward(source.asTorch())).mul(Math.sqrt(options.dModel));
         source = posEncoder.forward(source);
         org.bytedeco.pytorch.Tensor output = transformer.encoder().forward(source.asTorch());
         output = decoder.forward(output);
         output = torch.log_softmax(output, -1);
-        return Tensor.of(output);
+        return new Tensor(output);
     }
 
     /**

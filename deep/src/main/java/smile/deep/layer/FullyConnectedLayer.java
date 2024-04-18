@@ -91,6 +91,6 @@ public class FullyConnectedLayer implements Layer {
         if (dropout > 0.0) {
             x = torch.dropout(x, dropout, module.is_training());
         }
-        return Tensor.of(x);
+        return new Tensor(x);
     }
 }

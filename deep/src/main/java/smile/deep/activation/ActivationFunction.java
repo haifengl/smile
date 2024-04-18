@@ -71,7 +71,7 @@ public abstract class ActivationFunction implements
      * @return the output tensor.
      */
     public Tensor apply(Tensor x) {
-        return Tensor.of(apply(x.asTorch()));
+        return new Tensor(apply(x.asTorch()));
     }
 
     @Override

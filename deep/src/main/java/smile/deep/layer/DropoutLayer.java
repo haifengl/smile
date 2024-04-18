@@ -67,6 +67,6 @@ public class DropoutLayer implements Layer {
     @Override
     public Tensor forward(Tensor input) {
         if (!module.is_training()) return input;
-        return Tensor.of(module.forward(input.asTorch()));
+        return new Tensor(module.forward(input.asTorch()));
     }
 }
