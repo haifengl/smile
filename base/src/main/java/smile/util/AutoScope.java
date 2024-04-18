@@ -44,7 +44,9 @@ public class AutoScope implements AutoCloseable {
      */
     public AutoScope attach(AutoCloseable... resources) {
         for (var resource : resources) {
-            this.resources.add(resource);
+            if (!this.resources.contains(resource)) {
+                this.resources.add(resource);
+            }
         }
         return this;
     }
