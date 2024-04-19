@@ -62,15 +62,13 @@ public class PositionalEncoding implements Layer {
         tensor.put_(position.sin(), Colon, slice(0, null, 2));
         tensor.put_(position.cos(), Colon, slice(1, null, 2));
         pe = tensor.unsqueeze(0).transpose(0, 1);
+        pe.requireGrad(false);
         module.register_buffer("pe", pe.asTorch());
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor p = pe.get(
-                slice(null, input.size(0)),
-                Colon
-        );
+        Tensor p = pe.get(slice(null, input.size(0)), Colon);
         Tensor xp = input.add(p);
         return new Tensor(torch.dropout(xp.asTorch(), dropout, true));
     }

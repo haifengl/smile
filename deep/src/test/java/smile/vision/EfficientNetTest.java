@@ -22,8 +22,6 @@ import javax.imageio.ImageIO;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
-import static smile.deep.tensor.Index.Ellipsis;
-import static smile.deep.tensor.Index.slice;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
