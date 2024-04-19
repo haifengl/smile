@@ -23,6 +23,7 @@ import org.bytedeco.pytorch.global.torch;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
+import smile.vision.layer.*;
 import smile.vision.transform.Transform;
 
 /**
