@@ -16,55 +16,56 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.BatchNorm2dImpl;
-import org.bytedeco.pytorch.BatchNormOptions;
+import org.bytedeco.pytorch.GroupNormImpl;
+import org.bytedeco.pytorch.GroupNormOptions;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
- * A batch normalization layer that re-centers and normalizes the output
- * of one layer before feeding it to another. Centering and scaling the
- * intermediate tensors has a number of beneficial effects, such as allowing
- * higher learning rates without exploding/vanishing gradients.
+ * Group normalization. The input channels are separated into groups.
+ * The mean and standard-deviation are calculated separately over each
+ * group.
  *
  * @author Haifeng Li
  */
-public class BatchNorm2dLayer implements Layer {
+public class GroupNormLayer implements Layer {
     /** The layer configuration. */
-    private final BatchNormOptions options;
+    private final GroupNormOptions options;
     /** Implementation. */
-    private final BatchNorm2dImpl module;
+    private final GroupNormImpl module;
 
     /**
      * Constructor.
+     * @param groups the number of groups to separate the channels into.
+     *               The number of channels must be divisible by the number
+     *               of groups.
      * @param channels the number of input channels in (N,C,H,W).
      */
-    public BatchNorm2dLayer(int channels) {
-        this(channels, 1E-05, 0.1, true);
+    public GroupNormLayer(int groups, int channels) {
+        this(groups, channels, 1E-05, true);
     }
 
     /**
      * Constructor.
+     * @param groups the number of groups to separate the channels into.
+     *               The number of channels must be divisible by the number
+     *               of groups.
      * @param channels the number of input channels in (N,C,H,W).
      * @param eps a value added to the denominator for numerical stability.
-     * @param momentum the value used for the running_mean and running_var
-     *                computation. Can be set to 0.0 for cumulative moving average
-     *                (i.e. simple average).
      * @param affine when set to true, this layer has learnable affine parameters.
      */
-    public BatchNorm2dLayer(int channels, double eps, double momentum, boolean affine) {
-        this.options = new BatchNormOptions(channels);
+    public GroupNormLayer(int groups, int channels, double eps, boolean affine) {
+        this.options = new GroupNormOptions(groups, channels);
         options.eps().put(eps);
-        if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);
-        this.module = new BatchNorm2dImpl(options);
+        this.module = new GroupNormImpl(options);
     }
 
     /**
      * Returns the batch normalization layer configuration.
      * @return the batch normalization layer configuration.
      */
-    public BatchNormOptions options() {
+    public GroupNormOptions options() {
         return options;
     }
 
