@@ -16,14 +16,13 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.BatchNorm2dImpl;
 import org.bytedeco.pytorch.BatchNormOptions;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
- * A normalization layer that re-centers and normalizes the output
+ * A batch normalization layer that re-centers and normalizes the output
  * of one layer before feeding it to another. Centering and scaling the
  * intermediate tensors has a number of beneficial effects, such as allowing
  * higher learning rates without exploding/vanishing gradients.
@@ -38,23 +37,23 @@ public class BatchNorm2dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param c the number of input channels in (N,C,H,W).
+     * @param channels the number of input channels in (N,C,H,W).
      */
-    public BatchNorm2dLayer(int c) {
-        this(c, 1E-05, 0.1, true);
+    public BatchNorm2dLayer(int channels) {
+        this(channels, 1E-05, 0.1, true);
     }
 
     /**
      * Constructor.
-     * @param c the number of input channels in (N,C,H,W).
+     * @param channels the number of input channels in (N,C,H,W).
      * @param eps a value added to the denominator for numerical stability.
      * @param momentum the value used for the running_mean and running_var
      *                computation. Can be set to 0.0 for cumulative moving average
      *                (i.e. simple average).
      * @param affine when set to true, this layer has learnable affine parameters.
      */
-    public BatchNorm2dLayer(int c, double eps, double momentum, boolean affine) {
-        this.options = new BatchNormOptions(c);
+    public BatchNorm2dLayer(int channels, double eps, double momentum, boolean affine) {
+        this.options = new BatchNormOptions(channels);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);

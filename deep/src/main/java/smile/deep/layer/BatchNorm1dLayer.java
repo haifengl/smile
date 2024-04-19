@@ -16,7 +16,6 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.BatchNorm1dImpl;
 import org.bytedeco.pytorch.BatchNormOptions;
 import org.bytedeco.pytorch.Module;
@@ -38,23 +37,23 @@ public class BatchNorm1dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param channels the number of input channels.
      */
-    public BatchNorm1dLayer(int in) {
-        this(in, 1E-05, 0.1, true);
+    public BatchNorm1dLayer(int channels) {
+        this(channels, 1E-05, 0.1, true);
     }
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param channels the number of input channels.
      * @param eps a value added to the denominator for numerical stability.
      * @param momentum the value used for the running_mean and running_var
      *                computation. Can be set to 0.0 for cumulative moving average
      *                (i.e. simple average).
      * @param affine when set to true, this layer has learnable affine parameters.
      */
-    public BatchNorm1dLayer(int in, double eps, double momentum, boolean affine) {
-        this.options = new BatchNormOptions(in);
+    public BatchNorm1dLayer(int channels, double eps, double momentum, boolean affine) {
+        this.options = new BatchNormOptions(channels);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);
