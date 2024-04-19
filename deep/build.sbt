@@ -14,8 +14,6 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
     ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
   ),
-  "org.bytedeco"   % "cuda-platform-redist" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided excludeAll(
-    ExclusionRule(organization = "org.bytedeco", name = "javacpp-platform"),
-    ExclusionRule(organization = "org.bytedeco", name = "openblas-platform")
-  )
+  "org.bytedeco"   % "cuda" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided classifier "windows-x86_64-redist",
+  "org.bytedeco"   % "cuda" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided classifier "linux-x86_64-redist"
 )
