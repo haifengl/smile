@@ -70,7 +70,7 @@ public class Transformer {
      */
     public Transformer(Options options) {
         this.options = options;
-        this.transformer = new TransformerImpl(options.value);
+        this.transformer = new TransformerImpl(options.asTorch());
         this.posEncoder = new PositionalEncoding(options.dModel);
         this.embedding = new EmbeddingImpl(options.numTokens, options.dModel);
         this.decoder = new LinearImpl(options.dModel, options.numTokens);
@@ -114,111 +114,52 @@ public class Transformer {
         return this;
     }
 
-    /** Transformer architecture configuration. */
-    public static class Options {
-        TransformerOptions value = new TransformerOptions();
-        int numTokens;
-        int dModel = 512;
-        int numHeads = 8;
-        int numEncoderLayers = 6;
-        int numDecoderLayers = 6;
-        int dimFeedForward = 2048;
-        double dropout = 0.1;
-        String activation = "relu";
+    /**
+     * Transformer architecture configuration.
+     * @param numTokens the number of tokens in the vocabulary.
+     * @param dModel the number of expected features in the encoder/decoder inputs (default=512).
+     * @param numHeads the number of heads in the attention models (default=8).
+     * @param numEncoderLayers the number of sub-encoder-layers in the encoder (default=6).
+     * @param numDecoderLayers the number of sub-decoder-layers in the decoder (default=6).
+     * @param dimFeedForward the dimension of the feedforward network model (default=2048).
+     * @param dropout the dropout value (default=0.1).
+     * @param activation the activation function of encoder/decoder intermediate layer,
+     *                  e.g. "relu" or "gelu" (default=relu).
+     */
+    public record Options(int numTokens, int dModel, int numHeads, int numEncoderLayers,
+            int numDecoderLayers, int dimFeedForward, double dropout, String activation) {
 
         /**
-         * Default architecture configuration.
+         * Constructor with default values.
          * @param numTokens the number of tokens in the vocabulary.
          */
         public Options(int numTokens) {
-            this.numTokens = numTokens;
+            this(numTokens, 512, 8, 6, 6, 2048, 0.1, "relu");
         }
 
         /**
-         * Sets the number of expected features in the encoder/decoder inputs.
-         * @param dModel the number of expected features in the encoder/decoder inputs (default=512).
-         * @return this configuration object.
+         * Returns PyTorch option object.
+         * @return PyTorch option object.
          */
-        public Options dModel(int dModel) {
-            value.d_model().put(dModel);
-            this.dModel = dModel;
-            return this;
-        }
-
-        /**
-         * Sets the number of heads in the attention models.
-         * @param numHeads the number of heads in the attention models (default=8).
-         * @return this configuration object.
-         */
-        public Options numHeads(int numHeads) {
-            value.nhead().put(numHeads);
-            this.numHeads = numHeads;
-            return this;
-        }
-
-        /**
-         * Sets the number of sub-encoder-layers in the encoder.
-         * @param numEncoderLayers the number of sub-encoder-layers in the encoder (default=6).
-         * @return this configuration object.
-         */
-        public Options numEncoderLayers(int numEncoderLayers) {
-            value.num_encoder_layers().put(numEncoderLayers);
-            this.numEncoderLayers = numEncoderLayers;
-            return this;
-        }
-
-        /**
-         * Sets the number of sub-decoder-layers in the decoder.
-         * @param numDecoderLayers the number of sub-decoder-layers in the decoder (default=6).
-         * @return this configuration object.
-         */
-        public Options numDecoderLayers(int numDecoderLayers) {
-            value.num_decoder_layers().put(numDecoderLayers);
-            this.numDecoderLayers = numDecoderLayers;
-            return this;
-        }
-
-        /**
-         * Sets the dimension of the feedforward network model.
-         * @param dimFeedForward the dimension of the feedforward network model (default=2048).
-         * @return this configuration object.
-         */
-        public Options dimFeedForward(int dimFeedForward) {
-            value.dim_feedforward().put(dimFeedForward);
-            this.dimFeedForward = dimFeedForward;
-            return this;
-        }
-
-        /**
-         * Sets the dropout value.
-         * @param dropout the dropout value (default=0.1).
-         * @return this configuration object.
-         */
-        public Options dropout(double dropout) {
-            value.dropout().put(dropout);
-            this.dropout = dropout;
-            return this;
-        }
-
-        /**
-         * Sets the activation function of encoder/decoder intermediate layer.
-         * @param activation the activation function of encoder/decoder intermediate layer, e.g. “relu” or “gelu”. Default: relu
-         * @return this configuration object.
-         */
-        public Options activation(String activation) {
-            activation = activation.toLowerCase();
-            switch (activation) {
+        TransformerOptions asTorch() {
+            TransformerOptions options = new TransformerOptions(numTokens);
+            options.d_model().put(dModel);
+            options.nhead().put(numHeads);
+            options.num_encoder_layers().put(numEncoderLayers);
+            options.num_decoder_layers().put(numDecoderLayers);
+            options.dim_feedforward().put(dimFeedForward);
+            options.dropout().put(dropout);
+            switch (activation.toLowerCase()) {
                 case "relu":
-                    value.activation().put(new kReLU());
+                    options.activation().put(new kReLU());
                     break;
                 case "gelu":
-                    value.activation().put(new kGELU());
+                    options.activation().put(new kGELU());
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid activation: " + activation);
             }
-            this.activation = activation;
-            return this;
+            return options;
         }
     }
 }
