@@ -16,6 +16,7 @@
  */
 package smile.deep;
 
+import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.pytorch.*;
 
 /**
@@ -92,11 +93,13 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer Adam(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
+        DoublePointer betas = new DoublePointer(beta1, beta2);
         AdamOptions options = new AdamOptions(rate);
-        options.betas().put(beta1, beta2);
+        options.betas().put(betas);
         options.eps().put(eps);
         options.weight_decay().put(decay);
         options.amsgrad().put(amsgrad);
+        betas.close();
         return new Optimizer(new Adam(model.asTorch().parameters(), options));
     }
 
@@ -137,7 +140,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer RMSprop(Model model, double rate) {
-        return RMSprop(model, rate, 0.999, 1E-08, 0, 0, false);
+        return RMSprop(model, rate, 0.99, 1E-08, 0, 0, false);
     }
 
     /**
