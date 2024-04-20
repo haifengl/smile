@@ -5,6 +5,8 @@ lazy val scala3 = "3.3.3"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
+  resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
@@ -113,9 +115,9 @@ lazy val scalaSettings = commonSettings ++ Seq(
 
 lazy val javaCppSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+    "org.bytedeco" % "javacpp"   % "1.5.11-SNAPSHOT"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.11-SNAPSHOT" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11-SNAPSHOT"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
 )
 
