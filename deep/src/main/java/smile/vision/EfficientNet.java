@@ -194,7 +194,7 @@ public class EfficientNet extends LayerBlock {
         Transform transform = Transform.classification(384, 384);
 
         var net = new EfficientNet(config, 0.2, 0.2, 1000, 1280,
-                channels -> new BatchNorm2dLayer(channels, 0.001, 0.1, true));
+                channels -> new BatchNorm2dLayer(channels, 0.001, 0.01, true));
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
@@ -226,7 +226,7 @@ public class EfficientNet extends LayerBlock {
         Transform transform = Transform.classification(480, 480);
 
         var net = new EfficientNet(config, 0.3, 0.2, 1000, 1280,
-                channels -> new BatchNorm2dLayer(channels, 0.001, 0.1, true));
+                channels -> new BatchNorm2dLayer(channels, 0.001, 0.01, true));
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
@@ -259,7 +259,7 @@ public class EfficientNet extends LayerBlock {
                 new float[]{0.5f, 0.5f, 0.5f}, new float[]{0.5f, 0.5f, 0.5f}, Image.SCALE_SMOOTH);
 
         var net = new EfficientNet(config, 0.4, 0.2, 1000, 1280,
-                channels -> new BatchNorm2dLayer(channels, 0.001, 0.1, true));
+                channels -> new BatchNorm2dLayer(channels, 0.001, 0.01, true));
         var model = new VisionModel(net, transform);
         model.load(path);
         return model;
