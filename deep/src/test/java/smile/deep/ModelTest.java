@@ -72,7 +72,13 @@ public class ModelTest {
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
-        net.train(10, optimizer, loss, train, test, null);
+        net.train(10, optimizer, loss, train, test, null, new Accuracy(),
+                new Precision(Averaging.Micro),
+                new Precision(Averaging.Macro),
+                new Precision(Averaging.Weighted),
+                new Recall(Averaging.Micro),
+                new Recall(Averaging.Macro),
+                new Recall(Averaging.Weighted));
 
         double accuracy;
         try (var guard = Tensor.noGradGuard()) {
@@ -93,7 +99,7 @@ public class ModelTest {
             assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
         }
 
-        // Serialize your model periodically as a checkpoint.
+        // Serialize the model as a checkpoint.
         net.save("mnist.pt");
 
         // Loads the model from checkpoint.
