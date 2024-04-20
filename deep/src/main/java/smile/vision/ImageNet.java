@@ -16,7 +16,23 @@
  */
 package smile.vision;
 
-public interface ImageNet {
+import java.util.Map;
+import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+/**
+ * ImageNet class labels.
+ *
+ * @author Haifeng Li
+ */
+public interface ImageNet extends ToIntFunction<String> {
+    @Override
+    default int applyAsInt(final String label) {
+        return index.get(label);
+    }
+
+    /** Class labels. */
     String[] labels = {
             "tench, Tinca tinca",
             "goldfish, Carassius auratus",
@@ -1019,4 +1035,8 @@ public interface ImageNet {
             "ear, spike, capitulum",
             "toilet tissue, toilet paper, bathroom tissue"
     };
+
+    /** The map from label to index. */
+    Map<String, Integer> index = IntStream.range(0, labels.length)
+            .boxed().collect(Collectors.toMap(i -> labels[i].split(",")[0], i -> i));
 }
