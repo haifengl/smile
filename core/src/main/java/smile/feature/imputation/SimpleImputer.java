@@ -115,9 +115,7 @@ public class SimpleImputer implements Transform {
                         vector[i] = Float.isNaN(column[i]) ? x : column[i];
                     }
                     vectors[j] = FloatVector.of(field, vector);
-                } else if (field.type.isPrimitive()) {
-                    throw new IllegalArgumentException("Impute non-floating primitive types");
-                } else {
+                } else if (field.type.isObject()) {
                     if (field.type == DataTypes.BooleanObjectType) {
                         boolean x = (Boolean) value;
                         boolean[] vector = new boolean[n];
@@ -191,7 +189,9 @@ public class SimpleImputer implements Transform {
                         vectors[j] = Vector.of(field, vector);
                     }
                 }
-            } else {
+            }
+
+            if (vectors[j] == null) {
                 vectors[j] = data.column(j);
             }
         });

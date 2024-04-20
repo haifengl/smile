@@ -19,9 +19,12 @@ package smile.feature.imputation;
 
 import java.util.function.Function;
 import smile.data.DataFrame;
+import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.*;
 import org.junit.jupiter.api.*;
+import smile.util.Paths;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -117,5 +120,19 @@ public class SimpleImputerTest {
         impute(imputer, data, 0.01, 38.88);
         impute(imputer, data, 0.05, 48.80);
         impute(imputer, data, 0.10, 45.04);
+    }
+
+    @Test
+    public void testJson() throws Exception {
+        System.out.println("SimpleImputer on JSON");
+        DataFrame df = Read.json(Paths.getTestData("json/access.json"));
+        System.out.println(df);
+        SimpleImputer simpleImputer = SimpleImputer.fit(df);
+        System.out.println(simpleImputer);
+        System.out.println(simpleImputer.apply(df));
+/*
+        impute(imputer, data, 0.01, 38.88);
+        impute(imputer, data, 0.05, 48.80);
+        impute(imputer, data, 0.10, 45.04);*/
     }
 }
