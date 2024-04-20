@@ -43,6 +43,19 @@ public class Optimizer {
     }
 
     /**
+     * Sets the learning rate.
+     * @param rate the learning rate.
+     */
+    public void setLearningRate(double rate) {
+        var options = new OptimizerOptions();
+        options.set_lr(rate);
+        var groups = optimizer.param_groups();
+        for (int i = 0; i < groups.size(); i++) {
+            groups.get(i).set_options(options);
+        }
+    }
+
+    /**
      * Returns a stochastic gradient descent optimizer without momentum.
      * @param model the model to be optimized.
      * @param rate the learning rate.
