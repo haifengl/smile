@@ -16,6 +16,7 @@
  */
 package smile.vision;
 
+import smile.vision.transform.Transform;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-public class ImageNetTest {
+public class ImageDatasetTest {
 
-    public ImageNetTest() {
+    public ImageDatasetTest() {
     }
 
     @BeforeAll
@@ -46,14 +47,15 @@ public class ImageNetTest {
 
     @Test
     public void test() {
-        assertEquals(515, ImageNet.folder2Target.applyAsInt("n03124170"));
-        assertEquals(388, ImageNet.folder2Target.applyAsInt("n02510455"));
-        assertEquals(515, ImageNet.label2Target.applyAsInt("cowboy hat"));
-        assertEquals(515, ImageNet.label2Target.applyAsInt("ten-gallon hat"));
-        assertEquals(388, ImageNet.label2Target.applyAsInt("giant panda"));
-        assertEquals(387, ImageNet.label2Target.applyAsInt("panda"));
-        assertEquals(388, ImageNet.label2Target.applyAsInt("panda bear"));
-        assertEquals(388, ImageNet.label2Target.applyAsInt("coon bear"));
-        assertEquals(388, ImageNet.label2Target.applyAsInt("Ailuropoda melanoleuca"));
+        var transform = Transform.classification(32, 32);
+        var data = new ImageDataset(4, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
+        assertEquals(34745, data.size());
+        var iter = data.iterator();
+        assertEquals(true, iter.hasNext());
+        var sample = iter.next();
+        long[] dataShape = {4, 3, 32, 32};
+        long[] targetShape = {4};
+        assertArrayEquals(dataShape, sample.data().shape());
+        assertArrayEquals(targetShape, sample.target().shape());
     }
 }
