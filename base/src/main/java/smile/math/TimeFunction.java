@@ -67,12 +67,30 @@ public interface TimeFunction extends Serializable {
      * optimizer functions.
      *
      * @param boundaries A list of integers with strictly increasing entries.
-     * @param values	 The values for the intervals defined by boundaries.
+     * @param values	 The values for each interval defined by boundaries.
      *                   It should have one more element than boundaries.
      * @return the piecewise learning rate function.
      */
     static TimeFunction piecewise(int[] boundaries, double[] values) {
-        if (values.length != boundaries.length + 1) {
+        TimeFunction[] schedules = new TimeFunction[values.length];
+        for (int i = 0; i < values.length; i++) {
+            schedules[i] = TimeFunction.constant(values[i]);
+        }
+        return piecewise(boundaries, schedules);
+    }
+
+    /**
+     * Returns the piecewise constant learning rate. This can be useful for
+     * changing the learning rate value across different invocations of
+     * optimizer functions.
+     *
+     * @param boundaries A list of integers with strictly increasing entries.
+     * @param schedules	The time functions for each interval defined by boundaries.
+     *                  It should have one more element than .
+     * @return the piecewise learning rate function.
+     */
+    static TimeFunction piecewise(int[] boundaries, TimeFunction[] schedules) {
+        if (schedules.length != boundaries.length + 1) {
             throw new IllegalArgumentException("values should have one more element than boundaries");
         }
 
@@ -81,25 +99,14 @@ public interface TimeFunction extends Serializable {
             public double apply(int t) {
                 int i = Arrays.binarySearch(boundaries, t);
                 if (i < 0) i = -i - 1;
-                return values[i];
+                return schedules[i].apply(t);
             }
 
             @Override
             public String toString() {
-                return String.format("Piecewise(%s, %s)", Arrays.toString(boundaries), Arrays.toString(values));
+                return String.format("Piecewise(%s, %s)", Arrays.toString(boundaries), Arrays.toString(schedules));
             }
         };
-    }
-
-    /**
-     * Returns the linear learning rate decay function that ends at 0.0001.
-     *
-     * @param initLearningRate the initial learning rate.
-     * @param decaySteps the decay steps.
-     * @return the linear learning rate function.
-     */
-    static TimeFunction linear(double initLearningRate, double decaySteps) {
-        return linear(initLearningRate, decaySteps, 0.0001);
     }
 
     /**
@@ -148,7 +155,7 @@ public interface TimeFunction extends Serializable {
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.
      * @param endLearningRate the end learning rate.
-     * @param cycle the flag whether or not it should cycle beyond decaySteps.
+     * @param cycle the flag indicating if it should cycle beyond decaySteps.
      * @return the polynomial learning rate function.
      */
     static TimeFunction polynomial(double degree, double initLearningRate, double decaySteps, double endLearningRate, boolean cycle) {
