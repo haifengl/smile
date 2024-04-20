@@ -159,6 +159,14 @@ public class EfficientNet extends LayerBlock {
     }
 
     /**
+     * Returns the feature layer block.
+     * @return the feature layer block.
+     */
+    public SequentialBlock features() {
+        return features;
+    }
+
+    /**
      * EfficientNet-V2_S (baseline) model.
      * @return the model.
      */
