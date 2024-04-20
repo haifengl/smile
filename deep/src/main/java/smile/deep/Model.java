@@ -24,6 +24,7 @@ import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.math.TimeFunction;
 
 /**
  * The deep learning models.
@@ -36,6 +37,8 @@ public class Model {
     private LayerBlock net;
     /** The compute device on which the model is stored. */
     private Device device;
+    /** The learning rate schedule. */
+    private TimeFunction learningRateSchedule;
 
     /**
      * Constructor.
@@ -133,6 +136,14 @@ public class Model {
     }
 
     /**
+     * Sets the learning rate schedule.
+     * @param learningRateSchedule the learning rate schedule.
+     */
+    public void setLearningRateSchedule(TimeFunction learningRateSchedule) {
+        this.learningRateSchedule = learningRateSchedule;
+    }
+
+    /**
      * Trains the model.
      * @param epochs the number of training epochs.
      * @param optimizer the optimization algorithm.
@@ -155,8 +166,8 @@ public class Model {
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset val, String checkpoint, Metric... metrics) {
         train(); // training mode
+        int batchIndex = 0;
         for (int epoch = 1; epoch <= epochs; ++epoch) {
-            int batchIndex = 0;
             double lossValue = 0;
             // Iterate the data loader to yield batches from the dataset.
             for (SampleBatch batch : train) {
@@ -173,11 +184,22 @@ public class Model {
                 error.backward();
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
+
                 // Explicitly free native memory
                 data.close();
                 target.close();
+
+                if (learningRateSchedule != null) {
+                    double rate = learningRateSchedule.apply(batchIndex);
+                    optimizer.setLearningRate(rate);
+                }
+
                 if (++batchIndex % 100 == 0) {
                     String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
+                    if (learningRateSchedule != null) {
+                        double rate = learningRateSchedule.apply(batchIndex);
+                        msg += String.format(" | LR: %.4f", rate);
+                    }
                     logger.info(msg);
                     free();
                 }
