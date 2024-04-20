@@ -137,7 +137,7 @@ lazy val base = project.in(file("base"))
 
 lazy val core = project.in(file("core"))
   .settings(javaSettings: _*)
-  .dependsOn(base % "compile->compile;test->test")
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
 
 lazy val deep = project.in(file("deep"))
   .settings(javaSettings: _*)
