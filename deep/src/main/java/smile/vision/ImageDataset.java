@@ -55,12 +55,16 @@ public class ImageDataset implements Dataset {
      * @param transform the transformation from image to tensor.
      * @param targetTransform the transform from image label to class index.
      */
-    public ImageDataset(int batch, String root, Transform transform, ToIntFunction<String> targetTransform) {
+    public ImageDataset(int batch, String root, Transform transform, ToIntFunction<String> targetTransform) throws IOException {
         this.batch = batch;
         this.transform = transform;
         this.targetTransform = targetTransform;
 
         File dir = new File(root);
+        if (!dir.exists()) {
+            throw new IOException("Dataset root directory doesn't exist: " + root);
+        }
+
         for (var child : dir.listFiles()) {
             if (child.isDirectory()) {
                 String label = child.getName();
@@ -74,6 +78,10 @@ public class ImageDataset implements Dataset {
                     }
                 }
             }
+        }
+
+        if (samples.size() == 0) {
+            throw new IOException("No JPEG or PNG images found in " + root);
         }
     }
 
@@ -119,18 +127,15 @@ public class ImageDataset implements Dataset {
         thread.start();
 
         return new Iterator<>() {
-            int i = 0;
             @Override
             public boolean hasNext() {
-                return i < size;
+                return !queue.isEmpty() || thread.isAlive();
             }
 
             @Override
             public SampleBatch next() {
                 try {
-                    var sample = queue.take();
-                    i += sample.data().size(0);
-                    return sample;
+                    return queue.take();
                 } catch (InterruptedException ex) {
                     logger.error("Failed to take next sample batch", ex);
                     return null;
@@ -147,7 +152,7 @@ public class ImageDataset implements Dataset {
      */
     private SampleBatch readImages(int[] index) throws IOException {
         int n = index.length;
-        int[] target = new int[n];
+        long[] target = new long[n];
         BufferedImage[] images = new BufferedImage[n];
         for (int i = 0; i < n; i++) {
             var sample = samples.get(index[i]);
