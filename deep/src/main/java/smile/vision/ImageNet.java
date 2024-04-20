@@ -16,10 +16,12 @@
  */
 package smile.vision;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.util.Tuple2;
 
 /**
  * ImageNet class labels.
@@ -2035,10 +2037,19 @@ public interface ImageNet {
             "n15075141"
     };
 
+    /** The map from label to class id. */
+    Map<String, Integer> label2Id = IntStream.range(0, labels.length)
+            .mapToObj(i -> new Tuple2<>(i, labels[i].split(",")))
+            .flatMap(t -> Arrays.stream(t._2()).map(String::trim).map(s -> new Tuple2<>(s, t._1())))
+            .collect(Collectors.toMap(t -> t._1(), t -> t._2(), (a, b) -> a));
+
     /** The map from folder name to class id. */
     Map<String, Integer> folder2Id = IntStream.range(0, folders.length)
             .boxed().collect(Collectors.toMap(i -> folders[i], i -> i));
 
+    /** The functor mapping label to class id. */
+    ToIntFunction<String> label2Target = (String label) -> label2Id.get(label);
+
     /** The functor mapping folder name to class id. */
-    ToIntFunction<String> target = (String label) -> folder2Id.get(label);
+    ToIntFunction<String> folder2Target = (String folder) -> folder2Id.get(folder);
 }

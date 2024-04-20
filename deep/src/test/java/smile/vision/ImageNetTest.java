@@ -46,8 +46,15 @@ public class ImageNetTest {
     }
 
     @Test
-    public void test() throws IOException {
-        assertEquals(515, ImageNet.target.applyAsInt("n03124170"));
-        assertEquals(388, ImageNet.target.applyAsInt("n02510455"));
+    public void test() {
+        assertEquals(515, ImageNet.folder2Target.applyAsInt("n03124170"));
+        assertEquals(388, ImageNet.folder2Target.applyAsInt("n02510455"));
+        assertEquals(515, ImageNet.label2Target.applyAsInt("cowboy hat"));
+        assertEquals(515, ImageNet.label2Target.applyAsInt("ten-gallon hat"));
+        assertEquals(388, ImageNet.label2Target.applyAsInt("giant panda"));
+        assertEquals(387, ImageNet.label2Target.applyAsInt("panda"));
+        assertEquals(388, ImageNet.label2Target.applyAsInt("panda bear"));
+        assertEquals(388, ImageNet.label2Target.applyAsInt("coon bear"));
+        assertEquals(388, ImageNet.label2Target.applyAsInt("Ailuropoda melanoleuca"));
     }
 }
