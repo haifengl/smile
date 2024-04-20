@@ -149,11 +149,11 @@ public class Model {
      * @param optimizer the optimization algorithm.
      * @param loss the loss function.
      * @param train the training data.
-     * @param eval optional evaluation data.
+     * @param val optional validation data.
      * @param checkpoint optional checkpoint file path.
      * @param metrics the evaluation metrics.
      */
-    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset eval, String checkpoint, Metric... metrics) {
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset val, String checkpoint, Metric... metrics) {
         train(); // training mode
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             int batchIndex = 0;
@@ -174,8 +174,8 @@ public class Model {
                 // Update the parameters based on the calculated gradients.
                 optimizer.step();
                 // Explicitly free native memory
-                data.deallocate();
-                target.deallocate();
+                data.close();
+                target.close();
                 if (++batchIndex % 100 == 0) {
                     String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
                     logger.info(msg);
@@ -185,13 +185,13 @@ public class Model {
 
             // Output the loss and checkpoint.
             String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
-            if (eval != null) {
-                Map<String, Double> result = eval(eval, metrics);
+            if (val != null) {
+                Map<String, Double> result = eval(val, metrics);
                 StringBuilder sb = new StringBuilder(msg);
                 train(); // return to training mode
                 for (var metric : metrics) {
                     String name = metric.name();
-                    sb.append(String.format(" | %s: %.2f", name, 100 * result.get(name)));
+                    sb.append(String.format(" | %s: %.2f%%", name, 100 * result.get(name)));
                     metric.reset();
                 }
                 msg = sb.toString();
