@@ -150,16 +150,6 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
-     * Explicitly releases native memory without waiting after
-     * the garbage collector. The caller should not use this tensor
-     * any longer.
-     */
-    public void deallocate() {
-        value.deallocate();
-        value = null;
-    }
-
-    /**
      * Returns the element data type.
      * @return the element data type.
      */
