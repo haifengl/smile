@@ -25,7 +25,7 @@ import org.bytedeco.pytorch.*;
  *
  * @author Haifeng Li
  */
-public class DataSampler implements Iterator<SampleBatch> {
+class DataSampler implements Iterator<SampleBatch> {
     final ExampleIterator begin;
     final ExampleIterator end;
     ExampleIterator it;
