@@ -16,7 +16,6 @@
  */
 package smile.vision;
 
-import java.io.IOException;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

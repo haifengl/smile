@@ -18,7 +18,9 @@ package smile.vision;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -59,14 +61,13 @@ public class ImageDataset implements Dataset {
         this.targetTransform = targetTransform;
 
         File dir = new File(root);
-        File[] children = dir.listFiles();
-        for (var child : children) {
+        for (var child : dir.listFiles()) {
             if (child.isDirectory()) {
                 String label = child.getName();
-                File[] images = dir.listFiles();
+                File[] images = child.listFiles();
                 for (var image : images) {
                     if (image.isFile()) {
-                        String name = image.getName();
+                        String name = image.getName().toLowerCase();
                         if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")) {
                             samples.add(new ImageFile(image, label));
                         }
@@ -83,28 +84,32 @@ public class ImageDataset implements Dataset {
 
     @Override
     public Iterator<SampleBatch> iterator() {
+        final int size = samples.size();
+        final int[] permutation = MathEx.permutate(size);
         final BlockingQueue<SampleBatch> queue = new LinkedBlockingQueue<>(100);
 
-        final Runnable worker = new Runnable() {
-            final int size = samples.size();
-            final int[] permutation = MathEx.permutate(size);
+        final int start = Math.min(batch, size);
+        final int[] index = new int[start];
+        for (int i = 0; i < start; i++) {
+            index[i] = permutation[i];
+        }
 
-            @Override
-            public void run() {
+        try {
+            // prefetch the first batch
+            queue.put(readImages(index));
+        } catch (Exception ex) {
+            logger.error("Failed to load the first batch", ex);
+        }
+
+        final Runnable worker = () -> {
+            for (int i = start; i < size; ) {
+                int n = Math.min(batch, size - i);
+                for (int j = 0; j < n; j++, i++) {
+                    index[j] = permutation[i];
+                }
                 try {
-                    for (int i = 0; i < size; ) {
-                        int n = Math.min(batch, size - i);
-                        BufferedImage[] images = new BufferedImage[n];
-                        int[] classes = new int[n];
-                        for (int j = 0; j < n; j++, i++) {
-                            var sample = samples.get(permutation[i]);
-                            images[j] = ImageIO.read(sample.file);
-                            classes[j] = targetTransform.applyAsInt(sample.label);
-                        }
-
-                        queue.put(new SampleBatch(transform.forward(images), Tensor.of(classes, images.length)));
-                    }
-                } catch(Exception ex){
+                    queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
+                } catch (Exception ex) {
                     logger.error("Failed to load images", ex);
                 }
             }
@@ -114,15 +119,41 @@ public class ImageDataset implements Dataset {
         thread.start();
 
         return new Iterator<>() {
+            int i = 0;
             @Override
             public boolean hasNext() {
-                return !queue.isEmpty();
+                return i < size;
             }
 
             @Override
             public SampleBatch next() {
-                return queue.poll();
+                try {
+                    var sample = queue.take();
+                    i += sample.data().size(0);
+                    return sample;
+                } catch (InterruptedException ex) {
+                    logger.error("Failed to take next sample batch", ex);
+                    return null;
+                }
             }
         };
+    }
+
+    /**
+     * Reads a mini-batch of image samples.
+     * @param index the sample index.
+     * @return the sample batch.
+     * @throws IOException
+     */
+    private SampleBatch readImages(int[] index) throws IOException {
+        int n = index.length;
+        int[] target = new int[n];
+        BufferedImage[] images = new BufferedImage[n];
+        for (int i = 0; i < n; i++) {
+            var sample = samples.get(index[i]);
+            images[i] = ImageIO.read(sample.file);
+            target[i] = targetTransform.applyAsInt(sample.label);
+        }
+        return new SampleBatch(transform.forward(images), Tensor.of(target, images.length));
     }
 }

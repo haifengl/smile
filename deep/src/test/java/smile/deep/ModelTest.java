@@ -42,9 +42,6 @@ public class ModelTest {
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
-
-        // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl");
     }
 
     @AfterAll
