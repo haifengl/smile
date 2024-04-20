@@ -52,4 +52,12 @@ public class VisionModel extends Model {
             return forward(input);
         }
     }
+
+    /**
+     * Returns the associated image transform.
+     * @return the associated image transform.
+     */
+    public Transform transform() {
+        return transform;
+    }
 }
