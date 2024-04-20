@@ -47,11 +47,9 @@ public class Optimizer {
      * @param rate the learning rate.
      */
     public void setLearningRate(double rate) {
-        var options = new OptimizerOptions();
-        options.set_lr(rate);
         var groups = optimizer.param_groups();
         for (int i = 0; i < groups.size(); i++) {
-            groups.get(i).set_options(options);
+            groups.get(i).options().set_lr(rate);
         }
     }
 
