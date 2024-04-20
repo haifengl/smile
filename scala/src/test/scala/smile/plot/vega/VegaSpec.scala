@@ -17,6 +17,7 @@
 
 package smile.plot.vega
 
+import scala.language.existentials
 import smile.json._
 import org.specs2.mutable._
 
