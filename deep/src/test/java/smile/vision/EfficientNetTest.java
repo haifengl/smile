@@ -19,9 +19,14 @@ package smile.vision;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import smile.deep.Loss;
+import smile.deep.Optimizer;
+import smile.deep.metric.Accuracy;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
+import smile.math.TimeFunction;
+import smile.vision.transform.Transform;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -111,5 +116,23 @@ public class EfficientNetTest {
             assertEquals(515, topk._2().getInt(0, 0));
             assertEquals(388, topk._2().getInt(1, 0));
         }
+    }
+
+    @Test
+    public void train() throws IOException {
+        Device device = Device.preferredDevice();
+        device.setDefaultDevice();
+
+        var model = EfficientNet.V2S();
+        model.to(device);
+
+        var transform = Transform.classification(64, 64);
+        var data = new ImageDataset(128, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
+        var val = new ImageDataset(128, "D:\\data\\imagenet-mini\\val",   transform, ImageNet.folder2Target);
+
+        var schedule = TimeFunction.linear(0.001, 5000, 0.01);
+        model.setLearningRateSchedule(schedule);
+        Optimizer optimizer = Optimizer.SGD(model, 0.001);
+        model.train(20, optimizer, Loss.nll(), data, val, null, new Accuracy());
     }
 }

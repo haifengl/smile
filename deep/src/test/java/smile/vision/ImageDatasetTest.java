@@ -16,6 +16,7 @@
  */
 package smile.vision;
 
+import java.io.IOException;
 import smile.vision.transform.Transform;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,7 +47,7 @@ public class ImageDatasetTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         var transform = Transform.classification(32, 32);
         var data = new ImageDataset(4, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
         assertEquals(34745, data.size());
