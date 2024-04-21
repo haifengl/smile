@@ -188,6 +188,7 @@ public class Model {
                 // Explicitly free native memory
                 data.close();
                 target.close();
+                batch.close();
 
                 if (learningRateSchedule != null) {
                     double rate = learningRateSchedule.apply(batchIndex);
@@ -250,6 +251,10 @@ public class Model {
             for (var metric : metrics) {
                 metric.update(output, target);
             }
+            // Explicitly free native memory
+            data.close();
+            target.close();
+            batch.close();
         }
 
         Map<String, Double> map = new TreeMap<>();
