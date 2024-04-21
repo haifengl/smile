@@ -127,12 +127,12 @@ public class EfficientNetTest {
         model.to(device);
 
         var transform = Transform.classification(64, 64);
-        var data = new ImageDataset(128, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
-        var val = new ImageDataset(128, "D:\\data\\imagenet-mini\\val",   transform, ImageNet.folder2Target);
+        var data = new ImageDataset(32, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
+        var val = new ImageDataset(128, "D:\\data\\imagenet-mini\\val", transform, ImageNet.folder2Target);
 
-        var schedule = TimeFunction.linear(0.001, 5000, 0.01);
+        var schedule = TimeFunction.linear(0.0005, 20000, 0.001);
         model.setLearningRateSchedule(schedule);
-        Optimizer optimizer = Optimizer.SGD(model, 0.001);
-        model.train(20, optimizer, Loss.nll(), data, val, null, new Accuracy());
+        Optimizer optimizer = Optimizer.SGD(model, 0.0005);
+        model.train(2, optimizer, Loss.nll(), data, val, null, new Accuracy());
     }
 }
