@@ -29,8 +29,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class GroupNormLayer implements Layer {
-    /** The layer configuration. */
-    private final GroupNormOptions options;
     /** Implementation. */
     private final GroupNormImpl module;
 
@@ -55,18 +53,10 @@ public class GroupNormLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public GroupNormLayer(int groups, int channels, double eps, boolean affine) {
-        this.options = new GroupNormOptions(groups, channels);
+        var options = new GroupNormOptions(groups, channels);
         options.eps().put(eps);
         options.affine().put(affine);
         this.module = new GroupNormImpl(options);
-    }
-
-    /**
-     * Returns the batch normalization layer configuration.
-     * @return the batch normalization layer configuration.
-     */
-    public GroupNormOptions options() {
-        return options;
     }
 
     @Override

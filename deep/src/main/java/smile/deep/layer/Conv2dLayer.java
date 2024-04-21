@@ -27,8 +27,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Conv2dLayer implements Layer {
-    /** The layer configuration. */
-    private final Conv2dOptions options;
     /** Implementation. */
     private final Conv2dImpl module;
 
@@ -58,7 +56,7 @@ public class Conv2dLayer implements Layer {
         LongPointer paddingPointer = new LongPointer(padding, padding);
         LongPointer dilationPointer = new LongPointer(dilation, dilation);
 
-        options = new Conv2dOptions(in, out, kernelPointer);
+        var options = new Conv2dOptions(in, out, kernelPointer);
         options.stride().put(stridePointer);
         options.padding().put(paddingPointer);
         options.dilation().put(dilationPointer);
@@ -114,7 +112,7 @@ public class Conv2dLayer implements Layer {
         LongPointer stridePointer = new LongPointer(stride, stride);
         LongPointer dilationPointer = new LongPointer(dilation, dilation);
 
-        options = new Conv2dOptions(in, out, kernelPointer);
+        var options = new Conv2dOptions(in, out, kernelPointer);
         options.stride().put(stridePointer);
         options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
         options.dilation().put(dilationPointer);
@@ -133,14 +131,6 @@ public class Conv2dLayer implements Layer {
         kernelPointer.close();
         stridePointer.close();
         dilationPointer.close();
-    }
-
-    /**
-     * Returns the convolutional layer configuration.
-     * @return the convolutional layer configuration.
-     */
-    public Conv2dOptions options() {
-        return options;
     }
 
     @Override
