@@ -57,6 +57,8 @@ import smile.math.matrix.Matrix;
  * @see smile.manifold.LaplacianEigenmap
  * @see smile.manifold.SammonMapping
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KPCA<T> implements Function<T, double[]>, Serializable {

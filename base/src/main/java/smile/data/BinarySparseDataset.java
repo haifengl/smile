@@ -90,6 +90,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      * Returns a default implementation of BinarySparseDataset.
      *
      * @param data The sample instances.
+     * @param <T> the target type.
      * @return the sparse dataset.
      */
     static <T> BinarySparseDataset<T> of(Collection<SampleInstance<int[], T>> data) {

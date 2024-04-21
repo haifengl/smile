@@ -75,6 +75,9 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
  * <li> Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010. </li>
  * <li> </li>
  * </ol>
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class GaussianProcessRegression<T> implements Regression<T> {
@@ -586,7 +589,10 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
     }
 
-    /** Log marginal likelihood as optimization objective function. */
+    /**
+     * Log marginal likelihood as optimization objective function.
+     * @param <T> the data type of samples.
+     */
     private static class LogMarginalLikelihood<T> implements DifferentiableMultivariateFunction {
         final T[] x;
         final double[] y;

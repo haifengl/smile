@@ -65,7 +65,9 @@ import smile.neighbor.Neighbor;
  * achievable error rate given the distribution of the data). k-NN is
  * guaranteed to approach the Bayes error rate, for some value of k (where k
  * increases as a function of the number of data points).
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KNN<T> extends AbstractClassifier<T> {

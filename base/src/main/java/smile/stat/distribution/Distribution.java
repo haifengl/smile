@@ -36,7 +36,7 @@ import java.io.Serializable;
 public interface Distribution extends Serializable {
 
     /**
-     * The number of parameters of the distribution.
+     * Returns the number of parameters of the distribution.
      * The "length" is in the sense of the minimum description
      * length principle.
      * @return The number of parameters.
@@ -44,19 +44,19 @@ public interface Distribution extends Serializable {
     int length();
 
     /**
-     * The mean of distribution.
+     * Returns the mean of distribution.
      * @return The mean.
      */
     double mean();
     
     /**
-     * The variance of distribution.
+     * Returns the variance of distribution.
      * @return The variance.
      */
     double variance();
     
     /**
-     * The standard deviation of distribution.
+     * Returns the standard deviation of distribution.
      * @return The standard deviation.
      */
     default double sd() {
@@ -64,7 +64,7 @@ public interface Distribution extends Serializable {
     }
 
     /**
-     * Shannon entropy of the distribution.
+     * Returns Shannon entropy of the distribution.
      * @return Shannon entropy.
      */
     double entropy();

@@ -39,6 +39,7 @@ public class Tokenizer {
     /**
      * Initializes the Tokenizer with a SentencePiece model.
      * @param path The path to the SentencePiece model file.
+     * @throws IOException if fail to load the model.
      */
     public Tokenizer(String path) throws IOException {
         SpTokenizer model = new SpTokenizer(Paths.get(path));

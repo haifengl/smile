@@ -47,6 +47,8 @@ import java.util.stream.Stream;
  * <li>Lundberg, Scott M., Gabriel G. Erion, and Su-In Lee. Consistent individualized feature attribution for tree ensembles.</li>
  * </ol>
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public interface SHAP<T> {

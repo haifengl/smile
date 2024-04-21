@@ -43,7 +43,9 @@ package smile.math.distance;
  * The extension of the problem for two-dimensional "series" like images
  * (planar warping) is NP-complete, while the problem for one-dimensional
  * signals like time series can be solved in polynomial time.
- * 
+ *
+ * @param <T> the input type of distance function.
+ *
  * @author Haifeng Li
  */
 public class DynamicTimeWarping<T> implements Distance<T[]> {

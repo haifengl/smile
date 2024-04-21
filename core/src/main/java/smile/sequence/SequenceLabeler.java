@@ -22,6 +22,8 @@ import java.io.Serializable;
 /**
  * A sequence labeler assigns a class label to each position of the sequence.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public interface SequenceLabeler<T> extends Serializable {

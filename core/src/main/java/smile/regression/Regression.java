@@ -33,7 +33,7 @@ import smile.data.SampleInstance;
  * Regression analysis is widely used for prediction and forecasting, where
  * its use has substantial overlap with the field of machine learning. 
  *
- * @param <T> the type of model input object.
+ * @param <T> the data type of model input objects.
  *
  * @author Haifeng Li
  */

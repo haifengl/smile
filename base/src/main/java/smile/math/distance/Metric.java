@@ -28,6 +28,8 @@ package smile.math.distance;
  * <li> triangular inequality: {@code |x - y| + |y - z| >= |x - z|}.
  * </ul>
  *
+ * @param <T> the input type of metric function.
+ *
  * @author Haifeng Li
  */
 public interface Metric<T> extends Distance<T> {

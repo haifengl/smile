@@ -49,6 +49,8 @@ import smile.util.IntSet;
  * learners see unbalanced distributions because typically the set of
  * negatives they see is much larger than the set of positives.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class OneVersusRest<T> extends AbstractClassifier<T> {

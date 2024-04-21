@@ -34,6 +34,8 @@ import smile.math.kernel.MercerKernel;
  * <li>Jia Jiong and Zhang Hao-ran. A Fast Learning Algorithm for One-Class Support Vector Machine. ICNC 2007.</li>
  * </ol>
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class SVM<T> extends KernelMachine<T>  {

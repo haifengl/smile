@@ -36,6 +36,8 @@ import java.util.Set;
  * of the sizes of the union and the intersection of two sets by the size of
  * the union.
  *
+ * @param <T> the input type of distance function.
+ *
  * @author Haifeng Li
  */
 public class JaccardDistance<T> implements Distance<T[]> {

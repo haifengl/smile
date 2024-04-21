@@ -24,6 +24,8 @@ import smile.math.kernel.MercerKernel;
 /**
  * One-class support vector machine.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class OCSVM<T> {

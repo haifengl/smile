@@ -18,10 +18,12 @@
 package smile.util;
 
 /**
- * Represents a function that produces an float-valued result.
+ * Represents a function that produces a float-valued result.
  * This is the float-producing primitive specialization for Function.
  *
- * Java 8 doesn't have ToFloatFunction interface in java.util.function.
+ * There is no ToFloatFunction interface in java.util.function.
+ *
+ * @param <T> the type of the input to the function.
  *
  * @author Haifeng Li
  */

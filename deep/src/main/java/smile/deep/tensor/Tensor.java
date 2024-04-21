@@ -106,6 +106,8 @@ public class Tensor implements AutoCloseable {
      *
      * This context manager is thread-local; it will not affect computation in
      * other threads.
+     *
+     * @return no grad guard to be used with try-with scope.
      */
     public static NoGradGuard noGradGuard() {
         return new NoGradGuard();

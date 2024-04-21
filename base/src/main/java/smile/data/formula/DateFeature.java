@@ -28,7 +28,7 @@ public enum DateFeature {
      */
     YEAR,
     /**
-     *
+     * The quarter-of-year has values from 1 to 4.
      */
     QUARTER,
     /**

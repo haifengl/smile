@@ -89,7 +89,9 @@ import smile.math.kernel.*;
  *
  * @see OneVersusOne
  * @see OneVersusRest
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class SVM<T> extends KernelMachine<T> implements Classifier<T> {

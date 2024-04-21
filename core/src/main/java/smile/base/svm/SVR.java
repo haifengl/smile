@@ -41,6 +41,8 @@ import smile.regression.KernelMachine;
  * <li> Chih-Chung Chang and Chih-Jen Lin. LIBSVM: a Library for Support Vector Machines.</li>
  * </ol>
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class SVR<T> {

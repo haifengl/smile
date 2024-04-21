@@ -30,6 +30,8 @@ import smile.data.type.StructField;
 /**
  * An immutable generic vector.
  *
+ * @param <T> the data type of vector elements.
+ *
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {

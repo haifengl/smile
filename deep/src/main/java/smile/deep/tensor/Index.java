@@ -133,6 +133,7 @@ public class Index {
      *
      * @param start the start index.
      * @param end the end index.
+     * @param step the incremental step.
      * @return the slice.
      */
     public static Index slice(Integer start, Integer end, Integer step) {

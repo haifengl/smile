@@ -51,24 +51,60 @@ public class Conv2dNormActivation extends SequentialBlock {
      */
     public record Options(int in, int out, int kernel, int stride, int padding, int dilation, int groups,
                           IntFunction<Layer> normLayer, ActivationFunction activation) {
+
+        /** Custom constructor. */
         public Options {
             if (padding < 0) {
                 padding = (kernel - 1) / 2 * dilation;
             }
         }
 
+        /**
+         * Constructor.
+         * @param in the number of input channels.
+         * @param out the number of output channels/features.
+         * @param kernel the window/kernel size.
+         */
         public Options(int in, int out, int kernel) {
             this(in, out, kernel, channels -> new BatchNorm2dLayer(channels), new ReLU(true));
         }
 
+        /**
+         * Constructor.
+         * @param in the number of input channels.
+         * @param out the number of output channels/features.
+         * @param kernel the window/kernel size.
+         * @param normLayer the functor to create the normalization layer.
+         * @param activation the activation function.
+         */
         public Options(int in, int out, int kernel, IntFunction<Layer> normLayer, ActivationFunction activation) {
             this(in, out, kernel, 1, normLayer, activation);
         }
 
+        /**
+         * Constructor.
+         * @param in the number of input channels.
+         * @param out the number of output channels/features.
+         * @param kernel the window/kernel size.
+         * @param stride controls the stride for the cross-correlation.
+         * @param normLayer the functor to create the normalization layer.
+         * @param activation the activation function.
+         */
         public Options(int in, int out, int kernel, int stride, IntFunction<Layer> normLayer, ActivationFunction activation) {
             this(in, out, kernel, stride, 1, normLayer, activation);
         }
 
+        /**
+         * Constructor.
+         * @param in the number of input channels.
+         * @param out the number of output channels/features.
+         * @param kernel the window/kernel size.
+         * @param stride controls the stride for the cross-correlation.
+         * @param groups controls the connections between inputs and outputs.
+         *              The in channels and out channels must both be divisible by groups.
+         * @param normLayer the functor to create the normalization layer.
+         * @param activation the activation function.
+         */
         public Options(int in, int out, int kernel, int stride, int groups, IntFunction<Layer> normLayer, ActivationFunction activation) {
             this(in, out, kernel, stride, -1, 1, groups, normLayer, activation);
         }
@@ -76,6 +112,7 @@ public class Conv2dNormActivation extends SequentialBlock {
 
     /**
      * Constructor.
+     * @param options the layer block configuration.
      */
     public Conv2dNormActivation(Options options) {
         super("Conv2dNormActivation");
