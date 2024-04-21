@@ -30,8 +30,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class BatchNorm1dLayer implements Layer {
-    /** The layer configuration. */
-    private final BatchNormOptions options;
     /** Implementation. */
     private final BatchNorm1dImpl module;
 
@@ -53,19 +51,11 @@ public class BatchNorm1dLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public BatchNorm1dLayer(int channels, double eps, double momentum, boolean affine) {
-        this.options = new BatchNormOptions(channels);
+        var options = new BatchNormOptions(channels);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);
         this.module = new BatchNorm1dImpl(options);
-    }
-
-    /**
-     * Returns the batch normalization layer configuration.
-     * @return the batch normalization layer configuration.
-     */
-    public BatchNormOptions options() {
-        return options;
     }
 
     @Override
