@@ -27,7 +27,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public abstract class DiscreteDistribution extends AbstractDistribution {
+public abstract class DiscreteDistribution implements Distribution {
     /**
      * Generates an integer random number following this discrete distribution.
      * @return an integer random number.

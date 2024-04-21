@@ -70,7 +70,7 @@ import smile.math.special.Erf;
  * 
  * @author Haifeng Li
  */
-public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
+public class GaussianDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE_2 = Math.log(2 * Math.PI * Math.E) / 2;

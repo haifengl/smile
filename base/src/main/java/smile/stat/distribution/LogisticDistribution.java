@@ -37,7 +37,7 @@ package smile.stat.distribution;
  * 
  * @author Haifeng Li
  */
-public class LogisticDistribution extends AbstractDistribution {
+public class LogisticDistribution implements Distribution {
     private static final long serialVersionUID = 2L;
 
     private static final double PI_SQRT3 = Math.PI / Math.sqrt(3);

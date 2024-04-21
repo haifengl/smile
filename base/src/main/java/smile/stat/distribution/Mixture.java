@@ -40,7 +40,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Mixture extends AbstractDistribution {
+public class Mixture implements Distribution {
     private static final long serialVersionUID = 2L;
 
     /**

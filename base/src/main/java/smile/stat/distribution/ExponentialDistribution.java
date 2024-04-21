@@ -55,7 +55,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class ExponentialDistribution extends AbstractDistribution implements ExponentialFamily {
+public class ExponentialDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;
 
     /** The rate parameter. */

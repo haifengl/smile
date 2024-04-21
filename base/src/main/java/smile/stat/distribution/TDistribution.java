@@ -34,7 +34,7 @@ import smile.math.special.Gamma;
  *
  * @author Haifeng Li
  */
-public class TDistribution extends AbstractDistribution {
+public class TDistribution implements Distribution {
     private static final long serialVersionUID = 2L;
 
     /** The degree of freedom. */

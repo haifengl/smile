@@ -33,7 +33,7 @@ import smile.math.special.Erf;
  *
  * @author Haifeng Li
  */
-public class LogNormalDistribution extends AbstractDistribution {
+public class LogNormalDistribution implements Distribution {
     private static final long serialVersionUID = 2L;
 
     /** The mean of normal distribution. */

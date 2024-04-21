@@ -50,7 +50,7 @@ import smile.math.special.Gamma;
  *
  * @author Haifeng Li
  */
-public class GammaDistribution extends AbstractDistribution implements ExponentialFamily {
+public class GammaDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;
 
     /** The scale parameter. */
