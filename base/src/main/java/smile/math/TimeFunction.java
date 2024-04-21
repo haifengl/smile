@@ -324,6 +324,37 @@ public interface TimeFunction extends Serializable {
     }
 
     /**
+     * Returns the cosine annealing function. Cosine Annealing has the effect
+     * of starting with a large learning rate that is relatively rapidly
+     * decreased to a minimum value before being increased rapidly again.
+     * The resetting of the learning rate acts like a simulated restart
+     * of the learning process and the re-use of good weights as the
+     * starting point of the restart is referred to as a "warm restart"
+     * in contrast to a "cold restart" where a new set of small random
+     * numbers may be used as a starting point.
+     * {@code initLearningRate * pow(endLearningRate / initLearningRate, min(t, decaySteps) / decaySteps)}.
+     *
+     * @param minLearningRate the minimum learning rate.
+     * @param decaySteps the maximum decay steps.
+     * @param maxLearningRate the maximum learning rate. It also serves as the
+     *                        initial learning rate.
+     * @return the cosine decay function.
+     */
+    static TimeFunction cosine(double minLearningRate, double decaySteps, double maxLearningRate) {
+        return new TimeFunction() {
+            @Override
+            public double apply(int t) {
+                return minLearningRate + 0.5 * (maxLearningRate - minLearningRate) * (1 + Math.cos(t /decaySteps * Math.PI));
+            }
+
+            @Override
+            public String toString() {
+                return String.format("CosineDecay(%f, %.0f, %f)", minLearningRate, decaySteps, maxLearningRate);
+            }
+        };
+    }
+
+    /**
      * Parses a time function.
      *
      * @param time the time function representation.
@@ -387,6 +418,15 @@ public interface TimeFunction extends Serializable {
                 boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
                 return exp(initLearningRate, decaySteps, endLearningRate, staircase);
             }
+        }
+
+        Pattern cosine = Pattern.compile(String.format("cosine(?:decay)?\\((%s),\\s*(%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        m = cosine.matcher(time);
+        if (m.matches()) {
+            double minLearningRate = Double.parseDouble(m.group(1));
+            double decaySteps = Double.parseDouble(m.group(2));
+            double maxLearningRate = Double.parseDouble(m.group(3));
+            return cosine(minLearningRate, decaySteps, maxLearningRate);
         }
 
         try {
