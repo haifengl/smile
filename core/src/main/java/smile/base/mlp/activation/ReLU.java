@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.deep.activation;
+package smile.base.mlp.activation;
 
 /**
  * The rectifier activation function {@code max(0, x)}.
