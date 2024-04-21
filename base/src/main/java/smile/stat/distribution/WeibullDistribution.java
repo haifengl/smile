@@ -63,7 +63,7 @@ import smile.math.special.Gamma;
  *
  * @author Haifeng Li
  */
-public class WeibullDistribution extends AbstractDistribution {
+public class WeibullDistribution implements Distribution {
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */

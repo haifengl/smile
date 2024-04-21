@@ -36,7 +36,7 @@ import smile.math.special.Gamma;
  * where B(&alpha;,&beta;) is the beta function.
  * @author Haifeng Li
  */
-public class BetaDistribution extends AbstractDistribution implements ExponentialFamily {
+public class BetaDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */
