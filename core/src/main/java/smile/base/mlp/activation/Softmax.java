@@ -15,22 +15,42 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.deep.optimizer;
+package smile.base.mlp.activation;
 
-import java.io.Serializable;
-import smile.base.mlp.Layer;
+import smile.math.MathEx;
 
 /**
- * The neural network optimizer.
+ * Softmax for multi-class cross entropy objection function.
+ * The values of units in output layer can be regarded as
+ * posteriori probabilities of each class.
  *
  * @author Haifeng Li
  */
-public interface Optimizer extends Serializable {
+public class Softmax implements ActivationFunction {
+    /** Default instance. */
+    static Softmax instance = new Softmax();
+
     /**
-     * Updates a layer.
-     * @param layer a neural network layer.
-     * @param m the size of mini-batch.
-     * @param t the time step, i.e. the number of training iterations so far.
+     * Constructor.
      */
-    void update(Layer layer, int m, int t);
+    public Softmax() {
+
+    }
+
+    @Override
+    public String name() {
+        return "Softmax";
+    }
+
+    @Override
+    public void f(double[] x) {
+        MathEx.softmax(x);
+    }
+
+    @Override
+    public void g(double[] g, double[] y) {
+        for (int i = 0; i < g.length; i++) {
+            g[i] *= y[i] > 0 ? 1 : 0;
+        }
+    }
 }

@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.deep.optimizer;
+package smile.base.mlp.optimizer;
 
 import java.util.Arrays;
 import smile.base.mlp.Layer;

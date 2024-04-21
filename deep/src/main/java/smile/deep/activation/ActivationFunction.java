@@ -22,7 +22,8 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
 
 /**
- * The non-linear activation function.
+ * The activation function. It also implements the layer interface
+ * so that it can be treated added into a network as a layer.
  *
  * @author Haifeng Li
  */

@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.deep.activation;
+package smile.base.mlp.activation;
 
 /**
  * Hyperbolic tangent activation function. The tanh function is a

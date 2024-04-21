@@ -15,42 +15,50 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.deep.activation;
-
-import smile.math.MathEx;
+package smile.base.mlp.activation;
 
 /**
- * Softmax for multi-class cross entropy objection function.
- * The values of units in output layer can be regarded as
- * posteriori probabilities of each class.
+ * The leaky rectifier activation function {@code max(x, ax)} where
+ * {@code 0 <= a < 1}. By default {@code a = 0.01}. Leaky ReLUs allow
+ * a small, positive gradient when the unit is not active.
+ * It has a relation to "maxout" networks.
  *
  * @author Haifeng Li
  */
-public class Softmax implements ActivationFunction {
+public class LeakyReLU implements ActivationFunction {
     /** Default instance. */
-    static Softmax instance = new Softmax();
+    static LeakyReLU instance = new LeakyReLU(0.01);
+    /** The leaky parameter {@code 0 <= a < 1}. */
+    private double a;
 
     /**
      * Constructor.
+     * @param a leaky parameter {@code 0 <= a < 1}.
      */
-    public Softmax() {
+    public LeakyReLU(double a) {
+        if (a < 0 || a >= 1.0) {
+            throw new IllegalArgumentException("Invalid Leaky ReLU parameter: " + a);
+        }
 
+        this.a = a;
     }
 
     @Override
     public String name() {
-        return "Softmax";
+        return "LeakyReLU";
     }
 
     @Override
     public void f(double[] x) {
-        MathEx.softmax(x);
+        for (int i = 0; i < x.length; i++) {
+            x[i] = Math.max(a * x[i], x[i]);
+        }
     }
 
     @Override
     public void g(double[] g, double[] y) {
         for (int i = 0; i < g.length; i++) {
-            g[i] *= y[i] > 0 ? 1 : 0;
+            g[i] *= y[i] > 0 ? 1 : a;
         }
     }
 }
