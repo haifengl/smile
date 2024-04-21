@@ -16,6 +16,7 @@
  */
 package smile.deep.layer;
 
+import java.util.function.Function;
 import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Tensor;
@@ -25,7 +26,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public interface Layer {
+public interface Layer extends Function<Tensor, Tensor> {
     /**
      * Forward propagation (or forward pass) through the layer.
      *
@@ -33,6 +34,11 @@ public interface Layer {
      * @return the output tensor.
      */
     Tensor forward(Tensor input);
+
+    @Override
+    default Tensor apply(Tensor input) {
+        return forward(input);
+    }
 
     /**
      * Returns the PyTorch Module object.

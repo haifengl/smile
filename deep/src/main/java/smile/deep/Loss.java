@@ -31,7 +31,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss l1() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.l1_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.l1_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -39,7 +39,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss mse() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.mse_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.mse_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -47,7 +47,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss nll() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.nll_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.nll_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -55,7 +55,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss crossEntropy() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -63,7 +63,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss hingeEmbedding() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
     }
 
     /**
@@ -71,7 +71,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss kl() {
-        return (Tensor input, Tensor target) -> new Tensor(torch.kl_div(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(torch.kl_div(input.asTorch(), target.asTorch()));
     }
 
     /**

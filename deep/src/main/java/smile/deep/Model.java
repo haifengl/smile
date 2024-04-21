@@ -18,6 +18,7 @@ package smile.deep;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LayerBlock;
@@ -31,7 +32,7 @@ import smile.math.TimeFunction;
  *
  * @author Haifeng Li
  */
-public class Model {
+public class Model implements Function<Tensor, Tensor> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Model.class);
     /** The neural network. */
     private LayerBlock net;
@@ -120,6 +121,11 @@ public class Model {
         net.asTorch().save(archive);
         archive.save_to(path);
         return this;
+    }
+
+    @Override
+    public Tensor apply(Tensor input) {
+        return forward(input);
     }
 
     /**
