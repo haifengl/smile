@@ -40,6 +40,8 @@ import smile.util.SparseArray;
  * column-compressed sparse matrix format, which is more efficient for matrix
  * operations.
  *
+ * @param <T> the target type.
+ *
  * @author Haifeng Li
  */
 public interface SparseDataset<T> extends Dataset<SparseArray, T> {
@@ -162,6 +164,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * Returns a default implementation of SparseDataset without targets.
      *
      * @param data sparse arrays.
+     * @param <T> the target type.
      * @return the sparse dataset.
      */
     static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data) {
@@ -173,6 +176,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      *
      * @param data sparse arrays.
      * @param ncol the number of columns.
+     * @param <T> the target type.
      * @return the sparse dataset.
      */
     static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data, int ncol) {

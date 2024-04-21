@@ -49,7 +49,7 @@ public class SQL implements AutoCloseable {
     /**
      * Constructor to open or create a persistent database.
      * @param path DuckDB file path.
-     * @throws SQLException if fail to open or create the DuckDB file.
+     * @throws SQLException if fail to open or create the persistent database.
      */
     public SQL(String path) throws SQLException {
         db = DriverManager.getConnection("jdbc:duckdb:" + path);
@@ -72,7 +72,7 @@ public class SQL implements AutoCloseable {
     /**
      * Returns the tables in the database.
      * @return the data frame of table metadata.
-     * @throws SQLException
+     * @throws SQLException if fail to query metadata.
      */
     public DataFrame tables() throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
@@ -86,7 +86,7 @@ public class SQL implements AutoCloseable {
      * Returns the columns in a table.
      * @param table the table name.
      * @return the data frame of table columns.
-     * @throws SQLException
+     * @throws SQLException if fail to query metadata.
      */
     public DataFrame describe(String table) throws SQLException {
         DatabaseMetaData meta = db.getMetaData();
@@ -97,28 +97,35 @@ public class SQL implements AutoCloseable {
     }
 
     /**
-     * Creates a table from csv files. The file should have a header line
-     * and uses the default comma delimiter.
+     * Creates an in-memory table from csv files. The file should have a
+     * header line and uses the default comma delimiter. You can read a
+     * series of files and treat them as if they were a single table.
+     * Note that this only works if the files have the same schema.
+     * The files can be specified by a list parameter, glob pattern
+     * matching syntax, or a combination of both.
+     *
      * @param name the table name.
      * @param path the csv file path.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL csv(String name, String... path) throws SQLException {
         return csv(name, ',', null, path);
     }
 
     /**
-     * Creates a table from csv files. You can read a series of files and treat
-     * them as if they were a single table. Note that this only works if the
-     * files have the same schema. The files can be specified by a list
-     * parameter, glob pattern matching syntax, or a combination of both.
+     * Creates an in-memory table from csv files. You can read a series
+     * of files and treat them as if they were a single table. Note that
+     * this only works if the files have the same schema. The files can be
+     * specified by a list parameter, glob pattern matching syntax, or
+     * a combination of both.
+     *
      * @param name the table name.
      * @param path a list of csv files.
      * @param delimiter the delimiter character that separates columns.
      * @param columns a map that specifies the column names and column types.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL csv(String name, char delimiter, Map<String, String> columns, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
@@ -143,24 +150,28 @@ public class SQL implements AutoCloseable {
     }
 
     /**
-     * Creates a table from parquet files. You can read a series of files and treat
-     * them as if they were a single table. Note that this only works if the
-     * files have the same schema. The files can be specified by a list
-     * parameter, glob pattern matching syntax, or a combination of both.
+     * Creates an in-memory table from parquet files. You can read a series
+     * of files and treat them as if they were a single table. Note that
+     * this only works if the files have the same schema. The files can be
+     * specified by a list parameter, glob pattern matching syntax, or
+     * a combination of both.
+     *
      * @param name the table name.
      * @param path a list of csv files.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL parquet(String name, String... path) throws SQLException {
         return parquet(name, null, path);
     }
 
     /**
-     * Creates a table from parquet files. You can read a series of files and treat
-     * them as if they were a single table. Note that this only works if the
-     * files have the same schema. The files can be specified by a list
-     * parameter, glob pattern matching syntax, or a combination of both.
+     * Creates an in-memory table from parquet files. You can read a series
+     * of files and treat them as if they were a single table. Note that
+     * this only works if the files have the same schema. The files can be
+     * specified by a list parameter, glob pattern matching syntax, or
+     * a combination of both.
+     *
      * @param name the table name.
      * @param path a list of csv files.
      * @param options supported options include
@@ -168,16 +179,15 @@ public class SQL implements AutoCloseable {
      *               do not correctly set the UTF8 flag for strings, causing string
      *               columns to be loaded as BLOB instead. Set this to true to load
      *               binary columns as strings.
-     *               'filename' - Whether or not an extra filename column should be
-     *               included in the result.
-     *               'file_row_number' - Whether or not to include the file_row_number
-     *               column.
-     *               'hive_partitioning' - Whether or not to interpret the path as a
+     *               'filename' - Whether an extra filename column should be included
+     *               in the result.
+     *               'file_row_number' - Whether to include the file_row_number column.
+     *               'hive_partitioning' - Whether to interpret the path as a
      *               Hive partitioned path.
      *               'union_by_name' - Whether the columns of multiple schemas should be
      *               unified by name, rather than by position.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL parquet(String name, Map<String, String> options, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
@@ -201,24 +211,26 @@ public class SQL implements AutoCloseable {
 
 
     /**
-     * Creates a table from json files. You can read a series of files and treat
-     * them as if they were a single table. Note that this only works if the
-     * files have the same schema. The files can be specified by a list
-     * parameter, glob pattern matching syntax, or a combination of both.
+     * Creates an in-memory table from json files. You can read a series of
+     * files and treat them as if they were a single table. Note that this
+     * only works if the files have the same schema. The files can be
+     * specified by a list parameter, glob pattern matching syntax, or
+     * a combination of both.
      * @param name the table name.
      * @param path a list of json files.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL json(String name, String... path) throws SQLException {
         return json(name, "auto", null, path);
     }
 
     /**
-     * Creates a table from json files. You can read a series of files and treat
-     * them as if they were a single table. Note that this only works if the
-     * files have the same schema. The files can be specified by a list
-     * parameter, glob pattern matching syntax, or a combination of both.
+     * Creates an in-memory table from json files. You can read a series of
+     * files and treat them as if they were a single table. Note that this
+     * only works if the files have the same schema. The files can be
+     * specified by a list parameter, glob pattern matching syntax, or
+     * a combination of both.
      * @param name the table name.
      * @param path a list of json files.
      * @param format "auto", "unstructured", "newline_delimited", or "array".
@@ -229,7 +241,7 @@ public class SQL implements AutoCloseable {
      *               not newline-delimited or an array.
      * @param columns a map that specifies the column names and column types.
      * @return this object.
-     * @throws SQLException
+     * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL json(String name, String format, Map<String, String> columns, String... path) throws SQLException {
         StringBuilder sb = new StringBuilder();
@@ -287,7 +299,7 @@ public class SQL implements AutoCloseable {
      * Executes a SELECT statement.
      * @param sql a SELECT statement.
      * @return the query result.
-     * @throws SQLException
+     * @throws SQLException if fail to execute the SQL query.
      */
     public DataFrame query(String sql) throws SQLException {
         logger.info(sql);
@@ -300,7 +312,7 @@ public class SQL implements AutoCloseable {
      * Executes an INSERT, UPDATE, or DELETE statement.
      * @param sql an INSERT, UPDATE, or DELETE statement.
      * @return the number of rows affected by the SQL statement.
-     * @throws SQLException
+     * @throws SQLException if fail to execute the SQL update.
      */
     public int update(String sql) throws SQLException {
         logger.info(sql);
@@ -314,7 +326,7 @@ public class SQL implements AutoCloseable {
      * @param sql an SQL statement.
      * @return true if the first result is a ResultSet object;
      *         false if it is an update count or there are no results.
-     * @throws SQLException
+     * @throws SQLException if fail to execute the SQL query.
      */
     public boolean execute(String sql) throws SQLException {
         logger.info(sql);

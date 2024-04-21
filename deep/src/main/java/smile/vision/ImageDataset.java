@@ -54,6 +54,7 @@ public class ImageDataset implements Dataset {
      * @param root the root directory of image dataset.
      * @param transform the transformation from image to tensor.
      * @param targetTransform the transform from image label to class index.
+     * @throws IOException if the root directory doesn't exist or doesn't have images.
      */
     public ImageDataset(int batch, String root, Transform transform, ToIntFunction<String> targetTransform) throws IOException {
         this.batch = batch;

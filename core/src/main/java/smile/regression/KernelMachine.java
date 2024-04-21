@@ -32,6 +32,8 @@ import smile.math.kernel.MercerKernel;
  * a new representation) and learn for it a corresponding weight. Prediction
  * for unlabeled inputs is treated by the application of a similarity function.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements Regression<T> {

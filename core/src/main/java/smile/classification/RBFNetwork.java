@@ -86,7 +86,9 @@ import java.util.Properties;
  * @see RadialBasisFunction
  * @see SVM
  * @see MLP
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class RBFNetwork<T> extends AbstractClassifier<T> {

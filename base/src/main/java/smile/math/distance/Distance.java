@@ -34,6 +34,8 @@ import smile.math.matrix.Matrix;
  * Note that a distance function is not required to satisfy triangular inequality
  * {@code |x - y| + |y - z| >= |x - z|}, which is necessary for a metric.
  *
+ * @param <T> the input type of distance function.
+ *
  * @author Haifeng Li
  */
 public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {

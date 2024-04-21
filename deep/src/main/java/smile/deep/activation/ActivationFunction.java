@@ -28,6 +28,7 @@ import smile.deep.layer.Layer;
  * @author Haifeng Li
  */
 public abstract class ActivationFunction implements Layer, Serializable {
+    /** The module of activation function. */
     private final Module module;
     /** The function name. */
     private final String name;

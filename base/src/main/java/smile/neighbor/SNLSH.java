@@ -56,6 +56,9 @@ import smile.util.IntArrayList;
  * @see LSH
  * @see smile.hash.SimHash
  *
+ * @param <K> the type of keys.
+ * @param <V> the type of associated objects.
+ *
  * @author Qiyang Zuo
  */
 public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {

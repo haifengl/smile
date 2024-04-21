@@ -36,6 +36,8 @@ import smile.data.type.StructField;
 /**
  * An immutable vector.
  *
+ * @param <T> the data type of vector elements.
+ *
  * @author Haifeng Li
  */
 class VectorImpl<T> implements Vector<T> {

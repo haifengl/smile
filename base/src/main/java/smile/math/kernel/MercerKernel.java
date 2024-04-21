@@ -50,11 +50,13 @@ import static smile.util.Regex.DOUBLE_REGEX;
  * is also a kernel.
  * <p>
  * A stationary covariance function is a function of distance <code>x − y</code>.
- * Thus it is invariant stationarity to translations in the input space.
+ * Thus, it is invariant stationarity to translations in the input space.
  * If further the covariance function is a function only of <code>|x − y|</code>
  * then it is called isotropic; it is thus invariant to all rigid motions.
  * If a covariance function depends only on the dot product of x and y,
  * we call it a dot product covariance function.
+ *
+ * @param <T> the input type of kernel function.
  *
  * @author Haifeng Li
  */

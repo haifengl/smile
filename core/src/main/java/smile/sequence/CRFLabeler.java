@@ -25,6 +25,8 @@ import smile.data.Tuple;
 /**
  * First-order CRF sequence labeler.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class CRFLabeler<T> implements SequenceLabeler<T> {

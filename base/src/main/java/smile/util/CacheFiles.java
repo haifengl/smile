@@ -59,6 +59,8 @@ public interface CacheFiles {
      * Downloads a file and save to the cache directory.
      * @param url the url of online file.
      * @return the path to the cache file.
+     * @throws IOException if fail to download the file.
+     * @throws URISyntaxException if url is invalid.
      */
     static Path download(String url) throws IOException, URISyntaxException {
         return download(url, false);
@@ -69,6 +71,8 @@ public interface CacheFiles {
      * @param url the url of online file.
      * @param force flag indicating if download even when cache file exists.
      * @return the path to the cache file.
+     * @throws IOException if fail to download the file.
+     * @throws URISyntaxException if url is invalid.
      */
     static Path download(String url, boolean force) throws IOException, URISyntaxException {
         URI uri = new URI(url);
@@ -84,7 +88,10 @@ public interface CacheFiles {
         return path;
     }
 
-    /** Cleans up the cache directory. */
+    /**
+     * Cleans up the cache directory.
+     * @throws IOException if fail to delete the cache files.
+     */
     static void clean() throws IOException {
         Files.walk(Paths.get(dir()))
                 .sorted(Comparator.reverseOrder())

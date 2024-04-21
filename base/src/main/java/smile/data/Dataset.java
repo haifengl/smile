@@ -216,7 +216,8 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
     /**
      * Returns a stream collector that accumulates elements into a Dataset.
      *
-     * @param <T> the type of input elements.
+     * @param <D> the data type.
+     * @param <T> the target type.
      * @return the stream collector.
      */
     static <D, T> Collector<SampleInstance<D, T>, List<SampleInstance<D, T>>, Dataset<D, T>> collector() {

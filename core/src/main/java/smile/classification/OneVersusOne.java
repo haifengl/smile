@@ -44,6 +44,8 @@ import smile.util.IntSet;
  * suffers from ambiguities in that some regions of its input space may
  * receive the same number of votes.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class OneVersusOne<T> extends AbstractClassifier<T> {

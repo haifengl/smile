@@ -26,6 +26,8 @@ import java.util.Map;
  * Perfect hash based immutable map. This can be used as a lookup table with
  * constant worst-case access time.
  *
+ * @param <T> the data type of set objects.
+ *
  * @author Haifeng Li
  */
 public class PerfectMap<T> {
@@ -34,7 +36,10 @@ public class PerfectMap<T> {
     /** The value set. */
     private final List<T> values;
 
-    /** The builder of perfect map. */
+    /**
+     * The builder of perfect map.
+     * @param <T> the data type of set objects.
+     */
     public static class Builder<T> {
         /** Key-value map. */
         private final Map<String, T> map = new HashMap<>();
