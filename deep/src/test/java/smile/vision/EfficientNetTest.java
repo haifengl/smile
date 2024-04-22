@@ -130,9 +130,13 @@ public class EfficientNetTest {
         var data = new ImageDataset(32, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
         var val = new ImageDataset(128, "D:\\data\\imagenet-mini\\val", transform, ImageNet.folder2Target);
 
-        var schedule = TimeFunction.linear(0.0005, 20000, 0.001);
+        var schedule = TimeFunction.piecewise(new int[] { 10000 },
+                TimeFunction.linear(0.00001, 10000, 0.00005),
+                TimeFunction.cosine(0.00001, 5000, 0.00005));
         model.setLearningRateSchedule(schedule);
-        Optimizer optimizer = Optimizer.SGD(model, 0.0005);
-        model.train(2, optimizer, Loss.nll(), data, val, null, new Accuracy());
+        // Use parameters from the paper, the rests are Keras default values.
+        // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
+        Optimizer optimizer = Optimizer.RMSprop(model, 0.00001, 0.9, 1E-07, 1E-05, 0.9, false);
+        model.train(20, optimizer, Loss.nll(), data, val, null, new Accuracy());
     }
 }
