@@ -66,17 +66,17 @@ public interface TimeFunction extends Serializable {
      * changing the learning rate value across different invocations of
      * optimizer functions.
      *
-     * @param boundaries A list of integers with strictly increasing entries.
-     * @param values	 The values for each interval defined by boundaries.
-     *                   It should have one more element than boundaries.
+     * @param milestones List of batch indices. Must be increasing.
+     * @param values The values for each interval defined by milestones.
+     *               It should have one more element than milestones.
      * @return the piecewise learning rate function.
      */
-    static TimeFunction piecewise(int[] boundaries, double[] values) {
+    static TimeFunction piecewise(int[] milestones, double[] values) {
         TimeFunction[] schedules = new TimeFunction[values.length];
         for (int i = 0; i < values.length; i++) {
             schedules[i] = TimeFunction.constant(values[i]);
         }
-        return piecewise(boundaries, schedules);
+        return piecewise(milestones, schedules);
     }
 
     /**
@@ -84,27 +84,27 @@ public interface TimeFunction extends Serializable {
      * changing the learning rate value across different invocations of
      * optimizer functions.
      *
-     * @param boundaries A list of integers with strictly increasing entries.
-     * @param schedules	The time functions for each interval defined by boundaries.
+     * @param milestones List of batch indices. Must be increasing.
+     * @param schedules	The time functions for each interval defined by milestones.
      *                  It should have one more element than .
      * @return the piecewise learning rate function.
      */
-    static TimeFunction piecewise(int[] boundaries, TimeFunction[] schedules) {
-        if (schedules.length != boundaries.length + 1) {
-            throw new IllegalArgumentException("values should have one more element than boundaries");
+    static TimeFunction piecewise(int[] milestones, TimeFunction... schedules) {
+        if (schedules.length != milestones.length + 1) {
+            throw new IllegalArgumentException("values should have one more element than milestones");
         }
 
         return new TimeFunction() {
             @Override
             public double apply(int t) {
-                int i = Arrays.binarySearch(boundaries, t);
+                int i = Arrays.binarySearch(milestones, t);
                 if (i < 0) i = -i - 1;
                 return schedules[i].apply(t);
             }
 
             @Override
             public String toString() {
-                return String.format("Piecewise(%s, %s)", Arrays.toString(boundaries), Arrays.toString(schedules));
+                return String.format("Piecewise(%s, %s)", Arrays.toString(milestones), Arrays.toString(schedules));
             }
         };
     }
@@ -386,9 +386,9 @@ public interface TimeFunction extends Serializable {
         if (time.startsWith("piecewise([") && time.endsWith("])")) {
             String[] tokens = time.substring(11, time.length()-2).split("\\],\\s*\\[");
             if (tokens.length == 2) {
-                int[] boundaries = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
+                int[] milestones = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
                 double[] values = Arrays.stream(tokens[1].split(",\\s*")).mapToDouble(Double::parseDouble).toArray();
-                return piecewise(boundaries, values);
+                return piecewise(milestones, values);
             }
         }
 
