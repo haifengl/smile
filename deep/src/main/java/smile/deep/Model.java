@@ -173,8 +173,8 @@ public class Model implements Function<Tensor, Tensor> {
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset val, String checkpoint, Metric... metrics) {
         train(); // training mode
         int batchIndex = 0;
+        double lossValue = 0.0;
         for (int epoch = 1; epoch <= epochs; ++epoch) {
-            double lossValue = 0;
             // Iterate the data loader to yield batches from the dataset.
             for (SampleBatch batch : train) {
                 Tensor data = device == null ? batch.data() : batch.data().to(device);
@@ -185,7 +185,7 @@ public class Model implements Function<Tensor, Tensor> {
                 Tensor prediction = net.forward(data);
                 // Compute a loss value to judge the prediction of our model.
                 Tensor error = loss.apply(prediction, target);
-                lossValue = error.floatValue();
+                lossValue += error.floatValue();
                 // Compute gradients of the loss w.r.t. the parameters of our model.
                 error.backward();
                 // Update the parameters based on the calculated gradients.
@@ -202,18 +202,19 @@ public class Model implements Function<Tensor, Tensor> {
                 }
 
                 if (++batchIndex % 100 == 0) {
-                    String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
+                    String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue / 100);
                     if (learningRateSchedule != null) {
                         double rate = learningRateSchedule.apply(batchIndex);
-                        msg += String.format(" | LR: %.4f", rate);
+                        msg += String.format(" | LR: %.5f", rate);
                     }
                     logger.info(msg);
                     free();
+                    lossValue = 0.0;
                 }
             }
 
             // Output the loss and checkpoint.
-            String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue);
+            String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue / (batchIndex % 100));
             if (val != null) {
                 Map<String, Double> result = eval(val, metrics);
                 StringBuilder sb = new StringBuilder(msg);
