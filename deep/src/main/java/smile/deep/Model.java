@@ -171,6 +171,10 @@ public class Model implements Function<Tensor, Tensor> {
      * @param metrics the evaluation metrics.
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset val, String checkpoint, Metric... metrics) {
+        if (val != null && metrics.length == 0) {
+            throw new IllegalArgumentException("Validation dataset is provided without metrics");
+        }
+
         train(); // training mode
         int batchIndex = 0;
         double lossValue = 0.0;
@@ -213,9 +217,9 @@ public class Model implements Function<Tensor, Tensor> {
                 }
             }
 
-            // Output the loss and checkpoint.
-            String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue / (batchIndex % 100));
+            // Output the validation metrics.
             if (val != null) {
+                String msg = String.format("Epoch: %d | Batch: %d", epoch, batchIndex);
                 Map<String, Double> result = eval(val, metrics);
                 StringBuilder sb = new StringBuilder(msg);
                 train(); // return to training mode
@@ -225,9 +229,9 @@ public class Model implements Function<Tensor, Tensor> {
                     metric.reset();
                 }
                 msg = sb.toString();
+                logger.info(msg);
             }
 
-            logger.info(msg);
             if (checkpoint != null) {
                 save(String.format("%s-%d.pt", checkpoint, epoch));
             }
