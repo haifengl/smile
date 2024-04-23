@@ -81,8 +81,11 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-Xdoclint:none",
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
-    "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
-    ),
+    "--add-script", "project/gtag.js",
+    "-bottom", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+                 |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
+                 |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
+  ),
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.13",
     "org.slf4j" % "slf4j-simple" % "2.0.13" % Test,
@@ -119,6 +122,16 @@ lazy val javaCppSettings = Seq(
     "org.bytedeco" % "openblas"  % "0.3.26-1.5.11-SNAPSHOT" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
     "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11-SNAPSHOT"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
+)
+
+JavaUnidoc / unidoc / javacOptions ++= Seq(
+  "-Xdoclint:none",
+  "--allow-script-in-comments",
+  "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
+  "--add-script", "project/gtag.js",
+  "-bottom", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+               |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
+               |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
 )
 
 lazy val root = project.in(file("."))
