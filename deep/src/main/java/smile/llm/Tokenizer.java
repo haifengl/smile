@@ -44,7 +44,7 @@ public class Tokenizer {
     public Tokenizer(String path) throws IOException {
         SpTokenizer model = new SpTokenizer(Paths.get(path));
         SpVocabulary voc = SpVocabulary.from(model);
-        logger.info("Reloaded SentencePiece model from {} with vocabulary size {}", path, voc.size());
+        logger.info("Load SentencePiece model from {}", path);
         tokenizer = model.getProcessor();
         unk = (int) voc.getIndex("<unk>");
         bos = (int) voc.getIndex("<s>");
