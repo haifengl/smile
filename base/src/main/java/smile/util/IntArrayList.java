@@ -150,7 +150,7 @@ public final class IntArrayList implements Serializable {
      *
      * @param vals an array to be appended to this list.
      */
-    public void add(int[] vals) {
+    public void add(int... vals) {
         ensureCapacity(size + vals.length);
         System.arraycopy(vals, 0, data, size, vals.length);
         size += vals.length;
@@ -182,7 +182,7 @@ public final class IntArrayList implements Serializable {
     }
 
     /**
-     * Removes all of the value from this list. The list will
+     * Removes all values from this list. The list will
      * be empty after this call returns. 
      */
     public void clear() {
@@ -216,7 +216,7 @@ public final class IntArrayList implements Serializable {
     }
 
     /**
-     * Returns an array containing all of the values in this list in
+     * Returns an array containing all values in this list in
      * proper sequence (from first to last value). 
      * The caller is thus free to modify the returned array. 
      * @return an array containing the values of the list.
@@ -226,7 +226,7 @@ public final class IntArrayList implements Serializable {
     }
 
     /**
-     * Returns an array containing all of the values in this list in
+     * Returns an array containing all values in this list in
      * proper sequence (from first to last value). If the list fits
      * in the specified array, it is returned therein. Otherwise, a new
      * array is allocated with the size of this list. 
