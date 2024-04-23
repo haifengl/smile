@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm;
+package smile.llm.tokenizer;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -25,7 +25,7 @@ import ai.djl.sentencepiece.*;
  *
  * @author Haifeng Li
  */
-public class Tokenizer {
+class SentencePiece implements Tokenizer {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tokenizer.class);
     /** SentencePiece tokenizer. */
     private final SpProcessor tokenizer;
@@ -41,7 +41,7 @@ public class Tokenizer {
      * @param path The path to the SentencePiece model file.
      * @throws IOException if fail to load the model.
      */
-    public Tokenizer(String path) throws IOException {
+    public SentencePiece(String path) throws IOException {
         SpTokenizer model = new SpTokenizer(Paths.get(path));
         SpVocabulary voc = SpVocabulary.from(model);
         logger.info("Load SentencePiece model from {}", path);
@@ -52,22 +52,12 @@ public class Tokenizer {
         logger.info("UNK ID: {} | BOS ID: {} | EOS ID: {}", unk, bos, eos);
     }
 
-    /**
-     * Encodes a string into a list of token IDs.
-     * @param text The input string to be encoded.
-     * @return A list of token IDs.
-     */
+    @Override
     public int[] encode(String text) {
         return encode(text, false, false);
     }
 
-    /**
-     * Encodes a string into a list of token IDs.
-     * @param text The input string to be encoded.
-     * @param bos Whether to prepend the beginning-of-sequence token.
-     * @param eos Whether to append the end-of-sequence token.
-     * @return A list of token IDs.
-     */
+    @Override
     public int[] encode(String text, boolean bos, boolean eos) {
         int[] t = tokenizer.encode(text);
 
@@ -88,20 +78,12 @@ public class Tokenizer {
         return tokens;
     }
 
-    /**
-     * Decodes a list of token IDs into a string.
-     * @param tokens The list of token IDs to be decoded.
-     * @return The decoded string.
-     */
+    @Override
     public String decode(int[] tokens) {
         return tokenizer.decode(tokens);
     }
 
-    /**
-     * Segments text into tokens.
-     * @param text The input string to be tokenized.
-     * @return The tokenized sequence.
-     */
+    @Override
     public String[] tokenize(String text) {
         return tokenizer.tokenize(text);
     }
