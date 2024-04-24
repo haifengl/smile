@@ -40,11 +40,9 @@ public class Tiktoken implements Tokenizer {
     /** The regex pattern to detect special tokens. */
     private final Pattern specialTokenPattern;
     /** Token -> ID */
-    private final Map<Bytes, Integer> encoder;
+    protected final Map<Bytes, Integer> encoder;
     /** Special Token -> ID */
-    private final Map<String, Integer> specialTokenEncoder;
-    /** Special Token -> ID */
-    private final Set<Integer> specialTokens;
+    protected final Map<String, Integer> specialTokenEncoder;
     /** ID -> Token */
     private final Bytes[] decoder;
     /** BOS (beginning of sequence) token id. */
@@ -77,10 +75,8 @@ public class Tiktoken implements Tokenizer {
 
         this.specialTokenPattern = specialTokenRegex(specialTokens);
         this.specialTokenEncoder = new HashMap<>();
-        this.specialTokens = new TreeSet<>();
         for (int i = 0; i < specialTokens.length; i++) {
             int id = size + i;
-            this.specialTokens.add(id);
             this.specialTokenEncoder.put(specialTokens[i], id);
             this.decoder[id] = new Bytes(specialTokens[i]);
         }
@@ -161,17 +157,14 @@ public class Tiktoken implements Tokenizer {
         return output.toArray();
     }
 
-    private void bytePairMerge() {
-
-    }
-
     /**
      * Byte pair encoding.
-     * @param piece
-     * @param ranks
+     * @param piece the piece of text.
+     * @param ranks a workspace.
      */
     private void bytePairEncode(Bytes piece, IntArrayList output, IntArrayList ranks) {
         int length = piece.length();
+        assert length > 1;
         ranks.clear();
         ranks.ensureCapacity(length + 1);
 
@@ -187,6 +180,8 @@ public class Tiktoken implements Tokenizer {
             ranks.add(encoded);
         }
 
+        bytePairMerge(piece, ranks, minRankIndex);
+
         for (int start = 0, end = 1; end < ranks.size(); end++) {
             if (ranks.get(end) != DUMMY_RANK) {
                 int token = encode(piece, start, end);
@@ -197,6 +192,81 @@ public class Tiktoken implements Tokenizer {
         }
     }
 
+    private void bytePairMerge(Bytes piece, IntArrayList ranks, int minRankIndex) {
+        int length = piece.length();
+        while (minRankIndex >= 0) {
+            int previousIndex = getPreviousIndex(ranks, minRankIndex - 1);
+            int nextIndex = getNextIndex(ranks, minRankIndex + 1);
+            int nextNextIndex = getNextIndex(ranks, nextIndex + 1);
+            int nextNextNextIndex = getNextIndex(ranks, nextNextIndex + 1);
+
+            if (previousIndex >= 0) {
+                assert ranks.get(previousIndex) != DUMMY_RANK;
+                int newRank = encode(piece, previousIndex, nextNextIndex);
+                ranks.set(previousIndex, newRank);
+            }
+            assert ranks.get(minRankIndex) != DUMMY_RANK;
+            int newRank = encode(piece, minRankIndex, nextNextNextIndex);
+            ranks.set(minRankIndex, newRank);
+
+            ranks.set(nextIndex, DUMMY_RANK);
+
+            length--;
+            if (length < 3) {
+                break; // single tokens were already filtered out, let's skip a minimum calculation
+            } else {
+                minRankIndex = getMinRankIndex(ranks);
+            }
+        }
+        assert getMinRankIndex(ranks) < 0;
+    }
+
+    private static int getMinRankIndex(IntArrayList ranks) {
+        int minRankIndex = -1;
+        int minRank = MAX_RANK;
+
+        int i = 0;
+        int length = ranks.size() - 3;
+        for (; i < length - 2; i++) {
+            int r = ranks.get(i);
+            if (r < minRank) {
+                minRankIndex = i;
+                minRank = r;
+            }
+        }
+
+        for (; i <= length; i++) {
+            int r = ranks.get(i);
+            if (r < minRank) {
+                minRankIndex = i;
+                minRank = r;
+            }
+        }
+
+        return minRankIndex;
+    }
+
+    private static int getNextIndex(IntArrayList ranks, int nextIndex) {
+        while (nextIndex < ranks.size() && ranks.get(nextIndex) == DUMMY_RANK) {
+            nextIndex++;
+        }
+        return nextIndex;
+    }
+
+    private static int getPreviousIndex(IntArrayList ranks, int previousIndex) {
+        while (previousIndex >= 0 && ranks.get(previousIndex) == DUMMY_RANK) {
+            previousIndex--;
+        }
+        return previousIndex;
+    }
+
+    /**
+     * Encodes a part of piece.
+     * @param piece the piece of text.
+     * @param start the initial index of the range to be included, inclusive
+     * @param end the final index of the range to be included, exclusive.
+     * @return the token id if the part of piece is in the vocabulary or MAX_RANK.
+     */
     private int encode(Bytes piece, int start, int end) {
         if (end > piece.length() || end - start == piece.length()) {
             return MAX_RANK;

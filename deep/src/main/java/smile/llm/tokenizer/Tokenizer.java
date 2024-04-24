@@ -92,15 +92,4 @@ public interface Tokenizer {
         Map<Bytes, Integer> encoder = Tiktoken.load(path);
         return new Tiktoken(pattern, encoder, bos, eos, specialTokens);
     }
-
-    /**
-     * Loads a llama3 tokenizer model.
-     * @param path The llama3 model file path.
-     * @return a llama3 tokenizer.
-     * @throws IOException if fail to load the model.
-     */
-    static Llama llama(String path) throws IOException {
-        Map<Bytes, Integer> encoder = Tiktoken.load(path);
-        return new Llama(encoder);
-    }
 }
