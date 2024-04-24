@@ -21,30 +21,31 @@ import java.nio.file.Paths;
 import ai.djl.sentencepiece.*;
 
 /**
- * Tokenizing and encoding/decoding text using SentencePiece.
+ * SentencePiece is an unsupervised text tokenizer by Google.
+ * SentencePiece implements BPE and unigram language model.
  *
  * @author Haifeng Li
  */
-class SentencePiece implements Tokenizer {
+public class SentencePiece implements Tokenizer {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tokenizer.class);
     /** SentencePiece tokenizer. */
     private final SpProcessor tokenizer;
     /** Unknown token (<unk>), default id 0. */
     private final int unk;
-    /** BOS (beginning of sentence) token (<s>), default id 1. */
+    /** BOS (beginning of sequence) token (<s>), default id 1. */
     private final int bos;
-    /** EOS (end of sentence) token (</s>), default id 2. */
+    /** EOS (end of sequence) token (</s>), default id 2. */
     private final int eos;
 
     /**
-     * Initializes the Tokenizer with a SentencePiece model.
-     * @param path The path to the SentencePiece model file.
+     * Constructor.
+     * @param path The SentencePiece model file path.
      * @throws IOException if fail to load the model.
      */
     public SentencePiece(String path) throws IOException {
+        logger.info("Loading SentencePiece model from {}", path);
         SpTokenizer model = new SpTokenizer(Paths.get(path));
         SpVocabulary voc = SpVocabulary.from(model);
-        logger.info("Load SentencePiece model from {}", path);
         tokenizer = model.getProcessor();
         unk = (int) voc.getIndex("<unk>");
         bos = (int) voc.getIndex("<s>");
@@ -69,6 +70,8 @@ class SentencePiece implements Tokenizer {
         if (bos) {
             tokens[0] = this.bos;
             System.arraycopy(t, 0, tokens, 1, t.length);
+        } else {
+            System.arraycopy(t, 0, tokens, 0, t.length);
         }
 
         if (eos) {
