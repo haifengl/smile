@@ -19,6 +19,9 @@ package smile.llm.tokenizer;
 import java.io.IOException;
 import java.util.Arrays;
 import org.junit.jupiter.api.*;
+import smile.llm.llama.Message;
+import smile.llm.llama.Role;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -96,5 +99,41 @@ public class TokenizerTest {
         int[] tokens4 = { 2028, 374, 264, 1296, 11914, 13 };
         assertEquals("This is a test sentence.", tokenizer.decode(tokens4));
         assertArrayEquals(tokens4, tokenizer.encode("This is a test sentence.", false, false));
+
+        int[] messageTokens = {
+                128006,  // <|start_header_id|>
+                882,     // "user"
+                128007,  // <|end_of_header|>
+                271,     // "\n\n"
+                2028, 374, 264, 1296, 11914, 13,  // This is a test sentence.
+                128009   // <|eot_id|>
+        };
+
+        Message message = new Message(Role.user, "This is a test sentence.");
+        assertArrayEquals(messageTokens, tokenizer.encodeMessage(message));
+
+        int[] dialogTokens = {
+                128000,  // <|begin_of_text|>
+                128006,  // <|start_header_id|>
+                9125,    // "system"
+                128007,  // <|end_of_header|>
+                271,     // "\n\n"
+                2028, 374, 264, 1296, 11914, 13,  // "This is a test sentence."
+                128009,  // <|eot_id|>
+                128006,  // <|start_header_id|>
+                882,     // "user"
+                128007,  // <|end_of_header|>
+                271,     // "\n\n"
+                2028, 374, 264, 2077, 13,  // "This is a response.",
+                128009,  // <|eot_id|>
+                128006,  // <|start_header_id|>
+                78191,   // "assistant"
+                128007,  // <|end_of_header|>
+                271      // "\n\n"
+        };
+        assertArrayEquals(dialogTokens, tokenizer.encodeDialog(
+                new Message(Role.system, "This is a test sentence."),
+                new Message(Role.user, "This is a response.")
+        ));
     }
 }
