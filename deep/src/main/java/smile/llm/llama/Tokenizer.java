@@ -38,22 +38,22 @@ public class Tokenizer extends Tiktoken {
     /**
      * Constructor with default BOS, EOS, and special tokens.
      *
-     * @param encoder The token to id map.
+     * @param ranks The token to rank map.
      */
-    public Tokenizer(Map<Bytes, Integer> encoder) {
-        this(encoder, "<|begin_of_text|>", "<|end_of_text|>", specialTokens());
+    public Tokenizer(Map<Bytes, Integer> ranks) {
+        this(ranks, "<|begin_of_text|>", "<|end_of_text|>", specialTokens());
     }
 
     /**
      * Constructor.
      *
-     * @param encoder       The token to id map.
+     * @param ranks         The token to id map.
      * @param bos           beginning of sequence token.
      * @param eos           end of sequence token.
      * @param specialTokens Optional special tokens.
      */
-    public Tokenizer(Map<Bytes, Integer> encoder, String bos, String eos, String... specialTokens) {
-        super(regex, encoder, bos, eos, specialTokens);
+    public Tokenizer(Map<Bytes, Integer> ranks, String bos, String eos, String... specialTokens) {
+        super(regex, ranks, bos, eos, specialTokens);
     }
 
     /**
@@ -91,9 +91,9 @@ public class Tokenizer extends Tiktoken {
      * @param tokens the buffer to store tokens.
      */
     private void encodeHeader(Message message, IntArrayList tokens) {
-        tokens.add(specialTokenEncoder.get("<|start_header_id|>"));
+        tokens.add(specialTokens.get("<|start_header_id|>"));
         tokens.add(encode(message.role().name(), false, false));
-        tokens.add(specialTokenEncoder.get("<|end_header_id|>"));
+        tokens.add(specialTokens.get("<|end_header_id|>"));
         tokens.add(encode("\n\n", false, false));
     }
 
@@ -105,7 +105,7 @@ public class Tokenizer extends Tiktoken {
     private void encodeMessage(Message message, IntArrayList tokens) {
         encodeHeader(message, tokens);
         tokens.add(encode(message.content(), false, false));
-        tokens.add(specialTokenEncoder.get("<|eot_id|>"));
+        tokens.add(specialTokens.get("<|eot_id|>"));
     }
 
     /**
@@ -126,7 +126,7 @@ public class Tokenizer extends Tiktoken {
      */
     public int[] encodeDialog(Message... dialog) {
         IntArrayList tokens = new IntArrayList();
-        tokens.add(specialTokenEncoder.get("<|begin_of_text|>"));
+        tokens.add(specialTokens.get("<|begin_of_text|>"));
         for (var message : dialog) {
             encodeMessage(message, tokens);
         }
