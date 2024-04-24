@@ -30,7 +30,7 @@ import smile.swing.Button;
 /**
  * A table model that performs "paging" of its data. This model
  * reports a small number of rows (like 100 or so) as a "page" of data. You
- * can switch pages to view all of the rows as needed using the pageDown()
+ * can switch pages to view all the rows as needed using the pageDown()
  * and pageUp() methods. Presumably, access to the other pages of data is
  * dictated by other GUI elements such as up/down buttons, or maybe a text
  * field that allows you to enter the page number you want to display.

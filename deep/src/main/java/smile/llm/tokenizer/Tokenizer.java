@@ -17,6 +17,9 @@
 package smile.llm.tokenizer;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.regex.Pattern;
+import smile.util.Bytes;
 
 /**
  * Tokenizing and encoding/decoding text.
@@ -56,11 +59,48 @@ public interface Tokenizer {
 
     /**
      * Loads a SentencePiece model.
-     * @param path The path to the SentencePiece model file.
+     * @param path The SentencePiece model file path.
      * @return a SentencePiece tokenizer.
      * @throws IOException if fail to load the model.
      */
-    static Tokenizer sentencePiece(String path) throws IOException {
+    static SentencePiece sentencePiece(String path) throws IOException {
         return new SentencePiece(path);
+    }
+
+    /**
+     * Loads a tiktoken model with default BOS token (<s>) and EOS token (</s>).
+     * @param path The tiktoken model file path.
+     * @return a tiktoken tokenizer.
+     * @throws IOException if fail to load the model.
+     */
+    static Tiktoken tiktoken(String path, Pattern pattern) throws IOException {
+        String bos = "<s>";
+        String eos = "</s>";
+        return tiktoken(path, pattern, bos, eos, bos, eos);
+    }
+
+    /**
+     * Loads a tiktoken model.
+     * @param path The tiktoken model file path.
+     * @param bos beginning of sequence token.
+     * @param eos end of sequence token.
+     * @param specialTokens Optional special tokens.
+     * @return a tiktoken tokenizer.
+     * @throws IOException if fail to load the model.
+     */
+    static Tiktoken tiktoken(String path, Pattern pattern, String bos, String eos, String... specialTokens) throws IOException {
+        Map<Bytes, Integer> encoder = Tiktoken.load(path);
+        return new Tiktoken(pattern, encoder, bos, eos, specialTokens);
+    }
+
+    /**
+     * Loads a llama3 tokenizer model.
+     * @param path The llama3 model file path.
+     * @return a llama3 tokenizer.
+     * @throws IOException if fail to load the model.
+     */
+    static Llama llama(String path) throws IOException {
+        Map<Bytes, Integer> encoder = Tiktoken.load(path);
+        return new Llama(encoder);
     }
 }

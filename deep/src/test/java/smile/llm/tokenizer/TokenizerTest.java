@@ -17,6 +17,8 @@
 package smile.llm.tokenizer;
 
 import java.io.IOException;
+import java.util.Arrays;
+
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,9 +50,49 @@ public class TokenizerTest {
     @Test
     public void testSentencePiece() throws IOException {
         var tokenizer = Tokenizer.sentencePiece("deep/src/universal/models/tokenizer_v2.model");
+        System.out.println(Arrays.toString(tokenizer.tokenize("This is a test sentence.")));
 
-        int[] tokens = { 1, 910, 338, 263, 1243, 10541, 29889, 2 };
-        assertArrayEquals(tokens, tokenizer.encode("This is a test sentence.", true, true));
-        assertEquals("This is a test sentence.", tokenizer.decode(tokens));
+        int[] tokens1 = { 1, 910, 338, 263, 1243, 10541, 29889, 2 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens1));
+        assertArrayEquals(tokens1, tokenizer.encode("This is a test sentence.", true, true));
+
+        int[] tokens2 = { 910, 338, 263, 1243, 10541, 29889, 2 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens2));
+        assertArrayEquals(tokens2, tokenizer.encode("This is a test sentence.", false, true));
+
+        int[] tokens3 = { 1, 910, 338, 263, 1243, 10541, 29889 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens3));
+        assertArrayEquals(tokens3, tokenizer.encode("This is a test sentence.", true, false));
+
+        int[] tokens4 = { 910, 338, 263, 1243, 10541, 29889 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens4));
+        assertArrayEquals(tokens4, tokenizer.encode("This is a test sentence.", false, false));
+    }
+
+    @Test
+    public void testLlama() throws IOException {
+        var tokenizer = Tokenizer.llama("deep/src/universal/models/tokenizer_v3.model");
+        System.out.println(Arrays.toString(tokenizer.tokenize("This is a test sentence.")));
+
+        int[] tokens1 = { 128000, 2028, 374, 264, 1296, 11914, 13, 128001 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens1));
+        assertArrayEquals(tokens1, tokenizer.encode("This is a test sentence.", true, true));
+
+        int[] tokens2 = { 2028, 374, 264, 1296, 11914, 13, 128001 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens2));
+        assertArrayEquals(tokens2, tokenizer.encode("This is a test sentence.", false, true));
+
+        int[] tokens3 = { 128000, 2028, 374, 264, 1296, 11914, 13 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens3));
+        assertArrayEquals(tokens3, tokenizer.encode("This is a test sentence.", true, false));
+
+        int[] tokens4 = { 2028, 374, 264, 1296, 11914, 13 };
+        assertEquals("This is a test sentence.", tokenizer.decode(tokens4));
+        assertArrayEquals(tokens4, tokenizer.encode("This is a test sentence.", false, false));
+
+        tokenizer.allowSpecialTokens(true);
+        System.out.println(Arrays.toString(tokenizer.tokenize("<|begin_of_text|>This is a test sentence.")));
+        //int[] tokens1 = { 128000, 2028, 374, 264, 1296, 11914, 13, 128001 };
+        assertArrayEquals(tokens1, tokenizer.encode("<|begin_of_text|>This is a test sentence.<|end_of_text|>", false, false));
     }
 }
