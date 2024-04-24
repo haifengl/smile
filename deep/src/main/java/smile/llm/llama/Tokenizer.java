@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.tokenizer;
+package smile.llm.llama;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
-import smile.llm.llama.Message;
-import smile.llm.llama.Role;
+import smile.llm.tokenizer.Tiktoken;
 import smile.util.Bytes;
 import smile.util.IntArrayList;
 
@@ -29,7 +29,7 @@ import smile.util.IntArrayList;
  *
  * @author Haifeng Li
  */
-public class Llama extends Tiktoken {
+public class Tokenizer extends Tiktoken {
     /**
      * Token splitting regex.
      */
@@ -40,7 +40,7 @@ public class Llama extends Tiktoken {
      *
      * @param encoder The token to id map.
      */
-    public Llama(Map<Bytes, Integer> encoder) {
+    public Tokenizer(Map<Bytes, Integer> encoder) {
         this(encoder, "<|begin_of_text|>", "<|end_of_text|>", specialTokens());
     }
 
@@ -52,7 +52,7 @@ public class Llama extends Tiktoken {
      * @param eos           end of sequence token.
      * @param specialTokens Optional special tokens.
      */
-    public Llama(Map<Bytes, Integer> encoder, String bos, String eos, String... specialTokens) {
+    public Tokenizer(Map<Bytes, Integer> encoder, String bos, String eos, String... specialTokens) {
         super(regex, encoder, bos, eos, specialTokens);
     }
 
@@ -133,5 +133,16 @@ public class Llama extends Tiktoken {
         // Add the start of an assistant message for the model to complete.
         encodeHeader(new Message(Role.assistant, ""), tokens);
         return tokens.toArray();
+    }
+
+    /**
+     * Loads a llama3 tokenizer model.
+     * @param path The llama3 model file path.
+     * @return a llama3 tokenizer.
+     * @throws IOException if fail to load the model.
+     */
+    public static Tokenizer of(String path) throws IOException {
+        Map<Bytes, Integer> encoder = Tiktoken.load(path);
+        return new Tokenizer(encoder);
     }
 }
