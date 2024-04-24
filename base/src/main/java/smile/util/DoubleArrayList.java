@@ -174,7 +174,7 @@ public final class DoubleArrayList implements Serializable {
     }
 
     /**
-     * Removes all of the values from this list. The list will
+     * Removes all the values from this list. The list will
      * be empty after this call returns. 
      */
     public void clear() {
@@ -208,17 +208,17 @@ public final class DoubleArrayList implements Serializable {
     }
 
     /**
-     * Returns an array containing all of the values in this list in
+     * Returns an array containing all the values in this list in
      * proper sequence (from first to last value). 
      * The caller is thus free to modify the returned array.
      * @return an array containing the values of the list.
      */
     public double[] toArray() {
-        return toArray(null);
+        return Arrays.copyOf(data, size);
     }
 
     /**
-     * Returns an array containing all of the values in this list in
+     * Returns an array containing all the values in this list in
      * proper sequence (from first to last value). If the list fits
      * in the specified array, it is returned therein. Otherwise, a new
      * array is allocated with the size of this list. 
