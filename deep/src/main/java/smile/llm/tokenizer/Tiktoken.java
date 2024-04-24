@@ -197,9 +197,7 @@ public class Tiktoken implements Tokenizer {
     public String decode(int[] tokens) {
         StringBuilder sb = new StringBuilder();
         for (var token : tokens) {
-            if (!specialTokens.contains(token)) {
-                sb.append(decoder[token].toString());
-            }
+            sb.append(decoder[token].toString());
         }
         return sb.toString();
     }
