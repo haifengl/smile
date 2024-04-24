@@ -21,6 +21,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import smile.util.Bytes;
 import smile.util.IntArrayList;
 
@@ -36,6 +37,8 @@ public class Tiktoken implements Tokenizer {
 
     /** The regex pattern to split the input text into tokens. */
     private final Pattern pattern;
+    /** The regex pattern to detect special tokens. */
+    private final Pattern specialTokenPattern;
     /** Token -> ID */
     private final Map<Bytes, Integer> encoder;
     /** Special Token -> ID */
@@ -44,14 +47,10 @@ public class Tiktoken implements Tokenizer {
     private final Set<Integer> specialTokens;
     /** ID -> Token */
     private final Bytes[] decoder;
-    /** BOS (beginning of sequence) token. */
-    private final String bos;
     /** BOS (beginning of sequence) token id. */
-    private final int bosId;
-    /** EOS (end of sequence) token. */
-    private final String eos;
+    private final int bos;
     /** EOS (end of sequence) token id. */
-    private final int eosId;
+    private final int eos;
     /**
      * If false, special tokens will be encoded as natural text.
      * Otherwise, they will be encoded as special tokens.
@@ -76,6 +75,7 @@ public class Tiktoken implements Tokenizer {
             this.decoder[entry.getValue()] = entry.getKey();
         }
 
+        this.specialTokenPattern = specialTokenRegex(specialTokens);
         this.specialTokenEncoder = new HashMap<>();
         this.specialTokens = new TreeSet<>();
         for (int i = 0; i < specialTokens.length; i++) {
@@ -85,11 +85,24 @@ public class Tiktoken implements Tokenizer {
             this.decoder[id] = new Bytes(specialTokens[i]);
         }
 
-        this.bos = bos;
-        this.eos = eos;
-        this.bosId = this.specialTokenEncoder.get(bos);
-        this.eosId = this.specialTokenEncoder.get(eos);
-        logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, bosId, eosId);
+        this.bos = this.specialTokenEncoder.get(bos);
+        this.eos = this.specialTokenEncoder.get(eos);
+        logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, this.bos, this.eos);
+    }
+
+    /**
+     * Returns the regex for special tokens.
+     * @param tokens special tokens.
+     * @return the pattern regex.
+     */
+    private Pattern specialTokenRegex(String... tokens) {
+        var inner = Arrays.stream(tokens).map(s -> Pattern.quote(s))
+                .collect(Collectors.joining("|", "(", ")"));
+        // Employ lookahead and lookbehind to keep delimiter when calling
+        // split(). Lookahead and lookbehind equal to select an empty
+        // character before or after delimiter.
+        var regex = String.format("((?<=%s)|(?=%s))", inner, inner);
+        return Pattern.compile(regex);
     }
 
     /**
@@ -123,7 +136,7 @@ public class Tiktoken implements Tokenizer {
         IntArrayList ranks = new IntArrayList(text.length());
 
         if (bos) {
-            output.add(bosId);
+            output.add(this.bos);
         }
 
         for (var token : tokens) {
@@ -142,7 +155,7 @@ public class Tiktoken implements Tokenizer {
         }
 
         if (eos) {
-            output.add(eosId);
+            output.add(this.eos);
         }
 
         return output.toArray();
@@ -205,9 +218,22 @@ public class Tiktoken implements Tokenizer {
     @Override
     public String[] tokenize(String text) {
         ArrayList<String> tokens = new ArrayList<>();
-        for (var matcher = pattern.matcher(text); matcher.find(); ) {
-            tokens.add(matcher.group());
+        if (allowSpecialTokens) {
+            for (var segment : specialTokenPattern.split(text)) {
+                if (specialTokenEncoder.containsKey(segment)) {
+                    tokens.add(segment);
+                } else {
+                    for (var matcher = pattern.matcher(segment); matcher.find(); ) {
+                        tokens.add(matcher.group());
+                    }
+                }
+            }
+        } else {
+            for (var matcher = pattern.matcher(text); matcher.find(); ) {
+                tokens.add(matcher.group());
+            }
         }
+
         return tokens.toArray(new String[tokens.size()]);
     }
 

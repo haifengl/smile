@@ -18,7 +18,6 @@ package smile.llm.tokenizer;
 
 import java.io.IOException;
 import java.util.Arrays;
-
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -72,7 +71,15 @@ public class TokenizerTest {
     @Test
     public void testLlama() throws IOException {
         var tokenizer = Tokenizer.llama("deep/src/universal/models/tokenizer_v3.model");
-        System.out.println(Arrays.toString(tokenizer.tokenize("This is a test sentence.")));
+
+        tokenizer.allowSpecialTokens(true);
+        String[] tokens = { "<|begin_of_text|>", "This", " is", " a", " test", " sentence", ".", "<|end_of_text|>" };
+        assertArrayEquals(tokens, tokenizer.tokenize("<|begin_of_text|>This is a test sentence.<|end_of_text|>"));
+
+        tokenizer.allowSpecialTokens(false);
+        String[] noSpecialTokens = { "<|", "begin", "_of", "_text", "|>", "This",
+                " is", " a", " test", " sentence", ".<|", "end", "_of", "_text", "|>" };
+        assertArrayEquals(noSpecialTokens, tokenizer.tokenize("<|begin_of_text|>This is a test sentence.<|end_of_text|>"));
 
         int[] tokens1 = { 128000, 2028, 374, 264, 1296, 11914, 13, 128001 };
         assertEquals("<|begin_of_text|>This is a test sentence.<|end_of_text|>", tokenizer.decode(tokens1));
@@ -89,10 +96,5 @@ public class TokenizerTest {
         int[] tokens4 = { 2028, 374, 264, 1296, 11914, 13 };
         assertEquals("This is a test sentence.", tokenizer.decode(tokens4));
         assertArrayEquals(tokens4, tokenizer.encode("This is a test sentence.", false, false));
-
-        tokenizer.allowSpecialTokens(true);
-        System.out.println(Arrays.toString(tokenizer.tokenize("<|begin_of_text|>This is a test sentence.")));
-        //int[] tokens1 = { 128000, 2028, 374, 264, 1296, 11914, 13, 128001 };
-        assertArrayEquals(tokens1, tokenizer.encode("<|begin_of_text|>This is a test sentence.<|end_of_text|>", false, false));
     }
 }
