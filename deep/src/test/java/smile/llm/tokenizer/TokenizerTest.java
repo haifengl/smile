@@ -75,15 +75,15 @@ public class TokenizerTest {
         System.out.println(Arrays.toString(tokenizer.tokenize("This is a test sentence.")));
 
         int[] tokens1 = { 128000, 2028, 374, 264, 1296, 11914, 13, 128001 };
-        assertEquals("This is a test sentence.", tokenizer.decode(tokens1));
+        assertEquals("<|begin_of_text|>This is a test sentence.<|end_of_text|>", tokenizer.decode(tokens1));
         assertArrayEquals(tokens1, tokenizer.encode("This is a test sentence.", true, true));
 
         int[] tokens2 = { 2028, 374, 264, 1296, 11914, 13, 128001 };
-        assertEquals("This is a test sentence.", tokenizer.decode(tokens2));
+        assertEquals("This is a test sentence.<|end_of_text|>", tokenizer.decode(tokens2));
         assertArrayEquals(tokens2, tokenizer.encode("This is a test sentence.", false, true));
 
         int[] tokens3 = { 128000, 2028, 374, 264, 1296, 11914, 13 };
-        assertEquals("This is a test sentence.", tokenizer.decode(tokens3));
+        assertEquals("<|begin_of_text|>This is a test sentence.", tokenizer.decode(tokens3));
         assertArrayEquals(tokens3, tokenizer.encode("This is a test sentence.", true, false));
 
         int[] tokens4 = { 2028, 374, 264, 1296, 11914, 13 };
