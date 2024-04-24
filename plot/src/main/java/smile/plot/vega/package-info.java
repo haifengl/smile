@@ -16,8 +16,8 @@
  */
 
 /**
- * Mathematical and statistical plots.
- * 
+ * Declarative data visualization.
+ *
  * @author Haifeng Li
  */
-package smile.plot.swing;
+package smile.plot.vega;

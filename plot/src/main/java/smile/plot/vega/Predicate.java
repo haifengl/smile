@@ -157,7 +157,6 @@ public class Predicate {
      *           item to be included in the filtered data.
      * @param max inclusive maximum values for a field value of a data
      *           item to be included in the filtered data.
-     * @param max the value to compare.
      * @return a field predicate.
      */
     public static Predicate range(String field, double min, double max) {
