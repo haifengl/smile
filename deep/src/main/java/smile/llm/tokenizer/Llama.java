@@ -19,7 +19,10 @@ package smile.llm.tokenizer;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
+import smile.llm.llama.Message;
+import smile.llm.llama.Role;
 import smile.util.Bytes;
+import smile.util.IntArrayList;
 
 /**
  * Custom tokenizer for Llama 3 models.
@@ -27,11 +30,14 @@ import smile.util.Bytes;
  * @author Haifeng Li
  */
 public class Llama extends Tiktoken {
-    /** Token splitting regex. */
+    /**
+     * Token splitting regex.
+     */
     private static final Pattern regex = Pattern.compile("(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+");
 
     /**
      * Constructor with default BOS, EOS, and special tokens.
+     *
      * @param encoder The token to id map.
      */
     public Llama(Map<Bytes, Integer> encoder) {
@@ -40,9 +46,10 @@ public class Llama extends Tiktoken {
 
     /**
      * Constructor.
-     * @param encoder The token to id map.
-     * @param bos beginning of sequence token.
-     * @param eos end of sequence token.
+     *
+     * @param encoder       The token to id map.
+     * @param bos           beginning of sequence token.
+     * @param eos           end of sequence token.
      * @param specialTokens Optional special tokens.
      */
     public Llama(Map<Bytes, Integer> encoder, String bos, String eos, String... specialTokens) {
@@ -51,6 +58,7 @@ public class Llama extends Tiktoken {
 
     /**
      * Returns the default special tokens.
+     *
      * @return the default special tokens.
      */
     private static String[] specialTokens() {
@@ -71,9 +79,59 @@ public class Llama extends Tiktoken {
         int base = specialTokens.length;
         specialTokens = Arrays.copyOf(specialTokens, specialTokens.length + numReservedSpecialTokens);
         for (int i = 0; i < numReservedSpecialTokens; i++) {
-            specialTokens[base + i] = String.format("<|reserved_special_token_{%d}|>", i+5);
+            specialTokens[base + i] = String.format("<|reserved_special_token_{%d}|>", i + 5);
         }
 
         return specialTokens;
+    }
+
+    /**
+     * Encodes a message header.
+     * @param message the message.
+     * @param tokens the buffer to store tokens.
+     */
+    private void encodeHeader(Message message, IntArrayList tokens) {
+        tokens.add(specialTokenEncoder.get("<|start_header_id|>"));
+        tokens.add(encode(message.role().name(), false, false));
+        tokens.add(specialTokenEncoder.get("<|end_header_id|>"));
+        tokens.add(encode("\n\n", false, false));
+    }
+
+    /**
+     * Encodes a message.
+     * @param message the message.
+     * @param tokens the buffer to store tokens.
+     */
+    private void encodeMessage(Message message, IntArrayList tokens) {
+        encodeHeader(message, tokens);
+        tokens.add(encode(message.content(), false, false));
+        tokens.add(specialTokenEncoder.get("<|eot_id|>"));
+    }
+
+    /**
+     * Encodes a message.
+     * @param message the message.
+     * @return the tokens.
+     */
+    public int[] encodeMessage(Message message) {
+        IntArrayList tokens = new IntArrayList();
+        encodeMessage(message, tokens);
+        return tokens.toArray();
+    }
+
+    /**
+     * Encodes the messages of a dialog.
+     * @param dialog the messages.
+     * @return the tokens.
+     */
+    public int[] encodeDialog(Message... dialog) {
+        IntArrayList tokens = new IntArrayList();
+        tokens.add(specialTokenEncoder.get("<|begin_of_text|>"));
+        for (var message : dialog) {
+            encodeMessage(message, tokens);
+        }
+        // Add the start of an assistant message for the model to complete.
+        encodeHeader(new Message(Role.assistant, ""), tokens);
+        return tokens.toArray();
     }
 }
