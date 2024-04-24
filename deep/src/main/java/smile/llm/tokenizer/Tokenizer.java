@@ -89,7 +89,7 @@ public interface Tokenizer {
      * @throws IOException if fail to load the model.
      */
     static Tiktoken tiktoken(String path, Pattern pattern, String bos, String eos, String... specialTokens) throws IOException {
-        Map<Bytes, Integer> encoder = Tiktoken.load(path);
-        return new Tiktoken(pattern, encoder, bos, eos, specialTokens);
+        Map<Bytes, Integer> ranks = Tiktoken.load(path);
+        return new Tiktoken(pattern, ranks, bos, eos, specialTokens);
     }
 }
