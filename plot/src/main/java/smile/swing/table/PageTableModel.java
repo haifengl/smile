@@ -263,18 +263,15 @@ public abstract class PageTableModel extends AbstractTableModel {
         
         setActionEnabled();
         
-        TableModelListener listener = new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent tme) {
-                if (tme.getType() == TableModelEvent.INSERT || tme.getType() == TableModelEvent.DELETE) {
-                    if (getPage() >= getPageCount()) {
-                        setPage(getPageCount() - 1);
-                    }
-
-                    totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
-                    pageField.setText(Integer.toString(getPage() + 1));
-                    pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+        TableModelListener listener = event -> {
+            if (event.getType() == TableModelEvent.INSERT || event.getType() == TableModelEvent.DELETE) {
+                if (getPage() >= getPageCount()) {
+                    setPage(getPageCount() - 1);
                 }
+
+                totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
+                pageField.setText(Integer.toString(getPage() + 1));
+                pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
             }
         };
         

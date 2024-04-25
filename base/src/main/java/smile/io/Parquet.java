@@ -490,26 +490,19 @@ public class Parquet {
 
         switch (primitiveType.getPrimitiveTypeName()) {
             case BOOLEAN:
-                switch (repetition) {
-                    case REQUIRED:
-                        return new StructField(name, DataTypes.BooleanType);
-                    case OPTIONAL:
-                        return new StructField(name, DataTypes.BooleanObjectType);
-                    case REPEATED:
-                        return new StructField(name, DataTypes.BooleanArrayType);
-                }
-                break;
+                return switch (repetition) {
+                    case REQUIRED -> new StructField(name, DataTypes.BooleanType);
+                    case OPTIONAL -> new StructField(name, DataTypes.BooleanObjectType);
+                    case REPEATED -> new StructField(name, DataTypes.BooleanArrayType);
+                };
 
             case INT32:
                 if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                            return new StructField(name, DataTypes.IntegerType);
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.IntegerObjectType);
-                        case REPEATED:
-                            return new StructField(name, DataTypes.IntegerArrayType);
-                    }
+                    return switch (repetition) {
+                        case REQUIRED -> new StructField(name, DataTypes.IntegerType);
+                        case OPTIONAL -> new StructField(name, DataTypes.IntegerObjectType);
+                        case REPEATED -> new StructField(name, DataTypes.IntegerArrayType);
+                    };
                 } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
                     switch (repetition) {
                         case REQUIRED:
@@ -533,14 +526,11 @@ public class Parquet {
 
             case INT64:
                 if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                            return new StructField(name, DataTypes.LongType);
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.LongObjectType);
-                        case REPEATED:
-                            return new StructField(name, DataTypes.LongArrayType);
-                    }
+                    return switch (repetition) {
+                        case REQUIRED -> new StructField(name, DataTypes.LongType);
+                        case OPTIONAL -> new StructField(name, DataTypes.LongObjectType);
+                        case REPEATED -> new StructField(name, DataTypes.LongArrayType);
+                    };
                 } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
                     switch (repetition) {
                         case REQUIRED:
@@ -566,26 +556,18 @@ public class Parquet {
                 return new StructField(name, DataTypes.DateTimeType);
 
             case FLOAT:
-                switch (repetition) {
-                    case REQUIRED:
-                        return new StructField(name, DataTypes.FloatType);
-                    case OPTIONAL:
-                        return new StructField(name, DataTypes.FloatObjectType);
-                    case REPEATED:
-                        return new StructField(name, DataTypes.FloatArrayType);
-                }
-                break;
+                return switch (repetition) {
+                    case REQUIRED -> new StructField(name, DataTypes.FloatType);
+                    case OPTIONAL -> new StructField(name, DataTypes.FloatObjectType);
+                    case REPEATED -> new StructField(name, DataTypes.FloatArrayType);
+                };
 
             case DOUBLE:
-                switch (repetition) {
-                    case REQUIRED:
-                        return new StructField(name, DataTypes.DoubleType);
-                    case OPTIONAL:
-                        return new StructField(name, DataTypes.DoubleObjectType);
-                    case REPEATED:
-                        return new StructField(name, DataTypes.DoubleArrayType);
-                }
-                break;
+                return switch (repetition) {
+                    case REQUIRED -> new StructField(name, DataTypes.DoubleType);
+                    case OPTIONAL -> new StructField(name, DataTypes.DoubleObjectType);
+                    case REPEATED -> new StructField(name, DataTypes.DoubleArrayType);
+                };
 
             case FIXED_LEN_BYTE_ARRAY :
                 if (logicalType instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {

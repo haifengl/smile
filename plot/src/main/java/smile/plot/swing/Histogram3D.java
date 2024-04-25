@@ -138,13 +138,13 @@ public class Histogram3D extends Plot {
             }
         }
 
-        for (int k = 0; k < data.length; k++) {
-            int i = (int) ((data[k][0] - xmin) / xwidth);
+        for (var datum : data) {
+            int i = (int) ((datum[0] - xmin) / xwidth);
             if (i >= xbins) {
                 i = xbins - 1;
             }
 
-            int j = (int) ((data[k][1] - ymin) / ywidth);
+            int j = (int) ((datum[1] - ymin) / ywidth);
             if (j >= ybins) {
                 j = ybins - 1;
             }
@@ -159,9 +159,9 @@ public class Histogram3D extends Plot {
         }
 
         max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][2] > max) {
-                max = freq[i][2];
+        for (var count : freq) {
+            if (count[2] > max) {
+                max = count[2];
             }
         }
         
@@ -235,9 +235,9 @@ public class Histogram3D extends Plot {
     public double[] getUpperBound() {
         double[] max = MathEx.colMax(data);
         double[] bound = {max[0], max[1], 0};
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][2] > bound[2]) {
-                bound[2] = freq[i][2];
+        for (var count : freq) {
+            if (count[2] > bound[2]) {
+                bound[2] = count[2];
             }
         }
 
@@ -248,9 +248,7 @@ public class Histogram3D extends Plot {
     public void paint(Graphics g) {
         Projection3D p3d = (Projection3D) g.projection;
 
-        /**
-         * Calculates z-axis values in camera coordinates.
-         */
+        // Calculates z-axis values in camera coordinates.
         for (int i = 0; i < freq.length; i++) {
             zTopNW[i] = p3d.z(topNW[i]);
             zTopNE[i] = p3d.z(topNE[i]);
@@ -262,7 +260,7 @@ public class Histogram3D extends Plot {
             zBottomSE[i] = p3d.z(bottomSE[i]);
         }
 
-        /**
+        /*
          * Calculate (average) z-value for each surface.
          * Note that this is actually just sum, which is sufficient
          * for us to sort them.
@@ -276,7 +274,7 @@ public class Histogram3D extends Plot {
             z[k + 5] = (zBottomNW[i] + zBottomNE[i] + zBottomSE[i] + zBottomSW[i]);
         }
 
-        /**
+        /*
          * Sorts surfaces by z-values and paint them from furthest to
          * nearest, i.e. painter's algorithm. Although the painter's
          * algorithm is computationally and conceptually much easier than

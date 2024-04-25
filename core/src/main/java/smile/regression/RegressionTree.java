@@ -286,14 +286,14 @@ public class RegressionTree extends CART implements DataFrameRegression {
 
     /**
      * Fits a regression tree.
-     * The hyper-parameters in <code>prop</code> include
+     * The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.node.size</code>
      * <li><code>smile.cart.max.nodes</code>
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Properties params) {

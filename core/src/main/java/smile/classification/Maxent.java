@@ -259,7 +259,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
@@ -311,7 +311,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
@@ -390,7 +390,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {

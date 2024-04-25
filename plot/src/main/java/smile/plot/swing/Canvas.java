@@ -177,8 +177,8 @@ public class Canvas {
      * Reset the grid (when the base changes).
      */
     void resetAxis() {
-        for (int i = 0; i < axis.length; i++) {
-            axis[i].reset();
+        for (var ax : axis) {
+            ax.reset();
         }
     }
 
@@ -440,16 +440,15 @@ public class Canvas {
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, width, height);
 
-        for (int i = 0; i < axis.length; i++) {
-            axis[i].paint(graphics);
+        for (var ax : axis) {
+            ax.paint(graphics);
         }
 
         // draw plot
         graphics.clip();
         // with for-each loop, we will get a ConcurrentModificationException.
         // Use for loop instead.
-        for (int i = 0; i < shapes.size(); i++) {
-            Shape shape = shapes.get(i);
+        for (var shape : shapes) {
             graphics.setColor(shape.color);
             shape.paint(graphics);
         }
@@ -463,9 +462,8 @@ public class Canvas {
             int fontWidth = font.getSize();
             int fontHeight = font.getSize();
 
-            for (int i = 0; i < shapes.size(); i++) {
-                Shape s = shapes.get(i);
-                if (s instanceof Plot p) {
+            for (var shape : shapes) {
+                if (shape instanceof Plot p) {
                     if (p.legends().isPresent()) {
                         for (Legend legend : p.legends().get()) {
                             g2d.setColor(legend.color);

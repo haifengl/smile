@@ -22,7 +22,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -838,7 +837,7 @@ public class PlotPanel extends JPanel {
         }
     }
 
-    private class PropertyDialogCancelAction extends AbstractAction {
+    private static class PropertyDialogCancelAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "Cancel";
         private final JDialog dialog;

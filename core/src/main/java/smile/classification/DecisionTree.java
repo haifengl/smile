@@ -305,7 +305,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
 
     /**
      * Fits a classification tree.
-     * The hyper-parameters in <code>prop</code> include
+     * The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.split.rule</code>
      * <li><code>smile.cart.node.size</code>
@@ -313,7 +313,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, Properties params) {

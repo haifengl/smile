@@ -17,8 +17,6 @@
 
 package smile.nlp.tokenizer;
 
-import smile.nlp.dictionary.EnglishDictionary;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

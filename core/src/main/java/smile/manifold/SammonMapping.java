@@ -107,7 +107,7 @@ public class SammonMapping {
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity, Properties params) {

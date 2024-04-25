@@ -132,7 +132,7 @@ import smile.util.Strings;
      * Fits a MLP model.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static MLP fit(double[][] x, double[] y, Properties params) {

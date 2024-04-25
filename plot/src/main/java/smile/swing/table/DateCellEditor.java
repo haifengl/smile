@@ -32,8 +32,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -46,7 +44,7 @@ import javax.swing.text.DefaultFormatterFactory;
  */
 @SuppressWarnings("serial")
 public class DateCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(DoubleCellEditor.class.getName()); 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleCellEditor.class);
     
     public static final DateCellEditor YYYYMMDD        = new DateCellEditor("yyyy-MM-dd");
     public static final DateCellEditor MMDDYY          = new DateCellEditor("MM/dd/yy");
@@ -96,6 +94,7 @@ public class DateCellEditor extends DefaultCellEditor {
                         textField.commitEdit();     //so use it.
                         textField.postActionEvent(); //stop editing
                     } catch (java.text.ParseException ex) {
+                        logger.debug("Failed to commit edit: ", ex);
                     }
                 }
             }
@@ -119,7 +118,7 @@ public class DateCellEditor extends DefaultCellEditor {
             try {
                 return dateFormat.parseObject(o.toString());
             } catch (ParseException ex) {
-                LOGGER.log(Level.FINE, "getCellEditorValue: can't parse {0}", o);
+                logger.debug("getCellEditorValue: can't parse {}", o);
                 return null;
             }
         }
@@ -137,6 +136,7 @@ public class DateCellEditor extends DefaultCellEditor {
             try {
                 ftf.commitEdit();
             } catch (java.text.ParseException ex) {
+                logger.debug("Failed to commit edit: ", ex);
             }
 
         } else { //text is invalid

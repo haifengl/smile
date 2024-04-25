@@ -31,6 +31,7 @@ import java.util.Iterator;
  * @author Haifeng Li
  */
 public class SimpleDictionary implements Dictionary {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleDictionary.class);
 
     /**
      * A list of abbreviations.
@@ -59,7 +60,7 @@ public class SimpleDictionary implements Dictionary {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            logger.error("Failed to parse dictionary: ", ex);
         }
     }
 

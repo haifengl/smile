@@ -19,7 +19,6 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Arrays;
-import java.util.HashMap;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
@@ -89,18 +88,12 @@ public class Axis {
         this.base = base;
         this.index = index;
 
-        String label = "";
-        switch (index) {
-            case 0:
-                label = "X";
-                break;
-            case 1:
-                label = "Y";
-                break;
-            case 2:
-                label = "Z";
-                break;
-        }
+        String label = switch (index) {
+            case 0 -> "X";
+            case 1 -> "Y";
+            case 2 -> "Z";
+            default -> "";
+        };
         setLabel(label);
 
         init();
@@ -398,17 +391,17 @@ public class Axis {
     public void paint(Graphics g) {
         if (gridLines != null) {
             if (isGridVisible) {
-                for (int i = 0; i < gridLines.length; i++) {
-                    for (int j = 1; j < gridLines[i].length - 1; j++) {
-                        gridLines[i][j].paint(g);
+                for (var gridLine : gridLines) {
+                    for (int j = 1; j < gridLine.length - 1; j++) {
+                        gridLine[j].paint(g);
                     }
                 }
             }
 
             if (isFrameVisible) {
-                for (int i = 0; i < gridLines.length; i++) {
-                    gridLines[i][0].paint(g);
-                    gridLines[i][gridLines[i].length - 1].paint(g);
+                for (var gridLine : gridLines) {
+                    gridLine[0].paint(g);
+                    gridLine[gridLine.length - 1].paint(g);
                 }
             }
         }

@@ -74,8 +74,8 @@ public class WindowTransform {
      */
     public WindowTransform frame(Integer first, Integer last) {
         spec.putArray("frame")
-                .add(first == null ? null : first.intValue())
-                .add(last == null ? null : last.intValue());
+                .add(first == null ? null : first)
+                .add(last == null ? null : last);
         return this;
     }
 

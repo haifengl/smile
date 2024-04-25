@@ -81,7 +81,7 @@ public class LevenbergMarquardt {
      * Fits the nonlinear least squares.
      *
      * @param func the curve function. Of the input variable x, the first d
-     *             elements are hyper-parameters to be fit. The rest is the
+     *             elements are hyperparameters to be fit. The rest is the
      *             independent variable.
      * @param x independent variable.
      * @param y the observations.
@@ -242,7 +242,7 @@ public class LevenbergMarquardt {
      * Fits the nonlinear least squares.
      *
      * @param func the curve function. Of the input variable x, the first d
-     *             elements are hyper-parameters to be fit. The rest is the
+     *             elements are hyperparameters to be fit. The rest is the
      *             independent variable.
      * @param x independent variables.
      * @param y the observations.

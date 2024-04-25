@@ -100,7 +100,7 @@ public class RegressionNode extends LeafNode {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(" ".repeat(depth));
         line.append(id).append(") ");
 
         // split

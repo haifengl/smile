@@ -44,9 +44,9 @@ public class Grid extends Plot {
     public void paint(Graphics g) {
         g.setColor(color);
 
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length - 1; j++) {
-                g.drawLine(data[i][j], data[i][j+1]);
+        for (var row : data) {
+            for (int j = 0; j < row.length - 1; j++) {
+                g.drawLine(row[j], row[j + 1]);
             }
         }
 
@@ -60,13 +60,13 @@ public class Grid extends Plot {
     @Override
     public double[] getLowerBound() {
         double[] bound = {data[0][0][0], data[0][0][1]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] < bound[0]) {
-                    bound[0] = data[i][j][0];
+        for (var row : data) {
+            for (int j = 0; j < row.length; j++) {
+                if (row[j][0] < bound[0]) {
+                    bound[0] = row[j][0];
                 }
-                if (data[i][j][1] < bound[1]) {
-                    bound[1] = data[i][j][1];
+                if (row[j][1] < bound[1]) {
+                    bound[1] = row[j][1];
                 }
             }
         }
@@ -77,13 +77,13 @@ public class Grid extends Plot {
     @Override
     public double[] getUpperBound() {
         double[] bound = {data[0][0][0], data[0][0][1]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] > bound[0]) {
-                    bound[0] = data[i][j][0];
+        for (var row : data) {
+            for (int j = 0; j < row.length; j++) {
+                if (row[j][0] > bound[0]) {
+                    bound[0] = row[j][0];
                 }
-                if (data[i][j][1] > bound[1]) {
-                    bound[1] = data[i][j][1];
+                if (row[j][1] > bound[1]) {
+                    bound[1] = row[j][1];
                 }
             }
         }

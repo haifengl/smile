@@ -162,33 +162,20 @@ public class Avro {
 
     /** Converts an avro type to smile type. */
     private DataType typeOf(Schema schema) {
-        switch (schema.getType()) {
-            case BOOLEAN:
-                return DataTypes.BooleanType;
-            case INT:
-                return DataTypes.IntegerType;
-            case LONG:
-                return DataTypes.LongType;
-            case FLOAT:
-                return DataTypes.FloatType;
-            case DOUBLE:
-                return DataTypes.DoubleType;
-            case STRING:
-                return DataTypes.StringType;
-            case FIXED:
-            case BYTES:
-                return DataTypes.ByteArrayType;
-            case ENUM:
-                return new NominalScale(schema.getEnumSymbols()).type();
-            case ARRAY:
-                return DataTypes.array(typeOf(schema.getElementType()));
-            case MAP:
-                return DataTypes.object(java.util.Map.class);
-            case UNION:
-                return unionType(schema);
-            default:
-                throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
-        }
+        return switch (schema.getType()) {
+            case BOOLEAN -> DataTypes.BooleanType;
+            case INT -> DataTypes.IntegerType;
+            case LONG -> DataTypes.LongType;
+            case FLOAT -> DataTypes.FloatType;
+            case DOUBLE -> DataTypes.DoubleType;
+            case STRING -> DataTypes.StringType;
+            case FIXED, BYTES -> DataTypes.ByteArrayType;
+            case ENUM -> new NominalScale(schema.getEnumSymbols()).type();
+            case ARRAY -> DataTypes.array(typeOf(schema.getElementType()));
+            case MAP -> DataTypes.object(java.util.Map.class);
+            case UNION -> unionType(schema);
+            default -> throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
+        };
     }
 
     /** Converts a Union type. */

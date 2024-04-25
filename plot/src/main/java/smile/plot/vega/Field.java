@@ -57,13 +57,13 @@ public class Field {
      * @param type The encoded field's type of measurement ("quantitative",
      *             "temporal", "ordinal", or "nominal"). It can also be a
      *             "geojson" type for encoding ‘geoshape'.
-     *
+     * <p>
      *             Data type describes the semantics of the data rather than
      *             the primitive data types (number, string, etc.). The same
      *             primitive data type can have different types of
      *             measurement. For example, numeric data can represent
      *             quantitative, ordinal, or nominal data.
-     *
+     * <p>
      *             Data values for a temporal field can be either a
      *             date-time string (e.g., "2015-03-07 12:32:17",
      *             "17:01", "2015-03-16", "2015") or a timestamp
@@ -109,7 +109,7 @@ public class Field {
 
     /**
      * Sets the time unit for a temporal field. Vega-Lite supports the following time units:
-     *
+     * <p>
      * "year" - Gregorian calendar years.
      * "quarter" - Three-month intervals, starting in one of January, April, July, and October.
      * "month" - Calendar months (January, February, etc.).
@@ -157,15 +157,15 @@ public class Field {
      * Sets the function that transforms values in the data domain (numbers,
      * dates, strings, etc.) to visual values (pixels, colors, sizes) for
      * position and mark property channels.
-     *
+     * <p>
      * Vega-Lite supports the following categories of scale types:
      *
      * 1) Continuous Scales - mapping continuous domains to continuous output
      * ranges ("linear", "pow", "sqrt", "symlog", "log", "time", "utc".
-     *
+     * <p>
      * 2) Discrete Scales - mapping discrete domains to discrete ("ordinal")
      * or continuous ("band" and "point") output ranges.
-     *
+     * <p>
      * 3) Discretizing Scales - mapping continuous domains to discrete output
      * ranges "bin-ordinal", "quantile", "quantize" and "threshold".
      *
@@ -367,17 +367,17 @@ public class Field {
      * stack is only applicable for x, y, theta, and radius channels with
      * continuous domains. For example, stack of y can be used to customize
      * stacking for a vertical bar chart.
-     *
+     * <p>
      * Stack can be one of the following values:
-     *
+     * <p>
      * "zero" - stacking with baseline offset at zero value of the scale
      * (for creating typical stacked bar and area chart).
-     *
+     * <p>
      * "normalize" - stacking with normalized domain (for creating normalized
      * stacked bar and area charts and pie charts with percentage tooltip).
-     *
+     * <p>
      * "center" - stacking with center baseline (for streamgraph).
-     *
+     * <p>
      * null - No-stacking. This will produce layered bar and area chart.
      *
      * @param type "zero", "normalize", "center", or null.

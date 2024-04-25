@@ -153,7 +153,7 @@ public class Contour extends Plot {
     /**
      * A line segment in contour line.
      */
-    class Segment {
+    static class Segment {
 
         double x0;
         double y0;
@@ -272,8 +272,7 @@ public class Contour extends Plot {
         Segment[][] segments = new Segment[ny][nx];
         double atom = 1E-7 * (zMax - zMin);
 
-        for (int c = 0; c < levels.length; c++) {
-            double zc = levels[c];
+        for (double zc : levels) {
             for (int i = 0; i < nx; i++) {
                 for (int j = 0; j < ny; j++) {
                     segments[j][i] = null;
@@ -545,7 +544,7 @@ public class Contour extends Plot {
                             contour.add(s.x0, s.y0);
                         }
                         contour.add(s.x1, s.y1);
-                        
+
                         if (!contour.isEmpty()) {
                             contours.add(contour);
                         }

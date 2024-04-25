@@ -486,7 +486,7 @@ public class Mark {
 
     /**
      * Sets the extent of the band. Available options include:
-     *
+     * <p>
      * "ci" - Extend the band to the confidence interval of the mean.
      * "stderr" - The size of band are set to the value of standard error, extending from the mean.
      * "stdev" - The size of band are set to the value of standard deviation, extending from the mean.
@@ -523,7 +523,7 @@ public class Mark {
     /**
      * Sets the line interpolation method to use for line and area marks.
      * Available options include:
-     *
+     * <p>
      * "linear" - piecewise linear segments, as in a polyline.
      * "linear-closed" - close the linear segments to form a polygon.
      * "step" - alternate between horizontal and vertical segments, as in a step function.

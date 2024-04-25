@@ -1377,12 +1377,11 @@ public interface DataFrame extends Iterable<Tuple> {
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;
-        int maxColWidth;
-        switch (numCols) {
-            case 1: maxColWidth = 78; break;
-            case 2: maxColWidth = 38; break;
-            default: maxColWidth = 20;
-        }
+        int maxColWidth = switch (numCols) {
+            case 1 -> 78;
+            case 2 -> 38;
+            default -> 20;
+        };
         // To be used in lambda.
         final int maxColumnWidth = maxColWidth;
 

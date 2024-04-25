@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * to aggregate to populate the new cells. In addition, any number of
  * groupby fields can be provided to further subdivide the data into
  * output data objects (rows).
- *
+ * <p>
  * Pivot transforms are useful for creating matrix or cross-tabulation
  * data, acting as an inverse to the fold transform.
  *

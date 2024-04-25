@@ -77,14 +77,14 @@ public class NormalizedMutualInformation implements ClusteringMetric {
 
     @Override
     public double score(int[] y1, int[] y2) {
-        switch (method) {
-            case JOINT: return joint(y1, y2);
-            case MAX: return max(y1, y2);
-            case MIN: return min(y1, y2);
-            case SUM: return sum(y1, y2);
-            case SQRT: return sqrt(y1, y2);
-            default: throw new IllegalStateException("Unknown normalization method: " + method);
-        }
+        return switch (method) {
+            case JOINT -> joint(y1, y2);
+            case MAX -> max(y1, y2);
+            case MIN -> min(y1, y2);
+            case SUM -> sum(y1, y2);
+            case SQRT -> sqrt(y1, y2);
+            default -> throw new IllegalStateException("Unknown normalization method: " + method);
+        };
     }
 
     /**

@@ -18,7 +18,6 @@
 package smile.classification;
 
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.data.SparseDataset;
@@ -255,7 +254,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
     /**
      * Fits binomial logistic regression.
      * @param data training data.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(SparseDataset<Integer> data, Properties params) {
@@ -324,7 +323,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
     /**
      * Fits multinomial logistic regression.
      * @param data training data.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(SparseDataset<Integer> data, Properties params) {
@@ -400,7 +399,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
     /**
      * Fits logistic regression.
      * @param data training data.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset<Integer> data, Properties params) {

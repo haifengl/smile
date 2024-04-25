@@ -104,19 +104,10 @@ public interface DataType extends Serializable {
      * @return true if this is a primitive data type.
      */
     default boolean isPrimitive() {
-        switch (id()) {
-            case Integer:
-            case Long:
-            case Float:
-            case Double:
-            case Boolean:
-            case Char:
-            case Byte:
-            case Short:
-                return true;
-            default:
-                return false;
-        }
+        return switch (id()) {
+            case Integer, Long, Float, Double, Boolean, Char, Byte, Short -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -227,17 +218,17 @@ public interface DataType extends Serializable {
      * @return the boxed data type.
      */
     default DataType boxed() {
-        switch (id()) {
-            case Boolean: return DataTypes.BooleanObjectType;
-            case Char: return DataTypes.CharObjectType;
-            case Byte: return DataTypes.ByteObjectType;
-            case Short: return DataTypes.ShortObjectType;
-            case Integer: return DataTypes.IntegerObjectType;
-            case Long: return DataTypes.LongObjectType;
-            case Float: return DataTypes.FloatObjectType;
-            case Double: return DataTypes.DoubleObjectType;
-            default: return this;
-        }
+        return switch (id()) {
+            case Boolean -> DataTypes.BooleanObjectType;
+            case Char -> DataTypes.CharObjectType;
+            case Byte -> DataTypes.ByteObjectType;
+            case Short -> DataTypes.ShortObjectType;
+            case Integer -> DataTypes.IntegerObjectType;
+            case Long -> DataTypes.LongObjectType;
+            case Float -> DataTypes.FloatObjectType;
+            case Double -> DataTypes.DoubleObjectType;
+            default -> this;
+        };
     }
 
     /**
@@ -520,17 +511,14 @@ public interface DataType extends Serializable {
      * @return true if the given type is of int.
      */
     static boolean isInt(DataType t) {
-        switch (t.id()) {
-            case Integer:
-            case Short:
-            case Byte:
-                return true;
-            case Object:
+        return switch (t.id()) {
+            case Integer, Short, Byte -> true;
+            case Object -> {
                 Class clazz = ((ObjectType) t).getObjectClass();
-                return clazz == Integer.class || clazz == Short.class || clazz == Byte.class;
-            default:
-                return false;
-        }
+                yield clazz == Integer.class || clazz == Short.class || clazz == Byte.class;
+            }
+            default -> false;
+        };
     }
 
     /**

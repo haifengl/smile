@@ -223,7 +223,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties params) {
@@ -328,7 +328,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         for (int t = 0; t < ntrees; t++) {
             sampling(samples, permutation, nc, y, subsample);
 
-            logger.info("Training {} tree", Strings.ordinal(t+1));
+            logger.info("Training {} binary trees", Strings.ordinal(t+1));
             RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
             trees[t] = tree;
 
@@ -376,7 +376,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         int[] samples = new int[n];
 
         for (int t = 0; t < ntrees; t++) {
-            logger.info("Training {} tree", Strings.ordinal(t+1));
+            logger.info("Training {} multiclass trees", Strings.ordinal(t+1));
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < k; j++) {
                     p[i][j] = h[j][i];
@@ -445,11 +445,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @return the regression trees.
      */
     public RegressionTree[] trees() {
-        if (trees != null) {
-            return trees;
-        } else {
-            return Arrays.stream(forest).flatMap(Arrays::stream).toArray(RegressionTree[]::new);
-        }
+        return trees != null ? trees
+                : Arrays.stream(forest).flatMap(Arrays::stream).toArray(RegressionTree[]::new);
     }
 
     /**

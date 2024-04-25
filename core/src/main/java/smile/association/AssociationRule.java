@@ -92,10 +92,10 @@ public class AssociationRule {
      * measured against a random choice targeting model. A targeting model
      * is doing a good job if the response within the target is much better
      * than the average for the population as a whole.
-     *
+     * <p>
      * Lift is simply the ratio of these values: target response divided by
      * average response.
-     *
+     * <p>
      * For an association rule <code>X &rArr; Y</code>, if the lift is equal
      * to 1, it means that X and Y are independent. If the lift is higher
      * than 1, it means that X and Y are positively correlated.

@@ -51,7 +51,7 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
@@ -63,7 +63,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
      * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
@@ -83,7 +83,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fits an Elastic Net model. The hyper-parameters in <code>prop</code> include
+     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
      * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter

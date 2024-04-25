@@ -25,8 +25,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -41,7 +39,7 @@ import javax.swing.KeyStroke;
  * @author Haifeng Li
  */
 public class TableCopyPasteAdapter implements ActionListener {
-    private final static Logger LOGGER = Logger.getLogger(TableCopyPasteAdapter.class.getName()); 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TableCopyPasteAdapter.class);
 
     private String rowstring, value;
     private Clipboard system;
@@ -112,7 +110,6 @@ public class TableCopyPasteAdapter implements ActionListener {
         }
         
         if (e.getActionCommand().compareTo("Paste") == 0) {
-            LOGGER.log(Level.FINE, "Trying to Paste");
             int startRow = (table.getSelectedRows())[0];
             int startCol = (table.getSelectedColumns())[0];
             try {
@@ -130,6 +127,7 @@ public class TableCopyPasteAdapter implements ActionListener {
                     }
                 }
             } catch (Exception ex) {
+                logger.debug("Failed to paste: ", ex);
             }
         }
     }

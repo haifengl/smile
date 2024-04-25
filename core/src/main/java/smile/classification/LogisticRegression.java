@@ -311,7 +311,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(double[][] x, int[] y, Properties params) {
@@ -382,7 +382,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
@@ -460,7 +460,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LogisticRegression fit(double[][] x, int[] y, Properties params) {

@@ -131,7 +131,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
      * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model
      */
     public static FLD fit (double[][] x, int[] y, Properties params) {

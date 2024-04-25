@@ -18,7 +18,6 @@
 package smile.plot.swing;
 
 import java.awt.Color;
-import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
@@ -171,9 +170,9 @@ public class Surface extends Plot {
     public void paint(Graphics g) {
         g.setColor(color);
 
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length - 1; j++) {
-                g.drawLine(data[i][j], data[i][j + 1]);
+        for (var datum : data) {
+            for (int j = 0; j < datum.length - 1; j++) {
+                g.drawLine(datum[j], datum[j + 1]);
             }
         }
 
@@ -188,16 +187,14 @@ public class Surface extends Plot {
             int n = data[0].length;
             Projection3D p3d = (Projection3D) g.projection;
 
-            /**
-             * Calculates z-axis values in camera coordinates.
-             */
+            // Calculates z-axis values in camera coordinates.
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     zc[i][j] = p3d.z(data[i][j]);
                 }
             }
 
-            /**
+            /*
              * Calculate (average) z-value for each triangle.
              * Note that this is actually just sum, which is sufficient
              * for us to sort them.
@@ -206,7 +203,7 @@ public class Surface extends Plot {
                 az[i] = (zc[triangles[i][0]][triangles[i][1]] + zc[triangles[i][2]][triangles[i][3]] + zc[triangles[i][4]][triangles[i][5]]);
             }
 
-            /**
+            /*
              * Sorts triangles by z-values and paint them from furthest to
              * nearest, i.e. painter's algorithm. Although the painter's
              * algorithm is computationally and conceptually much easier than

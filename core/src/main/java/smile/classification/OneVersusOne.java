@@ -254,7 +254,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
     /**
      * Combines pairwise class probability estimates into
      * a joint probability estimate for all k classes.
-     *
+     * <p>
      * This method implements Method 2 from the paper by Wu, Lin, and Weng.
      *
      * <h2>References</h2>

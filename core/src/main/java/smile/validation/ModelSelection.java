@@ -52,7 +52,7 @@ package smile.validation;
 public interface ModelSelection {
     /**
      * Akaike information criterion.
-     *
+     * <p>
      * AIC = 2 * k - 2 * log(L), where L is the likelihood of estimated model
      * and n is the number of samples.
      *
@@ -66,7 +66,7 @@ public interface ModelSelection {
 
     /**
      * Bayesian information criterion.
-     *
+     * <p>
      * BIC = k * log(n) - 2 * log(L), where L is the likelihood of estimated model,
      * k is the number of free parameters to be estimated in the model,
      * and n is the number of samples.

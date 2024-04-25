@@ -182,7 +182,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Properties params) {

@@ -25,9 +25,7 @@ import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
-
 import smile.data.Dataset;
-import smile.data.SampleInstance;
 import smile.math.MathEx;
 
 /**
@@ -56,7 +54,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      */
     interface Trainer<T, M extends Classifier<T>> {
         /**
-         * Fits a classification model with the default hyper-parameters.
+         * Fits a classification model with the default hyperparameters.
          * @param x the training samples.
          * @param y the training labels.
          * @return the model
@@ -70,7 +68,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
          * Fits a classification model.
          * @param x the training samples.
          * @param y the training labels.
-         * @param params the hyper-parameters.
+         * @param params the hyperparameters.
          * @return the model
          */
         M fit(T[] x, int[] y, Properties params);
@@ -285,11 +283,15 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      */
     @SafeVarargs
     static <T> Classifier<T> ensemble(Classifier<T>... models) {
-        return new Classifier<T>() {
-            /** The ensemble is a soft classifier only if all the base models are. */
+        return new Classifier<>() {
+            /**
+             * The ensemble is a soft classifier only if all the base models are.
+             */
             private final boolean soft = Arrays.stream(models).allMatch(Classifier::soft);
 
-            /** The ensemble is an online learner only if all the base models are. */
+            /**
+             * The ensemble is an online learner only if all the base models are.
+             */
             private final boolean online = Arrays.stream(models).allMatch(Classifier::online);
 
             @Override
