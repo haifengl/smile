@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * A cartographic projection maps longitude and latitude pairs to x, y
  * coordinates. As with Vega, one can use projections in Vega-Lite to
- * layout both geographic points (such as locations on a map) represented
+ * lay out both geographic points (such as locations on a map) represented
  * by longitude and latitude coordinates, or to project geographic regions
  * (such as countries and states) represented using the GeoJSON format.
  * Projections are specified at the unit specification level, alongside

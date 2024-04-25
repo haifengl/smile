@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
-import smile.math.MathEx;
 
 /**
  * An immutable string vector.
@@ -38,7 +37,7 @@ public interface StringVector extends Vector<String> {
 
     @Override
     default boolean getBoolean(int i) {
-        return Boolean.valueOf(get(i));
+        return Boolean.parseBoolean(get(i));
     }
 
     @Override
@@ -49,32 +48,32 @@ public interface StringVector extends Vector<String> {
 
     @Override
     default byte getByte(int i) {
-        return Byte.valueOf(get(i));
+        return Byte.parseByte(get(i));
     }
 
     @Override
     default short getShort(int i) {
-        return Short.valueOf(get(i));
+        return Short.parseShort(get(i));
     }
 
     @Override
     default int getInt(int i) {
-        return Integer.valueOf(get(i));
+        return Integer.parseInt(get(i));
     }
 
     @Override
     default long getLong(int i) {
-        return Long.valueOf(get(i));
+        return Long.parseLong(get(i));
     }
 
     @Override
     default float getFloat(int i) {
-        return Float.valueOf(get(i));
+        return Float.parseFloat(get(i));
     }
 
     @Override
     default double getDouble(int i) {
-        return Double.valueOf(get(i));
+        return Double.parseDouble(get(i));
     }
 
     /**

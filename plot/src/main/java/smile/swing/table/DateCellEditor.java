@@ -56,8 +56,8 @@ public class DateCellEditor extends DefaultCellEditor {
     public static final DateCellEditor HHMMSS          = new DateCellEditor("HH:mm:ss");
     public static final DateCellEditor ISO8601         = new DateCellEditor("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-    JFormattedTextField textField;
-    DateFormat dateFormat;
+    final JFormattedTextField textField;
+    final DateFormat dateFormat;
 
     /**
      * Constructor.

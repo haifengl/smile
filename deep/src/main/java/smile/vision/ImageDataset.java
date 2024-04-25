@@ -149,7 +149,7 @@ public class ImageDataset implements Dataset {
      * Reads a mini-batch of image samples.
      * @param index the sample index.
      * @return the sample batch.
-     * @throws IOException
+     * @throws IOException if fail to read the image.
      */
     private SampleBatch readImages(int[] index) throws IOException {
         int n = index.length;

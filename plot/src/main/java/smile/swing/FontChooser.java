@@ -507,7 +507,7 @@ public class FontChooser extends JComponent {
 
     class ListSearchTextFieldDocumentHandler implements DocumentListener {
 
-        JList<String> targetList;
+        final JList<String> targetList;
 
         public ListSearchTextFieldDocumentHandler(JList<String> targetList) {
             this.targetList = targetList;

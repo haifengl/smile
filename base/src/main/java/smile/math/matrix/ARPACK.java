@@ -196,7 +196,7 @@ public class ARPACK {
         }
 
         nev = iparam[4]; // number of found eigenvalues
-        logger.info("ARPACK computed " + nev + " eigenvalues");
+        logger.info("ARPACK dseupd computed {} eigenvalues", nev);
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
@@ -299,7 +299,7 @@ public class ARPACK {
         }
 
         nev = iparam[4]; // number of found eigenvalues
-        logger.info("ARPACK computed " + nev + " eigenvalues");
+        logger.info("ARPACK dnaupd computed {} eigenvalues", nev);
 
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);

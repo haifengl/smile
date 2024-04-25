@@ -26,7 +26,7 @@ import smile.deep.tensor.Tensor;
 
 /**
  * Mobile inverted bottleneck convolution.
- *
+ * <p>
  * MBConv = expansion-conv1x1 + depthwise-conv3x3 + SENet + conv1x1 + add
  *
  * @author Haifeng Li

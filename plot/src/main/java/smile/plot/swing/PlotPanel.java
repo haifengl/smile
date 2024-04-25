@@ -75,7 +75,7 @@ public class PlotPanel extends JPanel {
      */
     private class JCanvas extends JComponent implements Printable, ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
         /**
-         * If the mouse double clicked.
+         * If the mouse double-clicked.
          */
         private boolean mouseDoubleClicked = false;
         /**
@@ -127,7 +127,7 @@ public class PlotPanel extends JPanel {
         }
 
         @Override
-        public int print(java.awt.Graphics g, PageFormat pf, int page) throws PrinterException {
+        public int print(java.awt.Graphics g, PageFormat pf, int page) {
             if (page > 0) {
                 // We have only one page, and 'page' is zero-based
                 return NO_SUCH_PAGE;
@@ -391,8 +391,8 @@ public class PlotPanel extends JPanel {
     }
 
     /**
-     * Returns a tool bar to control the plot.
-     * @return a tool bar to control the plot.
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
      */
     public JComponent getToolbar() {
         return toolbar;
@@ -939,7 +939,7 @@ public class PlotPanel extends JPanel {
     }
 
     /** The number of created windows, as the default window title. */
-    static AtomicInteger WindowCount = new AtomicInteger();
+    static final AtomicInteger WindowCount = new AtomicInteger();
 
     /**
      * Shows the plot in a window.

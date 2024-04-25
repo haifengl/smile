@@ -166,7 +166,7 @@ public class Table extends JXTable {
     }
 
     /**
-     * Constructs a JTable to display the values in the two dimensional array,
+     * Constructs a JTable to display the values in the two-dimensional array,
      * rowData, with column names, columnNames. 
      * @param rowData the data for the new table.
      * @param columnNames the names of each column.

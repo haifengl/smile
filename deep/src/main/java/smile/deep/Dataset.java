@@ -87,7 +87,7 @@ public interface Dataset extends Iterable<SampleBatch> {
      */
     static Dataset of(Formula formula, DataFrame df, int batch) {
         final double[][] x = formula.x(df).toArray();
-        final BaseVector y = formula.y(df);
+        final var y = formula.y(df);
         if (y.field().type.isIntegral()) {
             return of(x, y.toIntArray(), batch);
         } else {

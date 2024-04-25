@@ -77,7 +77,7 @@ public class Line extends Shape {
 
     /**
      * Constructor.
-     * @param points a n-by-2 or n-by-3 matrix that are the coordinates of points.
+     * @param points an n-by-2 or n-by-3 matrix that are the coordinates of points.
      * @param style the style of line.
      * @param mark the mark of points.
      * <ul>

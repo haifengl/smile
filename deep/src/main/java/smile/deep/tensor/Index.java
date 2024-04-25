@@ -40,20 +40,20 @@ public class Index {
     /**
      * The ellipsis (...) is used to slice higher-dimensional data structures as in numpy.
      * It's designed to mean at this point, insert as many full slices (:) to extend
-     * the multi-dimensional slice to all dimensions.
+     * the multidimensional slice to all dimensions.
      */
-    public static Index Ellipsis = new Index(new TensorIndex(torch.Ellipsis()));
+    public static final Index Ellipsis = new Index(new TensorIndex(torch.Ellipsis()));
 
     /**
      * The colon (:) is used to slice all elements of a dimension.
      */
-    public static Index Colon = new Index(new TensorIndex(new Slice()));
+    public static final Index Colon = new Index(new TensorIndex(new Slice()));
 
     /**
      * The None is used to insert a singleton dimension ("unsqueeze"
      * a dimension).
      */
-    public static Index None = new Index(new TensorIndex(torch.None()));
+    public static final Index None = new Index(new TensorIndex(torch.None()));
 
     /**
      * Returns the index of a single element in a dimension.
@@ -138,9 +138,9 @@ public class Index {
      */
     public static Index slice(Integer start, Integer end, Integer step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
-                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start.intValue())),
-                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end.intValue())),
-                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step.intValue()))
+                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
+                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
+                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
         )));
     }
 
@@ -165,9 +165,9 @@ public class Index {
      */
     public static Index slice(Long start, Long end, Long step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
-                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start.longValue())),
-                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end.longValue())),
-                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step.longValue()))
+                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
+                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
+                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
         )));
     }
 }

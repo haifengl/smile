@@ -58,7 +58,7 @@ public abstract class Plot extends Shape {
     }
 
     /**
-     * Returns a optional tool tip for the object at given coordinates.
+     * Returns an optional tooltip for the object at given coordinates.
      * @param coord the logical coordinates of current mouse position.
      * @return a string if an object with label close to the given coordinates.
      */
@@ -67,7 +67,7 @@ public abstract class Plot extends Shape {
     }
     
     /**
-     * Returns an optional list of components in tool bar to control the plot.
+     * Returns an optional list of components in toolbar to control the plot.
      * @return an optional list of toolbar components.
      */
     public Optional<JComponent[]> toolbar() {

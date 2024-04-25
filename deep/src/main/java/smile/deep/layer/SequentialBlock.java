@@ -74,8 +74,8 @@ public class SequentialBlock extends LayerBlock {
     public Tensor forward(Tensor input) {
         try (var scope = new AutoScope()) {
             Tensor output = input;
-            for (int i = 0; i < layers.size(); i++) {
-                output = layers.get(i).forward(output);
+            for (var layer : layers) {
+                output = layer.forward(output);
                 scope.attach(output);
             }
             scope.detach(output);

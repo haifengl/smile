@@ -142,8 +142,9 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     
     @Override
     public Iterator<Entry> iterator() {
-        return new Iterator<Entry>() {
+        return new Iterator<>() {
             int i = 0;
+
             @Override
             public boolean hasNext() {
                 return i < size();

@@ -127,7 +127,7 @@ public interface TimeFunction extends Serializable {
      * Returns the polynomial learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
      * decay steps, without cycling.
-     *
+     * <p>
      * It is commonly observed that a monotonically decreasing learning rate,
      * whose degree of change is carefully chosen, results in a better performing
      * model.
@@ -146,7 +146,7 @@ public interface TimeFunction extends Serializable {
      * Returns the polynomial learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
      * decay steps.
-     *
+     * <p>
      * It is commonly observed that a monotonically decreasing learning rate,
      * whose degree of change is carefully chosen, results in a better performing
      * model.

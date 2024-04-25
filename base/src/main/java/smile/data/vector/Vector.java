@@ -81,12 +81,12 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
 
     @Override
     default boolean getBoolean(int i) {
-        return ((Boolean) get(i)).booleanValue();
+        return (Boolean) get(i);
     }
 
     @Override
     default char getChar(int i) {
-        return ((Character) get(i)).charValue();
+        return (Character) get(i);
     }
 
     @Override

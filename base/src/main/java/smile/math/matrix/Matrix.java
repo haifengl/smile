@@ -1752,7 +1752,7 @@ public class Matrix extends IMatrix {
         Matrix lu = overwrite ? this : clone();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
-            logger.error("LAPACK GETRF error code: {}", info);
+            logger.error("LAPACK POTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 

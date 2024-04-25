@@ -57,7 +57,7 @@ public enum ScalarType {
     Float64(torch.ScalarType.Double);
 
     /** PyTorch tensor data type. */
-    torch.ScalarType value;
+    final torch.ScalarType value;
 
     /** Constructor. */
     ScalarType(torch.ScalarType dtype) {

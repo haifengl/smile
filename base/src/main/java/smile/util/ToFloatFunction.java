@@ -20,7 +20,7 @@ package smile.util;
 /**
  * Represents a function that produces a float-valued result.
  * This is the float-producing primitive specialization for Function.
- *
+ * <p>
  * There is no ToFloatFunction interface in java.util.function.
  *
  * @param <T> the type of the input to the function.

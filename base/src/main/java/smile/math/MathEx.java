@@ -171,22 +171,20 @@ public class MathEx {
     /**
      * High quality random number generator.
      */
-    private static final ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
-        protected Random initialValue() {
-            synchronized(DEFAULT_SEEDS) {
-                // For the first RNG instance, we use the default seed of RNG algorithms.
-                if (nextSeed < 0) {
-                    nextSeed = 0;
-                    return new Random();
-                }
-                if (nextSeed < DEFAULT_SEEDS.length) {
-                    return new Random(DEFAULT_SEEDS[nextSeed++]);
-                } else {
-                    return new Random(generateSeed());
-                }
+    private static final ThreadLocal<Random> random = ThreadLocal.withInitial(() -> {
+        synchronized(DEFAULT_SEEDS) {
+            // For the first RNG instance, we use the default seed of RNG algorithms.
+            if (nextSeed < 0) {
+                nextSeed = 0;
+                return new Random();
+            }
+            if (nextSeed < DEFAULT_SEEDS.length) {
+                return new Random(DEFAULT_SEEDS[nextSeed++]);
+            } else {
+                return new Random(generateSeed());
             }
         }
-    };
+    });
 
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.

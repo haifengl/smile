@@ -43,7 +43,7 @@ public class ColorCellRenderer extends DefaultTableCellRenderer {
      */
     Border selectedBorder = null;
     /**
-     * True if has border.
+     * True if it has border.
      */
     boolean isBordered = true;
 

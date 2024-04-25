@@ -70,7 +70,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      */
     private JPanel contentPane;
     /**
-     * Optional tool bar to control plots.
+     * Optional toolbar to control plots.
      */
     private JToolBar toolbar;
 
@@ -196,7 +196,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     }
 
     @Override
-    public int print(java.awt.Graphics g, PageFormat pf, int page) throws PrinterException {
+    public int print(java.awt.Graphics g, PageFormat pf, int page) {
         if (page > 0) {
             // We have only one page, and 'page' is zero-based
             return NO_SUCH_PAGE;

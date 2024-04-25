@@ -184,10 +184,10 @@ public class BinomialDistribution extends DiscreteDistribution {
 
     /**
      * This function generates a random variate with the binomial distribution.
-     *
+     * <p>
      * Uses down/up search from the mode by chop-down technique for {@code n*p < 55},
      * and patchwork rejection method for {@code n*p >= 55}.
-     *
+     * <p>
      * For {@code n*p < 1E-6} numerical inaccuracy is avoided by poisson approximation.
      */
     @Override

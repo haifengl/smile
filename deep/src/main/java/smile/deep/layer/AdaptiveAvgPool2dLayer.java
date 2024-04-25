@@ -19,7 +19,6 @@ package smile.deep.layer;
 import org.bytedeco.pytorch.AdaptiveAvgPool2dImpl;
 import org.bytedeco.pytorch.LongOptional;
 import org.bytedeco.pytorch.LongOptionalVector;
-import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 

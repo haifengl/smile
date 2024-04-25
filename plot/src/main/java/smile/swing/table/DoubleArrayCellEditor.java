@@ -43,9 +43,9 @@ import javax.swing.text.DefaultFormatterFactory;
  */
 @SuppressWarnings("serial")
 public class DoubleArrayCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(DoubleArrayCellEditor.class.getName()); 
+    private final static Logger LOGGER = Logger.getLogger(DoubleArrayCellEditor.class.getName());
 
-    JFormattedTextField textField;
+    final JFormattedTextField textField;
 
     /**
      * Constructor.

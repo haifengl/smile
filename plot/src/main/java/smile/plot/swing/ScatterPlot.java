@@ -106,7 +106,7 @@ public class ScatterPlot extends Plot {
 
     /**
      * Create a scatter plot.
-     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
      */
     public static ScatterPlot of(double[][] points) {
         return new ScatterPlot(Point.of(points));
@@ -114,7 +114,7 @@ public class ScatterPlot extends Plot {
 
     /**
      * Create a scatter plot.
-     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
      */
     public static ScatterPlot of(double[][] points, Color color) {
         return new ScatterPlot(Point.of(points, color));
@@ -122,7 +122,7 @@ public class ScatterPlot extends Plot {
 
     /**
      * Create a scatter plot.
-     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
      */
     public static ScatterPlot of(double[][] points, char mark) {
         return new ScatterPlot(Point.of(points, mark));
@@ -130,7 +130,7 @@ public class ScatterPlot extends Plot {
 
     /**
      * Create a scatter plot.
-     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
      */
     public static ScatterPlot of(double[][] points, char mark, Color color) {
         return new ScatterPlot(new Point(points, mark, color));

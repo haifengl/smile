@@ -171,7 +171,8 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<>() {
+            });
             for (Map<String, String> map : maps) {
                 rows.add(toTuple(map, parser));
                 if (rows.size() >= limit) break;
@@ -180,7 +181,8 @@ public class JSON {
             String line = reader.readLine();
             while (rows.size() < limit && line != null) {
                 try {
-                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
+                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {
+                    });
                     rows.add(toTuple(map, parser));
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
@@ -224,7 +226,8 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<>() {
+            });
             for (Map<String, String> map : maps) {
                 rows.add(map);
                 if (rows.size() >= limit) break;
@@ -233,7 +236,8 @@ public class JSON {
             String line = reader.readLine();
             while (rows.size() < limit && line != null) {
                 try {
-                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
+                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {
+                    });
                     rows.add(map);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);

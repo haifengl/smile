@@ -47,8 +47,8 @@ public class DoubleCellEditor extends DefaultCellEditor {
     private final static Logger LOGGER = Logger.getLogger(DoubleCellEditor.class.getName()); 
     private final static DoubleCellEditor instance = new DoubleCellEditor();
 
-    JFormattedTextField textField;
-    NumberFormat doubleFormat;
+    final JFormattedTextField textField;
+    final NumberFormat doubleFormat;
     private final Double minimum, maximum;
 
     /**
