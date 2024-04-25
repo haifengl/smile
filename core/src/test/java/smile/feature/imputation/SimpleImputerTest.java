@@ -22,9 +22,8 @@ import smile.data.DataFrame;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.*;
-import org.junit.jupiter.api.*;
 import smile.util.Paths;
-
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

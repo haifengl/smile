@@ -111,4 +111,13 @@ class DoubleVectorImpl implements DoubleVector {
     public String toString() {
         return toString(10);
     }
+
+    @Override
+    public void fillna(double value) {
+        for (int i = 0; i < vector.length; i++) {
+            if (Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
+                vector[i] = value;
+            }
+        }
+    }
 }
