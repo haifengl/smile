@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
@@ -72,6 +73,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class IsoMap implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
 

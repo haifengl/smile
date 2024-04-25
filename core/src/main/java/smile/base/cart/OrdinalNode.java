@@ -21,12 +21,15 @@ import smile.data.Tuple;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
+import java.io.Serial;
+
 /**
  * A node with a ordinal split variable (real-valued or ordinal categorical value).
  *
  * @author Haifeng Li
  */
 public class OrdinalNode extends InternalNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

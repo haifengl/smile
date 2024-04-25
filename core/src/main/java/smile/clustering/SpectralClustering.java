@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.stream.IntStream;
 
@@ -46,6 +47,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class SpectralClustering extends PartitionClustering implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpectralClustering.class);
 

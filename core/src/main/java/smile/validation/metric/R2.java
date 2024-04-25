@@ -19,6 +19,8 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * R<sup>2</sup>. R<sup>2</sup> coefficient of determination measures how well
  * the regression line approximates the real data points. An R<sup>2</sup>
@@ -27,6 +29,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class R2 implements RegressionMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static R2 instance = new R2();

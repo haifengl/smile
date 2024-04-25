@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.math.BFGS;
@@ -81,6 +82,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
  * @author Haifeng Li
  */
 public class GaussianProcessRegression<T> implements Regression<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

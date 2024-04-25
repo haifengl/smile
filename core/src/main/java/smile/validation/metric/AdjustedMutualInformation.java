@@ -17,6 +17,7 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import static java.lang.Math.exp;
@@ -43,6 +44,7 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class AdjustedMutualInformation implements ClusteringMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
     public final static AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);

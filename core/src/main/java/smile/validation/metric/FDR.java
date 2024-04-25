@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * The false discovery rate (FDR) is ratio of false positives
  * to combined true and false positives, which is actually 1 - precision.
@@ -27,6 +29,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class FDR implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static FDR instance = new FDR();

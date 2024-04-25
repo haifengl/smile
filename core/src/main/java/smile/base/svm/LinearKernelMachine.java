@@ -17,6 +17,7 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
 import smile.util.SparseArray;
@@ -30,6 +31,7 @@ import smile.math.kernel.SparseLinearKernel;
  * @author Haifeng Li
  */
 public class LinearKernelMachine implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

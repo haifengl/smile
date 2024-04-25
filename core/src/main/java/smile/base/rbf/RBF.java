@@ -17,6 +17,7 @@
 
 package smile.base.rbf;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.clustering.CLARANS;
@@ -55,6 +56,7 @@ import smile.math.rbf.GaussianRadialBasis;
  * @author Haifeng Li
  */
 public class RBF<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The center of neuron. */

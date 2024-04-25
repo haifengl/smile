@@ -18,6 +18,7 @@
 package smile.base.mlp;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
@@ -40,6 +41,7 @@ import smile.math.TimeFunction;
  * @author Haifeng Li
  */
 public abstract class MultilayerPerceptron implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * The dimensionality of input data.

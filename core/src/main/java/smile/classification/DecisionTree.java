@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,6 +103,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameClassifier {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

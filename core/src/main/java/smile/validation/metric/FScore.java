@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * The F-score (or F-measure) considers both the precision and the recall of the test
  * to compute the score. The precision p is the number of correct positive results
@@ -34,6 +36,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class FScore implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** The F_1 score, the harmonic mean of precision and recall. */
     public final static FScore F1 = new FScore(1.0);

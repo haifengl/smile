@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -38,6 +39,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class KModes extends CentroidClustering<int[], int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KModes.class);
 

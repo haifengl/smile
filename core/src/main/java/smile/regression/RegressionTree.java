@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.*;
 import java.util.stream.IntStream;
 import smile.base.cart.*;
@@ -78,6 +79,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RegressionTree extends CART implements DataFrameRegression {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */

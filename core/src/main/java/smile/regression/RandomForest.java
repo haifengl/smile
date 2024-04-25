@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -75,6 +76,7 @@ import smile.validation.metric.*;
  * @author Haifeng Li
  */
 public class RandomForest implements DataFrameRegression, TreeSHAP {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 

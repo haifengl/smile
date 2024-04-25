@@ -22,6 +22,8 @@ import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
+import java.io.Serial;
+
 /**
  * Principal component analysis. PCA is an orthogonal
  * linear transformation that transforms a number of possibly correlated
@@ -61,6 +63,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class PCA extends Projection {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

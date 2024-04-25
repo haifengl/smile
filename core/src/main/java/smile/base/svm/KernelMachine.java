@@ -17,6 +17,7 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.math.kernel.MercerKernel;
 
@@ -38,6 +39,7 @@ import smile.math.kernel.MercerKernel;
  * @author Haifeng Li
  */
 public class KernelMachine<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.ToIntFunction;
 
@@ -28,6 +29,7 @@ import java.util.function.ToIntFunction;
  * @author Haifeng Li
  */
 public class HMMLabeler<T> implements SequenceLabeler<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The HMM model. */

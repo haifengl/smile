@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -66,6 +67,7 @@ import smile.math.TimeFunction;
  * @author Haifeng Li
  */
 public class NeuralGas implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

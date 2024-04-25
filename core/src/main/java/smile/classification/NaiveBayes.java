@@ -21,6 +21,8 @@ import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
 import smile.util.IntSet;
 
+import java.io.Serial;
+
 /**
  * Naive Bayes classifier. A naive Bayes classifier is a simple probabilistic
  * classifier based on applying Bayes' theorem with strong (naive) independence
@@ -51,6 +53,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class NaiveBayes extends AbstractClassifier<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

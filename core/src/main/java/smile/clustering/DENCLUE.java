@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -41,6 +42,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class DENCLUE extends PartitionClustering {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
 

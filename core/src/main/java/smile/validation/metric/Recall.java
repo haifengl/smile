@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * In information retrieval area, sensitivity is called recall.
  *
@@ -25,6 +27,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class Recall implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Recall instance = new Recall();

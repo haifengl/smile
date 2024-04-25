@@ -4,6 +4,8 @@ import smile.data.DataFrame;
 import smile.manifold.KPCA;
 import smile.math.kernel.MercerKernel;
 
+import java.io.Serial;
+
 /**
  * Kernel PCA transform. Kernel PCA is an extension of
  * principal component analysis (PCA) using techniques of kernel methods.
@@ -35,6 +37,7 @@ import smile.math.kernel.MercerKernel;
  * @author Haifeng Li
  */
 public class KernelPCA extends Projection {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

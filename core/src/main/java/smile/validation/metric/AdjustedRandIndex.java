@@ -19,6 +19,8 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Adjusted Rand Index. Rand index is defined as the number of pairs of objects
  * that are either in the same group or in different groups in both partitions
@@ -38,6 +40,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class AdjustedRandIndex implements ClusteringMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static AdjustedRandIndex instance = new AdjustedRandIndex();

@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -25,6 +26,7 @@ import java.io.Serializable;
  * @author Haifeng Li
  */
 public class Bag implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

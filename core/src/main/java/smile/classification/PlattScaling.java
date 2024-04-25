@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
@@ -42,6 +43,7 @@ import static java.lang.Math.log;
  * @author Haifeng Li
  */
 public class PlattScaling implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
 
