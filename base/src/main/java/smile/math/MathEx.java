@@ -192,13 +192,13 @@ public class MathEx {
     private static class FPU {
         int RADIX;
         int DIGITS;
-        int FLOAT_DIGITS = 24;
+        final int FLOAT_DIGITS = 24;
         int ROUND_STYLE;
         int MACHEP;
-        int FLOAT_MACHEP = -23;
+        final int FLOAT_MACHEP = -23;
         int NEGEP;
-        int FLOAT_NEGEP = -24;
-        float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
+        final int FLOAT_NEGEP = -24;
+        final float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
         double EPSILON;
 
         FPU() {

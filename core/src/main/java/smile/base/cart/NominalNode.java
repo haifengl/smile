@@ -38,7 +38,7 @@ public class NominalNode extends InternalNode {
     /**
      * The split value.
      */
-    int value;
+    final int value;
 
     /**
      * Constructor.

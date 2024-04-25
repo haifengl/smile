@@ -26,9 +26,9 @@ import java.util.Set;
  */
 public abstract class AbstractFunction implements Term {
     /** The name of function. */
-    String name;
+    final String name;
     /** The operand. */
-    Term x;
+    final Term x;
 
     /**
      * Constructor.

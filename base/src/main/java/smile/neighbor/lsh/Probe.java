@@ -31,7 +31,7 @@ public class Probe implements Comparable<Probe> {
     /**
      * The bucket for probing.
      */
-    int[] bucket;
+    final int[] bucket;
     /**
      * The last non-zero component.
      */

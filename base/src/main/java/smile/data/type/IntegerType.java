@@ -25,7 +25,7 @@ package smile.data.type;
 public class IntegerType implements DataType {
 
     /** Singleton instance. */
-    static IntegerType instance = new IntegerType();
+    static final IntegerType instance = new IntegerType();
 
     /**
      * Private constructor for singleton design pattern.

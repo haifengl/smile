@@ -46,7 +46,7 @@ public class IsotonicRegressionScaling implements Serializable {
      * Step-wise constant function.
      */
     private static class StepwiseConstant {
-        double lo;
+        final double lo;
         double hi;
         double val;
         int weight;

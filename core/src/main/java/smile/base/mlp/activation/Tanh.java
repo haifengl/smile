@@ -26,7 +26,7 @@ package smile.base.mlp.activation;
  */
 public class Tanh implements ActivationFunction {
     /** Default instance. */
-    static Tanh instance = new Tanh();
+    static final Tanh instance = new Tanh();
 
     /**
      * Constructor.

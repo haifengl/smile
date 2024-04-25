@@ -68,7 +68,7 @@ public class LLE implements Serializable {
     /**
      * Nearest neighbor graph.
      */
-    public AdjacencyList graph;
+    public final AdjacencyList graph;
 
     /**
      * Constructor.
@@ -207,11 +207,11 @@ public class LLE implements Serializable {
      * compute only W * v and W' * v efficiently.
      */
     private static class M extends IMatrix {
-        SparseMatrix Wt;
-        double[] x;
-        double[] Wx;
-        double[] Wtx;
-        double[] WtWx;
+        final SparseMatrix Wt;
+        final double[] x;
+        final double[] Wx;
+        final double[] Wtx;
+        final double[] WtWx;
 
         public M(SparseMatrix Wt) {
             this.Wt = Wt;

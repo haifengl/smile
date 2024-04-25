@@ -35,7 +35,7 @@ public class OrdinalNode extends InternalNode {
     /**
      * The split value.
      */
-    double value;
+    final double value;
 
     /**
      * Constructor.

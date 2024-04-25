@@ -64,31 +64,31 @@ public class LinearModel implements DataFrameRegression {
     /**
      * Design matrix formula
      */
-    Formula formula;
+    final Formula formula;
     /**
      * The schema of design matrix.
      */
-    StructType schema;
+    final StructType schema;
     /**
      * The predictors of design matrix.
      */
-    String[] predictors;
+    final String[] predictors;
     /**
      * The dimensionality.
      */
-    int p;
+    final int p;
     /**
      * The intercept.
      */
-    double b;
+    final double b;
     /**
      * The linear weights.
      */
-    double[] w;
+    final double[] w;
     /**
      * True if the linear weights w includes the intercept.
      */
-    boolean bias;
+    final boolean bias;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -96,11 +96,11 @@ public class LinearModel implements DataFrameRegression {
     /**
      * The fitted values.
      */
-    double[] fittedValues;
+    final double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    double[] residuals;
+    final double[] residuals;
     /**
      * Residual sum of squares.
      */
@@ -108,11 +108,11 @@ public class LinearModel implements DataFrameRegression {
     /**
      * Residual standard error.
      */
-    double error;
+    final double error;
     /**
      * The degree-of-freedom of residual standard error.
      */
-    int df;
+    final int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -128,21 +128,21 @@ public class LinearModel implements DataFrameRegression {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    double RSquared;
+    final double RSquared;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    double adjustedRSquared;
+    final double adjustedRSquared;
     /**
      * The F-statistic of the goodness-of-fit of the model.
      */
-    double F;
+    final double F;
     /**
      * The p-value of the goodness-of-fit test of the model.
      */
-    double pvalue;
+    final double pvalue;
     /**
      * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
      * it is updated with each new learning instance.

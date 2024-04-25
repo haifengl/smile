@@ -97,7 +97,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     class Node implements Serializable {
 
         /** Index of the data point in the dataset. */
-        int idx;
+        final int idx;
         /** The maximum distance to any grandchild. */
         double maxDist;
         /** The distance to the parent node. */
@@ -159,14 +159,14 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     class DistanceSet {
 
         /** The index of the instance represented by this node. */
-        int idx;
+        final int idx;
         /**
          * The last distance is to the current reference point
          * (potential current parent). The previous ones are
          * to reference points that were previously looked at
          * (all potential ancestors).
          */
-        DoubleArrayList dist;
+        final DoubleArrayList dist;
 
         /**
          * Constructor.
@@ -197,9 +197,9 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     class DistanceNode implements Comparable<DistanceNode> {
 
         /** The distance of the node's point to the query point. */
-        double dist;
+        final double dist;
         /** The node. */
-        Node node;
+        final Node node;
 
         /**
          * Constructor.

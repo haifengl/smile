@@ -29,7 +29,7 @@ public class DoubleType implements DataType {
     private static final DecimalFormat format = new DecimalFormat("#.######");
 
     /** Singleton instance. */
-    static DoubleType instance = new DoubleType();
+    static final DoubleType instance = new DoubleType();
 
     /**
      * Private constructor for singleton design pattern.

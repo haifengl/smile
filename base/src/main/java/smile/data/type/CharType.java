@@ -25,7 +25,7 @@ package smile.data.type;
 public class CharType implements DataType {
 
     /** Singleton instance. */
-    static CharType instance = new CharType();
+    static final CharType instance = new CharType();
 
     /**
      * Private constructor for singleton design pattern.

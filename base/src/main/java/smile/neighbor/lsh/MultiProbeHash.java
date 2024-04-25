@@ -30,11 +30,11 @@ public class MultiProbeHash extends Hash {
     /**
      * The minimum values of hashing functions for given dataset.
      */
-    double[] umin;
+    final double[] umin;
     /**
      * The maximum values of hashing functions for given dataset.
      */
-    double[] umax;
+    final double[] umax;
 
 
     /**

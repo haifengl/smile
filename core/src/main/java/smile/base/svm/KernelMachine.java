@@ -45,19 +45,19 @@ public class KernelMachine<T> implements Serializable {
     /**
      * The kernel function.
      */
-    MercerKernel<T> kernel;
+    final MercerKernel<T> kernel;
     /**
      * The support vectors (or control points).
      */
-    T[] vectors;
+    final T[] vectors;
     /**
      * The linear weights.
      */
-    double[] w;
+    final double[] w;
     /**
      * The intercept.
      */
-    double b;
+    final double b;
 
     /**
      * Constructor.

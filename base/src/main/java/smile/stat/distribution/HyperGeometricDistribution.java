@@ -200,7 +200,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     abstract static class RandomNumberGenerator {
-        protected int N, m, n;
+        protected final int N, m, n;
         protected int fak;
         protected int addd;
 

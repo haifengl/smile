@@ -25,7 +25,7 @@ package smile.data.type;
 public class LongType implements DataType {
 
     /** Singleton instance. */
-    static LongType instance = new LongType();
+    static final LongType instance = new LongType();
 
     /**
      * Private constructor for singleton design pattern.

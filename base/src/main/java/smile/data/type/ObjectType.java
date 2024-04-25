@@ -26,23 +26,23 @@ import java.util.function.Function;
  */
 public class ObjectType implements DataType {
     /** Object type. */
-    static ObjectType instance = new ObjectType(Object.class);
+    static final ObjectType instance = new ObjectType(Object.class);
     /** Boolean object type. */
-    static ObjectType BooleanObjectType = new ObjectType(Boolean.class);
+    static final ObjectType BooleanObjectType = new ObjectType(Boolean.class);
     /** Char object type. */
-    static ObjectType CharObjectType = new ObjectType(Character.class);
+    static final ObjectType CharObjectType = new ObjectType(Character.class);
     /** Byte object type. */
-    static ObjectType ByteObjectType = new ObjectType(Byte.class);
+    static final ObjectType ByteObjectType = new ObjectType(Byte.class);
     /** Short object type. */
-    static ObjectType ShortObjectType = new ObjectType(Short.class);
+    static final ObjectType ShortObjectType = new ObjectType(Short.class);
     /** Integer object type. */
-    static ObjectType IntegerObjectType = new ObjectType(Integer.class);
+    static final ObjectType IntegerObjectType = new ObjectType(Integer.class);
     /** Long object type. */
-    static ObjectType LongObjectType = new ObjectType(Long.class);
+    static final ObjectType LongObjectType = new ObjectType(Long.class);
     /** Float object type. */
-    static ObjectType FloatObjectType = new ObjectType(Float.class);
+    static final ObjectType FloatObjectType = new ObjectType(Float.class);
     /** Double object type. */
-    static ObjectType DoubleObjectType = new ObjectType(Double.class);
+    static final ObjectType DoubleObjectType = new ObjectType(Double.class);
 
     /** Object Class. */
     private final Class<?> clazz;
@@ -56,13 +56,13 @@ public class ObjectType implements DataType {
     ObjectType(Class<?> clazz) {
         this.clazz = clazz;
         if (clazz == Float.class) {
-            format = o -> DataTypes.FloatType.toString(o);
+            format = DataTypes.FloatType::toString;
         } else if (clazz == Double.class) {
-            format = o -> DataTypes.DoubleType.toString(o);
+            format = DataTypes.DoubleType::toString;
         } else if (clazz == Integer.class) {
-            format = o -> DataTypes.IntegerType.toString(o);
+            format = DataTypes.IntegerType::toString;
         } else if (clazz == Long.class) {
-            format = o -> DataTypes.IntegerType.toString(o);
+            format = DataTypes.IntegerType::toString;
         } else {
             format = Object::toString;
         }

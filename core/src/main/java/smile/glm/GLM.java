@@ -80,27 +80,27 @@ public class GLM implements Serializable {
     /**
      * The symbolic description of the model to be fitted.
      */
-    protected Formula formula;
+    protected final Formula formula;
     /**
      * The predictors of design matrix.
      */
-    String[] predictors;
+    final String[] predictors;
     /**
      * The model specifications (link function, deviance, etc.).
      */
-    protected Model model;
+    protected final Model model;
     /**
      * The linear weights.
      */
-    protected double[] beta;
+    protected final double[] beta;
     /**
      * The coefficients, their standard errors, z-scores, and p-values.
      */
-    protected double[][] ztest;
+    protected final double[][] ztest;
     /**
      * The fitted mean values.
      */
-    protected double[] mu;
+    protected final double[] mu;
     /**
      * The null deviance = 2 * (LogLikelihood(Saturated Model) - LogLikelihood(Null Model)).
      * <p>
@@ -114,11 +114,11 @@ public class GLM implements Serializable {
      * depend on predictor variables. While the saturated most is the most
      * general model, the null model is the most restricted model.
      */
-    protected double nullDeviance;
+    protected final double nullDeviance;
     /**
      * The deviance = 2 * (LogLikelihood(Saturated Model) - LogLikelihood(Proposed Model)).
      */
-    protected double deviance;
+    protected final double deviance;
     /**
      * The deviance residuals.
      */
@@ -126,11 +126,11 @@ public class GLM implements Serializable {
     /**
      * The degrees of freedom of the residual deviance.
      */
-    protected int df;
+    protected final int df;
     /**
      * Log-likelihood.
      */
-    protected double logLikelihood;
+    protected final double logLikelihood;
 
     /**
      * Constructor.

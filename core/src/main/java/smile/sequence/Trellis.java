@@ -35,11 +35,11 @@ class Trellis {
         /**
          * The residuals of conditional samples as regression tree training target.
          */
-        public double[] residual;
+        public final double[] residual;
         /**
          * Exp of potential function values F_i(x_t, s_t-1)
          */
-        public double[] expf;
+        public final double[] expf;
 
         /**
          * Constructor.

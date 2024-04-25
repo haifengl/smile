@@ -424,11 +424,11 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     /** The result of pruning a subtree. */
     private static class Prune {
         /** The merged node if pruned. Otherwise, the original node. */
-        Node node;
+        final Node node;
         /** The test error on this node. */
-        int error;
+        final int error;
         /** The training sample count of each class. */
-        int[] count;
+        final int[] count;
 
         /** Constructor. */
         Prune(Node node, int error, int[] count) {

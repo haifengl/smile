@@ -25,7 +25,7 @@ package smile.data.type;
 public class StringType implements DataType {
 
     /** Singleton instance. */
-    static StringType instance = new StringType();
+    static final StringType instance = new StringType();
 
     /**
      * Private constructor for singleton design pattern.
