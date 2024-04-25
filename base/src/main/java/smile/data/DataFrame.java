@@ -162,14 +162,9 @@ public interface DataFrame extends Iterable<Tuple> {
                 vector.fillna((float) value);
             } else if (column instanceof DoubleVector vector) {
                 vector.fillna(value);
-            }/* else if (column instanceof NumberVector<?> vector) {
-                var number = nrow() > 0 ? vector.get(0) : null;
-                if (number instanceof Float) {
-                    vector.fillna(Float.valueOf((float) value));
-                } else if (number instanceof Double) {
-                    vector.fillna(Double.valueOf(value));
-                }
-            }*/
+            } else if (column instanceof NumberVector vector) {
+                vector.fillna(value);
+            }
         }
         return this;
     }
