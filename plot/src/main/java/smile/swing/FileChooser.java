@@ -85,19 +85,19 @@ public class FileChooser extends JFileChooser {
         /**
          * A buffer to hold file header.
          */
-        char[] buf = new char[1024];
+        final char[] buf = new char[1024];
         /**
          * Font for header text.
          */
-        Font font = (Font) UIManager.get("Label.font"); 
+        final Font font = (Font) UIManager.get("Label.font");
         /**
          * Font metrics.
          */
-        FontMetrics fm = getFontMetrics(font);
+        final FontMetrics fm = getFontMetrics(font);
         /**
          * Color for header text.
          */
-        Color color = (Color) UIManager.get("Label.foreground"); 
+        final Color color = (Color) UIManager.get("Label.foreground");
         /**
          * Text file header.
          */
@@ -279,7 +279,7 @@ public class FileChooser extends JFileChooser {
         /**
          * The file extensions in lower case.
          */
-        private TreeSet<String> filters = new TreeSet<>();
+        private final TreeSet<String> filters = new TreeSet<>();
         /**
          * The human-readable description of this filter.
          */
@@ -378,7 +378,7 @@ public class FileChooser extends JFileChooser {
         }
 
         /**
-         * Returns the human readable description of this filter.
+         * Returns the human-readable description of this filter.
          */
         @Override
         public String getDescription() {
@@ -396,7 +396,7 @@ public class FileChooser extends JFileChooser {
         }
 
         /**
-         * Sets the human readable description of this filter.
+         * Sets the human-readable description of this filter.
          */
         public void setDescription(String description) {
             this.description = description;

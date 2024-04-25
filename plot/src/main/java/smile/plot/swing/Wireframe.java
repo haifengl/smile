@@ -40,7 +40,7 @@ public class Wireframe extends Plot {
 
     /**
      * Constructor.
-     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
+     * @param vertices an n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
      */
@@ -71,7 +71,7 @@ public class Wireframe extends Plot {
 
     /**
      * Constructor.
-     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
+     * @param vertices an n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
      */

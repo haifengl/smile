@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 /**
  * MurmurHash is a very fast, non-cryptographic hash suitable for general hash-based
  * lookup. The name comes from two basic operations, multiply (MU) and rotate (R),
- * used in its inner loop. See http://murmurhash.googlepages.com/ for more details.
+ * used in its inner loop. See this <a href="http://murmurhash.googlepages.com/">page</a> for more details.
  * <p>
  * The older MurmurHash2 yields a 32-bit or 64-bit value.
  * <p>
@@ -58,7 +58,7 @@ public interface MurmurHash2 {
             k = k << 8;
             k = k | (data.get(offset + i_4 + 1) & 0xff);
             k = k << 8;
-            k = k | (data.get(offset + i_4 + 0) & 0xff);
+            k = k | (data.get(offset + i_4) & 0xff);
             k *= m;
             k ^= k >>> r;
             k *= m;
@@ -110,7 +110,7 @@ public interface MurmurHash2 {
         for (int i = 0; i < lenLongs; ++i) {
             int i_8 = i << 3;
 
-            long k64 = ((long) data.get(offset + i_8 + 0) & 0xff)
+            long k64 = ((long) data.get(offset + i_8) & 0xff)
                     + (((long) data.get(offset + i_8 + 1) & 0xff) << 8)
                     + (((long) data.get(offset + i_8 + 2) & 0xff) << 16)
                     + (((long) data.get(offset + i_8 + 3) & 0xff) << 24)

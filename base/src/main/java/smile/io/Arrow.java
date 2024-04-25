@@ -634,23 +634,19 @@ public class Arrow {
     private smile.data.vector.BaseVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalTime[] a = new LocalTime[count];
-        if (fieldVector instanceof TimeNanoVector) {
-            TimeNanoVector vector = (TimeNanoVector) fieldVector;
+        if (fieldVector instanceof TimeNanoVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i));
             }
-        } else if (fieldVector instanceof TimeMilliVector) {
-            TimeMilliVector vector = (TimeMilliVector) fieldVector;
+        } else if (fieldVector instanceof TimeMilliVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000);
             }
-        } else if (fieldVector instanceof TimeMicroVector) {
-            TimeMicroVector vector = (TimeMicroVector) fieldVector;
+        } else if (fieldVector instanceof TimeMicroVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
             }
-        } else if (fieldVector instanceof TimeSecVector) {
-            TimeSecVector vector = (TimeSecVector) fieldVector;
+        } else if (fieldVector instanceof TimeSecVector vector) {;
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
             }
@@ -662,22 +658,21 @@ public class Arrow {
     private smile.data.vector.BaseVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalDateTime[] a = new LocalDateTime[count];
-        TimeStampVector vector = (TimeStampVector) fieldVector;
         String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
         ZoneOffset zone = timezone == null ? OffsetDateTime.now().getOffset() : ZoneOffset.of(timezone);
-        if (fieldVector instanceof TimeStampMilliVector) {
+        if (fieldVector instanceof TimeStampMilliVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone);
             }
-        } else if (fieldVector instanceof TimeStampNanoVector) {
+        } else if (fieldVector instanceof TimeStampNanoVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000000), zone);
             }
-        } else if (fieldVector instanceof TimeStampMicroVector) {
+        } else if (fieldVector instanceof TimeStampMicroVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000), zone);
             }
-        } else if (fieldVector instanceof TimeStampSecVector) {
+        } else if (fieldVector instanceof TimeStampSecVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
             }

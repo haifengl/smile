@@ -552,7 +552,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * Reads a matrix from a Matrix Market File Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
-     *
+     * <p>
      * The returned matrix may be dense or sparse.
      *
      * @param path the input file path.

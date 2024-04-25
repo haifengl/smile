@@ -288,7 +288,7 @@ public class Lanczos {
             enough = enough || first >= n;
         }
 
-        logger.info("Lanczos: " + iter + " iterations for Matrix of size " + n);
+        logger.info("Lanczos: {} iterations for Matrix of size {}", iter, n);
 
         store(q, j, wptr[1]);
 
@@ -571,7 +571,7 @@ public class Lanczos {
     /**
      * Tridiagonal QL Implicit routine for computing eigenvalues and eigenvectors of a symmetric,
      * real, tridiagonal matrix.
-     *
+     * <p>
      * The routine works extremely well in practice. The number of iterations for the first few
      * eigenvalues might be 4 or 5, say, but meanwhile the off-diagonal elements in the lower right-hand
      * corner have been reduced too. The later eigenvalues are liberated with very little work. The

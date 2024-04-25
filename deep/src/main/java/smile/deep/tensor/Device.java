@@ -143,7 +143,7 @@ public class Device {
     }
 
     /**
-     * Returns the GPU for MacOS devices with Metal programming framework.
+     * Returns the GPU for macOS devices with Metal programming framework.
      *
      * @return the compute device.
      */
@@ -175,7 +175,7 @@ public class Device {
      * function calls which are called with an explicit device argument.
      * Factory calls will be performed as if they were passed device as
      * an argument.
-     *
+     * <p>
      * The default device is initially CPU. If you set the default tensor
      * device to another device (e.g., CUDA) without a device index,
      * tensors will be allocated on whatever the current device for

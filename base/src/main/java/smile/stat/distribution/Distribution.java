@@ -85,7 +85,7 @@ public interface Distribution extends Serializable {
     /**
      * Generates a set of random numbers following this distribution.
      * @param n the number of random numbers to generate.
-     * @return a set of random numbers.
+     * @return an array of random numbers.
      */
     default double[] rand(int n) {
         double[] data = new double[n];

@@ -100,7 +100,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
 
     /**
-     * The sub class should implement this method to return the real number
+     * The subclass should implement this method to return the real number
      * of rows in the model.
      * @return The real number of rows in the model.
      */
@@ -222,8 +222,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
 
     /**
-     * Returns a tool bar to control the plot.
-     * @return a tool bar to control the plot.
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
      */
     public JToolBar getToolbar() {
         return toolbar;

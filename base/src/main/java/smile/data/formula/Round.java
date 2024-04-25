@@ -63,9 +63,8 @@ class Round extends AbstractFunction {
                 public Object apply(Tuple o) {
                     Object y = feature.apply(o);
                     if (y == null) return null;
-
-                    if (y instanceof Double) return Math.round((double) y);
-                    else if (y instanceof Float) return Math.abs((float) y);
+                    else if (y instanceof Double v) return Math.round(v);
+                    else if (y instanceof Float v) return Math.abs(v);
                     else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
                 }
 

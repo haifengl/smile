@@ -198,7 +198,7 @@ public class IntDoubleHashMap {
 
     /**
      * Return the least power of two greater than or equal to the specified value.
-     *
+     * <p>
      * Note that this function will return 1 when the argument is 0.
      *
      * @param x a long integer smaller than or equal to 2<sup>62</sup>.

@@ -41,8 +41,8 @@ public interface Term extends Serializable {
     List<Feature> bind(StructType schema);
 
     /**
-     * Returns the list of variables used in this term.
-     * @return the list of variables used in this term.
+     * Returns the set of variables used in this term.
+     * @return the set of variables used in this term.
      */
     Set<String> variables();
 

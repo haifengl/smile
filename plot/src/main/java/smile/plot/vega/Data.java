@@ -122,7 +122,7 @@ public class Data {
      * @param json JSON content to parse.
      * @return this object.
      */
-    public Data values(String json) throws JsonProcessingException {
+    public Data values(String json) {
         spec.set("values", VegaLite.mapper.valueToTree(json));
         return this;
     }

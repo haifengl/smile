@@ -277,9 +277,9 @@ public class GaussianDistribution implements ExponentialFamily {
     /**
      * The quantile, the probability to the left of quantile(p) is p. This is
      * actually the inverse of cdf.
-     *
-     * Original algorythm and Perl implementation can
-     * be found at: http://www.math.uio.no/~jacklam/notes/invnorm/index.html
+     * <p>
+     * Original algorithm and Perl implementation can be found at this
+     * <a href="http://www.math.uio.no/~jacklam/notes/invnorm/index.html">page</a>.
      */
     @Override
     public double quantile(double p) {

@@ -75,7 +75,7 @@ public interface SAS {
      * @return the data frame.
      */
     static DataFrame read(InputStream input, int limit) throws IOException {
-        try {
+        try (input) {
             SasFileReader reader = new SasFileReaderImpl(input);
             SasFileProperties properties = reader.getSasFileProperties();
             List<Column> columns = reader.getColumns();
@@ -106,8 +106,6 @@ public interface SAS {
             }
 
             return DataFrame.of(vectors);
-        } finally {
-            input.close();
         }
     }
 }

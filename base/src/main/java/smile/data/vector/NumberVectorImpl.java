@@ -51,12 +51,12 @@ class NumberVectorImpl extends VectorImpl<Number> implements NumberVector {
     @Override
     public void fillna(double value) {
         Number number = switch (type().id()) {
-            case Byte -> Byte.valueOf((byte) value);
-            case Short -> Short.valueOf((short) value);
-            case Integer -> Integer.valueOf((int) value);
-            case Long -> Long.valueOf((long) value);
-            case Float -> Float.valueOf((float) value);
-            case Double -> Double.valueOf(value);
+            case Byte -> (byte) value;
+            case Short -> (short) value;
+            case Integer -> (int) value;
+            case Long -> (long) value;
+            case Float -> (float) value;
+            case Double -> value;
             default -> throw new UnsupportedOperationException("Unsupported type: " + type().id());
         };
 

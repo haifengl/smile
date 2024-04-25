@@ -25,7 +25,7 @@ import org.bytedeco.pytorch.*;
  * @author Haifeng Li
  */
 public class Optimizer {
-    org.bytedeco.pytorch.Optimizer optimizer;
+    final org.bytedeco.pytorch.Optimizer optimizer;
 
     /** Constructor. */
     Optimizer(org.bytedeco.pytorch.Optimizer optimizer) {

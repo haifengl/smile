@@ -115,7 +115,7 @@ public interface Transform {
         final int width = images[0].getWidth();
         final int height = images[0].getHeight();
         final int length = height * width;
-        final int green = 1 * length;
+        final int green = length;
         final int blue  = 2 * length;
         float[] result = new float[images.length * length * 3];
 

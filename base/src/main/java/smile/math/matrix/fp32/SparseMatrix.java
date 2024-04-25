@@ -271,7 +271,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
             throw new IllegalArgumentException("Invalid end column: " + endColumn);
         }
 
-        return new Iterator<Entry>() {
+        return new Iterator<>() {
             int k = colIndex[beginColumn]; // entry index
             int j = beginColumn; // column
 
@@ -640,7 +640,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * Reads a sparse matrix from a Harwell-Boeing Exchange Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
-     *
+     * <p>
      * Note that our implementation supports only real-valued matrix and we
      * ignore the optional supplementary data (e.g. right hand side vectors).
      *
@@ -705,7 +705,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/rb/rb.html">http://people.sc.fsu.edu/~jburkardt/data/rb/rb.html</a>.
      * Especially, the supplementary data in the form of right-hand sides,
      * estimates or solutions are treated as separate files.
-     *
+     * <p>
      * Note that our implementation supports only real-valued matrix and we ignore
      * the optional supplementary data (e.g. right hand side vectors).
      *

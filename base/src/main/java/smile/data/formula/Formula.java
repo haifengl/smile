@@ -18,7 +18,6 @@
 package smile.data.formula;
 
 import java.io.Serializable;
-import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -190,12 +189,14 @@ public class Formula implements Serializable {
     public static Formula of(String response, String... predictors) {
         return new Formula(
                 new Variable(response),
-                Arrays.stream(predictors).map(predictor -> {
-                    if (predictor.equals(".")) return new Dot();
-                    if (predictor.equals("1")) return new Intercept(true);
-                    if (predictor.equals("0")) return new Intercept(false);
-                    return new Variable(predictor);
-                }).toArray(Term[]::new)
+                Arrays.stream(predictors).map(predictor ->
+                    switch (predictor) {
+                        case "." -> new Dot();
+                        case "1" -> new Intercept(true);
+                        case "0" -> new Intercept(false);
+                        default -> new Variable(predictor);
+                    }
+                ).toArray(Term[]::new)
         );
     }
 
@@ -369,7 +370,7 @@ public class Formula implements Serializable {
             }
         }
 
-        this.binding = new ThreadLocal<Binding>() {
+        this.binding = new ThreadLocal<>() {
             protected synchronized Binding initialValue() {
                 return binding;
             }

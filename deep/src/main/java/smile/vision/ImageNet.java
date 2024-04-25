@@ -2041,15 +2041,15 @@ public interface ImageNet {
     Map<String, Integer> label2Id = IntStream.range(0, labels.length)
             .mapToObj(i -> new Tuple2<>(i, labels[i].split(",")))
             .flatMap(t -> Arrays.stream(t._2()).map(String::trim).map(s -> new Tuple2<>(s, t._1())))
-            .collect(Collectors.toMap(t -> t._1(), t -> t._2(), (a, b) -> a));
+            .collect(Collectors.toMap(Tuple2::_1, Tuple2::_2, (a, b) -> a));
 
     /** The map from folder name to class id. */
     Map<String, Integer> folder2Id = IntStream.range(0, folders.length)
             .boxed().collect(Collectors.toMap(i -> folders[i], i -> i));
 
     /** The functor mapping label to class id. */
-    ToIntFunction<String> label2Target = (String label) -> label2Id.get(label);
+    ToIntFunction<String> label2Target = label2Id::get;
 
     /** The functor mapping folder name to class id. */
-    ToIntFunction<String> folder2Target = (String folder) -> folder2Id.get(folder);
+    ToIntFunction<String> folder2Target = folder2Id::get;
 }

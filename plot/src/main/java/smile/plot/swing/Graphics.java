@@ -86,7 +86,7 @@ public class Graphics {
     public void setGraphics(java.awt.Graphics2D g2d, int width, int height) {
         this.g2d = g2d;
         projection.setSize(width, height);
-        // anti-aliasing methods
+        // antialiasing methods
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
     }
@@ -573,8 +573,8 @@ public class Graphics {
 
     /**
      * Rotate the 3D view based on the changes on mouse position.
-     * @param x changes of mouse position on the x axis.
-     * @param y changes on mouse position on the y axis.
+     * @param x changes of mouse position on the x-axis.
+     * @param y changes on mouse position on the y-axis.
      */
     public void rotate(double x, double y) {
         if (!(projection instanceof Projection3D)) {

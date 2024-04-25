@@ -27,7 +27,7 @@ import smile.deep.tensor.Tensor;
  * elements are chosen independently for each forward call and are
  * sampled from a Bernoulli distribution. Each channel will be zeroed
  * out independently on every forward call.
- *
+ * <p>
  * This has proven to be an effective technique for regularization
  * and preventing the co-adaptation of neurons as described in the
  * paper "Improving Neural Networks by Preventing Co-adaptation

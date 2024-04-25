@@ -82,13 +82,13 @@ public abstract class LayerBlock implements Layer {
                 var key = keys.get(i);
                 var child = children.get(key);
 
-                for (int j = 0; j < indent + 2; j++) sb.append(' ');
+                sb.append(" ".repeat(indent + 2));
                 sb.append(String.format("(%s): ", key.getString()));
                 toString(child, sb, indent + 2);
                 sb.append(System.lineSeparator());
             }
 
-            for (int j = 0; j < indent; j++) sb.append(' ');
+            sb.append(" ".repeat(indent));
             sb.append(')');
         }
         return sb.toString();

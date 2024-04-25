@@ -23,7 +23,7 @@ import smile.math.MathEx;
 
 /**
  * A boxplot is a convenient way of graphically depicting groups of numerical
- * data through their five-number summaries (the smallest observation
+ * data through their five-number summaries the smallest observation
  * (sample minimum), lower quartile (Q1), median (Q2), upper quartile (Q3),
  * and largest observation (sample maximum). A boxplot may also indicate
  * which observations, if any, might be considered outliers.

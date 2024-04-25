@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.math.MathEx;
 
 /**
  * An immutable integer vector.

@@ -62,11 +62,12 @@ public class Abs extends AbstractFunction {
                 public Object apply(Tuple o) {
                     Object y = feature.apply(o);
                     if (y == null) return null;
-
-                    if (y instanceof Double) return Math.abs((double) y);
-                    else if (y instanceof Integer) return Math.abs((int) y);
-                    else if (y instanceof Float) return Math.abs((float) y);
-                    else if (y instanceof Long) return Math.abs((long) y);
+                    else if (y instanceof Double v) return Math.abs(v);
+                    else if (y instanceof Integer i) return Math.abs(i);
+                    else if (y instanceof Float v) return Math.abs(v);
+                    else if (y instanceof Long l) return Math.abs(l);
+                    else if (y instanceof Short s) return Math.abs(s);
+                    else if (y instanceof Byte b) return Math.abs(b);
                     else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
                 }
 

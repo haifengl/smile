@@ -430,7 +430,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      * elements are chosen independently for each forward call and are
      * sampled from a Bernoulli distribution. Each channel will be zeroed
      * out independently on every forward call.
-     *
+     * <p>
      * This has proven to be an effective technique for regularization
      * and preventing the co-adaptation of neurons as described in the
      * paper "Improving Neural Networks by Preventing Co-adaptation
@@ -446,7 +446,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     /**
      * Returns an embedding layer that is a simple lookup table that stores
      * embeddings of a fixed dictionary and size.
-     *
+     * <p>
      * This layer is often used to store word embeddings and retrieve them
      * using indices. The input to the module is a list of indices, and the
      * output is the corresponding word embeddings.
@@ -462,7 +462,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     /**
      * Returns an embedding layer that is a simple lookup table that stores
      * embeddings of a fixed dictionary and size.
-     *
+     * <p>
      * This layer is often used to store word embeddings and retrieve them
      * using indices. The input to the module is a list of indices, and the
      * output is the corresponding word embeddings.

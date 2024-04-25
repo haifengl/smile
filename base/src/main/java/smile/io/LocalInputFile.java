@@ -28,7 +28,7 @@ import org.apache.parquet.io.SeekableInputStream;
 
 /**
  * Parquet InputFile with a local java.nio.Path.
- * Adapted from https://github.com/tideworks/arvo2parquet
+ * Adapted from <a href="https://github.com/tideworks/arvo2parquet">arvo2parquet</a>.
  *
  * @author Haifeng Li
  */

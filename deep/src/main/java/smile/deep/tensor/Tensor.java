@@ -22,13 +22,13 @@ import org.bytedeco.pytorch.global.torch;
 import smile.util.Tuple2;
 
 /**
- * A Tensor is a multi-dimensional array containing elements of a single data type.
+ * A Tensor is a multidimensional array containing elements of a single data type.
  *
  * @author Haifeng Li
  */
 public class Tensor implements AutoCloseable {
     /** PyTorch Tensor handle. */
-    org.bytedeco.pytorch.Tensor value;
+    final org.bytedeco.pytorch.Tensor value;
 
     /**
      * Constructor.
@@ -100,10 +100,10 @@ public class Tensor implements AutoCloseable {
      * for inference, when you are sure that you will not call backward.
      * It will reduce memory consumption for computations that would otherwise
      * have requireGrad(true).
-     *
+     * <p>
      * In this mode, the result of every computation will have requireGrad(false),
      * even when the inputs have requireGrad(true).
-     *
+     * <p>
      * This context manager is thread-local; it will not affect computation in
      * other threads.
      *
@@ -736,9 +736,9 @@ public class Tensor implements AutoCloseable {
     /**
      * Returns a new tensor with a dimension of size one inserted at the
      * specified position.
-     *
+     * <p>
      * The returned tensor shares the same underlying data with this tensor.
-     *
+     * <p>
      * A dim value within the range [-input.dim() - 1, input.dim() + 1) can be
      * used. Negative dim will correspond to unsqueeze() applied at
      * dim = dim + input.dim() + 1.
@@ -753,14 +753,14 @@ public class Tensor implements AutoCloseable {
     /**
      * Returns a tensor that is a transposed version of input. The given
      * dimensions dim0 and dim1 are swapped.
-     *
+     * <p>
      * If input is a strided tensor then the resulting out tensor shares
      * its underlying storage with the input tensor, so changing the content
      * of one would change the content of the other.
-     *
+     * <p>
      * If input is a sparse tensor then the resulting out tensor does not
      * share the underlying storage with the input tensor.
-     *
+     * <p>
      * If input is a sparse tensor with compressed layout (SparseCSR,
      * SparseBSR, SparseCSC or SparseBSC) the arguments dim0 and dim1 must
      * be both batch dimensions, or must both be sparse dimensions. The
@@ -1047,7 +1047,7 @@ public class Tensor implements AutoCloseable {
      * specified in the index tensor. For each value in src, its output index
      * is specified by its index in src for dimension != dim and by the
      * corresponding value in index for dimension = dim.
-     *
+     * <p>
      * This is the reverse operation of the manner described in gather().
      *
      * @param dim the axis along which to index.
@@ -1068,7 +1068,7 @@ public class Tensor implements AutoCloseable {
      * specified in the index tensor. For each value in src, its output index
      * is specified by its index in src for dimension != dim and by the
      * corresponding value in index for dimension = dim.
-     *
+     * <p>
      * This is the reverse operation of the manner described in gather().
      *
      * @param dim the axis along which to index.
@@ -1659,7 +1659,7 @@ public class Tensor implements AutoCloseable {
      * Returns a 1-D tensor of size (end - start) / step with values from the
      * interval [start, end) taken with common difference step beginning from
      * start.
-     *
+     * <p>
      * Note that step is subject to floating point rounding errors when
      * comparing against end. To avoid inconsistency, we advise subtracting
      * a small epsilon from end in such cases.
@@ -1677,7 +1677,7 @@ public class Tensor implements AutoCloseable {
      * Returns a 1-D tensor of size (end - start) / step with values from the
      * interval [start, end) taken with common difference step beginning from
      * start.
-     *
+     * <p>
      * Note that step is subject to floating point rounding errors when
      * comparing against end. To avoid inconsistency, we advise subtracting
      * a small epsilon from end in such cases.
@@ -1755,7 +1755,7 @@ public class Tensor implements AutoCloseable {
      * A class that encapsulates the construction axes of a Tensor.
      * With construction axis we mean a particular property of a Tensor
      * that can be configured before its construction (and sometimes changed
-     * afterwards).
+     * afterward).
      */
     public static class Options {
         /** PyTorch options object. */

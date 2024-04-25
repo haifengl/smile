@@ -122,9 +122,8 @@ public interface Sampling {
             // draw with replacement.
             int[] samples = new int[n];
             int l = 0;
-            for (int i = 0; i < m; i++) {
-                int[] stratum = strata[i];
-                int size = strata[i].length;
+            for (var stratum : strata) {
+                int size = stratum.length;
                 for (int j = 0; j < size; j++) {
                     samples[l++] = stratum[MathEx.randomInt(size)];
                 }
@@ -133,16 +132,15 @@ public interface Sampling {
         } else {
             // draw without replacement.
             int size = 0;
-            for (int i = 0; i < m; i++) {
-                size += (int) Math.round(subsample * strata[i].length);
+            for (var stratum : strata) {
+                size += (int) Math.round(subsample * stratum.length);
             }
 
             int[] samples = new int[size];
             int l = 0;
-            for (int i = 0; i < m; i++) {
-                int sub = (int) Math.round(subsample * strata[i].length);
-                int[] stratum = strata[i];
-                int[] permutation = MathEx.permutate(strata[i].length);
+            for (var stratum : strata) {
+                int sub = (int) Math.round(subsample * stratum.length);
+                int[] permutation = MathEx.permutate(stratum.length);
                 for (int j = 0; j < sub; j++) {
                     samples[l++] = stratum[permutation[j]];
                 }

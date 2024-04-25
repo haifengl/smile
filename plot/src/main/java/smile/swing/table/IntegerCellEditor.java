@@ -44,10 +44,10 @@ import javax.swing.text.NumberFormatter;
  */
 @SuppressWarnings("serial")
 public class IntegerCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(IntegerCellEditor.class.getName()); 
+    private final static Logger LOGGER = Logger.getLogger(IntegerCellEditor.class.getName());
 
-    JFormattedTextField textField;
-    NumberFormat integerFormat;
+    final JFormattedTextField textField;
+    final NumberFormat integerFormat;
     private final Integer minimum, maximum;
 
     /**

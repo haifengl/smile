@@ -92,7 +92,7 @@ public class Tiktoken implements Tokenizer {
      * @return the pattern regex.
      */
     private Pattern specialTokenRegex(String... tokens) {
-        var inner = Arrays.stream(tokens).map(s -> Pattern.quote(s))
+        var inner = Arrays.stream(tokens).map(Pattern::quote)
                 .collect(Collectors.joining("|", "(", ")"));
         // Employ lookahead and lookbehind to keep delimiter when calling
         // split(). Lookahead and lookbehind equal to select an empty

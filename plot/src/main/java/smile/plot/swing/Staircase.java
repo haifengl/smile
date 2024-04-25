@@ -33,7 +33,7 @@ public class Staircase extends Shape {
 
     /**
      * Constructor.
-     * @param points a n-by-2 or n-by-3 matrix that are the coordinates of points.
+     * @param points an n-by-2 or n-by-3 matrix that are the coordinates of points.
      * @param color the color of points.
      */
     public Staircase(double[][] points, Color color) {

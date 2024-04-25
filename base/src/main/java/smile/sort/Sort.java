@@ -27,111 +27,109 @@ public interface Sort {
 
     /**
      * Swap two positions.
-     * @param x the array.
+     * @param a the array.
      * @param i the index of array element.
      * @param j the index of other element.
      */
-    static void swap(int[] x, int i, int j) {
-        int a = x[i];
-        x[i] = x[j];
-        x[j] = a;
+    static void swap(int[] a, int i, int j) {
+        int temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
     }
 
     /**
      * Swap two positions.
-     * @param x the array.
+     * @param a the array.
      * @param i the index of array element.
      * @param j the index of other element.
      */
-    static void swap(float[] x, int i, int j) {
-        float a = x[i];
-        x[i] = x[j];
-        x[j] = a;
+    static void swap(float[] a, int i, int j) {
+        float temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
     }
 
     /**
      * Swap two positions.
-     * @param x the array.
+     * @param a the array.
      * @param i the index of array element.
      * @param j the index of other element.
      */
-    static void swap(double[] x, int i, int j) {
-        double a;
-        a = x[i];
-        x[i] = x[j];
-        x[j] = a;
+    static void swap(double[] a, int i, int j) {
+        double temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
     }
 
     /**
      * Swap two positions.
-     * @param x the array.
+     * @param a the array.
      * @param i the index of array element.
      * @param j the index of other element.
      */
-    static void swap(Object[] x, int i, int j) {
-        Object a;
-        a = x[i];
-        x[i] = x[j];
-        x[j] = a;
+    static void swap(Object[] a, int i, int j) {
+        Object temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
     }
 
     /**
      * To restore the max-heap condition when a node's priority is increased.
-     * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
+     * We move up the heap, exchanging the node at position k with its parent
+     * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      */
-    static void siftUp(int[] x, int k) {
-        while (k > 1 && x[k/2] < x[k]) {
-            swap(x, k, k/2);
+    static void siftUp(int[] a, int k) {
+        while (k > 1 && a[k/2] < a[k]) {
+            swap(a, k, k/2);
             k = k/2;
         }
     }
 
     /**
      * To restore the max-heap condition when a node's priority is increased.
-     * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
+     * We move up the heap, exchanging the node at position k with its parent
+     * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      */
-    static void siftUp(float[] x, int k) {
-        while (k > 1 && x[k/2] < x[k]) {
-            swap(x, k, k/2);
+    static void siftUp(float[] a, int k) {
+        while (k > 1 && a[k/2] < a[k]) {
+            swap(a, k, k/2);
             k = k/2;
         }
     }
 
     /**
      * To restore the max-heap condition when a node's priority is increased.
-     * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
+     * We move up the heap, exchanging the node at position k with its parent
+     * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      */
-    static void siftUp(double[] x, int k) {
-        while (k > 1 && x[k/2] < x[k]) {
-            swap(x, k, k/2);
+    static void siftUp(double[] a, int k) {
+        while (k > 1 && a[k/2] < a[k]) {
+            swap(a, k, k/2);
             k = k/2;
         }
     }
 
     /**
      * To restore the max-heap condition when a node's priority is increased.
-     * We move up the heap, exchaning the node at position k with its parent
-     * (at postion k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
+     * We move up the heap, exchanging the node at position k with its parent
+     * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      * @param <T> the data type of array elements.
      */
-    static <T extends Comparable<? super T>> void siftUp(T[] x, int k) {
-        while (k > 1 && x[k/2].compareTo(x[k]) < 0) {
-            swap(x, k, k/2);
+    static <T extends Comparable<? super T>> void siftUp(T[] a, int k) {
+        while (k > 1 && a[k/2].compareTo(a[k]) < 0) {
+            swap(a, k, k/2);
             k = k/2;
         }
     }
@@ -143,20 +141,20 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      * @param n the index {@code n > k}.
      */
-    static void siftDown(int[] x, int k, int n) {
+    static void siftDown(int[] a, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
-            if (j < n && x[j] < x[j + 1]) {
+            if (j < n && a[j] < a[j + 1]) {
                 j++;
             }
-            if (x[k] >= x[j]) {
+            if (a[k] >= a[j]) {
                 break;
             }
-            swap(x, k, j);
+            swap(a, k, j);
             k = j;
         }
     }
@@ -168,20 +166,20 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      * @param n the index {@code n > k}.
      */
-    static void siftDown(float[] x, int k, int n) {
+    static void siftDown(float[] a, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
-            if (j < n && x[j] < x[j + 1]) {
+            if (j < n && a[j] < a[j + 1]) {
                 j++;
             }
-            if (x[k] >= x[j]) {
+            if (a[k] >= a[j]) {
                 break;
             }
-            swap(x, k, j);
+            swap(a, k, j);
             k = j;
         }
     }
@@ -193,20 +191,20 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      * @param n the index {@code n > k}.
      */
-    static void siftDown(double[] x, int k, int n) {
+    static void siftDown(double[] a, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
-            if (j < n && x[j] < x[j + 1]) {
+            if (j < n && a[j] < a[j + 1]) {
                 j++;
             }
-            if (x[k] >= x[j]) {
+            if (a[k] >= a[j]) {
                 break;
             }
-            swap(x, k, j);
+            swap(a, k, j);
             k = j;
         }
     }
@@ -218,21 +216,21 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param x the array.
+     * @param a the array.
      * @param k the index of array element.
      * @param n the index {@code n > k}.
      * @param <T> the data type of array elements.
      */
-    static <T extends Comparable<? super T>> void siftDown(T[] x, int k, int n) {
+    static <T extends Comparable<? super T>> void siftDown(T[] a, int k, int n) {
         while (2*k <= n) {
             int j = 2 * k;
-            if (j < n && x[j].compareTo(x[j + 1]) < 0) {
+            if (j < n && a[j].compareTo(a[j + 1]) < 0) {
                 j++;
             }
-            if (x[k].compareTo(x[j]) >= 0) {
+            if (a[k].compareTo(a[j]) >= 0) {
                 break;
             }
-            swap(x, k, j);
+            swap(a, k, j);
             k = j;
         }
     }

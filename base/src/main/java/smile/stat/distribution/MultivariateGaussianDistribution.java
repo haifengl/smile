@@ -222,7 +222,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * Algorithm from Alan Genz (1992) Numerical Computation of 
      * Multivariate Normal Probabilities, Journal of Computational and 
      * Graphical Statistics, pp. 141-149.
-     *
+     * <p>
      * The difference between returned value and the true value of the
      * CDF is less than 0.001 in 99.9% time. The maximum number of iterations
      * is set to 10000.
@@ -312,7 +312,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     /**
      * Generates a set of random numbers following this distribution.
      * @param n the number of random samples to generate.
-     * @return a set of random samples.
+     * @return an array of random samples.
      */
     public double[][] rand(int n) {
         double[][] data = new double[n][];

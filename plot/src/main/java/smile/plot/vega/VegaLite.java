@@ -301,7 +301,7 @@ public class VegaLite {
      * @param lang the primary language of document.
      * @return the HTML of plot specification with Vega Embed.
      */
-    public String html(String lang) throws JsonProcessingException {
+    public String html(String lang) {
         String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>

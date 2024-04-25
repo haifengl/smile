@@ -39,7 +39,7 @@ public abstract class DiscreteDistribution implements Distribution {
     /**
      * Generates a set of integer random numbers following this discrete distribution.
      * @param n the number of random numbers to generate.
-     * @return a set of integer random numbers.
+     * @return an array of integer random numbers.
      */
     public int[] randi(int n) {
         int[] data = new int[n];

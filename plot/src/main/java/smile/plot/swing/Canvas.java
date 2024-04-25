@@ -70,7 +70,7 @@ public class Canvas {
     /**
      * The shapes in the canvas, e.g. label, plots, etc.
      */
-    List<Shape> shapes = new ArrayList<>();
+    final List<Shape> shapes = new ArrayList<>();
     /**
      * Show legends if true.
      */

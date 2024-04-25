@@ -20,7 +20,7 @@ package smile.plot.swing;
 import java.awt.Color;
 
 /**
- * One more more points in the plot.
+ * One more points in the plot.
  *
  * @author Haifeng Li
  */
@@ -40,7 +40,7 @@ public class Point extends Shape {
 
     /**
      * Constructor.
-     * @param points a n-by-2 or n-by-3 matrix that are the coordinates of points.
+     * @param points an n-by-2 or n-by-3 matrix that are the coordinates of points.
      * @param mark the mark of points.
      * <ul>
      * <li> . : dot

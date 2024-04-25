@@ -91,7 +91,7 @@ public class View extends VegaLite {
     }
 
     /**
-     * For a discrete y-field, sets the height per discrete step..
+     * For a discrete y-field, sets the height per discrete step.
      */
     public View heightStep(int step) {
         ObjectNode height = spec.putObject("height");
