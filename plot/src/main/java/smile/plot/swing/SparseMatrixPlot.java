@@ -33,15 +33,15 @@ public class SparseMatrixPlot extends Plot {
     /**
      * The sparse matrix.
      */
-    private SparseMatrix sparse;
+    private final SparseMatrix sparse;
     /**
      * The x coordinate of matrix entries.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The y coordinate of matrix entries.
      */
-    private double[] y;
+    private final double[] y;
     /**
      * The minimum of the data.
      */

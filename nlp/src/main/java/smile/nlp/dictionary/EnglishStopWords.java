@@ -67,7 +67,8 @@ public enum EnglishStopWords implements StopWords {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishStopWords.class);
+            logger.error("Failed to load English stop words", ex);
         }
     }
 

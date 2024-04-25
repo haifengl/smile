@@ -76,71 +76,71 @@ public class Table extends JXTable {
     /**
      * Color renderer.
      */
-    private static TableCellRenderer colorRenderer = new ColorCellRenderer();
+    private static final TableCellRenderer colorRenderer = new ColorCellRenderer();
     /**
      * Font renderer.
      */
-    private static TableCellRenderer fontRenderer = new FontCellRenderer();
+    private static final TableCellRenderer fontRenderer = new FontCellRenderer();
     /**
      * Byte array renderer.
      */
-    private static TableCellRenderer byteArrayRenderer = new ByteArrayCellRenderer();
+    private static final TableCellRenderer byteArrayRenderer = new ByteArrayCellRenderer();
     /**
      * Short array renderer.
      */
-    private static TableCellRenderer shortArrayRenderer = new ShortArrayCellRenderer();
+    private static final TableCellRenderer shortArrayRenderer = new ShortArrayCellRenderer();
     /**
      * Integer array renderer.
      */
-    private static TableCellRenderer intArrayRenderer = new IntegerArrayCellRenderer();
+    private static final TableCellRenderer intArrayRenderer = new IntegerArrayCellRenderer();
     /**
      * Long array renderer.
      */
-    private static TableCellRenderer longArrayRenderer = new LongArrayCellRenderer();
+    private static final TableCellRenderer longArrayRenderer = new LongArrayCellRenderer();
     /**
      * Float array renderer.
      */
-    private static TableCellRenderer floatArrayRenderer = new FloatArrayCellRenderer();
+    private static final TableCellRenderer floatArrayRenderer = new FloatArrayCellRenderer();
     /**
      * Double array renderer.
      */
-    private static TableCellRenderer doubleArrayRenderer = new DoubleArrayCellRenderer();
+    private static final TableCellRenderer doubleArrayRenderer = new DoubleArrayCellRenderer();
     /**
      * Color editor.
      */
-    private static TableCellEditor colorEditor = new ColorCellEditor();
+    private static final TableCellEditor colorEditor = new ColorCellEditor();
     /**
      * Font editor.
      */
-    private static TableCellEditor fontEditor = new FontCellEditor();
+    private static final TableCellEditor fontEditor = new FontCellEditor();
     /**
      * Integer editor.
      */
-    private static TableCellEditor byteEditor = new IntegerCellEditor(-128, 127);
+    private static final TableCellEditor byteEditor = new IntegerCellEditor(-128, 127);
     /**
      * Integer editor.
      */
-    private static TableCellEditor shortEditor = new IntegerCellEditor(-32768, 32767);
+    private static final TableCellEditor shortEditor = new IntegerCellEditor(-32768, 32767);
     /**
      * Integer editor.
      */
-    private static TableCellEditor intEditor = new IntegerCellEditor(-2147483648, 2147483647);
+    private static final TableCellEditor intEditor = new IntegerCellEditor(-2147483648, 2147483647);
     /**
      * Integer editor.
      */
-    private static TableCellEditor floatEditor = new DoubleCellEditor(-Float.MAX_VALUE, Float.MAX_VALUE);
+    private static final TableCellEditor floatEditor = new DoubleCellEditor(-Float.MAX_VALUE, Float.MAX_VALUE);
     /**
      * Double editor.
      */
-    private static TableCellEditor doubleEditor = new DoubleCellEditor();
+    private static final TableCellEditor doubleEditor = new DoubleCellEditor();
     /**
      * Integer array editor.
      */
-    private static TableCellEditor intArrayEditor = new IntegerArrayCellEditor();
+    private static final TableCellEditor intArrayEditor = new IntegerArrayCellEditor();
     /**
      * Double array editor.
      */
-    private static TableCellEditor doubleArrayEditor = new DoubleArrayCellEditor();
+    private static final TableCellEditor doubleArrayEditor = new DoubleArrayCellEditor();
     /**
      * Row header.
      */

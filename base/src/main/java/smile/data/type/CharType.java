@@ -55,7 +55,7 @@ public class CharType implements DataType {
 
     @Override
     public Character valueOf(String s) {
-        if (s == null || s.length() == 0) return null;
+        if (s == null || s.isEmpty()) return null;
         return s.charAt(0);
     }
 

@@ -29,7 +29,7 @@ public class Grid extends Plot {
     /**
      * The vertex locations of 2D grid.
      */
-    private double[][][] data;
+    private final double[][][] data;
 
     /**
      * Constructor.

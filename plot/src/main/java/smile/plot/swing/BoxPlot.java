@@ -60,20 +60,20 @@ public class BoxPlot extends Plot {
     /**
      * Tooltip format string.
      */
-    private static String format = "<table border=\"1\"><tr><td>Median</td><td align=\"right\">%g</td></tr><tr><td>Q1</td><td align=\"right\">%g</td></tr><tr><td>Q3</td><td align=\"right\">%g</td></tr></table>";
+    private static final String format = "<table border=\"1\"><tr><td>Median</td><td align=\"right\">%g</td></tr><tr><td>Q1</td><td align=\"right\">%g</td></tr><tr><td>Q3</td><td align=\"right\">%g</td></tr></table>";
 
     /**
      * The input data. Each row is a variable.
      */
-    private double[][] data;
+    private final double[][] data;
     /**
      * The label of each variable.
      */
-    private String[] labels;
+    private final String[] labels;
     /**
      * The quantiles of data.
      */
-    private double[][] quantiles;
+    private final double[][] quantiles;
 
     /**
      * Constructor.

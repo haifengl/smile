@@ -42,14 +42,14 @@ public class ScatterPlot extends Plot {
     /**
      * The legends of each point group.
      */
-    final Optional<Legend[]> legends;
+    final Legend[] legends;
 
     /**
      * Constructor.
      */
     public ScatterPlot(Point... points) {
         this.points = points;
-        legends = Optional.empty();
+        legends = null;
     }
 
     /**
@@ -57,7 +57,7 @@ public class ScatterPlot extends Plot {
      */
     public ScatterPlot(Point[] points, Legend[] legends) {
         this.points = points;
-        this.legends = Optional.of(legends);
+        this.legends = legends;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ScatterPlot extends Plot {
 
     @Override
     public Optional<Legend[]> legends() {
-        return legends;
+        return Optional.of(legends);
     }
 
     @Override

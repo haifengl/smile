@@ -381,7 +381,7 @@ public class Arff implements AutoCloseable {
 
     /** Returns the attribute name. */
     private String attributeName(String name) {
-        return path.length() == 0 ? name : path + "." + name;
+        return path.isEmpty() ? name : path + "." + name;
     }
 
     /**

@@ -78,7 +78,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
      */
     default Iterator<List<SampleInstance<D, T>>> batch(int size) {
         return new Iterator<>() {
-            int[] permutation = MathEx.permutate(size());
+            final int[] permutation = MathEx.permutate(size());
             int i = 0;
 
             @Override

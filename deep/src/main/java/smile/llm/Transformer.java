@@ -46,15 +46,15 @@ import smile.deep.tensor.Tensor;
  */
 public class Transformer {
     /** The transform architecture configuration. */
-    private Options options;
+    private final Options options;
     /** The transformer model. */
-    private TransformerImpl transformer;
+    private final TransformerImpl transformer;
     /** The token embedding layer. */
-    private EmbeddingImpl embedding;
+    private final EmbeddingImpl embedding;
     /** The positioning encoder. */
-    private PositionalEncoding posEncoder;
+    private final PositionalEncoding posEncoder;
     /** The decoding layer. */
-    private LinearImpl decoder;
+    private final LinearImpl decoder;
 
     /**
      * Creates a Transformer model with default architecture configuration.

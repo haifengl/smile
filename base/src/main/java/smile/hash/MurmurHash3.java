@@ -198,7 +198,7 @@ public class MurmurHash3 {
             case 10:
                 k2 ^= ((long) data.get(offset + 9)) << 8;
             case 9:
-                k2 ^= ((long) data.get(offset + 8)) << 0;
+                k2 ^= data.get(offset + 8);
                 k2 *= c2;
                 k2 = rotl64(k2, 33);
                 k2 *= c1;
@@ -219,7 +219,7 @@ public class MurmurHash3 {
             case 2:
                 k1 ^= ((long) data.get(offset + 1)) << 8;
             case 1:
-                k1 ^= ((long) data.get(offset));
+                k1 ^= data.get(offset);
                 k1 *= c1;
                 k1 = rotl64(k1, 31);
                 k1 *= c2;

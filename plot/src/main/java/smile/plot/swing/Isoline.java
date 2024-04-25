@@ -32,7 +32,7 @@ public class Isoline extends Shape {
     /**
      * The coordinates of points along the contour line.
      */
-    private List<double[]> points = new ArrayList<>();
+    private final List<double[]> points = new ArrayList<>();
     /**
      * The label of contour line.
      */
@@ -40,7 +40,7 @@ public class Isoline extends Shape {
     /**
      * Show the value of isoline.
      */
-    private boolean isLevelVisible;
+    private final boolean isLevelVisible;
 
     /**
      * Constructor.

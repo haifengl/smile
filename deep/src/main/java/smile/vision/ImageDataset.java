@@ -81,7 +81,7 @@ public class ImageDataset implements Dataset {
             }
         }
 
-        if (samples.size() == 0) {
+        if (samples.isEmpty()) {
             throw new IOException("No JPEG or PNG images found in " + root);
         }
     }

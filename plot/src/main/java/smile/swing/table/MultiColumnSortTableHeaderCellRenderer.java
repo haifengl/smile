@@ -34,7 +34,7 @@ import smile.swing.AlphaIcon;
 @SuppressWarnings("serial")
 public class MultiColumnSortTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer {
 
-    private float alpha;
+    private final float alpha;
 
     /**
      * Constructs a

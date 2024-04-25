@@ -32,11 +32,11 @@ public class Axis {
     /**
      * The base coordinate space.
      */
-    private Base base;
+    private final Base base;
     /**
      * The index of coordinate associated with this axis.
      */
-    private int index;
+    private final int index;
     /**
      * The tick mark label.
      */

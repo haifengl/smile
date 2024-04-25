@@ -35,7 +35,7 @@ public class Printer {
     /**
      * Printer attributes.
      */
-    private PrintRequestAttributeSet printAttributes = new HashPrintRequestAttributeSet();
+    private final PrintRequestAttributeSet printAttributes = new HashPrintRequestAttributeSet();
     /**
      * Printer job.
      */

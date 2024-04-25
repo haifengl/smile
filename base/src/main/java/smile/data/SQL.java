@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class SQL implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SQL.class);
     /** JDBC connection. */
-    private Connection db;
+    private final Connection db;
 
     static {
         try {

@@ -27,7 +27,7 @@ import java.util.LinkedList;
  */
 public class AutoScope implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AutoScope.class);
-    private List<AutoCloseable> resources = new LinkedList<>();
+    private final List<AutoCloseable> resources = new LinkedList<>();
 
     /**
      * Constructors.

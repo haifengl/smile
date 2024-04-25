@@ -28,7 +28,7 @@ import smile.math.MathEx;
  */
 public class Label extends Shape {
     /** The default JLabel font may vary on different systems. */
-    private static Font DefaultFont = new javax.swing.JLabel().getFont();
+    private static final Font DefaultFont = new javax.swing.JLabel().getFont();
 
     /**
      * The text of label.

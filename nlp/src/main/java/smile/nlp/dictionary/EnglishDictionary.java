@@ -58,7 +58,8 @@ public enum EnglishDictionary implements Dictionary {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishDictionary.class);
+            logger.error("Failed to load English dictionary", ex);
         }
     }
 

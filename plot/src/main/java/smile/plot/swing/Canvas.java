@@ -90,7 +90,7 @@ public class Canvas {
     /**
      * Notify Swing listeners when a property changes.
      */
-    private SwingPropertyChangeSupport pcs = new SwingPropertyChangeSupport(this, true);
+    private final SwingPropertyChangeSupport pcs = new SwingPropertyChangeSupport(this, true);
 
     /**
      * Constructor

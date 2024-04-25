@@ -35,7 +35,7 @@ import smile.math.TimeFunction;
 public class Model implements Function<Tensor, Tensor> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Model.class);
     /** The neural network. */
-    private LayerBlock net;
+    private final LayerBlock net;
     /** The compute device on which the model is stored. */
     private Device device;
     /** The learning rate schedule. */

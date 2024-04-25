@@ -46,7 +46,7 @@ public class TableCopyPasteAdapter implements ActionListener {
     private String rowstring, value;
     private Clipboard system;
     private StringSelection stsel;
-    private JTable table;
+    private final JTable table;
 
     /**
      * The copy/paste adapter is constructed with a JTable on which it enables

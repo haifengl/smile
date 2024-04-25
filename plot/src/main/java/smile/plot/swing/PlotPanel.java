@@ -52,13 +52,13 @@ public class PlotPanel extends JPanel {
     /**
      * The canvas of plots.
      */
-    private Canvas canvas;
+    private final Canvas canvas;
     /**
      * The Swing component to draw the canvas.
      */
-    private JCanvas contentPane;
+    private final JCanvas contentPane;
     /**
-     * Optional tool bar to control plots.
+     * Optional toolbar to control plots.
      */
     private JToolBar toolbar;
     /**
@@ -401,18 +401,18 @@ public class PlotPanel extends JPanel {
     /**
      * Toolbar button actions.
      */
-    private transient Action saveAction = new SaveAction();
-    private transient Action printAction = new PrintAction();
-    private transient Action zoomInAction = new ZoomInAction();
-    private transient Action zoomOutAction = new ZoomOutAction();
-    private transient Action resetAction = new ResetAction();
-    private transient Action enlargePlotAreaAction = new EnlargePlotAreaAction();
-    private transient Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
-    private transient Action propertyAction = new PropertyAction();
-    private transient Action increaseHeightAction = new IncreaseHeightAction();
-    private transient Action increaseWidthAction = new IncreaseWidthAction();
-    private transient Action decreaseHeightAction = new DecreaseHeightAction();
-    private transient Action decreaseWidthAction = new DecreaseWidthAction();
+    private transient final Action saveAction = new SaveAction();
+    private transient final Action printAction = new PrintAction();
+    private transient final Action zoomInAction = new ZoomInAction();
+    private transient final Action zoomOutAction = new ZoomOutAction();
+    private transient final Action resetAction = new ResetAction();
+    private transient final Action enlargePlotAreaAction = new EnlargePlotAreaAction();
+    private transient final Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
+    private transient final Action propertyAction = new PropertyAction();
+    private transient final Action increaseHeightAction = new IncreaseHeightAction();
+    private transient final Action increaseWidthAction = new IncreaseWidthAction();
+    private transient final Action decreaseHeightAction = new DecreaseHeightAction();
+    private transient final Action decreaseWidthAction = new DecreaseWidthAction();
     private JScrollPane scrollPane;
 
     /**
@@ -793,7 +793,7 @@ public class PlotPanel extends JPanel {
     private class PropertyDialogOKAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "OK";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected PropertyDialogOKAction(JDialog dialog) {
             this.dialog = dialog;
@@ -841,7 +841,7 @@ public class PlotPanel extends JPanel {
     private class PropertyDialogCancelAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "Cancel";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected PropertyDialogCancelAction(JDialog dialog) {
             this.dialog = dialog;

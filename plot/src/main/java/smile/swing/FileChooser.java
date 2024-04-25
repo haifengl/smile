@@ -54,7 +54,7 @@ public class FileChooser extends JFileChooser {
      * Shared file chooser. An application should have only one file chooser
      * so that it always points to the recent directory.
      */
-    private static FileChooser chooser = new FileChooser();
+    private static final FileChooser chooser = new FileChooser();
 
     /**
      * Constructor.
@@ -270,27 +270,22 @@ public class FileChooser extends JFileChooser {
         /**
          * Filter for readable image formats.
          */
-        private static SimpleFileFilter readableImageFilter;
+        private static final SimpleFileFilter readableImageFilter = new SimpleFileFilter("Readable Images", ImageIO.getReaderFormatNames());
         /**
          * Filter for writable image formats.
          */
-        private static SimpleFileFilter writableImageFilter;
-
-        static {
-            readableImageFilter = new SimpleFileFilter("Readable Images", ImageIO.getReaderFormatNames());
-            writableImageFilter = new SimpleFileFilter("Writable Images", ImageIO.getWriterFormatNames());
-        }
+        private static final SimpleFileFilter writableImageFilter = new SimpleFileFilter("Writable Images", ImageIO.getWriterFormatNames());
 
         /**
          * The file extensions in lower case.
          */
         private TreeSet<String> filters = new TreeSet<>();
         /**
-         * The human readable description of this filter.
+         * The human-readable description of this filter.
          */
         private String description = null;
         /**
-         * The human readable description of this filter with the list of
+         * The human-readable description of this filter with the list of
          * file extensions.
          */
         private String fullDescription = null;

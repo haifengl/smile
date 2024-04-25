@@ -379,7 +379,7 @@ public interface TimeFunction extends Serializable {
             double initLearningRate = Double.parseDouble(m.group(2));
             double decaySteps = Double.parseDouble(m.group(3));
             double endLearningRate = Double.parseDouble(m.group(4));
-            boolean cycle = m.group(5) == null ? false : m.group(6).equals("true");
+            boolean cycle = m.group(5) != null && m.group(6).equals("true");
             return polynomial(degree, initLearningRate, decaySteps, endLearningRate, cycle);
         }
 
@@ -401,7 +401,7 @@ public interface TimeFunction extends Serializable {
                 return inverse(initLearningRate, decaySteps);
             } else {
                 double endLearningRate = Double.parseDouble(m.group(4));
-                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                boolean staircase = m.group(5) != null && m.group(6).equals("true");
                 return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
             }
         }
@@ -415,7 +415,7 @@ public interface TimeFunction extends Serializable {
                 return exp(initLearningRate, decaySteps);
             } else {
                 double endLearningRate = Double.parseDouble(m.group(4));
-                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                boolean staircase = m.group(5) != null && m.group(6).equals("true");
                 return exp(initLearningRate, decaySteps, endLearningRate, staircase);
             }
         }
