@@ -28,7 +28,7 @@ import smile.util.IntPair;
  * Balanced Iterative Reducing and Clustering using Hierarchies. BIRCH performs
  * hierarchical clustering over particularly large data. An advantage of
  * BIRCH is its ability to incrementally and dynamically cluster incoming,
- * multi-dimensional metric data points in an attempt to produce the high
+ * multidimensional metric data points in an attempt to produce the high
  * quality clustering for a given set of resources (memory and time constraints).
  * <p>
  * BIRCH has several advantages. For example, each clustering decision is made

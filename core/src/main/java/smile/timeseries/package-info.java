@@ -18,7 +18,7 @@
 /**
  * Time series analysis. A time series is a series of data points indexed
  * in time order. Most commonly, a time series is a sequence taken at
- * successive equally spaced points in time. Thus it is a sequence of
+ * successive equally spaced points in time. Thus, it is a sequence of
  * discrete-time data.
  * <p>
  * Methods for time series analysis may be divided into two classes:
@@ -56,7 +56,7 @@
  * stationary. Differencing can help stabilize the mean of the time
  * series by removing changes in the level of a time series, and so
  * eliminating (or reducing) trend and seasonality. In addition,
- * transformations such as logarithms can help to stabilise the
+ * transformations such as logarithms can help to stabilize the
  * variance of a time series.
  *
  * @author Haifeng Li

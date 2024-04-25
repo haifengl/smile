@@ -77,7 +77,7 @@ public interface Sampling {
             }
         }
 
-        // # of samples in each strata
+        // # of samples in each stratum
         int[] ni = new int[m];
         for (int i : y) ni[i]++;
 

@@ -28,8 +28,8 @@ import java.io.Serializable;
 public interface Neighborhood extends Serializable {
     /**
      * Returns the changing rate of neighborhood at a given iteration.
-     * @param i the row distance of topology from the the winner neuron.
-     * @param j the column distance of topology from the the winner neuron.
+     * @param i the row distance of topology from the winner neuron.
+     * @param j the column distance of topology from the winner neuron.
      * @param t the order number of current iteration.
      * @return the changing rate of neighborhood.
      */

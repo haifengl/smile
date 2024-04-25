@@ -48,7 +48,7 @@ import static smile.math.MathEx.norm;
  * updates specified by gradient evaluations (or approximate gradient
  * evaluations). Quasi-Newton methods are generalizations of the secant
  * method to find the root of the first derivative for multidimensional
- * problems. In multi-dimensional problems, the secant equation does not
+ * problems. In multidimensional problems, the secant equation does not
  * specify a unique solution, and quasi-Newton methods differ in how they
  * constrain the solution. The BFGS method is one of the most popular
  * members of this class.

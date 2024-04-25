@@ -25,5 +25,5 @@ The sample data
 **Additional context**
 - What Java (OpenJDK, Orack JDK, etc.) are you using and which Java version
 - Which Smile version
-- What is your build system (e.g. Ubuntu, MacOS, Windows, Debian )
+- What is your build system (e.g. Ubuntu, macOS, Windows, Debian )
 - Add any other context about the problem here.

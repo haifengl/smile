@@ -41,7 +41,7 @@ import smile.util.Strings;
  * often used for labeling or parsing of sequential data.
  * <p>
  * A CRF is a Markov random field that was trained discriminatively.
- * Therefore it is not necessary to model the distribution over always
+ * Therefore, it is not necessary to model the distribution over always
  * observed variables, which makes it possible to include arbitrarily
  * complicated features of the observed variables into the model.
  * <p>

@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.graph.AdjacencyList;
@@ -52,6 +53,7 @@ import smile.math.matrix.SparseMatrix;
  * @author Haifeng Li
  */
 public class LLE implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
@@ -106,7 +108,7 @@ public class LLE implements Serializable {
             tol = 1E-3;
         }
 
-        // Use largest connected component of nearest neighbor graph.
+        // Use the largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
         AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> N[v1][j] = v2);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);

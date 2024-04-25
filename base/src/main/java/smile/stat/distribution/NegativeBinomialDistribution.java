@@ -103,7 +103,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Shannon entropy. Not supported.
+     * Shannon's entropy. Not supported.
      */
     @Override
     public double entropy() {

@@ -7,10 +7,10 @@ permalink: "{{ page.filePathStem }}.html"
 <div class="col-md-9 col-md-pull-3">
     <h1 id="feature-top" class="title">Features</h1>
 
-    <p>We have went through the classification and regression algorithms. In the examples,
+    <p>We have gone through the classification and regression algorithms. In the examples,
         we assume that the data is ready and features are carefully prepared, which many
         machine learning practitioners take as granted. However, it is not general case
-        in practice. The practitioners should pay a lot attentions on feature generation,
+        in practice. The practitioners should pay a lot of attentions on feature generation,
         selection, and dimension reduction, which often have bigger impacts on the final
         results than the choice of particular learning algorithm.</p>
 
@@ -138,7 +138,7 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
     <p>The class <code>Normalizer</code> transform samples to unit norm. This class
         is stateless and thus doesn't need to learn transformation parameters from data.
-        Each sample (i.e. each row of the data matrix) with at least one non zero
+        Each sample (i.e. each row of the data matrix) with at least one non-zero
         component is rescaled independently of other samples so that its norm
         (L1 or L2) equals one. Scaling inputs to unit norms is a common operation for text
         classification or clustering for instance.</p>
@@ -153,7 +153,7 @@ permalink: "{{ page.filePathStem }}.html"
         The class <code>OneHotEncoder</code> encode categorical integer features
         using the one-of-K scheme.</p>
 
-    <p>There are also other feature generation classes in the package. For example,
+    <p>There are other feature generation classes in the package. For example,
         <code>DateFeature</code> generates the attributes of <code>Date</code> object.
         <code>Bag</code> is a generic implementation of bag of words features, which
         may be applied to generic objects other than <code>String</code>. </p>
@@ -592,7 +592,7 @@ LSTAT                 2.6772
         </div>
     </div>
 -->
-    <p>When many such subsets of variables are obtained, the one with best
+    <p>When many such subsets of variables are obtained, the one with the best
         performance may be used as selected features. Alternatively, the frequencies
         with which variables are selected may be analyzed further. The most
         frequently selected variables may be presumed to be the most relevant to

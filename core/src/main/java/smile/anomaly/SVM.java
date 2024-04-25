@@ -51,7 +51,7 @@ public class SVM<T> extends KernelMachine<T>  {
     }
 
     /**
-     * Fits an one-class SVM.
+     * Fits a one-class SVM.
      * @param x training samples.
      * @param kernel the kernel function.
      * @param <T> the data type.
@@ -62,7 +62,7 @@ public class SVM<T> extends KernelMachine<T>  {
     }
 
     /**
-     * Fits an one-class SVM.
+     * Fits a one-class SVM.
      * @param x training samples.
      * @param kernel the kernel function.
      * @param nu the parameter sets an upper bound on the fraction of outliers

@@ -204,7 +204,7 @@ class TotalSupportTree implements Iterable<ItemSet> {
         int item = order[itemset[index]];
         Node child = node.children[item];
         if (child != null) {
-            // If the index is 0, then this is the last element (i.e the
+            // If the index is 0, then this is the last element (i.e. the
             // input is a 1 itemset)  and therefore item set found
             if (index == 0) {
                 return child.support;

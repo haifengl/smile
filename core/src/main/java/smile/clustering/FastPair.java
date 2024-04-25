@@ -155,7 +155,7 @@ class FastPair {
     }
 
     /**
-     * Find closest pair by scanning list of nearest neighbors
+     * Find the closest pair by scanning list of nearest neighbors
      */
     public double getNearestPair(int[] pair) {
         if (npoints < 2) {

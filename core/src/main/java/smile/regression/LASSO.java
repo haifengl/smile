@@ -43,7 +43,7 @@ import smile.math.matrix.Matrix;
  * <p>
  * For over-determined systems (more instances than variables, commonly in
  * machine learning), we normalize variables with mean 0 and standard deviation
- * 1. For under-determined systems (less instances than variables, e.g.
+ * 1. For under-determined systems (fewer instances than variables, e.g.
  * compressed sensing), we assume white noise (i.e. no intercept in the linear
  * model) and do not perform normalization. Note that the solution
  * is not unique in this case.

@@ -19,7 +19,7 @@ package smile.gap;
 
 /**
  * Artificial chromosomes used in Lamarckian algorithm that is a hybrid of
- * of evolutionary computation and a local improver such as hill-climbing.
+ * evolutionary computation and a local improver such as hill-climbing.
  * Lamarckian algorithm augments an EA with some
  * hill-climbing during the fitness assessment phase to revise each individual
  * as it is being assessed. The revised individual replaces the original one

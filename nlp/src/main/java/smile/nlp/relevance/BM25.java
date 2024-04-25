@@ -30,7 +30,7 @@ import smile.nlp.TextTerms;
  * <p>
  * At the extreme values of the coefficient b, BM25 turns into ranking functions
  * known as BM11 (for b = 1) and BM15 (for b = 0). BM25F is a modification of
- * BM25 in which the document is considered to be composed from several fields
+ * BM25 in which the document is considered to be composed of several fields
  * (such as headlines, main text, anchor text) with possibly different degrees
  * of importance.
  * <p>

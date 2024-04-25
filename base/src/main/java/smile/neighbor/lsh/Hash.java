@@ -80,7 +80,7 @@ public class Hash implements Serializable {
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently away
-     *          from 0. But we should not choose an w value that is too large,
+     *          from 0. But we should not choose a w value that is too large,
      *          which will increase the query time.
      * @param H the size of universal hash tables.
      */

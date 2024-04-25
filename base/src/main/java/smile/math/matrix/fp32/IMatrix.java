@@ -109,7 +109,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
     /**
      * Returns the number of stored matrix elements. For conventional matrix,
-     * it is simplify nrow * ncol. But it is usually much less for band,
+     * it is simply nrow * ncol. But it is usually much less for band,
      * packed or sparse matrix.
      * @return the number of stored matrix elements.
      */
@@ -245,8 +245,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *              operation on the matrix.
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
@@ -279,8 +279,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public void mv(float alpha, float[] x, float beta, float[] y) {
@@ -323,8 +323,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public void tv(float alpha, float[] x, float beta, float[] y) {
@@ -470,11 +470,11 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param p the origin in the shifting power method. A - pI will be
      * used in the iteration to accelerate the method. p should be such that
      * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
-     * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
-     * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
+     * where &lambda;<sub>2</sub> is the second-largest eigenvalue in magnitude.
+     * If we know the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
      * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue
      * in magnitude. Good estimates of &lambda;<sub>2</sub> are more difficult
-     * to compute. However, if &mu; is an approximation to largest eigenvector,
+     * to compute. However, if &mu; is an approximation to the largest eigenvector,
      * then using any x<sub>0</sub> such that x<sub>0</sub>*&mu; = 0 as the initial
      * vector for a few iterations may yield a reasonable estimate of &lambda;<sub>2</sub>.
      * @param tol the desired convergence tolerance.

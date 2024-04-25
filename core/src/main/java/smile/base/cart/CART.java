@@ -244,7 +244,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Returns the predictors by the model formula if it is not null.
-     * Otherwise return the input tuple.
+     * Otherwise, return the input tuple.
      * @param x the input tuple.
      * @return the predictors.
      */
@@ -341,7 +341,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Finds the best attribute to split on a set of samples. at the current node. Returns
-     * <code>Optional.empty</code> if a split doesn't exists to reduce the impurity.
+     * <code>Optional.empty</code> if a split doesn't exist to reduce the impurity.
      * @param node the leaf node to split.
      * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
      * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
@@ -350,7 +350,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] unsplittable) {
         if (node.size() < 2 * nodeSize) {
-            return Optional.empty(); // one child will has less than nodeSize samples.
+            return Optional.empty(); // one child will have less than nodeSize samples.
         }
 
         final double impurity = impurity(node);
@@ -654,7 +654,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
          */
         double[] z;
         /**
-         * The fraction of one paths (where this feature is
+         * The fraction of one path (where this feature is
          * in the non-zero index set S) that flow through this path.
          */
         double[] o;

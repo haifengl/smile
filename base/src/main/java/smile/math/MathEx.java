@@ -1822,7 +1822,7 @@ public class MathEx {
     }
 
     /**
-     * Returns the index of minimum value of an matrix.
+     * Returns the index of minimum value of a matrix.
      * @param matrix the matrix.
      * @return the index of minimum.
      */
@@ -3703,7 +3703,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.
@@ -3733,7 +3733,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.
@@ -3763,7 +3763,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.

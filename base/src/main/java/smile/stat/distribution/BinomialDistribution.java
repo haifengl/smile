@@ -196,7 +196,7 @@ public class BinomialDistribution extends DiscreteDistribution {
         boolean inv = p > 0.5;
         double np = n * Math.min(p, 1.0 - p);
 
-        // Poisson approximation for extremely low np
+        // Poisson's approximation for extremely low np
         int x;
         if (np < 1E-6) {
             x = PoissonDistribution.tinyLambdaRand(np);

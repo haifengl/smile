@@ -33,7 +33,7 @@ import static smile.math.MathEx.lfactorial;
  * two partitions are identical and 0 when the MI between two partitions
  * equals the value expected due to chance alone.
  * <p>
- * WARNING: The computation of adjustment is is really really slow.
+ * WARNING: The computation of adjustment is really slow.
  *
  * <h2>References</h2>
  * <ol>

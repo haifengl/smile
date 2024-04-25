@@ -38,7 +38,7 @@ import smile.util.Strings;
  * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  * <p>
- * The representational capabilities of a MLP are determined by the range of
+ * The representational capabilities of an MLP are determined by the range of
  * mappings it may implement through weight variation. Single layer perceptrons
  * are capable of solving only linearly separable problems. With the sigmoid
  * function as activation function, the single-layer network is identical
@@ -70,7 +70,7 @@ import smile.util.Strings;
  * at large &eta;, is to make the change in weight dependent on the past weight
  * change by adding a momentum term.
  * <p>
- * Although the back-propagation algorithm may performs gradient
+ * Although the back-propagation algorithm may perform gradient
  * descent on the total error of all instances in a batch way, 
  * the learning rule is often applied to each instance separately in an online
  * way or stochastic way. There exists empirical indication that the stochastic

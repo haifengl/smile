@@ -52,7 +52,7 @@ public interface Chromosome extends Comparable<Chromosome> {
      * For genetic algorithms, this method mutates the chromosome randomly.
      * The offspring may have no changes since the mutation rate is usually
      * very low. For Lamarckian algorithms, this method actually does the local
-     * search such as such as hill-climbing.
+     * search such as hill-climbing.
      */
     void mutate();
 }

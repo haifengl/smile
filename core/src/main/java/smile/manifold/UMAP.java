@@ -404,7 +404,7 @@ public class UMAP implements Serializable {
 
         // Computes a continuous version of the distance to the kth nearest neighbor.
         // That is, this is similar to knn-distance but allows continuous k values
-        // rather than requiring an integral k. In essence we are simply computing
+        // rather than requiring an integral k. In essence, we are simply computing
         // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {

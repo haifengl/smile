@@ -123,7 +123,7 @@ public class DataTypes {
     }
 
     /**
-     * Creates an object data type of a given class.
+     * Creates an object data type of given class.
      * @param clazz the object class.
      * @return the object data type.
      */

@@ -311,7 +311,7 @@ public interface Read {
      * with a '%', whereby the remainder of the line is ignored.
      * <p>
      * A significant advantage of the ARFF data file over the CSV data file is
-     * the meta data information.
+     * the metadata information.
      * <p>
      * Also, the ability to include comments ensure we can record extra information
      * about the data set, including how it was derived, where it came from, and
@@ -347,7 +347,7 @@ public interface Read {
      * with a '%', whereby the remainder of the line is ignored.
      * <p>
      * A significant advantage of the ARFF data file over the CSV data file is
-     * the meta data information.
+     * the metadata information.
      * <p>
      * Also, the ability to include comments ensure we can record extra information
      * about the data set, including how it was derived, where it came from, and

@@ -23,7 +23,7 @@ package smile.stat.distribution;
  * <code>{1, 2, 3, &hellip;}</code>. Sometimes, people define that the probability
  * distribution of the number <code>Y = X - 1</code> of failures before the first
  * success, supported on the set <code>{0, 1, 2, 3, &hellip;}</code>. To reduce
- * the confusion, we denote the later as shifted geometric distribution.
+ * the confusion, we denote the latter as shifted geometric distribution.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
  * Pr(X = k) = (1 - p)<sup>k-1</sup> p.
@@ -110,7 +110,7 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
     }
 
     /**
-     * Shannon entropy. Not supported.
+     * Shannon's entropy. Not supported.
      */
     @Override
     public double entropy() {

@@ -52,7 +52,7 @@ import smile.data.type.*;
  * with a '%', whereby the remainder of the line is ignored.
  * <p>
  * A significant advantage of the ARFF data file over the CSV data file is
- * the meta data information.
+ * the metadata information.
  * <p>
  * Also, the ability to include comments ensure we can record extra information
  * about the data set, including how it was derived, where it came from, and
@@ -152,7 +152,7 @@ public class Arff implements AutoCloseable {
      * @param reader the file reader.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
-]     */
+     */
     public Arff(Reader reader) throws IOException, ParseException {
         this.reader = reader;
 
@@ -268,7 +268,7 @@ public class Arff implements AutoCloseable {
 
         while (ARFF_ATTRIBUTE.equalsIgnoreCase(tokenizer.sval)) {
             StructField attribute = nextAttribute();
-            // We may meet an relational attribute, which parseAttribute returns null
+            // We may meet a relational attribute, which parseAttribute returns null
             // as it flats the relational attribute out.
             if (attribute != null) {
                 fields.add(attribute);

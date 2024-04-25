@@ -54,13 +54,13 @@ import smile.math.kernel.*;
  * transformed feature space. The transformation may be nonlinear and
  * the transformed space be high dimensional. For example, the feature space
  * corresponding Gaussian kernel is a Hilbert space of infinite dimension.
- * Thus though the classifier is a hyperplane in the high-dimensional feature
+ * Thus, though the classifier is a hyperplane in the high-dimensional feature
  * space, it may be nonlinear in the original input space. Maximum margin
  * classifiers are well regularized, so the infinite dimension does not spoil
  * the results.
  * <p>
  * The effectiveness of SVM depends on the selection of kernel, the kernel's
- * parameters, and the soft margin parameter C. Given a kernel, best combination
+ * parameters, and the soft margin parameter C. Given a kernel, the best combination
  * of C and kernel's parameters is often selected by a grid-search with
  * cross validation.
  * <p>

@@ -112,7 +112,7 @@ public interface TimeFunction extends Serializable {
     /**
      * Returns the linear learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
-     * decay steps..
+     * decay steps.
      *
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.

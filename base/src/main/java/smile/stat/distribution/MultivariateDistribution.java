@@ -37,7 +37,7 @@ public interface MultivariateDistribution extends Serializable {
     int length();
 
     /**
-     * Shannon entropy of the distribution.
+     * Shannon's entropy of the distribution.
      * @return Shannon entropy
      */
     double entropy();

@@ -78,7 +78,7 @@ public class KNN<T> extends AbstractClassifier<T> {
      */
     private final KNNSearch<T, T> knn;
     /**
-     * The labels of training samples.
+     * The labels of training sample.
      */
     private final int[] y;
     /**

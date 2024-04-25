@@ -47,7 +47,7 @@ import java.util.Comparator;
  * always appear before S in the sorted list.
  * <p>
  * For speed of execution, we implement it without recursion. Instead,
- * we requires an auxiliary array (stack) of storage, of length
+ * we require an auxiliary array (stack) of storage, of length
  * 2 log<sub><small>2</small></sub> n. When a subarray has gotten down to size 7,
  * we sort it by straight insertion.
  * 

@@ -101,7 +101,7 @@ import java.util.Arrays;
  * sometimes rank selection can be better. In general, elitism should be used
  * unless other method is used to save the best found solution.</dd>
  * </dl>
- * This implementation also supports Lamarckian algorithm that is a hybrid of
+ * This implementation also supports Lamarckian algorithm that is a hybrid
  * of evolutionary computation and a local improver such as hill-climbing.
  * Lamarckian algorithm augments an EA with some
  * hill-climbing during the fitness assessment phase to revise each individual
@@ -132,7 +132,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
     /**
      * The number of best chromosomes to copy to new population. When creating
      * new population by crossover and mutation, we have a big chance, that we
-     * will loose the best chromosome. Elitism first copies the best chromosome
+     * will lose the best chromosome. Elitism first copies the best chromosome
      * (or a few best chromosomes) to new population. The rest is done in
      * classical way. Elitism can very rapidly increase performance of GA,
      * because it prevents losing the best found solution.
@@ -160,7 +160,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * @param seeds the initial population, which is usually randomly generated.
      * @param elitism the number of best chromosomes to copy to new population.
      *                When creating new population by crossover and mutation,
-     *                we have a big chance, that we will loose the best chromosome.
+     *                we have a big chance, that we will lose the best chromosome.
      *                Elitism first copies the best chromosome (or a few best
      *                chromosomes) to new population. The rest is done in classical
      *                way. Elitism can very rapidly increase performance of GA,

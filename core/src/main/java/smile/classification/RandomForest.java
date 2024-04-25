@@ -470,7 +470,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
     /**
      * Returns the overall out-of-bag metric estimations. The OOB estimate is
-     * quite accurate given that enough trees have been grown. Otherwise the
+     * quite accurate given that enough trees have been grown. Otherwise, the
      * OOB error estimate can bias upward.
      * 
      * @return the out-of-bag metrics estimations.

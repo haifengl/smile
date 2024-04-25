@@ -31,7 +31,7 @@ import java.util.Arrays;
  * so experimentation is usually needed to determine an appropriate width.
  * <p>
  * Note that this class provides only tools to choose the bin width or the
- * number of bins and frequency counting. It does NOT providing plotting
+ * number of bins and frequency counting. It does NOT provide plotting
  * services.
  * 
  * @author Haifeng Li

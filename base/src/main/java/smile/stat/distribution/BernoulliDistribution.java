@@ -20,7 +20,7 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 
 /**
- * Bernoulli distribution is a discrete probability distribution, which takes
+ * Bernoulli's distribution is a discrete probability distribution, which takes
  * value 1 with success probability p and value 0 with failure probability
  * q = 1 - p.
  * <p>
@@ -63,7 +63,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
 
     /**
      * Estimates the distribution parameters by MLE.
-     * @param data data[i] == 1 if the i-<i>th</i> trail is success. Otherwise 0.
+     * @param data data[i] == 1 if the i-<i>th</i> trail is success. Otherwise, 0.
      * @return the distribution.
      */
     public static BernoulliDistribution fit(int[] data) {
@@ -81,7 +81,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Construct an Bernoulli from the given samples. Parameter
+     * Construct a Bernoulli from the given samples. Parameter
      * will be estimated from the data by MLE.
      * @param data the boolean array to indicate if the i-<i>th</i> trail success.
      */

@@ -75,9 +75,9 @@
  * <p>
  * A different approach to nonlinear dimensionality reduction is through the
  * use of autoencoders, a special kind of feed-forward neural networks with
- * a bottle-neck hidden layer. The training of deep encoders is typically
+ * a bottleneck hidden layer. The training of deep encoders is typically
  * performed using a greedy layer-wise pre-training (e.g., using a stack of
- * Restricted Boltzmann machines) that is followed by a fine tuning stage based
+ * Restricted Boltzmann machines) that is followed by a fine-tuning stage based
  * on backpropagation.
  *
  * @author Haifeng Li

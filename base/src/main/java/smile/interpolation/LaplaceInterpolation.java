@@ -20,7 +20,7 @@ package smile.interpolation;
 import java.util.Arrays;
 
 /**
- * Laplace interpolation to restore missing or unmeasured values on a 2-dimensional
+ * Laplace's interpolation to restore missing or unmeasured values on a 2-dimensional
  * evenly spaced regular grid. In some sense, Laplace interpolation
  * produces the smoothest possible interpolant, which are obtained by solving
  * a very sparse linear equations with biconjugate gradient method.

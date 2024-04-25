@@ -27,7 +27,7 @@ import smile.manifold.MDS;
 import smile.sort.QuickSort;
 
 /**
- * Self-Organizing Map. An SOM is a unsupervised learning method to produce
+ * Self-Organizing Map. An SOM is an unsupervised learning method to produce
  * a low-dimensional (typically two-dimensional) discretized representation
  * (called a map) of the input space of the training samples. The model was
  * first described as an artificial neural network by Teuvo Kohonen, and is

@@ -71,7 +71,7 @@ public interface DataType extends Serializable {
 
     /**
      * Returns the type name used in external catalogs.
-     * DataType.of(name()) should returns the same type.
+     * DataType.of(name()) should return the same type.
      * @return the type name used in external catalogs.
      */
     String name();
@@ -261,7 +261,7 @@ public interface DataType extends Serializable {
     }
 
     /**
-     * Infers the type of a string.
+     * Infers the type of string.
      * @param s the string value.
      * @return the inferred data type of string value.
      */

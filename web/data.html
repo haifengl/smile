@@ -1388,7 +1388,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <h3 id="read.arff">Weka ARFF</h3>
     <p><a href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
-        is an ASCII text file format that is essentially a CSV file with a header that describes the meta data.
+        is an ASCII text file format that is essentially a CSV file with a header that describes the metadata.
         ARFF was developed for use in the <a href="http://www.cs.waikato.ac.nz/ml/weka/">Weka</a> machine learning software.</p>
 
     <p>A dataset is firstly described, beginning with the name of the dataset (or the relation in ARFF terminology).
@@ -1400,7 +1400,7 @@ permalink: "{{ page.filePathStem }}.html"
         Comments can be included in the file, introduced at the beginning of a line with a '%',
         whereby the remainder of the line is ignored.</p>
 
-    <p>A significant advantage of the ARFF data file over the CSV data file is the meta data information.
+    <p>A significant advantage of the ARFF data file over the CSV data file is the metadata information.
         Also, the ability to include comments ensure we can record extra information about the data set,
         including how it was derived, where it came from, and how it might be cited.</p>
 
@@ -1736,7 +1736,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         (multi-class classification is supported). For regression, it's any real
         number. For one-class SVM, it's not used so can be any number.
         &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
-        is a real number. The indices must be in an ascending order. The labels in
+        is a real number. The indices must be in ascending order. The labels in
         the testing data file are only used to calculate accuracy or error. If they
         are unknown, just fill this column with a number.</p>
 
@@ -1954,7 +1954,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
 
     <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
         For details, see <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
-        Note that our implementation supports only real-valued matrix and we ignore
+        Note that our implementation supports only real-valued matrix, and we ignore
         the optional right hand side vectors. This format is supported by the function
         <code>SparseMatrix.harwell(Path path)</code>. </p>
 
@@ -2111,7 +2111,7 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
     <p>You can also save a <code>DataFrame</code> to an ARFF file with the method
         <code>write.arff(data, file)</code>. The ARFF file keeps the data type information.
         If you prefer the plain csv text file, you may use the methods <code>write.csv(data, file)</code> or
-        <code>write.table(data, file, "delimiter")</code>, which save a generic two dimensional array
+        <code>write.table(data, file, "delimiter")</code>, which save a generic two-dimensional array
         with comma or customized delimiter. To save one dimensional array, simply call
         <code>write(array, file)</code>.</p>
 

@@ -25,7 +25,7 @@ import smile.math.distance.Distance;
  * that are about to fuse.
  * <p>
  * Note that the terms weighted and unweighted refer to the final result,
- * not the math by which it is achieved. Thus the simple averaging in WPGMA
+ * not the math by which it is achieved. Thus, the simple averaging in WPGMA
  * produces a weighted result, and the proportional averaging in UPGMA produces
  * an unweighted result.
  * 

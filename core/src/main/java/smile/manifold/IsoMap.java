@@ -162,7 +162,7 @@ public class IsoMap implements Serializable {
             }
         }
 
-        // Use largest connected component of nearest neighbor graph.
+        // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;

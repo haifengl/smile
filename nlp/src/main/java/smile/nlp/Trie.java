@@ -41,7 +41,7 @@ public class Trie<K, V> {
     /**
      * The root node is specialized as a hash map for 
      * quick search. In case of Named Entities, the root
-     * node will contains a lot of children. A plain list
+     * node will contain a lot of children. A plain list
      * will be slow for search.
      */
     private final HashMap<K, Node> root;
