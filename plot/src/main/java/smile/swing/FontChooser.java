@@ -107,7 +107,7 @@ public class FontChooser extends JComponent {
     
     // instance variables
     protected int dialogResultValue = ERROR_OPTION;
-    private ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
+    private final ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
 
     protected String getMessage(String key) {
         String value = key;
@@ -136,7 +136,7 @@ public class FontChooser extends JComponent {
      * Shared font chooser. An application should have only one font chooser
      * so that it always knows the latest chosen font.
      */
-    private static FontChooser chooser = new FontChooser();
+    private static final FontChooser chooser = new FontChooser();
 
     /**
      * Constructs a <code>FontChooser</code> object.
@@ -428,7 +428,7 @@ public class FontChooser extends JComponent {
 
     class ListSelectionHandler implements ListSelectionListener {
 
-        private JTextComponent textComponent;
+        private final JTextComponent textComponent;
 
         ListSelectionHandler(JTextComponent textComponent) {
             this.textComponent = textComponent;
@@ -436,10 +436,10 @@ public class FontChooser extends JComponent {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            if (e.getValueIsAdjusting() == false) {
+            if (!e.getValueIsAdjusting()) {
                 @SuppressWarnings("unchecked")
                 JList<String> list = (JList<String>) e.getSource();
-                String selectedValue = (String) list.getSelectedValue();
+                String selectedValue = list.getSelectedValue();
 
                 String oldValue = textComponent.getText();
                 textComponent.setText(selectedValue);
@@ -455,7 +455,7 @@ public class FontChooser extends JComponent {
 
     class TextFieldFocusHandlerForTextSelection extends FocusAdapter {
 
-        private JTextComponent textComponent;
+        private final JTextComponent textComponent;
 
         public TextFieldFocusHandlerForTextSelection(JTextComponent textComponent) {
             this.textComponent = textComponent;
@@ -475,7 +475,7 @@ public class FontChooser extends JComponent {
 
     class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
 
-        private JList<String> targetList;
+        private final JList<String> targetList;
 
         public TextFieldKeyHandlerForListSelectionUpDown(JList<String> list) {
             this.targetList = list;
@@ -555,7 +555,7 @@ public class FontChooser extends JComponent {
 
         public class ListSelector implements Runnable {
 
-            private int index;
+            private final int index;
 
             public ListSelector(int index) {
                 this.index = index;
@@ -571,7 +571,7 @@ public class FontChooser extends JComponent {
     class DialogOKAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "OK";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected DialogOKAction(JDialog dialog) {
             this.dialog = dialog;
@@ -590,7 +590,7 @@ public class FontChooser extends JComponent {
     class DialogCancelAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "Cancel";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected DialogCancelAction(JDialog dialog) {
             this.dialog = dialog;

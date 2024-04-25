@@ -50,23 +50,23 @@ public class Base {
     /**
      * Precision unit of each axis.
      */
-    private double[] precisionUnit;
+    private final double[] precisionUnit;
     /**
      * Precision unit digits of each axis.
      */
-    private int[] precisionDigits;
+    private final int[] precisionDigits;
     /**
      * Original lower bound of each axis.
      */
-    private double[] originalLowerBound;
+    private final double[] originalLowerBound;
     /**
      * Original upper bound of each axis.
      */
-    private double[] originalUpperBound;
+    private final double[] originalUpperBound;
     /**
      * True to round/extend bound of each axis to nearest precision units.
      */
-    private boolean[] extendBound;
+    private final boolean[] extendBound;
 
     /**
      * Constructor.

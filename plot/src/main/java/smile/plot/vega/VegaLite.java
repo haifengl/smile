@@ -314,9 +314,9 @@ public class VegaLite {
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
                    </head>
                    <body>
-                   
+                
                    <div id="vega-lite"></div>
-                   
+                
                    <script type="text/javascript">
                      var spec = %s;
                      var opt = {

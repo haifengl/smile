@@ -37,15 +37,15 @@ public class Hexmap extends Plot {
     /**
      * The two-dimensional data matrix.
      */
-    private double[][] z;
+    private final double[][] z;
     /**
      * Tooltip lambda.
      */
-    private Tooltip tooltip;
+    private final Tooltip tooltip;
     /**
      * The coordinates of hexagons for each cell in data matrix.
      */
-    private double[][][][] hexagon;
+    private final double[][][][] hexagon;
     /**
      * The minimum of the data.
      */
@@ -61,7 +61,7 @@ public class Hexmap extends Plot {
     /**
      * The color palette to represent values.
      */
-    private Color[] palette;
+    private final Color[] palette;
 
     /**
      * Constructor.

@@ -31,23 +31,23 @@ public class Surface extends Plot {
     /**
      * The data-axis locations of surface.
      */
-    private double[][][] data;
+    private final double[][][] data;
     /**
      * Vertex Z-axis value in camera coordinate.
      */
-    private double[][] zc;
+    private final double[][] zc;
     /**
      * Average z-axis value of triangles to fill for painter's algorithm.
      */
-    private double[] az;
+    private final double[] az;
     /**
      * The indices of triangles in descending order of average z-axis values.
      */
-    private int[] order;
+    private final int[] order;
     /**
      * Triangles. Each row is the index of triangle vertices in data.
      */
-    private int[][] triangles;
+    private final int[][] triangles;
     /**
      * The minimum of the data.
      */
@@ -63,7 +63,7 @@ public class Surface extends Plot {
     /**
      * The color palette to represent values.
      */
-    private Color[] palette;
+    private final Color[] palette;
 
     /**
      * Constructor for irregular mesh grid.

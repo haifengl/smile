@@ -86,7 +86,7 @@ public class DataTypeTest {
                 new StructField("salary", DataTypes.object(Integer.class))
         );
         System.out.println(type.name());
-        System.out.println(type.toString());
+        System.out.println(type);
         assertEquals(type,
                 DataType.of("Struct[age: int, birthday: Date[uuuu-MM-dd], gender: char, name: String, salary: Object[java.lang.Integer]]"));
     }

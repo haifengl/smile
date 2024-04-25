@@ -52,7 +52,7 @@ class Projection3D extends Projection {
     /**
      * Zoom factor.
      */
-    private double factor = 1.7;
+    private final double factor = 1.7;
 
     /**
      * Constructor.

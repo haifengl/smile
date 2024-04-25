@@ -1428,7 +1428,7 @@ public interface DataFrame extends Iterable<Tuple> {
             header.append('|');
         }
         header.append('\n');
-        sb.append(header.toString());
+        sb.append(header);
         sb.append(sep);
 
         // data
@@ -1444,7 +1444,7 @@ public interface DataFrame extends Iterable<Tuple> {
                 line.append('|');
             }
             line.append('\n');
-            sb.append(line.toString());
+            sb.append(line);
         }
 
         sb.append(sep);

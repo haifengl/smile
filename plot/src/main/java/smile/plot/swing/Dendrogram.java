@@ -30,15 +30,15 @@ public class Dendrogram extends Plot {
     /**
      * The one end points of lines.
      */
-    private double[][] p1;
+    private final double[][] p1;
     /**
      * The other end points of lines.
      */
-    private double[][] p2;
+    private final double[][] p2;
     /**
      * The height of tree.
      */
-    private double height;
+    private final double height;
 
     /**
      * Constructor.

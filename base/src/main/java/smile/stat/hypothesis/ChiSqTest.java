@@ -216,11 +216,7 @@ public class ChiSqTest {
         int nrow = table.length;
         int ncol = table[0].length;
 
-        boolean correct = false;
-        if (nrow == 2 && ncol == 2) {
-            correct = true;
-        }
-
+        boolean correct = nrow == 2 && ncol == 2;
         double n = 0.0; // total observations
         int r = nrow; // without all zero rows
         double[] ni = new double[nrow]; // observations per row

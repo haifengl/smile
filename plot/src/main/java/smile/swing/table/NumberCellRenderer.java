@@ -36,7 +36,7 @@ public class NumberCellRenderer extends DefaultTableCellRenderer {
     /**
      * Format string.
      */
-    private NumberFormat numberFormat;
+    private final NumberFormat numberFormat;
 
     /**
      * Constructor.

@@ -37,7 +37,7 @@ public class DateCellRenderer extends DefaultTableCellRenderer {
     public static final DateCellRenderer HHMMSS          = new DateCellRenderer("HH:mm:ss");
     public static final DateCellRenderer ISO8601         = new DateCellRenderer("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-    private DateFormat dateFormat;
+    private final DateFormat dateFormat;
 
     public DateCellRenderer(String format) {
         dateFormat = new SimpleDateFormat(format);

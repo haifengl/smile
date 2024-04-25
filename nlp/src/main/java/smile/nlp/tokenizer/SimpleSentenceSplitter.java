@@ -236,7 +236,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
         }
 
         // If currentSentence is not empty (e.g. break at abbrev), add it to the results.
-        if (currentSentence.length() > 0) {
+        if (!currentSentence.isEmpty()) {
             sentences.add(currentSentence.toString().trim());
         }
 

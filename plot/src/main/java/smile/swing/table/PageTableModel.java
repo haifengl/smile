@@ -55,23 +55,23 @@ public abstract class PageTableModel extends AbstractTableModel {
     /**
      * Controls on toolbar.
      */
-    private JTextField pageSizeField = new JTextField(5);
-    private JTextField pageField = new JTextField(5);
-    private JLabel pageSizeLabel = new JLabel("Page Size: ");
-    private JLabel totalRowCountLabel = new JLabel();
-    private JLabel pageCountLabel = new JLabel();
-    private String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
-    private String pageCountLabelFormat = " of %d";
+    private final JTextField pageSizeField = new JTextField(5);
+    private final JTextField pageField = new JTextField(5);
+    private final JLabel pageSizeLabel = new JLabel("Page Size: ");
+    private final JLabel totalRowCountLabel = new JLabel();
+    private final JLabel pageCountLabel = new JLabel();
+    private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
+    private final String pageCountLabelFormat = " of %d";
 
     /**
      * Paging event action.
      */
-    private Action pageDownAction = new PageDownAction();
-    private Action pageUpAction = new PageUpAction();
-    private Action firstPageAction = new FirstPageAction();
-    private Action lastPageAction = new LastPageAction();
-    private Action gotoPageAction = new GoToPageAction();
-    private Action pageSizeAction = new PageSizeAction();
+    private final Action pageDownAction = new PageDownAction();
+    private final Action pageUpAction = new PageUpAction();
+    private final Action firstPageAction = new FirstPageAction();
+    private final Action lastPageAction = new LastPageAction();
+    private final Action gotoPageAction = new GoToPageAction();
+    private final Action pageSizeAction = new PageSizeAction();
 
 
     /**

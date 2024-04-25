@@ -37,7 +37,7 @@ public class QQPlot extends Plot {
     /**
      * The coordinates of points.
      */
-    private double[][] points;
+    private final double[][] points;
 
     /**
      * Constructor.

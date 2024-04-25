@@ -48,7 +48,7 @@ public class IntegerCellEditor extends DefaultCellEditor {
 
     JFormattedTextField textField;
     NumberFormat integerFormat;
-    private Integer minimum, maximum;
+    private final Integer minimum, maximum;
 
     /**
      * Constructor.

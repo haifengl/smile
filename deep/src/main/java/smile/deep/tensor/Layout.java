@@ -37,7 +37,7 @@ public enum Layout {
     torch.Layout value;
 
     /** Constructor. */
-    private Layout(torch.Layout layout) {
+    Layout(torch.Layout layout) {
         this.value = layout;
     }
 }

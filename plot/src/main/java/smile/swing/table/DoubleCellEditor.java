@@ -49,7 +49,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
 
     JFormattedTextField textField;
     NumberFormat doubleFormat;
-    private Double minimum, maximum;
+    private final Double minimum, maximum;
 
     /**
      * Constructor.

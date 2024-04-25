@@ -559,11 +559,7 @@ public class Contour extends Plot {
      * Returns true if zc is between z0 and z1.
      */
     private boolean isIntersect(double z0, double z1, double zc) {
-        if ((z0 - zc) * (z1 - zc) < 0.0) {
-            return true;
-        }
-
-        return false;
+        return (z0 - zc) * (z1 - zc) < 0.0;
     }
 
     /**
@@ -640,14 +636,6 @@ public class Contour extends Plot {
             case 3:
                 if (YMATCH(yend, seglist.y0)) {
                     if (!tail) {
-                        seglist.swap();
-                    }
-                    seg[1] = seglist;
-                    return seglist.next;
-                }
-
-                if (YMATCH(yend, seglist.y1)) {
-                    if (tail) {
                         seglist.swap();
                     }
                     seg[1] = seglist;

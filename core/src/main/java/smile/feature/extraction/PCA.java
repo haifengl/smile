@@ -70,7 +70,7 @@ public class PCA extends Projection {
     /**
      * The projected sample mean.
      */
-    private double[] pmu;
+    private final double[] pmu;
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */

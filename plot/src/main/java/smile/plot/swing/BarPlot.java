@@ -34,14 +34,14 @@ public class BarPlot extends Plot {
     /**
      * The legends of each bar group.
      */
-    final Optional<Legend[]> legends;
+    final Legend[] legends;
 
     /**
      * Constructor.
      */
     public BarPlot(Bar... bars) {
         this.bars = bars;
-        legends = Optional.empty();
+        legends = null;
     }
 
     /**
@@ -49,7 +49,7 @@ public class BarPlot extends Plot {
      */
     public BarPlot(Bar[] bars, Legend[] legends) {
         this.bars = bars;
-        this.legends = Optional.of(legends);
+        this.legends = legends;
     }
 
     @Override
@@ -99,7 +99,7 @@ public class BarPlot extends Plot {
 
     @Override
     public Optional<Legend[]> legends() {
-        return legends;
+        return Optional.of(legends);
     }
 
     @Override

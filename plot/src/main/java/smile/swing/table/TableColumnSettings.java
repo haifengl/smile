@@ -37,7 +37,7 @@ public class TableColumnSettings implements TableColumnModelListener {
      * The id of table to save and restore column settings (width, order,
      * visible).
      */
-    private String id;
+    private final String id;
     /**
      * The table to apply.
      */
@@ -45,7 +45,7 @@ public class TableColumnSettings implements TableColumnModelListener {
     /**
      * Preferences store.
      */
-    private Preferences prefs = Preferences.userNodeForPackage(TableColumnSettings.class);
+    private final Preferences prefs = Preferences.userNodeForPackage(TableColumnSettings.class);
 
     /**
      * Constructor.
@@ -82,7 +82,7 @@ public class TableColumnSettings implements TableColumnModelListener {
         }
 
         // restore column order
-        TableColumn column[] = new TableColumn[columnModel.getColumnCount()];
+        TableColumn[] column = new TableColumn[columnModel.getColumnCount()];
 
         for (int i = 0; i < column.length; i++) {
             column[i] = columnModel.getColumn(i);

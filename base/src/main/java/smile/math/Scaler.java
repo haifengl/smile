@@ -35,17 +35,17 @@ public class Scaler implements Function {
     /**
      * The offset.
      */
-    private double scale;
+    private final double scale;
 
     /**
      * The scaling factor.
      */
-    private double offset;
+    private final double offset;
 
     /**
      * If true, clip the value in [0, 1].
      */
-    private boolean clip;
+    private final boolean clip;
 
     /**
      * Constructor.

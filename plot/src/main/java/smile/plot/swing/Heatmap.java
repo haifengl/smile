@@ -41,7 +41,7 @@ public class Heatmap extends Plot {
     /**
      * The two-dimensional data matrix.
      */
-    private double[][] z;
+    private final double[][] z;
     /**
      * The labels for columns of data matrix.
      */
@@ -65,7 +65,7 @@ public class Heatmap extends Plot {
     /**
      * The color palette to represent values.
      */
-    private Color[] palette;
+    private final Color[] palette;
     /**
      * If show axis marks.
      */
