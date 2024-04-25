@@ -103,11 +103,14 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-release:11"
+    "-release:17"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
-    "-implicits"
+    "-project-version", "3.1.0",
+    "-project-logo", "web/images/smile.jpg",
+    "-project-footer", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+                         |Use is subject to license terms.""".stripMargin,
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",

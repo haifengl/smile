@@ -21,10 +21,10 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt json/doc
+sbt ++3.3.3 json/doc
 check_error "!!"
 
-sbt scala/doc
+sbt ++3.3.3 scala/doc
 check_error "!!"
 
 cd kotlin
