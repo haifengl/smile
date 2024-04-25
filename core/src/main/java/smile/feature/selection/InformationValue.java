@@ -226,8 +226,8 @@ public class InformationValue implements Comparable<InformationValue> {
             double[] breaks = null;
 
             StructField field = schema.field(i);
-            if (field.measure instanceof NominalScale) {
-                int k = ((NominalScale) field.measure).size();
+            if (field.measure instanceof NominalScale scale) {
+                int k = scale.size();
                 events = new int[k];
                 nonevents = new int[k];
 

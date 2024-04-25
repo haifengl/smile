@@ -286,8 +286,7 @@ public class PlotPanel extends JPanel {
 
                     String firstid = null;
                     for (Shape shape : canvas.shapes) {
-                        if (shape instanceof Plot) {
-                            Plot plot = (Plot) shape;
+                        if (shape instanceof Plot plot) {
                             Optional<String> s = plot.tooltip(sc);
                             if (s.isPresent()) {
                                 if (tooltip == null) {
@@ -465,9 +464,9 @@ public class PlotPanel extends JPanel {
                 boolean inScrollPane = false;
                 Container parent = getParent();
                 while (parent != null) {
-                    if (parent instanceof JScrollPane) {
+                    if (parent instanceof JScrollPane pane) {
                         inScrollPane = true;
-                        scrollPane = (JScrollPane) parent;
+                        scrollPane = pane;
                         break;
                     }
 
@@ -932,8 +931,8 @@ public class PlotPanel extends JPanel {
         graphics.projection.reset();
         canvas.resetAxis();
 
-        if (graphics.projection instanceof Projection3D) {
-            ((Projection3D) graphics.projection).setDefaultView();
+        if (graphics.projection instanceof Projection3D p3d) {
+            p3d.setDefaultView();
         }
 
         contentPane.repaint();

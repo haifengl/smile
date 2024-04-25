@@ -93,9 +93,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                 
                 StringBuilder builder = new StringBuilder();
 
-                if (value instanceof byte[]) {
-                    byte[] data = (byte[]) value;
-
+                if (value instanceof byte[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
@@ -104,9 +102,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                         builder.append(", ").append(data[i]);
                     }
                     builder.append("]");
-                } else if (value instanceof short[]) {
-                    short[] data = (short[]) value;
-
+                } else if (value instanceof short[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }

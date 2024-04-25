@@ -52,8 +52,8 @@ public class SimpleImputer implements Transform {
     /** Return true if x is null or NaN. */
     static boolean isMissing(Object x) {
         if (x == null) return true;
-        if (x instanceof Number) {
-            return Double.isNaN(((Number) x).doubleValue());
+        if (x instanceof Number n) {
+            return Double.isNaN(n.doubleValue());
         }
         return false;
     }

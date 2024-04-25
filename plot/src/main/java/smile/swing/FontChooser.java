@@ -607,8 +607,13 @@ public class FontChooser extends JComponent {
     }
 
     private JDialog createDialog(Component parent) {
-        Frame frame = parent instanceof Frame ? (Frame) parent
-                : (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
+        Frame frame;
+        if (parent instanceof Frame f) {
+            frame = f;
+        } else {
+            frame = (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
+        }
+
         JDialog dialog = new JDialog(frame, getMessage("SelectFont"), true);
 
         Action okAction = new DialogOKAction(dialog);

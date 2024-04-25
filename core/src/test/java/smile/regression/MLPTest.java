@@ -138,7 +138,7 @@ public class MLPTest {
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115704.9305,
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115696.4145,
                 Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 

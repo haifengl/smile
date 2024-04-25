@@ -115,8 +115,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         // Initialize clusters with KMeans/CLARANS.
         int[] y;
-        if (data instanceof double[][] && distance instanceof EuclideanDistance) {
-            KMeans kmeans = KMeans.fit((double[][]) data, k);
+        if (data instanceof double[][] matrix && distance instanceof EuclideanDistance) {
+            KMeans kmeans = KMeans.fit(matrix, k);
             y = kmeans.y;
         } else {
             CLARANS<T> clarans = CLARANS.fit(data, distance, k);

@@ -150,8 +150,8 @@ public class ObjectType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof ObjectType) {
-            return clazz == ((ObjectType) o).getObjectClass();
+        if (o instanceof ObjectType t) {
+            return clazz == t.getObjectClass();
         }
 
         return false;

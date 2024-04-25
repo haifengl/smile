@@ -131,9 +131,9 @@ public class ButtonCellRenderer extends AbstractCellEditor implements TableCellR
             editButton.setText("");
             editButton.setIcon(null);
             editButton.setEnabled(true);
-        } else if (value instanceof Icon) {
+        } else if (value instanceof Icon icon) {
             editButton.setText("");
-            editButton.setIcon((Icon) value);
+            editButton.setIcon(icon);
             editButton.setEnabled(true);
         } else {
             editButton.setText(value.toString());

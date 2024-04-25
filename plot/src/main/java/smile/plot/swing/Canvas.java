@@ -465,8 +465,7 @@ public class Canvas {
 
             for (int i = 0; i < shapes.size(); i++) {
                 Shape s = shapes.get(i);
-                if (s instanceof Plot) {
-                    Plot p = (Plot) s;
+                if (s instanceof Plot p) {
                     if (p.legends().isPresent()) {
                         for (Legend legend : p.legends().get()) {
                             g2d.setColor(legend.color);

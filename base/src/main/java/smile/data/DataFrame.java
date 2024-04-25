@@ -481,8 +481,8 @@ public interface DataFrame extends Iterable<Tuple> {
         Object o = get(i, j);
         if (o == null) return "null";
 
-        if (o instanceof String) {
-            return (String) o;
+        if (o instanceof String s) {
+            return s;
         } else {
             return schema().field(j).toString(o);
         }
@@ -605,7 +605,11 @@ public interface DataFrame extends Iterable<Tuple> {
     default String getScale(int i, int j) {
         int x = getInt(i, j);
         Measure measure = schema().field(j).measure;
-        return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
+        if (measure instanceof CategoricalMeasure cat) {
+            return cat.toString(x);
+        } else {
+            return String.valueOf(x);
+        }
     }
 
     /**
@@ -1107,8 +1111,7 @@ public interface DataFrame extends Iterable<Tuple> {
             StructField field = schema.field(j);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
@@ -1140,8 +1143,7 @@ public interface DataFrame extends Iterable<Tuple> {
             StructField field = schema.field(col);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
@@ -1201,8 +1203,7 @@ public interface DataFrame extends Iterable<Tuple> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
@@ -1243,8 +1244,7 @@ public interface DataFrame extends Iterable<Tuple> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));

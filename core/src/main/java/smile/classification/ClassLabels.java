@@ -135,8 +135,7 @@ public class ClassLabels implements Serializable {
         int[] y = response.toIntArray();
 
         Measure measure = response.measure();
-        if (measure instanceof NominalScale) {
-            NominalScale scale = (NominalScale) measure;
+        if (measure instanceof NominalScale scale) {
             int k = scale.size();
             int[] labels = IntStream.range(0, k).toArray();
             IntSet encoder = new IntSet(labels);
