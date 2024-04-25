@@ -17,6 +17,7 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -27,6 +28,7 @@ import java.io.Serializable;
  * @author Haifeng Li
  */
 public class SupportVector<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

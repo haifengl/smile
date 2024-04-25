@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * The accuracy is the proportion of true results (both true positives and
  * true negatives) in the population.
@@ -24,6 +26,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class Accuracy implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Accuracy instance = new Accuracy();

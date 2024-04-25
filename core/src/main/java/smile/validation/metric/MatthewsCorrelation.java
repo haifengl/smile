@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * Matthews correlation coefficient. The MCC is in essence a correlation
  * coefficient between the observed and predicted binary classifications.
@@ -28,6 +30,7 @@ package smile.validation.metric;
  * @author digital-thinking
  */
 public class MatthewsCorrelation implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MatthewsCorrelation instance = new MatthewsCorrelation();

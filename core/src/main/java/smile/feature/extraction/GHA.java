@@ -23,6 +23,8 @@ import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
 
+import java.io.Serial;
+
 /**
  * Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
  * network model for unsupervised learning with applications primarily in
@@ -58,6 +60,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class GHA extends Projection {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

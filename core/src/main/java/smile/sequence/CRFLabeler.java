@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
@@ -30,6 +31,7 @@ import smile.data.Tuple;
  * @author Haifeng Li
  */
 public class CRFLabeler<T> implements SequenceLabeler<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The CRF model. */

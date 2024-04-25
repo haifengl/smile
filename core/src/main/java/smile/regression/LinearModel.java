@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -56,6 +57,7 @@ import smile.stat.Hypothesis;
  * @author Haifeng Li
  */
 public class LinearModel implements DataFrameRegression {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 

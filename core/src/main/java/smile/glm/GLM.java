@@ -17,6 +17,7 @@
 
 package smile.glm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -72,6 +73,7 @@ import smile.validation.ModelSelection;
  * @author Haifeng Li
  */
 public class GLM implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GLM.class);
 

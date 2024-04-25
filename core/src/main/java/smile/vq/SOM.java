@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -86,6 +87,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class SOM implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

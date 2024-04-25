@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import smile.math.MathEx;
@@ -29,6 +30,7 @@ import smile.math.MathEx;
  * @author Haifeng
  */
 public class ClassificationValidations<M> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The multiple round validations. */

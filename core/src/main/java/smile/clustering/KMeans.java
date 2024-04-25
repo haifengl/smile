@@ -19,6 +19,8 @@ package smile.clustering;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * K-Means clustering. The algorithm partitions n observations into k clusters
  * in which each observation belongs to the cluster with the nearest mean.
@@ -75,6 +77,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class KMeans extends CentroidClustering<double[], double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KMeans.class);
 

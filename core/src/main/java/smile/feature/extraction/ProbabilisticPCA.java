@@ -22,6 +22,8 @@ import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
+import java.io.Serial;
+
 /**
  * Probabilistic principal component analysis. Probabilistic PCA is
  * a simplified factor analysis that employs a latent variable model
@@ -47,6 +49,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class ProbabilisticPCA extends Projection {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

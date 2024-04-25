@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,6 +55,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class LaplacianEigenmap implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

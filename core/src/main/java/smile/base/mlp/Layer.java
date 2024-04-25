@@ -18,6 +18,7 @@
 package smile.base.mlp;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,7 @@ import smile.util.Regex;
  * @author Haifeng Li
  */
 public abstract class Layer implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * The number of neurons in this layer

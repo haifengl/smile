@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.util.*;
 import smile.sort.HeapSelect;
 import smile.vq.hebb.Edge;
@@ -50,6 +51,7 @@ import smile.vq.hebb.Neuron;
  * @author Haifeng Li
  */
 public class GrowingNeuralGas implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

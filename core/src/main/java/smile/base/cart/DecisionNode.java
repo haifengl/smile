@@ -21,6 +21,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
+import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public class DecisionNode extends LeafNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The predicted output. */

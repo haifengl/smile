@@ -19,12 +19,15 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Root mean squared error.
  * 
  * @author Haifeng Li
  */
 public class RMSE implements RegressionMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static RMSE instance = new RMSE();

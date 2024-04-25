@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.base.rbf.RBF;
 import smile.math.matrix.Matrix;
@@ -76,6 +77,7 @@ import smile.math.rbf.RadialBasisFunction;
  * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Regression<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.ToIntFunction;
@@ -40,6 +41,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class HMM implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

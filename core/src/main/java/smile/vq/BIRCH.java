@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +56,7 @@ import smile.util.IntPair;
  * @author Haifeng Li
  */
 public class BIRCH implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

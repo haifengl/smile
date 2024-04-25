@@ -18,6 +18,7 @@
 package smile.base.mlp;
 
 import java.io.IOException;
+import java.io.Serial;
 
 /**
  * An input layer in the neural network.
@@ -25,6 +26,7 @@ import java.io.IOException;
  * @author Haifeng Li
  */
 public class InputLayer extends Layer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

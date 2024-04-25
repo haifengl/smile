@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.util.*;
 import smile.sort.HeapSelect;
 import smile.vq.hebb.Neuron;
@@ -37,6 +38,7 @@ import smile.vq.hebb.Edge;
  * @author Haifeng Li
  */
 public class NeuralMap implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

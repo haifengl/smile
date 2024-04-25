@@ -22,6 +22,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public class NominalNode extends InternalNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

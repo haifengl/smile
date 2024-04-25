@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -90,6 +91,7 @@ import smile.math.distance.Distance;
  * @author Haifeng Li
  */
 public class DBSCAN<T> extends PartitionClustering {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

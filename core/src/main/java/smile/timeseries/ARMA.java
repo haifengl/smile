@@ -17,6 +17,7 @@
 
 package smile.timeseries;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
@@ -41,6 +42,7 @@ import smile.stat.Hypothesis;
  * @author Haifeng Li
  */
 public class ARMA implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

@@ -20,6 +20,7 @@ package smile.data;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -36,6 +37,7 @@ import smile.data.vector.Vector;
  * @author Haifeng Li
  */
 class DataFrameImpl implements DataFrame, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);
 

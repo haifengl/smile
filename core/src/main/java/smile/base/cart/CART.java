@@ -28,6 +28,7 @@ import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -40,6 +41,7 @@ import java.util.AbstractMap.SimpleEntry;
  * @author Haifeng Li
  */
 public abstract class CART implements SHAP<Tuple>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
 

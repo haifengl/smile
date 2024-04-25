@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
@@ -49,6 +50,7 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public abstract class CentroidClustering<T, U> extends PartitionClustering implements Comparable<CentroidClustering<T, U>> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

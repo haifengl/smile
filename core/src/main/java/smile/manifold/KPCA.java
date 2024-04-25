@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.Function;
@@ -62,6 +63,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class KPCA<T> implements Function<T, double[]>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
