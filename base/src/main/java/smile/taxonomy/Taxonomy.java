@@ -33,11 +33,11 @@ public class Taxonomy {
     /**
      * All the concepts in this taxonomy.
      */
-    HashMap<String, Concept> concepts = new HashMap<>();
+    final HashMap<String, Concept> concepts = new HashMap<>();
     /**
      * The root node in the taxonomy.
      */
-    Concept root;
+    final Concept root;
 
     /**
      * Constructor.

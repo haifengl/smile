@@ -364,7 +364,7 @@ public class CRF implements Serializable {
 
     static class PotentialLoss implements Loss {
         /** The response variable. */
-        double[] response;
+        final double[] response;
 
         PotentialLoss(double[] response) {
             this.response = response;

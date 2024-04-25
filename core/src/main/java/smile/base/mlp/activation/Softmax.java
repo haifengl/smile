@@ -28,7 +28,7 @@ import smile.math.MathEx;
  */
 public class Softmax implements ActivationFunction {
     /** Default instance. */
-    static Softmax instance = new Softmax();
+    static final Softmax instance = new Softmax();
 
     /**
      * Constructor.

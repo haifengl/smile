@@ -25,7 +25,7 @@ package smile.data.type;
 public class ByteType implements DataType {
 
     /** Singleton instance. */
-    static ByteType instance = new ByteType();
+    static final ByteType instance = new ByteType();
 
     /**
      * Private constructor for singleton design pattern.

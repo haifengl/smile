@@ -66,15 +66,15 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
         /**
          * The object key.
          */
-        K key;
+        final K key;
         /**
          * The data object.
          */
-        V value;
+        final V value;
         /**
          * The index of datum in the dataset.
          */
-        int index;
+        final int index;
         /**
          * The children nodes. The i-th child's distance to
          * the parent is i.

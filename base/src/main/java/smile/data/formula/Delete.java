@@ -30,7 +30,7 @@ import smile.data.type.StructType;
  */
 class Delete implements Term {
     /** The term to delete. */
-    Term x;
+    final Term x;
 
     /**
      * Constructor.

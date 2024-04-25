@@ -39,7 +39,7 @@ package smile.base.mlp.activation;
  */
 public class ReLU implements ActivationFunction {
     /** Default instance. */
-    static ReLU instance = new ReLU();
+    static final ReLU instance = new ReLU();
 
     /**
      * Constructor.

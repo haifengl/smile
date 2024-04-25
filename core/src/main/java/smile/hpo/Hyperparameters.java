@@ -71,8 +71,8 @@ public class Hyperparameters {
     private final HashMap<String, Object> parameters = new HashMap<>();
 
     static class Pair {
-        String name;
-        String value;
+        final String name;
+        final String value;
 
         Pair(String name, String value) {
             this.name = name;

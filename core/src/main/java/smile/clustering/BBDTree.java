@@ -63,15 +63,15 @@ public class BBDTree {
         /**
          * The center/mean of bounding box.
          */
-        double[] center;
+        final double[] center;
         /**
          * The half side-lengths of bounding box.
          */
-        double[] radius;
+        final double[] radius;
         /**
          * The sum of the data stored in this node.
          */
-        double[] sum;
+        final double[] sum;
         /**
          * The min cost for putting all data in this node in 1 cluster
          */

@@ -649,21 +649,21 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         /** The length of path. */
         int length;
         /** The unique feature index. */
-        int[] d;
+        final int[] d;
         /**
          * The fraction of zero paths (where this feature is not
          * in the non-zero index set S) that flow through this path.
          */
-        double[] z;
+        final double[] z;
         /**
          * The fraction of one path (where this feature is
          * in the non-zero index set S) that flow through this path.
          */
-        double[] o;
+        final double[] o;
         /**
          * The proportion of sets of a given cardinality that are present.
          */
-        double[] w;
+        final double[] w;
 
         /**
          * Constructor.

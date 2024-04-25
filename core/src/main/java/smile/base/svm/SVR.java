@@ -111,15 +111,15 @@ public class SVR<T> {
         /**
          * Lagrangian multipliers of support vector.
          */
-        double[] alpha = new double[2];
+        final double[] alpha = new double[2];
         /**
          * Gradient y - Ki * alpha.
          */
-        double[] g = new double[2];
+        final double[] g = new double[2];
         /**
          * Kernel value k(x, x)
          */
-        double k;
+        final double k;
 
         /**
          * Constructor.

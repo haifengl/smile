@@ -27,11 +27,11 @@ import java.util.Set;
  */
 public abstract class AbstractBiFunction implements Term {
     /** The name of function. */
-    String name;
+    final String name;
     /** The first parameter of function. */
-    Term x;
+    final Term x;
     /** The second parameter of function. */
-    Term y;
+    final Term y;
 
     /**
      * Constructor.

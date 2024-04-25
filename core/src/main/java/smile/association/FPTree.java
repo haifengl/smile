@@ -157,7 +157,7 @@ public class FPTree {
         /**
          * The item identifier.
          */
-        int id;
+        final int id;
         /**
          * The support (frequency) of single item.
          */
@@ -201,7 +201,7 @@ public class FPTree {
     /**
      * The support of single items.
      */
-    int[] itemSupport;
+    final int[] itemSupport;
     /**
      * Header table.
      */

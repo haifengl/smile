@@ -29,7 +29,7 @@ public class FloatType implements DataType {
     private static final DecimalFormat format = new DecimalFormat("#.####");
 
     /** Singleton instance. */
-    static FloatType instance = new FloatType();
+    static final FloatType instance = new FloatType();
 
     /**
      * Private constructor for singleton design pattern.

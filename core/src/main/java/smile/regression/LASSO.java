@@ -388,23 +388,23 @@ public class LASSO {
      */
     static class PCG extends IMatrix implements IMatrix.Preconditioner {
         /** The design matrix. */
-        Matrix A;
+        final Matrix A;
         /** A' * A */
         Matrix AtA;
         /** The number of columns of A. */
-        int p;
+        final int p;
         /** The right bottom of Hessian matrix. */
-        double[] d1;
+        final double[] d1;
         /** The last row/column of Hessian matrix. */
-        double[] d2;
+        final double[] d2;
         /** The vector used in preconditioner. */
-        double[] prb;
+        final double[] prb;
         /** The vector used in preconditioner. */
-        double[] prs;
+        final double[] prs;
         /** A * x */
-        double[] ax;
+        final double[] ax;
         /** A' * A * x. */
-        double[] atax;
+        final double[] atax;
 
         /**
          * Constructor.

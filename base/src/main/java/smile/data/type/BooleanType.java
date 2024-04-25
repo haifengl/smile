@@ -25,7 +25,7 @@ package smile.data.type;
 public class BooleanType implements DataType {
 
     /** Singleton instance. */
-    static BooleanType instance = new BooleanType();
+    static final BooleanType instance = new BooleanType();
 
     /**
      * Private constructor for singleton design pattern.

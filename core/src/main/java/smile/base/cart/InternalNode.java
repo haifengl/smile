@@ -33,7 +33,7 @@ import smile.math.MathEx;
  */
 public abstract class InternalNode implements Node {
     /** The number of samples in the node. */
-    int size;
+    final int size;
 
     /**
      * Children node.
@@ -48,17 +48,17 @@ public abstract class InternalNode implements Node {
     /**
      * The split feature for this node.
      */
-    int feature;
+    final int feature;
 
     /**
      * Reduction in impurity compared to parent.
      */
-    double score;
+    final double score;
 
     /**
      * The deviance of node.
      */
-    double deviance;
+    final double deviance;
 
     /**
      * Constructor.

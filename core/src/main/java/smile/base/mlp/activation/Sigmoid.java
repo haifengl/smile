@@ -30,7 +30,7 @@ import smile.math.MathEx;
  */
 public class Sigmoid implements ActivationFunction {
     /** Default instance. */
-    static Sigmoid instance = new Sigmoid();
+    static final Sigmoid instance = new Sigmoid();
 
     /**
      * Constructor.

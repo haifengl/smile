@@ -26,7 +26,7 @@ import smile.data.Tuple;
  */
 public abstract class LeafNode implements Node {
     /** The number of samples in the node. */
-    protected int size;
+    protected final int size;
 
     /**
      * Constructor.

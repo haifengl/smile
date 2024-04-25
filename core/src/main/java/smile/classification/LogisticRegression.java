@@ -81,22 +81,22 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     /**
      * The dimension of input space.
      */
-    int p;
+    final int p;
 
     /**
      * The number of classes.
      */
-    int k;
+    final int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    double L;
+    final double L;
 
     /**
      * Regularization factor.
      */
-    double lambda;
+    final double lambda;
 
     /**
      * learning rate for stochastic gradient descent.
@@ -497,31 +497,31 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         /**
          * Training instances.
          */
-        double[][] x;
+        final double[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
 
         /**
          * Constructor.
@@ -606,39 +606,39 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         /**
          * Training instances.
          */
-        double[][] x;
+        final double[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The number of classes.
          */
-        int k;
+        final int k;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
         /**
          * The workspace to store posteriori probability for each data partition.
          */
-        double[][] posterioris;
+        final double[][] posterioris;
 
         /**
          * Constructor.

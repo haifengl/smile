@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 public class DecimalType implements DataType {
 
     /** Singleton instance. */
-    static DecimalType instance = new DecimalType();
+    static final DecimalType instance = new DecimalType();
 
     /**
      * Private constructor for singleton design pattern.

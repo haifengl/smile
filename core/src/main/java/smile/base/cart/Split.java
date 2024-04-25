@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 public abstract class Split {
     /** The comparator on the split score. */
-    public static Comparator<Split> comparator = Comparator.comparingDouble(x -> x.score);
+    public static final Comparator<Split> comparator = Comparator.comparingDouble(x -> x.score);
 
     /** The node associated with this split. */
     final LeafNode leaf;
