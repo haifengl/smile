@@ -146,10 +146,8 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         int splitFalseCount = 0;
 
         Measure measure = schema.field(j).measure;
-        if (measure instanceof NominalScale) {
+        if (measure instanceof NominalScale scale) {
             int splitValue = -1;
-
-            NominalScale scale = (NominalScale) measure;
             int m = scale.size();
             int[][] trueCount = new int[m][k];
 
@@ -440,8 +438,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
 
     /** Prunes a subtree. */
     private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, IntSet labels) {
-        if (node instanceof DecisionNode) {
-            DecisionNode leaf = (DecisionNode) node;
+        if (node instanceof DecisionNode leaf) {
             int y = leaf.output();
 
             int error = 0;

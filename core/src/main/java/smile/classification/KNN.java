@@ -130,8 +130,8 @@ public class KNN<T> extends AbstractClassifier<T> {
         }
 
         KNNSearch<T, T> knn;
-        if (distance instanceof Metric) {
-            knn = CoverTree.of(x, (Metric<T>) distance);
+        if (distance instanceof Metric<T> metric) {
+            knn = CoverTree.of(x, metric);
         } else {
             knn = LinearSearch.of(x, distance);
         }

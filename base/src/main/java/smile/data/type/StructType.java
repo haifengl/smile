@@ -255,8 +255,7 @@ public class StructType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof StructType) {
-            StructType t = (StructType) o;
+        if (o instanceof StructType t) {
             return Arrays.equals(fields, t.fields);
         }
 

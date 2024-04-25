@@ -352,8 +352,7 @@ public class Table extends JXTable {
             Component c = getParent();
 
             //  Keep scrolling of the row table in sync with the main table.
-            if (c instanceof JViewport) {
-                JViewport viewport = (JViewport) c;
+            if (c instanceof JViewport viewport) {
                 viewport.addChangeListener(this);
             }
         }
@@ -377,8 +376,7 @@ public class Table extends JXTable {
          */
         @Override
         public Object getValueAt(int row, int column) {
-            if (dataModel instanceof PageTableModel) {
-                PageTableModel model = (PageTableModel) dataModel;
+            if (dataModel instanceof PageTableModel model) {
                 return Integer.valueOf(model.getPage() * model.getPageSize() + row + 1);
             } else {
                 return Integer.valueOf(row + 1);

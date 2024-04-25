@@ -50,8 +50,7 @@ public class ItemSet {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof ItemSet) {
-            ItemSet a = (ItemSet) o;
+        if (o instanceof ItemSet a) {
             if (support != a.support) {
                 return false;
             }

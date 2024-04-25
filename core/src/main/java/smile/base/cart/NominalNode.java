@@ -80,8 +80,7 @@ public class NominalNode extends InternalNode {
         if (trueBranch) {
             values = field.toString(value);
         } else {
-            if (field.measure instanceof NominalScale) {
-                NominalScale scale = (NominalScale) field.measure;
+            if (field.measure instanceof NominalScale scale) {
                 values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(scale::level).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;

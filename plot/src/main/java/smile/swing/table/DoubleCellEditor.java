@@ -124,8 +124,8 @@ public class DoubleCellEditor extends DefaultCellEditor {
         Object o = ftf.getValue();
         if (o instanceof Double) {
             return o;
-        } else if (o instanceof Number) {
-            return ((Number) o).doubleValue();
+        } else if (o instanceof Number n) {
+            return n.doubleValue();
         } else {
             try {
                 return doubleFormat.parseObject(o.toString());

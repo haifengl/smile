@@ -487,8 +487,7 @@ public class BIRCH implements VectorQuantizer {
 
     /** Collects the centroids of leaf nodes in the subtree. */
     private void centroids(Node node, ArrayList<double[]> list) {
-        if (node instanceof Leaf) {
-            Leaf leaf = (Leaf) node;
+        if (node instanceof Leaf leaf) {
             for (int i = 0; i < leaf.k; i++)
             list.add(leaf.clusters[i].centroid());
         } else {

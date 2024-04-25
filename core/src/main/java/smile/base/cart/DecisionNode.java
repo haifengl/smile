@@ -157,8 +157,7 @@ public class DecisionNode extends LeafNode {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof DecisionNode) {
-            DecisionNode a = (DecisionNode) o;
+        if (o instanceof DecisionNode a) {
             return output == a.output;
         }
 

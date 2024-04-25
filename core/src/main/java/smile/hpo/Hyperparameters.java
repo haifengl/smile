@@ -286,23 +286,18 @@ public class Hyperparameters {
         return Stream.generate(() -> {
             Properties params = new Properties();
             parameters.forEach((name, values) -> {
-                if (values instanceof int[]) {
-                    int[] a = (int[]) values;
+                if (values instanceof int[] a) {
                     int v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
                     params.setProperty(name, String.valueOf(v));
-                } else if (values instanceof double[]) {
-                    double[] a = (double[]) values;
+                } else if (values instanceof double[] a) {
                     double v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
                     params.setProperty(name, String.valueOf(v));
-                } else if (values instanceof String[]) {
-                    String[] a = (String[]) values;
+                } else if (values instanceof String[] a) {
                     String v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
                     params.setProperty(name, v);
-                } else if (values instanceof IntRange) {
-                    IntRange range = (IntRange) values;
+                } else if (values instanceof IntRange range) {
                     params.setProperty(name, String.valueOf(MathEx.randomInt(range.start, range.end)));
-                } else if (values instanceof DoubleRange) {
-                    DoubleRange range = (DoubleRange) values;
+                } else if (values instanceof DoubleRange range) {
                     params.setProperty(name, String.valueOf(MathEx.random(range.start, range.end)));
                 } else {
                     throw new IllegalStateException("Unknown parameter type: " + values);
@@ -352,24 +347,24 @@ public class Hyperparameters {
         ArrayList<Pair> list = new ArrayList<>();
         String name = parameter.getKey();
         Object values = parameter.getValue();
-        if (values instanceof int[]) {
-            for (int value : (int[]) values) {
+        if (values instanceof int[] array) {
+            for (int value : array) {
                 list.add(new Pair(name, String.valueOf(value)));
             }
-        } else if (values instanceof double[]) {
-            for (double value : (double[]) values) {
+        } else if (values instanceof double[] array) {
+            for (double value : array) {
                 list.add(new Pair(name, String.valueOf(value)));
             }
-        } else if (values instanceof String[]) {
-            for (String value : (String[]) values) {
+        } else if (values instanceof String[] array) {
+            for (String value : array) {
                 list.add(new Pair(name, String.valueOf(value)));
             }
-        } else if (values instanceof IntRange) {
-            for (int value : ((IntRange) values).toArray()) {
+        } else if (values instanceof IntRange range) {
+            for (int value : range.toArray()) {
                 list.add(new Pair(name, String.valueOf(value)));
             }
-        } else if (values instanceof DoubleRange) {
-            for (double value : ((DoubleRange) values).toArray()) {
+        } else if (values instanceof DoubleRange range) {
+            for (double value : range.toArray()) {
                 list.add(new Pair(name, String.valueOf(value)));
             }
         } else {

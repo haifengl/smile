@@ -122,8 +122,7 @@ public class RegressionNode extends LeafNode {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof RegressionNode) {
-            RegressionNode a = (RegressionNode) o;
+        if (o instanceof RegressionNode a) {
             return MathEx.equals(output, a.output);
         }
 

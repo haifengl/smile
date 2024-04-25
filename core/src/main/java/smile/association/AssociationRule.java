@@ -133,8 +133,7 @@ public class AssociationRule {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof AssociationRule) {
-            AssociationRule a = (AssociationRule) o;
+        if (o instanceof AssociationRule a) {
             if (support != a.support) {
                 return false;
             }

@@ -93,9 +93,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
                 
                 StringBuilder builder = new StringBuilder();
 
-                if (value instanceof float[]) {
-                    float[] data = (float[]) value;
-
+                if (value instanceof float[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
@@ -105,9 +103,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
                     }
                     builder.append("]");
 
-                } else if (value instanceof double[]) {
-                    double[] data = (double[]) value;
-
+                } else if (value instanceof double[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
