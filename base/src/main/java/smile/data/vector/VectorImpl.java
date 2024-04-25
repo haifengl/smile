@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.vector;
 
 import java.time.Instant;
@@ -48,7 +47,7 @@ class VectorImpl<T> implements Vector<T> {
     /** Optional measure. */
     private final Measure measure;
     /** The vector data. */
-    private final T[] vector;
+    final T[] vector;
 
     /** Constructor. */
     public VectorImpl(String name, Class<?> clazz, T[] vector) {

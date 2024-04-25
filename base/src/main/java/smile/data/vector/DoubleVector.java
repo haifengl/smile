@@ -86,6 +86,12 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
         return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
+    /**
+     * Fills NaN/Inf values using the specified value.
+     * @param value the value to replace NAs.
+     */
+    void fillna(double value);
+
     /** Creates a named double vector.
      *
      * @param name the name of vector.
