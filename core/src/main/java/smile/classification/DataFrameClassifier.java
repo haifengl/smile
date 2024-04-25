@@ -42,7 +42,7 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
      */
     interface Trainer<M extends DataFrameClassifier>  {
         /**
-         * Fits a classification model with the default hyper-parameters.
+         * Fits a classification model with the default hyperparameters.
          * @param formula a symbolic description of the model to be fitted.
          * @param data the data frame of the explanatory and response variables.
          * @return the model
@@ -56,7 +56,7 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
          * Fits a classification model.
          * @param formula a symbolic description of the model to be fitted.
          * @param data the data frame of the explanatory and response variables.
-         * @param params the hyper-parameters.
+         * @param params the hyperparameters.
          * @return the model
          */
         M fit(Formula formula, DataFrame data, Properties params);
@@ -113,7 +113,7 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param trainer the training lambda.
      * @return the model.
      */

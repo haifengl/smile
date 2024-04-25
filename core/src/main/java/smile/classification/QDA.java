@@ -132,7 +132,7 @@ public class QDA extends AbstractClassifier<double[]> {
      * Fits quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static QDA fit(double[][] x, int[] y, Properties params) {

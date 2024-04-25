@@ -107,7 +107,7 @@ public class ImputeTransform {
      * rows preceding or following the current data object. For example,
      * the value [-5, 5] indicates that the window should include five objects
      * preceding and five objects following the current object.
-     *
+     * <p>
      * Default value [null, null] indicating that the window includes all objects.
      *
      * @param first the offset of the first object in the sliding window.
@@ -116,8 +116,8 @@ public class ImputeTransform {
      */
     public ImputeTransform frame(Integer first, Integer last) {
         spec.putArray("frame")
-                .add(first == null ? null : first.intValue())
-                .add(last == null ? null : last.intValue());
+                .add(first == null ? null : first)
+                .add(last == null ? null : last);
         return this;
     }
 

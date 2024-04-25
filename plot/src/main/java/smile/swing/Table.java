@@ -377,9 +377,9 @@ public class Table extends JXTable {
         @Override
         public Object getValueAt(int row, int column) {
             if (dataModel instanceof PageTableModel model) {
-                return Integer.valueOf(model.getPage() * model.getPageSize() + row + 1);
+                return model.getPage() * model.getPageSize() + row + 1;
             } else {
-                return Integer.valueOf(row + 1);
+                return row + 1;
             }
         }
 

@@ -93,12 +93,12 @@ public interface Hypothesis {
          * @return the test results.
          */
         static TTest test(double[] x, double[] y, String option) {
-            switch (option.toLowerCase(Locale.ROOT)) {
-                case "unequal.var": return TTest.test(x, y, false);
-                case "equal.var": return TTest.test(x, y, true);
-                case "paired": return TTest.testPaired(x, y);
-            }
-            return TTest.testPaired(x, y);
+            return switch (option.toLowerCase(Locale.ROOT)) {
+                case "unequal.var" -> TTest.test(x, y, false);
+                case "equal.var" -> TTest.test(x, y, true);
+                case "paired" -> TTest.testPaired(x, y);
+                default -> TTest.testPaired(x, y);
+            };
         }
 
         /**
@@ -187,12 +187,12 @@ public interface Hypothesis {
          * @return the test results.
          */
         static CorTest test(double[] x, double[] y, String method) {
-            switch (method.toLowerCase(Locale.ROOT)) {
-                case "pearson": return CorTest.pearson(x, y);
-                case "kendall": return CorTest.kendall(x, y);
-                case "spearman": return CorTest.spearman(x, y);
-                default: throw new IllegalArgumentException("Invalid correlation test method: " + method);
-            }
+            return switch (method.toLowerCase(Locale.ROOT)) {
+                case "pearson" -> CorTest.pearson(x, y);
+                case "kendall" -> CorTest.kendall(x, y);
+                case "spearman" -> CorTest.spearman(x, y);
+                default -> throw new IllegalArgumentException("Invalid correlation test method: " + method);
+            };
         }
     }
 

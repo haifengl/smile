@@ -1884,7 +1884,7 @@ public class BigMatrix extends IMatrix {
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with COMPACT error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
             }
 
@@ -1895,7 +1895,7 @@ public class BigMatrix extends IMatrix {
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
             }
 

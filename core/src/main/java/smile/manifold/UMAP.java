@@ -51,7 +51,7 @@ import smile.stat.distribution.GaussianDistribution;
  * <h2>References</h2>
  * <ol>
  * <li>McInnes, L, Healy, J, UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction, ArXiv e-prints 1802.03426, 2018</li>
- * <li>How UMAP Works: https://umap-learn.readthedocs.io/en/latest/how_umap_works.html</li>
+ * <li><a href="https://umap-learn.readthedocs.io/en/latest/how_umap_works.html">How UMAP Works</a></li>
  * </ol>
  *
  * @see TSNE

@@ -67,7 +67,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param sequences the training data.
      * @param labels the training sequence labels.
      * @param features the feature function.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param <T> the data type of observations.
      * @return the model.
      */

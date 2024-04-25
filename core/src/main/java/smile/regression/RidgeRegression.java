@@ -82,7 +82,7 @@ public class RidgeRegression {
     }
 
     /**
-     * Fits a ridge regression model. The hyper-parameters in <code>prop</code> include
+     * Fits a ridge regression model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -92,7 +92,7 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {

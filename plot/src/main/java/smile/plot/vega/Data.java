@@ -18,14 +18,13 @@ package smile.plot.vega;
 
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * The basic data model used by Vega-Lite is tabular data. Individual data sets
  * are assumed to contain a collection of records, which may contain any number
  * of named data fields.
- *
+ * <p>
  * A dataset may be either inline data (values) or a URL from which to load the
  * data (url). Or we can create an empty, named data source (name), which can
  * be bound at runtime or populated from top-level datasets.

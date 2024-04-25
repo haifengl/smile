@@ -22,16 +22,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * To test a data point in a filter transform or a test property in conditional
  * encoding, a predicate definition of the following forms must be specified:
- *
+ * <p>
  * - a Vega expression string, where datum can be used to refer to the current
  *   data object. For example, datum.b2 > 60 would test if the value in the
  *   field b2 for each data point is over 60.
- *
+ * <p>
  * - one of the field predicates: equal, lt, lte, gt, gte, range, oneOf, or valid.
- *
+ * <p>
  * - a parameter predicate, which defines the names of a selection that the data
  *   point should belong to (or a logical composition of selections).
- *
+ * <p>
  * - a logical composition of (1), (2), or (3).
  *
  * @author Haifeng Li
@@ -80,7 +80,7 @@ public class Predicate {
 
     /**
      * Sets the time unit for a temporal field. Vega-Lite supports the following time units:
-     *
+     * <p>
      * "year" - Gregorian calendar years.
      * "quarter" - Three-month intervals, starting in one of January, April, July, and October.
      * "month" - Calendar months (January, February, etc.).

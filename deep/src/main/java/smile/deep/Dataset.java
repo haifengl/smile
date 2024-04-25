@@ -19,7 +19,6 @@ package smile.deep;
 import org.bytedeco.pytorch.*;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.data.vector.BaseVector;
 
 /**
  * A dataset consists of data and an associated target (label)

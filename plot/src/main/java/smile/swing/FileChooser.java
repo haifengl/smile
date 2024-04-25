@@ -73,7 +73,7 @@ public class FileChooser extends JFileChooser {
         return chooser;
     }
     
-    class FilePreview extends JComponent implements PropertyChangeListener {
+    static class FilePreview extends JComponent implements PropertyChangeListener {
         /**
          * The image of selected file.
          */
@@ -292,7 +292,7 @@ public class FileChooser extends JFileChooser {
 
         /**
          * Creates a file filter that accepts the given file type.
-         *
+         * <p>
          * Note that the "." before the extension is not needed. If
          * provided, it will be ignored.
          */
@@ -308,7 +308,7 @@ public class FileChooser extends JFileChooser {
 
         /**
          * Creates a file filter from the given string array and description.
-         *
+         * <p>
          * Note that the "." before the extension is not needed and will be ignored.
          */
         public SimpleFileFilter(String description, String... filters) {
@@ -316,15 +316,15 @@ public class FileChooser extends JFileChooser {
                 setDescription(description);
             }
 
-            for (int i = 0; i < filters.length; i++) {
+            for (String filter : filters) {
                 // add filters one by one
-                addExtension(filters[i]);
+                addExtension(filter);
             }
         }
 
         /**
          * Creates a file filter from the given string array and description.
-         *
+         * <p>
          * Note that the "." before the extension is not needed and will be ignored.
          */
         public SimpleFileFilter(String description, Collection<String> filters) {

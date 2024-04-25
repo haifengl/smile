@@ -33,7 +33,6 @@ import java.util.ArrayList;
  * <h2>References</h2>
  * <ol>
  * <li> Paice, Another stemmer, SIGIR Forum, 24(3), 56-61, 1990. </li>
- * <li> http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm </li>
  * </ol>
  *
  * @author Haifeng Li
@@ -330,16 +329,10 @@ public class LancasterStemmer implements Stemmer {
             case 'u':
                 return true;
             case 'y': {
-                switch (prev) {
-                    case 'a':
-                    case 'e':
-                    case 'i':
-                    case 'o':
-                    case 'u':
-                        return false;
-                    default:
-                        return true;
-                }
+                return switch (prev) {
+                    case 'a', 'e', 'i', 'o', 'u' -> false;
+                    default -> true;
+                };
             }
             default:
                 return false;

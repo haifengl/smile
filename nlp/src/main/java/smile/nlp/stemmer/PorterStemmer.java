@@ -33,7 +33,7 @@ package smile.nlp.stemmer;
  * <p>
  * Note that this class is NOT multi-thread safe.
  * <p>
- * The code is based on http://www.tartarus.org/~martin/PorterStemmer
+ * The code is based on the <a href="http://www.tartarus.org/~martin/PorterStemmer">C code</a>.
  *
  * <h2>References</h2>
  * <ol>
@@ -67,18 +67,11 @@ public class PorterStemmer implements Stemmer {
      * Returns true if b[i] is a consonant.
      */
     private boolean isConsonant(int i) {
-        switch (b[i]) {
-            case 'a':
-            case 'e':
-            case 'i':
-            case 'o':
-            case 'u':
-                return false;
-            case 'y':
-                return i == 0 || !isConsonant(i - 1);
-            default:
-                return true;
-        }
+        return switch (b[i]) {
+            case 'a', 'e', 'i', 'o', 'u' -> false;
+            case 'y' -> i == 0 || !isConsonant(i - 1);
+            default -> true;
+        };
     }
 
     /**
@@ -219,23 +212,23 @@ public class PorterStemmer implements Stemmer {
     /**
      * step1() gets rid of plurals and -ed or -ing. e.g. If the argument y is true,
      * do the special handling of ending ies and ied.
-     *
+     * <p>
      * caresses  ->  caress
      * ponies    ->  poni
      * ties      ->  ti
      * caress    ->  caress
      * cats      ->  cat
-     *
+     * <p>
      * feed      ->  feed
      * agreed    ->  agree
      * disabled  ->  disable
-     *
+     * <p>
      * matting   ->  mat
      * mating    ->  mate
      * meeting   ->  meet
      * milling   ->  mill
      * messing   ->  mess
-     *
+     * <p>
      * meetings  ->  meet
      */
     private void step1(boolean y) {

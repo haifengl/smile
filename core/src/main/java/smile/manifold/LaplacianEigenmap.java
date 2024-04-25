@@ -19,7 +19,6 @@ package smile.manifold;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;

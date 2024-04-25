@@ -646,7 +646,7 @@ public class Arrow {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
             }
-        } else if (fieldVector instanceof TimeSecVector vector) {;
+        } else if (fieldVector instanceof TimeSecVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
             }
@@ -1267,11 +1267,11 @@ public class Arrow {
 
             case FloatingPoint:
                 FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
-                switch (precision) {
-                    case DOUBLE: return new StructField(name, nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType);
-                    case SINGLE: return new StructField(name, nullable ? DataTypes.FloatObjectType : DataTypes.FloatType);
-                    case HALF: throw new UnsupportedOperationException("Unsupported float precision: " + precision);
-                }
+                return switch (precision) {
+                    case DOUBLE -> new StructField(name, nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType);
+                    case SINGLE -> new StructField(name, nullable ? DataTypes.FloatObjectType : DataTypes.FloatType);
+                    case HALF -> throw new UnsupportedOperationException("Unsupported float precision: " + precision);
+                };
 
             case Bool:
                 return new StructField(name, nullable ? DataTypes.BooleanObjectType : DataTypes.BooleanType);

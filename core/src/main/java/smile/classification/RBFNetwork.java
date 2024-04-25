@@ -200,7 +200,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
      * Fits an RBF network.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {

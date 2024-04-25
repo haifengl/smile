@@ -140,7 +140,7 @@ public class LDA extends AbstractClassifier<double[]> {
      * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LDA fit(double[][] x, int[] y, Properties params) {

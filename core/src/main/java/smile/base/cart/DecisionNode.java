@@ -62,8 +62,8 @@ public class DecisionNode extends LeafNode {
     }
 
     /**
-     * Returns the number of node samples in each class.
-     * @return the number of node samples in each class.
+     * Returns the sample size in each class.
+     * @return the sample size in each class.
      */
     public int[] count() {
         return count;
@@ -84,7 +84,7 @@ public class DecisionNode extends LeafNode {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(" ".repeat(depth));
         line.append(id).append(") ");
 
         // split

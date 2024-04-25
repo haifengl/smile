@@ -113,7 +113,8 @@ public class FontChooser extends JComponent {
         String value = key;
         try {
             value = messageCatalog.getString(key);
-        } catch (MissingResourceException e) {
+        } catch (MissingResourceException ex) {
+            logger.debug("Failed to get message resource: ", ex);
         }
         return value;
     }
@@ -473,7 +474,7 @@ public class FontChooser extends JComponent {
         }
     }
 
-    class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
+    static class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
 
         private final JList<String> targetList;
 
@@ -505,7 +506,7 @@ public class FontChooser extends JComponent {
         }
     }
 
-    class ListSearchTextFieldDocumentHandler implements DocumentListener {
+    static class ListSearchTextFieldDocumentHandler implements DocumentListener {
 
         final JList<String> targetList;
 

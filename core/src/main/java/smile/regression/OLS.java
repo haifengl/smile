@@ -86,7 +86,7 @@ public class OLS {
     }
 
     /**
-     * Fits an ordinary least squares model. The hyper-parameters in <code>prop</code> include
+     * Fits an ordinary least squares model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.ols.method</code> (default "svd") is a string (svd or qr) for the fitting method
      * <li><code>smile.ols.standard.error</code> (default true) is a boolean. If true, compute the estimated standard
@@ -96,7 +96,7 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {

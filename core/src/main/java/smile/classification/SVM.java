@@ -25,7 +25,6 @@ import smile.base.svm.LASVM;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.SparseArray;
-import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.*;
 
 /**
@@ -147,7 +146,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<double[]> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<double[]>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
@@ -185,7 +184,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<int[]> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<int[]>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
@@ -223,7 +222,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<SparseArray> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<SparseArray>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
@@ -268,7 +267,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * Fits a binary or multiclass SVM.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Classifier<double[]> fit(double[][] x, int[] y, Properties params) {

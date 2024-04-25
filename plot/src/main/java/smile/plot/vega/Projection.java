@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * The geographic projection, which will be applied to shape path for
  * "geoshape" marks and to latitude and "longitude" channels for other
  * marks.
- *
+ * <p>
  * A cartographic projection maps longitude and latitude pairs to x, y
  * coordinates. As with Vega, one can use projections in Vega-Lite to
  * lay out both geographic points (such as locations on a map) represented
@@ -103,7 +103,7 @@ public class Projection {
      * For conic projections, sets the two standard parallels that define the map layout.
      * @param parallels two standard parallels.
      * @return this object.
-     * @link https://en.wikipedia.org/wiki/Map_projection#Conic
+     * @link <a href="https://en.wikipedia.org/wiki/Map_projection#Conic">Conic</a>
      */
     public Projection parallels(double... parallels) {
         ArrayNode node = spec.putArray("parallels");

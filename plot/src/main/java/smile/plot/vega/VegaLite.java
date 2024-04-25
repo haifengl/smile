@@ -196,7 +196,7 @@ public class VegaLite {
      *                 setting includes the padding within the view size
      *                 calculations, such that the width and height settings
      *                 indicate the total intended size of the view.
-     * @link https://vega.github.io/vega-lite/docs/size.html#autosize
+     * @link <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
      */
     public VegaLite autosize(String type, boolean resize, String contains) {
         ObjectNode autosize = spec.putObject("autosize");
@@ -278,7 +278,7 @@ public class VegaLite {
         try {
             Path path = Files.createTempFile("smile-plot-", ".html");
             path.toFile().deleteOnExit();
-            Files.write(path, html().getBytes(StandardCharsets.UTF_8));
+            Files.writeString(path, html());
             Desktop.getDesktop().browse(path.toUri());
         } catch (Exception ex) {
             if (silent) {

@@ -408,9 +408,9 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
     /**
-     * Sets MLP hyper-parameters such as learning rate, weight decay, momentum,
+     * Sets MLP hyperparameters such as learning rate, weight decay, momentum,
      * RMSProp, etc.
-     * @param params the MLP hyper-parameters.
+     * @param params the MLP hyperparameters.
      */
     public void setParameters(Properties params) {
         String learningRate = params.getProperty("smile.mlp.learning_rate");

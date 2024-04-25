@@ -29,8 +29,6 @@ import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -43,7 +41,7 @@ import javax.swing.text.DefaultFormatterFactory;
  */
 @SuppressWarnings("serial")
 public class DoubleArrayCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(DoubleArrayCellEditor.class.getName());
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleArrayCellEditor.class);
 
     final JFormattedTextField textField;
 
@@ -79,7 +77,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
 
                 double[] data = new double[items.length];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = Double.valueOf(items[i].trim());
+                    data[i] = Double.parseDouble(items[i].trim());
                 }
 
                 return data;
@@ -141,6 +139,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
                         textField.commitEdit();     //so use it.
                         textField.postActionEvent(); //stop editing
                     } catch (java.text.ParseException ex) {
+                        logger.debug("Failed to commit edit: ", ex);
                     }
                 }
             }
@@ -160,7 +159,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
         if (o instanceof double[]) {
             return o;
         } else {
-            LOGGER.log(Level.FINE, "getCellEditorValue: can't parse o{0}", o);
+            logger.debug("getCellEditorValue: can't parse o{}", o);
             return null;
         }
     }
@@ -177,6 +176,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
             try {
                 ftf.commitEdit();
             } catch (java.text.ParseException ex) {
+                logger.debug("Failed to commit edit: ", ex);
             }
 
         } else { //text is invalid

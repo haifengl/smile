@@ -242,7 +242,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Properties params) {

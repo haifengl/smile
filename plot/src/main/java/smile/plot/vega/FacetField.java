@@ -52,13 +52,13 @@ public class FacetField {
      * @param type The encoded field's type of measurement ("quantitative",
      *             "temporal", "ordinal", or "nominal"). It can also be a
      *             "geojson" type for encoding ‘geoshape'.
-     *
+     * <p>
      *             Data type describes the semantics of the data rather than
      *             the primitive data types (number, string, etc.). The same
      *             primitive data type can have different types of
      *             measurement. For example, numeric data can represent
      *             quantitative, ordinal, or nominal data.
-     *
+     * <p>
      *             Data values for a temporal field can be either a
      *             date-time string (e.g., "2015-03-07 12:32:17",
      *             "17:01", "2015-03-16", "2015") or a timestamp
@@ -94,7 +94,7 @@ public class FacetField {
 
     /**
      * Sets the time unit for a temporal field. Vega-Lite supports the following time units:
-     *
+     * <p>
      * "year" - Gregorian calendar years.
      * "quarter" - Three-month intervals, starting in one of January, April, July, and October.
      * "month" - Calendar months (January, February, etc.).
@@ -132,10 +132,10 @@ public class FacetField {
      * Sets the alignment to apply to row/column facet's subplot.
      * For "none", a flow layout will be used, in which adjacent subviews
      * are simply placed one after the other.
-     *
+     * <p>
      * For "each", subviews will be aligned into a clean grid structure,
      * but each row or column may be of variable size.
-     *
+     * <p>
      * For "all", subviews will be aligned and each row or column will be
      * sized identically based on the maximum observed size. String values
      * for this property will be applied to both grid rows and columns.

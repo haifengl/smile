@@ -317,10 +317,10 @@ public class Base {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder(String.format("Base[%d]{", dimension));
-        for (int i = 0; i < baseCoords.length; i++) {
+        for (var baseCoord : baseCoords) {
             s.append("[");
-            for (int j = 0; j < baseCoords[i].length; j++) {
-                s.append(baseCoords[i][j]).append(',');
+            for (int j = 0; j < baseCoord.length; j++) {
+                s.append(baseCoord[j]).append(',');
             }
             s.setCharAt(s.length() - 1, ']');
         }

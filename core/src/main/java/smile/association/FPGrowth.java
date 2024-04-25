@@ -92,7 +92,7 @@ public class FPGrowth implements Iterable<ItemSet> {
 
     @Override
     public Iterator<ItemSet> iterator() {
-        return new Iterator<ItemSet>() {
+        return new Iterator<>() {
             final int[] prefixItemset = new int[T0.maxItemSetSize];
             final int[] localItemSupport = new int[T0.numItems];
             int i = T0.headerTable.length;

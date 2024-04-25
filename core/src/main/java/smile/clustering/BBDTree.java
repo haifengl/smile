@@ -345,11 +345,11 @@ public class BBDTree {
     /**
      * Determines whether every point in the box is closer to centroids[bestIndex] than to
      * centroids[testIndex].
-     *
+     * <p>
      * If x is a point, c_0 = centroids[bestIndex], c = centroids[testIndex], then:
      *       (x-c).(x-c) < (x-c_0).(x-c_0)
      *   <=> (c-c_0).(c-c_0) < 2(x-c_0).(c-c_0)
-     *
+     * <p>
      * The right-hand side is maximized for a vertex of the box where for each
      * dimension, we choose the low or high value based on the sign of x-c_0 in
      * that dimension.

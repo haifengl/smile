@@ -113,7 +113,7 @@ class TotalSupportTree implements Iterable<ItemSet> {
 
     @Override
     public Iterator<ItemSet> iterator() {
-        return new Iterator<ItemSet>() {
+        return new Iterator<>() {
             int i = 0;
 
             @Override

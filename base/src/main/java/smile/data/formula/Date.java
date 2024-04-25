@@ -127,45 +127,44 @@ public class Date implements Term {
                         case Date:
                         {
                             LocalDate date = (LocalDate) x;
-                            switch (feature) {
-                                case YEAR: return date.getYear();
-                                case MONTH: return date.getMonthValue();
-                                case WEEK_OF_YEAR: return date.get(weekFields.weekOfYear());
-                                case WEEK_OF_MONTH: return date.get(weekFields.weekOfMonth());
-                                case QUARTER: return date.get(IsoFields.QUARTER_OF_YEAR);
-                                case DAY_OF_YEAR: return date.getDayOfYear();
-                                case DAY_OF_MONTH: return date.getDayOfMonth();
-                                case DAY_OF_WEEK: return date.getDayOfWeek().getValue();
-                                default: throw new IllegalStateException("Extract time features from a date.");
-                            }
+                            return switch (feature) {
+                                case YEAR -> date.getYear();
+                                case MONTH -> date.getMonthValue();
+                                case WEEK_OF_YEAR -> date.get(weekFields.weekOfYear());
+                                case WEEK_OF_MONTH -> date.get(weekFields.weekOfMonth());
+                                case QUARTER -> date.get(IsoFields.QUARTER_OF_YEAR);
+                                case DAY_OF_YEAR -> date.getDayOfYear();
+                                case DAY_OF_MONTH -> date.getDayOfMonth();
+                                case DAY_OF_WEEK -> date.getDayOfWeek().getValue();
+                                default -> throw new IllegalStateException("Extract time features from a date.");
+                            };
                         }
                         case Time:
                         {
                             LocalTime time = (LocalTime) x;
-                            switch (feature) {
-                                case HOUR: return time.getHour();
-                                case MINUTE: return time.getMinute();
-                                case SECOND: return time.getSecond();
-                                default: throw new IllegalStateException("Extract date features from a time.");
-                            }
+                            return switch (feature) {
+                                case HOUR -> time.getHour();
+                                case MINUTE -> time.getMinute();
+                                case SECOND -> time.getSecond();
+                                default -> throw new IllegalStateException("Extract date features from a time.");
+                            };
                         }
                         case DateTime:
                         {
                             LocalDateTime dateTime = (LocalDateTime) x;
-                            switch (feature) {
-                                case YEAR: return dateTime.getYear();
-                                case MONTH: return dateTime.getMonthValue();
-                                case WEEK_OF_YEAR: return dateTime.get(weekFields.weekOfYear());
-                                case WEEK_OF_MONTH: return dateTime.get(weekFields.weekOfMonth());
-                                case QUARTER: return dateTime.get(IsoFields.QUARTER_OF_YEAR);
-                                case DAY_OF_YEAR: return dateTime.getDayOfYear();
-                                case DAY_OF_MONTH: return dateTime.getDayOfMonth();
-                                case DAY_OF_WEEK: return dateTime.getDayOfWeek().getValue();
-                                case HOUR: return dateTime.getHour();
-                                case MINUTE: return dateTime.getMinute();
-                                case SECOND: return dateTime.getSecond();
-                            }
-                            break;
+                            return switch (feature) {
+                                case YEAR -> dateTime.getYear();
+                                case MONTH -> dateTime.getMonthValue();
+                                case WEEK_OF_YEAR -> dateTime.get(weekFields.weekOfYear());
+                                case WEEK_OF_MONTH -> dateTime.get(weekFields.weekOfMonth());
+                                case QUARTER -> dateTime.get(IsoFields.QUARTER_OF_YEAR);
+                                case DAY_OF_YEAR -> dateTime.getDayOfYear();
+                                case DAY_OF_MONTH -> dateTime.getDayOfMonth();
+                                case DAY_OF_WEEK -> dateTime.getDayOfWeek().getValue();
+                                case HOUR -> dateTime.getHour();
+                                case MINUTE -> dateTime.getMinute();
+                                case SECOND -> dateTime.getSecond();
+                            };
                         }
                     }
                     throw new IllegalStateException("Unsupported data type for date/time features");

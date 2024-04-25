@@ -119,7 +119,7 @@ public class IsolationForest implements Serializable {
      * Fits a random forest for classification.
      *
      * @param data the training data.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Properties params) {

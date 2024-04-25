@@ -36,8 +36,8 @@ import java.io.Serial;
  * AUC is quite noisy as a classification measure and has some other
  * significant problems in model comparison.
  * <p>
- * We calculate AUC based on Mann-Whitney U test
- * (https://en.wikipedia.org/wiki/Mann-Whitney_U_test).
+ * We calculate AUC based on
+ * <a href="https://en.wikipedia.org/wiki/Mann-Whitney_U_test">Mann-Whitney U test</a>.
  *
  * @author Haifeng Li
  */

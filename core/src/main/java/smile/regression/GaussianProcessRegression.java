@@ -289,7 +289,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer("GaussianProcessRegression {\n");
+        StringBuilder sb = new StringBuilder("GaussianProcessRegression {\n");
         sb.append("  kernel: ").append(kernel).append(",\n");
         sb.append("  regressors: ").append(regressors.length).append(",\n");
         sb.append("  mean: ").append(String.format("%.4f,\n", mean));
@@ -306,7 +306,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits a regular Gaussian process model.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties params) {
@@ -323,7 +323,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param kernel the Mercer kernel.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
@@ -422,7 +422,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          be chosen randomly from the training set or as the centers of
      *          k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
@@ -503,7 +503,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */

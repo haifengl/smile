@@ -19,10 +19,8 @@ package smile.nlp.pos;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import smile.math.MathEx;
 import smile.util.Paths;
 
@@ -221,21 +219,13 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         
         for (int i = 0; i < o.length; i++) {
             Integer index = symbol.get(o[i]);
-            if (index != null) {
-                seq[i][0] = index;
-            } else {
-                seq[i][0] = 0;
-            }
+            seq[i][0] = Objects.requireNonNullElse(index, 0);
             
             index = null;
             if (o[i].length() > 2) {
                 index = suffix.get(o[i].substring(o[i].length() - 2));
-            }            
-            if (index != null) {
-                seq[i][1] = index;
-            } else {
-                seq[i][1] = -1;
             }
+            seq[i][1] = Objects.requireNonNullElse(index, -1);
         }
 
         return seq;

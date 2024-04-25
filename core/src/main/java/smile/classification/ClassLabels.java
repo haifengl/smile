@@ -146,10 +146,10 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Returns the number of samples per class.
+     * Returns the sample size per class.
      * @param y sample labels in [0, k)
      * @param k the number of classes.
-     * @return the number of samples per class.
+     * @return the sample size per class.
      */
     private static int[] count(int[] y, int k) {
         int[] ni = new int[k];

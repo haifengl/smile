@@ -32,7 +32,7 @@ public class IsolationTree implements Serializable {
     /**
      * Isolation tree node.
      */
-    class Node implements Serializable {
+    static class Node implements Serializable {
         /** The adjusted depth of node in the tree. */
         final double depth;
         /** The normal vector of random hyperplane, uniformly over the unit N-Sphere. */

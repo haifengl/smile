@@ -26,7 +26,6 @@ import smile.neighbor.Neighbor;
 import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.RNNSearch;
-import smile.math.MathEx;
 import smile.math.distance.Distance;
 
 /**

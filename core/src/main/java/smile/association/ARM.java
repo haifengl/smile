@@ -80,7 +80,7 @@ public class ARM implements Iterable<AssociationRule> {
 
     @Override
     public Iterator<AssociationRule> iterator() {
-        return new Iterator<AssociationRule>() {
+        return new Iterator<>() {
             int i = 0;
 
             @Override

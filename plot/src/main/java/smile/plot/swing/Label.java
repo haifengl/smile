@@ -88,13 +88,13 @@ public class Label extends Shape {
     /**
      * Convert coordinate to a string.
      */
-    private static String coordinatesToString(double... c) {
+    private static String coordinatesToString(double... coord) {
         StringBuilder builder = new StringBuilder("(");
-        for (int i = 0; i < c.length; i++) {
-            builder.append(MathEx.round(c[i], 2)).append(",");
+        for (double v : coord) {
+            builder.append(MathEx.round(v, 2)).append(",");
         }
 
-        if (c.length > 0) {
+        if (coord.length > 0) {
             builder.setCharAt(builder.length(), ')');
         } else {
             builder.append(")");

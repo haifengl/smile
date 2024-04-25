@@ -184,8 +184,8 @@ public class SparseMatrixPlot extends Plot {
             end[0] = 1.13;
             end[1] = start[1] - height;
 
-            for (int i = 0; i < palette.length; i++) {
-                g.setColor(palette[i]);
+            for (var color : palette) {
+                g.setColor(color);
                 g.fillRectBaseRatio(start, end);
                 start[1] += height;
                 end[1] += height;

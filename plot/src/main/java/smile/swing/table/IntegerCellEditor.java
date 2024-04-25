@@ -30,8 +30,6 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
@@ -44,7 +42,7 @@ import javax.swing.text.NumberFormatter;
  */
 @SuppressWarnings("serial")
 public class IntegerCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(IntegerCellEditor.class.getName());
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IntegerCellEditor.class);
 
     final JFormattedTextField textField;
     final NumberFormat integerFormat;
@@ -97,6 +95,7 @@ public class IntegerCellEditor extends DefaultCellEditor {
                         textField.commitEdit();     //so use it.
                         textField.postActionEvent(); //stop editing
                     } catch (java.text.ParseException ex) {
+                        logger.debug("Failed to commit edit: ", ex);
                     }
                 }
             }
@@ -122,7 +121,7 @@ public class IntegerCellEditor extends DefaultCellEditor {
             try {
                 return integerFormat.parseObject(o.toString());
             } catch (ParseException ex) {
-                LOGGER.log(Level.FINE, "getCellEditorValue: can't parse {0}", o);
+                logger.debug("getCellEditorValue: can't parse {}", o);
                 return null;
             }
         }
@@ -140,6 +139,7 @@ public class IntegerCellEditor extends DefaultCellEditor {
             try {
                 ftf.commitEdit();
             } catch (java.text.ParseException ex) {
+                logger.debug("Failed to commit edit: ", ex);
             }
 
         } else { //text is invalid

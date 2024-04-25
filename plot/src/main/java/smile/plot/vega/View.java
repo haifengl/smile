@@ -16,9 +16,6 @@
  */
 package smile.plot.vega;
 
-import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -125,7 +122,7 @@ public class View extends VegaLite {
      * applied to shape path for "geoshape" marks and to latitude and
      * "longitude" channels for other marks.
      * @param type The cartographic projection to use.
-     * @link https://vega.github.io/vega-lite/docs/projection.html#projection-types
+     * @link <a href="https://vega.github.io/vega-lite/docs/projection.html#projection-types">projection types</a>
      */
     public Projection projection(String type) {
         ObjectNode node = spec.putObject("projection");
