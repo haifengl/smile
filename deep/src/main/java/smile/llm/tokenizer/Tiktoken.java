@@ -129,7 +129,7 @@ public class Tiktoken implements Tokenizer {
     public int[] encode(String text, boolean bos, boolean eos) {
         String[] tokens = tokenize(text);
         IntArrayList output = new IntArrayList(2 * tokens.length);
-        ArrayList<IntPair> parts = new ArrayList(text.length());
+        ArrayList<IntPair> parts = new ArrayList<>(text.length());
 
         if (bos) {
             output.add(this.bos);
