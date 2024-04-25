@@ -1016,7 +1016,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * Merges data frames horizontally by columns.
      * @param dataframes the data frames to merge.
      * @return a new data frame that combines this DataFrame
-     * with one more more other DataFrames by columns.
+     * with one more other DataFrames by columns.
      */
     DataFrame merge(DataFrame... dataframes);
 
@@ -1024,7 +1024,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * Merges vectors with this data frame.
      * @param vectors the vectors to merge.
      * @return a new data frame that combines this DataFrame
-     * with one more more additional vectors.
+     * with one more additional vectors.
      */
     DataFrame merge(BaseVector... vectors);
 

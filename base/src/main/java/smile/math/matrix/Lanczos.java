@@ -35,7 +35,7 @@ public class Lanczos {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);
 
     /**
-     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Find k-largest approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
      * @param A the matrix supporting matrix vector multiplication operation.
@@ -48,7 +48,7 @@ public class Lanczos {
     }
 
     /**
-     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Find k-largest approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
      * @param A the matrix supporting matrix vector multiplication operation.

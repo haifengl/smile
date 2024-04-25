@@ -539,7 +539,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
 
         @Override
         public double f(double[] w) {
-            // Since BFGS try to minimize the objective function
+            // Since BFGS try to minimize the objective function,
             // and we try to maximize the log-likelihood, we really
             // return the negative log-likelihood here.
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {

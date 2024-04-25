@@ -63,7 +63,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
  * <p>
  * Experimental evidence suggests that for large m the SR and Nystrom methods
  * have similar performance, but for small m the Nystrom method can be quite
- * poor. Also embarrassments can occur like the approximated predictive
+ * poor. Also, embarrassments can occur like the approximated predictive
  * variance being negative. For these reasons we do not recommend the
  * Nystrom method over the SR method.
  *

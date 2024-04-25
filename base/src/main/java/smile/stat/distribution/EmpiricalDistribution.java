@@ -26,7 +26,7 @@ import smile.util.IntSet;
  * An empirical distribution function or empirical cdf, is a cumulative
  * probability distribution function that concentrates probability 1/n at
  * each of the n numbers in a sample. As n grows the empirical distribution
- * will getting closer to the true distribution.
+ * will get closer to the true distribution.
  * Empirical distribution is a very important estimator in Statistics. In
  * particular, the Bootstrap method rely heavily on the empirical distribution.
  *

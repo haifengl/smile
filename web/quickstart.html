@@ -9,7 +9,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>Smile is a fast and comprehensive machine learning system.
         With advanced data structures and algorithms, Smile delivers the state-of-art performance.
-        Smile is self contained and requires only Java standard library.
+        Smile is self-contained and requires only Java standard library.
         Since v1.4, Smile may optionally leverage native BLAS/LAPACK library too.
         It also provides high-level operators in Scala and an interactive shell.
         In practice, data scientists usually build models with high-level tools such as R, Matlab,
@@ -48,7 +48,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>which will build the system and enter the shell.</p>
 
-    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, macOS).
         Although we require Java9+ to build Smile to enable automatic module,
         the built library can work with Java8+. All you need is to have
         <code>Java</code> installed on your system <code>PATH</code>,
@@ -425,7 +425,7 @@ smile&gt;
         However, it may break the default Scala kernel (Almond).</p>
 
     <p>In Scala notebooks, it is helpful to add the following
-        code to the notebook. We provides many notebook examples in
+        code to the notebook. We provide many notebook examples in
         the <code>notebooks</code> directory.</p>
 
     <pre class="prettyprint lang-scala"><code>
@@ -604,7 +604,7 @@ smile&gt;
         (OOB) samples. This is useful especially when we don't have a separate
          test dataset.</p>
 
-    <p>Now let's a support vector machine (SVM) on the USPS data. As SVM
+    <p>Now let's train a support vector machine (SVM) on the USPS data. As SVM
         is a kernel learning machine, it can be applied on any type of data
         as long as we can define a Mercer kernel on the data. Therefore,
         SVM class doesn't take a DataFrame as input but a generic array.
@@ -679,8 +679,8 @@ smile&gt;
 
     <p>Lastly, we will train a 5-layer deep learning model. Deep learning
         requires the features properly scaled/standardized. In this example,
-        we employs the class <code>Standardizer</code> to transforms features
-        to 0 mean and unit variance. A alternative is to subtract the median
+        we employ the class <code>Standardizer</code> to transforms features
+        to 0 mean and unit variance. An alternative is to subtract the median
         and divide by the IQR, which is implemented <code>RobustStandardizer</code>.</p>
 
     <ul class="nav nav-tabs">

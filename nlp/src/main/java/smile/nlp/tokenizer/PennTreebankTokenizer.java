@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * This tokenizer assumes that the text has already been segmented into
  * sentences. Any periods -- apart from those at the end of a string or before
  * newline -- are assumed to be part of the word they are attached to (e.g. for
- * abbreviations, etc), and are not separately tokenized.
+ * abbreviations, etc.), and are not separately tokenized.
  *
  * @author Haifeng Li
  */

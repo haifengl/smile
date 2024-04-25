@@ -40,7 +40,7 @@ import smile.util.SparseArray;
  * <p>
  * The locality preserving character of the Laplacian Eigenmap algorithm makes
  * it relatively insensitive to outliers and noise. It is also not prone to
- * "short circuiting" as only the local distances are used.
+ * "short-circuiting" as only the local distances are used.
  *
  * @see IsoMap
  * @see LLE
@@ -144,7 +144,7 @@ public class LaplacianEigenmap implements Serializable {
      * @return the model.
      */
     public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
-        // Use largest connected component of nearest neighbor graph.
+        // Use the largest connected component of nearest neighbor graph.
         AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, false, null);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 

@@ -31,7 +31,7 @@ package smile.stat.distribution;
 public interface MultivariateExponentialFamily {
 
     /**
-     * The M step in the EM algorithm, which depends the specific distribution.
+     * The M step in the EM algorithm, which depends on the specific distribution.
      *
      * @param x the input data for estimation
      * @param posteriori the posteriori probability.

@@ -386,7 +386,7 @@ public class LASVM<T> implements Serializable {
             // Parallel stream may cause unreproducible results due to
             // different numeric round-off because of different data
             // partitions (i.e. different number of cores/threads).
-            // The speed up of parallel stream is also limited as
+            // The speedup of parallel stream is also limited as
             // the number of support vectors is often small.
             double k = kernel.k(v.x, x);
             cache[v.i] = k;

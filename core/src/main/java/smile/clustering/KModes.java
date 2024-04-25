@@ -25,7 +25,7 @@ import smile.util.IntSet;
 
 /**
  * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
- * The mean update for centroids is replace by the mode one which is
+ * The mean update for centroids is replaced by the mode one which is
  * a majority vote among element of each cluster.
  *
  * <h2>References</h2>

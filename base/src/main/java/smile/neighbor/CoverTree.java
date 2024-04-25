@@ -481,7 +481,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
 
     /**
      * Returns the max distance of the reference point p in current node to
-     * it's children nodes.
+     * its children nodes.
      * @param v the stack of DistanceNode objects.
      * @return the distance of the furthest child.
      */

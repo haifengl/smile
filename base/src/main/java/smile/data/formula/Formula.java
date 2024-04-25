@@ -49,7 +49,7 @@ import smile.math.matrix.Matrix;
  * {@code b} and {@code c} together with their second-order interactions.
  * The {@code -} operator removes the specified terms, so that
  * {@code (a+b+c)^2 - a::b} is identical to {@code a + b + c + b::c + a::c}.
- * It can also used to remove the intercept term: when fitting a linear model
+ * It can also be used to remove the intercept term: when fitting a linear model
  * {@code y ~ x - 1} specifies a line through the origin. A model with
  * no intercept can be also specified as {@code y ~ x + 0}.
  * <p>
@@ -426,7 +426,7 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Apply the formula on a tuple to generate the predictors data.
+     * Apply the formula on a tuple to generate the predictor data.
      * @param tuple the input tuple.
      * @return the output tuple.
      */
@@ -525,7 +525,7 @@ public class Formula implements Serializable {
     /**
      * Returns the design matrix of predictors.
      * All categorical variables will be dummy encoded.
-     * If the formula doesn't has an Intercept term, the bias
+     * If the formula doesn't have an Intercept term, the bias
      * column will be included. Otherwise, it is based on the
      * setting of Intercept term.
      *

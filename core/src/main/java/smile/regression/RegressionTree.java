@@ -100,7 +100,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         // in gradient tree boosting.
         double out = loss.output(nodeSamples, samples);
 
-        // RSS computation should always based on the sample mean in the node.
+        // RSS computation should always be based on the sample mean in the node.
         double mean = out;
         if (!loss.toString().equals("LeastSquares")) {
             int n = 0;

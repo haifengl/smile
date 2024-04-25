@@ -348,7 +348,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
     /**
      * Returns the overall out-of-bag metric estimations. The OOB estimate is
-     * quite accurate given that enough trees have been grown. Otherwise the
+     * quite accurate given that enough trees have been grown. Otherwise, the
      * OOB error estimate can bias upward.
      * 
      * @return the overall out-of-bag metric estimations.

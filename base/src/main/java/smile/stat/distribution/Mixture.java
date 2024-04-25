@@ -151,7 +151,7 @@ public class Mixture implements Distribution {
     }
 
     /**
-     * Shannon entropy. Not supported.
+     * Shannon's entropy. Not supported.
      */
     @Override
     public double entropy() {

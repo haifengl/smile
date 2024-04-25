@@ -309,7 +309,7 @@ public class ARPACK {
     }
 
     /**
-     * Computes k largest approximate singular triples of a matrix.
+     * Computes k-largest approximate singular triples of a matrix.
      *
      * @param A the matrix to decompose.
      * @param k the number of singular triples to compute.
@@ -320,7 +320,7 @@ public class ARPACK {
     }
 
     /**
-     * Computes k largest approximate singular triples of a matrix.
+     * Computes k-largest approximate singular triples of a matrix.
      *
      * @param A the matrix to decompose.
      * @param k the number of singular triples to compute.

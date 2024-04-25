@@ -25,7 +25,7 @@ import smile.math.MathEx;
  * given a set of past observations of objects from different species.
  * In drawing balls from an urn, the 'objects' would be balls and the
  * 'species' would be the distinct colors of the balls (finite but
- * unknown in number). After drawing R_red red balls, R_black black
+ * unknown number). After drawing R_red red balls, R_black black
  * balls and , R_green green balls, we would ask what is the probability
  * of drawing a red ball, a black ball, a green ball or one of a
  * previously unseen color.

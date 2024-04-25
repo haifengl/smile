@@ -507,7 +507,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Sets the format of packed matrix.
-     * @param uplo the format of packed matrix..
+     * @param uplo the format of packed matrix.
      * @return this matrix.
      */
     public Matrix uplo(UPLO uplo) {
@@ -1835,7 +1835,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1854,7 +1854,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1881,7 +1881,7 @@ public class Matrix extends IMatrix {
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with COMPACT error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
@@ -1892,7 +1892,7 @@ public class Matrix extends IMatrix {
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
@@ -2109,7 +2109,7 @@ public class Matrix extends IMatrix {
         /**
          * Returns the L<sub>2</sub> norm condition number, which is max(S) / min(S).
          * A system of equations is considered to be well-conditioned if a small
-         * change in the coefficient matrix or a small change in the right hand
+         * change in the coefficient matrix or a small change on the right hand
          * side results in a small change in the solution vector. Otherwise, it is
          * called ill-conditioned. Condition number is defined as the product of
          * the norm of A and the norm of A<sup>-1</sup>. If we use the usual
@@ -2300,7 +2300,7 @@ public class Matrix extends IMatrix {
         private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
-         * By default the eigenvalues and eigenvectors are not always in
+         * By default, the eigenvalues and eigenvectors are not always in
          * sorted order. The <code>sort</code> function puts the eigenvalues
          * in descending order and reorder the corresponding eigenvectors.
          */

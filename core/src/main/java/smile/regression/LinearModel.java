@@ -410,7 +410,7 @@ public class LinearModel implements DataFrameRegression {
      * In some adaptive configurations it can be useful not to give equal
      * importance to all the historical data but to assign higher weights
      * to the most recent data (and then to forget the oldest one). This
-     * may happen when the phenomenon underlying the data is non stationary
+     * may happen when the phenomenon underlying the data is non-stationary
      * or when we want to approximate a nonlinear dependence by using a
      * linear model which is local in time. Both these situations are common
      * in adaptive control problems.

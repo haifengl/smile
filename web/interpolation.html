@@ -17,7 +17,7 @@ permalink: "{{ page.filePathStem }}.html"
         variable.</p>
 
     <p>Smile package <code>smile.interpolation</code> provides a variety of
-        algorithms on 1d and 2d data. These algorithms implements the interface
+        algorithms on 1d and 2d data. These algorithms implement the interface
         <code>Interpolation</code> (or <code>Interpolation2D</code> for 2d data),
         of which the method <code>interpolate</code> takes a value and return
         an interploated value.</p>
@@ -304,7 +304,7 @@ permalink: "{{ page.filePathStem }}.html"
         where the approximating function y(x) is represented as a sum of N radial
         basis functions &phi;, each associated with a different center c<sub>i</sub>, and weighted
         by an appropriate coefficient w<sub>i</sub>. For distance, one usually chooses
-        euclidean distance. The weights w<sub>i</sub> can
+        Euclidean distance. The weights w<sub>i</sub> can
         be estimated using the matrix methods of linear least squares, because
         the approximating function is linear in the weights.</p>
 
@@ -316,11 +316,11 @@ permalink: "{{ page.filePathStem }}.html"
         graphics, neural networks, for the solution of differential equations
         via collocation methods and many other problems.</p>
 
-    <p>Other popular choices for &phi; comprise the Gaussian function and the so
-        called thin plate splines. Thin plate splines result from the solution of
+    <p>Other popular choices for &phi; comprise the Gaussian function and the
+        so-called thin plate splines. Thin plate splines result from the solution of
         a variational problem. The advantage of the thin plate splines is that
         their conditioning is invariant under scalings. Gaussians, multi-quadrics
-        and inverse multi-quadrics are infinitely smooth and and involve a scale
+        and inverse multi-quadrics are infinitely smooth and involve a scale
         or shape parameter, r<sub><small>0</small></sub> &gt; 0.
         Decreasing r<sub><small>0</small></sub> tends to
         flatten the basis function. For a given function, the quality of
@@ -378,11 +378,11 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
 
     <h2 id="shepard" class="title">Shepard Interpolation</h2>
-    <p>Shepard interpolation is a special case of normalized radial basis function
+    <p>Shepard's interpolation is a special case of normalized radial basis function
         interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
         finite for r &gt; 0. In this case, the weights w<sub>i</sub> are just equal to
         the respective function values y<sub>i</sub>. So we need not solve linear
-        equations and thus it works for very large N. An example of such &phi;
+        equations, and thus it works for very large N. An example of such &phi;
         is &phi;(r) = r<sup>-p</sup> with (typically) 1 &lt; p &le; 3.</p>
 
     <ul class="nav nav-tabs">
@@ -428,7 +428,7 @@ permalink: "{{ page.filePathStem }}.html"
         <img src="images/shepard-interpolation.png" class="enlarge" style="width: 480px;" />
     </div>
 
-    <p>Shepard interpolation is rarely as accurate as the well-tuned application of
+    <p>Shepard's interpolation is rarely as accurate as the well-tuned application of
         other radial basis functions. However, it is simple, fast, and often sufficient
         for quick and dirty applications.</p>
 
@@ -438,7 +438,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <h2 id="laplace" class="title">Laplace Interpolation</h2>
 
-    <p>Laplace interpolation can restore missing or unmeasured values on a 2-dimensional
+    <p>Laplace's interpolation can restore missing or unmeasured values on a 2-dimensional
         evenly spaced regular grid. In some sense, Laplace interpolation
         produces the smoothest possible interpolant, which are obtained by solving
         a very sparse linear equations with biconjugate gradient method.</p>

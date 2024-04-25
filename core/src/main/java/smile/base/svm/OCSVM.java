@@ -109,7 +109,7 @@ public class OCSVM<T> {
     }
 
     /**
-     * Fits an one-class support vector machine.
+     * Fits a one-class support vector machine.
      * @param x training instances.
      * @return the model.
      */

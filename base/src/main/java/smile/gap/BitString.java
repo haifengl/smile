@@ -31,9 +31,9 @@ import smile.math.MathEx;
  * However, it this does not mean that the new generation is the same because
  * of mutation. Crossover is made in hope that new chromosomes will have good
  * parts of old chromosomes and maybe the new chromosomes will be better.
- * However it is good to leave some part of population survive to next
+ * However, it is good to leave some part of population survive to next
  * generation. Crossover rate generally should be high, about 80% - 95%.
- * However some results show that for some problems crossover rate about 60% is
+ * However, some results show that for some problems crossover rate about 60% is
  * the best.
  * <p>
  * Mutation rate determines how often will be parts of chromosome mutated.

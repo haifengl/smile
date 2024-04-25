@@ -25,7 +25,7 @@ import java.util.Arrays;
  * be a set of <code>n</code> binary attributes called items. Let
  * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
  * be a set of transactions called the database. Each transaction in
- * <code>D</code> has an unique transaction ID and contains a subset
+ * <code>D</code> has a unique transaction ID and contains a subset
  * of the items in <code>I</code>. An association rule is defined
  * as an implication of the form <code>X &rArr; Y</code>
  * where <code>X, Y &sube; I</code> and <code>X &cap; Y = &Oslash;</code>.

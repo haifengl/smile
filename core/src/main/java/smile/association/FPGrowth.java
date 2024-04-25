@@ -111,7 +111,7 @@ public class FPGrowth implements Iterable<ItemSet> {
                      *   new local header table and (iii) populate with ancestors.
                      * - If new local FP tree is not empty repeat mining operation.
                      *
-                     * Otherwise end.
+                     * Otherwise, end.
                      */
                     if (i-- > 0) {
                         grow(T0.headerTable[i], null, localItemSupport, prefixItemset);
@@ -149,7 +149,7 @@ public class FPGrowth implements Iterable<ItemSet> {
      * new local header table and (iii) populate with ancestors.
      * <LI> If new local FP tree is not empty repeat mining operation.
      * </OL>
-     * Otherwise end.
+     * Otherwise, end.
      * @param itemset the current item sets as generated so far (null at start).
      */
     private void grow(FPTree fptree, int[] itemset, int[] localItemSupport, int[] prefixItemset) {
@@ -283,7 +283,7 @@ public class FPGrowth implements Iterable<ItemSet> {
     }
 
     /**
-     * Insert a item to the front of an item set.
+     * Insert an item to the front of an item set.
      * @param itemset the original item set.
      * @param item the new item to be inserted.
      * @return the combined item set

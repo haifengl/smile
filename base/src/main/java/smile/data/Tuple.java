@@ -633,7 +633,7 @@ public interface Tuple extends Serializable {
     /**
      * Returns the value of a given fieldName.
      * For primitive types if value is null it returns 'zero value' specific for primitive
-     * ie. 0 for Int - use isNullAt to ensure that value is not null
+     * i.e. 0 for Int - use isNullAt to ensure that value is not null
      *
      * @param field the name of field.
      * @param <T> the data type of field.

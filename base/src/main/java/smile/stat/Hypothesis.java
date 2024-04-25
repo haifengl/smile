@@ -88,7 +88,7 @@ public interface Hypothesis {
          *               from populations with the same true variance.
          *               "unequal.var if the data arrays are allowed to be drawn
          *               from populations with unequal variances.
-         *               "paired" if x and y are two values (i.e., pair of values)
+         *               "paired" if x and y are two values (i.e., a pair of values)
          *               for the same samples.
          * @return the test results.
          */

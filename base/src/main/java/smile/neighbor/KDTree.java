@@ -30,14 +30,14 @@ import smile.sort.HeapSelect;
  * a useful dataset structure for nearest neighbor searches. The kd-tree is a
  * binary tree in which every node is a k-dimensional point. Every non-leaf
  * node generates a splitting hyperplane that divides the space into two
- * subspaces. Points left to the hyperplane represent the left sub-tree of
- * that node and the points right to the hyperplane by the right sub-tree.
+ * subspaces. Points left to the hyperplane represent the left subtree of
+ * that node and the points right to the hyperplane by the right subtree.
  * The hyperplane direction is chosen in the following way: every node split
- * to sub-trees is associated with one of the k-dimensions, such that the
+ * to subtrees is associated with one of the k-dimensions, such that the
  * hyperplane is perpendicular to that dimension vector. So, for example, if
  * for a particular split the "x" axis is chosen, all points in the subtree
  * with a smaller "x" value than the node will appear in the left subtree and
- * all points with larger "x" value will be in the right sub tree.
+ * all points with larger "x" value will be in the right subtree.
  * <p>
  * KD-trees are not suitable for efficiently finding the nearest neighbor
  * in high dimensional spaces. As a general rule, if the dimensionality is D,
@@ -106,7 +106,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
      */
     private final Node root;
     /**
-     * The index of objects in each nodes.
+     * The index of objects in each node.
      */
     private final int[] index;
 
@@ -151,7 +151,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
     }
 
     /**
-     * Builds a sub-tree.
+     * Builds a subtree.
      * @param begin the beginning index of samples for the subtree (inclusive).
      * @param end the ending index of samples for the subtree (exclusive).
      * @param lowerBound the work space of lower bound of each dimension of samples.

@@ -21,7 +21,7 @@ import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 /**
- * Finite multivariate Gaussian mixture. The EM algorithm is provide to learned
+ * Finite multivariate Gaussian mixture. The EM algorithm is provided to learn
  * the mixture model from data. The BIC score is employed to estimate the number
  * of components.
  *

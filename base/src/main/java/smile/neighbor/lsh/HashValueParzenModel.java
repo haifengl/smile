@@ -130,7 +130,7 @@ public class HashValueParzenModel {
 
     /**
      * Returns the standard deviation.
-     * @return the conditional standard deviation..
+     * @return the conditional standard deviation.
      */
     public double sd() {
         return sd;

@@ -104,7 +104,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
         public final int index;
 
         /**
-         * Private constructor. Only the enclosure matrix can creates
+         * Private constructor. Only the enclosure matrix can create
          * the instances of entry.
          * @param i the row index.
          * @param j the column index.
@@ -655,7 +655,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
      * <p>
-     * Note that our implementation supports only real-valued matrix and we
+     * Note that our implementation supports only real-valued matrix, and we
      * ignore the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.
@@ -720,7 +720,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * Especially, the supplementary data in the form of right-hand sides,
      * estimates or solutions are treated as separate files.
      * <p>
-     * Note that our implementation supports only real-valued matrix and we ignore
+     * Note that our implementation supports only real-valued matrix, and we ignore
      * the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.

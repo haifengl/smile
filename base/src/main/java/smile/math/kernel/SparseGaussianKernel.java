@@ -28,7 +28,7 @@ import smile.util.SparseArray;
  * where &sigma; {@code > 0} is the scale parameter of the kernel.
  * <p>
  * The Gaussian kernel is a good choice for a great deal of applications,
- * although sometimes it is remarked as being over used.
+ * although sometimes it is remarked as being overused.
 
  * @author Haifeng Li
  */
