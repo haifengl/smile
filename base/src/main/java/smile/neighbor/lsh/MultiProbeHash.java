@@ -79,7 +79,7 @@ public class MultiProbeHash extends Hash {
                 umax[i] = hi;
             }
 
-            g += c[i] * (int) Math.floor(hi);
+            g += c[i] * (long) Math.floor(hi);
         }
 
         int gint = (int) (g % P);

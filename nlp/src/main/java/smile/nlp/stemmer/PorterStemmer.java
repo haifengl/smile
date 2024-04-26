@@ -581,7 +581,11 @@ public class PorterStemmer implements Stemmer {
         b = word.toCharArray();
 
         k = word.length() - 1;
-        if (k > 1 && !word.equalsIgnoreCase("is") && !word.equalsIgnoreCase("was") && !word.equalsIgnoreCase("has") && !word.equalsIgnoreCase("his") && !word.equalsIgnoreCase("this")) {
+        if (k > 1 && !word.equalsIgnoreCase("is")
+            && !word.equalsIgnoreCase("was")
+            && !word.equalsIgnoreCase("has")
+            && !word.equalsIgnoreCase("his")
+            && !word.equalsIgnoreCase("this")) {
             step1(true);
             return new String(b, 0, k+1);
         }
