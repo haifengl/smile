@@ -195,8 +195,10 @@ public class Axis {
             } else {
                 int decimal = base.getPrecisionDigits()[index];
                 if (ticks == null) {
-                    if ((i == 0 && tickLocation[0] != tickLocation[1]) || (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2]))
-                    decimal -= 1;
+                    if ((i == 0 && tickLocation[0] != tickLocation[1]) ||
+                        (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2])) {
+                        decimal -= 1;
+                    }
                 }
 
                 String format = "%.0f";

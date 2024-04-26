@@ -55,15 +55,16 @@ public class PositionalEncoding implements Layer {
      */
     public PositionalEncoding(int dModel, double dropout, int maxLen) {
         this.dropout = dropout;
-        Tensor tensor = Tensor.zeros(maxLen, dModel);
-        Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
-        Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel);
-        position.mul_(divTerm);
-        tensor.put_(position.sin(), Colon, slice(0, null, 2));
-        tensor.put_(position.cos(), Colon, slice(1, null, 2));
-        pe = tensor.unsqueeze(0).transpose(0, 1);
-        pe.requireGrad(false);
-        module.register_buffer("pe", pe.asTorch());
+        try (Tensor tensor = Tensor.zeros(maxLen, dModel);
+             Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel)) {
+            position.mul_(divTerm);
+            tensor.put_(position.sin(), Colon, slice(0, null, 2));
+            tensor.put_(position.cos(), Colon, slice(1, null, 2));
+            pe = tensor.unsqueeze(0).transpose(0, 1);
+            pe.requireGrad(false);
+            module.register_buffer("pe", pe.asTorch());
+        }
     }
 
     @Override

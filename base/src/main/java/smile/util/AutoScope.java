@@ -42,13 +42,12 @@ public class AutoScope implements AutoCloseable {
      * @param resources the resources to be attached to this scope.
      * @return this object.
      */
-    public AutoScope attach(AutoCloseable... resources) {
+    public void attach(AutoCloseable... resources) {
         for (var resource : resources) {
             if (!this.resources.contains(resource)) {
                 this.resources.add(resource);
             }
         }
-        return this;
     }
 
     /**
@@ -56,11 +55,10 @@ public class AutoScope implements AutoCloseable {
      * @param resources the resources to be detached from this scope.
      * @return this object.
      */
-    public AutoScope detach(AutoCloseable... resources) {
+    public void detach(AutoCloseable... resources) {
         for (var resource : resources) {
             this.resources.remove(resource);
         }
-        return this;
     }
 
     @Override

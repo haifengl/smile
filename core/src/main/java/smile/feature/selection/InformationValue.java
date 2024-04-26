@@ -221,8 +221,8 @@ public class InformationValue implements Comparable<InformationValue> {
         StructType schema = data.schema();
 
         return IntStream.range(0, schema.length()).mapToObj(i -> {
-            int[] events = null;
-            int[] nonevents = null;
+            int[] events;
+            int[] nonevents;
             double[] breaks = null;
 
             StructField field = schema.field(i);

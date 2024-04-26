@@ -78,11 +78,12 @@ public interface CacheFiles {
         Path path = Paths.get(dir(), uri.getPath());
         File file = path.toFile();
         if (force || !(file.exists() && !file.isDirectory())) {
-            file.getParentFile().mkdirs();
-            Files.copy(
-                    uri.toURL().openStream(),
-                    path,
-                    StandardCopyOption.REPLACE_EXISTING);
+            if (file.getParentFile().mkdirs()) {
+                Files.copy(
+                        uri.toURL().openStream(),
+                        path,
+                        StandardCopyOption.REPLACE_EXISTING);
+            }
         }
         return path;
     }
@@ -92,9 +93,10 @@ public interface CacheFiles {
      * @throws IOException if fail to delete the cache files.
      */
     static void clean() throws IOException {
-        Files.walk(Paths.get(dir()))
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        try (var files = Files.walk(Paths.get(dir()))) {
+            files.sorted(Comparator.reverseOrder())
+                 .map(Path::toFile)
+                 .forEach(File::delete);
+        }
     }
 }

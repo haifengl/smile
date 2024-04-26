@@ -137,7 +137,7 @@ public class FileChooser extends JFileChooser {
                     reader.close();
                     boolean binary = false;
                     for (int i = 0; i < len; i++) {
-                        if (buf[i] >= 0 && buf[i] < 0x1F) {
+                        if (buf[i] < 0x1F) {
                             if (buf[i] != 0x09 && // tab
                                 buf[i] != 0x0A && // line feed
                                 buf[i] != 0x0C && // form feed

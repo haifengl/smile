@@ -248,7 +248,6 @@ public class Contour extends Plot {
                 if (residual >= 0.4 && residual <= 0.7) {
                     // In case of too few grids, we use a half of precision unit.
                     precisionUnit /= 2;
-                    precisionDigits -= 1;
                 }
 
                 double lowerBound = precisionUnit * (Math.ceil(zMin / precisionUnit));
@@ -485,7 +484,7 @@ public class Contour extends Plot {
             // 4. Save the contour
             for (int i = 0; i < nx - 1; i++) {
                 for (int j = 0; j < ny - 1; j++) {
-                    Segment seglist = null;
+                    Segment seglist;
                     while ((seglist = segments[j][i]) != null) {
                         ij[0] = i;
                         ij[1] = j;
@@ -497,7 +496,7 @@ public class Contour extends Plot {
                         double xend = seglist.x1;
                         double yend = seglist.y1;
 
-                        int dir = 0;
+                        int dir;
                         while ((dir = segdir(xend, yend, ij)) != 0) {
                             // tail
                             int ii = ij[0];
@@ -518,7 +517,7 @@ public class Contour extends Plot {
                         ij[1] = j;
                         xend = seglist.x0;
                         yend = seglist.y0;
-                        dir = 0;
+
                         while ((dir = segdir(xend, yend, ij)) != 0) {
                             // head
                             int ii = ij[0];

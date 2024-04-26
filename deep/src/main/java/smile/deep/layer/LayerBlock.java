@@ -28,7 +28,7 @@ import org.bytedeco.pytorch.Module;
  * @author Haifeng Li
  */
 public abstract class LayerBlock implements Layer {
-    final Module module;
+    protected final Module module;
 
     /**
      * Constructor.

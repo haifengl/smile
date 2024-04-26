@@ -68,7 +68,7 @@ public class Gamma {
         double xcopy = x;
         double first = x + LANCZOS_SMALL_GAMMA + 0.5;
         double second = LANCZOS_COEFF[0];
-        double fg = 0.0;
+        double fg;
 
         if (x >= 0.0) {
             if (x >= 1.0 && x - (int) x == 0.0) {
@@ -93,7 +93,7 @@ public class Gamma {
      */
     public static double lgamma(double x) {
         double xcopy = x;
-        double fg = 0.0;
+        double fg;
         double first = x + LANCZOS_SMALL_GAMMA + 0.5;
         double second = LANCZOS_COEFF[0];
 
@@ -138,7 +138,7 @@ public class Gamma {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
 
-        double igf = 0.0;
+        double igf;
 
         if (x < s + 1.0) {
             // Series representation
@@ -233,13 +233,13 @@ public class Gamma {
         }
 
         int i = 0;
-        double ii = 0.0;
-        double igf = 0.0;
+        double ii;
+        double igf;
         boolean check = true;
 
         double loggamma = lgamma(a);
-        double numer = 0.0;
-        double incr = 0.0;
+        double numer;
+        double incr;
         double denom = x - a + 1.0;
         double first = 1.0 / denom;
         double term = 1.0 / FPMIN;
@@ -310,7 +310,7 @@ public class Gamma {
 
         double prodPj = 0.0;
         double prodQj = 0.0;
-        double digX = 0.0;
+        double digX;
 
         if (x >= 3.0) {
             double x2 = 1.0 / (x * x);

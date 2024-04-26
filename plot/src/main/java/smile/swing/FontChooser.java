@@ -120,7 +120,7 @@ public class FontChooser extends JComponent {
     }
     private String[] fontStyleNames = null;
     private String[] fontFamilyNames = null;
-    private String[] fontSizeStrings = null;
+    private String[] fontSizeStrings;
     private JTextField fontFamilyTextField = null;
     private JTextField fontStyleTextField = null;
     private JTextField fontSizeTextField = null;
@@ -298,14 +298,14 @@ public class FontChooser extends JComponent {
      * @see #setSelectedFontSize
      **/
     public int getSelectedFontSize() {
-        int fontSize = 1;
+        int fontSize;
         String fontSizeString = getFontSizeTextField().getText();
         while (true) {
             try {
                 fontSize = Integer.parseInt(fontSizeString);
                 break;
             } catch (NumberFormatException e) {
-                fontSizeString = (String) getFontSizeList().getSelectedValue();
+                fontSizeString = getFontSizeList().getSelectedValue();
                 getFontSizeTextField().setText(fontSizeString);
             }
         }
@@ -321,8 +321,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font
      **/
     public Font getSelectedFont() {
-        Font font = new Font(getSelectedFontFamily(),
-                getSelectedFontStyle(), getSelectedFontSize());
+        Font font = new Font(getSelectedFontFamily(), getSelectedFontStyle(), getSelectedFontSize());
         return font;
     }
 
@@ -422,7 +421,6 @@ public class FontChooser extends JComponent {
 
         dialog.setVisible(true);
         dialog.dispose();
-        dialog = null;
 
         return dialogResultValue;
     }
@@ -776,12 +774,12 @@ public class FontChooser extends JComponent {
 
     private String[] getFontStyleNames() {
         if (fontStyleNames == null) {
-            int i = 0;
-            fontStyleNames = new String[4];
-            fontStyleNames[i++] = getMessage("Plain");
-            fontStyleNames[i++] = getMessage("Bold");
-            fontStyleNames[i++] = getMessage("Italic");
-            fontStyleNames[i++] = getMessage("BoldItalic");
+            fontStyleNames = new String[] {
+                getMessage("Plain"),
+                getMessage("Bold"),
+                getMessage("Italic"),
+                getMessage("BoldItalic")
+            };
         }
         return fontStyleNames;
     }

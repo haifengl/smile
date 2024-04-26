@@ -115,7 +115,7 @@ public class EfficientNet extends LayerBlock {
         // Initialization should run in torch.no_grad() mode and
         // will not be taken into account by autograd.
         try (var guard = Tensor.noGradGuard()) {
-            try (var modules = asTorch().modules()) {
+            try (var modules = module.modules()) {
                 for (int i = 0; i < modules.size(); i++) {
                     var module = modules.get(i);
                     var name = module.name().getString();
