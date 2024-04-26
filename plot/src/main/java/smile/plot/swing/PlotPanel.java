@@ -281,38 +281,24 @@ public class PlotPanel extends JPanel {
                     canvas.resetAxis();
                     repaint();
                 } else {
-                    String tooltip = null;
+                    StringBuilder tooltip = new StringBuilder();
                     double[] sc = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
 
-                    String firstid = null;
+                    //String firstid = null;
                     for (Shape shape : canvas.shapes) {
                         if (shape instanceof Plot plot) {
                             Optional<String> s = plot.tooltip(sc);
                             if (s.isPresent()) {
-                                if (tooltip == null) {
-                                    tooltip = s.get();
-                                    firstid = plot.name;
-                                } else {
-                                    if (firstid != null) {
-                                        tooltip = "<b>" + firstid + ":</b><br>" + tooltip;
-                                        firstid = null;
-                                    }
-
-                                    String id = plot.name;
-                                    if (id != null) {
-                                        tooltip += "<br><b>" + id + ":</b><br>" + s;
-                                    } else {
-                                        tooltip += "<br>----------<br>" + s;
-                                    }
+                                if (!tooltip.isEmpty()) {
+                                    tooltip.append("<br>");
                                 }
+                                tooltip.append(s);
                             }
                         }
                     }
 
-                    if (tooltip != null) {
+                    if (tooltip.length() > 0) {
                         setToolTipText(String.format("<html>%s</html>", tooltip));
-                    } else {
-                        setToolTipText(null);
                     }
                 }
             }

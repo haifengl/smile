@@ -31,6 +31,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -383,13 +384,13 @@ public class FileChooser extends JFileChooser {
         @Override
         public String getDescription() {
             if (fullDescription == null) {
-                fullDescription = description == null ? "(" : description + " (";
-                // build the description from the extension list
-                for (String extension : filters) {
-                    fullDescription += "." + extension;
+                StringBuilder sb = new StringBuilder();
+                if (description != null) {
+                    sb.append(description);
+                    sb.append(' ');
                 }
-
-                fullDescription += ")";
+                sb.append(Arrays.toString(filters.toArray(new String[0])));
+                fullDescription = sb.toString();
             }
 
             return fullDescription;
