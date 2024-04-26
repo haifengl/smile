@@ -111,6 +111,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-project-logo", "web/images/smile.jpg",
     "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin,
+    "-dynamic-side-menu"
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
