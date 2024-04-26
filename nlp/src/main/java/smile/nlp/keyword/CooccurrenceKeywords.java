@@ -218,7 +218,6 @@ public interface CooccurrenceKeywords {
                         break;
                     } else {
                         keywords.remove(freqTerms[index[j]]);
-                        add = true;
                     }
                 }
             }

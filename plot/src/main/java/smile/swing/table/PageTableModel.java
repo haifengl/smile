@@ -19,6 +19,7 @@ package smile.swing.table;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.util.Objects;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -303,7 +304,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class PageDownAction extends AbstractAction {
 
         public PageDownAction() {
-            super("Next Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_right.png")));
+            super("Next Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_right.png"))));
         }
 
         @Override
@@ -316,7 +317,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class PageUpAction extends AbstractAction {
 
         public PageUpAction() {
-            super("Previous Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_left.png")));
+            super("Previous Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_left.png"))));
         }
 
         @Override
@@ -329,7 +330,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class FirstPageAction extends AbstractAction {
 
         public FirstPageAction() {
-            super("First Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_beginning.png")));
+            super("First Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_beginning.png"))));
         }
 
         @Override
@@ -342,7 +343,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class LastPageAction extends AbstractAction {
 
         public LastPageAction() {
-            super("Last Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_end.png")));
+            super("Last Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_end.png"))));
         }
 
         @Override

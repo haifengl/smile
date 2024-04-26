@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Several sets of English stop words.
@@ -58,7 +59,7 @@ public enum EnglishStopWords implements StopWords {
     EnglishStopWords(String resource) {
         dict = new HashSet<>();
 
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(Objects.requireNonNull(this.getClass().getResourceAsStream(resource))))) {
             String line;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
