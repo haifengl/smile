@@ -410,15 +410,17 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case CNB:
             case WCNB:
                 for (SparseArray.Entry e : x) {
-                    ntc[y][e.i] += e.x;
-                    nt[y] += e.x;
+                    int ex = (int) e.x;
+                    ntc[y][e.i] += ex;
+                    nt[y] += ex;
                 }
                 break;
 
             case POLYAURN:
                 for (SparseArray.Entry e : x) {
-                    ntc[y][e.i] += e.x * 2;
-                    nt[y] += e.x * 2;
+                    int ex = (int) e.x;
+                    ntc[y][e.i] += ex * 2;
+                    nt[y] += ex * 2;
                 }
                 break;
 
@@ -586,8 +588,9 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        ntc[yi][e.i] += e.x;
-                        nt[yi] += e.x;
+                        int ex = (int) e.x;
+                        ntc[yi][e.i] += ex;
+                        nt[yi] += ex;
                     }
 
                     n++;
@@ -655,8 +658,9 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        ntc[yi][e.i] += e.x * 2;
-                        nt[yi] += e.x * 2;
+                        int ex = (int) e.x;
+                        ntc[yi][e.i] += ex * 2;
+                        nt[yi] += ex * 2;
                     }
 
                     n++;

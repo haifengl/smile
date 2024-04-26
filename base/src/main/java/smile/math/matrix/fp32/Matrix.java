@@ -2630,7 +2630,7 @@ public class Matrix extends IMatrix {
             int n = lu.n;
             float d = 0.0f;
             for (int i = 0; i < n; i++) {
-                d += Math.log(lu.get(i, i));
+                d += (float) Math.log(lu.get(i, i));
             }
 
             return 2.0f * d;
