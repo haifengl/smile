@@ -47,16 +47,18 @@ public class Probe implements Comparable<Probe> {
      */
     public Probe(int[] range) {
         this.range = range;
-        bucket = new int[range.length];
-        last = 0;
+        this.bucket = new int[range.length];
+        this.last = 0;
     }
 
-    @Override
-    protected Probe clone() {
-        Probe p = new Probe(range);
-        p.last = last;
-        System.arraycopy(bucket, 0, p.bucket, 0, bucket.length);
-        return p;
+    /**
+     * Returns a shallow copy that shares the range array.
+     */
+    public Probe copy() {
+        Probe probe = new Probe(range);
+        probe.last = last;
+        System.arraycopy(bucket, 0, probe.bucket, 0, bucket.length);
+        return probe;
     }
 
     /**
@@ -73,7 +75,7 @@ public class Probe implements Comparable<Probe> {
      * @return the shifted probe.
      */
     public Probe shift() {
-        Probe p = clone();
+        Probe p = copy();
         p.bucket[last] = 0;
         p.last++;
         p.bucket[last] = 1;
@@ -94,7 +96,7 @@ public class Probe implements Comparable<Probe> {
      * @return the expanded probe.
      */
     public Probe expand() {
-        Probe p = clone();
+        Probe p = copy();
         p.last++;
         p.bucket[last] = 1;
         return p;
@@ -113,7 +115,7 @@ public class Probe implements Comparable<Probe> {
      * @return the extended probe.
      */
     public Probe extend() {
-        Probe p = clone();
+        Probe p = copy();
         p.bucket[last]++;
         return p;
     }
