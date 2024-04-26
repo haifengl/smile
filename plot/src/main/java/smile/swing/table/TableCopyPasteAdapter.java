@@ -18,13 +18,13 @@
 package smile.swing.table;
 
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.InputEvent;
+import java.lang.ref.WeakReference;
 import java.util.StringTokenizer;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -41,32 +41,31 @@ import javax.swing.KeyStroke;
  */
 public class TableCopyPasteAdapter implements ActionListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TableCopyPasteAdapter.class);
-
-    private String rowstring, value;
-    private Clipboard system;
-    private StringSelection stsel;
-    private final JTable table;
+    private final WeakReference<JTable> tableRef;
 
     /**
      * The copy/paste adapter is constructed with a JTable on which it enables
      * Copy-Paste and acts as a Clipboard listener.
      */
     private TableCopyPasteAdapter(JTable table) {
-        this.table = table;
-        KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK, false);
+        this.tableRef = new WeakReference<>(table);
+        KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, false);
         // Identifying the copy KeyStroke user can modify this
         // to copy on some other Key combination.
-        KeyStroke paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK, false);
+        KeyStroke paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, false);
         // Identifying the Paste KeyStroke user can modify this
         //to copy on some other Key combination.
         table.registerKeyboardAction(this, "Copy", copy, JComponent.WHEN_FOCUSED);
         table.registerKeyboardAction(this, "Paste", paste, JComponent.WHEN_FOCUSED);
-        system = Toolkit.getDefaultToolkit().getSystemClipboard();
     }
 
+    /**
+     * Creates and attaches a copy-paste adapter for a table.
+     * @param table the table.
+     * @return an adapter.
+     */
     public static TableCopyPasteAdapter apply(JTable table) {
-        TableCopyPasteAdapter adapter = new TableCopyPasteAdapter(table);
-        return adapter;
+        return new TableCopyPasteAdapter(table);
     }
 
     /**
@@ -79,10 +78,12 @@ public class TableCopyPasteAdapter implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        var table = tableRef.get();
+        var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+
         if (e.getActionCommand().compareTo("Copy") == 0) {
-            StringBuilder sbf = new StringBuilder();
-            // Check to ensure we have selected only a contiguous block of
-            // cells
+            StringBuilder sb = new StringBuilder();
+            // Check to ensure we have selected only a contiguous block of cells
             int numcols = table.getSelectedColumnCount();
             int numrows = table.getSelectedRowCount();
             int[] rowsselected = table.getSelectedRows();
@@ -92,38 +93,36 @@ public class TableCopyPasteAdapter implements ActionListener {
                     && (numcols - 1 == colsselected[colsselected.length - 1] - colsselected[0]
                     && numcols == colsselected.length))) {
                 JOptionPane.showMessageDialog(null, "Invalid Copy Selection",
-                        "Invalid Copy Selection",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Invalid Copy Selection", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             for (int i = 0; i < numrows; i++) {
                 for (int j = 0; j < numcols; j++) {
-                    sbf.append(table.getValueAt(rowsselected[i], colsselected[j]));
+                    sb.append(table.getValueAt(rowsselected[i], colsselected[j]));
                     if (j < numcols - 1) {
-                        sbf.append("\t");
+                        sb.append("\t");
                     }
                 }
-                sbf.append("\n");
+                sb.append("\n");
             }
-            stsel = new StringSelection(sbf.toString());
-            system = Toolkit.getDefaultToolkit().getSystemClipboard();
-            system.setContents(stsel, stsel);
+            StringSelection stsel = new StringSelection(sb.toString());
+            clipboard.setContents(stsel, stsel);
         }
         
         if (e.getActionCommand().compareTo("Paste") == 0) {
             int startRow = (table.getSelectedRows())[0];
             int startCol = (table.getSelectedColumns())[0];
             try {
-                String trstring = (String) (system.getContents(this).getTransferData(DataFlavor.stringFlavor));
+                String trstring = (String) (clipboard.getContents(this).getTransferData(DataFlavor.stringFlavor));
                 StringTokenizer st1 = new StringTokenizer(trstring, "\n");
                 for (int i = 0; st1.hasMoreTokens(); i++) {
-                    rowstring = st1.nextToken();
-                    StringTokenizer st2 = new StringTokenizer(rowstring, "\t");
+                    String line = st1.nextToken();
+                    StringTokenizer st2 = new StringTokenizer(line, "\t");
                     for (int j = 0; st2.hasMoreTokens(); j++) {
-                        value = (String) st2.nextToken();
+                        String token = st2.nextToken();
                         if (startRow + i < table.getRowCount()
                                 && startCol + j < table.getColumnCount()) {
-                            table.setValueAt(value, startRow + i, startCol + j);
+                            table.setValueAt(token, startRow + i, startCol + j);
                         }
                     }
                 }
