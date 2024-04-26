@@ -107,6 +107,6 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
      * @return the sparse feature vectors.
      */
     public SparseArray[] apply(DataFrame data) {
-        return data.stream().map(this::apply).toArray(SparseArray[]::new);
+        return data.stream().map(this).toArray(SparseArray[]::new);
     }
 }

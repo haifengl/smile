@@ -228,7 +228,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @throws ParseException when fails to parse data.
      * @return the sparse dataset.
      */
-    static SparseDataset from(Path path) throws IOException, ParseException {
+    static SparseDataset<Void> from(Path path) throws IOException, ParseException {
         return from(path, 0);
     }
 
