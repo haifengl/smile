@@ -83,7 +83,7 @@ import static smile.math.blas.UPLO.LOWER;
  *
  * @author Haifeng Li
  */
-public abstract class IMatrix implements Cloneable, Serializable {
+public abstract class IMatrix implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IMatrix.class);
 
     /**
