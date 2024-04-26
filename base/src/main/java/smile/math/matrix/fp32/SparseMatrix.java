@@ -209,7 +209,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
-    public SparseMatrix clone() {
+    public SparseMatrix copy() {
         return new SparseMatrix(m, n, nonzeros.clone(), rowIndex.clone(), colIndex.clone());
     }
 

@@ -529,10 +529,10 @@ public class UMAP implements Serializable {
         double b = curve[1];
         double alpha = initialAlpha;
 
-        SparseMatrix epochsPerNegativeSample = epochsPerSample.clone();
+        SparseMatrix epochsPerNegativeSample = epochsPerSample.copy();
         epochsPerNegativeSample.nonzeros().forEach(w -> w.update(w.x / negativeSamples));
-        SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.clone();
-        SparseMatrix epochNextSample = epochsPerSample.clone();
+        SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.copy();
+        SparseMatrix epochNextSample = epochsPerSample.copy();
 
         for (int iter = 1; iter <= iterations; iter++) {
             for (SparseMatrix.Entry edge : epochNextSample) {

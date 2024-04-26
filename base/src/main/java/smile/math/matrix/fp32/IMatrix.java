@@ -96,6 +96,14 @@ public abstract class IMatrix implements Serializable {
     private String[] colNames;
 
     /**
+     * Returns a deep copy of matrix.
+     * @return a deep copy of matrix.
+     */
+    public IMatrix copy() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Returns the number of rows.
      * @return the number of rows.
      */

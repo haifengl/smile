@@ -505,9 +505,8 @@ public class Matrix extends IMatrix {
         return diag;
     }
 
-    /** Returns a deep copy of matrix. */
     @Override
-    public Matrix clone() {
+    public Matrix copy() {
         Matrix matrix;
         if (layout() == COL_MAJOR) {
             matrix = new Matrix(m, n, ld, A.clone());
@@ -1454,7 +1453,7 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        Matrix lu = clone();
+        Matrix lu = copy();
         Matrix inv = eye(n);
         int[] ipiv = new int[n];
         if (isSymmetric()) {
@@ -1717,7 +1716,7 @@ public class Matrix extends IMatrix {
      * @return LU decomposition.
      */
     public LU lu(boolean overwrite) {
-        Matrix lu = overwrite ? this : clone();
+        Matrix lu = overwrite ? this : copy();
         int[] ipiv = new int[Math.min(m, n)];
         int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
@@ -1751,7 +1750,7 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        Matrix lu = overwrite ? this : clone();
+        Matrix lu = overwrite ? this : copy();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK POTRF error code: {}", info);
@@ -1776,7 +1775,7 @@ public class Matrix extends IMatrix {
      * @return QR decomposition.
      */
     public QR qr(boolean overwrite) {
-        Matrix qr = overwrite ? this : clone();
+        Matrix qr = overwrite ? this : copy();
         double[] tau = new double[Math.min(m, n)];
         int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
@@ -1829,7 +1828,7 @@ public class Matrix extends IMatrix {
         int k = Math.min(m, n);
         double[] s = new double[k];
 
-        Matrix W = overwrite ? this : clone();
+        Matrix W = overwrite ? this : copy();
         if (vectors) {
             Matrix U = new Matrix(m, k);
             Matrix VT = new Matrix(k, n);
@@ -1888,7 +1887,7 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        Matrix eig = overwrite ? this : clone();
+        Matrix eig = overwrite ? this : copy();
         if (isSymmetric()) {
             double[] w = new double[n];
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
@@ -2702,7 +2701,7 @@ public class Matrix extends IMatrix {
             int m = qr.m;
             int n = qr.n;
             int k = Math.min(m, n);
-            Matrix Q = qr.clone();
+            Matrix Q = qr.copy();
             int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);
