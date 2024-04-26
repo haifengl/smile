@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * Laplacian kernel, also referred as exponential kernel.
  * <p>
@@ -27,6 +29,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class Laplacian implements IsotropicKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The length scale of the kernel. */

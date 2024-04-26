@@ -19,6 +19,8 @@ package smile.math.distance;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * The Jensen-Shannon divergence is a popular method of measuring the
  * similarity between two probability distributions. It is also known
@@ -38,6 +40,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class JensenShannonDistance implements Metric<double[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

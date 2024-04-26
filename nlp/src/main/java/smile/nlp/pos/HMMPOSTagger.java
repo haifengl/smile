@@ -30,6 +30,7 @@ import smile.util.Paths;
  * @author Haifeng Li
  */
 public class HMMPOSTagger implements POSTagger, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HMMPOSTagger.class);
 

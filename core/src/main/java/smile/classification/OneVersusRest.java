@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
@@ -54,6 +55,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class OneVersusRest<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusRest.class);
 

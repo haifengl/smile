@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * The Thin Plate Spline kernel.
  * <p>
@@ -27,6 +29,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class ThinPlateSpline implements IsotropicKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

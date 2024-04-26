@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -27,6 +28,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class Hash implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

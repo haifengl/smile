@@ -17,6 +17,7 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Iterator;
 import smile.util.SparseArray;
@@ -28,6 +29,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SparseManhattanDistance implements Metric<SparseArray> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

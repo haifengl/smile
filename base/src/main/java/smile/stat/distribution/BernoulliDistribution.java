@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Bernoulli's distribution is a discrete probability distribution, which takes
  * value 1 with success probability p and value 0 with failure probability
@@ -31,6 +33,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BernoulliDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

@@ -17,6 +17,8 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
+
 /**
  * The logistic distribution is a continuous probability distribution whose
  * cumulative distribution function is the logistic function, which appears
@@ -38,6 +40,7 @@ package smile.stat.distribution;
  * @author Haifeng Li
  */
 public class LogisticDistribution implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private static final double PI_SQRT3 = Math.PI / Math.sqrt(3);

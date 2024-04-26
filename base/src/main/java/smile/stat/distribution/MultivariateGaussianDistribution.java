@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
@@ -30,6 +31,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class MultivariateGaussianDistribution implements MultivariateDistribution, MultivariateExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE = Math.log(2 * Math.PI * Math.E);

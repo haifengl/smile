@@ -17,6 +17,7 @@
 
 package smile.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import java.util.stream.IntStream;
  */
 
 public final class IntArrayList implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

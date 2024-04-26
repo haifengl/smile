@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.util.*;
 import smile.neighbor.lsh.*;
 import smile.util.IntArrayList;
@@ -50,6 +51,7 @@ import smile.sort.HeapSelect;
  * @author Haifeng Li
  */
 public class MPLSH <E> extends LSH<E> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

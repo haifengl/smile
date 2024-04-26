@@ -19,6 +19,7 @@ package smile.math.distance;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
 import java.util.function.ToDoubleBiFunction;
 
 /**
@@ -27,6 +28,7 @@ import java.util.function.ToDoubleBiFunction;
  * @author Haifeng Li
  */
 public class CorrelationDistance implements Distance<double[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** The type of correlation is employed. */

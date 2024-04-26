@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
@@ -33,6 +34,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class EmpiricalDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

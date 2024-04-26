@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * F-distribution arises in the testing of whether two observed samples have
  * the same variance. A random variate of the F-distribution arises as the
@@ -28,6 +30,7 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class FDistribution implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

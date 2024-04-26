@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -46,6 +47,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class QDA extends AbstractClassifier<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

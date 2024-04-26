@@ -17,6 +17,7 @@
 
 package smile.math.matrix.fp32;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
@@ -39,6 +40,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class Matrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
 
@@ -1991,6 +1993,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class SVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
@@ -2297,6 +2300,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class EVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
@@ -2441,6 +2445,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -2584,6 +2589,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
@@ -2681,6 +2687,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class QR implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.

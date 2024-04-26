@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +54,7 @@ import smile.sort.HeapSelect;
  * @author Haifeng Li
  */
 public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

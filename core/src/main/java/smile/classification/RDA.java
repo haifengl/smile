@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
@@ -40,6 +41,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class RDA extends QDA {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

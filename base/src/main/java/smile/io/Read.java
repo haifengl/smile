@@ -324,8 +324,9 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame arff(String path) throws IOException, ParseException, URISyntaxException {
-        Arff arff = new Arff(path);
-        return arff.read();
+        try (var arff = new Arff(path)) {
+            return arff.read();
+        }
     }
 
     /**
@@ -359,8 +360,9 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame arff(Path path) throws IOException, ParseException {
-        Arff arff = new Arff(path);
-        return arff.read();
+        try (var arff = new Arff(path)) {
+            return arff.read();
+        }
     }
 
     /**

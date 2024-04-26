@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -62,6 +63,7 @@ import smile.util.IntArrayList;
  * @author Qiyang Zuo
  */
 public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** Hash function mask. */

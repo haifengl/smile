@@ -134,6 +134,7 @@ public abstract class MultilayerPerceptron implements Serializable {
      * @throws IOException when fails to read the stream.
      * @throws ClassNotFoundException when fails to load the class.
      */
+    @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         init();

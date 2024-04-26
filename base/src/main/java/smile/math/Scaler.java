@@ -17,6 +17,7 @@
 
 package smile.math;
 
+import java.io.Serial;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +31,7 @@ import static smile.util.Regex.DOUBLE_REGEX;
  * @author Haifeng Li
  */
 public class Scaler implements Function {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

@@ -318,11 +318,7 @@ public class Base {
     public String toString() {
         StringBuilder s = new StringBuilder(String.format("Base[%d]{", dimension));
         for (var baseCoord : baseCoords) {
-            s.append("[");
-            for (int j = 0; j < baseCoord.length; j++) {
-                s.append(baseCoord[j]).append(',');
-            }
-            s.setCharAt(s.length() - 1, ']');
+            s.append(Arrays.toString(baseCoord));
         }
         s.append('}');
         return s.toString();

@@ -19,6 +19,8 @@ package smile.math.kernel;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Pearson VII universal kernel. The Pearson VII function
  * is often used for curve fitting of X-ray diffraction
@@ -32,6 +34,7 @@ import smile.math.MathEx;
  * @author Diego Catalano
  */
 public class PearsonKernel implements MercerKernel<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The tailing factor of the peak. */

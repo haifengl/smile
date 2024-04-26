@@ -17,6 +17,7 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import java.util.Set;
  * @author Haifeng Li
  */
 public class JaccardDistance<T> implements Distance<T[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

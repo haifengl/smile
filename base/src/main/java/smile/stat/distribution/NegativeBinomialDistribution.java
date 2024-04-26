@@ -17,6 +17,8 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
+
 import static smile.math.MathEx.factorial;
 import static smile.math.MathEx.lfactorial;
 import static smile.math.special.Beta.regularizedIncompleteBetaFunction;
@@ -53,6 +55,7 @@ import static smile.math.special.Gamma.lgamma;
  * @author Haifeng Li
  */
 public class NegativeBinomialDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

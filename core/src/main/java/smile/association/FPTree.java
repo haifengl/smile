@@ -190,14 +190,14 @@ public class FPTree {
     /**
      * The required minimum support of item sets.
      */
-    int minSupport;
+    final int minSupport;
     /**
      * Start reference for FP-tree. Root is just a dummy node for building the
      * FP-tree as a starting point. It is used during mining maximal frequent
      * item sets. No other nodes should use it as a parent node even if they
      * are root's children nodes.
      */
-    Node root = new Node();
+    final Node root = new Node();
     /**
      * The support of single items.
      */

@@ -17,10 +17,7 @@
 
 package smile.math.matrix;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.IntPointer;
@@ -43,6 +40,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class BigMatrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
@@ -419,6 +417,7 @@ public class BigMatrix extends IMatrix {
      * @param out the output stream.
      * @throws IOException when fails to write to the stream.
      */
+    @Serial
     private void writeObject(ObjectOutputStream out) throws IOException {
         // write default properties
         out.defaultWriteObject();
@@ -445,6 +444,7 @@ public class BigMatrix extends IMatrix {
      * @throws IOException when fails to read the stream.
      * @throws ClassNotFoundException when fails to load the class.
      */
+    @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // read default properties
         in.defaultReadObject();
@@ -1994,6 +1994,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class SVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
@@ -2296,6 +2297,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class EVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
@@ -2440,6 +2442,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -2586,6 +2589,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
@@ -2686,6 +2690,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class QR implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.

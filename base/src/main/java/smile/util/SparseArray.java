@@ -17,6 +17,7 @@
 
 package smile.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import smile.sort.QuickSort;
  *
  */
 public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     // Entry as an object has too much overhead and not CPU cache friendly.

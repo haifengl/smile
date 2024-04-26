@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * The Weibull distribution is one of the most widely used lifetime distributions
  * in reliability engineering. It is a versatile distribution that can take on
@@ -64,6 +66,7 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class WeibullDistribution implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */

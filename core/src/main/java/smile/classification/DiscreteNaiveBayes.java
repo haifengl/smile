@@ -22,6 +22,7 @@ import smile.util.IntSet;
 import smile.util.SparseArray;
 import smile.stat.distribution.Distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -82,6 +83,7 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 

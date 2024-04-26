@@ -17,6 +17,7 @@
 
 package smile.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class IntSet implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** Map of index to original values. */

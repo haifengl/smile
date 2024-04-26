@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -33,6 +34,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class ClassLabels implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The number of classes. */

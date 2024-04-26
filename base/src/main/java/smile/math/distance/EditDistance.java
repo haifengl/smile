@@ -20,6 +20,8 @@ package smile.math.distance;
 import smile.math.MathEx;
 import smile.util.IntArray2D;
 
+import java.io.Serial;
+
 /**
  * The Edit distance between two strings is a metric for measuring the amount
  * of difference between two sequences. The Levenshtein distance between two
@@ -41,6 +43,7 @@ import smile.util.IntArray2D;
  * @author Haifeng Li
  */
 public class EditDistance implements Metric<String> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

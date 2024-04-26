@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
@@ -108,6 +109,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class MLP extends MultilayerPerceptron implements Classifier<double[]>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
