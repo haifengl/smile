@@ -14,20 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.math.kernel;
 
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.SparseArray;
-import static smile.util.Regex.INTEGER_REGEX;
-import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -196,16 +192,12 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     static MercerKernel<double[]> of(String kernel) {
         kernel = kernel.trim().toLowerCase(Locale.ROOT);
 
-        Pattern linear = Pattern.compile(
-                String.format("linear(?:kernel)?(?:\\(\\))?"));
-        Matcher m = linear.matcher(kernel);
+        Matcher m = KernelPatterns.linear.matcher(kernel);
         if (m.matches()) {
             return new LinearKernel();
         }
 
-        Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
-        m = polynomial.matcher(kernel);
+        m = KernelPatterns.polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
             double scale = Double.parseDouble(m.group(2));
@@ -213,60 +205,46 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             return new PolynomialKernel(degree, scale, offset);
         }
 
-        Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = gaussian.matcher(kernel);
+        m = KernelPatterns.gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new GaussianKernel(sigma);
         }
 
-        Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = matern.matcher(kernel);
+        m = KernelPatterns.matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             double nu = Double.parseDouble(m.group(2));
             return new MaternKernel(sigma, nu);
         }
 
-        Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = laplacian.matcher(kernel);
+        m = KernelPatterns.laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             return new LaplacianKernel(scale);
         }
 
-        Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = tanh.matcher(kernel);
+        m = KernelPatterns.tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             double offset = Double.parseDouble(m.group(2));
             return new HyperbolicTangentKernel(scale, offset);
         }
 
-        Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = tps.matcher(kernel);
+        m = KernelPatterns.thinPlateSpline.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new ThinPlateSplineKernel(sigma);
         }
 
-        Pattern pearson = Pattern.compile(
-                String.format("pearson(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = pearson.matcher(kernel);
+        m = KernelPatterns.pearson.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             double omega = Double.parseDouble(m.group(2));
             return new PearsonKernel(sigma, omega);
         }
 
-        Pattern hellinger = Pattern.compile(
-                String.format("hellinger(?:kernel)?(?:\\(\\))?"));
-        m = hellinger.matcher(kernel);
+        m = KernelPatterns.hellinger.matcher(kernel);
         if (m.matches()) {
             return new HellingerKernel();
         }
@@ -282,16 +260,12 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     static MercerKernel<SparseArray> sparse(String kernel) {
         kernel = kernel.trim();
 
-        Pattern linear = Pattern.compile(
-                String.format("linear(?:kernel)?(?:\\(\\))?"));
-        Matcher m = linear.matcher(kernel);
+        Matcher m = KernelPatterns.linear.matcher(kernel);
         if (m.matches()) {
             return new SparseLinearKernel();
         }
 
-        Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
-        m = polynomial.matcher(kernel);
+        m = KernelPatterns.polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
             double scale = Double.parseDouble(m.group(2));
@@ -299,43 +273,33 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             return new SparsePolynomialKernel(degree, scale, offset);
         }
 
-        Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = gaussian.matcher(kernel);
+        m = KernelPatterns.gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new SparseGaussianKernel(sigma);
         }
 
-        Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = matern.matcher(kernel);
+        m = KernelPatterns.matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             double nu = Double.parseDouble(m.group(2));
             return new SparseMaternKernel(sigma, nu);
         }
 
-        Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = laplacian.matcher(kernel);
+        m = KernelPatterns.laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             return new SparseLaplacianKernel(scale);
         }
 
-        Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = tanh.matcher(kernel);
+        m = KernelPatterns.tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             double offset = Double.parseDouble(m.group(2));
             return new SparseHyperbolicTangentKernel(scale, offset);
         }
 
-        Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = tps.matcher(kernel);
+        m = KernelPatterns.thinPlateSpline.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new SparseThinPlateSplineKernel(sigma);
@@ -352,16 +316,12 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     static MercerKernel<int[]> binary(String kernel) {
         kernel = kernel.trim();
 
-        Pattern linear = Pattern.compile(
-                String.format("linear(?:kernel)?(?:\\(\\))?"));
-        Matcher m = linear.matcher(kernel);
+        Matcher m = KernelPatterns.linear.matcher(kernel);
         if (m.matches()) {
             return new BinarySparseLinearKernel();
         }
 
-        Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
-        m = polynomial.matcher(kernel);
+        m = KernelPatterns.polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
             double scale = Double.parseDouble(m.group(2));
@@ -369,43 +329,33 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             return new BinarySparsePolynomialKernel(degree, scale, offset);
         }
 
-        Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = gaussian.matcher(kernel);
+        m = KernelPatterns.gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new BinarySparseGaussianKernel(sigma);
         }
 
-        Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = matern.matcher(kernel);
+        m = KernelPatterns.matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             double nu = Double.parseDouble(m.group(2));
             return new BinarySparseMaternKernel(sigma, nu);
         }
 
-        Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = laplacian.matcher(kernel);
+        m = KernelPatterns.laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             return new BinarySparseLaplacianKernel(scale);
         }
 
-        Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-        m = tanh.matcher(kernel);
+        m = KernelPatterns.tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
             double offset = Double.parseDouble(m.group(2));
             return new BinarySparseHyperbolicTangentKernel(scale, offset);
         }
 
-        Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
-        m = tps.matcher(kernel);
+        m = KernelPatterns.thinPlateSpline.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
             return new BinarySparseThinPlateSplineKernel(sigma);
