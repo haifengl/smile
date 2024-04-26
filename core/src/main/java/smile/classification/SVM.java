@@ -293,7 +293,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
                 }
             case "binary":
                 Arrays.sort(classes);
-                if (classes[0] != -1 || classes[1] != +1) {
+                if (classes[0] != -1 || classes[1] != 1) {
                     y = y.clone();
                     for (int i = 0; i < y.length; i++) {
                         y[i] = y[i] == classes[0] ? -1 : +1;

@@ -191,7 +191,7 @@ public class LASVM<T> implements Serializable {
         int cp = 0, cn = 0;
 
         for (int i : MathEx.permutate(x.length)) {
-            if (y[i] == +1 && cp < few) {
+            if (y[i] == 1 && cp < few) {
                 if (process(i, x[i], y[i])) cp++;
             } else if (y[i] == -1 && cn < few) {
                 if (process(i, x[i], y[i])) cn++;
@@ -370,7 +370,7 @@ public class LASVM<T> implements Serializable {
      * @return true if x is added to support vectors.
      */
     private boolean process(int i, T x, int y) {
-        if (y != +1 && y != -1) {
+        if (y != 1 && y != -1) {
             throw new IllegalArgumentException("Invalid label: " + y);
         }
 

@@ -28,7 +28,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Dot implements Term {
+public class Dot implements Term {
     /**
      * Constructor.
      */
