@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Haifeng Li
  */
-class Round extends AbstractFunction {
+public class Round extends AbstractFunction {
     /**
      * Constructor.
      *
