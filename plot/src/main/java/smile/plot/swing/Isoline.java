@@ -73,7 +73,7 @@ public class Isoline extends Shape {
         double angle = 0.0;
         double horizontalReference = 0.0;
         double verticalReference = 0.0;
-        double[] coord = null;
+        double[] coord = points.get(0);
 
         if (points.size() > 1) {
             double[] x1 = points.get(0);

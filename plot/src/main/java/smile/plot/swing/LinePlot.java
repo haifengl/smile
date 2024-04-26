@@ -40,8 +40,7 @@ public class LinePlot extends Plot {
      * Constructor.
      */
     public LinePlot(Line... lines) {
-        this.lines = lines;
-        legends = null;
+        this(lines, null);
     }
 
     /**

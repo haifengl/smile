@@ -40,8 +40,7 @@ public class BarPlot extends Plot {
      * Constructor.
      */
     public BarPlot(Bar... bars) {
-        this.bars = bars;
-        legends = null;
+        this(bars, null);
     }
 
     /**

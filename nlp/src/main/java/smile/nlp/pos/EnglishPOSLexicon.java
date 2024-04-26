@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * An English lexicon with part-of-speech tags.
@@ -77,7 +78,7 @@ public class EnglishPOSLexicon {
      * character 0xBE replaced with a '~'.
      */
     static {
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishPOSLexicon.class.getResourceAsStream("/smile/nlp/pos/part-of-speech_en.txt")))) {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(Objects.requireNonNull(EnglishPOSLexicon.class.getResourceAsStream("/smile/nlp/pos/part-of-speech_en.txt"))))) {
             input.lines().forEach(line -> {
                 String[] pos = line.trim().split("\t");
                 if (pos.length == 2) {

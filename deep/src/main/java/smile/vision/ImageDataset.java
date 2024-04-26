@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.ToIntFunction;
@@ -66,10 +67,10 @@ public class ImageDataset implements Dataset {
             throw new IOException("Dataset root directory doesn't exist: " + root);
         }
 
-        for (var child : dir.listFiles()) {
+        for (var child : Objects.requireNonNull(dir.listFiles())) {
             if (child.isDirectory()) {
                 String label = child.getName();
-                File[] images = child.listFiles();
+                File[] images = Objects.requireNonNull(child.listFiles());
                 for (var image : images) {
                     if (image.isFile()) {
                         String name = image.getName().toLowerCase();
