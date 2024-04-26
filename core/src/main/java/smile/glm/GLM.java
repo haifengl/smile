@@ -122,7 +122,7 @@ public class GLM implements Serializable {
     /**
      * The deviance residuals.
      */
-    protected double[] devianceResiduals;
+    protected final double[] devianceResiduals;
     /**
      * The degrees of freedom of the residual deviance.
      */

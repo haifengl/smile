@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * Student's t-distribution (or simply the t-distribution) is a probability
  * distribution that arises in the problem of estimating the mean of a
@@ -35,6 +37,7 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class TDistribution implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The degree of freedom. */

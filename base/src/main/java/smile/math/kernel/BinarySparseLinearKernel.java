@@ -19,6 +19,8 @@ package smile.math.kernel;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * The linear dot product kernel on sparse binary arrays in {@code int[]},
  * which are the indices of nonzero elements.
@@ -27,6 +29,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BinarySparseLinearKernel implements MercerKernel<int[]>, DotProductKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

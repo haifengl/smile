@@ -159,7 +159,7 @@ public class Field {
      * position and mark property channels.
      * <p>
      * Vega-Lite supports the following categories of scale types:
-     *
+     * <p>
      * 1) Continuous Scales - mapping continuous domains to continuous output
      * ranges ("linear", "pow", "sqrt", "symlog", "log", "time", "utc".
      * <p>

@@ -60,13 +60,13 @@ public class Grid extends Plot {
     @Override
     public double[] getLowerBound() {
         double[] bound = {data[0][0][0], data[0][0][1]};
-        for (var row : data) {
-            for (int j = 0; j < row.length; j++) {
-                if (row[j][0] < bound[0]) {
-                    bound[0] = row[j][0];
+        for (var datum : data) {
+            for (var row : datum) {
+                if (row[0] < bound[0]) {
+                    bound[0] = row[0];
                 }
-                if (row[j][1] < bound[1]) {
-                    bound[1] = row[j][1];
+                if (row[1] < bound[1]) {
+                    bound[1] = row[1];
                 }
             }
         }
@@ -77,13 +77,13 @@ public class Grid extends Plot {
     @Override
     public double[] getUpperBound() {
         double[] bound = {data[0][0][0], data[0][0][1]};
-        for (var row : data) {
-            for (int j = 0; j < row.length; j++) {
-                if (row[j][0] > bound[0]) {
-                    bound[0] = row[j][0];
+        for (var datum : data) {
+            for (var row : datum) {
+                if (row[0] > bound[0]) {
+                    bound[0] = row[0];
                 }
-                if (row[j][1] > bound[1]) {
-                    bound[1] = row[j][1];
+                if (row[1] > bound[1]) {
+                    bound[1] = row[1];
                 }
             }
         }

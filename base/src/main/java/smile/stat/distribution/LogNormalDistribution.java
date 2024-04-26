@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Erf;
 
+import java.io.Serial;
+
 /**
  * A log-normal distribution is a probability distribution of a random variable
  * whose logarithm is normally distributed. The log-normal distribution is the
@@ -34,6 +36,7 @@ import smile.math.special.Erf;
  * @author Haifeng Li
  */
 public class LogNormalDistribution implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The mean of normal distribution. */

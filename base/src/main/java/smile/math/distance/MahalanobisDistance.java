@@ -20,6 +20,8 @@ package smile.math.distance;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
+import java.io.Serial;
+
 /**
  * In statistics, Mahalanobis distance is based on correlations between
  * variables by which different patterns can be identified and analyzed.
@@ -31,6 +33,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class MahalanobisDistance implements Metric<double[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** The covariance matrix. */

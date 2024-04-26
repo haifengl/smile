@@ -169,11 +169,7 @@ public class Trie<K, V> {
      * @param value the value.
      */
     public void put(K[] key, V value) {
-        Node child = root.get(key[0]);
-        if (child == null) {
-            child = new Node(key[0]);
-            root.put(key[0], child);
-        }
+        Node child = root.computeIfAbsent(key[0], k -> new Node(key[0]));
         child.addChild(key, value, 1);
     }
 

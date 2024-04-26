@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Beta;
 
+import java.io.Serial;
+
 import static java.lang.Math.*;
 import static smile.math.MathEx.lfactorial;
 
@@ -56,6 +58,7 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class BinomialDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */

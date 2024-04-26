@@ -17,6 +17,8 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
+
 /**
  * The geometric distribution is a discrete probability distribution of the
  * number X of Bernoulli trials needed to get one success, supported on the set
@@ -46,6 +48,7 @@ package smile.stat.distribution;
  * @author Haifeng Li
  */
 public class GeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

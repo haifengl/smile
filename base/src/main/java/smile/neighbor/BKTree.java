@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,7 @@ import smile.math.distance.Metric;
  * @author Haifeng Li
  */
 public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     
     /**

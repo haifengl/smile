@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Erf;
 
+import java.io.Serial;
+
 /**
  * The normal distribution or Gaussian distribution is a continuous probability
  * distribution that describes data that clusters around a mean.
@@ -71,6 +73,7 @@ import smile.math.special.Erf;
  * @author Haifeng Li
  */
 public class GaussianDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE_2 = Math.log(2 * Math.PI * Math.E) / 2;

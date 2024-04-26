@@ -23,6 +23,7 @@ import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.IntSet;
 
+import java.io.Serial;
 import java.util.Properties;
 
 /**
@@ -92,6 +93,7 @@ import java.util.Properties;
  * @author Haifeng Li
  */
 public class RBFNetwork<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

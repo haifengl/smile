@@ -19,6 +19,7 @@ package smile.math.matrix.fp32;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serial;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -62,8 +63,9 @@ import static java.util.Spliterator.*;
  * @author Haifeng Li
  */
 public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry> {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
+    @Serial
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
 
     /**
      * The number of rows.

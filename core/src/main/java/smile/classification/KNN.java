@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
@@ -71,6 +72,7 @@ import smile.neighbor.Neighbor;
  * @author Haifeng Li
  */
 public class KNN<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

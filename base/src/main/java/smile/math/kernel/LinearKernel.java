@@ -19,6 +19,8 @@ package smile.math.kernel;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * The linear dot product kernel. When using a linear kernel, input space is
  * identical to feature space.
@@ -26,6 +28,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

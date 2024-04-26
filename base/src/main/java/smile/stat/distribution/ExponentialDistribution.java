@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * An exponential distribution describes the times between events in a Poisson
  * process, in which events occur continuously and independently at a constant
@@ -56,6 +58,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class ExponentialDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The rate parameter. */

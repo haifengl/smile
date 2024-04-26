@@ -282,7 +282,7 @@ public class VegaLite {
             Desktop.getDesktop().browse(path.toUri());
         } catch (Exception ex) {
             if (silent) {
-                logger.warn("Failed to show " + this.getClass().getSimpleName(), ex);
+                logger.warn("Failed to show {}", this.getClass().getSimpleName(), ex);
             } else {
                 throw ex;
             }

@@ -17,6 +17,7 @@
 
 package smile.ica;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
@@ -55,6 +56,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class ICA implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICA.class);
 

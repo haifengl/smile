@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * The polynomial kernel.
  * <p>
@@ -28,6 +30,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class Polynomial implements DotProductKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The degree of polynomial. */

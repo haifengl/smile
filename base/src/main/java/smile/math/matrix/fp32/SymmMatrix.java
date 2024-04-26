@@ -17,6 +17,7 @@
 
 package smile.math.matrix.fp32;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import smile.math.MathEx;
@@ -30,6 +31,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class SymmMatrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SymmMatrix.class);
 
@@ -260,6 +262,7 @@ public class SymmMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class BunchKaufman implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Bunch–Kaufman decomposition.
@@ -393,6 +396,7 @@ public class SymmMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.

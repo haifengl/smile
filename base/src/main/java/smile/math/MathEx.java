@@ -190,7 +190,7 @@ public class MathEx {
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
     private static class FPU {
-        int RADIX;
+        final int RADIX;
         int DIGITS;
         final int FLOAT_DIGITS = 24;
         int ROUND_STYLE;
@@ -199,7 +199,7 @@ public class MathEx {
         int NEGEP;
         final int FLOAT_NEGEP = -24;
         final float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
-        double EPSILON;
+        final double EPSILON;
 
         FPU() {
             double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;

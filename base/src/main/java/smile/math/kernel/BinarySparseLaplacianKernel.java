@@ -19,6 +19,8 @@ package smile.math.kernel;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Laplacian kernel, also referred as exponential kernel.
  * <p>
@@ -31,6 +33,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BinarySparseLaplacianKernel extends Laplacian implements MercerKernel<int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

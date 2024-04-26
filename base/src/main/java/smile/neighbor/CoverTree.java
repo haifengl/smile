@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +59,7 @@ import smile.util.DoubleArrayList;
  * @author Haifeng Li
  */
 public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoverTree.class);
 

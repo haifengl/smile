@@ -17,6 +17,7 @@
 
 package smile.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ import java.util.stream.DoubleStream;
  */
 
 public final class DoubleArrayList implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     /** Format for toString. */
     private static final DecimalFormat format = new DecimalFormat("#.######");

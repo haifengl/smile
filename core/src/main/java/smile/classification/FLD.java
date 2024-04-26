@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -61,6 +62,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class FLD extends AbstractClassifier<double[]> /*implements Projection<double[]>*/ {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

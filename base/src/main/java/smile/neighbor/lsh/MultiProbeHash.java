@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -25,6 +26,7 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class MultiProbeHash extends Hash {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

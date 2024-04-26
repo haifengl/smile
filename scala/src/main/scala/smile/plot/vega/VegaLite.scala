@@ -274,7 +274,7 @@ object VegaLite {
   val mime: String = "application/vnd.vegalite.v5+json"
 
   /** Returns a single view specification to be used in a composition.
-    * @param init Initial specification.
+    * @param title view title.
     */
   def view(title: String = ""): View = {
     val view = new View {

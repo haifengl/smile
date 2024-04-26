@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * The Gamma distribution is a continuous probability distributions with
  * a scale parameter &theta; and a shape parameter k. If k is an
@@ -51,6 +53,7 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class GammaDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The scale parameter. */

@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import smile.math.MathEx;
@@ -67,6 +68,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class BandMatrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
@@ -395,6 +397,7 @@ public class BandMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -538,6 +541,7 @@ public class BandMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.

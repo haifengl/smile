@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -37,6 +38,7 @@ import smile.validation.ModelSelection;
  * @author Haifeng Li
  */
 public abstract class SparseLogisticRegression extends AbstractClassifier<SparseArray> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
