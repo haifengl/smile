@@ -942,13 +942,11 @@ public abstract class IMatrix implements Serializable {
             P.asolve(b, z);
             bnrm = norm(z, itol);
             P.asolve(r, z);
-        } else if (itol == 3 || itol == 4) {
+        } else { // if (itol == 3 || itol == 4) {
             P.asolve(b, z);
             bnrm = norm(z, itol);
             P.asolve(r, z);
             znrm = norm(z, itol);
-        } else {
-            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
@@ -985,7 +983,7 @@ public abstract class IMatrix implements Serializable {
                 err = norm(r, itol) / bnrm;
             } else if (itol == 2) {
                 err = norm(z, itol) / bnrm;
-            } else if (itol == 3 || itol == 4) {
+            } else { // if (itol == 3 || itol == 4) {
                 zm1nrm = znrm;
                 znrm = norm(z, itol);
                 if (Math.abs(zm1nrm - znrm) > MathEx.EPSILON * znrm) {

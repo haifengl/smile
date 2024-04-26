@@ -44,7 +44,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     /**
      * Number of rows per page.
      */
-    private int pageSize = 100;
+    private int pageSize;
     /**
      * The current page.
      */

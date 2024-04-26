@@ -106,7 +106,7 @@ public class Isoline extends Shape {
                     }
                 }
             }
-        } else if (points.size() == 1) {
+        } else {
             double[] x1 = points.get(0);
             g.drawPoint('@', x1);
             coord = x1;

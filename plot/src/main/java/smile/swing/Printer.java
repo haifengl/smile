@@ -39,12 +39,12 @@ public class Printer {
     /**
      * Printer job.
      */
-    private PrinterJob printer = null;
+    private PrinterJob printer;
     /**
      * Singleton instance. An application should have only one printer instance
      * so that printer settings can be shared by swing components.
      */
-    private static Printer singleton = null;
+    private static Printer singleton;
     
     /**
      * Private constructor for singleton design pattern.

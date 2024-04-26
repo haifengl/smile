@@ -342,7 +342,7 @@ public class VegaLite {
      *
      * @param id the iframe HTML id.
      */
-    public String iframe(String id) throws JsonProcessingException {
+    public String iframe(String id) {
         String src = Strings.htmlEscape(html());
         return String.format("""
                    <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>

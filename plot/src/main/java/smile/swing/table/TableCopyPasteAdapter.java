@@ -79,6 +79,7 @@ public class TableCopyPasteAdapter implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         var table = tableRef.get();
+        if (table == null) return;
         var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
         if (e.getActionCommand().compareTo("Copy") == 0) {
@@ -110,8 +111,8 @@ public class TableCopyPasteAdapter implements ActionListener {
         }
         
         if (e.getActionCommand().compareTo("Paste") == 0) {
-            int startRow = (table.getSelectedRows())[0];
-            int startCol = (table.getSelectedColumns())[0];
+            int startRow = table.getSelectedRows()[0];
+            int startCol = table.getSelectedColumns()[0];
             try {
                 String trstring = (String) (clipboard.getContents(this).getTransferData(DataFlavor.stringFlavor));
                 StringTokenizer st1 = new StringTokenizer(trstring, "\n");
@@ -120,8 +121,7 @@ public class TableCopyPasteAdapter implements ActionListener {
                     StringTokenizer st2 = new StringTokenizer(line, "\t");
                     for (int j = 0; st2.hasMoreTokens(); j++) {
                         String token = st2.nextToken();
-                        if (startRow + i < table.getRowCount()
-                                && startCol + j < table.getColumnCount()) {
+                        if (startRow + i < table.getRowCount() && startCol + j < table.getColumnCount()) {
                             table.setValueAt(token, startRow + i, startCol + j);
                         }
                     }

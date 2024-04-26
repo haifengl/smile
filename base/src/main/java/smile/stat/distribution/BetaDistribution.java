@@ -263,7 +263,7 @@ public class BetaDistribution implements ExponentialFamily {
         }
 
         public double rand() {
-            double X = 0.0;
+            double X;
             double u1, u2, v, w, y, z, r, s, t;
             switch (method) {
                 case BB:

@@ -283,15 +283,15 @@ public class Table extends JXTable {
             return DateCellEditor.ISO8601;
         } else if (clazz.equals(java.util.Date.class)) {
             return DateCellEditor.YYYYMMDD_HHMMSS;
-        } else if (clazz.equals(Byte.TYPE)) {
+        } else if (clazz.equals(Byte.class)) {
             return byteEditor;
-        } else if (clazz.equals(Short.TYPE)) {
+        } else if (clazz.equals(Short.class)) {
             return shortEditor;
-        } else if (clazz.equals(Integer.TYPE)) {
+        } else if (clazz.equals(Integer.class)) {
             return intEditor;
-        } else if (clazz.equals(Float.TYPE)) {
+        } else if (clazz.equals(Float.class)) {
             return floatEditor;
-        } else if (clazz.equals(Double.TYPE)) {
+        } else if (clazz.equals(Double.class)) {
             return doubleEditor;
         } else if (clazz.equals(int[].class)) {
             return intArrayEditor;
