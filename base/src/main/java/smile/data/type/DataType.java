@@ -318,7 +318,7 @@ public interface DataType extends Serializable {
      * @param clazz the Class object.
      * @return Smile data type.
      */
-    static DataType of(Class clazz) {
+    static DataType of(Class<?> clazz) {
         if (clazz == int.class)
             return DataTypes.IntegerType;
         else if (clazz == double.class)
@@ -514,7 +514,7 @@ public interface DataType extends Serializable {
         return switch (t.id()) {
             case Integer, Short, Byte -> true;
             case Object -> {
-                Class clazz = ((ObjectType) t).getObjectClass();
+                Class<?> clazz = ((ObjectType) t).getObjectClass();
                 yield clazz == Integer.class || clazz == Short.class || clazz == Byte.class;
             }
             default -> false;

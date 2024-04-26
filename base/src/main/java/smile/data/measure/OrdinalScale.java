@@ -69,7 +69,7 @@ public class OrdinalScale extends CategoricalMeasure {
      *
      * @param clazz an Enum class.
      */
-    public OrdinalScale(Class<? extends Enum> clazz) {
+    public OrdinalScale(Class<? extends Enum<?>> clazz) {
         super(values(clazz), levels(clazz));
     }
 

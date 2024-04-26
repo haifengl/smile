@@ -123,11 +123,10 @@ public class Date implements Term {
                     if (x == null) return null;
 
                     WeekFields weekFields = WeekFields.of(Locale.ROOT);
-                    switch (type.id()) {
-                        case Date:
-                        {
+                    return switch (type.id()) {
+                        case Date -> {
                             LocalDate date = (LocalDate) x;
-                            return switch (feature) {
+                            yield switch (feature) {
                                 case YEAR -> date.getYear();
                                 case MONTH -> date.getMonthValue();
                                 case WEEK_OF_YEAR -> date.get(weekFields.weekOfYear());
@@ -139,20 +138,18 @@ public class Date implements Term {
                                 default -> throw new IllegalStateException("Extract time features from a date.");
                             };
                         }
-                        case Time:
-                        {
+                        case Time -> {
                             LocalTime time = (LocalTime) x;
-                            return switch (feature) {
+                            yield switch (feature) {
                                 case HOUR -> time.getHour();
                                 case MINUTE -> time.getMinute();
                                 case SECOND -> time.getSecond();
                                 default -> throw new IllegalStateException("Extract date features from a time.");
                             };
                         }
-                        case DateTime:
-                        {
+                        case DateTime -> {
                             LocalDateTime dateTime = (LocalDateTime) x;
-                            return switch (feature) {
+                            yield switch (feature) {
                                 case YEAR -> dateTime.getYear();
                                 case MONTH -> dateTime.getMonthValue();
                                 case WEEK_OF_YEAR -> dateTime.get(weekFields.weekOfYear());
@@ -166,8 +163,8 @@ public class Date implements Term {
                                 case SECOND -> dateTime.getSecond();
                             };
                         }
-                    }
-                    throw new IllegalStateException("Unsupported data type for date/time features");
+                        default -> throw new IllegalStateException("Unsupported data type for date/time features");
+                    };
                 }
             });
         }

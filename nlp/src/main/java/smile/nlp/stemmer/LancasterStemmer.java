@@ -321,22 +321,14 @@ public class LancasterStemmer implements Stemmer {
      * when ch == y
      */
     private boolean vowel(char ch, char prev) {
-        switch (ch) {
-            case 'a':
-            case 'e':
-            case 'i':
-            case 'o':
-            case 'u':
-                return true;
-            case 'y': {
-                return switch (prev) {
-                    case 'a', 'e', 'i', 'o', 'u' -> false;
-                    default -> true;
-                };
-            }
-            default:
-                return false;
-        }
+        return switch (ch) {
+            case 'a', 'e', 'i', 'o', 'u' -> true;
+            case 'y' -> switch (prev) {
+                case 'a', 'e', 'i', 'o', 'u' -> false;
+                default -> true;
+            };
+            default -> false;
+        };
     }
 
     /**

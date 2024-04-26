@@ -18,7 +18,6 @@ package smile.plot.vega;
 
 import java.awt.*;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
@@ -292,7 +291,7 @@ public class VegaLite {
     /**
      * Returns the HTML of plot specification with Vega Embed.
      */
-    public String html() throws JsonProcessingException {
+    public String html() {
         return html("en");
     }
 

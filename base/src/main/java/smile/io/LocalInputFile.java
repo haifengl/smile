@@ -51,7 +51,7 @@ class LocalInputFile implements InputFile {
     }
 
     @Override
-    public SeekableInputStream newStream() throws IOException {
+    public SeekableInputStream newStream() {
         return new SeekableInputStream() {
             private final byte[] page = new byte[8192];
             private long markPos = 0;
