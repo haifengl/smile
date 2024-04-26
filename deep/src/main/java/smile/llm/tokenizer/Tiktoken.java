@@ -265,7 +265,7 @@ public class Tiktoken implements Tokenizer {
             }
         }
 
-        return tokens.toArray(new String[tokens.size()]);
+        return tokens.toArray(new String[0]);
     }
 
     /**

@@ -64,7 +64,7 @@ public class LeeDistance implements Metric<int[]> {
 
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
-            double d = Math.abs(x[i] - y[i]);
+            int d = Math.abs(x[i] - y[i]);
             dist += Math.min(d, q-d);
         }
 

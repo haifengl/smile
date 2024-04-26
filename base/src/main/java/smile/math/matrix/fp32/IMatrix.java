@@ -1017,7 +1017,7 @@ public abstract class IMatrix implements Serializable {
 
         if (itol <= 3) {
             float ans = 0.0f;
-            for (double v : x) {
+            for (var v : x) {
                 ans += v * v;
             }
             return (float) Math.sqrt(ans);
