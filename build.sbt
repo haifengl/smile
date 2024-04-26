@@ -109,7 +109,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-groups",
     "-project-version", "3.1.0",
     "-project-logo", "web/images/smile.jpg",
-    "-project-footer", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+    "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin,
   ),
   libraryDependencies ++= Seq(

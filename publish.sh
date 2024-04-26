@@ -23,9 +23,13 @@ mv target/javaunidoc doc/api/java
 
 sbt ++3.3.3 json/doc
 check_error "!!"
+cp project/gtag.js doc/api/json/scripts/
+find doc/api/json -name '*.html' -exec ./gtag.sh {} \;
 
 sbt ++3.3.3 scala/doc
 check_error "!!"
+cp project/gtag.js doc/api/scala/scripts/
+find doc/api/scala -name '*.html' -exec ./gtag.sh {} \;
 
 cd kotlin
 gradle dokkaHtml
