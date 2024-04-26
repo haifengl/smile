@@ -27,14 +27,23 @@ import javax.swing.JComponent;
  * @author Haifeng Li
  */
 public abstract class Plot extends Shape {
+    /** Plot name. */
+    final String name;
+
     /** Constructor. */
     public Plot() {
-        this(Color.BLACK);
+        this(null, Color.BLACK);
     }
 
     /** Constructor. */
     public Plot(Color color) {
+        this(null, color);
+    }
+
+    /** Constructor. */
+    public Plot(String name, Color color) {
         super(color);
+        this.name = name;
     }
 
     /** Returns the lower bound of data. */
@@ -46,6 +55,9 @@ public abstract class Plot extends Shape {
     public Canvas canvas() {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
         canvas.add(this);
+        if (name != null) {
+            canvas.setTitle(name);
+        }
         return canvas;
     }
 
