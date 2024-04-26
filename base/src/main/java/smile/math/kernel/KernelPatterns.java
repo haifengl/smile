@@ -22,8 +22,7 @@ import static smile.util.Regex.INTEGER_REGEX;
 
 /** Package only interface to hold regex patterns. */
 interface KernelPatterns {
-    Pattern linear = Pattern.compile(
-            String.format("linear(?:kernel)?(?:\\(\\))?"));
+    Pattern linear = Pattern.compile("linear(?:kernel)?(?:\\(\\))?");
     Pattern polynomial = Pattern.compile(
             String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
     Pattern gaussian = Pattern.compile(
@@ -38,6 +37,5 @@ interface KernelPatterns {
             String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
     Pattern pearson = Pattern.compile(
             String.format("pearson(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
-    Pattern hellinger = Pattern.compile(
-            String.format("hellinger(?:kernel)?(?:\\(\\))?"));
+    Pattern hellinger = Pattern.compile("hellinger(?:kernel)?(?:\\(\\))?");
 }

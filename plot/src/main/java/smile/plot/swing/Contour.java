@@ -445,7 +445,7 @@ public class Contour extends Plot {
                     Segment seglist = null;
                     if (k > 0) {
                         if (k == 2) {
-                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], seglist);
+                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], null);
                         } else if (k == 4) {
                             for (k = 3; k >= 1; k--) {
                                 int m = k;
@@ -467,7 +467,7 @@ public class Contour extends Plot {
                                 }
                             }
 
-                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], seglist);
+                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], null);
                             seglist = new Segment(xx[2], yy[2], xx[3], yy[3], seglist);
                         } else {
                             throw new IllegalStateException("k != 2 or 4");

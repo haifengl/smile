@@ -382,7 +382,7 @@ public class Parquet {
                             int days = byteBuffer.getInt();
                             int millis = byteBuffer.getInt();
                             Duration duration = Duration.ofDays(days);
-                            o[i] = duration.plusDays(months * 30).plusMillis(millis);
+                            o[i] = duration.plusDays(months * 30L).plusMillis(millis);
                         } else if (rep > 1) {
                             Duration[] a = new Duration[rep];
                             for (int j = 0; j < rep; j++) {
@@ -392,7 +392,7 @@ public class Parquet {
                                 int days = byteBuffer.getInt();
                                 int millis = byteBuffer.getInt();
                                 Duration duration = Duration.ofDays(days);
-                                a[j] = duration.plusDays(months * 30).plusMillis(millis);
+                                a[j] = duration.plusDays(months * 30L).plusMillis(millis);
                             }
                             o[i] = a;
                         }

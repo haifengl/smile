@@ -153,7 +153,7 @@ public class BandMatrix extends IMatrix {
     }
 
     @Override
-    public BandMatrix clone() {
+    public BandMatrix copy() {
         BandMatrix matrix = new BandMatrix(m, n, kl, ku);
         System.arraycopy(AB, 0, matrix.AB, 0, AB.length);
 

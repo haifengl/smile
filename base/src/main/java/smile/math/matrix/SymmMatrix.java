@@ -87,7 +87,7 @@ public class SymmMatrix extends IMatrix {
     }
 
     @Override
-    public SymmMatrix clone() {
+    public SymmMatrix copy() {
         SymmMatrix matrix = new SymmMatrix(uplo, n);
         System.arraycopy(AP, 0, matrix.AP, 0, AP.length);
         return matrix;
@@ -216,7 +216,7 @@ public class SymmMatrix extends IMatrix {
      * @return Bunch-Kaufman decomposition.
      */
     public BunchKaufman bk() {
-        SymmMatrix lu = clone();
+        SymmMatrix lu = copy();
         int[] ipiv = new int[n];
         int info = LAPACK.engine.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
         if (info < 0) {
@@ -238,7 +238,7 @@ public class SymmMatrix extends IMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        SymmMatrix lu = clone();
+        SymmMatrix lu = copy();
         int info = LAPACK.engine.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
         if (info != 0) {
             logger.error("LAPACK PPTRF error code: {}", info);
