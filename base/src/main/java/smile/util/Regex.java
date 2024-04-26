@@ -41,11 +41,11 @@ public interface Regex {
     /** Double regular expression pattern. */
     Pattern DOUBLE = Pattern.compile(DOUBLE_REGEX);
     /** Date regular expression pattern. */
-    Pattern DATE = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))");
+    Pattern DATE = Pattern.compile("\\d{4}([-/])((0[1-9])|(1[0-2]))([-/])((0[1-9])|([1-2][0-9])|(3[0-1]))");
     /** Time regular expression pattern. */
     Pattern TIME = Pattern.compile("(([0-1][0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?");
     /** Datetime regular expression pattern. */
-    Pattern DATETIME = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
+    Pattern DATETIME = Pattern.compile("\\d{4}([-/])((0[1-9])|(1[0-2]))([-/])((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
 
     /** Cardinal numbers. */
     Pattern CARDINAL_NUMBER = Pattern.compile("^-?[0-9]+(\\.[0-9]+)?$");

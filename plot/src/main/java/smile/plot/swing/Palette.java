@@ -232,7 +232,7 @@ public interface Palette {
      * @param alpha the parameter in [0,1] for transparency.
      */
     static Color[] jet(int n, float alpha) {
-        int m = (int) Math.ceil(n / 4);
+        int m = (int) Math.ceil(n / 4.0);
 
         float[] u = new float[3 * m];
         for (int i = 0; i < u.length; i++) {

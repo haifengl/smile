@@ -66,7 +66,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
     /**
      * Regular expression to match sentences with basic rules.
      */
-    private static final Pattern REGEX_SENTENCE = Pattern.compile("(['\"`]*[\\(\\{\\[]?[a-zA-Z0-9]+.*?)([\\.!?:])(?:(?=([\\(\\[\\{\"'`\\)\\}\\]<]*[ \031]+)[\\(\\[\\{\"'`\\)\\}\\] ]*([A-Z0-9][a-z]*))|(?=([\\(\\)\"'`\\)\\}<\\] \031]+)\\s))");
+    private static final Pattern REGEX_SENTENCE = Pattern.compile("(['\"`]*[\\(\\{\\[]?[a-zA-Z0-9]+.*?)([\\.!?:])(?:(?=([\\(\\[\\{\"'`\\)\\}\\]<]*[ \u0019]+)[\\(\\[\\{\"'`\\)\\}\\] ]*([A-Z0-9][a-z]*))|(?=([\\(\\)\"'`\\}<\\] \u0019]+)\\s))");
     /**
      * Regular expression to split words.
      */
