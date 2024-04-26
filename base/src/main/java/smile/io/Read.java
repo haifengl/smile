@@ -168,7 +168,7 @@ public interface Read {
                     if ("true".equalsIgnoreCase(option[1])) {
                         formatBuilder.setHeader().setSkipHeaderRecord(true);
                     } else {
-                        String[] header = option[1].split("|");
+                        String[] header = option[1].split("\\|");
                         formatBuilder.setHeader(header);
                     }
                     break;
