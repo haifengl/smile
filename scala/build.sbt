@@ -3,7 +3,7 @@ name := "smile-scala"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.scala")
 
 Compile / doc / scalacOptions ++= Seq(
-  "-project", "Smile",
+  "-project", "Smile - Scala",
   "-doc-root-content", baseDirectory.value + "/root-doc.txt"
 )
 Compile / doc / target := baseDirectory.value / "../doc/api/scala"
