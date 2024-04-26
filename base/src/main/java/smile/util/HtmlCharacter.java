@@ -40,8 +40,6 @@ class HtmlCharacter {
 
     private final String[] characterToEntityReferenceMap = new String[3000];
 
-    private final Map<String, Character> entityReferenceToCharacterMap = new HashMap<>(512);
-
     /**
      * Returns a new set of character entity references reflecting the HTML 4.0 character set.
      */
@@ -73,7 +71,6 @@ class HtmlCharacter {
             int index = (referredChar < 1000 ? referredChar : referredChar - 7000);
             String reference = entityReferences.getProperty(key);
             this.characterToEntityReferenceMap[index] = REFERENCE_START + reference + REFERENCE_END;
-            this.entityReferenceToCharacterMap.put(reference, (char) referredChar);
         }
     }
 

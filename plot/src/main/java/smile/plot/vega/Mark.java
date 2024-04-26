@@ -180,7 +180,7 @@ public class Mark {
      * @return this object.
      */
     public Mark x(String width) {
-        assert width == "width" : "Invalid width: " + width;
+        assert "width".equals(width)  : "Invalid width: " + width;
         spec.put("x", width);
         return this;
     }
@@ -201,7 +201,7 @@ public class Mark {
      * @return this object.
      */
     public Mark x2(String width) {
-        assert width == "width" : "Invalid width: " + width;
+        assert "width".equals(width) : "Invalid width: " + width;
         spec.put("x2", width);
         return this;
     }
@@ -222,7 +222,7 @@ public class Mark {
      * @return this object.
      */
     public Mark y(String height) {
-        assert height == "height" : "Invalid height: " + height;
+        assert "height".equals(height) : "Invalid height: " + height;
         spec.put("y", height);
         return this;
     }
@@ -243,7 +243,7 @@ public class Mark {
      * @return this object.
      */
     public Mark y2(String height) {
-        assert height == "height" : "Invalid height: " + height;
+        assert "height".equals(height) : "Invalid height: " + height;
         spec.put("y2", height);
         return this;
     }

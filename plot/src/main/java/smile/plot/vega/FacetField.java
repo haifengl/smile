@@ -87,7 +87,7 @@ public class FacetField {
      * @return this object.
      */
     public FacetField bin(String bin) {
-        assert bin == "binned" : "Invalid bin: " + bin;
+        assert "binned".equals(bin)  : "Invalid bin: " + bin;
         spec.put("bin", bin);
         return this;
     }

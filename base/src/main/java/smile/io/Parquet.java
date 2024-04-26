@@ -206,11 +206,11 @@ public class Parquet {
                         }
 
                         if (rep == 1) {
-                            o[i] = LocalTime.ofNanoOfDay(g.getInteger(i, 0) * 1000000);
+                            o[i] = LocalTime.ofNanoOfDay(g.getInteger(i, 0) * 1000000L);
                         } else if (rep > 1) {
                             LocalTime[] a = new LocalTime[rep];
                             for (int j = 0; j < rep; j++)
-                                a[j] = LocalTime.ofNanoOfDay(g.getInteger(i, j) * 1000000);
+                                a[j] = LocalTime.ofNanoOfDay(g.getInteger(i, j) * 1000000L);
                             o[i] = a;
                         }
                     } else {

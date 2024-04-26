@@ -63,7 +63,7 @@ public class StochasticDepth implements Layer {
         double survivalRate = 1.0 - p;
         long[] shape = new long[input.dim()];
         Arrays.fill(shape, 1);
-        if (mode == "row") {
+        if ("row".equals(mode)) {
             shape[0] = input.size(0);
         }
 

@@ -92,7 +92,7 @@ public class Field {
      * @return this object.
      */
     public Field bin(String bin) {
-        assert bin == "binned" : "Invalid bin: " + bin;
+        assert "binned".equals(bin) : "Invalid bin: " + bin;
         spec.put("bin", bin);
         return this;
     }

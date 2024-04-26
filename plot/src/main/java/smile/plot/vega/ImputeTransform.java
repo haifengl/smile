@@ -115,9 +115,7 @@ public class ImputeTransform {
      * @return this object.
      */
     public ImputeTransform frame(Integer first, Integer last) {
-        spec.putArray("frame")
-                .add(first == null ? null : first)
-                .add(last == null ? null : last);
+        spec.putArray("frame").add(first).add(last);
         return this;
     }
 
