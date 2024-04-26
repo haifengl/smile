@@ -99,10 +99,7 @@ public class ImageDataset implements Dataset {
         final BlockingQueue<SampleBatch> queue = new LinkedBlockingQueue<>(100);
 
         final int start = Math.min(batch, size);
-        final int[] index = new int[start];
-        for (int i = 0; i < start; i++) {
-            index[i] = permutation[i];
-        }
+        final int[] index = Arrays.copyOf(permutation, start);
 
         try {
             // prefetch the first batch
@@ -114,9 +111,9 @@ public class ImageDataset implements Dataset {
         final Runnable worker = () -> {
             for (int i = start; i < size; ) {
                 int n = Math.min(batch, size - i);
-                for (int j = 0; j < n; j++, i++) {
-                    index[j] = permutation[i];
-                }
+                System.arraycopy(permutation, i, index,  0, n);
+                i += n;
+
                 try {
                     queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
                 } catch (Exception ex) {
