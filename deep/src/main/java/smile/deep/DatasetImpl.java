@@ -48,9 +48,7 @@ class DatasetImpl implements Dataset {
         for (int i = 0; i < n; i++) {
             y[i] = target[i];
             float[] xi = data[i];
-            for (int j = 0; j < p; j++) {
-                x[i * p + j] = xi[j];
-            }
+            System.arraycopy(xi, 0, x, i * p, p);
         }
 
         this.data = Tensor.of(x, n, p);
@@ -98,9 +96,7 @@ class DatasetImpl implements Dataset {
         float[] x = new float[n * p];
         for (int i = 0; i < n; i++) {
             float[] xi = data[i];
-            for (int j = 0; j < p; j++) {
-                x[i * p + j] = xi[j];
-            }
+            System.arraycopy(xi, 0, x, i * p, p);
         }
 
         this.data = Tensor.of(x, n, p);
