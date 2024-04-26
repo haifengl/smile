@@ -63,11 +63,6 @@ public class Tensor implements AutoCloseable {
         return String.format("%s%s", value, Arrays.toString(value.shape()));
     }
 
-    @Override
-    public Tensor clone() {
-        return new Tensor(value.detach().clone());
-    }
-
     /**
      * Returns the PyTorch tensor object.
      * @return the PyTorch tensor object.
