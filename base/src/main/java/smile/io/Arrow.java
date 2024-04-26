@@ -640,7 +640,7 @@ public class Arrow {
             }
         } else if (fieldVector instanceof TimeMilliVector vector) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000);
+                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000L);
             }
         } else if (fieldVector instanceof TimeMicroVector vector) {
             for (int i = 0; i < count; i++) {

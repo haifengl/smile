@@ -63,7 +63,7 @@ public class View extends VegaLite {
      * @param width it should be set to "container".
      */
     public View width(String width) {
-        assert width == "container" : "Invalid width: " + width;
+        assert "container".equals(width) : "Invalid width: " + width;
         spec.put("width", width);
         return this;
     }
@@ -73,7 +73,7 @@ public class View extends VegaLite {
      * @param height it should be set to "container".
      */
     public View height(String height) {
-        assert height == "container" : "Invalid height: " + height;
+        assert "container".equals(height) : "Invalid height: " + height;
         spec.put("height", height);
         return this;
     }

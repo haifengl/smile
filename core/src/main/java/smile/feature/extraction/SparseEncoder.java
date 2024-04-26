@@ -74,7 +74,7 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
                     base[i+1] = base[i] + cat.size();
                 }
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical"));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
             }
         }
     }
@@ -94,7 +94,7 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
             } else if (field.measure instanceof CategoricalMeasure) {
                 features.append(x.getInt(columns[i]) + base[i], 1);
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical"));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
             }
         }
 

@@ -261,7 +261,7 @@ public class LancasterStemmer implements Stemmer {
                                 // ...minimal stem is 2 letters
                                 ruleok = -1;
                             } else {
-                                //ruleok=1; as ruleok must already be positive to reach this stage
+                                ruleok = 1; // In fact, ruleok must already be positive to reach this stage
                             }
                         } //if word start swith consonant...
                         else if ((xl < 2) | (xl < pfv)) {
@@ -269,7 +269,7 @@ public class LancasterStemmer implements Stemmer {
                             // ...minimal stem is 3 letters...
                             // ...including one or more vowel
                         } else {
-                            //ruleok=1; as ruleok must already be positive to reach this stage
+                            ruleok = 1; // In fact, ruleok must already be positive to reach this stage
                         }
                     }
                     // if using the rule passes the assertion tests

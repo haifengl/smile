@@ -24,6 +24,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.InputEvent;
 import java.util.StringTokenizer;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -52,10 +53,10 @@ public class TableCopyPasteAdapter implements ActionListener {
      */
     private TableCopyPasteAdapter(JTable table) {
         this.table = table;
-        KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK, false);
+        KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK, false);
         // Identifying the copy KeyStroke user can modify this
         // to copy on some other Key combination.
-        KeyStroke paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK, false);
+        KeyStroke paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_MASK, false);
         // Identifying the Paste KeyStroke user can modify this
         //to copy on some other Key combination.
         table.registerKeyboardAction(this, "Copy", copy, JComponent.WHEN_FOCUSED);
