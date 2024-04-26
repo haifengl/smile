@@ -64,7 +64,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
         @Override
         protected long index(int i, int j) {
-            return i * ld + j;
+            return (long) i * ld + j;
         }
     }
 
@@ -118,7 +118,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         this.n = n;
         this.ld = ld(m);
 
-        A = new DoublePointer(ld * n);
+        A = new DoublePointer((long) ld * n);
         fill(a);
     }
 
@@ -457,7 +457,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         // read buffer data
         if (layout() == COL_MAJOR) {
             this.ld = ld(m);
-            this.A = new DoublePointer(ld * n);
+            this.A = new DoublePointer((long) ld * n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, in.readDouble());
@@ -465,7 +465,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             }
         } else {
             this.ld = ld(n);
-            this.A = new DoublePointer(m * ld);
+            this.A = new DoublePointer((long) m * ld);
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     set(i, j, in.readDouble());
@@ -486,7 +486,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
     @Override
     public long size() {
-        return m * n;
+        return (long) m * n;
     }
 
     /** Returns the length of double array pointer. */
@@ -624,7 +624,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         } else {
             if (layout() == COL_MAJOR) {
                 this.ld = ld(m);
-                this.A = new DoublePointer(ld * n);
+                this.A = new DoublePointer((long) ld * n);
 
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
@@ -633,7 +633,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                 }
             } else {
                 this.ld = ld(n);
-                this.A = new DoublePointer(ld * m);
+                this.A = new DoublePointer((long) ld * m);
 
                 for (int i = 0; i < m; i++) {
                     for (int j = 0; j < n; j++) {
@@ -653,7 +653,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @return the linearized index.
      */
     protected long index(int i , int j) {
-        return j * ld + i;
+        return (long) j * ld + i;
     }
 
     @Override

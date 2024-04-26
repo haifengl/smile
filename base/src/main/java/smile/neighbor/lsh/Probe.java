@@ -147,7 +147,7 @@ public class Probe implements Comparable<Probe> {
         int[] c = hash.c;
 
         for (int i = 0; i < hash.k; i++) {
-            r += c[pz[i].m] * pz[i].prh[bucket[i]].u;
+            r += (long) c[pz[i].m] * pz[i].prh[bucket[i]].u;
         }
 
         int h = (int) (r % hash.P);

@@ -480,7 +480,7 @@ public class Matrix extends IMatrix {
 
     @Override
     public long size() {
-        return m * n;
+        return (long) m * n;
     }
 
     /**

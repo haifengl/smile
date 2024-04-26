@@ -150,7 +150,7 @@ public class Hash implements Serializable {
         long g = 0;
         for (int i = 0; i < k; i++) {
             int hi = (int) Math.floor((h[i] + b[i]) / w);
-            g += c[i] * hi;
+            g += (long) c[i] * hi;
         }
 
         int gint = (int) (g % P);
