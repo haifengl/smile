@@ -48,8 +48,7 @@ public class ScatterPlot extends Plot {
      * Constructor.
      */
     public ScatterPlot(Point... points) {
-        this.points = points;
-        legends = null;
+        this(points, null);
     }
 
     /**

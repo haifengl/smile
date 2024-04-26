@@ -42,8 +42,7 @@ public class StaircasePlot extends Plot {
      * Constructor.
      */
     public StaircasePlot(Staircase... lines) {
-        this.lines = lines;
-        legends = null;
+        this(lines, null);
     }
 
     /**

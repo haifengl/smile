@@ -290,14 +290,14 @@ public class PlotPanel extends JPanel {
                             if (s.isPresent()) {
                                 if (tooltip == null) {
                                     tooltip = s.get();
-                                    firstid = null;//plot.name();
+                                    firstid = plot.name;
                                 } else {
                                     if (firstid != null) {
                                         tooltip = "<b>" + firstid + ":</b><br>" + tooltip;
                                         firstid = null;
                                     }
 
-                                    String id = null;//plot.name();
+                                    String id = plot.name;
                                     if (id != null) {
                                         tooltip += "<br><b>" + id + ":</b><br>" + s;
                                     } else {
