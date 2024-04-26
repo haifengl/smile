@@ -4031,62 +4031,62 @@ public class MathEx {
 
     /**
      * Returns the cosine similarity.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the cosine similarity.
      */
-    public static float cos(float[] x, float[] y) {
-        return dot(x, y) / (norm2(x) * norm2(y));
+    public static float cos(float[] a, float[] b) {
+        return dot(a, b) / (norm2(a) * norm2(b));
     }
 
     /**
      * Returns the cosine similarity.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the cosine similarity.
      */
-    public static double cos(double[] x, double[] y) {
-        return dot(x, y) / (norm2(x) * norm2(y));
+    public static double cos(double[] a, double[] b) {
+        return dot(a, b) / (norm2(a) * norm2(b));
     }
 
     /**
      * Standardizes an array to mean 0 and variance 1.
-     * @param x the matrix.
+     * @param array the array.
      */
-    public static void standardize(double[] x) {
-        double mu = mean(x);
-        double sigma = sd(x);
+    public static void standardize(double[] array) {
+        double mu = mean(array);
+        double sigma = sd(array);
 
         if (isZero(sigma)) {
             logger.warn("array has variance of 0.");
             return;
         }
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] = (x[i] - mu) / sigma;
+        for (int i = 0; i < array.length; i++) {
+            array[i] = (array[i] - mu) / sigma;
         }
     }
 
     /**
      * Scales each column of a matrix to range [0, 1].
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void scale(double[][] x) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void scale(double[][] matrix) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
-        double[] min = colMin(x);
-        double[] max = colMax(x);
+        double[] min = colMin(matrix);
+        double[] max = colMax(matrix);
 
         for (int j = 0; j < p; j++) {
             double scale = max[j] - min[j];
             if (!isZero(scale)) {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] = (x[i][j] - min[j]) / scale;
+                    matrix[i][j] = (matrix[i][j] - min[j]) / scale;
                 }
             } else {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] = 0.5;
+                    matrix[i][j] = 0.5;
                 }
             }
         }
@@ -4094,29 +4094,29 @@ public class MathEx {
 
     /**
      * Standardizes each column of a matrix to 0 mean and unit variance.
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void standardize(double[][] x) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void standardize(double[][] matrix) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
-        double[] center = colMeans(x);
+        double[] center = colMeans(matrix);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                x[i][j] = x[i][j] - center[j];
+                matrix[i][j] = matrix[i][j] - center[j];
             }
         }
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (double[] xi : x) {
+            for (double[] xi : matrix) {
                 scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j] / (n-1));
 
             if (!isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] /= scale[j];
+                    matrix[i][j] /= scale[j];
                 }
             }
         }
@@ -4124,33 +4124,33 @@ public class MathEx {
 
     /**
      * Unitizes each column of a matrix to unit length (L_2 norm).
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void normalize(double[][] x) {
-        normalize(x, false);
+    public static void normalize(double[][] matrix) {
+        normalize(matrix, false);
     }
 
     /**
      * Unitizes each column of a matrix to unit length (L_2 norm).
-     * @param x the matrix.
+     * @param matrix the matrix.
      * @param centerizing If true, centerize each column to 0 mean.
      */
-    public static void normalize(double[][] x, boolean centerizing) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void normalize(double[][] matrix, boolean centerizing) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
         if (centerizing) {
-            double[] center = colMeans(x);
+            double[] center = colMeans(matrix);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
-                    x[i][j] = x[i][j] - center[j];
+                    matrix[i][j] = matrix[i][j] - center[j];
                 }
             }
         }
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (double[] xi : x) {
+            for (double[] xi : matrix) {
                 scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j]);
@@ -4159,44 +4159,44 @@ public class MathEx {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 if (!isZero(scale[j])) {
-                    x[i][j] /= scale[j];
+                    matrix[i][j] /= scale[j];
                 }
             }
         }
     }
 
     /**
-     * Unitize an array so that L<sub>2</sub> norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of array = 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize(double[] x) {
-        unitize2(x);
+    public static void unitize(double[] array) {
+        unitize2(array);
     }
 
     /**
-     * Unitize an array so that L<sub>1</sub> norm of x is 1.
+     * Unitize an array so that L<sub>1</sub> norm of array is 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize1(double[] x) {
-        double n = norm1(x);
+    public static void unitize1(double[] array) {
+        double n = norm1(array);
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] /= n;
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= n;
         }
     }
 
     /**
-     * Unitize an array so that L<sub>2</sub> norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of array = 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize2(double[] x) {
-        double n = norm(x);
+    public static void unitize2(double[] array) {
+        double n = norm(array);
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] /= n;
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= n;
         }
     }
 

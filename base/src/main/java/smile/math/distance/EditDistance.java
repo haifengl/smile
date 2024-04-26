@@ -159,13 +159,13 @@ public class EditDistance implements Metric<String> {
      * it is NOT multi-thread safe for unit cost edit distance.
      */
     @Override
-    public double d(String x, String y) {
+    public double d(String a, String b) {
         if (weight != null)
-            return weightedEdit(x, y);
-        else if (FKP == null || x.length() == 1 || y.length() == 1)
-            return damerau ? damerau(x, y) : levenshtein(x, y);
+            return weightedEdit(a, b);
+        else if (FKP == null || a.length() == 1 || b.length() == 1)
+            return damerau ? damerau(a, b) : levenshtein(a, b);
         else
-            return br(x, y);
+            return br(a, b);
     }
 
     /**
@@ -173,48 +173,48 @@ public class EditDistance implements Metric<String> {
      * edit distance. O(ne) time and O(mn) space for unit cost edit distance.
      * For weighted edit distance, this method is multi-thread safe. However,
      * it is NOT multi-thread safe for unit cost edit distance.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    public double d(char[] x, char[] y) {
+    public double d(char[] a, char[] b) {
         if (weight != null) {
-            return weightedEdit(x, y);
-        } else if (FKP == null || x.length == 1 || y.length == 1) {
-            return damerau ? damerau(x, y) : levenshtein(x, y);
+            return weightedEdit(a, b);
+        } else if (FKP == null || a.length == 1 || b.length == 1) {
+            return damerau ? damerau(a, b) : levenshtein(a, b);
         } else {
-            return br(x, y);
+            return br(a, b);
         }
     }
 
     /**
      * Weighted edit distance.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    private double weightedEdit(char[] x, char[] y) {
+    private double weightedEdit(char[] a, char[] b) {
         // switch parameters to use the shorter one as y to save space.
-        if (x.length < y.length) {
-            char[] swap = x;
-            x = y;
-            y = swap;
+        if (a.length < b.length) {
+            char[] swap = a;
+            a = b;
+            b = swap;
         }
 
-        int radius = (int) Math.round(r * x.length);
+        int radius = (int) Math.round(r * a.length);
 
-        double[][] d = new double[2][y.length + 1];
+        double[][] d = new double[2][b.length + 1];
 
         d[0][0] = 0.0;
-        for (int j = 1; j <= y.length; j++) {
-            d[0][j] = d[0][j - 1] + weight.get(0, y[j]);
+        for (int j = 1; j <= b.length; j++) {
+            d[0][j] = d[0][j - 1] + weight.get(0, b[j]);
         }
 
-        for (int i = 1; i <= x.length; i++) {
-            d[1][0] = d[0][0] + weight.get(x[i], 0);
+        for (int i = 1; i <= a.length; i++) {
+            d[1][0] = d[0][0] + weight.get(a[i], 0);
 
             int start = 1;
-            int end = y.length;
+            int end = b.length;
 
             if (radius > 0) {
                 start = i - radius;
@@ -224,17 +224,17 @@ public class EditDistance implements Metric<String> {
                     start = 1;
 
                 end = i + radius;
-                if (end < y.length)
+                if (end < b.length)
                     d[1][end+1] = Double.POSITIVE_INFINITY;
                 else
-                    end = y.length;
+                    end = b.length;
             }
 
             for (int j = start; j <= end; j++) {
-                double cost = weight.get(x[i - 1], y[j - 1]);
+                double cost = weight.get(a[i - 1], b[j - 1]);
                 d[1][j] = MathEx.min(
-                        d[0][j] + weight.get(x[i - 1], 0), // deletion
-                        d[1][j - 1] + weight.get(0, y[j - 1]), // insertion
+                        d[0][j] + weight.get(a[i - 1], 0), // deletion
+                        d[1][j - 1] + weight.get(0, b[j - 1]), // insertion
                         d[0][j - 1] + cost); // substitution
             }
 
@@ -243,37 +243,37 @@ public class EditDistance implements Metric<String> {
             d[1] = swap;
         }
 
-        return d[0][y.length];
+        return d[0][b.length];
     }
 
     /**
      * Weighted edit distance.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    private double weightedEdit(String x, String y) {
+    private double weightedEdit(String a, String b) {
         // switch parameters to use the shorter one as y to save space.
-        if (x.length() < y.length()) {
-            String swap = x;
-            x = y;
-            y = swap;
+        if (a.length() < b.length()) {
+            String swap = a;
+            a = b;
+            b = swap;
         }
 
-        int radius = (int) Math.round(r * x.length());
+        int radius = (int) Math.round(r * a.length());
 
-        double[][] d = new double[2][y.length() + 1];
+        double[][] d = new double[2][b.length() + 1];
 
         d[0][0] = 0.0;
-        for (int j = 1; j <= y.length(); j++) {
-            d[0][j] = d[0][j - 1] + weight.get(0, y.charAt(j));
+        for (int j = 1; j <= b.length(); j++) {
+            d[0][j] = d[0][j - 1] + weight.get(0, b.charAt(j));
         }
 
-        for (int i = 1; i <= x.length(); i++) {
-            d[1][0] = d[0][0] + weight.get(x.charAt(i), 0);
+        for (int i = 1; i <= a.length(); i++) {
+            d[1][0] = d[0][0] + weight.get(a.charAt(i), 0);
 
             int start = 1;
-            int end = y.length();
+            int end = b.length();
 
             if (radius > 0) {
                 start = i - radius;
@@ -283,17 +283,17 @@ public class EditDistance implements Metric<String> {
                     start = 1;
 
                 end = i + radius;
-                if (end < y.length())
+                if (end < b.length())
                     d[1][end+1] = Double.POSITIVE_INFINITY;
                 else
-                    end = y.length();
+                    end = b.length();
             }
 
             for (int j = start; j <= end; j++) {
-                double cost = weight.get(x.charAt(i - 1), y.charAt(j - 1));
+                double cost = weight.get(a.charAt(i - 1), b.charAt(j - 1));
                 d[1][j] = MathEx.min(
-                        d[0][j] + weight.get(x.charAt(i - 1), 0), // deletion
-                        d[1][j - 1] + weight.get(0, y.charAt(j - 1)), // insertion
+                        d[0][j] + weight.get(a.charAt(i - 1), 0), // deletion
+                        d[1][j - 1] + weight.get(0, b.charAt(j - 1)), // insertion
                         d[0][j - 1] + cost); // substitution
             }
 
@@ -302,24 +302,24 @@ public class EditDistance implements Metric<String> {
             d[1] = swap;
         }
 
-        return d[0][y.length()];
+        return d[0][b.length()];
     }
 
     /**
      * Berghel & Roach's extended Ukkonen's algorithm.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    private int br(char[] x, char[] y) {
-        if (x.length > y.length) {
-            char[] swap = x;
-            x = y;
-            y = swap;
+    private int br(char[] a, char[] b) {
+        if (a.length > b.length) {
+            char[] swap = a;
+            a = b;
+            b = swap;
         }
 
-        final int m = x.length;
-        final int n = y.length;
+        final int m = a.length;
+        final int n = b.length;
 
         int ZERO_K = n;
 
@@ -346,14 +346,14 @@ public class EditDistance implements Metric<String> {
             p++;
 
             for (int i = (p - (n-m))/2; i >= 1; i--) {
-                brf.f(x, y, FKP, ZERO_K, n-m+i, p-i);
+                brf.f(a, b, FKP, ZERO_K, n-m+i, p-i);
             }
 
             for (int i = (n-m+p)/2; i >= 1; i--) {
-                brf.f(x, y, FKP, ZERO_K, n-m-i, p-i);
+                brf.f(a, b, FKP, ZERO_K, n-m-i, p-i);
             }
 
-            brf.f(x, y, FKP, ZERO_K, n - m, p);
+            brf.f(a, b, FKP, ZERO_K, n - m, p);
         } while (FKP.get((n - m) + ZERO_K, p) != m);
 
         return p - 1;
@@ -361,19 +361,19 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Berghel & Roach's extended Ukkonen's algorithm.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    private int br(String x, String y) {
-        if (x.length() > y.length()) {
-            String swap = x;
-            x = y;
-            y = swap;
+    private int br(String a, String b) {
+        if (a.length() > b.length()) {
+            String swap = a;
+            a = b;
+            b = swap;
         }
 
-        final int m = x.length();
-        final int n = y.length();
+        final int m = a.length();
+        final int n = b.length();
 
         int ZERO_K = n;
 
@@ -400,14 +400,14 @@ public class EditDistance implements Metric<String> {
             p++;
 
             for (int i = (p - (n-m))/2; i >= 1; i--) {
-                brf.f(x, y, FKP, ZERO_K, n-m+i, p-i);
+                brf.f(a, b, FKP, ZERO_K, n-m+i, p-i);
             }
 
             for (int i = (n-m+p)/2; i >= 1; i--) {
-                brf.f(x, y, FKP, ZERO_K, n-m-i, p-i);
+                brf.f(a, b, FKP, ZERO_K, n-m-i, p-i);
             }
 
-            brf.f(x, y, FKP, ZERO_K, n - m, p);
+            brf.f(a, b, FKP, ZERO_K, n - m, p);
         } while (FKP.get((n - m) + ZERO_K, p) != m);
 
         return p - 1;
@@ -499,29 +499,29 @@ public class EditDistance implements Metric<String> {
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
      * Multi-thread safe.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    public static int levenshtein(String x, String y) {
-        // switch parameters to use the shorter one as y to save space.
-        if (x.length() < y.length()) {
-            String swap = x;
-            x = y;
-            y = swap;
+    public static int levenshtein(String a, String b) {
+        // switch parameters to use the shorter one as b to save space.
+        if (a.length() < b.length()) {
+            String swap = a;
+            a = b;
+            b = swap;
         }
 
-        int[][] d = new int[2][y.length() + 1];
+        int[][] d = new int[2][b.length() + 1];
 
-        for (int j = 0; j <= y.length(); j++) {
+        for (int j = 0; j <= b.length(); j++) {
             d[0][j] = j;
         }
 
-        for (int i = 1; i <= x.length(); i++) {
+        for (int i = 1; i <= a.length(); i++) {
             d[1][0] = i;
 
-            for (int j = 1; j <= y.length(); j++) {
-                int cost = x.charAt(i - 1) == y.charAt(j - 1) ? 0 : 1;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
                 d[1][j] = MathEx.min(
                         d[0][j] + 1, // deletion
                         d[1][j - 1] + 1, // insertion
@@ -532,36 +532,36 @@ public class EditDistance implements Metric<String> {
             d[1] = swap;
         }
 
-        return d[0][y.length()];
+        return d[0][b.length()];
     }
 
     /**
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
      * Multi-thread safe.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    public static int levenshtein(char[] x, char[] y) {
-        // switch parameters to use the shorter one as y to save space.
-        if (x.length < y.length) {
-            char[] swap = x;
-            x = y;
-            y = swap;
+    public static int levenshtein(char[] a, char[] b) {
+        // switch parameters to use the shorter one as b to save space.
+        if (a.length < b.length) {
+            char[] swap = a;
+            a = b;
+            b = swap;
         }
 
-        int[][] d = new int[2][y.length + 1];
+        int[][] d = new int[2][b.length + 1];
 
-        for (int j = 0; j <= y.length; j++) {
+        for (int j = 0; j <= b.length; j++) {
             d[0][j] = j;
         }
 
-        for (int i = 1; i <= x.length; i++) {
+        for (int i = 1; i <= a.length; i++) {
             d[1][0] = i;
 
-            for (int j = 1; j <= y.length; j++) {
-                int cost = x[i - 1] == y[j - 1] ? 0 : 1;
+            for (int j = 1; j <= b.length; j++) {
+                int cost = a[i - 1] == b[j - 1] ? 0 : 1;
                 d[1][j] = MathEx.min(
                         d[0][j] + 1, // deletion
                         d[1][j - 1] + 1, // insertion
@@ -572,43 +572,43 @@ public class EditDistance implements Metric<String> {
             d[1] = swap;
         }
 
-        return d[0][y.length];
+        return d[0][b.length];
     }
 
     /**
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
      * O(mn) time and O(n) space. Multi-thread safe.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    public static int damerau(String x, String y) {
-        // switch parameters to use the shorter one as y to save space.
-        if (x.length() < y.length()) {
-            String swap = x;
-            x = y;
-            y = swap;
+    public static int damerau(String a, String b) {
+        // switch parameters to use the shorter one as b to save space.
+        if (a.length() < b.length()) {
+            String swap = a;
+            a = b;
+            b = swap;
         }
 
-        int[][] d = new int[3][y.length() + 1];
+        int[][] d = new int[3][b.length() + 1];
 
-        for (int j = 0; j <= y.length(); j++) {
+        for (int j = 0; j <= b.length(); j++) {
             d[1][j] = j;
         }
 
-        for (int i = 1; i <= x.length(); i++) {
+        for (int i = 1; i <= a.length(); i++) {
             d[2][0] = i;
 
-            for (int j = 1; j <= y.length(); j++) {
-                int cost = x.charAt(i-1) == y.charAt(j-1) ? 0 : 1;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i-1) == b.charAt(j-1) ? 0 : 1;
                 d[2][j] = MathEx.min(
                         d[1][j] + 1,       // deletion
                         d[2][j-1] + 1,       // insertion
                         d[1][j-1] + cost); // substitution
 
                 if (i > 1 && j > 1) {
-                    if (x.charAt(i-1) == y.charAt(j-2) && x.charAt(i-2) == y.charAt(j-1))
+                    if (a.charAt(i-1) == b.charAt(j-2) && a.charAt(i-2) == b.charAt(j-1))
                         d[2][j] = Math.min(d[2][j], d[0][j-2] + cost);   // damerau
                 }
             }
@@ -619,43 +619,43 @@ public class EditDistance implements Metric<String> {
             d[2] = swap;
         }
 
-        return d[1][y.length()];
+        return d[1][b.length()];
     }
 
     /**
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
      * O(mn) time and O(n) space. Multi-thread safe.
-     * @param x a string.
-     * @param y a string.
+     * @param a a string.
+     * @param b a string.
      * @return the distance.
      */
-    public static int damerau(char[] x, char[] y) {
-        // switch parameters to use the shorter one as y to save space.
-        if (x.length < y.length) {
-            char[] swap = x;
-            x = y;
-            y = swap;
+    public static int damerau(char[] a, char[] b) {
+        // switch parameters to use the shorter one as b to save space.
+        if (a.length < b.length) {
+            char[] swap = a;
+            a = b;
+            b = swap;
         }
 
-        int[][] d = new int[3][y.length + 1];
+        int[][] d = new int[3][b.length + 1];
 
-        for (int j = 0; j <= y.length; j++) {
+        for (int j = 0; j <= b.length; j++) {
             d[1][j] = j;
         }
 
-        for (int i = 1; i <= x.length; i++) {
+        for (int i = 1; i <= a.length; i++) {
             d[2][0] = i;
 
-            for (int j = 1; j <= y.length; j++) {
-                int cost = x[i-1] == y[j-1] ? 0 : 1;
+            for (int j = 1; j <= b.length; j++) {
+                int cost = a[i-1] == b[j-1] ? 0 : 1;
                 d[2][j] = MathEx.min(
                         d[1][j] + 1,       // deletion
                         d[2][j-1] + 1,       // insertion
                         d[1][j-1] + cost); // substitution
 
                 if (i > 1 && j > 1) {
-                    if (x[i-1] == y[j-2] && x[i-2] == y[j-1])
+                    if (a[i-1] == b[j-2] && a[i-2] == b[j-1])
                         d[2][j] = Math.min(d[2][j], d[0][j-2] + cost);   // damerau
                 }
             }
@@ -666,7 +666,7 @@ public class EditDistance implements Metric<String> {
             d[2] = swap;
         }
 
-        return d[1][y.length];
+        return d[1][b.length];
     }
 }
 
