@@ -1564,20 +1564,22 @@ public class BigMatrix extends IMatrix {
 
     @Override
     public void mv(double[] work, int inputOffset, int outputOffset) {
-        DoublePointer pointer = new DoublePointer(work);
-        DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
-        DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
-        mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
-        pointer.get(work);
+        try (var pointer = new DoublePointer(work)) {
+            DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
+            DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
+            mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
+            pointer.get(work);
+        }
     }
 
     @Override
     public void tv(double[] work, int inputOffset, int outputOffset) {
-        DoublePointer pointer = new DoublePointer(work);
-        DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
-        DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
-        mv(TRANSPOSE, 1.0, xb, 0.0, yb);
-        pointer.get(work);
+        try (var pointer = new DoublePointer(work)) {
+            DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
+            DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
+            mv(TRANSPOSE, 1.0, xb, 0.0, yb);
+            pointer.get(work);
+        }
     }
 
     /**
