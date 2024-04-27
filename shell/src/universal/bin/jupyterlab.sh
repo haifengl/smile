@@ -7,8 +7,6 @@ Help() {
   echo "options:"
   echo "--update           Update conda environment smile-env."
   echo "--remove           Remove conda environment smile-env."
-  echo "--install-beakerx  Intall BeakerX."
-  echo "                   CAUTION: will break Almond (Scala kernel)."
   echo "--help             Print this Help."
   echo
 }
@@ -53,7 +51,7 @@ install_almond() {
       chmod +x coursier
   fi
 
-  SCALA_VERSION=2.13.11 ALMOND_VERSION=0.14.0-RC8
+  SCALA_VERSION=2.13.13 ALMOND_VERSION=0.14.0-RC14
   ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
     --install \
     --id scala213 \
@@ -97,9 +95,6 @@ do
         --remove)
             removeSmileEnv=true
             ;;
-        --install-beakerx)
-            installBeakerX=true
-            ;;
         *)
             echo "Unknown argument $arg"
             ;;
@@ -127,15 +122,6 @@ if [ "$removeSmileEnv" == true ]
 then
     conda activate
     conda remove --name $SMILE_ENV --all
-    exit
-fi
-
-if [ "$installBeakerX" == true ]
-then
-    conda config --env --add pinned_packages 'openjdk>8.0.121'
-    conda install --name $SMILE_ENV -c conda-forge beakerx
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager
-    jupyter labextension install beakerx-jupyterlab
     exit
 fi
 

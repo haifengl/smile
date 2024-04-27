@@ -1,3 +1,3 @@
-openjdk-8-jre-headless
+openjdk-21-jre-headless
 maven
 graphviz
