@@ -100,10 +100,18 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds));
+        String[] fields = model.schema().names();
 
         double[] importance = model.importance();
+        System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        double[] shap = model.shap(WeatherNominal.data);
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
@@ -297,7 +305,7 @@ public class RandomForestTest {
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
         RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
-        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        String[] fields = model.schema().names();
         double[] importance = model.importance();
         double[] shap = model.shap(Iris.data);
 

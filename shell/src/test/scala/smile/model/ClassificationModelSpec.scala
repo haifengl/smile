@@ -22,6 +22,7 @@ import org.specs2.mutable._
 import smile.read
 import smile.data.DataFrame
 import smile.data.formula._
+import smile.feature.transform.{Standardizer, WinsorScaler}
 import smile.math.MathEx
 import smile.util.Paths
 
@@ -45,12 +46,14 @@ class ClassificationModelSpec extends Specification {
     }
     "svm" in {
       MathEx.setSeed(19650218)
+      val scaler = Standardizer.fit(train)
       val params = new Properties()
-      params.setProperty("smile.feature.transform", "Standardizer")
+      // This property is not supported now.
+      // params.setProperty("smile.feature.transform", "Standardizer")
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
       params.setProperty("smile.svm.type", "ovo")
-      val model = ClassificationModel("svm", formula, train, params, test = Some(test))
+      val model = ClassificationModel("svm", formula, scaler(train), params, test = Some(scaler(test)))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
@@ -58,12 +61,14 @@ class ClassificationModelSpec extends Specification {
     }
     "svm with ensemble" in {
       MathEx.setSeed(19650218)
+      val scaler = Standardizer.fit(train)
       val params = new Properties()
-      params.setProperty("smile.feature.transform", "Standardizer")
+      // This property is not supported now.
+      // params.setProperty("smile.feature.transform", "Standardizer")
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
       params.setProperty("smile.svm.type", "ovo")
-      val model = ClassificationModel("svm", formula, train, params, kfold = 5, round = 3, ensemble = true, test = Some(test))
+      val model = ClassificationModel("svm", formula, scaler(train), params, kfold = 5, round = 3, ensemble = true, test = Some(scaler(test)))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
@@ -71,14 +76,16 @@ class ClassificationModelSpec extends Specification {
     }
     "mlp" in {
       MathEx.setSeed(19650218)
+      val scaler = WinsorScaler.fit(train, 0.01, 0.99)
       val params = new Properties()
-      params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
+      // This property is not supported now.
+      // params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
       params.setProperty("smile.mlp.epochs", "13")
       params.setProperty("smile.mlp.mini_batch", "20")
       params.setProperty("smile.mlp.layers", "Sigmoid(50)")
       params.setProperty("smile.mlp.learning_rate", "linear(0.1, 10000, 0.01)")
       params.setProperty("smile.mlp.RMSProp.rho", "0.9")
-      val model = ClassificationModel("mlp", formula, train, params, test = Some(test))
+      val model = ClassificationModel("mlp", formula, scaler(train), params, test = Some(scaler(test)))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")

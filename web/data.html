@@ -2108,24 +2108,6 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
     <p>This method is in the Scala API <code>smile.write</code> object and serialize the model to Java
         serialization format. This is handy if you want to use a model in Spark.</p>
 
-    <p>Alternatively, you can also use</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="scala_26">
-            <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    write.xstream(model, file)
-    </code></pre>
-            </div>
-        </div>
-    </div>
-
-    <p>which uses XStream library to serialize the model (actually any objects) to XML file.</p>
-
-    <p>To read the model back, you can use <code>read(file)</code> or <code>read.xstream(file)</code>, correspondingly.</p>
-
     <p>You can also save a <code>DataFrame</code> to an ARFF file with the method
         <code>write.arff(data, file)</code>. The ARFF file keeps the data type information.
         If you prefer the plain csv text file, you may use the methods <code>write.csv(data, file)</code> or

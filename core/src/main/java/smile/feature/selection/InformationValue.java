@@ -73,7 +73,7 @@ import smile.sort.QuickSort;
  * <p>
  * On arranging a numerical feature in ascending order, if the WoE
  * values are all linear, we know that the feature has the right
- * linear relation with the target. However, if the feature’s WoE
+ * linear relation with the target. However, if the feature's WoE
  * is non-linear, we should either discard it or consider some other
  * variable transformation to ensure the linearity. Hence, WoE helps
  * check the linear relationship of a feature with its dependent variable

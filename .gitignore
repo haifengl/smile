@@ -4,8 +4,12 @@
 *.war
 *.ear
 
+# SBT
+.bsp
+
 # Intellij
 .idea
+**/target
 
 # Eclipse
 .project
@@ -14,27 +18,35 @@
 .cache-tests
 .classpath
 
+# NetBeans
+nbproject
+
+# Android Studio
+*.iml
+
 # jupyter
 .ipynb_checkpoints
 
-# javadoc
+# PyTorch checkpoints
+*.pt
+
+# JavaDoc
 doc/api
 web/node_modules/
 web/_site/
 shell/src/universal/data/nlp
 
-#clojure
+# clojure
 .lein-repl-*
 clojure/pom.xml*
 
-#gradle
+# gradle
 .gradle
 build
 
 # JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+# MacOS
 .DS_Store
-*.iml
-**/target
 

@@ -150,7 +150,7 @@ trait VegaLite {
 
   /** Sets the url of the data source.
     *
-    * @param url An URL from which to load the data set.
+    * @param url A URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
     *               Default value: The default format type is determined
     *               by the extension of the file URL. If no extension is
@@ -205,7 +205,7 @@ trait VegaLite {
        |<html>
        |<head>
        |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
        |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
        |</head>
        |<body>
@@ -249,9 +249,9 @@ trait VegaLite {
 
 object VegaLite {
   /** The schema of Vega-Lite. */
-  val $schema = "https://vega.github.io/schema/vega-lite/v4.json"
+  val $schema = "https://vega.github.io/schema/vega-lite/v5.json"
   /** The MIME type of Vega-Lite. */
-  val mime: String = "application/vnd.vegalite.v4+json"
+  val mime: String = "application/vnd.vegalite.v5+json"
 
   /** Returns a single view specification with inline data. */
   def apply(rows: JsObject*): View = {
@@ -274,9 +274,9 @@ object VegaLite {
     }
   }
 
-  /** Returns a single view specification with data from from URL.
+  /** Returns a single view specification with data from a URL.
     *
-    * @param url An URL from which to load the data set.
+    * @param url A URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
     *               Default value: The default format type is determined
     *               by the extension of the file URL. If no extension is
@@ -316,7 +316,7 @@ object VegaLite {
     facet(df.toJSON)
   }
 
-  /** Returns a facet specification with data from from URL.
+  /** Returns a facet specification with data from a URL.
     *
     * @param url An URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
@@ -334,7 +334,7 @@ object VegaLite {
   def layer(layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of()
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 
@@ -342,7 +342,7 @@ object VegaLite {
   def layer(json: JsArray, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(json)
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 
@@ -355,7 +355,7 @@ object VegaLite {
   def layer(url: String, format: JsValue, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(url, format)
-      layer(layers: _*)
+      super.layer(layers: _*)
     }
   }
 

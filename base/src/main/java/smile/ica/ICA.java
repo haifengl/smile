@@ -67,7 +67,7 @@ public class ICA implements Serializable {
      * Constructor.
      * @param components each row is an independent component.
      */
-    public ICA(double[][] components) {
+    private ICA(double[][] components) {
         this.components = components;
     }
 
@@ -135,8 +135,8 @@ public class ICA implements Serializable {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int n = data.length;
-        int m = data[0].length;
+        int n = data[0].length;
+        int m = data.length;
         if (p < 1 || p > m) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
@@ -229,19 +229,20 @@ public class ICA implements Serializable {
     private static Matrix whiten(double[][] data) {
         // covariance matrix on centered data.
         double[] mean = MathEx.rowMeans(data);
-        Matrix X = Matrix.of(data);
+        Matrix X = Matrix.of(data).transpose();
         int n = X.nrow();
         int m = X.ncol();
         for (int j = 0; j < m; j++) {
+            double mu = mean[j];
             for (int i = 0; i < n; i++) {
-                X.sub(i, j, mean[i]);
+                X.sub(i, j, mu);
             }
         }
 
-        Matrix XXt = X.aat();
-        Matrix.EVD eigen = XXt.eigen(false, true, true);
+        Matrix XtX = X.ata();
+        Matrix.EVD eigen = XtX.eigen(false, true, true);
         Matrix E = eigen.Vr;
-        Matrix Y = E.tm(X);
+        Matrix Y = X.mm(E);
 
         double[] d = eigen.wr;
         for (int i = 0; i < d.length; i++) {
@@ -253,7 +254,7 @@ public class ICA implements Serializable {
 
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
-                Y.mul(i, j, d[i]);
+                Y.mul(i, j, d[j]);
             }
         }
 
