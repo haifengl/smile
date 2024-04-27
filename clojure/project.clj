@@ -9,6 +9,7 @@
                  [com.github.haifengl/smile-core "3.1.0"]]
   :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
+          :project {:name "Smile - Clojure" :description "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."}
           :output-path "../doc/api/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
