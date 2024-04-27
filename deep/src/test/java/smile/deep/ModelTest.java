@@ -33,8 +33,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class ModelTest {
-    static String mnist = Paths.getTestData("mnist").toString();
-
     public ModelTest() {
     }
 
@@ -66,13 +64,13 @@ public class ModelTest {
                 Layer.logSoftmax(32, 10))
         ).to(device);
 
-        Dataset train = Dataset.mnist(mnist, true, 64);
-        Dataset test = Dataset.mnist(mnist, false, 64);
+        Dataset data = Dataset.mnist("deep/src/universal/data/mnist", true, 64);
+        Dataset test = Dataset.mnist("deep/src/universal/data/mnist", false, 64);
 
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
-        net.train(10, optimizer, loss, train, test, null, new Accuracy(),
+        net.train(10, optimizer, loss, data, test, null, new Accuracy(),
                 new Precision(Averaging.Micro),
                 new Precision(Averaging.Macro),
                 new Precision(Averaging.Weighted),
