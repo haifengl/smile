@@ -1,4 +1,4 @@
-openjdk-17-jre-headless
+openjdk-17-jdk
 maven
 graphviz
 libopenblas-dev
