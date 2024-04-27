@@ -17,15 +17,7 @@
 
 package smile.math.kernel;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.sql.Time;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
 
 /**
  *
@@ -36,23 +28,23 @@ public class MercerKernelTest {
     public MercerKernelTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testParse() {
         System.out.println("parse");
         MercerKernel.of("linear()");
@@ -66,7 +58,7 @@ public class MercerKernelTest {
         MercerKernel.of("hellinger");
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseToString() {
         System.out.println("parse");
         MercerKernel.of(new LinearKernel().toString());

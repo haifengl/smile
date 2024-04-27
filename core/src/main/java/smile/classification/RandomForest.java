@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.LongStream;
@@ -76,6 +77,7 @@ import smile.validation.metric.Error;
  * @author Haifeng Li
  */
 public class RandomForest extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
@@ -180,7 +182,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
@@ -470,7 +472,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
     /**
      * Returns the overall out-of-bag metric estimations. The OOB estimate is
-     * quite accurate given that enough trees have been grown. Otherwise the
+     * quite accurate given that enough trees have been grown. Otherwise, the
      * OOB error estimate can bias upward.
      * 
      * @return the out-of-bag metrics estimations.

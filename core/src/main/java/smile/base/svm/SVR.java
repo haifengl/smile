@@ -41,6 +41,8 @@ import smile.regression.KernelMachine;
  * <li> Chih-Chung Chang and Chih-Jen Lin. LIBSVM: a Library for Support Vector Machines.</li>
  * </ol>
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class SVR<T> {
@@ -109,15 +111,15 @@ public class SVR<T> {
         /**
          * Lagrangian multipliers of support vector.
          */
-        double[] alpha = new double[2];
+        final double[] alpha = new double[2];
         /**
          * Gradient y - Ki * alpha.
          */
-        double[] g = new double[2];
+        final double[] g = new double[2];
         /**
          * Kernel value k(x, x)
          */
-        double k;
+        final double k;
 
         /**
          * Constructor.

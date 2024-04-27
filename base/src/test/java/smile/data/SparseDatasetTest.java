@@ -17,17 +17,12 @@
 
 package smile.data;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import smile.util.SparseArray;
 import smile.math.matrix.SparseMatrix;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -43,33 +38,34 @@ public class SparseDatasetTest {
     };
 
     public SparseDatasetTest() {
-        List<SparseArray> rows = new ArrayList<>();
-        for (double[] a : A) {
+        SparseArray[] rows = new SparseArray[A.length];
+        for (int i = 0; i < A.length; i++) {
+            double[] a = A[i];
             SparseArray row = new SparseArray();
             for (int j = 0; j < a.length; j++) {
                 row.append(j, a[j]);
             }
 
-            rows.add(row);
+            rows[i] = row;
         }
 
         SparseDataset lil = SparseDataset.of(rows);
         sm = lil.toMatrix();
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

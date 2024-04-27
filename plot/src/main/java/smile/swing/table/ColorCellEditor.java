@@ -49,15 +49,15 @@ public class ColorCellEditor extends AbstractCellEditor implements TableCellEdit
     /**
      * Editor component.
      */
-    private JButton button;
+    private final JButton button;
     /**
      * Color chooser.
      */
-    private JColorChooser colorChooser;
+    private final JColorChooser colorChooser;
     /**
      * Color chooser dialog.
      */
-    private JDialog dialog;
+    private final JDialog dialog;
 
     /**
      * Constructor.

@@ -98,7 +98,7 @@ var text = SimpleNormalizer.getInstance().normalize(unicode)
         punctuation marks are often ambiguous.
         In English, punctuation marks that usually appear at the end of a sentence
         may not indicate the end of a sentence. The period is the worst offender.
-        A period can end a sentence but it can also be part of an abbreviation
+        A period can end a sentence, but it can also be part of an abbreviation
         or acronym, an ellipsis, a decimal number, or part of a bracket of periods
         surrounding a Roman numeral. A period can even act both as the end of an
         abbreviation and the end of a sentence at the same time. Other the other
@@ -179,7 +179,7 @@ Though this was the first seal sighting on the runway at the airport, the depart
         has already been segmented into sentences and splits a sentence
         into tokens. Any periods &ndash; apart from those at the end
         of a string or before newline &ndash; are assumed to be part
-        of the word they are attached to (e.g. for abbreviations, etc),
+        of the word they are attached to (e.g. for abbreviations, etc.),
         and are not separately tokenized. Most punctuation is split
         from adjoining words. Verb contractions and the Anglo-Saxon
         genitive of nouns are split into their component morphemes,
@@ -404,7 +404,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         a good practice to use all tokens in the corpus as features.
         Therefore, we require the user to provide a list of selected
         tokens as the features in <code>vectorize()</code>.
-        A overloaded version of <code>vectorize()</code> converts
+        An overloaded version of <code>vectorize()</code> converts
         a binary bag of words (<code>Set[String]</code>) to a sparse
         integer vector, which elements are the indices of presented
         feature tokens in ascending order. As most documents will typically
@@ -500,7 +500,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
     <p>For a new document in prediction phase, an overload version of <code>tfidf(bag, n, df)</code>
         can be employed, where <code>bag</code> is the bag-of-words feature
         vector of a document, <code>n</code> is the number of documents in
-        training corpus, and <code>df</code> is an array which element is the
+        training corpus, and <code>df</code> is an array which element is
         the number of documents containing the given term in the corpus.</p>
 
     <h2 id="phrase" class="title">Phrase/Collocation Extraction</h2>
@@ -517,7 +517,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
 
     <p>Finding collocations requires first calculating the frequencies of words
         and their appearance in the context of other words. Often the collection
-        of words will then requiring filtering to only retain useful content terms.
+        of words will then require filtering to only retain useful content terms.
         Each n-gram of words may then be scored according to some association measure,
         in order to determine the relative likelihood of each n-gram being a collocation.</p>
 
@@ -852,7 +852,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
     </code></pre>
 
     <p>For document classification in NLP, there are two different ways we can set
-        up an naive Bayes classifier: multinomial model and Bernoulli model. The
+        up a naive Bayes classifier: multinomial model and Bernoulli model. The
         multinomial model generates one term from the vocabulary in each position
         of the document. The multivariate Bernoulli model or Bernoulli model
         generates an indicator for each term of the vocabulary, either indicating
@@ -934,7 +934,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         and therefore the state transition probabilities are the only parameters.
         In a hidden Markov model, the state is not directly visible, but output,
         dependent on the state, is visible. Each state has a probability distribution
-        over the possible output tokens. Therefore the sequence of tokens generated
+        over the possible output tokens. Therefore, the sequence of tokens generated
         by an HMM gives some information about the sequence of states.</p>
 
     <p>The below function trains a first-order hidden Markov model.</p>
@@ -961,7 +961,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         and in computer vision.</p>
 
     <p>A CRF is a Markov random field that was trained discriminatively.
-        Therefore it is not necessary to model the distribution over
+        Therefore, it is not necessary to model the distribution over
         always observed variables, which makes it possible to include
         arbitrarily complicated features of the observed variables into the model.</p>
 

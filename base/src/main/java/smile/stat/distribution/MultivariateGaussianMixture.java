@@ -20,14 +20,17 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
+import java.io.Serial;
+
 /**
- * Finite multivariate Gaussian mixture. The EM algorithm is provide to learned
+ * Finite multivariate Gaussian mixture. The EM algorithm is provided to learn
  * the mixture model from data. The BIC score is employed to estimate the number
  * of components.
  *
  * @author Haifeng Li
  */
 public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMixture {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MultivariateGaussianMixture.class);
 

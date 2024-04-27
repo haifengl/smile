@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,10 +39,11 @@ interface EnglishAbbreviations {
     Set<String> dictionary = dictionary();
 
     static Set<String> dictionary() {
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt")))) {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(Objects.requireNonNull(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt"))))) {
             return input.lines().map(String::trim).filter(line -> !line.isEmpty()).collect(Collectors.toSet());
         } catch (IOException ex) {
-            ex.printStackTrace();
+            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishAbbreviations.class);
+            logger.error("Failed to load English abbreviations", ex);
         }
 
         return Collections.emptySet();

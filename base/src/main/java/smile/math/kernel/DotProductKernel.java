@@ -41,7 +41,7 @@ public interface DotProductKernel extends Function {
     double k(double dot);
 
     /**
-     * Computes the dot product kernel function and its gradient over hyperparameters..
+     * Computes the dot product kernel function and its gradient over hyperparameters.
      * @param dot The dot product.
      * @return the kernel value and gradient.
      */

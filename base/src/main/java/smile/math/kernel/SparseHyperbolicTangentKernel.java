@@ -36,7 +36,7 @@ import smile.util.SparseArray;
  * due to its origin from neural networks. However, it should be used carefully
  * since the kernel matrix may not be positive semi-definite. Besides, it was
  * reported the hyperbolic tangent kernel is not better than the Gaussian kernel
- * in general..
+ * in general.
  *
  * @author Haifeng Li
  */

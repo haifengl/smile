@@ -17,22 +17,31 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Hyperbolic Tangent activation function.
  *
  * @author Haifeng Li
  */
-public class Tanh implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Tanh";
+public class Tanh extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public Tanh(boolean inplace) {
+        super("Tanh", inplace);
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.tanh(x);
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!module.is_training() && inplace) {
+            torch.tanh_(x);
+            return input;
+        } else {
+            return new Tensor(torch.tanh(x));
+        }
     }
 }

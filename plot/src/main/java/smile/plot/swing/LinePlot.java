@@ -34,14 +34,13 @@ public class LinePlot extends Plot {
     /**
      * The legends of each line.
      */
-    final Optional<Legend[]> legends;
+    final Legend[] legends;
 
     /**
      * Constructor.
      */
     public LinePlot(Line... lines) {
-        this.lines = lines;
-        legends = Optional.empty();
+        this(lines, null);
     }
 
     /**
@@ -49,12 +48,12 @@ public class LinePlot extends Plot {
      */
     public LinePlot(Line[] lines, Legend[] legends) {
         this.lines = lines;
-        this.legends = Optional.of(legends);
+        this.legends = legends;
     }
 
     @Override
     public Optional<Legend[]> legends() {
-        return legends;
+        return Optional.of(legends);
     }
 
     @Override

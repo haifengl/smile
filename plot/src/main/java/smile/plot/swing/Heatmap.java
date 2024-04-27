@@ -41,7 +41,7 @@ public class Heatmap extends Plot {
     /**
      * The two-dimensional data matrix.
      */
-    private double[][] z;
+    private final double[][] z;
     /**
      * The labels for columns of data matrix.
      */
@@ -65,7 +65,7 @@ public class Heatmap extends Plot {
     /**
      * The color palette to represent values.
      */
-    private Color[] palette;
+    private final Color[] palette;
     /**
      * If show axis marks.
      */
@@ -249,8 +249,8 @@ public class Heatmap extends Plot {
         end[0] = 1.13;
         end[1] = start[1] - height;
 
-        for (int i = 0; i < palette.length; i++) {
-            g.setColor(palette[i]);
+        for (var color : palette) {
+            g.setColor(color);
             g.fillRectBaseRatio(start, end);
             start[1] += height;
             end[1] += height;

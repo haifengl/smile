@@ -17,17 +17,13 @@
 
 package smile.feature.selection;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
 import smile.data.DataFrame;
 import smile.data.vector.IntVector;
 import smile.test.data.BreastCancer;
 import smile.test.data.Default;
 import smile.test.data.Iris;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -38,19 +34,19 @@ public class SignalNoiseRatioTest {
     public SignalNoiseRatioTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

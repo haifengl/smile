@@ -30,6 +30,8 @@ import smile.data.type.StructField;
 /**
  * An immutable generic vector.
  *
+ * @param <T> the data type of vector elements.
+ *
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
@@ -75,6 +77,16 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      */
     default List<T> distinct() {
         return stream().distinct().collect(Collectors.toList());
+    }
+
+    @Override
+    default boolean getBoolean(int i) {
+        return (Boolean) get(i);
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (Character) get(i);
     }
 
     @Override

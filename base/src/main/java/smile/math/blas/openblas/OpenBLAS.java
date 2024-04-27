@@ -32,8 +32,14 @@ import static org.bytedeco.openblas.global.openblas.*;
  */
 public class OpenBLAS implements BLAS, LAPACK {
     static {
-        // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl_rt");
+        String os = System.getProperty("os.name");
+        if (os.startsWith("Mac")) {
+            // try to use Accelerate framework on Mac OS X
+            System.setProperty("org.bytedeco.openblas.load", "blas");
+        } else {
+            // try to use MKL when available
+            System.setProperty("org.bytedeco.openblas.load", "mkl_rt");
+        }
     }
 
     @Override

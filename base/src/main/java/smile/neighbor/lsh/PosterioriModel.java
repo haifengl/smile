@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ import smile.util.IntArrayList;
  * @author Haifeng Li
  */
 public class PosterioriModel implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

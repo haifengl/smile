@@ -18,11 +18,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.clustering.KMeans;
 import smile.io.Read;
 import smile.io.Write;
@@ -32,8 +27,8 @@ import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.test.data.*;
 import smile.validation.*;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -43,23 +38,23 @@ public class GaussianProcessRegressionTest {
     public GaussianProcessRegressionTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testOutOfBoundsException() throws Exception {
         double[][] X = {
                 {4.543,  3.135, 0.86},

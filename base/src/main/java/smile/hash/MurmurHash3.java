@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * MurmurHash is a very fast, non-cryptographic hash suitable for general hash-based
  * lookup. The name comes from two basic operations, multiply (MU) and rotate (R),
- * used in its inner loop. See http://murmurhash.googlepages.com/ for more details.
+ * used in its inner loop. See this <a href="http://murmurhash.googlepages.com/">page</a> for more details.
  * <p>
  * The current version is MurmurHash3, which yields a 32-bit or 128-bit hash value.
  * When using 128-bits, the x86 and x64 versions do not produce the same values,
@@ -38,7 +38,7 @@ public class MurmurHash3 {
     private static long getblock(ByteBuffer key, int offset, int index) {
         int i_8 = index << 3;
         int blockOffset = offset + i_8;
-        return ((long) key.get(blockOffset + 0) & 0xff)
+        return ((long) key.get(blockOffset) & 0xff)
                 + (((long) key.get(blockOffset + 1) & 0xff) << 8)
                 + (((long) key.get(blockOffset + 2) & 0xff) << 16)
                 + (((long) key.get(blockOffset + 3) & 0xff) << 24)
@@ -153,7 +153,7 @@ public class MurmurHash3 {
         // body
 
         for (int i = 0; i < nblocks; i++) {
-            long k1 = getblock(data, offset, i * 2 + 0);
+            long k1 = getblock(data, offset, i * 2);
             long k2 = getblock(data, offset, i * 2 + 1);
 
             k1 *= c1;
@@ -198,7 +198,7 @@ public class MurmurHash3 {
             case 10:
                 k2 ^= ((long) data.get(offset + 9)) << 8;
             case 9:
-                k2 ^= ((long) data.get(offset + 8)) << 0;
+                k2 ^= data.get(offset + 8);
                 k2 *= c2;
                 k2 = rotl64(k2, 33);
                 k2 *= c1;
@@ -219,7 +219,7 @@ public class MurmurHash3 {
             case 2:
                 k1 ^= ((long) data.get(offset + 1)) << 8;
             case 1:
-                k1 ^= ((long) data.get(offset));
+                k1 ^= data.get(offset);
                 k1 *= c1;
                 k1 = rotl64(k1, 31);
                 k1 *= c2;

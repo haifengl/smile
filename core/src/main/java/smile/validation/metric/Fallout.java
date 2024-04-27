@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * Fall-out, false alarm rate, or false positive rate (FPR)
  * <pre>
@@ -28,6 +30,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class Fallout implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Fallout instance = new Fallout();

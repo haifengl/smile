@@ -27,7 +27,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public abstract class DiscreteDistribution extends AbstractDistribution {
+public abstract class DiscreteDistribution implements Distribution {
     /**
      * Generates an integer random number following this discrete distribution.
      * @return an integer random number.
@@ -39,7 +39,7 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
     /**
      * Generates a set of integer random numbers following this discrete distribution.
      * @param n the number of random numbers to generate.
-     * @return a set of integer random numbers.
+     * @return an array of integer random numbers.
      */
     public int[] randi(int n) {
         int[] data = new int[n];

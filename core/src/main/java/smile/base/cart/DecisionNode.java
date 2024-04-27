@@ -21,6 +21,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 
+import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public class DecisionNode extends LeafNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The predicted output. */
@@ -60,8 +62,8 @@ public class DecisionNode extends LeafNode {
     }
 
     /**
-     * Returns the number of node samples in each class.
-     * @return the number of node samples in each class.
+     * Returns the sample size in each class.
+     * @return the sample size in each class.
      */
     public int[] count() {
         return count;
@@ -82,7 +84,7 @@ public class DecisionNode extends LeafNode {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(" ".repeat(depth));
         line.append(id).append(") ");
 
         // split
@@ -157,8 +159,7 @@ public class DecisionNode extends LeafNode {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof DecisionNode) {
-            DecisionNode a = (DecisionNode) o;
+        if (o instanceof DecisionNode a) {
             return output == a.output;
         }
 

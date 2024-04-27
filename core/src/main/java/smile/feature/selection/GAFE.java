@@ -55,7 +55,7 @@ public class GAFE {
     /**
      * The number of best chromosomes to copy to new population. When creating
      * new population by crossover and mutation, we have a big chance, that we
-     * will loose the best chromosome. Elitism first copies the best chromosome
+     * will lose the best chromosome. Elitism first copies the best chromosome
      * (or a few best chromosomes) to new population. The rest is done in
      * classical way. Elitism can very rapidly increase performance of GA,
      * because it prevents losing the best found solution.

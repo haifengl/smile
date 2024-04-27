@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -27,6 +28,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class Hash implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -80,7 +82,7 @@ public class Hash implements Serializable {
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently away
-     *          from 0. But we should not choose an w value that is too large,
+     *          from 0. But we should not choose a w value that is too large,
      *          which will increase the query time.
      * @param H the size of universal hash tables.
      */
@@ -148,7 +150,7 @@ public class Hash implements Serializable {
         long g = 0;
         for (int i = 0; i < k; i++) {
             int hi = (int) Math.floor((h[i] + b[i]) / w);
-            g += c[i] * hi;
+            g += (long) c[i] * hi;
         }
 
         int gint = (int) (g % P);

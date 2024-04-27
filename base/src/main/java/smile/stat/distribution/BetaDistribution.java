@@ -21,6 +21,8 @@ import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * The beta distribution is defined on the interval [0, 1] parameterized by
  * two positive shape parameters, typically denoted by &alpha; and &beta;.
@@ -36,7 +38,8 @@ import smile.math.special.Gamma;
  * where B(&alpha;,&beta;) is the beta function.
  * @author Haifeng Li
  */
-public class BetaDistribution extends AbstractDistribution implements ExponentialFamily {
+public class BetaDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */
@@ -260,7 +263,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         }
 
         public double rand() {
-            double X = 0.0;
+            double X;
             double u1, u2, v, w, y, z, r, s, t;
             switch (method) {
                 case BB:

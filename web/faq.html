@@ -48,7 +48,7 @@ permalink: "{{ page.filePathStem }}.html"
     </code></pre>
 
     <p>Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
-        some clustering algorithms, Gaussian Process regression, MLP, etc).
+        some clustering algorithms, Gaussian Process regression, MLP, etc.).
         To use these algorithms, you should include OpenBLAS for optimized
         matrix computation:</p>
     <pre><code>
@@ -100,7 +100,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <h2 class="question" id="headless-plot">Headless Plot</h2>
     <p class="answer">
-        In case that your environment does not have a display or you need to generate and save
+        In case that your environment does not have a display, or you need to generate and save
         a lot of plots without showing them on the screen, you may run Smile in headless model.
     </p>
 
@@ -180,7 +180,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>
         A method <code>setSeed()</code> in the algorithm is also troublesome.
         For algorithms like random forest, it is not right to initialize every thread
-        with the same seed. Otherwise, same decision trees will be created
+        with the same seed. Otherwise, same decision trees will be created,
         and we lose the randomness of "random" forest. It is also complicated
         to pass a sequence of random numbers because it is not clear
         how many random number generators are needed for many algorithms. Even worse, it breaks

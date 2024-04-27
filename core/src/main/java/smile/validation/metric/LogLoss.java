@@ -17,8 +17,10 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
- * Log loss is a evaluation metric for binary classifiers and it is sometimes
+ * Log loss is an evaluation metric for binary classifiers, and it is sometimes
  * the optimization objective as well in case of logistic regression and neural
  * networks. Log Loss takes into account the uncertainty of the prediction
  * based on how much it varies from the actual label. This provides a more
@@ -29,6 +31,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class LogLoss implements ProbabilisticClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static LogLoss instance = new LogLoss();

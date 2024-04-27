@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.util.IntArrayList;
 
@@ -28,6 +29,7 @@ import smile.util.IntArrayList;
  * @author Haifeng Li
  */
 public class Bucket implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

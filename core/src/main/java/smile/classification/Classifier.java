@@ -25,9 +25,7 @@ import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
-
 import smile.data.Dataset;
-import smile.data.Instance;
 import smile.math.MathEx;
 
 /**
@@ -56,7 +54,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      */
     interface Trainer<T, M extends Classifier<T>> {
         /**
-         * Fits a classification model with the default hyper-parameters.
+         * Fits a classification model with the default hyperparameters.
          * @param x the training samples.
          * @param y the training labels.
          * @return the model
@@ -70,7 +68,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
          * Fits a classification model.
          * @param x the training samples.
          * @param y the training labels.
-         * @param params the hyper-parameters.
+         * @param params the hyperparameters.
          * @return the model
          */
         M fit(T[] x, int[] y, Properties params);
@@ -142,8 +140,8 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @param x the dataset to be classified.
      * @return the predicted class labels.
      */
-    default int[] predict(Dataset<T> x) {
-        return x.stream().mapToInt(this::predict).toArray();
+    default int[] predict(Dataset<T, ?> x) {
+        return x.stream().mapToInt(sample -> predict(sample.x())).toArray();
     }
 
     /**
@@ -215,13 +213,13 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @param posteriori an empty list to store a posteriori probabilities on output.
      * @return the predicted class labels.
      */
-    default int[] predict(Dataset<T> x, List<double[]> posteriori) {
+    default int[] predict(Dataset<T, ?> x, List<double[]> posteriori) {
         int n = x.size();
         int k = numClasses();
         double[][] prob = new double[n][k];
         Collections.addAll(posteriori, prob);
         return IntStream.range(0, n).parallel()
-                .map(i -> predict(x.get(i), prob[i]))
+                .map(i -> predict(x.get(i).x(), prob[i]))
                 .toArray();
     }
 
@@ -271,8 +269,8 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * Updates the model with a mini-batch of new samples.
      * @param batch the training instances.
      */
-    default void update(Dataset<Instance<T>> batch) {
-        batch.stream().forEach(sample -> update(sample.x(), sample.label()));
+    default void update(Dataset<T, Integer> batch) {
+        batch.stream().forEach(sample -> update(sample.x(), sample.y()));
     }
 
     /**
@@ -285,11 +283,15 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      */
     @SafeVarargs
     static <T> Classifier<T> ensemble(Classifier<T>... models) {
-        return new Classifier<T>() {
-            /** The ensemble is a soft classifier only if all the base models are. */
+        return new Classifier<>() {
+            /**
+             * The ensemble is a soft classifier only if all the base models are.
+             */
             private final boolean soft = Arrays.stream(models).allMatch(Classifier::soft);
 
-            /** The ensemble is an online learner only if all the base models are. */
+            /**
+             * The ensemble is an online learner only if all the base models are.
+             */
             private final boolean online = Arrays.stream(models).allMatch(Classifier::online);
 
             @Override

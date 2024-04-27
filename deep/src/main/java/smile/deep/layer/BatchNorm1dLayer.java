@@ -16,13 +16,13 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.BatchNorm1dImpl;
 import org.bytedeco.pytorch.BatchNormOptions;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
- * A normalization layer that re-centers and normalizes the output
+ * A batch normalization layer that re-centers and normalizes the output
  * of one layer before feeding it to another. Centering and scaling the
  * intermediate tensors has a number of beneficial effects, such as allowing
  * higher learning rates without exploding/vanishing gradients.
@@ -30,31 +30,28 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class BatchNorm1dLayer implements Layer {
-    /** The layer configuration. */
-    BatchNormOptions options;
     /** Implementation. */
-    BatchNorm1dImpl module;
+    private final BatchNorm1dImpl module;
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param channels the number of input channels.
      */
-    public BatchNorm1dLayer(int in) {
-        this(in, 1E-05, 0.1, true);
+    public BatchNorm1dLayer(int channels) {
+        this(channels, 1E-05, 0.1, true);
     }
 
     /**
      * Constructor.
-     * @param in the number of input features.
+     * @param channels the number of input channels.
      * @param eps a value added to the denominator for numerical stability.
      * @param momentum the value used for the running_mean and running_var
      *                computation. Can be set to 0.0 for cumulative moving average
      *                (i.e. simple average).
      * @param affine when set to true, this layer has learnable affine parameters.
      */
-    public BatchNorm1dLayer(int in, double eps, double momentum, boolean affine) {
-        LongPointer p = new LongPointer(1).put(in);
-        this.options = new BatchNormOptions(p);
+    public BatchNorm1dLayer(int channels, double eps, double momentum, boolean affine) {
+        var options = new BatchNormOptions(channels);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);
         options.affine().put(affine);
@@ -62,17 +59,12 @@ public class BatchNorm1dLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public BatchNorm1dImpl asTorch() {
-        return module;
+        return new Tensor(module.forward(input.asTorch()));
     }
 }

@@ -35,7 +35,7 @@ public class NeighborHashValueModel {
     /**
      * The variance of hash values of neighbors.
      */
-    public double[] var;
+    public final double[] var;
 
     /**
      * Constructor.

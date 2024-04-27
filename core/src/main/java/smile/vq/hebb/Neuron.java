@@ -17,6 +17,7 @@
 
 package smile.vq.hebb;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,6 +30,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Neuron implements Comparable<Neuron>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * The reference vector.

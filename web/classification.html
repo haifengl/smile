@@ -136,7 +136,7 @@ permalink: "{{ page.filePathStem }}.html"
         <dt>Bias-variance tradeoff</dt>
         <dd><p>Mean squared error (MSE) can be broken down into two components:
             variance and squared bias, known as the bias-variance decomposition.
-            Thus in order to minimize the MSE, we need to minimize both the bias and
+            Thus, in order to minimize the MSE, we need to minimize both the bias and
             the variance. However, this is not trivial. Therefore, there is a tradeoff
             between bias and variance.</p>
         </dd>
@@ -566,7 +566,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>FLD is also closely related to principal component analysis (PCA), which also
         looks for linear combinations of variables which best explain the data.
         As a supervised method, FLD explicitly attempts to model the
-        difference between the classes of data. On the other hand, PCA is a
+        difference between the classes of data. On the other hand, PCA is an
         unsupervised method and does not take into account any difference in class.</p>
 
     <p>One complication in applying FLD (and LDA) to real data
@@ -980,7 +980,7 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
 
     <p>where <code>p</code> is the number of input variables, <code>builders</code>
-        defines the each layer of network,
+        defines each layer of network,
         <code>epochs</code> is the number of epochs of stochastic learning,
         <code>eta</code> is the learning rate,
         <code>alpha</code> is the momentum factor,
@@ -991,7 +991,7 @@ permalink: "{{ page.filePathStem }}.html"
         recommended:</p>
 
     <ul>
-        <li>linear output units and a least squares penalty function.</li>
+        <li>linear output units and least squares penalty function.</li>
 
         <li>a two-class cross-entropy penalty function and a logistic
             activation function.</li>
@@ -1086,7 +1086,7 @@ permalink: "{{ page.filePathStem }}.html"
         at large &eta;, is to make the change in weight dependent on the past weight
         change by adding a momentum term.</p>
 
-    <p>Although the back-propagation algorithm may performs gradient
+    <p>Although the back-propagation algorithm may perform gradient
         descent on the total error of all instances in a batch way,
         the learning rule is often applied to each instance separately in an online
         way or stochastic way. There exists empirical indication that the stochastic
@@ -1136,7 +1136,7 @@ permalink: "{{ page.filePathStem }}.html"
         A common objective function, at least for regression/function estimation,
         is the least squares function.</p>
 
-    <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
+    <p>An optional third backpropagation step can be performed to fine-tune all the RBF
         network's parameters.</p>
 
     <ul class="nav nav-tabs">
@@ -1170,11 +1170,11 @@ permalink: "{{ page.filePathStem }}.html"
         </div>
     </div>
 
-    <p>The popular choices for &phi; comprise the Gaussian function and the so
-        called thin plate splines. The advantage of the thin plate splines is that
-        their conditioning is invariant under scalings. Gaussian, multi-quadric
-        and inverse multi-quadric are infinitely smooth and and involve a scale
-        or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+    <p>The popular choices for &phi; comprise the Gaussian function and the
+        so-called thin plate splines. The advantage of the thin plate splines
+        is that their conditioning is invariant under scalings. Gaussian,
+        multi-quadric and inverse multi-quadric are infinitely smooth and involve
+        a scale or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
         r<sub><small>0</small></sub> tends to flatten the basis function. For a
         given function, the quality of approximation may strongly depend on this
         parameter. In particular, increasing r<sub><small>0</small></sub> has the
@@ -1250,7 +1250,7 @@ permalink: "{{ page.filePathStem }}.html"
         transformed feature space. The transformation may be nonlinear and
         the transformed space be high dimensional. For example, the feature space
         corresponding Gaussian kernel is a Hilbert space of infinite dimension.
-        Thus though the classifier is a hyperplane in the high-dimensional feature
+        Thus, though the classifier is a hyperplane in the high-dimensional feature
         space, it may be nonlinear in the original input space. Maximum margin
         classifiers are well regularized, so the infinite dimension does not spoil
         the results.</p>
@@ -1484,7 +1484,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>where <code>maxNodes</code> is the maximum number of leaf nodes in the tree as
         a regularization control.
         The parameter <code>attributes</code> provides
-        the attribute properties so that the algorithm can chooses the proper split
+        the attribute properties so that the algorithm can choose the proper split
         value for attributes. If not provided, all attributes are assumed real-valued.</p>
 
     <p>The following picture is the decision boundary of decision tree with 200 nodes
@@ -1726,7 +1726,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>where <code>ntrees</code> is the number of trees, and <code>mtry</code> is the number
         of attributed randomly selected at each node to choose the best split.
         Although the original random forest algorithm trains each tree fully without pruning,
-        it is useful to control the tree size some times, which can be achieved by the
+        it is useful to control the tree size sometimes, which can be achieved by the
         parameter <code>maxNodes</code>. The tree can also be regularized by
         limiting the minimum number of observations in trees' terminal nodes with the
         parameter <code>nodeSize</code>.
@@ -1896,7 +1896,7 @@ permalink: "{{ page.filePathStem }}.html"
         decision trees is probably the most popular combination. AdaBoost is adaptive
         in the sense that subsequent classifiers built are tweaked in favor of those
         instances misclassified by previous classifiers. AdaBoost is sensitive to
-        noisy data and outliers. However in some problems it can be less susceptible
+        noisy data and outliers. However, in some problems it can be less susceptible
         to the over-fitting problem than most learning algorithms.</p>
 
     <p>AdaBoost calls a weak classifier repeatedly in a series of rounds from

@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class TimeType implements DataType {
     /** Default instance. */
-    static TimeType instance = new TimeType();
+    static final TimeType instance = new TimeType();
 
     /** Date format pattern. */
     private final String pattern;

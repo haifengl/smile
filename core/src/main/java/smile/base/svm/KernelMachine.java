@@ -17,6 +17,7 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.math.kernel.MercerKernel;
 
@@ -33,27 +34,30 @@ import smile.math.kernel.MercerKernel;
  * a new representation) and learn for it a corresponding weight. Prediction
  * for unlabeled inputs is treated by the application of a similarity function.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KernelMachine<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The kernel function.
      */
-    MercerKernel<T> kernel;
+    final MercerKernel<T> kernel;
     /**
      * The support vectors (or control points).
      */
-    T[] vectors;
+    final T[] vectors;
     /**
      * The linear weights.
      */
-    double[] w;
+    final double[] w;
     /**
      * The intercept.
      */
-    double b;
+    final double b;
 
     /**
      * Constructor.

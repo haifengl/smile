@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.ParseException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,7 +68,7 @@ public interface HadoopInput {
      */
     static InputStream stream(String path) throws IOException, URISyntaxException {
         // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*\\S]?.*")) {
+        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
             return Files.newInputStream(Paths.get(path));
         }
 
@@ -102,7 +101,7 @@ public interface HadoopInput {
      */
     static InputFile file(String path) throws IOException, URISyntaxException {
         // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*\\S]?.*")) {
+        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
             return new LocalInputFile(Paths.get(path));
         }
 

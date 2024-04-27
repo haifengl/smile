@@ -56,7 +56,7 @@ public class MersenneTwister64 implements RandomNumberGenerator {
 
     /**
      * Internal state to hold 64 bits, that might
-     * used to generate two 32 bit values.
+     * be used to generate two 32 bit values.
      */
     private long bits64;
     private boolean bitState = true;

@@ -17,8 +17,8 @@
 
 package smile.data.formula;
 
+import java.io.Serial;
 import java.io.Serializable;
-import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +50,7 @@ import smile.math.matrix.Matrix;
  * {@code b} and {@code c} together with their second-order interactions.
  * The {@code -} operator removes the specified terms, so that
  * {@code (a+b+c)^2 - a::b} is identical to {@code a + b + c + b::c + a::c}.
- * It can also used to remove the intercept term: when fitting a linear model
+ * It can also be used to remove the intercept term: when fitting a linear model
  * {@code y ~ x - 1} specifies a line through the origin. A model with
  * no intercept can be also specified as {@code y ~ x + 0}.
  * <p>
@@ -64,6 +64,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class Formula implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
 
@@ -190,12 +191,14 @@ public class Formula implements Serializable {
     public static Formula of(String response, String... predictors) {
         return new Formula(
                 new Variable(response),
-                Arrays.stream(predictors).map(predictor -> {
-                    if (predictor.equals(".")) return new Dot();
-                    if (predictor.equals("1")) return new Intercept(true);
-                    if (predictor.equals("0")) return new Intercept(false);
-                    return new Variable(predictor);
-                }).toArray(Term[]::new)
+                Arrays.stream(predictors).map(predictor ->
+                    switch (predictor) {
+                        case "." -> new Dot();
+                        case "1" -> new Intercept(true);
+                        case "0" -> new Intercept(false);
+                        default -> new Variable(predictor);
+                    }
+                ).toArray(Term[]::new)
         );
     }
 
@@ -369,7 +372,7 @@ public class Formula implements Serializable {
             }
         }
 
-        this.binding = new ThreadLocal<Binding>() {
+        this.binding = new ThreadLocal<>() {
             protected synchronized Binding initialValue() {
                 return binding;
             }
@@ -425,7 +428,7 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Apply the formula on a tuple to generate the predictors data.
+     * Apply the formula on a tuple to generate the predictor data.
      * @param tuple the input tuple.
      * @return the output tuple.
      */
@@ -524,7 +527,7 @@ public class Formula implements Serializable {
     /**
      * Returns the design matrix of predictors.
      * All categorical variables will be dummy encoded.
-     * If the formula doesn't has an Intercept term, the bias
+     * If the formula doesn't have an Intercept term, the bias
      * column will be included. Otherwise, it is based on the
      * setting of Intercept term.
      *

@@ -17,6 +17,8 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
+
 /**
  * Dynamic time warping is an algorithm for measuring similarity between two
  * sequences which may vary in time or speed. DTW has been applied to video,
@@ -43,10 +45,13 @@ package smile.math.distance;
  * The extension of the problem for two-dimensional "series" like images
  * (planar warping) is NP-complete, while the problem for one-dimensional
  * signals like time series can be solved in polynomial time.
- * 
+ *
+ * @param <T> the input type of distance function.
+ *
  * @author Haifeng Li
  */
 public class DynamicTimeWarping<T> implements Distance<T[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** The distance function. */

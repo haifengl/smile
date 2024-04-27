@@ -17,12 +17,15 @@
 
 package smile.base.mlp;
 
+import java.io.Serial;
+
 /**
  * A hidden layer in the neural network.
  *
  * @author Haifeng Li
  */
 public class HiddenLayer extends Layer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The activation function. */

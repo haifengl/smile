@@ -23,6 +23,8 @@ import java.util.stream.DoubleStream;
 /**
  * The product kernel takes two kernels and combines them via k1(x, y) * k2(x, y).
  *
+ * @param <T> the input type of kernel function.
+ *
  * @author Haifeng Li
  */
 public class ProductKernel<T> implements MercerKernel<T> {

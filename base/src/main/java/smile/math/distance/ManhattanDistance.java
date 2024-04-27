@@ -17,6 +17,7 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -31,6 +32,7 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class ManhattanDistance implements Metric<double[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

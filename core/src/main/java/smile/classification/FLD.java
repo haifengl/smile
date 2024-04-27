@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -41,7 +42,7 @@ import smile.util.IntSet;
  * FLD is also closely related to principal component analysis (PCA), which also
  * looks for linear combinations of variables which best explain the data.
  * As a supervised method, FLD explicitly attempts to model the
- * difference between the classes of data. On the other hand, PCA is a
+ * difference between the classes of data. On the other hand, PCA is an
  * unsupervised method and does not take into account any difference in class.
  * <p>
  * One complication in applying FLD (and LDA) to real data
@@ -61,6 +62,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class FLD extends AbstractClassifier<double[]> /*implements Projection<double[]>*/ {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -131,7 +133,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
      * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model
      */
     public static FLD fit (double[][] x, int[] y, Properties params) {

@@ -17,6 +17,7 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import static java.lang.Math.exp;
@@ -33,7 +34,7 @@ import static smile.math.MathEx.lfactorial;
  * two partitions are identical and 0 when the MI between two partitions
  * equals the value expected due to chance alone.
  * <p>
- * WARNING: The computation of adjustment is is really really slow.
+ * WARNING: The computation of adjustment is really slow.
  *
  * <h2>References</h2>
  * <ol>
@@ -43,6 +44,7 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class AdjustedMutualInformation implements ClusteringMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
     public final static AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);
@@ -78,13 +80,12 @@ public class AdjustedMutualInformation implements ClusteringMetric {
 
     @Override
     public double score(int[] y1, int[] y2) {
-        switch (method) {
-            case MAX: return max(y1, y2);
-            case MIN: return min(y1, y2);
-            case SUM: return sum(y1, y2);
-            case SQRT: return sqrt(y1, y2);
-            default: throw new IllegalStateException("Unknown normalization method: " + method);
-        }
+        return switch (method) {
+            case MAX -> max(y1, y2);
+            case MIN -> min(y1, y2);
+            case SUM -> sum(y1, y2);
+            case SQRT -> sqrt(y1, y2);
+        };
     }
 
     /**

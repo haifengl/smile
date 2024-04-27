@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * A concise dictionary of common terms in English.
@@ -47,7 +48,7 @@ public enum EnglishDictionary implements Dictionary {
     EnglishDictionary(String resource) {
         dict = new HashSet<>();
 
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+        try (BufferedReader input = new BufferedReader(new InputStreamReader(Objects.requireNonNull(this.getClass().getResourceAsStream(resource))))) {
         
             String line;
             while ((line = input.readLine()) != null) {
@@ -58,7 +59,8 @@ public enum EnglishDictionary implements Dictionary {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishDictionary.class);
+            logger.error("Failed to load English dictionary", ex);
         }
     }
 

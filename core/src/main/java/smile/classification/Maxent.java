@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -52,27 +53,28 @@ import smile.validation.ModelSelection;
  * @author Haifeng Li
  */
 public abstract class Maxent extends AbstractClassifier<int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    int p;
+    final int p;
 
     /**
      * The number of classes.
      */
-    int k;
+    final int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    double L;
+    final double L;
 
     /**
      * Regularization factor.
      */
-    double lambda;
+    final double lambda;
 
     /**
      * learning rate for stochastic gradient descent.
@@ -259,7 +261,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
@@ -311,7 +313,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
@@ -390,7 +392,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {
@@ -465,31 +467,31 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         /**
          * Training instances.
          */
-        int[][] x;
+        final int[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
 
         /**
          * Constructor.
@@ -507,7 +509,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         
         @Override
         public double f(double[] w) {
-            // Since BFGS try to minimize the objective function
+            // Since BFGS try to minimize the objective function,
             // and we try to maximize the log-likelihood, we really
             // return the negative log-likelihood here.
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
@@ -574,39 +576,39 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         /**
          * Training instances.
          */
-        int[][] x;
+        final int[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The number of classes.
          */
-        int k;
+        final int k;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
         /**
          * The workspace to store posteriori probability for each data partition.
          */
-        double[][] posterioris;
+        final double[][] posterioris;
 
         /**
          * Constructor.

@@ -60,7 +60,7 @@ public class SVM {
         smile.base.svm.SVR<double[]> svr = new smile.base.svm.SVR<>(new LinearKernel(), eps, C, tol);
         KernelMachine<double[]> svm = svr.fit(x, y);
 
-        return new Regression<double[]>() {
+        return new Regression<>() {
             final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
@@ -88,7 +88,7 @@ public class SVM {
         smile.base.svm.SVR<int[]> svr = new smile.base.svm.SVR<>(new BinarySparseLinearKernel(), eps, C, tol);
         KernelMachine<int[]> svm = svr.fit(x, y);
 
-        return new Regression<int[]>() {
+        return new Regression<>() {
             final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
@@ -116,7 +116,7 @@ public class SVM {
         smile.base.svm.SVR<SparseArray> svr = new smile.base.svm.SVR<>(new SparseLinearKernel(), eps, C, tol);
         KernelMachine<SparseArray> svm = svr.fit(x, y);
 
-        return new Regression<SparseArray>() {
+        return new Regression<>() {
             final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
@@ -150,7 +150,7 @@ public class SVM {
      * Fits an epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Properties params) {

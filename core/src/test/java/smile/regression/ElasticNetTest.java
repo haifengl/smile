@@ -17,12 +17,6 @@
 
 package smile.regression;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
@@ -31,8 +25,8 @@ import smile.io.Write;
 import smile.math.MathEx;
 import smile.test.data.*;
 import smile.validation.*;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -42,19 +36,19 @@ public class ElasticNetTest {
     public ElasticNetTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

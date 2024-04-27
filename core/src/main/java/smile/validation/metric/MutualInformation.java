@@ -17,6 +17,7 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
 import java.util.Arrays;
 import static java.lang.Math.log;
 
@@ -31,6 +32,7 @@ import static java.lang.Math.log;
  * @author Haifeng Li
  */
 public class MutualInformation implements ClusteringMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MutualInformation instance = new MutualInformation();

@@ -5,6 +5,8 @@ lazy val scala3 = "3.3.3"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
+  resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
@@ -12,7 +14,7 @@ lazy val commonSettings = Seq(
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
-  organizationHomepage := Some(url("http://haifengl.github.io/")),
+  organizationHomepage := Some(url("https://haifengl.github.io/")),
   version := "3.1.0",
 
   autoAPIMappings := true,
@@ -21,6 +23,10 @@ lazy val commonSettings = Seq(
   Test / parallelExecution := false,
   Test / publishArtifact := false,
   Test / javaOptions ++= Seq(
+    "-XX:+UseG1GC",
+    "-XX:MaxMetaspaceSize=1024M",
+    "-Xss4M",
+    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
     "--add-opens=java.base/java.lang=ALL-UNNAMED",
     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
@@ -67,35 +73,25 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-encoding", "UTF8",
     "-g:lines,vars,source",
     "-Xlint:deprecation",
-    "-Xlint:unchecked"
+    "-Xlint:unchecked",
+    "-source", "17",
+    "-target", "17"
   ),
   Compile / doc / javacOptions ++= Seq(
     "-Xdoclint:none",
     "--allow-script-in-comments",
-    "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
-    "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
-    ),
+    "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+    "--add-script", "project/gtag.js",
+    "-bottom", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+                 |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
+                 |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
+  ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.12",
-    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
-    "junit" % "junit" % "4.13.2" % Test,
-    "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
-  ),
-  Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
-)
-
-lazy val java8Settings = javaSettings ++ Seq(
-  Compile / compile / javacOptions ++= Seq(
-    "-source", "1.8",
-    "-target", "1.8"
-  ),
-)
-
-lazy val java17Settings = javaSettings ++ Seq(
-  Compile / compile / javacOptions ++= Seq(
-    "-source", "17",
-    "-target", "17"
-  ),
+    "org.slf4j" % "slf4j-api" % "2.0.13",
+    "org.slf4j" % "slf4j-simple" % "2.0.13" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "5.10.2" % Test,
+    "net.aichler"       % "jupiter-interface"    % "0.11.1" % Test
+  )
 )
 
 lazy val scalaSettings = commonSettings ++ Seq(
@@ -107,33 +103,39 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-release:8"
+    "-release:17"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
-    "-implicits"
+    "-project-version", "3.1.0",
+    "-project-logo", "web/images/smile.jpg",
+    "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
+                         |Use is subject to license terms.""".stripMargin,
+    "-dynamic-side-menu"
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.13" % Test,
     "org.specs2" %% "specs2-core" % "4.20.5" % Test
   ),
 )
 
 lazy val javaCppSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+    "org.bytedeco" % "javacpp"   % "1.5.11-SNAPSHOT"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.11-SNAPSHOT" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11-SNAPSHOT"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
 )
 
-lazy val javaCppTestSettings = Seq(
-  libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"   % "1.5.10"        % "test" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "test" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
-  )
+JavaUnidoc / unidoc / javacOptions ++= Seq(
+  "-Xdoclint:none",
+  "--allow-script-in-comments",
+  "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+  "--add-script", "project/gtag.js",
+  "-bottom", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+               |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
+               |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
 )
 
 lazy val root = project.in(file("."))
@@ -142,36 +144,29 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
+    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
   )
-  .aggregate(core, base, mkl, nlp, deep, plot, json, scala, spark, shell)
+  .aggregate(core, base, nlp, deep, plot, json, scala, spark, shell)
 
 lazy val base = project.in(file("base"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .settings(javaCppSettings: _*)
 
-lazy val mkl = project.in(file("mkl"))
-  .settings(java8Settings: _*)
-  .settings(javaCppTestSettings: _*)
-  .settings(Test / envVars += ("MKL_VERBOSE" -> "1"))
-  .settings(publish / skip := true)
-  .dependsOn(base)
-
 lazy val core = project.in(file("core"))
-  .settings(java8Settings: _*)
-  .dependsOn(base % "compile->compile;test->test")
+  .settings(javaSettings: _*)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
 
 lazy val deep = project.in(file("deep"))
-  .settings(java17Settings: _*)
+  .settings(javaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
-  .settings(java8Settings: _*)
+  .settings(javaSettings: _*)
   .dependsOn(core)
 
 lazy val plot = project.in(file("plot"))
-  .settings(java17Settings: _*)
+  .settings(javaSettings: _*)
   .dependsOn(base)
 
 lazy val json = project.in(file("json"))

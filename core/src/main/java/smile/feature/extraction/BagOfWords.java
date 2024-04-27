@@ -125,12 +125,10 @@ public class BagOfWords implements Transform {
      */
     public static BagOfWords fit(DataFrame data, Function<String, String[]> tokenizer, int k, String... columns) {
         HashMap<String, Integer> words = new HashMap<>();
-        for (String column : columns) {
-            for (String text : data.column(column).toStringArray()) {
-                for (String word : tokenizer.apply(text)) {
-                    Integer count = words.get(word);
-                    if (count == null) words.put(word, 1);
-                    else words.put(word, count + 1);
+        for (var column : columns) {
+            for (var text : data.column(column).toStringArray()) {
+                for (var word : tokenizer.apply(text)) {
+                    words.merge(word, 1, Integer::sum);
                 }
             }
         }

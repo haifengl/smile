@@ -22,6 +22,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -31,12 +32,13 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public class NominalNode extends InternalNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The split value.
      */
-    int value;
+    final int value;
 
     /**
      * Constructor.
@@ -80,8 +82,7 @@ public class NominalNode extends InternalNode {
         if (trueBranch) {
             values = field.toString(value);
         } else {
-            if (field.measure instanceof NominalScale) {
-                NominalScale scale = (NominalScale) field.measure;
+            if (field.measure instanceof NominalScale scale) {
                 values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(scale::level).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;

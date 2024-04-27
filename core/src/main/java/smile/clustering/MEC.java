@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -52,10 +53,13 @@ import smile.neighbor.RNNSearch;
  * <ol>
  * <li> Haifeng Li. All rights reserved., Keshu Zhang, and Tao Jiang. Minimum Entropy Clustering and Applications to Gene Expression Analysis. CSB, 2004. </li>
  * </ol>
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MEC.class);
 
@@ -113,8 +117,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         // Initialize clusters with KMeans/CLARANS.
         int[] y;
-        if (data instanceof double[][] && distance instanceof EuclideanDistance) {
-            KMeans kmeans = KMeans.fit((double[][]) data, k);
+        if (data instanceof double[][] matrix && distance instanceof EuclideanDistance) {
+            KMeans kmeans = KMeans.fit(matrix, k);
             y = kmeans.y;
         } else {
             CLARANS<T> clarans = CLARANS.fit(data, distance, k);

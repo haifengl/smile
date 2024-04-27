@@ -38,7 +38,7 @@
  * unit but if the values are missing systematically the problem is more severe
  * because the sample cannot be representative of the population.
  * <p>
- * All of the causes for missing data fit into four classes, which are based
+ * All the causes for missing data fit into four classes, which are based
  * on the relationship between the missing data mechanism and the missing and
  * observed values. These classes are important to understand because the
  * problems caused by missing data and the solutions to these problems are

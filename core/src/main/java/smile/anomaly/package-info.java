@@ -28,7 +28,7 @@
  * least to the remainder of the data set. Supervised anomaly detection
  * techniques require a data set that has been labeled as "normal" and
  * "abnormal" and involves training a classifier (the key difference to
- * many other statistical classification problems is the inherent unbalanced
+ * many other statistical classification problems is the inherently unbalanced
  * nature of outlier detection). Semi-supervised anomaly detection techniques
  * construct a model representing normal behavior from a given normal training
  * data set, and then test the likelihood of a test instance to be generated

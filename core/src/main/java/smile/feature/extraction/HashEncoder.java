@@ -96,13 +96,11 @@ public class HashEncoder implements Function<String, SparseArray> {
 
             // improve inner product preservation in the hashed space
             int value = alternateSign && h < 0 ? -1 : 1;
-            Integer count = bag.get(index);
-            if (count == null) bag.put(index, value);
-            else bag.put(index, count + value);
+            bag.merge(index, value, Integer::sum);
         }
 
         SparseArray features = new SparseArray();
-        bag.forEach((i, x) -> features.append(i, x));
+        bag.forEach(features::append);
         return features;
     }
 }

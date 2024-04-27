@@ -33,7 +33,7 @@ public class Root {
     /**
      * Brent's method for root-finding. It combines the bisection method,
      * the secant method and inverse quadratic interpolation. It has the
-     * reliability of bisection but it can be as quick as some of the
+     * reliability of bisection, but it can be as quick as some of the
      * less-reliable methods. The algorithm tries to use the potentially
      * fast-converging secant method or inverse quadratic interpolation
      * if possible, but it falls back to the more robust bisection method

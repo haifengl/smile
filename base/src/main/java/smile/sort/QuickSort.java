@@ -47,7 +47,7 @@ import java.util.Comparator;
  * always appear before S in the sorted list.
  * <p>
  * For speed of execution, we implement it without recursion. Instead,
- * we requires an auxiliary array (stack) of storage, of length
+ * we require an auxiliary array (stack) of storage, of length
  * 2 log<sub><small>2</small></sub> n. When a subarray has gotten down to size 7,
  * we sort it by straight insertion.
  * 
@@ -64,26 +64,26 @@ public class QuickSort {
 
     /**
      * Sorts the specified array into ascending numerical order.
-     * @param x the array.
+     * @param array the array.
      * @return the original index of elements after sorting in range [0, n).
      */
-    public static int[] sort(int[] x) {
-        int[] order = new int[x.length];
+    public static int[] sort(int[] array) {
+        int[] order = new int[array.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        sort(x, order);
+        sort(array, order);
         return order;
     }
 
     /**
-     * Besides sorting the array x, the array y will be also
-     * rearranged as the same order of x.
-     * @param x the array to sort.
-     * @param y the associate array.
+     * Besides sorting the array, the array b will be also
+     * rearranged as the same order of array.
+     * @param array the array to sort.
+     * @param b the associate array.
      */
-    public static void sort(int[] x, int[] y) {
-        sort(x, y, x.length);
+    public static void sort(int[] array, int[] b) {
+        sort(array, b, array.length);
     }
 
     /**

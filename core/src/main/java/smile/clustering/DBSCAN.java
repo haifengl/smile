@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ import smile.neighbor.Neighbor;
 import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.RNNSearch;
-import smile.math.MathEx;
 import smile.math.distance.Distance;
 
 /**
@@ -90,6 +90,7 @@ import smile.math.distance.Distance;
  * @author Haifeng Li
  */
 public class DBSCAN<T> extends PartitionClustering {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

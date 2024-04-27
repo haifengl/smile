@@ -18,6 +18,7 @@
 package smile.data;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -25,41 +26,47 @@ import java.util.stream.Stream;
 /**
  * A simple implementation of Dataset that store data in single machine's memory.
  *
- * @param <T> the type of data objects.
+ * @param <D> the data type.
+ * @param <T> the target type.
  *
  * @author Haifeng Li
  */
-class DatasetImpl<T> implements Dataset<T> {
+class DatasetImpl<D, T> implements Dataset<D, T> {
     /**
-     * The data objects.
+     * The sample instances.
      */
-    private final ArrayList<T> data;
+    private final ArrayList<SampleInstance<D, T>> instances;
 
     /**
      * Constructor
-     * @param data The underlying data collection.
+     * @param instances The sample instances.
      */
-    public DatasetImpl(Collection<T> data) {
-        this.data = new ArrayList<>(data);
+    public DatasetImpl(Collection<SampleInstance<D, T>> instances) {
+        this.instances = new ArrayList<>(instances);
     }
 
     @Override
     public int size() {
-        return data.size();
+        return instances.size();
     }
 
     @Override
-    public T get(int i) {
-        return data.get(i);
+    public SampleInstance<D, T> get(int i) {
+        return instances.get(i);
     }
 
     @Override
-    public Stream<T> stream() {
-        return data.stream();
+    public Stream<SampleInstance<D, T>> stream() {
+        return instances.stream();
     }
 
     @Override
-    public List<T> toList() {
-        return new ArrayList<>(data);
+    public Iterator<SampleInstance<D, T>> iterator() {
+        return instances.iterator();
+    }
+
+    @Override
+    public List<SampleInstance<D, T>> toList() {
+        return new ArrayList<>(instances);
     }
 }

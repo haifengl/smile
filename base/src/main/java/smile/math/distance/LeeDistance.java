@@ -17,6 +17,8 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
+
 /**
  * In coding theory, the Lee distance is a distance between two strings
  * <code>x<sub>1</sub>x<sub>2</sub>...x<sub>n</sub></code> and
@@ -31,6 +33,7 @@ package smile.math.distance;
  * @author Haifeng Li
  */
 public class LeeDistance implements Metric<int[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** The size of q-ary alphabet. */
@@ -61,7 +64,7 @@ public class LeeDistance implements Metric<int[]> {
 
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
-            double d = Math.abs(x[i] - y[i]);
+            int d = Math.abs(x[i] - y[i]);
             dist += Math.min(d, q-d);
         }
 

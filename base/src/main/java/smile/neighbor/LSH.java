@@ -17,6 +17,7 @@
 
 package smile.neighbor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -51,6 +52,7 @@ import smile.sort.HeapSelect;
  * @author Haifeng Li
  */
 public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -96,7 +98,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
      * @param keys the object keys.
      * @param data the data objects.
      * @param w the width of random projections. It should be sufficiently
-     *          away from 0. But we should not choose an w value that is too
+     *          away from 0. But we should not choose a w value that is too
      *          large, which will increase the query time.
      * @param H the size of universal hash tables.
      */
@@ -124,7 +126,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently
-     *          away from 0. But we should not choose an w value that is too
+     *          away from 0. But we should not choose a w value that is too
      *          large, which will increase the query time.
      */
     public LSH(int d, int L, int k, double w) {
@@ -138,7 +140,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently
-     *          away from 0. But we should not choose an w value that is too
+     *          away from 0. But we should not choose a w value that is too
      *          large, which will increase the query time.
      * @param H the size of universal hash tables.
      */
@@ -180,7 +182,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently
-     *          away from 0. But we should not choose an w value that is too
+     *          away from 0. But we should not choose a w value that is too
      *          large, which will increase the query time.
      * @param H the size of universal hash tables.
      */

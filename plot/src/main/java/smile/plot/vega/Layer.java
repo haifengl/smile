@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 public class Layer extends View implements ViewComposition {
     /**
      * Constructor.
-     *
+     * <p>
      * Note: Specifications inside layer cannot use row and column
      * channels as layering facet specifications is not allowed.
      * Instead, use the facet operator and place a layer inside a facet.

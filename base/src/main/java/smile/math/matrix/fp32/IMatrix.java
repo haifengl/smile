@@ -83,7 +83,7 @@ import static smile.math.blas.UPLO.LOWER;
  *
  * @author Haifeng Li
  */
-public abstract class IMatrix implements Cloneable, Serializable {
+public abstract class IMatrix implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IMatrix.class);
 
     /**
@@ -94,6 +94,14 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * The column names.
      */
     private String[] colNames;
+
+    /**
+     * Returns a deep copy of matrix.
+     * @return a deep copy of matrix.
+     */
+    public IMatrix copy() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns the number of rows.
@@ -109,7 +117,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
     /**
      * Returns the number of stored matrix elements. For conventional matrix,
-     * it is simplify nrow * ncol. But it is usually much less for band,
+     * it is simply nrow * ncol. But it is usually much less for band,
      * packed or sparse matrix.
      * @return the number of stored matrix elements.
      */
@@ -245,8 +253,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *              operation on the matrix.
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
@@ -279,8 +287,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public void mv(float alpha, float[] x, float beta, float[] y) {
@@ -323,8 +331,8 @@ public abstract class IMatrix implements Cloneable, Serializable {
      *
      * @param alpha the scalar alpha.
      * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  the input and output vector.
      */
     public void tv(float alpha, float[] x, float beta, float[] y) {
@@ -470,11 +478,11 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * @param p the origin in the shifting power method. A - pI will be
      * used in the iteration to accelerate the method. p should be such that
      * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
-     * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
-     * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
+     * where &lambda;<sub>2</sub> is the second-largest eigenvalue in magnitude.
+     * If we know the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
      * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue
      * in magnitude. Good estimates of &lambda;<sub>2</sub> are more difficult
-     * to compute. However, if &mu; is an approximation to largest eigenvector,
+     * to compute. However, if &mu; is an approximation to the largest eigenvector,
      * then using any x<sub>0</sub> such that x<sub>0</sub>*&mu; = 0 as the initial
      * vector for a few iterations may yield a reasonable estimate of &lambda;<sub>2</sub>.
      * @param tol the desired convergence tolerance.
@@ -552,7 +560,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
      * Reads a matrix from a Matrix Market File Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
-     *
+     * <p>
      * The returned matrix may be dense or sparse.
      *
      * @param path the input file path.
@@ -934,13 +942,11 @@ public abstract class IMatrix implements Cloneable, Serializable {
             P.asolve(b, z);
             bnrm = norm(z, itol);
             P.asolve(r, z);
-        } else if (itol == 3 || itol == 4) {
+        } else { // if (itol == 3 || itol == 4) {
             P.asolve(b, z);
             bnrm = norm(z, itol);
             P.asolve(r, z);
             znrm = norm(z, itol);
-        } else {
-            throw new IllegalArgumentException(String.format("Illegal itol: %d", itol));
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
@@ -977,7 +983,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
                 err = norm(r, itol) / bnrm;
             } else if (itol == 2) {
                 err = norm(z, itol) / bnrm;
-            } else if (itol == 3 || itol == 4) {
+            } else { // if (itol == 3 || itol == 4) {
                 zm1nrm = znrm;
                 znrm = norm(z, itol);
                 if (Math.abs(zm1nrm - znrm) > MathEx.EPSILON * znrm) {
@@ -1017,7 +1023,7 @@ public abstract class IMatrix implements Cloneable, Serializable {
 
         if (itol <= 3) {
             float ans = 0.0f;
-            for (double v : x) {
+            for (var v : x) {
                 ans += v * v;
             }
             return (float) Math.sqrt(ans);

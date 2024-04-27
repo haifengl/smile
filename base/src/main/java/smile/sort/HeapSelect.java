@@ -23,7 +23,9 @@ package smile.sort;
  * we have a stream of input values, each of which we get to see only once. We
  * want to be able to report at any time, say after n values, the i-<i>th</i> smallest
  * value see so far.
- * 
+ *
+ * @param <T> the data type of stream elements.
+ *
  * @author Haifeng Li
  */
 public class HeapSelect<T extends Comparable<? super T>> {

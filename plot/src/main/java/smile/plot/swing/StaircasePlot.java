@@ -36,14 +36,13 @@ public class StaircasePlot extends Plot {
     /**
      * The legends of each line.
      */
-    final Optional<Legend[]> legends;
+    final Legend[] legends;
 
     /**
      * Constructor.
      */
     public StaircasePlot(Staircase... lines) {
-        this.lines = lines;
-        legends = Optional.empty();
+        this(lines, null);
     }
 
     /**
@@ -51,7 +50,12 @@ public class StaircasePlot extends Plot {
      */
     public StaircasePlot(Staircase[] lines, Legend[] legends) {
         this.lines = lines;
-        this.legends = Optional.of(legends);
+        this.legends = legends;
+    }
+
+    @Override
+    public Optional<Legend[]> legends() {
+        return Optional.of(legends);
     }
 
     @Override

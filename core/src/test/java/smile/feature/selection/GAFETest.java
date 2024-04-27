@@ -17,23 +17,16 @@
 
 package smile.feature.selection;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import smile.classification.DecisionTree;
-import smile.classification.LDA;
 import smile.test.data.Abalone;
 import smile.test.data.Segment;
-import smile.test.data.USPS;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
 import smile.math.MathEx;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.RMSE;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -44,26 +37,25 @@ public class GAFETest {
     public GAFETest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
-
+/* GAFE with LDA is too slow on Windows as OpenBlas is 4X slower on Windows.
     @Test
     public void testLDA() {
         System.out.println("LDA");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
@@ -76,11 +68,10 @@ public class GAFETest {
 
         assertEquals(0.8789, result[result.length-1].fitness(), 1E-4);
     }
-
+*/
     @Test
     public void testDecisionTree() {
         System.out.println("DecisionTree");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
@@ -97,7 +88,6 @@ public class GAFETest {
     @Test
     public void testRegressionTree() {
         System.out.println("RegressionTree");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();

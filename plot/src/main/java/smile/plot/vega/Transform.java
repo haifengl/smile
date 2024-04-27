@@ -213,14 +213,14 @@ public class Transform {
      * Adds a fold transform. The fold transform collapses (or "folds") one or
      * more data fields into two properties: a key property (containing the
      * original data field name) and a value property (containing the data value).
-     *
+     * <p>
      * The fold transform is useful for mapping matrix or cross-tabulation data
      * into a standardized format.
-     *
+     * <p>
      * This transform generates a new data stream in which each data object
      * consists of the key and value properties as well as all the original
      * fields of the corresponding input data object.
-     *
+     * <p>
      * Note: The fold transform only applies to a list of known fields (set
      * using the fields parameter). If your data objects instead contain
      * array-typed fields, you may wish to use the flatten transform instead.

@@ -17,9 +17,8 @@
 
 package smile.validation.metric;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfusionMatrixTest {
     @Test
@@ -28,7 +27,7 @@ public class ConfusionMatrixTest {
         int[] prediction = {0,1,2,4,5,2,1,2,4,5,4,1};
 
         ConfusionMatrix confusion = ConfusionMatrix.of(truth, prediction);
-        System.out.println(confusion.toString());
+        System.out.println(confusion);
 
         int[][] matrix = confusion.matrix;
         int[] expected = {1,1,1,0,1,0};

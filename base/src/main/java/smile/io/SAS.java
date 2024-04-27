@@ -70,12 +70,12 @@ public interface SAS {
      * Reads a limited number of records from a SAS7BDAT file.
      *
      * @param input a SAS7BDAT file input stream.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to write the file.
      * @return the data frame.
      */
     static DataFrame read(InputStream input, int limit) throws IOException {
-        try {
+        try (input) {
             SasFileReader reader = new SasFileReaderImpl(input);
             SasFileProperties properties = reader.getSasFileProperties();
             List<Column> columns = reader.getColumns();
@@ -106,8 +106,6 @@ public interface SAS {
             }
 
             return DataFrame.of(vectors);
-        } finally {
-            input.close();
         }
     }
 }

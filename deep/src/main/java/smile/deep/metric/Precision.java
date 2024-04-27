@@ -119,7 +119,7 @@ public class Precision implements Metric {
         } else if (strategy == Averaging.Weighted) {
             precision = precision.mul(size).sum().div(size.sum());
         }
-        return precision.getDouble();
+        return precision.doubleValue();
     }
 
     @Override

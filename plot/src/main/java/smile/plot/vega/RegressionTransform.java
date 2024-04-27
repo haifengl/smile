@@ -16,7 +16,6 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -26,16 +25,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * (one per group) and generates new data objects that represent points for
  * summary trend lines. Alternatively, this transform can be used to generate
  * a set of objects containing regression model parameters, one per group.
- *
+ * <p>
  * This transform supports parametric models for the following functional forms:
- *
+ * <p>
  * linear (linear): y = a + b * x
  * logarithmic (log): y = a + b * log(x)
  * exponential (exp): y = a * e^(b * x)
  * power (pow): y = a * x^b
  * quadratic (quad): y = a + b * x + c * x^2
  * polynomial (poly): y = a + b * x + … + k * x^(order)
- *
+ * <p>
  * All models are fit using ordinary least squares. For non-parametric locally
  * weighted regression, see the loess transform.
  *

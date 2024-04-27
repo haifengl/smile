@@ -17,6 +17,7 @@
 
 package smile.data.type;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -31,6 +32,7 @@ import smile.data.measure.NominalScale;
  * @author Haifeng Li
  */
 public class StructField implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** Field name. */

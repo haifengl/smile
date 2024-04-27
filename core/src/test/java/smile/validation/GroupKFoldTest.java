@@ -19,8 +19,8 @@ package smile.validation;
 
 import java.util.Arrays;
 import smile.math.MathEx;
-import org.junit.Test;
-import static org.junit.Assert.assertFalse;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -46,15 +46,19 @@ public class GroupKFoldTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidKParameter() {
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        CrossValidation.nonoverlap(groups, -1);
+        assertThrows(IllegalArgumentException.class, () -> {
+            int[] groups = new int[]{1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+            CrossValidation.nonoverlap(groups, -1);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidGroupsKParameters() {
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        CrossValidation.nonoverlap(groups, 4);
+        assertThrows(IllegalArgumentException.class, () -> {
+            int[] groups = new int[]{1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
+            CrossValidation.nonoverlap(groups, 4);
+        });
     }
 }

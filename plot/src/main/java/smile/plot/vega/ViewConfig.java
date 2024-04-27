@@ -16,7 +16,6 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -153,7 +152,7 @@ public class ViewConfig {
     }
 
     /**
-     * Sets the stroke cap for line ending style. One of "butt", "round", or "square"..
+     * Sets the stroke cap for line ending style. One of "butt", "round", or "square".
      * @param cap "butt", "round", or "square".
      * @return this object.
      */

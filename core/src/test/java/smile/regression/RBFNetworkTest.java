@@ -17,11 +17,6 @@
 
 package smile.regression;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.base.rbf.RBF;
 import smile.io.Read;
 import smile.io.Write;
@@ -31,8 +26,8 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -43,19 +38,19 @@ public class RBFNetworkTest {
     public RBFNetworkTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

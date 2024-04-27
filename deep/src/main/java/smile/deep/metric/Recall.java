@@ -119,7 +119,7 @@ public class Recall implements Metric {
         } else if (strategy == Averaging.Weighted) {
             recall = recall.mul(size).sum().div(size.sum());
         }
-        return recall.getDouble();
+        return recall.doubleValue();
     }
 
     @Override

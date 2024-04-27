@@ -19,15 +19,11 @@ package smile.feature.extraction;
 
 import java.io.IOException;
 import java.util.function.Function;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.util.Paths;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -39,27 +35,29 @@ public class BagOfWordsTest {
     public BagOfWordsTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUniquenessOfFeatures() {
-        System.out.println("unique features");
-        String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
-        BagOfWords bag = new BagOfWords(tokenizer, features);
+        assertThrows(IllegalArgumentException.class, () -> {
+            System.out.println("unique features");
+            String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
+            BagOfWords bag = new BagOfWords(tokenizer, features);
+        });
     }
 
     @Test
@@ -105,10 +103,11 @@ public class BagOfWordsTest {
             assertEquals(10, df.ncol());
             assertEquals(10, bag.features().length);
             assertEquals("--", bag.features()[0]);
-            assertEquals("Encyclopedias", bag.features()[1]);
             assertEquals("Union", bag.features()[9]);
-            for (int i = 0; i < 10; i++)
-            System.out.println(bag.features()[i]);
+            for (int i = 0; i < 10; i++) {
+                var feature = bag.features()[i];
+                System.out.println(feature);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
@@ -44,9 +45,12 @@ import smile.util.IntSet;
  * suffers from ambiguities in that some regions of its input space may
  * receive the same number of votes.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class OneVersusOne<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusOne.class);
 
@@ -252,7 +256,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
     /**
      * Combines pairwise class probability estimates into
      * a joint probability estimate for all k classes.
-     *
+     * <p>
      * This method implements Method 2 from the paper by Wu, Lin, and Weng.
      *
      * <h2>References</h2>

@@ -50,7 +50,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -96,7 +96,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -142,7 +142,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -188,7 +188,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -234,7 +234,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -280,7 +280,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -333,7 +333,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -386,7 +386,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -439,7 +439,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -492,7 +492,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -545,7 +545,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -596,7 +596,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -647,7 +647,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -698,7 +698,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
      *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
@@ -749,7 +749,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -798,7 +798,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -847,7 +847,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -896,7 +896,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -945,7 +945,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -992,7 +992,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -1039,7 +1039,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -1086,7 +1086,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
      *     A = U<sup>T</sup>* U,  if UPLO = 'U'
@@ -1133,7 +1133,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -1191,7 +1191,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -1249,7 +1249,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -1307,7 +1307,7 @@ public interface LAPACK {
      *     A * X = B
      * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
-     *
+     * <p>
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
      * <pre>{@code
@@ -1698,7 +1698,7 @@ public interface LAPACK {
     /**
      * Solves an overdetermined or underdetermined system, using the singular
      * value decomposition (SVD) of A. A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1746,7 +1746,7 @@ public interface LAPACK {
     /**
      * Solves an overdetermined or underdetermined system, using the singular
      * value decomposition (SVD) of A. A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1794,7 +1794,7 @@ public interface LAPACK {
     /**
      * Solves an overdetermined or underdetermined system, using the singular
      * value decomposition (SVD) of A. A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1842,7 +1842,7 @@ public interface LAPACK {
     /**
      * Solves an overdetermined or underdetermined system, using the singular
      * value decomposition (SVD) of A. A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1891,7 +1891,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a divide
      * and conquer algorithm with the singular value decomposition (SVD) of A.
      * A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1940,7 +1940,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a divide
      * and conquer algorithm with the singular value decomposition (SVD) of A.
      * A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -1989,7 +1989,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a divide
      * and conquer algorithm with the singular value decomposition (SVD) of A.
      * A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -2038,7 +2038,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a divide
      * and conquer algorithm with the singular value decomposition (SVD) of A.
      * A may be rank-deficient.
-     *
+     * <p>
      * The effective rank of A is determined by treating as zero those
      * singular values which are less than RCOND times the largest singular
      * value.
@@ -3190,7 +3190,7 @@ public interface LAPACK {
      * eigenvectors of a real symmetric matrix A. Eigenvalues and
      * eigenvectors can be selected by specifying either a range of
      * values or a range of indices for the desired eigenvalues.
-     *
+     * <p>
      * SYEVR first reduces the matrix A to tridiagonal form T with a call
      * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
      * the eigenspectrum using Relatively Robust Representations. DSTEMR
@@ -3199,7 +3199,7 @@ public interface LAPACK {
      * (also known as Relatively Robust Representations). Gram-Schmidt
      * orthogonalization is avoided as far as possible. More specifically,
      * the various steps of the algorithm are as follows.
-     *
+     * <p>
      * The desired accuracy of the output can be specified by the input
      * parameter ABSTOL.
      *
@@ -3269,7 +3269,7 @@ public interface LAPACK {
      * eigenvectors of a real symmetric matrix A. Eigenvalues and
      * eigenvectors can be selected by specifying either a range of
      * values or a range of indices for the desired eigenvalues.
-     *
+     * <p>
      * SYEVR first reduces the matrix A to tridiagonal form T with a call
      * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
      * the eigenspectrum using Relatively Robust Representations. DSTEMR
@@ -3278,7 +3278,7 @@ public interface LAPACK {
      * (also known as Relatively Robust Representations). Gram-Schmidt
      * orthogonalization is avoided as far as possible. More specifically,
      * the various steps of the algorithm are as follows.
-     *
+     * <p>
      * The desired accuracy of the output can be specified by the input
      * parameter ABSTOL.
      *
@@ -3348,7 +3348,7 @@ public interface LAPACK {
      * eigenvectors of a real symmetric matrix A. Eigenvalues and
      * eigenvectors can be selected by specifying either a range of
      * values or a range of indices for the desired eigenvalues.
-     *
+     * <p>
      * SYEVR first reduces the matrix A to tridiagonal form T with a call
      * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
      * the eigenspectrum using Relatively Robust Representations. DSTEMR
@@ -3357,7 +3357,7 @@ public interface LAPACK {
      * (also known as Relatively Robust Representations). Gram-Schmidt
      * orthogonalization is avoided as far as possible. More specifically,
      * the various steps of the algorithm are as follows.
-     *
+     * <p>
      * The desired accuracy of the output can be specified by the input
      * parameter ABSTOL.
      *
@@ -3427,7 +3427,7 @@ public interface LAPACK {
      * eigenvectors of a real symmetric matrix A. Eigenvalues and
      * eigenvectors can be selected by specifying either a range of
      * values or a range of indices for the desired eigenvalues.
-     *
+     * <p>
      * SYEVR first reduces the matrix A to tridiagonal form T with a call
      * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
      * the eigenspectrum using Relatively Robust Representations. DSTEMR
@@ -3436,7 +3436,7 @@ public interface LAPACK {
      * (also known as Relatively Robust Representations). Gram-Schmidt
      * orthogonalization is avoided as far as possible. More specifically,
      * the various steps of the algorithm are as follows.
-     *
+     * <p>
      * The desired accuracy of the output can be specified by the input
      * parameter ABSTOL.
      *
@@ -3517,13 +3517,13 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBU = 'O', A is overwritten with the first min(m,n)
      *          columns of U (the left singular vectors, stored columnwise).
-     *
+     * <p>
      *          If JOBVT = 'O',A is overwritten with the first min(m,n)
      *          rows of VT (the right singular vectors, stored rowwise).
-     *
+     * <p>
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
@@ -3568,13 +3568,13 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBU = 'O', A is overwritten with the first min(m,n)
      *          columns of U (the left singular vectors, stored columnwise).
-     *
+     * <p>
      *          If JOBVT = 'O',A is overwritten with the first min(m,n)
      *          rows of VT (the right singular vectors, stored rowwise).
-     *
+     * <p>
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
@@ -3619,13 +3619,13 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBU = 'O', A is overwritten with the first min(m,n)
      *          columns of U (the left singular vectors, stored columnwise).
-     *
+     * <p>
      *          If JOBVT = 'O',A is overwritten with the first min(m,n)
      *          rows of VT (the right singular vectors, stored rowwise).
-     *
+     * <p>
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
@@ -3670,13 +3670,13 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBU = 'O', A is overwritten with the first min(m,n)
      *          columns of U (the left singular vectors, stored columnwise).
-     *
+     * <p>
      *          If JOBVT = 'O',A is overwritten with the first min(m,n)
      *          rows of VT (the right singular vectors, stored rowwise).
-     *
+     * <p>
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
@@ -3720,12 +3720,12 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
-     *
+     * <p>
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
@@ -3763,12 +3763,12 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
-     *
+     * <p>
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
@@ -3806,12 +3806,12 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
-     *
+     * <p>
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
@@ -3849,12 +3849,12 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
-     *
+     * <p>
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
@@ -3892,12 +3892,12 @@ public interface LAPACK {
      * @param n The number of columns of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
-     *
+     * <p>
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
-     *
+     * <p>
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.

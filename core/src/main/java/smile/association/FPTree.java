@@ -61,8 +61,8 @@ public class FPTree {
          */
         Node next = null;
         /**
-         * The reference to the child branch (levels in FP-tree branches are
-         * stored as a arrays of Node structures.
+         * The reference to the child branch (levels in FP-tree branches) are
+         * stored as an arrays of Node structures.
          */
         HashMap<Integer, Node> children = null;
 
@@ -84,7 +84,7 @@ public class FPTree {
         /**
          * Searches through the list of children for given item set.
          * If a node for current item set found, increments support count and
-         * proceed down branch. Otherwise add a new child node.
+         * proceed down branch. Otherwise, add a new child node.
          * @param index the current item index in the item set.
          * @param end the end index of item set to add into the database.
          * @param itemset the given item set.
@@ -150,14 +150,14 @@ public class FPTree {
      * Header table item. Array of these structures used to link into FP-tree.
      * All FP-tree nodes with the same identifier are linked together starting
      * from a node in a header table (made up of HeaderTableItem structures).
-     * This cross linking gives the FP-tree most significant advantage.
+     * This cross-linking gives the FP-tree most significant advantage.
      */
     static class HeaderTableItem implements Comparable<HeaderTableItem> {
 
         /**
          * The item identifier.
          */
-        int id;
+        final int id;
         /**
          * The support (frequency) of single item.
          */
@@ -190,18 +190,18 @@ public class FPTree {
     /**
      * The required minimum support of item sets.
      */
-    int minSupport;
+    final int minSupport;
     /**
      * Start reference for FP-tree. Root is just a dummy node for building the
      * FP-tree as a starting point. It is used during mining maximal frequent
      * item sets. No other nodes should use it as a parent node even if they
      * are root's children nodes.
      */
-    Node root = new Node();
+    final Node root = new Node();
     /**
      * The support of single items.
      */
-    int[] itemSupport;
+    final int[] itemSupport;
     /**
      * Header table.
      */
@@ -270,7 +270,7 @@ public class FPTree {
         
         // It greatly improves the performance by making header table of
         // size numFreqItems instead of numItems. The reason is that numFreqItems
-        // is usually much smaller than numItems and it is time consuming to
+        // is usually much smaller than numItems, and it is time-consuming to
         // sort a large array.
         headerTable = new HeaderTableItem[numFreqItems];
         for (int i = 0, j = 0; i < numItems; i++) {
@@ -337,7 +337,7 @@ public class FPTree {
 
     /**
      * One-step construction of FP-tree if the database is available in main memory.
-     * @param itemsets the item set database. Each row is a item set, which
+     * @param itemsets the item set database. Each row is an item set, which
      *                 may have different length. The item identifiers have to be in [0, n),
      *                 where n is the number of items. Item set should NOT contain duplicated
      *                 items. Note that it is reordered after the call.
@@ -353,7 +353,7 @@ public class FPTree {
 
     /**
      * One-step construction of FP-tree if the database is available in main memory.
-     * @param itemsets the item set database. Each row is a item set, which
+     * @param itemsets the item set database. Each row is an item set, which
      *                 may have different length. The item identifiers have to be in [0, n),
      *                 where n is the number of items. Item set should NOT contain duplicated
      *                 items. Note that it is reordered after the call.

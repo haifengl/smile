@@ -17,8 +17,7 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.LinearImpl;
-import org.bytedeco.pytorch.global.torch;
-import smile.deep.activation.ActivationFunction;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -27,16 +26,8 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class FullyConnectedLayer implements Layer {
-    /** The number of input features. */
-    final int in;
-    /** The number of output features. */
-    final int out;
-    /** The optional activation function. */
-    final ActivationFunction activation;
-    /** The optional dropout probability. */
-    final double dropout;
-    /** Implementation. */
-    LinearImpl module;
+    private final int in;
+    private final LinearImpl module;
 
     /**
      * Constructor.
@@ -44,37 +35,13 @@ public class FullyConnectedLayer implements Layer {
      * @param out the number of output features.
      */
     public FullyConnectedLayer(int in, int out) {
-        this(in, out, null, 0.0);
-    }
-
-    /**
-     * Constructor.
-     * @param in the number of input features.
-     * @param out the number of output features.
-     * @param activation the non-linear activation function.
-     */
-    public FullyConnectedLayer(int in, int out, ActivationFunction activation) {
-        this(in, out, activation, 0.0);
-    }
-
-    /**
-     * Constructor.
-     * @param in the number of input features.
-     * @param out the number of output features.
-     * @param activation the non-linear activation function.
-     * @param dropout the optional dropout probability.
-     */
-    public FullyConnectedLayer(int in, int out, ActivationFunction activation, double dropout) {
         this.in = in;
-        this.out = out;
-        this.activation = activation;
-        this.dropout = dropout;
         this.module = new LinearImpl(in, out);
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
@@ -83,18 +50,7 @@ public class FullyConnectedLayer implements Layer {
         if (x.dim() > 1) {
             x = x.reshape(x.size(0), in);
         }
-        x = module.forward(x);
-        if (activation != null) {
-            x = activation.apply(x);
-        }
-        if (dropout > 0.0) {
-            x = torch.dropout(x, dropout, module.is_training());
-        }
-        return Tensor.of(x);
-    }
 
-    @Override
-    public LinearImpl asTorch() {
-        return module;
+        return new Tensor(module.forward(x));
     }
 }

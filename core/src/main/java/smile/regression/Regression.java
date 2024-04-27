@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import smile.data.Dataset;
-import smile.data.Instance;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -33,7 +32,7 @@ import smile.data.Instance;
  * Regression analysis is widely used for prediction and forecasting, where
  * its use has substantial overlap with the field of machine learning. 
  *
- * @param <T> the type of model input object.
+ * @param <T> the data type of model input objects.
  *
  * @author Haifeng Li
  */
@@ -45,7 +44,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      */
     interface Trainer<T, M extends Regression<T>> {
         /**
-         * Fits a regression model with the default hyper-parameters.
+         * Fits a regression model with the default hyperparameters.
          * @param x the training samples.
          * @param y the response variables.
          * @return the model
@@ -59,7 +58,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
          * Fits a regression model.
          * @param x the training samples.
          * @param y the response variables.
-         * @param params the hyper-parameters.
+         * @param params the hyperparameters.
          * @return the model
          */
         M fit(T[] x, double[] y, Properties params);
@@ -103,8 +102,8 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      * @param x the dataset to be classified.
      * @return the predicted class labels.
      */
-    default double[] predict(Dataset<T> x) {
-        return x.stream().mapToDouble(this::predict).toArray();
+    default double[] predict(Dataset<T, ?> x) {
+        return x.stream().mapToDouble(sample -> predict(sample.x())).toArray();
     }
 
     /**
@@ -153,7 +152,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      * Updates the model with a mini-batch of new samples.
      * @param batch the training instances.
      */
-    default void update(Dataset<Instance<T>> batch) {
+    default void update(Dataset<T, Double> batch) {
         batch.stream().forEach(sample -> update(sample.x(), sample.y()));
     }
 
@@ -167,8 +166,10 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      */
     @SafeVarargs
     static <T> Regression<T> ensemble(Regression<T>... models) {
-        return new Regression<T>() {
-            /** The ensemble is an online learner only if all the base models are. */
+        return new Regression<>() {
+            /**
+             * The ensemble is an online learner only if all the base models are.
+             */
             private final boolean online = Arrays.stream(models).allMatch(Regression::online);
 
             @Override

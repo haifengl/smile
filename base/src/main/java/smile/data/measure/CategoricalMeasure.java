@@ -132,7 +132,7 @@ public abstract class CategoricalMeasure implements Measure {
      * @param clazz the Class of an enum.
      * @return the ordinal values of an enum.
      */
-    static int[] values(Class<? extends Enum> clazz) {
+    static int[] values(Class<? extends Enum<?>> clazz) {
         return Arrays.stream(clazz.getEnumConstants())
                 .mapToInt(Enum::ordinal)
                 .toArray();
@@ -143,7 +143,7 @@ public abstract class CategoricalMeasure implements Measure {
      * @param clazz the Class of an enum.
      * @return the string values of an enum.
      */
-    static String[] levels(Class<? extends Enum> clazz) {
+    static String[] levels(Class<? extends Enum<?>> clazz) {
         return Arrays.stream(clazz.getEnumConstants())
                 .map(Object::toString)
                 .toArray(String[]::new);

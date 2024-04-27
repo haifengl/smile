@@ -135,15 +135,15 @@ public class InformationValue implements Comparable<InformationValue> {
 
     /**
      * Returns a string representation of the array of information values.
-     * @param iv the array of information values.
+     * @param ivs the array of information values.
      * @return a string representation of information values
      */
-    public static String toString(InformationValue[] iv) {
+    public static String toString(InformationValue[] ivs) {
         StringBuilder builder = new StringBuilder();
 
         builder.append("Feature                   Information Value    Predictive Power\n");
-        for (int i = 0; i < iv.length; i++) {
-            builder.append(String.format("%-25s %17.4f    %16s%n", iv[i].feature, iv[i].iv, predictivePower(iv[i].iv)));
+        for (var iv : ivs) {
+            builder.append(String.format("%-25s %17.4f    %16s%n", iv.feature, iv.iv, predictivePower(iv.iv)));
         }
 
         return builder.toString();
@@ -221,13 +221,13 @@ public class InformationValue implements Comparable<InformationValue> {
         StructType schema = data.schema();
 
         return IntStream.range(0, schema.length()).mapToObj(i -> {
-            int[] events = null;
-            int[] nonevents = null;
+            int[] events;
+            int[] nonevents;
             double[] breaks = null;
 
             StructField field = schema.field(i);
-            if (field.measure instanceof NominalScale) {
-                int k = ((NominalScale) field.measure).size();
+            if (field.measure instanceof NominalScale scale) {
+                int k = scale.size();
                 events = new int[k];
                 nonevents = new int[k];
 

@@ -22,12 +22,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * Axes provide axis lines, ticks, and labels to convey how a positional range
  * represents a data range. Simply put, axes visualize scales.
- *
+ * <p>
  * By default, Vega-Lite automatically creates axes with default properties
  * for x and y channels when they encode data fields. User can set the axis
  * property of x- or y-field definition to an object to customize axis
  * properties or set axis to null to remove the axis.
- *
+ * <p>
  * Besides axis property of a field definition, the configuration object
  * (config) also provides axis config for setting default axis properties
  * for all axes.
@@ -285,7 +285,7 @@ public class Axis {
      * Sets the text format. When used with the default "number" and "time"
      * format type, the text formatting pattern for labels of guides (axes,
      * legends, headers) and text marks.
-     *
+     * <p>
      * If the format type is "number" (e.g., for quantitative fields), this is
      * D3's number format pattern. If the format type is "time" (e.g., for
      * temporal fields), this is D3's time format pattern.

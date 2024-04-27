@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ import smile.validation.metric.ConfusionMatrix;
  * @author Haifeng
  */
 public class ClassificationValidation<M> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The model. */

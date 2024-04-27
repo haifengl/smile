@@ -17,22 +17,24 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Log sigmoid activation function.
  *
  * @author Haifeng Li
  */
-public class LogSigmoid implements ActivationFunction {
-    @Override
-    public String name() {
-        return "LogSigmoid";
+public class LogSigmoid extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public LogSigmoid() {
+        super("LogSigmoid", false);
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.log_sigmoid(x);
+    public Tensor forward(Tensor x) {
+        return new Tensor(torch.log_sigmoid(x.asTorch()));
     }
 }

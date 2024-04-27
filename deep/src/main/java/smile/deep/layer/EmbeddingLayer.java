@@ -17,13 +17,14 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.EmbeddingImpl;
+import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.Scalar;
 import smile.deep.tensor.Tensor;
 
 /**
  * An embedding layer that is a simple lookup table that stores embeddings
  * of a fixed dictionary and size.
- *
+ * <p>
  * This layer is often used to store word embeddings and retrieve them using
  * indices. The input to the module is a list of indices, and the output is
  * the corresponding word embeddings.
@@ -32,15 +33,15 @@ import smile.deep.tensor.Tensor;
  */
 public class EmbeddingLayer implements Layer {
     /** The size of the dictionary of embeddings. */
-    int numTokens;
+    private final int numTokens;
     /** The size of each embedding vector. */
-    int dim;
+    private final int dim;
     /** The optional scaling factor. */
-    double alpha;
+    private final double alpha;
     /** The wrapper of alpha. */
-    Scalar scale;
+    private final Scalar scale;
     /** Implementation. */
-    EmbeddingImpl module;
+    private final EmbeddingImpl module;
 
     /**
      * Constructor.
@@ -66,8 +67,8 @@ public class EmbeddingLayer implements Layer {
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, new EmbeddingImpl(numTokens, dim));
+    public Module asTorch() {
+        return module;
     }
 
     @Override
@@ -77,11 +78,6 @@ public class EmbeddingLayer implements Layer {
         if (alpha != 1.0) {
             x.mul_(scale);
         }
-        return Tensor.of(x);
-    }
-
-    @Override
-    public EmbeddingImpl asTorch() {
-        return module;
+        return new Tensor(x);
     }
 }

@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -52,6 +53,7 @@ import smile.math.distance.Distance;
  * @author Haifeng Li
  */
 public class CLARANS<T> extends CentroidClustering<T, T> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CLARANS.class);
     /**

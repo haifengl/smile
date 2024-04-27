@@ -25,7 +25,7 @@ package smile.data.type;
 public class ShortType implements DataType {
 
     /** Singleton instance. */
-    static ShortType instance = new ShortType();
+    static final ShortType instance = new ShortType();
 
     /**
      * Private constructor for singleton design pattern.

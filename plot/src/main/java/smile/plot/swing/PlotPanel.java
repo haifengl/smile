@@ -22,10 +22,10 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
@@ -52,13 +52,13 @@ public class PlotPanel extends JPanel {
     /**
      * The canvas of plots.
      */
-    private Canvas canvas;
+    private final Canvas canvas;
     /**
      * The Swing component to draw the canvas.
      */
-    private JCanvas contentPane;
+    private final JCanvas contentPane;
     /**
-     * Optional tool bar to control plots.
+     * Optional toolbar to control plots.
      */
     private JToolBar toolbar;
     /**
@@ -75,7 +75,7 @@ public class PlotPanel extends JPanel {
      */
     private class JCanvas extends JComponent implements Printable, ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
         /**
-         * If the mouse double clicked.
+         * If the mouse double-clicked.
          */
         private boolean mouseDoubleClicked = false;
         /**
@@ -127,7 +127,7 @@ public class PlotPanel extends JPanel {
         }
 
         @Override
-        public int print(java.awt.Graphics g, PageFormat pf, int page) throws PrinterException {
+        public int print(java.awt.Graphics g, PageFormat pf, int page) {
             if (page > 0) {
                 // We have only one page, and 'page' is zero-based
                 return NO_SUCH_PAGE;
@@ -281,39 +281,24 @@ public class PlotPanel extends JPanel {
                     canvas.resetAxis();
                     repaint();
                 } else {
-                    String tooltip = null;
+                    StringBuilder tooltip = new StringBuilder();
                     double[] sc = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
 
-                    String firstid = null;
+                    //String firstid = null;
                     for (Shape shape : canvas.shapes) {
-                        if (shape instanceof Plot) {
-                            Plot plot = (Plot) shape;
+                        if (shape instanceof Plot plot) {
                             Optional<String> s = plot.tooltip(sc);
                             if (s.isPresent()) {
-                                if (tooltip == null) {
-                                    tooltip = s.get();
-                                    firstid = null;//plot.name();
-                                } else {
-                                    if (firstid != null) {
-                                        tooltip = "<b>" + firstid + ":</b><br>" + tooltip;
-                                        firstid = null;
-                                    }
-
-                                    String id = null;//plot.name();
-                                    if (id != null) {
-                                        tooltip += "<br><b>" + id + ":</b><br>" + s;
-                                    } else {
-                                        tooltip += "<br>----------<br>" + s;
-                                    }
+                                if (!tooltip.isEmpty()) {
+                                    tooltip.append("<br>");
                                 }
+                                tooltip.append(s);
                             }
                         }
                     }
 
-                    if (tooltip != null) {
+                    if (tooltip.length() > 0) {
                         setToolTipText(String.format("<html>%s</html>", tooltip));
-                    } else {
-                        setToolTipText(null);
                     }
                 }
             }
@@ -392,8 +377,8 @@ public class PlotPanel extends JPanel {
     }
 
     /**
-     * Returns a tool bar to control the plot.
-     * @return a tool bar to control the plot.
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
      */
     public JComponent getToolbar() {
         return toolbar;
@@ -402,18 +387,18 @@ public class PlotPanel extends JPanel {
     /**
      * Toolbar button actions.
      */
-    private transient Action saveAction = new SaveAction();
-    private transient Action printAction = new PrintAction();
-    private transient Action zoomInAction = new ZoomInAction();
-    private transient Action zoomOutAction = new ZoomOutAction();
-    private transient Action resetAction = new ResetAction();
-    private transient Action enlargePlotAreaAction = new EnlargePlotAreaAction();
-    private transient Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
-    private transient Action propertyAction = new PropertyAction();
-    private transient Action increaseHeightAction = new IncreaseHeightAction();
-    private transient Action increaseWidthAction = new IncreaseWidthAction();
-    private transient Action decreaseHeightAction = new DecreaseHeightAction();
-    private transient Action decreaseWidthAction = new DecreaseWidthAction();
+    private transient final Action saveAction = new SaveAction();
+    private transient final Action printAction = new PrintAction();
+    private transient final Action zoomInAction = new ZoomInAction();
+    private transient final Action zoomOutAction = new ZoomOutAction();
+    private transient final Action resetAction = new ResetAction();
+    private transient final Action enlargePlotAreaAction = new EnlargePlotAreaAction();
+    private transient final Action shrinkPlotAreaAction = new ShrinkPlotAreaAction();
+    private transient final Action propertyAction = new PropertyAction();
+    private transient final Action increaseHeightAction = new IncreaseHeightAction();
+    private transient final Action increaseWidthAction = new IncreaseWidthAction();
+    private transient final Action decreaseHeightAction = new DecreaseHeightAction();
+    private transient final Action decreaseWidthAction = new DecreaseWidthAction();
     private JScrollPane scrollPane;
 
     /**
@@ -465,9 +450,9 @@ public class PlotPanel extends JPanel {
                 boolean inScrollPane = false;
                 Container parent = getParent();
                 while (parent != null) {
-                    if (parent instanceof JScrollPane) {
+                    if (parent instanceof JScrollPane pane) {
                         inScrollPane = true;
-                        scrollPane = (JScrollPane) parent;
+                        scrollPane = pane;
                         break;
                     }
 
@@ -493,7 +478,7 @@ public class PlotPanel extends JPanel {
     private class SaveAction extends AbstractAction {
 
         public SaveAction() {
-            super("Save", new ImageIcon(PlotPanel.class.getResource("images/save16.png")));
+            super("Save", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/save16.png"))));
         }
 
         @Override
@@ -509,7 +494,7 @@ public class PlotPanel extends JPanel {
     private class PrintAction extends AbstractAction {
 
         public PrintAction() {
-            super("Print", new ImageIcon(PlotPanel.class.getResource("images/print16.png")));
+            super("Print", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/print16.png"))));
         }
 
         @Override
@@ -521,7 +506,7 @@ public class PlotPanel extends JPanel {
     private class ZoomInAction extends AbstractAction {
 
         public ZoomInAction() {
-            super("Zoom In", new ImageIcon(PlotPanel.class.getResource("images/zoom-in16.png")));
+            super("Zoom In", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/zoom-in16.png"))));
         }
 
         @Override
@@ -533,7 +518,7 @@ public class PlotPanel extends JPanel {
     private class ZoomOutAction extends AbstractAction {
 
         public ZoomOutAction() {
-            super("Zoom Out", new ImageIcon(PlotPanel.class.getResource("images/zoom-out16.png")));
+            super("Zoom Out", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/zoom-out16.png"))));
         }
 
         @Override
@@ -545,7 +530,7 @@ public class PlotPanel extends JPanel {
     private class ResetAction extends AbstractAction {
 
         public ResetAction() {
-            super("Reset", new ImageIcon(PlotPanel.class.getResource("images/refresh16.png")));
+            super("Reset", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/refresh16.png"))));
         }
 
         @Override
@@ -557,7 +542,7 @@ public class PlotPanel extends JPanel {
     private class EnlargePlotAreaAction extends AbstractAction {
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", new ImageIcon(PlotPanel.class.getResource("images/resize-larger16.png")));
+            super("Enlarge", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/resize-larger16.png"))));
         }
 
         @Override
@@ -581,7 +566,7 @@ public class PlotPanel extends JPanel {
     private class ShrinkPlotAreaAction extends AbstractAction {
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", new ImageIcon(PlotPanel.class.getResource("images/resize-smaller16.png")));
+            super("Shrink", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/resize-smaller16.png"))));
         }
 
         @Override
@@ -605,7 +590,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseWidthAction extends AbstractAction {
 
         public IncreaseWidthAction() {
-            super("Increase Width", new ImageIcon(PlotPanel.class.getResource("images/increase-width16.png")));
+            super("Increase Width", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/increase-width16.png"))));
         }
 
         @Override
@@ -625,7 +610,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseHeightAction extends AbstractAction {
 
         public IncreaseHeightAction() {
-            super("Increase Height", new ImageIcon(PlotPanel.class.getResource("images/increase-height16.png")));
+            super("Increase Height", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/increase-height16.png"))));
         }
 
         @Override
@@ -645,7 +630,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseWidthAction extends AbstractAction {
 
         public DecreaseWidthAction() {
-            super("Decrease Width", new ImageIcon(PlotPanel.class.getResource("images/decrease-width16.png")));
+            super("Decrease Width", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/decrease-width16.png"))));
         }
 
         @Override
@@ -668,7 +653,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseHeightAction extends AbstractAction {
 
         public DecreaseHeightAction() {
-            super("Decrease Height", new ImageIcon(PlotPanel.class.getResource("images/decrease-height16.png")));
+            super("Decrease Height", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/decrease-height16.png"))));
         }
 
         @Override
@@ -691,7 +676,7 @@ public class PlotPanel extends JPanel {
     private class PropertyAction extends AbstractAction {
 
         public PropertyAction() {
-            super("Properties", new ImageIcon(PlotPanel.class.getResource("images/property16.png")));
+            super("Properties", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/property16.png"))));
         }
 
         @Override
@@ -794,7 +779,7 @@ public class PlotPanel extends JPanel {
     private class PropertyDialogOKAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "OK";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected PropertyDialogOKAction(JDialog dialog) {
             this.dialog = dialog;
@@ -839,10 +824,10 @@ public class PlotPanel extends JPanel {
         }
     }
 
-    private class PropertyDialogCancelAction extends AbstractAction {
+    private static class PropertyDialogCancelAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "Cancel";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected PropertyDialogCancelAction(JDialog dialog) {
             this.dialog = dialog;
@@ -932,15 +917,15 @@ public class PlotPanel extends JPanel {
         graphics.projection.reset();
         canvas.resetAxis();
 
-        if (graphics.projection instanceof Projection3D) {
-            ((Projection3D) graphics.projection).setDefaultView();
+        if (graphics.projection instanceof Projection3D p3d) {
+            p3d.setDefaultView();
         }
 
         contentPane.repaint();
     }
 
     /** The number of created windows, as the default window title. */
-    static AtomicInteger WindowCount = new AtomicInteger();
+    static final AtomicInteger WindowCount = new AtomicInteger();
 
     /**
      * Shows the plot in a window.

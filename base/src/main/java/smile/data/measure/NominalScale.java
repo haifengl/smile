@@ -66,7 +66,7 @@ public class NominalScale extends CategoricalMeasure {
      *
      * @param clazz an Enum class.
      */
-    public NominalScale(Class<? extends Enum> clazz) {
+    public NominalScale(Class<? extends Enum<?>> clazz) {
         super(values(clazz), levels(clazz));
     }
 

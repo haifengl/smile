@@ -17,6 +17,8 @@
 
 package smile.math.rbf;
 
+import java.io.Serial;
+
 /**
  * Gaussian RBF. &phi;(r) = exp(-0.5 * r<sup>2</sup> / r<sub>0</sub><sup>2</sup>)
  * where r<sub>0</sub> is a scale factor. The interpolation accuracy using
@@ -42,6 +44,7 @@ package smile.math.rbf;
  * @author Haifeng Li
  */
 public class GaussianRadialBasis implements RadialBasisFunction {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

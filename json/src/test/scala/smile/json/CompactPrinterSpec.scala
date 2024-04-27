@@ -66,11 +66,17 @@ class CompactPrinterSpec extends Specification {
     }
     "properly print a simple JsObject" in (
       CompactPrinter(JsObject("key" -> JsInt(42), "key2" -> JsString("value")))
-        mustEqual """{"key2":"value","key":42}"""
+        mustEqual """{"key":42,"key2":"value"}"""
       )
     "properly print a simple JsArray" in (
       CompactPrinter(JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true))))
         mustEqual """[null,1.23,{"key":true}]"""
+      )
+    "properly print a simple JsArray in JSONL" in (
+      """null
+        |1.23
+        |{"key":true}""".stripMargin mustEqual
+      JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true))).jsonl
       )
     "properly print a JSON padding (JSONP) if requested" in {
       CompactPrinter(JsTrue, Some("customCallback")) mustEqual "customCallback(true)"

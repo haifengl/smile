@@ -18,16 +18,12 @@
 package smile.feature.imputation;
 
 import java.util.function.Function;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.math.distance.Distance;
 import smile.test.data.SyntheticControl;
 import smile.math.MathEx;
+import org.junit.jupiter.api.*;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -39,23 +35,23 @@ public class KMedoidsImputerTest {
     public KMedoidsImputerTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("KMedoidsImputer");
         MathEx.setSeed(19650218); // to get repeatable results.

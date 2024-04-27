@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +29,7 @@ import smile.util.IntPair;
  * Balanced Iterative Reducing and Clustering using Hierarchies. BIRCH performs
  * hierarchical clustering over particularly large data. An advantage of
  * BIRCH is its ability to incrementally and dynamically cluster incoming,
- * multi-dimensional metric data points in an attempt to produce the high
+ * multidimensional metric data points in an attempt to produce the high
  * quality clustering for a given set of resources (memory and time constraints).
  * <p>
  * BIRCH has several advantages. For example, each clustering decision is made
@@ -55,6 +56,7 @@ import smile.util.IntPair;
  * @author Haifeng Li
  */
 public class BIRCH implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -340,7 +342,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             Node[] sister = new Node[B];
             for (int i = 0; i <= B; i++) {
-                if (dist[i][farthest.i] < dist[i][farthest.j]) {
+                if (dist[i][farthest._1()] < dist[i][farthest._2()]) {
                     children[k++] = nodes[i];
                 } else {
                     sister[n++] = nodes[i];
@@ -428,7 +430,7 @@ public class BIRCH implements VectorQuantizer {
             int n = 0;
             ClusteringFeature[] sister = new ClusteringFeature[L];
             for (int i = 0; i <= L; i++) {
-                if (dist[i][farthest.i] < dist[i][farthest.j]) {
+                if (dist[i][farthest._1()] < dist[i][farthest._2()]) {
                     this.clusters[k++] = clusters[i];
                 } else {
                     sister[n++] = clusters[i];
@@ -487,10 +489,10 @@ public class BIRCH implements VectorQuantizer {
 
     /** Collects the centroids of leaf nodes in the subtree. */
     private void centroids(Node node, ArrayList<double[]> list) {
-        if (node instanceof Leaf) {
-            Leaf leaf = (Leaf) node;
-            for (int i = 0; i < leaf.k; i++)
-            list.add(leaf.clusters[i].centroid());
+        if (node instanceof Leaf leaf) {
+            for (int i = 0; i < leaf.k; i++) {
+                list.add(leaf.clusters[i].centroid());
+            }
         } else {
             InternalNode parent = (InternalNode) node;
             for (int i = 0; i < parent.k; i++) {

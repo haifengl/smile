@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * The "shifted" geometric distribution is a discrete probability distribution
  * of the number of failures before the first success, supported on the set
@@ -32,6 +34,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class ShiftedGeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */

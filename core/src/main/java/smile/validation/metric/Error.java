@@ -17,12 +17,15 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * The number of errors in the population.
  *
  * @author Haifeng Li
  */
 public class Error implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Error instance = new Error();

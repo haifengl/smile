@@ -32,7 +32,7 @@ import smile.nlp.dictionary.EnglishDictionary;
  * Recognizing the end of a sentence is not an easy task for a computer.
  * In English, punctuation marks that usually appear at the end of a sentence
  * may not indicate the end of a sentence. The period is the worst offender.
- * A period can end a sentence but it can also be part of an abbreviation
+ * A period can end a sentence, but it can also be part of an abbreviation
  * or acronym, an ellipsis, a decimal number, or part of a bracket of periods
  * surrounding a Roman numeral. A period can even act both as the end of an
  * abbreviation and the end of a sentence at the same time. Other the other
@@ -66,7 +66,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
     /**
      * Regular expression to match sentences with basic rules.
      */
-    private static final Pattern REGEX_SENTENCE = Pattern.compile("(['\"`]*[\\(\\{\\[]?[a-zA-Z0-9]+.*?)([\\.!?:])(?:(?=([\\(\\[\\{\"'`\\)\\}\\]<]*[ \031]+)[\\(\\[\\{\"'`\\)\\}\\] ]*([A-Z0-9][a-z]*))|(?=([\\(\\)\"'`\\)\\}<\\] \031]+)\\s))");
+    private static final Pattern REGEX_SENTENCE = Pattern.compile("(['\"`]*[\\(\\{\\[]?[a-zA-Z0-9]+.*?)([\\.!?:])(?:(?=([\\(\\[\\{\"'`\\)\\}\\]<]*[ \u0019]+)[\\(\\[\\{\"'`\\)\\}\\] ]*([A-Z0-9][a-z]*))|(?=([\\(\\)\"'`\\}<\\] \u0019]+)\\s))");
     /**
      * Regular expression to split words.
      */
@@ -124,7 +124,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
         // $2 = the punctuation mark - either [.!?:]
         // $3 = the brackets or quotes after the [!?.:]. This is non-grouping i.e. does not consume.
         // $4 = the next word after the [.?!:].This is non-grouping i.e. does not consume.
-        // $5 = rather than a next word, it may have been the last sentence in the file. Therefore capture
+        // $5 = rather than a next word, it may have been the last sentence in the file. Therefore, capture
         //      punctuation and brackets before end of file. This is non-grouping i.e. does not consume.
         Matcher matcher = REGEX_SENTENCE.matcher(text);
         StringBuilder currentSentence = new StringBuilder();
@@ -177,7 +177,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
                         || EnglishAbbreviations.contains(lastWord.toLowerCase())) {
 
                     // We have an abbreviation, but this could come at the middle or end of a
-                    // sentence. Therefore we assume that the abbreviation is not at the end of
+                    // sentence. Therefore, we assume that the abbreviation is not at the end of
                     // a sentence if the next word is a common word and the abbreviation occurs
                     // less than 5 words from the start of the sentence.
                     if (EnglishDictionary.CONCISE.contains(nextWord) && len > 6) {
@@ -236,7 +236,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
         }
 
         // If currentSentence is not empty (e.g. break at abbrev), add it to the results.
-        if (currentSentence.length() > 0) {
+        if (!currentSentence.isEmpty()) {
             sentences.add(currentSentence.toString().trim());
         }
 

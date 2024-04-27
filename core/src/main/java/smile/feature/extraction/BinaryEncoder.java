@@ -98,6 +98,6 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
      * @return the binary feature vectors.
      */
     public int[][] apply(DataFrame data) {
-        return data.stream().map(this::apply).toArray(int[][]::new);
+        return data.stream().map(this).toArray(int[][]::new);
     }
 }

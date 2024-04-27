@@ -41,10 +41,10 @@ package smile.stat.distribution;
  *
  * @author Haifeng Li
  */
-public interface ExponentialFamily {
+public interface ExponentialFamily extends Distribution {
 
     /**
-     * The M step in the EM algorithm, which depends the specific distribution.
+     * The M step in the EM algorithm, which depends on the specific distribution.
      *
      * @param x the input data for estimation
      * @param posteriori the posteriori probability.

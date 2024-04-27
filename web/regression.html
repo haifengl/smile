@@ -289,7 +289,7 @@ permalink: "{{ page.filePathStem }}.html"
         producing a large variance.</p>
 
     <p>Ridge regression is one method to address these issues. In ridge regression,
-        the matrix <code>X'X</code> is perturbed so as to make its determinant appreciably
+        the matrix <code>X'X</code> is perturbed to make its determinant appreciably
         different from 0.</p>
 
     <p>Ridge regression is a kind of Tikhonov regularization, which is the most
@@ -433,7 +433,7 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
 
     <p>When including an intercept term in the regression, we usually leave
-        this coefficient unpenalized. Otherwise we could add some constant amount
+        this coefficient unpenalized. Otherwise, we could add some constant amount
         to the vector <code>y</code>, and this would not result in the same solution.
         If we center the columns of <code>X</code>, then the intercept estimate
         ends up just being the mean of <code>y</code>.</p>
@@ -445,7 +445,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>It can be shown that ridge regression doesn’t set coefficients exactly to zero
         unless <code>&lambda; = &infin;</code>, in which case they’re all zero.
-        Hence ridge regression cannot perform variable selection, and even though
+        Hence, ridge regression cannot perform variable selection, and even though
         it performs well in terms of prediction accuracy, it does poorly in terms
         of offering a clear interpretation.</p>
 
@@ -524,7 +524,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>For over-determined systems (more instances than variables, commonly in
         machine learning), we normalize variables with mean 0 and standard deviation
-        1. For under-determined systems (less instances than variables, e.g.
+        1. For under-determined systems (fewer instances than variables, e.g.
         compressed sensing), we assume white noise (i.e. no intercept in the linear
         model) and do not perform normalization. Note that the solution
         is not unique in this case.</p>
@@ -609,7 +609,7 @@ permalink: "{{ page.filePathStem }}.html"
         A common objective function, at least for regression/function estimation,
         is the least squares function.</p>
 
-    <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
+    <p>An optional third backpropagation step can be performed to fine-tune all the RBF
         network's parameters.</p>
 
     <ul class="nav nav-tabs">
@@ -647,10 +647,10 @@ permalink: "{{ page.filePathStem }}.html"
         </div>
     </div>
 
-    <p>The popular choices for &phi; comprise the Gaussian function and the so
-        called thin plate splines. The advantage of the thin plate splines is that
+    <p>The popular choices for &phi; comprise the Gaussian function and the
+        so-called thin plate splines. The advantage of the thin plate splines is that
         their conditioning is invariant under scalings. Gaussian, multi-quadric
-        and inverse multi-quadric are infinitely smooth and and involve a scale
+        and inverse multi-quadric are infinitely smooth and involve a scale
         or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
         r<sub><small>0</small></sub> tends to flatten the basis function. For a
         given function, the quality of approximation may strongly depend on this
@@ -697,7 +697,7 @@ permalink: "{{ page.filePathStem }}.html"
         in above example.
         The reason is that we import both <code>smile.regression._</code> and
         <code>smile.classification._</code> in the shell. And by Scala's scope rule,
-        the later imported names shadow the same ones in earlier imported packages.
+        the latter imported names shadow the same ones in earlier imported packages.
         If you work only on regression problems in a shell session, just import
         <code>smile.regression._</code> again to avoid using the fully qualified names.</p>
 

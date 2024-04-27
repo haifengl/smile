@@ -112,7 +112,6 @@
  * that is required by the object header lies between the objects, possibly
  * disrupting the benefit.
  *
- *
  * @author Haifeng Li
  */
 package smile.data;

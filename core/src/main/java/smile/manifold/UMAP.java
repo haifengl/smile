@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.IntStream;
@@ -50,7 +51,7 @@ import smile.stat.distribution.GaussianDistribution;
  * <h2>References</h2>
  * <ol>
  * <li>McInnes, L, Healy, J, UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction, ArXiv e-prints 1802.03426, 2018</li>
- * <li>How UMAP Works: https://umap-learn.readthedocs.io/en/latest/how_umap_works.html</li>
+ * <li><a href="https://umap-learn.readthedocs.io/en/latest/how_umap_works.html">How UMAP Works</a></li>
  * </ol>
  *
  * @see TSNE
@@ -58,6 +59,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author rayeaster
  */
 public class UMAP implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UMAP.class);
 
@@ -404,7 +406,7 @@ public class UMAP implements Serializable {
 
         // Computes a continuous version of the distance to the kth nearest neighbor.
         // That is, this is similar to knn-distance but allows continuous k values
-        // rather than requiring an integral k. In essence we are simply computing
+        // rather than requiring an integral k. In essence, we are simply computing
         // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
@@ -527,10 +529,10 @@ public class UMAP implements Serializable {
         double b = curve[1];
         double alpha = initialAlpha;
 
-        SparseMatrix epochsPerNegativeSample = epochsPerSample.clone();
+        SparseMatrix epochsPerNegativeSample = epochsPerSample.copy();
         epochsPerNegativeSample.nonzeros().forEach(w -> w.update(w.x / negativeSamples));
-        SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.clone();
-        SparseMatrix epochNextSample = epochsPerSample.clone();
+        SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.copy();
+        SparseMatrix epochNextSample = epochsPerSample.copy();
 
         for (int iter = 1; iter <= iterations; iter++) {
             for (SparseMatrix.Entry edge : epochNextSample) {

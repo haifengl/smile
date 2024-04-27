@@ -30,15 +30,15 @@ public class Dendrogram extends Plot {
     /**
      * The one end points of lines.
      */
-    private double[][] p1;
+    private final double[][] p1;
     /**
      * The other end points of lines.
      */
-    private double[][] p2;
+    private final double[][] p2;
     /**
      * The height of tree.
      */
-    private double height;
+    private final double height;
 
     /**
      * Constructor.
@@ -149,14 +149,14 @@ public class Dendrogram extends Plot {
     @Override
     public double[] getLowerBound() {
         int n = p1.length / 3 + 1;
-        double[] bound = {-n / 100, 0};
+        double[] bound = {-n / 100., 0};
         return bound;
     }
 
     @Override
     public double[] getUpperBound() {
         int n = p1.length / 3 + 1;
-        double[] bound = {n + n / 100, 1.01 * height};
+        double[] bound = {n + n / 100., 1.01 * height};
         return bound;
     }
 

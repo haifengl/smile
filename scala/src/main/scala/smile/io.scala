@@ -23,10 +23,9 @@ import java.sql.ResultSet
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import org.apache.commons.csv.CSVFormat
-import smile.data.{DataFrame, Dataset, Instance}
+import smile.data.{DataFrame, SparseDataset}
 import smile.data.`type`.StructType
 import smile.io.{Read, Write, JSON}
-import smile.util.SparseArray
 
 /** Data saving utilities. */
 object write {
@@ -225,10 +224,10 @@ object read {
   def parquet(file: Path): DataFrame = Read.parquet(file)
 
   /** Reads a LivSVM file. */
-  def libsvm(file: String): Dataset[Instance[SparseArray]] = Read.libsvm(file)
+  def libsvm(file: String): SparseDataset[Integer] = Read.libsvm(file)
 
   /** Reads a LivSVM file. */
-  def libsvm(file: Path): Dataset[Instance[SparseArray]] = Read.libsvm(file)
+  def libsvm(file: Path): SparseDataset[Integer] = Read.libsvm(file)
 
   /** Reads a Wavefront OBJ file. */
   def wavefront(file: String): (Array[Array[Double]], Array[Array[Int]]) = wavefront(Paths.get(file))

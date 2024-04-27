@@ -29,8 +29,6 @@ import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -43,9 +41,9 @@ import javax.swing.text.DefaultFormatterFactory;
  */
 @SuppressWarnings("serial")
 public class IntegerArrayCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(IntegerArrayCellEditor.class.getName()); 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IntegerArrayCellEditor.class);
 
-    JFormattedTextField textField;
+    final JFormattedTextField textField;
 
     /**
      * Constructor.
@@ -93,9 +91,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                 
                 StringBuilder builder = new StringBuilder();
 
-                if (value instanceof byte[]) {
-                    byte[] data = (byte[]) value;
-
+                if (value instanceof byte[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
@@ -104,9 +100,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                         builder.append(", ").append(data[i]);
                     }
                     builder.append("]");
-                } else if (value instanceof short[]) {
-                    short[] data = (short[]) value;
-
+                } else if (value instanceof short[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
@@ -167,6 +161,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                         textField.commitEdit();     //so use it.
                         textField.postActionEvent(); //stop editing
                     } catch (java.text.ParseException ex) {
+                        logger.debug("Failed to commit edit: ", ex);
                     }
                 }
             }
@@ -186,7 +181,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
         if (o instanceof int[]) {
             return o;
         } else {
-            LOGGER.log(Level.FINE, "getCellEditorValue: can't parse {0}", o);
+            logger.debug("getCellEditorValue: can't parse {}", o);
             return null;
         }
     }
@@ -203,6 +198,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
             try {
                 ftf.commitEdit();
             } catch (java.text.ParseException ex) {
+                logger.debug("Failed to commit edit: ", ex);
             }
 
         } else { //text is invalid

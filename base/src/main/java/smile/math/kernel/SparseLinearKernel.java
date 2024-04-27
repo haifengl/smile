@@ -20,6 +20,8 @@ package smile.math.kernel;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 
+import java.io.Serial;
+
 /**
  * The linear dot product kernel on sparse arrays. When using a linear kernel, input space is
  * identical to feature space.
@@ -27,6 +29,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SparseLinearKernel implements MercerKernel<SparseArray>, DotProductKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

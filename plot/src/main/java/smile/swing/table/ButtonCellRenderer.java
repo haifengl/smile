@@ -55,13 +55,13 @@ import javax.swing.table.TableColumnModel;
 @SuppressWarnings("serial")
 public class ButtonCellRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener
 {
-    private JTable table;
-    private transient Action action;
+    private final JTable table;
+    private final transient Action action;
     private int mnemonic;
-    private Border originalBorder;
+    private final Border originalBorder;
     private Border focusBorder;
-    private JButton renderButton;
-    private JButton editButton;
+    private final JButton renderButton;
+    private final JButton editButton;
     private Object editorValue;
     private boolean isButtonColumnEditor;
 
@@ -131,9 +131,9 @@ public class ButtonCellRenderer extends AbstractCellEditor implements TableCellR
             editButton.setText("");
             editButton.setIcon(null);
             editButton.setEnabled(true);
-        } else if (value instanceof Icon) {
+        } else if (value instanceof Icon icon) {
             editButton.setText("");
-            editButton.setIcon((Icon) value);
+            editButton.setIcon(icon);
             editButton.setEnabled(true);
         } else {
             editButton.setText(value.toString());
@@ -200,7 +200,7 @@ public class ButtonCellRenderer extends AbstractCellEditor implements TableCellR
     }
 
     /*
-     *  When the mouse is pressed the editor is invoked. If you then then drag
+     *  When the mouse is pressed the editor is invoked. If you then drag
      *  the mouse to another cell before releasing it, the editor is still
      *  active. Make sure editing is stopped when the mouse is released.
      */

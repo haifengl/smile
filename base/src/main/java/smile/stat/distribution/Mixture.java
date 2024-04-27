@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -40,7 +41,8 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Mixture extends AbstractDistribution {
+public class Mixture implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -48,6 +50,7 @@ public class Mixture extends AbstractDistribution {
      * and its weight in the mixture.
      */
     public static class Component implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The priori probability of component.
@@ -151,7 +154,7 @@ public class Mixture extends AbstractDistribution {
     }
 
     /**
-     * Shannon entropy. Not supported.
+     * Shannon's entropy. Not supported.
      */
     @Override
     public double entropy() {

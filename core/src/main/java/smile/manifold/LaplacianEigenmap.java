@@ -17,8 +17,8 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
@@ -40,7 +40,7 @@ import smile.util.SparseArray;
  * <p>
  * The locality preserving character of the Laplacian Eigenmap algorithm makes
  * it relatively insensitive to outliers and noise. It is also not prone to
- * "short circuiting" as only the local distances are used.
+ * "short-circuiting" as only the local distances are used.
  *
  * @see IsoMap
  * @see LLE
@@ -54,6 +54,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class LaplacianEigenmap implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -144,7 +145,7 @@ public class LaplacianEigenmap implements Serializable {
      * @return the model.
      */
     public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
-        // Use largest connected component of nearest neighbor graph.
+        // Use the largest connected component of nearest neighbor graph.
         AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, false, null);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
@@ -155,7 +156,7 @@ public class LaplacianEigenmap implements Serializable {
         double[] D = new double[n];
         double gamma = -1.0 / t;
 
-        ArrayList<SparseArray> W = new ArrayList<>(n);
+        SparseArray[] W = new SparseArray[n];
         for (int i = 0; i < n; i++) {
             SparseArray row = new SparseArray();
             Collection<Edge> edges = graph.getEdges(i);
@@ -168,11 +169,11 @@ public class LaplacianEigenmap implements Serializable {
                 D[i] += w;
             }
             D[i] = 1 / Math.sqrt(D[i]);
-            W.add(i, row);
+            W[i] = row;
         }
 
         for (int i = 0; i < n; i++) {
-            SparseArray row = W.get(i);
+            SparseArray row = W[i];
             for (SparseArray.Entry e : row) {
                 e.update(-D[i] * e.x * D[e.i]);
             }

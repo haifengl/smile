@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Erf;
 
+import java.io.Serial;
+
 /**
  * The normal distribution or Gaussian distribution is a continuous probability
  * distribution that describes data that clusters around a mean.
@@ -70,7 +72,8 @@ import smile.math.special.Erf;
  * 
  * @author Haifeng Li
  */
-public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
+public class GaussianDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE_2 = Math.log(2 * Math.PI * Math.E) / 2;
@@ -277,9 +280,9 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     /**
      * The quantile, the probability to the left of quantile(p) is p. This is
      * actually the inverse of cdf.
-     *
-     * Original algorythm and Perl implementation can
-     * be found at: http://www.math.uio.no/~jacklam/notes/invnorm/index.html
+     * <p>
+     * Original algorithm and Perl implementation can be found at this
+     * <a href="http://www.math.uio.no/~jacklam/notes/invnorm/index.html">page</a>.
      */
     @Override
     public double quantile(double p) {

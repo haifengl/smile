@@ -32,7 +32,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-final class Variable implements Term {
+public final class Variable implements Term {
     /** The variable name. */
     private final String name;
 

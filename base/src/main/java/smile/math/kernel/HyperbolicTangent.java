@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * The hyperbolic tangent kernel.
  * <p>
@@ -38,6 +40,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class HyperbolicTangent implements DotProductKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The scale parameter. */

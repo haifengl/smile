@@ -35,6 +35,47 @@ public interface StringVector extends Vector<String> {
     @Override
     StringVector get(int... index);
 
+    @Override
+    default boolean getBoolean(int i) {
+        return Boolean.parseBoolean(get(i));
+    }
+
+    @Override
+    default char getChar(int i) {
+        String s = get(i);
+        return s.isEmpty() ? '\u0000' : s.charAt(0);
+    }
+
+    @Override
+    default byte getByte(int i) {
+        return Byte.parseByte(get(i));
+    }
+
+    @Override
+    default short getShort(int i) {
+        return Short.parseShort(get(i));
+    }
+
+    @Override
+    default int getInt(int i) {
+        return Integer.parseInt(get(i));
+    }
+
+    @Override
+    default long getLong(int i) {
+        return Long.parseLong(get(i));
+    }
+
+    @Override
+    default float getFloat(int i) {
+        return Float.parseFloat(get(i));
+    }
+
+    @Override
+    default double getDouble(int i) {
+        return Double.parseDouble(get(i));
+    }
+
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and
      * uses the given date format pattern to parse strings.

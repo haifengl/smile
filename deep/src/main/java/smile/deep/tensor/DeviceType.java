@@ -28,11 +28,11 @@ public enum DeviceType {
     CPU(torch.DeviceType.CPU),
     /** NVIDIA GPU */
     CUDA(torch.DeviceType.CUDA),
-    /** GPU for MacOS devices with Metal programming framework. */
+    /** GPU for macOS devices with Metal programming framework. */
     MPS(torch.DeviceType.MPS);
 
     /** PyTorch device type. */
-    torch.DeviceType value;
+    final torch.DeviceType value;
 
     /** Constructor. */
     DeviceType(torch.DeviceType device) {

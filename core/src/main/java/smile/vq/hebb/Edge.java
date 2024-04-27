@@ -17,6 +17,7 @@
 
 package smile.vq.hebb;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -25,6 +26,7 @@ import java.io.Serializable;
  * @author Haifeng Li
  */
 public class Edge implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * The neighbor neuron.

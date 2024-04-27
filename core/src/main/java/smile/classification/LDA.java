@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -57,6 +58,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class LDA extends AbstractClassifier<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -138,7 +140,7 @@ public class LDA extends AbstractClassifier<double[]> {
      * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LDA fit(double[][] x, int[] y, Properties params) {
