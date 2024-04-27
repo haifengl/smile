@@ -24,7 +24,7 @@ package smile.gap;
  *
  * @author Haifeng Li
  */
-public interface Chromosome extends Comparable<Chromosome> {
+public interface Chromosome<T extends Chromosome<T>> extends Comparable<Chromosome<T>> {
 
     /**
      * Returns the fitness of chromosome.
@@ -36,7 +36,7 @@ public interface Chromosome extends Comparable<Chromosome> {
      * Returns a new random instance.
      * @return a new random instance.
      */
-    Chromosome newInstance();
+    T newInstance();
 
     /**
      * Returns a pair of offsprings by crossovering this one with another one
@@ -46,7 +46,7 @@ public interface Chromosome extends Comparable<Chromosome> {
      * @param other the other parent.
      * @return a pair of offsprings.
      */
-    Chromosome[] crossover(Chromosome other);
+    T[] crossover(T other);
 
     /**
      * For genetic algorithms, this method mutates the chromosome randomly.
