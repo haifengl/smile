@@ -45,7 +45,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class BitString implements Chromosome {
+public class BitString implements Chromosome<BitString> {
 
     /**
      * Binary encoding of chromosome.
@@ -189,13 +189,7 @@ public class BitString implements Chromosome {
     }
 
     @Override
-    public BitString[] crossover(Chromosome another) {
-        if (!(another instanceof BitString)) {
-            throw new IllegalArgumentException("NOT a BitString chromosome.");
-        }
-
-        BitString mother = (BitString) another;
-
+    public BitString[] crossover(BitString mother) {
         if (MathEx.random() < crossoverRate) {
             return crossover.apply(this, mother);
         } else {

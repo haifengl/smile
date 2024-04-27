@@ -118,7 +118,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class GeneticAlgorithm <T extends Chromosome> {
+public class GeneticAlgorithm <T extends Chromosome<T>> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneticAlgorithm.class);
 
     /**
@@ -246,7 +246,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
         Arrays.sort(population);
         T best = population[size-1];
 
-        Chromosome[] offsprings = new Chromosome[size];
+        T[] offsprings = population.clone();
         for (int g = 1; g <= generation && best.fitness() < threshold; g++) {
             for (int i = 0; i < elitism; i++) {
                 offsprings[i] = population[size-i-1];
@@ -259,7 +259,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
                     mother = selection.apply(population);
                 }
 
-                Chromosome[] children = father.crossover(mother);
+                T[] children = father.crossover(mother);
                 offsprings[i] = children[0];
                 offsprings[i].mutate();
                 if (i + 1 < size) {
