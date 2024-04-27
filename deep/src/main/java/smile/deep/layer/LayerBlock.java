@@ -16,7 +16,11 @@
  */
 package smile.deep.layer;
 
+import org.bytedeco.pytorch.InputArchive;
 import org.bytedeco.pytorch.Module;
+import org.bytedeco.pytorch.OutputArchive;
+import smile.deep.Model;
+import smile.deep.tensor.Device;
 
 /**
  * A block is combinations of one or more layers. Blocks form the basis of
@@ -113,6 +117,56 @@ public abstract class LayerBlock implements Layer {
     public LayerBlock add(String name, Module layer) {
         module.register_module(name, layer);
         return this;
+    }
+
+    /**
+     * Returns true if the layer block is in training mode.
+     * @return true if the layer block is in training mode.
+     */
+    public boolean isTraining() {
+        return module.is_training();
+    }
+
+    /**
+     * Sets the layer block in the training mode.
+     */
+    public void train() {
+        module.train(true);
+    }
+
+    /**
+     * Sets the layer block in the evaluation/inference mode.
+     */
+    public void eval() {
+        module.eval();
+    }
+
+    /**
+     * Moves the layer block to a device.
+     * @param device the compute device.
+     */
+    public void to(Device device) {
+        module.to(device.asTorch(), true);
+    }
+
+    /**
+     * Loads a checkpoint.
+     * @param path the checkpoint file path.
+     */
+    public void load(String path) {
+        InputArchive archive = new InputArchive();
+        archive.load_from(path);
+        module.load(archive);
+    }
+
+    /**
+     * Serialize the layer block as a checkpoint.
+     * @param path the checkpoint file path.
+     */
+    public void save(String path) {
+        OutputArchive archive = new OutputArchive();
+        module.save(archive);
+        archive.save_to(path);
     }
 
     /**

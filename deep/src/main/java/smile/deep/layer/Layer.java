@@ -47,14 +47,6 @@ public interface Layer extends Function<Tensor, Tensor> {
     Module asTorch();
 
     /**
-     * Returns true if the layer is in training mode.
-     * @return true if the layer is in training mode.
-     */
-    default boolean isTraining() {
-        return asTorch().is_training();
-    }
-
-    /**
      * Returns a linear fully connected layer.
      * @param in the number of input features.
      * @param out the number of output features.

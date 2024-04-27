@@ -67,7 +67,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @return this model.
      */
     public Model train() {
-        net.asTorch().train(true);
+        net.train();
         return this;
     }
 
@@ -76,7 +76,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @return this model.
      */
     public Model eval() {
-        net.asTorch().eval();
+        net.eval();
         return this;
     }
 
@@ -95,7 +95,7 @@ public class Model implements Function<Tensor, Tensor> {
      */
     public Model to(Device device) {
         this.device = device;
-        net.asTorch().to(device.asTorch(), true);
+        net.to(device);
         return this;
     }
 
@@ -105,9 +105,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @return this model.
      */
     public Model load(String path) {
-        InputArchive archive = new InputArchive();
-        archive.load_from(path);
-        net.asTorch().load(archive);
+        net.load(path);
         return this;
     }
 
@@ -117,9 +115,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @return this model.
      */
     public Model save(String path) {
-        OutputArchive archive = new OutputArchive();
-        net.asTorch().save(archive);
-        archive.save_to(path);
+        net.save(path);
         return this;
     }
 
