@@ -1892,6 +1892,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             BigMatrix VT = new BigMatrix(k, n);
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+            if (W != this) W.close();
             if (info != 0) {
                 logger.error("LAPACK GESDD with COMPACT error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
@@ -1903,6 +1904,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                  BigMatrix VT = new BigMatrix(1, 1)) {
 
                 int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+                if (W != this) W.close();
                 if (info != 0) {
                     logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
                     throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
@@ -1950,6 +1952,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         if (isSymmetric()) {
             DoublePointer w = new DoublePointer(n);
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
+            if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK SYEV error code: {}", info);
                 throw new ArithmeticException("LAPACK SYEV error code: " + info);
@@ -1963,6 +1966,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             BigMatrix Vl = vl ? new BigMatrix(n, n) : new BigMatrix(1, 1);
             BigMatrix Vr = vr ? new BigMatrix(n, n) : new BigMatrix(1, 1);
             int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
+            if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
