@@ -43,6 +43,8 @@ tasks.build {
 tasks {
     dokkaHtml.configure {
         outputDirectory.set(buildDir.resolve("../../doc/api/kotlin"))
+        pageName = "Smile - Kotlin"
+        footerMessage = "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."
         dokkaSourceSets {
             configureEach {
                 includes.from("packages.md")
