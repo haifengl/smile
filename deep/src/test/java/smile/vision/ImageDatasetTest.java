@@ -49,7 +49,7 @@ public class ImageDatasetTest {
     @Test
     public void test() throws IOException {
         var transform = Transform.classification(32, 32);
-        var data = new ImageDataset(4, "D:\\data\\imagenet-mini\\train", transform, ImageNet.folder2Target);
+        var data = new ImageDataset(4, "deep/src/universal/data/imagenet-mini/train", transform, ImageNet.folder2Target);
         assertEquals(34745, data.size());
         var iter = data.iterator();
         assertEquals(true, iter.hasNext());
