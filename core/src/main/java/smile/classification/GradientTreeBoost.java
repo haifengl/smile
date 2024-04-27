@@ -629,8 +629,9 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             ntrees = trees.length;
             for (RegressionTree tree : trees) {
                 double[] phii = tree.shap(xt);
-                for (int i = 0; i < phi.length; i++) {
-                    phi[i] += phii[i];
+                for (int i = 0; i < p; i++) {
+                    phi[2*i] += phii[i];
+                    phi[2*i+1] += phii[i];
                 }
             }
         } else {

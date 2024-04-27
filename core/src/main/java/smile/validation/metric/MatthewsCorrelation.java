@@ -55,8 +55,8 @@ public class MatthewsCorrelation implements ClassificationMetric {
             throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusion);
         }
 
-        int tp = matrix[0][0];
-        int tn = matrix[1][1];
+        int tp = matrix[1][1];
+        int tn = matrix[0][0];
         int fp = matrix[0][1];
         int fn = matrix[1][0];
 

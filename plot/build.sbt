@@ -2,5 +2,7 @@ name := "smile-plot"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.plot")
 
-libraryDependencies += "org.swinglabs" % "swingx" % "1.6.1"
-
+libraryDependencies ++= Seq(
+  "org.swinglabs" % "swingx" % "1.6.1",
+  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.17.0"
+)

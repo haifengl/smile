@@ -32,10 +32,11 @@ public class HiddenLayer extends Layer {
      * Constructor.
      * @param n the number of neurons.
      * @param p the number of input variables (not including bias value).
+     * @param dropout the dropout rate.
      * @param activation the activation function.
      */
-    public HiddenLayer(int n, int p, ActivationFunction activation) {
-        super(n, p);
+    public HiddenLayer(int n, int p, double dropout, ActivationFunction activation) {
+        super(n, p, dropout);
         this.activation = activation;
     }
 

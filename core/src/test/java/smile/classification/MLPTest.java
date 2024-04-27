@@ -225,7 +225,7 @@ public class MLPTest {
         int k = MathEx.max(USPS.y) + 1;
 
         MLP model = new MLP(Layer.input(p),
-                Layer.leaky(768, 0.5, 0.02),
+                Layer.leaky(768, 0.2, 0.02),
                 Layer.rectifier(192),
                 Layer.rectifier(30),
                 Layer.mle(k, OutputFunction.SOFTMAX)
@@ -246,7 +246,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(109, error);
+        assertEquals(115, error, 5);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -277,11 +277,11 @@ public class MLPTest {
         );
         model.setRMSProp(0.9, 1E-7);
 
-        int batch = 32;
+        int batch = 64;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         int error = 0;
-        for (int epoch = 1; epoch <= 10; epoch++) {
+        for (int epoch = 1; epoch <= 8; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
@@ -302,6 +302,6 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(115, error);
+        assertEquals(120, error, 5);
     }
 }

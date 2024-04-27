@@ -22,6 +22,7 @@ import org.specs2.mutable._
 import smile.read
 import smile.data.DataFrame
 import smile.data.formula._
+import smile.feature.transform.WinsorScaler
 import smile.math.MathEx
 import smile.util.Paths
 
@@ -68,16 +69,18 @@ class RegressionModelSpec extends Specification {
     }
     "mlp" in {
       MathEx.setSeed(19650218)
+      val scaler = WinsorScaler.fit(train, 0.01, 0.99)
       val params = new Properties()
-      params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
+      // This property is not supported now.
+      // params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
       params.setProperty("smile.mlp.epochs", "30")
       params.setProperty("smile.mlp.activation", "ReLU(50)|Sigmoid(30)")
       params.setProperty("smile.mlp.learning_rate", "0.2")
-      val model = RegressionModel("mlp", formula, train, params, test = Some(test))
+      val model = RegressionModel("mlp", formula, scaler(train), params, test = Some(scaler(test)))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.rmse must beCloseTo(0.7999 +/- 0.01)
+      model.test.get.rmse must beCloseTo(0.1293 +/- 0.01)
     }
   }
 }

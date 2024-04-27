@@ -1,18 +1,32 @@
 name := "smile"
 
+lazy val scala213 = "2.13.13"
+lazy val scala3 = "3.3.3"
+lazy val supportedScalaVersions = List(scala213, scala3)
+
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := "2.13.10",
+  scalaVersion := scala213,
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.0",
+  version := "3.1.0",
 
-  Test / parallelExecution := false,
   autoAPIMappings := true,
+  Test / fork := true,
+  Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
+  Test / parallelExecution := false,
+  Test / publishArtifact := false,
+  Test / javaOptions ++= Seq(
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
+  ),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -21,7 +35,6 @@ lazy val commonSettings = Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
-  Test / publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
   pomExtra := (
@@ -63,15 +76,10 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.6",
-    "org.slf4j" % "slf4j-simple" % "2.0.6" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.12",
+    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
     "junit" % "junit" % "4.13.2" % Test,
     "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep")
-  ),
-  Test / run / javaOptions ++= Seq(
-    "--add-opens=java.base/java.lang=ALL-UNNAMED",
-    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
-    "--add-opens=java.base/java.nio=ALL-UNNAMED",
   ),
   Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 )
@@ -86,18 +94,14 @@ lazy val java8Settings = javaSettings ++ Seq(
 lazy val java17Settings = javaSettings ++ Seq(
   Compile / compile / javacOptions ++= Seq(
     "-source", "17",
-    "-target", "17",
-    "--enable-preview",
-    "-Xlint:preview"
+    "-target", "17"
   ),
-  Compile / doc / javacOptions ++= Seq(
-    "--enable-preview"
-  )
 )
 
 lazy val scalaSettings = commonSettings ++ Seq(
   crossPaths := true,
   autoScalaLibrary := true,
+  crossScalaVersions := supportedScalaVersions,
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",
@@ -111,24 +115,46 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.6" % Test,
-    "org.specs2" %% "specs2-core" % "4.19.0" % Test
+    "org.slf4j" % "slf4j-simple" % "2.0.12" % Test,
+    "org.specs2" %% "specs2-core" % "4.20.5" % Test
   ),
+)
+
+lazy val javaCppSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
+)
+
+lazy val javaCppTestSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.bytedeco" % "javacpp"   % "1.5.10"        % "test" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.26-1.5.10" % "test" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.10"  % "test" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+  )
 )
 
 lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
   .settings(publish / skip := true)
+  .settings(crossScalaVersions := Nil)
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
   )
-  .aggregate(core, base, mkl, nlp, plot, json, scala, spark, shell)
+  .aggregate(core, base, mkl, nlp, deep, plot, json, scala, spark, shell)
 
-lazy val base = project.in(file("base")).settings(java8Settings: _*)
+lazy val base = project.in(file("base"))
+  .settings(java8Settings: _*)
+  .settings(javaCppSettings: _*)
 
 lazy val mkl = project.in(file("mkl"))
   .settings(java8Settings: _*)
+  .settings(javaCppTestSettings: _*)
+  .settings(Test / envVars += ("MKL_VERBOSE" -> "1"))
+  .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val core = project.in(file("core"))
@@ -136,18 +162,20 @@ lazy val core = project.in(file("core"))
   .dependsOn(base % "compile->compile;test->test")
 
 lazy val deep = project.in(file("deep"))
-  .settings(java8Settings: _*)
+  .settings(java17Settings: _*)
   .settings(publish / skip := true)
+  .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
   .settings(java8Settings: _*)
   .dependsOn(core)
 
 lazy val plot = project.in(file("plot"))
-  .settings(java8Settings: _*)
+  .settings(java17Settings: _*)
   .dependsOn(base)
 
-lazy val json = project.in(file("json")).settings(scalaSettings: _*)
+lazy val json = project.in(file("json"))
+  .settings(scalaSettings: _*)
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)

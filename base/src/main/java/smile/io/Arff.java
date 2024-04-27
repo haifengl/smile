@@ -555,6 +555,8 @@ public class Arff implements AutoCloseable {
             } else {
                 writer.println(" REAL");
             }
+        } else {
+            writer.println(" STRING");
         }
     }
 }

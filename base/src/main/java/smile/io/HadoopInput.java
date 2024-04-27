@@ -68,6 +68,11 @@ public interface HadoopInput {
      * @return the file input stream.
      */
     static InputStream stream(String path) throws IOException, URISyntaxException {
+        // Windows file path
+        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*\\S]?.*")) {
+            return Files.newInputStream(Paths.get(path));
+        }
+
         URI uri = new URI(path);
         if (uri.getScheme() == null) return Files.newInputStream(Paths.get(path));
 
@@ -96,6 +101,11 @@ public interface HadoopInput {
      * @return Parquet's InputFile.
      */
     static InputFile file(String path) throws IOException, URISyntaxException {
+        // Windows file path
+        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*\\S]?.*")) {
+            return new LocalInputFile(Paths.get(path));
+        }
+
         URI uri = new URI(path);
         if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));
 

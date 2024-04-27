@@ -25,8 +25,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.time.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.page.PageReadStore;
@@ -38,9 +39,8 @@ import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
-import org.apache.parquet.schema.DecimalMetadata;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import smile.data.DataFrame;
@@ -75,7 +75,7 @@ public class Parquet {
     /**
      * Reads a local parquet file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to write the file.
      * @return the data frame.
      */
@@ -97,7 +97,7 @@ public class Parquet {
     /**
      * Reads a HDFS parquet file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to write the file.
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
@@ -121,7 +121,7 @@ public class Parquet {
      * Reads a limited number of records from a parquet file.
      * @param file an interface with the methods needed by Parquet
      *             to read data files. See HadoopInputFile for example.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to write the file.
      * @return the data frame.
      */
@@ -130,7 +130,7 @@ public class Parquet {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();
             StructType struct = toSmileSchema(schema);
-            logger.debug("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
+            logger.debug("The meta data of parquet file {}: {}", file, ParquetMetadata.toPrettyJSON(footer));
 
             int nrow = (int) Math.min(reader.getRecordCount(), limit);
             List<Tuple> rows = new ArrayList<>(nrow);
@@ -141,7 +141,7 @@ public class Parquet {
                 final MessageColumnIO columnIO = new ColumnIOFactory().getColumnIO(schema);
                 final RecordReader<Group> recordReader = columnIO.getRecordReader(store, new GroupRecordConverter(schema));
                 for (int i = 0; i < rowCount && rows.size() < nrow; i++) {
-                    rows.add(Tuple.of(group2object(recordReader.read(), schema.getColumns(), struct), struct));
+                    rows.add(Tuple.of(readRowGroup(recordReader.read(), schema.getColumns(), struct), struct));
                 }
             }
 
@@ -149,15 +149,14 @@ public class Parquet {
         }
     }
 
-    private static Object[] group2object(Group g, List<ColumnDescriptor> columns, StructType schema) {
+    private static Object[] readRowGroup(Group g, List<ColumnDescriptor> columns, StructType schema) {
         int length = schema.length();
         Object[] o = new Object[length];
         for (int i = 0; i < length; i++) {
             int rep = g.getFieldRepetitionCount(i);
-            StructField field = schema.field(i);
             ColumnDescriptor column = columns.get(i);
             PrimitiveType primitiveType = column.getPrimitiveType();
-            OriginalType originalType = primitiveType.getOriginalType();
+            LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
 
             switch (primitiveType.getPrimitiveTypeName()) {
                 case BOOLEAN:
@@ -172,7 +171,7 @@ public class Parquet {
                     break;
 
                 case INT32:
-                    if (originalType == null) {
+                    if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                         if (rep == 1) {
                             o[i] = g.getInteger(i, 0);
                         } else if (rep > 1) {
@@ -181,67 +180,46 @@ public class Parquet {
                                 a[j] = g.getInteger(i, j);
                             o[i] = a;
                         }
-                        break;
-                    }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                        int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalType).getScale();
+                        if (rep == 1) {
+                            o[i] = BigDecimal.valueOf(g.getInteger(i, 0), scale);
+                        } else if (rep > 1) {
+                            BigDecimal[] a = new BigDecimal[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = BigDecimal.valueOf(g.getInteger(i, j), scale);
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                        if (rep == 1) {
+                            o[i] = LocalDate.ofEpochDay(g.getInteger(i, 0));
+                        } else if (rep > 1) {
+                            LocalDate[] a = new LocalDate[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = LocalDate.ofEpochDay(g.getInteger(i, j));
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+                        LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimeLogicalTypeAnnotation) logicalType;
+                        if (timeType.getUnit() != LogicalTypeAnnotation.TimeUnit.MILLIS) {
+                            throw new IllegalStateException("Invalid TimeUnit for INT32: " + timeType.getUnit());
+                        }
 
-                    switch (originalType) {
-                        case INT_8:
-                            if (rep == 1) {
-                                o[i] = (byte) g.getInteger(i, 0);
-                            } else if (rep > 1) {
-                                byte[] a = new byte[rep];
-                                for (int j = 0; j < rep; j++)
-                                    a[j] = (byte) g.getInteger(i, j);
-                                o[i] = a;
-                            }
-                            break;
-                        case UINT_8:
-                        case INT_16:
-                            if (rep == 1) {
-                                o[i] = (short) g.getInteger(i, 0);
-                            } else if (rep > 1) {
-                                short[] a = new short[rep];
-                                for (int j = 0; j < rep; j++)
-                                    a[j] = (short) g.getInteger(i, j);
-                                o[i] = a;
-                            }
-                            break;
-                        case UINT_16:
-                        case INT_32:
-                            if (rep == 1) {
-                                o[i] = g.getInteger(i, 0);
-                            } else if (rep > 1) {
-                                int[] a = new int[rep];
-                                for (int j = 0; j < rep; j++)
-                                    a[j] = g.getInteger(i, j);
-                                o[i] = a;
-                            }
-                            break;
-                        case DECIMAL:
-                            if (rep == 1) {
-                                int unscaledValue = g.getInteger(i, 0);
-                                DecimalMetadata decimalMetadata = primitiveType.getDecimalMetadata();
-                                int scale = decimalMetadata.getScale();
-                                o[i] = BigDecimal.valueOf(unscaledValue, scale);
-                            }
-                            break;
-                        case DATE:
-                            if (rep == 1) {
-                                int days = g.getInteger(i, 0);
-                                o[i] = LocalDate.ofEpochDay(days);
-                            }
-                            break;
-                        case TIME_MILLIS:
-                            if (rep == 1) {
-                                int millis = g.getInteger(i, 0);
-                                o[i] = LocalTime.ofNanoOfDay(millis * 1000000);
-                            }
-                            break;
+                        if (rep == 1) {
+                            o[i] = LocalTime.ofNanoOfDay(g.getInteger(i, 0) * 1000000);
+                        } else if (rep > 1) {
+                            LocalTime[] a = new LocalTime[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = LocalTime.ofNanoOfDay(g.getInteger(i, j) * 1000000);
+                            o[i] = a;
+                        }
+                    } else {
+                        throw new IllegalStateException("Invalid logical type for INT32: " + logicalType);
                     }
                     break;
 
                 case INT64:
-                    if (originalType == null) {
+                    if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                         if (rep == 1) {
                             o[i] = g.getLong(i, 0);
                         } else if (rep > 1) {
@@ -251,60 +229,107 @@ public class Parquet {
                             o[i] = a;
                         }
                         break;
-                    }
-
-                    switch (originalType) {
-                        case INT_64:
-                            if (rep == 1) {
-                                o[i] = g.getLong(i, 0);
-                            } else if (rep > 1) {
-                                long[] a = new long[rep];
-                                for (int j = 0; j < rep; j++)
-                                    a[j] = g.getLong(i, j);
-                                o[i] = a;
-                            }
-                            break;
-                        case DECIMAL:
-                            if (rep == 1) {
-                                long unscaledValue = g.getLong(i, 0);
-                                DecimalMetadata decimalMetadata = primitiveType.getDecimalMetadata();
-                                int scale = decimalMetadata.getScale();
-                                o[i] = BigDecimal.valueOf(unscaledValue, scale);
-                            }
-                            break;
-                        case TIME_MICROS:
-                            if (rep == 1) {
-                                long micros = g.getLong(i, 0);
-                                o[i] = LocalTime.ofNanoOfDay(micros * 1000);
-                            }
-                            break;
-                        case TIMESTAMP_MILLIS:
-                            if (rep == 1) {
-                                long millis = g.getLong(i, 0);
-                                o[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC);
-                            }
-                            break;
-                        case TIMESTAMP_MICROS:
-                            if (rep == 1) {
-                                long micros = g.getLong(i, 0);
-                                long second = micros / 1000000;
-                                int nano = (int) (micros % 1000000) * 1000;
-                                o[i] = LocalDateTime.ofEpochSecond(second, nano, ZoneOffset.UTC);
-                            }
-                            break;
+                    } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                        int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalType).getScale();
+                        if (rep == 1) {
+                            o[i] = BigDecimal.valueOf(g.getLong(i, 0), scale);
+                        } else if (rep > 1) {
+                            BigDecimal[] a = new BigDecimal[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = BigDecimal.valueOf(g.getLong(i, j), scale);
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+                        LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimeLogicalTypeAnnotation) logicalType;
+                        switch (timeType.getUnit()) {
+                            case MILLIS:
+                                throw new IllegalStateException("Invalid TimeUnit for INT64: " + timeType.getUnit());
+                            case MICROS:
+                                if (rep == 1) {
+                                    o[i] = LocalTime.ofNanoOfDay(g.getLong(i, 0) * 1000);
+                                } else if (rep > 1) {
+                                    LocalTime[] a = new LocalTime[rep];
+                                    for (int j = 0; j < rep; j++)
+                                        a[j] = LocalTime.ofNanoOfDay(g.getLong(i, j) * 1000);
+                                    o[i] = a;
+                                }
+                                break;
+                            case NANOS:
+                                if (rep == 1) {
+                                    o[i] = LocalTime.ofNanoOfDay(g.getLong(i, 0));
+                                } else if (rep > 1) {
+                                    LocalTime[] a = new LocalTime[rep];
+                                    for (int j = 0; j < rep; j++)
+                                        a[j] = LocalTime.ofNanoOfDay(g.getLong(i, j));
+                                    o[i] = a;
+                                }
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+                        LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) logicalType;
+                        ZoneId zone = timeType.isAdjustedToUTC() ? ZoneOffset.UTC : ZoneId.systemDefault();
+                        switch (timeType.getUnit()) {
+                            case MILLIS:
+                                if (rep == 1) {
+                                    o[i] = LocalDateTime.ofInstant(Instant.ofEpochMilli(g.getLong(i, 0)), zone);
+                                } else if (rep > 1) {
+                                    LocalDateTime[] a = new LocalDateTime[rep];
+                                    for (int j = 0; j < rep; j++)
+                                        a[j] = LocalDateTime.ofInstant(Instant.ofEpochMilli(g.getLong(i, j)), zone);
+                                    o[i] = a;
+                                }
+                                break;
+                            case MICROS:
+                                if (rep == 1) {
+                                    long micros = g.getLong(i, 0);
+                                    o[i] = LocalDateTime.ofInstant(Instant.ofEpochSecond(micros / 1000000, (int) (micros % 100000) * 1000), zone);
+                                } else if (rep > 1) {
+                                    LocalDateTime[] a = new LocalDateTime[rep];
+                                    for (int j = 0; j < rep; j++) {
+                                        long micros = g.getLong(i, j);
+                                        a[j] = LocalDateTime.ofInstant(Instant.ofEpochSecond(micros / 1000000, (int) (micros % 100000) * 1000), zone);
+                                    }
+                                    o[i] = a;
+                                }
+                                break;
+                            case NANOS:
+                                if (rep == 1) {
+                                    long nanos = g.getLong(i, 0);
+                                    o[i] = LocalDateTime.ofInstant(Instant.ofEpochSecond(nanos / 1000000000, (int) (nanos % 100000000)), zone);
+                                } else if (rep > 1) {
+                                    LocalDateTime[] a = new LocalDateTime[rep];
+                                    for (int j = 0; j < rep; j++) {
+                                        long nanos = g.getLong(i, j);
+                                        a[j] = LocalDateTime.ofInstant(Instant.ofEpochSecond(nanos / 1000000000, (int) (nanos % 100000000)), zone);
+                                    }
+                                    o[i] = a;
+                                }
+                        }
+                    } else {
+                        throw new IllegalStateException("Invalid logical type for INT64: " + logicalType);
                     }
                     break;
 
                 case INT96:
+                    // see http://stackoverflow.com/questions/466321/convert-unix-timestamp-to-julian
+                    // it's 2440587.5, rounding up to compatible with Hive
                     if (rep == 1) {
                         ByteBuffer buf = g.getInt96(i, 0).toByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
                         long nanoOfDay = buf.getLong();
                         int julianDay = buf.getInt();
-                        // see http://stackoverflow.com/questions/466321/convert-unix-timestamp-to-julian
-                        // it's 2440587.5, rounding up to compatible with Hive
                         LocalDate date = LocalDate.ofEpochDay(julianDay - 2440588);
                         LocalTime time = LocalTime.ofNanoOfDay(nanoOfDay);
                         o[i] = LocalDateTime.of(date, time);
+                    } else if (rep > 1) {
+                        LocalDateTime[] a = new LocalDateTime[rep];
+                        for (int j = 0; j < rep; j++) {
+                            ByteBuffer buf = g.getInt96(i, 0).toByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
+                            long nanoOfDay = buf.getLong();
+                            int julianDay = buf.getInt();
+                            LocalDate date = LocalDate.ofEpochDay(julianDay - 2440588);
+                            LocalTime time = LocalTime.ofNanoOfDay(nanoOfDay);
+                            a[j] = LocalDateTime.of(date, time);
+                        }
+                        o[i] = a;
                     }
                     break;
 
@@ -330,32 +355,115 @@ public class Parquet {
                     }
                     break;
 
-                case BINARY:
                 case FIXED_LEN_BYTE_ARRAY:
-                    switch (field.type.id()) {
-                        case String:
-                            if (rep == 1) {
-                                o[i] = g.getString(i, 0);
-                            } else if (rep > 1) {
-                                String[] a = new String[rep];
-                                for (int j = 0; j < rep; j++)
-                                    a[j] = g.getString(i, j);
-                                o[i] = a;
+                    if (logicalType instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
+                        if (rep == 1) {
+                            byte[] bytes = g.getBinary(i, 0).getBytes();
+                            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                            long high = byteBuffer.getLong();
+                            long low = byteBuffer.getLong();
+                            o[i] = new UUID(high, low);
+                        } else if (rep > 1) {
+                            UUID[] a = new UUID[rep];
+                            for (int j = 0; j < rep; j++) {
+                                byte[] bytes = g.getBinary(i, j).getBytes();
+                                ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                                long high = byteBuffer.getLong();
+                                long low = byteBuffer.getLong();
+                                a[j] = new UUID(high, low);
                             }
-                            break;
-                        case Decimal:
-                            if (rep == 1) {
-                                byte[] value = g.getBinary(i, 0).getBytes();
-                                DecimalMetadata decimalMetadata = primitiveType.getDecimalMetadata();
-                                int scale = decimalMetadata.getScale();
-                                o[i] = new BigDecimal(new BigInteger(value), scale);
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
+                        if (rep == 1) {
+                            byte[] bytes = g.getBinary(i, 0).getBytes();
+                            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                            int months = byteBuffer.getInt();
+                            int days = byteBuffer.getInt();
+                            int millis = byteBuffer.getInt();
+                            Duration duration = Duration.ofDays(days);
+                            o[i] = duration.plusDays(months * 30).plusMillis(millis);
+                        } else if (rep > 1) {
+                            Duration[] a = new Duration[rep];
+                            for (int j = 0; j < rep; j++) {
+                                byte[] bytes = g.getBinary(i, j).getBytes();
+                                ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                                int months = byteBuffer.getInt();
+                                int days = byteBuffer.getInt();
+                                int millis = byteBuffer.getInt();
+                                Duration duration = Duration.ofDays(days);
+                                a[j] = duration.plusDays(months * 30).plusMillis(millis);
                             }
-                            break;
-                        default:
-                            if (rep >= 1) {
-                                o[i] = g.getBinary(i, 0).getBytes();
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                        int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalType).getScale();
+                        if (rep == 1) {
+                            byte[] value = g.getBinary(i, 0).getBytes();
+                            o[i] = new BigDecimal(new BigInteger(value), scale);
+                        } else if (rep > 1) {
+                            BigDecimal[] a = new BigDecimal[rep];
+                            for (int j = 0; j < rep; j++) {
+                                byte[] value = g.getBinary(i, j).getBytes();
+                                a[j] = new BigDecimal(new BigInteger(value), scale);
                             }
-                            break;
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+                        if (rep == 1) {
+                            o[i] = g.getString(i, 0);
+                        } else if (rep > 1) {
+                            String[] a = new String[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = g.getString(i, j);
+                            o[i] = a;
+                        }
+                    } else {
+                        if (rep == 1) {
+                            o[i] = g.getBinary(i, 0).getBytes();
+                        } else if (rep > 1) {
+                            byte[][] a = new byte[rep][];
+                            for (int j = 0; j < rep; j++) {
+                                a[j] = g.getBinary(i, j).getBytes();
+                            }
+                            o[i] = a;
+                        }
+                    }
+                    break;
+
+                case BINARY:
+                    if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                        int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalType).getScale();
+                        if (rep == 1) {
+                            byte[] value = g.getBinary(i, 0).getBytes();
+                            o[i] = new BigDecimal(new BigInteger(value), scale);
+                        } else if (rep > 1) {
+                            BigDecimal[] a = new BigDecimal[rep];
+                            for (int j = 0; j < rep; j++) {
+                                byte[] value = g.getBinary(i, j).getBytes();
+                                a[j] = new BigDecimal(new BigInteger(value), scale);
+                            }
+                            o[i] = a;
+                        }
+                    } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation || logicalType instanceof LogicalTypeAnnotation.JsonLogicalTypeAnnotation) {
+                        if (rep == 1) {
+                            o[i] = g.getString(i, 0);
+                        } else if (rep > 1) {
+                            String[] a = new String[rep];
+                            for (int j = 0; j < rep; j++)
+                                a[j] = g.getString(i, j);
+                            o[i] = a;
+                        }
+                    } else {
+                        if (rep == 1) {
+                            o[i] = g.getBinary(i, 0).getBytes();
+                        } else if (rep > 1) {
+                            byte[][] a = new byte[rep][];
+                            for (int j = 0; j < rep; j++) {
+                                a[j] = g.getBinary(i, j).getBytes();
+                            }
+                            o[i] = a;
+                        }
                     }
                     break;
             }
@@ -377,7 +485,7 @@ public class Parquet {
     private static StructField toSmileField(ColumnDescriptor column) {
         String name = String.join(".", column.getPath());
         PrimitiveType primitiveType = column.getPrimitiveType();
-        OriginalType originalType = primitiveType.getOriginalType();
+        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
         Type.Repetition repetition = primitiveType.getRepetition();
 
         switch (primitiveType.getPrimitiveTypeName()) {
@@ -390,9 +498,10 @@ public class Parquet {
                     case REPEATED:
                         return new StructField(name, DataTypes.BooleanArrayType);
                 }
+                break;
 
             case INT32:
-                if (originalType == null) {
+                if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                     switch (repetition) {
                         case REQUIRED:
                             return new StructField(name, DataTypes.IntegerType);
@@ -401,49 +510,29 @@ public class Parquet {
                         case REPEATED:
                             return new StructField(name, DataTypes.IntegerArrayType);
                     }
-                }
-
-                switch (originalType) {
-                    case INT_8:
-                        switch (repetition) {
-                            case REQUIRED:
-                                return new StructField(name, DataTypes.ByteType);
-                            case OPTIONAL:
-                                return new StructField(name, DataTypes.ByteObjectType);
-                            case REPEATED:
-                                return new StructField(name, DataTypes.ByteArrayType);
-                        }
-                    case UINT_8:
-                    case INT_16:
-                        switch (repetition) {
-                            case REQUIRED:
-                                return new StructField(name, DataTypes.ShortType);
-                            case OPTIONAL:
-                                return new StructField(name, DataTypes.ShortObjectType);
-                            case REPEATED:
-                                return new StructField(name, DataTypes.ShortArrayType);
-                        }
-                    case UINT_16:
-                    case INT_32:
-                        switch (repetition) {
-                            case REQUIRED:
-                                return new StructField(name, DataTypes.IntegerType);
-                            case OPTIONAL:
-                                return new StructField(name, DataTypes.IntegerObjectType);
-                            case REPEATED:
-                                return new StructField(name, DataTypes.IntegerArrayType);
-                        }
-                    case DECIMAL:
-                        return new StructField(name, DataTypes.DecimalType);
-                    case DATE:
-                        return new StructField(name, DataTypes.DateType);
-                    case TIME_MILLIS:
-                        return new StructField(name, DataTypes.TimeType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.DecimalType);
+                    }
+                } else if (logicalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.DateType);
+                    }
+                } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.TimeType);
+                    }
                 }
                 break;
 
             case INT64:
-                if (originalType == null) {
+                if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
                     switch (repetition) {
                         case REQUIRED:
                             return new StructField(name, DataTypes.LongType);
@@ -452,25 +541,24 @@ public class Parquet {
                         case REPEATED:
                             return new StructField(name, DataTypes.LongArrayType);
                     }
-                }
-
-                switch (originalType) {
-                    case INT_64:
-                        switch (repetition) {
-                            case REQUIRED:
-                                return new StructField(name, DataTypes.LongType);
-                            case OPTIONAL:
-                                return new StructField(name, DataTypes.LongObjectType);
-                            case REPEATED:
-                                return new StructField(name, DataTypes.LongArrayType);
-                        }
-                    case DECIMAL:
-                        return new StructField(name, DataTypes.DecimalType);
-                    case TIME_MICROS:
-                        return new StructField(name, DataTypes.TimeType);
-                    case TIMESTAMP_MILLIS:
-                    case TIMESTAMP_MICROS:
-                        return new StructField(name, DataTypes.DateTimeType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.DecimalType);
+                    }
+                } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.TimeType);
+                    }
+                } else if (logicalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+                    switch (repetition) {
+                        case REQUIRED:
+                        case OPTIONAL:
+                            return new StructField(name, DataTypes.DateTimeType);
+                    }
                 }
                 break;
 
@@ -486,6 +574,7 @@ public class Parquet {
                     case REPEATED:
                         return new StructField(name, DataTypes.FloatArrayType);
                 }
+                break;
 
             case DOUBLE:
                 switch (repetition) {
@@ -496,24 +585,31 @@ public class Parquet {
                     case REPEATED:
                         return new StructField(name, DataTypes.DoubleArrayType);
                 }
+                break;
 
-            case BINARY:
             case FIXED_LEN_BYTE_ARRAY :
-                if (originalType == null) {
+                if (logicalType instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.ObjectType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.ObjectType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.DecimalType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.StringType);
+                } else {
                     return new StructField(name, DataTypes.ByteArrayType);
                 }
 
-                switch (originalType) {
-                    case UTF8:
-                    case JSON:
-                        return new StructField(name, DataTypes.StringType);
-                    case DECIMAL:
-                        return new StructField(name, DataTypes.DecimalType);
-                    default:
-                        return new StructField(name, DataTypes.ByteArrayType);
+            case BINARY:
+                if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.DecimalType);
+                } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
+                    return new StructField(name, DataTypes.StringType);
+                } else {
+                    return new StructField(name, DataTypes.ByteArrayType);
                 }
         }
 
-        throw new UnsupportedOperationException("Unsupported OriginalType " + originalType + " for primitive type " + primitiveType);
+        throw new UnsupportedOperationException("Unsupported LogicalType " + logicalType + " for primitive type " + primitiveType);
     }
 }

@@ -63,10 +63,17 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 20, 5, 8, 1);
+        String[] fields = model.schema().names();
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        double[] shap = model.shap(WeatherNominal.data);
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
         }
 
         java.nio.file.Path temp = Write.object(model);
@@ -112,7 +119,6 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
                 (f, x) -> AdaBoost.fit(f, x, 100, 20, 4, 1));
 
@@ -169,6 +175,8 @@ public class AdaBoostTest {
 
     @Test
     public void testShap() {
+        System.out.println("SHAP");
+
         MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);

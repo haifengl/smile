@@ -18,31 +18,31 @@
 package smile.math
 
 /** Distance functions.
-	*
-	* @author Beck Gaël
-	*/
+ *
+ * @author Beck Gaël
+ */
 package object distance {
 
-	/**
-	  * Build the contingency matrix (a, b, c, d) where for each bite i, j of vector 1 and 2 :
-	  *   - a is incremented if i = 1, j = 1
-	  *   - b is incremented if i = 1, j = 0
-	  *   - c is incremented if i = 0, j = 1
-	  *   - d is incremented if i = 0, j = 0
-	  */
-	def contingency(x: Array[Int], y: Array[Int]): (Int, Int, Int, Int) = {
-		require(x.length == y.length, "Arrays have different length")
+  /**
+   * Build the contingency matrix (a, b, c, d) where for each bite i, j of vector 1 and 2 :
+   *   - a is incremented if i = 1, j = 1
+   *   - b is incremented if i = 1, j = 0
+   *   - c is incremented if i = 0, j = 1
+   *   - d is incremented if i = 0, j = 0
+   */
+  def contingency(x: Array[Int], y: Array[Int]): (Int, Int, Int, Int) = {
+    require(x.length == y.length, "Arrays have different length")
 
-	  var (a,b,c,d) = (0, 0, 0, 0)
+    var (a,b,c,d) = (0, 0, 0, 0)
 
-		x.zip(y).foreach {
-			case (1, 1) => a += 1
-			case (1, 0) => b += 1
-			case (0, 1) => c += 1
-			case (0, 0) => d += 1
-			case (x, y) => throw new IllegalArgumentException("Invalid value ($x, $y)")
-		}
+    x.zip(y).foreach {
+      case (1, 1) => a += 1
+      case (1, 0) => b += 1
+      case (0, 1) => c += 1
+      case (0, 0) => d += 1
+      case (x, y) => throw new IllegalArgumentException("Invalid value ($x, $y)")
+    }
 
-	  (a, b, c, d)
-	}
+    (a, b, c, d)
+  }
 }
