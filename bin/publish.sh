@@ -23,21 +23,22 @@ mv target/javaunidoc doc/api/java
 
 sbt ++3.3.3 json/doc
 check_error "!!"
-cp project/gtag.js doc/api/json/scripts/
-find doc/api/json -name '*.html' -exec ./gtag.sh {} \;
+find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
 sbt ++3.3.3 scala/doc
 check_error "!!"
-cp project/gtag.js doc/api/scala/scripts/
-find doc/api/scala -name '*.html' -exec ./gtag.sh {} \;
+find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 cd kotlin
 gradle dokkaHtml
 check_error "!!"
+find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 cd ../clojure
 lein codox
 check_error "!!"
+find doc/api/clojure -name '*.html' -exec tidy -m {} \;
+find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
 cd ../web
 npx @11ty/eleventy
