@@ -29,9 +29,9 @@ import smile.deep.layer.Layer;
  */
 public abstract class ActivationFunction implements Layer, Serializable {
     /** The module of activation function. */
-    private final Module module;
+    final Module module;
     /** The function name. */
-    private final String name;
+    final String name;
     /** True if the operation executes in-place. */
     final boolean inplace;
 

@@ -37,7 +37,7 @@ public class Tanh extends ActivationFunction {
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
-        if (!isTraining() && inplace) {
+        if (!module.is_training() && inplace) {
             torch.tanh_(x);
             return input;
         } else {
