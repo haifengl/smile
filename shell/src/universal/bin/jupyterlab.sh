@@ -51,7 +51,7 @@ install_almond() {
       chmod +x coursier
   fi
 
-  SCALA_VERSION=2.13.13 ALMOND_VERSION=0.14.0-RC14
+  SCALA_VERSION=2.13.12 ALMOND_VERSION=0.14.0-RC14
   ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
     --install \
     --id scala213 \
