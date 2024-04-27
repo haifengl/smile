@@ -88,6 +88,11 @@ public class ImageDataset implements Dataset {
     }
 
     @Override
+    public void close() {
+        // We don't hold any (external) resources.
+    }
+
+    @Override
     public long size() {
         return samples.size();
     }

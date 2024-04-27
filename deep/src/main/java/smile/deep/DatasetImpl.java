@@ -130,6 +130,12 @@ class DatasetImpl implements Dataset {
     }
 
     @Override
+    public void close() {
+        data.close();
+        target.close();
+    }
+
+    @Override
     public long size() {
     return size;
 }

@@ -26,7 +26,7 @@ import smile.data.formula.Formula;
  *
  * @author Haifeng Li
  */
-public interface Dataset extends Iterable<SampleBatch> {
+public interface Dataset extends Iterable<SampleBatch>, AutoCloseable {
     /**
      * Returns the size of dataset.
      * @return the size of dataset.
@@ -105,13 +105,13 @@ public interface Dataset extends Iterable<SampleBatch> {
      * @return the MNIST dataset.
      */
     static Dataset mnist(String path, boolean trainMode, int batch) {
-        int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
-        MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
-        MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
-                dataset, new RandomSampler(dataset.size().get()),
-                new DataLoaderOptions(batch));
-
         return new Dataset() {
+            int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
+            MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
+            MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
+                    dataset, new RandomSampler(dataset.size().get()),
+                    new DataLoaderOptions(batch));
+
             @Override
             public long size() {
                 return dataset.size().get();
@@ -120,6 +120,11 @@ public interface Dataset extends Iterable<SampleBatch> {
             @Override
             public DataSampler iterator() {
                 return new DataSampler(loader.begin(), loader.end());
+            }
+
+            @Override
+            public void close() {
+                dataset.close();
             }
         };
     }
