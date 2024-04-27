@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 
@@ -30,6 +31,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class KernelDensity implements Distribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -130,7 +132,7 @@ public class KernelDensity implements Distribution {
     }
 
     /**
-     * Shannon entropy. Not supported.
+     * Shannon's entropy. Not supported.
      */
     @Override
     public double entropy() {

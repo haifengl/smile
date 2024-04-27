@@ -63,7 +63,7 @@ public class LookupData {
     }
 
     /**
-     * Returns the fields in foreign data or selection to lookup..
+     * Returns the fields in foreign data or selection to lookup.
      *
      * @param fields the fields in foreign data or selection to lookup.
      *              If not specified, the entire object is queried.

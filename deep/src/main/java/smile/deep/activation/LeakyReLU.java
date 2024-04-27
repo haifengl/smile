@@ -17,41 +17,44 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Sigmoid Linear Unit activation function.
  *
  * @author Haifeng Li
  */
-public class LeakyReLU implements ActivationFunction {
+public class LeakyReLU extends ActivationFunction {
     /** Controls the angle of the negative slope. */
-    final double negativeSlop;
+    final double negativeSlope;
 
     /**
      * Constructor.
      */
     public LeakyReLU() {
-        this(0.01);
+        this(0.01, false);
     }
 
     /**
      * Constructor.
      * @param negativeSlope Controls the angle of the negative slope, which is
      *                     used for negative input values.
+     * @param inplace true if the operation executes in-place.
      */
-    public LeakyReLU(double negativeSlope) {
-        this.negativeSlop = negativeSlope;
+    public LeakyReLU(double negativeSlope, boolean inplace) {
+        super(String.format("LeakyReLU(%.4f)", negativeSlope), inplace);
+        this.negativeSlope = negativeSlope;
     }
 
     @Override
-    public String name() {
-        return String.format("LeakyReLU(%.4f)", negativeSlop);
-    }
-
-    @Override
-    public Tensor apply(Tensor x) {
-        return torch.leaky_relu(x, negativeSlop, false);
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!module.is_training() && inplace) {
+            torch.leaky_relu(x, negativeSlope, true);
+            return input;
+        } else {
+            return new Tensor(torch.leaky_relu(x, negativeSlope, false));
+        }
     }
 }

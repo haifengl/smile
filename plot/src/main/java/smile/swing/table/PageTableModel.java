@@ -19,6 +19,7 @@ package smile.swing.table;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.util.Objects;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -30,7 +31,7 @@ import smile.swing.Button;
 /**
  * A table model that performs "paging" of its data. This model
  * reports a small number of rows (like 100 or so) as a "page" of data. You
- * can switch pages to view all of the rows as needed using the pageDown()
+ * can switch pages to view all the rows as needed using the pageDown()
  * and pageUp() methods. Presumably, access to the other pages of data is
  * dictated by other GUI elements such as up/down buttons, or maybe a text
  * field that allows you to enter the page number you want to display.
@@ -43,7 +44,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     /**
      * Number of rows per page.
      */
-    private int pageSize = 100;
+    private int pageSize;
     /**
      * The current page.
      */
@@ -55,23 +56,23 @@ public abstract class PageTableModel extends AbstractTableModel {
     /**
      * Controls on toolbar.
      */
-    private JTextField pageSizeField = new JTextField(5);
-    private JTextField pageField = new JTextField(5);
-    private JLabel pageSizeLabel = new JLabel("Page Size: ");
-    private JLabel totalRowCountLabel = new JLabel();
-    private JLabel pageCountLabel = new JLabel();
-    private String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
-    private String pageCountLabelFormat = " of %d";
+    private final JTextField pageSizeField = new JTextField(5);
+    private final JTextField pageField = new JTextField(5);
+    private final JLabel pageSizeLabel = new JLabel("Page Size: ");
+    private final JLabel totalRowCountLabel = new JLabel();
+    private final JLabel pageCountLabel = new JLabel();
+    private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
+    private final String pageCountLabelFormat = " of %d";
 
     /**
      * Paging event action.
      */
-    private Action pageDownAction = new PageDownAction();
-    private Action pageUpAction = new PageUpAction();
-    private Action firstPageAction = new FirstPageAction();
-    private Action lastPageAction = new LastPageAction();
-    private Action gotoPageAction = new GoToPageAction();
-    private Action pageSizeAction = new PageSizeAction();
+    private final Action pageDownAction = new PageDownAction();
+    private final Action pageUpAction = new PageUpAction();
+    private final Action firstPageAction = new FirstPageAction();
+    private final Action lastPageAction = new LastPageAction();
+    private final Action gotoPageAction = new GoToPageAction();
+    private final Action pageSizeAction = new PageSizeAction();
 
 
     /**
@@ -100,7 +101,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
 
     /**
-     * The sub class should implement this method to return the real number
+     * The subclass should implement this method to return the real number
      * of rows in the model.
      * @return The real number of rows in the model.
      */
@@ -222,8 +223,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
 
     /**
-     * Returns a tool bar to control the plot.
-     * @return a tool bar to control the plot.
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
      */
     public JToolBar getToolbar() {
         return toolbar;
@@ -263,18 +264,15 @@ public abstract class PageTableModel extends AbstractTableModel {
         
         setActionEnabled();
         
-        TableModelListener listener = new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent tme) {
-                if (tme.getType() == TableModelEvent.INSERT || tme.getType() == TableModelEvent.DELETE) {
-                    if (getPage() >= getPageCount()) {
-                        setPage(getPageCount() - 1);
-                    }
-
-                    totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
-                    pageField.setText(Integer.toString(getPage() + 1));
-                    pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+        TableModelListener listener = event -> {
+            if (event.getType() == TableModelEvent.INSERT || event.getType() == TableModelEvent.DELETE) {
+                if (getPage() >= getPageCount()) {
+                    setPage(getPageCount() - 1);
                 }
+
+                totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
+                pageField.setText(Integer.toString(getPage() + 1));
+                pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
             }
         };
         
@@ -306,7 +304,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class PageDownAction extends AbstractAction {
 
         public PageDownAction() {
-            super("Next Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_right.png")));
+            super("Next Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_right.png"))));
         }
 
         @Override
@@ -319,7 +317,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class PageUpAction extends AbstractAction {
 
         public PageUpAction() {
-            super("Previous Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_left.png")));
+            super("Previous Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_left.png"))));
         }
 
         @Override
@@ -332,7 +330,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class FirstPageAction extends AbstractAction {
 
         public FirstPageAction() {
-            super("First Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_beginning.png")));
+            super("First Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_beginning.png"))));
         }
 
         @Override
@@ -345,7 +343,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     class LastPageAction extends AbstractAction {
 
         public LastPageAction() {
-            super("Last Page", new ImageIcon(PageTableModel.class.getResource("/smile/swing/images/navigate_end.png")));
+            super("Last Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_end.png"))));
         }
 
         @Override

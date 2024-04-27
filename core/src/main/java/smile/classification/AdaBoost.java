@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.base.cart.CART;
@@ -38,7 +39,7 @@ import smile.util.Strings;
  * decision trees is probably the most popular combination. AdaBoost is adaptive
  * in the sense that subsequent classifiers built are tweaked in favor of those
  * instances misclassified by previous classifiers. AdaBoost is sensitive to
- * noisy data and outliers. However in some problems it can be less susceptible
+ * noisy data and outliers. However, in some problems it can be less susceptible
  * to the over-fitting problem than most learning algorithms.
  * <p>
  * AdaBoost calls a weak classifier repeatedly in a series of rounds from
@@ -63,6 +64,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
 
@@ -147,7 +149,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties params) {

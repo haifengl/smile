@@ -89,7 +89,7 @@ public abstract class PartitionClustering implements Serializable {
 
     /**
      * Initialize cluster membership of input objects with K-Means++ algorithm.
-     * Many clustering methods, e.g. k-means, need a initial clustering
+     * Many clustering methods, e.g. k-means, need an initial clustering
      * configuration as a seed.
      * <p>
      * K-Means++ is based on the intuition of spreading the k initial cluster

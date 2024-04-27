@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * Chi-square (or chi-squared) distribution with k degrees of freedom is the
  * distribution of a sum of the squares of k independent standard normal
@@ -38,7 +40,8 @@ import smile.math.special.Gamma;
  *
  * @author Haifeng Li
  */
-public class ChiSquareDistribution extends AbstractDistribution implements ExponentialFamily {
+public class ChiSquareDistribution implements ExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

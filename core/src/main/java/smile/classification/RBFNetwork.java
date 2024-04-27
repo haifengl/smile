@@ -23,6 +23,7 @@ import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.IntSet;
 
+import java.io.Serial;
 import java.util.Properties;
 
 /**
@@ -47,10 +48,10 @@ import java.util.Properties;
  * with weight parameters undergo a supervised learning processing
  * (e.g. error-correction learning).
  * <p>
- * The popular choices for &phi; comprise the Gaussian function and the so
- * called thin plate splines. The advantage of the thin plate splines is that
+ * The popular choices for &phi; comprise the Gaussian function and the
+ * so-called thin plate splines. The advantage of the thin plate splines is that
  * their conditioning is invariant under scalings. Gaussian, multi-quadric
- * and inverse multi-quadric are infinitely smooth and and involve a scale
+ * and inverse multi-quadric are infinitely smooth and involve a scale
  * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
@@ -86,10 +87,13 @@ import java.util.Properties;
  * @see RadialBasisFunction
  * @see SVM
  * @see MLP
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class RBFNetwork<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -137,7 +141,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
     }
 
     /**
-     * Fits a RBF network.
+     * Fits an RBF network.
      *
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
@@ -150,7 +154,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
     }
 
     /**
-     * Fits a RBF network.
+     * Fits an RBF network.
      * 
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
@@ -195,10 +199,10 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
     }
 
     /**
-     * Fits a RBF network.
+     * Fits an RBF network.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {

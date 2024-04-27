@@ -105,7 +105,7 @@ public class CSV {
     /**
      * Reads a limited number of records from a CSV file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
@@ -132,7 +132,7 @@ public class CSV {
     /**
      * Reads a limited number of records from a CSV file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */

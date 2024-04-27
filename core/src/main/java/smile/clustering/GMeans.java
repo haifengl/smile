@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import smile.math.MathEx;
@@ -42,6 +43,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class GMeans extends CentroidClustering<double[], double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
 

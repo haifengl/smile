@@ -32,7 +32,7 @@ public class Isoline extends Shape {
     /**
      * The coordinates of points along the contour line.
      */
-    private List<double[]> points = new ArrayList<>();
+    private final List<double[]> points = new ArrayList<>();
     /**
      * The label of contour line.
      */
@@ -40,7 +40,7 @@ public class Isoline extends Shape {
     /**
      * Show the value of isoline.
      */
-    private boolean isLevelVisible;
+    private final boolean isLevelVisible;
 
     /**
      * Constructor.
@@ -73,7 +73,7 @@ public class Isoline extends Shape {
         double angle = 0.0;
         double horizontalReference = 0.0;
         double verticalReference = 0.0;
-        double[] coord = null;
+        double[] coord = points.get(0);
 
         if (points.size() > 1) {
             double[] x1 = points.get(0);
@@ -106,7 +106,7 @@ public class Isoline extends Shape {
                     }
                 }
             }
-        } else if (points.size() == 1) {
+        } else {
             double[] x1 = points.get(0);
             g.drawPoint('@', x1);
             coord = x1;

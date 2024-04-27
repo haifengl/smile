@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +42,7 @@ import smile.util.Strings;
  * often used for labeling or parsing of sequential data.
  * <p>
  * A CRF is a Markov random field that was trained discriminatively.
- * Therefore it is not necessary to model the distribution over always
+ * Therefore, it is not necessary to model the distribution over always
  * observed variables, which makes it possible to include arbitrarily
  * complicated features of the observed variables into the model.
  * <p>
@@ -63,6 +64,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class CRF implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
@@ -240,7 +242,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Properties params) {
@@ -362,7 +364,7 @@ public class CRF implements Serializable {
 
     static class PotentialLoss implements Loss {
         /** The response variable. */
-        double[] response;
+        final double[] response;
 
         PotentialLoss(double[] response) {
             this.response = response;

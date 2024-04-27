@@ -43,7 +43,7 @@ public interface IsotropicKernel extends Function {
     double k(double dist);
 
     /**
-     * Computes the isotropic kernel function and its gradient over hyperparameters..
+     * Computes the isotropic kernel function and its gradient over hyperparameters.
      * @param dist The distance.
      * @return the kernel value and gradient.
      */

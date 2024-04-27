@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.classification.Classifier;
@@ -29,6 +30,7 @@ import smile.validation.metric.Error;
 
 /** The classification validation metrics. */
 public class ClassificationMetrics implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The time in milliseconds of fitting the model. */

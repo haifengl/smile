@@ -16,23 +16,25 @@
  */
 package smile.deep.tensor;
 
+import java.util.Arrays;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
+import smile.util.Tuple2;
 
 /**
- * A Tensor is a multi-dimensional array containing elements of a single data type.
+ * A Tensor is a multidimensional array containing elements of a single data type.
  *
  * @author Haifeng Li
  */
-public class Tensor {
+public class Tensor implements AutoCloseable {
     /** PyTorch Tensor handle. */
-    org.bytedeco.pytorch.Tensor value;
+    final org.bytedeco.pytorch.Tensor value;
 
     /**
      * Constructor.
      * @param tensor PyTorch Tensor object.
      */
-    Tensor(org.bytedeco.pytorch.Tensor tensor) {
+    public Tensor(org.bytedeco.pytorch.Tensor tensor) {
         this.value = tensor;
     }
 
@@ -42,13 +44,23 @@ public class Tensor {
     }
 
     @Override
-    public String toString() {
-        return value.toString();
+    public boolean equals(java.lang.Object other) {
+        if (other instanceof Tensor t) {
+            return value == t.value;
+        }
+        return false;
     }
 
     @Override
-    public Tensor clone() {
-        return Tensor.of(value.to());
+    public void close() {
+        if (!value.isNull()) {
+            value.close();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s%s", value, Arrays.toString(value.shape()));
     }
 
     /**
@@ -60,13 +72,50 @@ public class Tensor {
     }
 
     /**
+     * Sets if autograd should record operations on this tensor.
+     * @param required the flag indicating if autograd should record
+     *                operations on this tensor.
+     * @return this tensor.
+     */
+    public Tensor requireGrad(boolean required) {
+        value.set_requires_grad(required);
+        return this;
+    }
+
+    /**
+     * Returns true if autograd should record operations on this tensor.
+     * @return true if autograd should record operations on this tensor.
+     */
+    public boolean requireGrad() {
+        return value.requires_grad();
+    }
+
+    /**
+     * Disables gradient calculation. Disabling gradient calculation is useful
+     * for inference, when you are sure that you will not call backward.
+     * It will reduce memory consumption for computations that would otherwise
+     * have requireGrad(true).
+     * <p>
+     * In this mode, the result of every computation will have requireGrad(false),
+     * even when the inputs have requireGrad(true).
+     * <p>
+     * This context manager is thread-local; it will not affect computation in
+     * other threads.
+     *
+     * @return no grad guard to be used with try-with scope.
+     */
+    public static NoGradGuard noGradGuard() {
+        return new NoGradGuard();
+    }
+
+    /**
      * Returns a new tensor, detached from the current graph.
      * The result will never require gradient.
      *
      * @return a new tensor that doesn't require gradient.
      */
     public Tensor detach() {
-        return Tensor.of(value.detach());
+        return new Tensor(value.detach());
     }
 
     /**
@@ -84,7 +133,7 @@ public class Tensor {
      * @return The cloned tensor.
      */
     public Tensor to(Device device) {
-        return Tensor.of(value.to(device.value, value.dtype()));
+        return new Tensor(value.to(device.value, value.dtype()));
     }
 
     /**
@@ -94,17 +143,7 @@ public class Tensor {
      * @return The cloned tensor.
      */
     public Tensor to(Device device, ScalarType dtype) {
-        return Tensor.of(value.to(device.value, dtype.value));
-    }
-
-    /**
-     * Explicitly releases native memory without waiting after
-     * the garbage collector. The caller should not use this tensor
-     * any more.
-     */
-    public void deallocate() {
-        value.deallocate();
-        value = null;
+        return new Tensor(value.to(device.value, dtype.value));
     }
 
     /**
@@ -122,11 +161,19 @@ public class Tensor {
     }
 
     /**
+     * Returns the device on which the tensor is.
+     * @return the device.
+     */
+    public Device device() {
+        return new Device(value.device());
+    }
+
+    /**
      * Returns the number of dimensions of tensor.
      * @return the number of dimensions of tensor
      */
-    public long dim() {
-        return value.dim();
+    public int dim() {
+        return (int) value.dim();
     }
 
     /**
@@ -142,7 +189,7 @@ public class Tensor {
      * @param dim dimension index.
      * @return the size of given dimension.
      */
-    public long size(long dim) {
+    public long size(int dim) {
         return value.size(dim);
     }
 
@@ -155,7 +202,43 @@ public class Tensor {
      * @return the tensor with the specified shape.
      */
     public Tensor reshape(long... shape) {
-        return Tensor.of(value.reshape(shape));
+        return new Tensor(value.reshape(shape));
+    }
+
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * This function may return the original object, a view, or copy.
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten() {
+        return flatten(0);
+    }
+
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * Only dimensions starting with startDim and ending with endDim are
+     * flattened. The order of elements in input is unchanged.
+     * This function may return the original object, a view, or copy.
+     *
+     * @param startDim the first dim to flatten.
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten(int startDim) {
+        return new Tensor(value.flatten(startDim, -1));
+    }
+
+    /**
+     * Flattens the tensor by reshaping it into a one-dimensional tensor.
+     * Only dimensions starting with startDim and ending with endDim are
+     * flattened. The order of elements in input is unchanged.
+     * This function may return the original object, a view, or copy.
+     *
+     * @param startDim the first dim to flatten.
+     * @param endDim the last dim to flatten
+     * @return the tensor with the specified shape.
+     */
+    public Tensor flatten(int startDim, int endDim) {
+        return new Tensor(value.flatten(startDim, endDim));
     }
 
     /** Computes the gradients. */
@@ -184,14 +267,59 @@ public class Tensor {
     }
 
     /**
+     * Draws binary random numbers (0 or 1) from a Bernoulli distribution.
+     * @param p Bernoulli probability.
+     * @return this tensor.
+     */
+    public Tensor bernoulli_(double p) {
+        value.bernoulli_(p, null);
+        return this;
+    }
+
+    /**
+     * Returns a view of the original tensor input with its dimensions permuted.
+     * @param dims The desired ordering of dimensions.
+     * @return the permuted tensor.
+     */
+    public Tensor permute(long... dims) {
+        return new Tensor(value.permute(dims));
+    }
+
+    /**
+     * Returns a tensor index vector.
+     * @param indices the indices along the dimensions.
+     * @return the index vector.
+     */
+    private TensorIndexVector indexVector(int... indices) {
+        TensorIndexVector vector = new TensorIndexVector();
+        for (var index : indices) {
+            vector.push_back(new TensorIndex(index));
+        }
+        return vector;
+    }
+
+    /**
+     * Returns a tensor index vector.
+     * @param indices the indices along the dimensions.
+     * @return the index vector.
+     */
+    private TensorIndexVector indexVector(long... indices) {
+        TensorIndexVector vector = new TensorIndexVector();
+        for (var index : indices) {
+            vector.push_back(new TensorIndex(index));
+        }
+        return vector;
+    }
+
+    /**
      * Returns a tensor index vector.
      * @param indices the indices along the dimensions.
      * @return the index vector.
      */
     private TensorIndexVector indexVector(Index... indices) {
         TensorIndexVector vector = new TensorIndexVector();
-        for (Index index : indices) {
-            vector.put(new TensorIndex(index.value));
+        for (var index : indices) {
+            vector.push_back(index.value);
         }
         return vector;
     }
@@ -211,44 +339,206 @@ public class Tensor {
 
     /**
      * Updates a portion of tensor.
-     * @param x the new sub-tensor values.
+     * @param source the new sub-tensor values.
      * @param indices the indices along the dimensions.
      * @return the output tensor.
      */
-    public Tensor put(Tensor x, Index... indices) {
-        return Tensor.of(value.index_put(indexList(indices), x.value));
+    public Tensor put(Tensor source, Index... indices) {
+        return new Tensor(value.index_put(indexList(indices), source.value));
     }
 
     /**
      * Updates a portion of tensor.
+     * @param source the new sub-tensor value.
      * @param index the sub-tensor index.
-     * @param source the sub-tensor value.
      * @return the output tensor.
      */
-    public Tensor put(Tensor index, Tensor source) {
-        return Tensor.of(value.put(index.value, source.value));
+    public Tensor put(Tensor source, Tensor index) {
+        return new Tensor(value.put(index.value, source.value));
     }
 
     /**
      * Updates a portion of tensor in place.
-     * @param x the new sub-tensor values.
+     * @param source the new sub-tensor values.
      * @param indices the indices along the dimensions.
      * @return this tensor.
      */
-    public Tensor put_(Tensor x, Index... indices) {
-        value.index_put_(indexVector(indices), x.value);
+    public Tensor put_(Tensor source, Index... indices) {
+        value.index_put_(indexVector(indices), source.value);
         return this;
     }
 
     /**
      * Updates a portion of tensor in place.
+     * @param source the new sub-tensor value.
      * @param index the sub-tensor index.
-     * @param source the sub-tensor value.
      * @return this tensor.
      */
-    public Tensor put_(Tensor index, Tensor source) {
+    public Tensor put_(Tensor source, Tensor index) {
         value.put_(index.value, source.value);
         return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(byte x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(byte x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(short x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(short x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(int x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(int x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(long x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(long x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(float x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(float x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(double x, int... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates an element in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(double x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Returns a portion of tensor given the indices.
+     * @param indices the indices along the dimensions.
+     * @return the sub-tensor.
+     */
+    public Tensor get(int... indices) {
+        return new Tensor(value.index(indexVector(indices)));
+    }
+
+    /**
+     * Returns a portion of tensor given the indices.
+     * @param indices the indices along the dimensions.
+     * @return the sub-tensor.
+     */
+    public Tensor get(long... indices) {
+        return new Tensor(value.index(indexVector(indices)));
     }
 
     /**
@@ -257,80 +547,160 @@ public class Tensor {
      * @return the sub-tensor.
      */
     public Tensor get(Index... indices) {
-        return Tensor.of(value.index(indexVector(indices)));
+        return new Tensor(value.index(indexVector(indices)));
     }
 
     /**
      * Returns a portion of tensor given the indices.
-     * @param index the indices of elements to copy.
+     * @param index the tensor index.
      * @return the sub-tensor.
      */
     public Tensor get(Tensor index) {
-        TensorIndexVector vector = new TensorIndexVector(new TensorIndex(index.value));
-        return Tensor.of(value.index(vector));
+        TensorIndexVector indexVector = new TensorIndexVector(new TensorIndex(index.value));
+        return new Tensor(value.index(indexVector));
+    }
+
+    /**
+     * Returns the byte value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public byte getByte(int... indices) {
+        return value.index(indexVector(indices)).item_byte();
+    }
+
+    /**
+     * Returns the byte value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public byte getByte(long... indices) {
+        return value.index(indexVector(indices)).item_byte();
+    }
+
+    /**
+     * Returns the short value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public short getShort(int... indices) {
+        return value.index(indexVector(indices)).item_short();
+    }
+
+    /**
+     * Returns the short value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public short getShort(long... indices) {
+        return value.index(indexVector(indices)).item_short();
     }
 
     /**
      * Returns the int value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public int getInt(long... index) {
-        org.bytedeco.pytorch.Tensor x = value;
-        for (long i : index) {
-            x = x.get(i);
-        }
-        return x.item_int();
+    public int getInt(int... indices) {
+        return value.index(indexVector(indices)).item_int();
     }
 
     /**
      * Returns the int value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public long getLong(long... index) {
-        org.bytedeco.pytorch.Tensor x = value;
-        for (long i : index) {
-            x = x.get(i);
-        }
-        return x.item_long();
+    public int getInt(long... indices) {
+        return value.index(indexVector(indices)).item_int();
     }
 
     /**
-     * Returns the int value of element at given index.
+     * Returns the long value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public float getFloat(long... index) {
-        org.bytedeco.pytorch.Tensor x = value;
-        for (long i : index) {
-            x = x.get(i);
-        }
-        return x.item_float();
+    public long getLong(int... indices) {
+        return value.index(indexVector(indices)).item_long();
     }
 
     /**
-     * Returns the int value of element at given index.
+     * Returns the long value of element at given index.
      *
-     * @param index the element index.
+     * @param indices the indices along the dimensions.
      * @return the element value.
      */
-    public double getDouble(long... index) {
-        org.bytedeco.pytorch.Tensor x = value;
-        for (long i : index) {
-            x = x.get(i);
-        }
-        return x.item_double();
+    public long getLong(long... indices) {
+        return value.index(indexVector(indices)).item_long();
+    }
+
+    /**
+     * Returns the float value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public float getFloat(int... indices) {
+        return value.index(indexVector(indices)).item_float();
+    }
+
+    /**
+     * Returns the float value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public float getFloat(long... indices) {
+        return value.index(indexVector(indices)).item_float();
+    }
+
+    /**
+     * Returns the double value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public double getDouble(int... indices) {
+        return value.index(indexVector(indices)).item_double();
+    }
+
+    /**
+     * Returns the double value of element at given index.
+     *
+     * @param indices the indices along the dimensions.
+     * @return the element value.
+     */
+    public double getDouble(long... indices) {
+        return value.index(indexVector(indices)).item_double();
+    }
+
+    /**
+     * Returns the byte value when the tensor holds a single value.
+     * @return the byte value when the tensor holds a single value.
+     */
+    public int byteValue() {
+        return value.item_byte();
+    }
+
+    /**
+     * Returns the short value when the tensor holds a single value.
+     * @return the short value when the tensor holds a single value.
+     */
+    public int shortValue() {
+        return value.item_short();
     }
 
     /**
      * Returns the int value when the tensor holds a single value.
      * @return the int value when the tensor holds a single value.
      */
-    public int toInt() {
+    public int intValue() {
         return value.item_int();
     }
 
@@ -338,7 +708,7 @@ public class Tensor {
      * Returns the long value when the tensor holds a single value.
      * @return the long value when the tensor holds a single value.
      */
-    public long toLong() {
+    public long longValue() {
         return value.item_long();
     }
 
@@ -346,7 +716,7 @@ public class Tensor {
      * Returns the float value when the tensor holds a single value.
      * @return the float value when the tensor holds a single value.
      */
-    public float toFloat() {
+    public float floatValue() {
         return value.item_float();
     }
 
@@ -354,16 +724,16 @@ public class Tensor {
      * Returns the double value when the tensor holds a single value.
      * @return the double value when the tensor holds a single value.
      */
-    public double toDouble() {
+    public double doubleValue() {
         return value.item_double();
     }
 
     /**
      * Returns a new tensor with a dimension of size one inserted at the
      * specified position.
-     *
+     * <p>
      * The returned tensor shares the same underlying data with this tensor.
-     *
+     * <p>
      * A dim value within the range [-input.dim() - 1, input.dim() + 1) can be
      * used. Negative dim will correspond to unsqueeze() applied at
      * dim = dim + input.dim() + 1.
@@ -372,20 +742,20 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor unsqueeze(long dim) {
-        return Tensor.of(value.unsqueeze(dim));
+        return new Tensor(value.unsqueeze(dim));
     }
 
     /**
      * Returns a tensor that is a transposed version of input. The given
      * dimensions dim0 and dim1 are swapped.
-     *
+     * <p>
      * If input is a strided tensor then the resulting out tensor shares
      * its underlying storage with the input tensor, so changing the content
      * of one would change the content of the other.
-     *
+     * <p>
      * If input is a sparse tensor then the resulting out tensor does not
      * share the underlying storage with the input tensor.
-     *
+     * <p>
      * If input is a sparse tensor with compressed layout (SparseCSR,
      * SparseBSR, SparseCSC or SparseBSC) the arguments dim0 and dim1 must
      * be both batch dimensions, or must both be sparse dimensions. The
@@ -397,7 +767,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor transpose(long dim0, long dim1) {
-        return Tensor.of(value.transpose(dim0, dim1));
+        return new Tensor(value.transpose(dim0, dim1));
     }
 
     /**
@@ -408,7 +778,32 @@ public class Tensor {
      * @return the indices of the maximum value of a tensor across a dimension.
      */
     public Tensor argmax(int dim, boolean keepDim) {
-        return Tensor.of(value.argmax(new LongOptional(dim), keepDim));
+        return new Tensor(value.argmax(new LongOptional(dim), keepDim));
+    }
+
+    /**
+     * Returns the k largest elements.
+     *
+     * @param k the number of largest elements.
+     * @return the values and indices of the largest k elements.
+     */
+    public Tuple2<Tensor, Tensor> topk(int k) {
+        var topk = value.topk(k);
+        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
+    }
+
+    /**
+     * Returns the k largest elements along a given dimension.
+     *
+     * @param k the number of largest elements.
+     * @param dim the dimension to sort along.
+     * @param largest controls whether to return largest or smallest elements.
+     * @param sorted  controls whether to return the elements in sorted order.
+     * @return the values and indices of the largest k elements.
+     */
+    public Tuple2<Tensor, Tensor> topk(int k, int dim, boolean largest, boolean sorted) {
+        var topk = value.topk(k, dim, largest, sorted);
+        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
     }
 
     /**
@@ -422,7 +817,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor where(Tensor condition, int input, int other) {
-        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
     }
 
     /**
@@ -436,7 +831,16 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor where(Tensor condition, double input, double other) {
-        return Tensor.of(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+    }
+
+    /**
+     * Returns the matrix product of two tensors.
+     * @param other another tensor.
+     * @return the matrix product of two tensors.
+     */
+    public Tensor matmul(Tensor other) {
+        return new Tensor(value.matmul(other.value));
     }
 
     /**
@@ -445,7 +849,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor eq(int other) {
-        return Tensor.of(value.eq(new Scalar(other)));
+        return new Tensor(value.eq(new Scalar(other)));
     }
 
     /**
@@ -454,7 +858,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor eq(double other) {
-        return Tensor.of(value.eq(new Scalar(other)));
+        return new Tensor(value.eq(new Scalar(other)));
     }
 
     /**
@@ -463,7 +867,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor eq(Tensor other) {
-        return Tensor.of(value.eq(other.value));
+        return new Tensor(value.eq(other.value));
     }
 
     /**
@@ -472,7 +876,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ne(int other) {
-        return Tensor.of(value.ne(new Scalar(other)));
+        return new Tensor(value.ne(new Scalar(other)));
     }
 
     /**
@@ -481,7 +885,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ne(double other) {
-        return Tensor.of(value.ne(new Scalar(other)));
+        return new Tensor(value.ne(new Scalar(other)));
     }
 
     /**
@@ -490,7 +894,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ne(Tensor other) {
-        return Tensor.of(value.ne(other.value));
+        return new Tensor(value.ne(other.value));
     }
 
     /**
@@ -499,7 +903,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor lt(double other) {
-        return Tensor.of(value.lt(new Scalar(other)));
+        return new Tensor(value.lt(new Scalar(other)));
     }
 
     /**
@@ -508,7 +912,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor lt(int other) {
-        return Tensor.of(value.lt(new Scalar(other)));
+        return new Tensor(value.lt(new Scalar(other)));
     }
 
     /**
@@ -517,7 +921,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor lt(Tensor other) {
-        return Tensor.of(value.lt(other.value));
+        return new Tensor(value.lt(other.value));
     }
 
     /**
@@ -526,7 +930,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor le(int other) {
-        return Tensor.of(value.le(new Scalar(other)));
+        return new Tensor(value.le(new Scalar(other)));
     }
 
     /**
@@ -535,7 +939,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor le(double other) {
-        return Tensor.of(value.le(new Scalar(other)));
+        return new Tensor(value.le(new Scalar(other)));
     }
 
     /**
@@ -544,7 +948,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor le(Tensor other) {
-        return Tensor.of(value.le(other.value));
+        return new Tensor(value.le(other.value));
     }
 
     /**
@@ -553,7 +957,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor gt(int other) {
-        return Tensor.of(value.gt(new Scalar(other)));
+        return new Tensor(value.gt(new Scalar(other)));
     }
 
     /**
@@ -562,7 +966,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor gt(double other) {
-        return Tensor.of(value.gt(new Scalar(other)));
+        return new Tensor(value.gt(new Scalar(other)));
     }
 
     /**
@@ -571,7 +975,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor gt(Tensor other) {
-        return Tensor.of(value.gt(other.value));
+        return new Tensor(value.gt(other.value));
     }
 
     /**
@@ -580,7 +984,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ge(int other) {
-        return Tensor.of(value.ge(new Scalar(other)));
+        return new Tensor(value.ge(new Scalar(other)));
     }
 
     /**
@@ -589,7 +993,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ge(double other) {
-        return Tensor.of(value.ge(new Scalar(other)));
+        return new Tensor(value.ge(new Scalar(other)));
     }
 
     /**
@@ -598,7 +1002,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor ge(Tensor other) {
-        return Tensor.of(value.ge(other.value));
+        return new Tensor(value.ge(other.value));
     }
 
     /**
@@ -606,7 +1010,7 @@ public class Tensor {
      * @return the sum of all elements.
      */
     public Tensor sum() {
-        return Tensor.of(value.sum());
+        return new Tensor(value.sum());
     }
 
     /**
@@ -614,7 +1018,7 @@ public class Tensor {
      * @return the mean of all elements.
      */
     public Tensor mean() {
-        return Tensor.of(value.mean());
+        return new Tensor(value.mean());
     }
 
     /**
@@ -622,7 +1026,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor exp() {
-        return Tensor.of(value.exp());
+        return new Tensor(value.exp());
     }
 
     /**
@@ -630,7 +1034,7 @@ public class Tensor {
      * @return this tensor.
      */
     public Tensor exp_() {
-        return Tensor.of(value.exp_());
+        return new Tensor(value.exp_());
     }
 
     /**
@@ -638,7 +1042,7 @@ public class Tensor {
      * specified in the index tensor. For each value in src, its output index
      * is specified by its index in src for dimension != dim and by the
      * corresponding value in index for dimension = dim.
-     *
+     * <p>
      * This is the reverse operation of the manner described in gather().
      *
      * @param dim the axis along which to index.
@@ -651,7 +1055,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor scatterReduce(int dim, Tensor index, Tensor source, String reduce) {
-        return Tensor.of(value.scatter_reduce(dim, index.value, source.value, reduce));
+        return new Tensor(value.scatter_reduce(dim, index.value, source.value, reduce));
     }
 
     /**
@@ -659,7 +1063,7 @@ public class Tensor {
      * specified in the index tensor. For each value in src, its output index
      * is specified by its index in src for dimension != dim and by the
      * corresponding value in index for dimension = dim.
-     *
+     * <p>
      * This is the reverse operation of the manner described in gather().
      *
      * @param dim the axis along which to index.
@@ -684,7 +1088,26 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor gather(int dim, Tensor index) {
-        return Tensor.of(value.gather(dim, index.value));
+        return new Tensor(value.gather(dim, index.value));
+    }
+
+    /**
+     * Returns A + b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor add(float other) {
+        return new Tensor(value.add(new Scalar(other)));
+    }
+
+    /**
+     * Returns A += b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor add_(float other) {
+        value.add_(new Scalar(other));
+        return this;
     }
 
     /**
@@ -693,7 +1116,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor add(double other) {
-        return Tensor.of(value.add(new Scalar(other)));
+        return new Tensor(value.add(new Scalar(other)));
     }
 
     /**
@@ -712,7 +1135,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor add(Tensor other) {
-        return Tensor.of(value.add(other.value));
+        return new Tensor(value.add(other.value));
     }
 
     /**
@@ -732,7 +1155,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor add(Tensor other, double alpha) {
-        return Tensor.of(value.add(other.value, new Scalar(alpha)));
+        return new Tensor(value.add(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -752,7 +1175,26 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor sub(float other) {
-        return Tensor.of(value.sub(new Scalar(other)));
+        return new Tensor(value.sub(new Scalar(other)));
+    }
+
+    /**
+     * Returns A - b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
+    public Tensor sub_(float other) {
+        return new Tensor(value.sub(new Scalar(other)));
+    }
+
+    /**
+     * Returns A -= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor sub(double other) {
+        value.sub_(new Scalar(other));
+        return this;
     }
 
     /**
@@ -771,7 +1213,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other) {
-        return Tensor.of(value.sub(other.value));
+        return new Tensor(value.sub(other.value));
     }
 
     /**
@@ -791,7 +1233,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other, double alpha) {
-        return Tensor.of(value.sub(other.value, new Scalar(alpha)));
+        return new Tensor(value.sub(other.value, new Scalar(alpha)));
     }
 
     /**
@@ -810,8 +1252,27 @@ public class Tensor {
      * @param other a scalar value.
      * @return the output tensor.
      */
+    public Tensor mul(float other) {
+        return new Tensor(value.mul(new Scalar(other)));
+    }
+
+    /**
+     * Returns A *= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor mul_(float other) {
+        value.mul_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A * b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
     public Tensor mul(double other) {
-        return Tensor.of(value.mul(new Scalar(other)));
+        return new Tensor(value.mul(new Scalar(other)));
     }
 
     /**
@@ -830,7 +1291,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor mul(Tensor other) {
-        return Tensor.of(value.mul(other.value));
+        return new Tensor(value.mul(other.value));
     }
 
     /**
@@ -848,8 +1309,27 @@ public class Tensor {
      * @param other a scalar value.
      * @return the output tensor.
      */
+    public Tensor div(float other) {
+        return new Tensor(value.div(new Scalar(other)));
+    }
+
+    /**
+     * Returns A /= b.
+     * @param other a scalar value.
+     * @return this tensor.
+     */
+    public Tensor div_(float other) {
+        value.div_(new Scalar(other));
+        return this;
+    }
+
+    /**
+     * Returns A / b.
+     * @param other a scalar value.
+     * @return the output tensor.
+     */
     public Tensor div(double other) {
-        return Tensor.of(value.div(new Scalar(other)));
+        return new Tensor(value.div(new Scalar(other)));
     }
 
     /**
@@ -868,7 +1348,7 @@ public class Tensor {
      * @return the output tensor.
      */
     public Tensor div(Tensor other) {
-        return Tensor.of(value.div(other.value));
+        return new Tensor(value.div(other.value));
     }
 
     /**
@@ -886,7 +1366,7 @@ public class Tensor {
      * @return a new tensor with the cosine of the elements of input.
      */
     public Tensor cos() {
-        return Tensor.of(value.cos());
+        return new Tensor(value.cos());
     }
 
     /**
@@ -903,7 +1383,7 @@ public class Tensor {
      * @return a new tensor with the sine of the elements of input.
      */
     public Tensor sin() {
-        return Tensor.of(value.cos());
+        return new Tensor(value.cos());
     }
 
     /**
@@ -920,7 +1400,7 @@ public class Tensor {
      * @return a new tensor with the arccosine of the elements of input.
      */
     public Tensor acos() {
-        return Tensor.of(value.acos());
+        return new Tensor(value.acos());
     }
 
     /**
@@ -937,7 +1417,7 @@ public class Tensor {
      * @return a new tensor with the arcsine of the elements of input.
      */
     public Tensor asin() {
-        return Tensor.of(value.acos());
+        return new Tensor(value.acos());
     }
 
     /**
@@ -955,7 +1435,7 @@ public class Tensor {
      * @return a new tensor of logical and results.
      */
     public Tensor and(Tensor other) {
-        return Tensor.of(value.logical_and(other.value));
+        return new Tensor(value.logical_and(other.value));
     }
 
     /**
@@ -974,7 +1454,7 @@ public class Tensor {
      * @return a new tensor of logical and results.
      */
     public Tensor or(Tensor other) {
-        return Tensor.of(value.logical_or(other.value));
+        return new Tensor(value.logical_or(other.value));
     }
 
     /**
@@ -995,7 +1475,7 @@ public class Tensor {
      * @return a new tensor after random dropouts.
      */
     public Tensor dropout(double p) {
-        return Tensor.of(torch.dropout(value, p, false));
+        return new Tensor(torch.dropout(value, p, false));
     }
 
     /**
@@ -1017,7 +1497,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public Tensor newZeros(long... shape) {
-        return Tensor.of(value.new_zeros(shape));
+        return new Tensor(value.new_zeros(shape));
     }
 
     /**
@@ -1027,7 +1507,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public Tensor newOnes(long... shape) {
-        return Tensor.of(value.new_ones(shape));
+        return new Tensor(value.new_ones(shape));
     }
 
     /**
@@ -1036,7 +1516,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor eye(long shape) {
-        return Tensor.of(torch.eye(shape));
+        return new Tensor(torch.eye(shape));
     }
 
     /**
@@ -1046,7 +1526,26 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor eye(Options options, long shape) {
-        return Tensor.of(torch.eye(shape, options.value));
+        return new Tensor(torch.eye(shape, options.value));
+    }
+
+    /**
+     * Returns a tensor with uninitialized data.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor empty(long... shape) {
+        return new Tensor(torch.empty(shape));
+    }
+
+    /**
+     * Returns a tensor with uninitialized data.
+     * @param options Tensor creation options.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor empty(Options options, long... shape) {
+        return new Tensor(torch.empty(shape, options.value, null));
     }
 
     /**
@@ -1055,7 +1554,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor zeros(long... shape) {
-        return Tensor.of(torch.zeros(shape));
+        return new Tensor(torch.zeros(shape));
     }
 
     /**
@@ -1065,7 +1564,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor zeros(Options options, long... shape) {
-        return Tensor.of(torch.zeros(shape, options.value));
+        return new Tensor(torch.zeros(shape, options.value));
     }
 
     /**
@@ -1074,7 +1573,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor ones(long... shape) {
-        return Tensor.of(torch.ones(shape));
+        return new Tensor(torch.ones(shape));
     }
 
     /**
@@ -1084,7 +1583,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor ones(Options options, long... shape) {
-        return Tensor.of(torch.ones(shape, options.value));
+        return new Tensor(torch.ones(shape, options.value));
     }
 
     /**
@@ -1093,7 +1592,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor rand(long... shape) {
-        return Tensor.of(torch.rand(shape));
+        return new Tensor(torch.rand(shape));
     }
 
     /**
@@ -1103,7 +1602,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor rand(Options options, long... shape) {
-        return Tensor.of(torch.rand(shape, options.value));
+        return new Tensor(torch.rand(shape, options.value));
     }
 
     /**
@@ -1112,7 +1611,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor randn(long... shape) {
-        return Tensor.of(torch.randn(shape));
+        return new Tensor(torch.randn(shape));
     }
 
     /**
@@ -1122,7 +1621,7 @@ public class Tensor {
      * @return the created tensor.
      */
     public static Tensor randn(Options options, long... shape) {
-        return Tensor.of(torch.randn(shape, options.value));
+        return new Tensor(torch.randn(shape, options.value));
     }
 
     /**
@@ -1135,7 +1634,7 @@ public class Tensor {
      * @return a 1-D tensor.
      */
     public static Tensor arange(int start, int end, int step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1148,14 +1647,14 @@ public class Tensor {
      * @return a 1-D tensor.
      */
     public static Tensor arange(long start, long end, long step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
      * Returns a 1-D tensor of size (end - start) / step with values from the
      * interval [start, end) taken with common difference step beginning from
      * start.
-     *
+     * <p>
      * Note that step is subject to floating point rounding errors when
      * comparing against end. To avoid inconsistency, we advise subtracting
      * a small epsilon from end in such cases.
@@ -1166,14 +1665,14 @@ public class Tensor {
      * @return a 1-D tensor.
      */
     public static Tensor arange(float start, float end, float step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
      * Returns a 1-D tensor of size (end - start) / step with values from the
      * interval [start, end) taken with common difference step beginning from
      * start.
-     *
+     * <p>
      * Note that step is subject to floating point rounding errors when
      * comparing against end. To avoid inconsistency, we advise subtracting
      * a small epsilon from end in such cases.
@@ -1184,7 +1683,7 @@ public class Tensor {
      * @return a 1-D tensor.
      */
     public static Tensor arange(double start, double end, double step) {
-        return Tensor.of(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
     /**
@@ -1248,30 +1747,10 @@ public class Tensor {
     }
 
     /**
-     * Returns a tensor with a PyTorch tensor object.
-     * @param tensor PyTorch tensor object.
-     * @return the created tensor.
-     */
-    public static Tensor of(org.bytedeco.pytorch.Tensor tensor) {
-        return new Tensor(tensor);
-    }
-
-    /**
-     * Creates a tensor instance.
-     * @param tensor PyTorch Tensor object.
-     * @param device the compute device of this Tensor.
-     * @param dtype the element data type of this Tensor.
-     * @return the tensor instance.
-     */
-    public static Tensor of(org.bytedeco.pytorch.Tensor tensor, Device device, ScalarType dtype) {
-        return new Tensor(tensor.to(device.value, dtype.value));
-    }
-
-    /**
      * A class that encapsulates the construction axes of a Tensor.
      * With construction axis we mean a particular property of a Tensor
      * that can be configured before its construction (and sometimes changed
-     * afterwards).
+     * afterward).
      */
     public static class Options {
         /** PyTorch options object. */

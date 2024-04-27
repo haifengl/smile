@@ -55,11 +55,6 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public Iterator<BaseVector> iterator() {
-        return df.iterator();
-    }
-
-    @Override
     public int indexOf(String name) {
         return df.indexOf(name);
     }
@@ -82,6 +77,11 @@ public class IndexDataFrame implements DataFrame {
     @Override
     public Stream<Tuple> stream() {
         return Arrays.stream(index).mapToObj(df::get);
+    }
+
+    @Override
+    public Iterator<Tuple> iterator() {
+        return stream().iterator();
     }
 
     @Override

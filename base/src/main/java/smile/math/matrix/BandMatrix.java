@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import smile.math.MathEx;
@@ -52,11 +53,11 @@ import static smile.math.blas.UPLO.*;
  * From a computational point of view, working with band matrices is always
  * preferential to working with similarly dimensioned dense square matrices.
  * A band matrix can be likened in complexity to a rectangular matrix whose
- * row dimension is equal to the bandwidth of the band matrix. Thus the work
+ * row dimension is equal to the bandwidth of the band matrix. Thus, the work
  * involved in performing operations such as multiplication falls significantly,
  * often leading to huge savings in terms of calculation time and complexity.
  * <p>
- * Given a n-by-n band matrix with m<sub>1</sub> rows below the diagonal
+ * Given an n-by-n band matrix with m<sub>1</sub> rows below the diagonal
  * and m<sub>2</sub> rows above. The matrix is compactly stored in an array
  * A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]. The diagonal elements are in
  * A[0,n-1][m<sub>1</sub>]. The subdiagonal elements are in A[j,n-1][0,m<sub>1</sub>-1]
@@ -67,6 +68,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class BandMatrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
@@ -151,7 +153,7 @@ public class BandMatrix extends IMatrix {
     }
 
     @Override
-    public BandMatrix clone() {
+    public BandMatrix copy() {
         BandMatrix matrix = new BandMatrix(m, n, kl, ku);
         System.arraycopy(AB, 0, matrix.AB, 0, AB.length);
 
@@ -395,6 +397,7 @@ public class BandMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -538,6 +541,7 @@ public class BandMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.

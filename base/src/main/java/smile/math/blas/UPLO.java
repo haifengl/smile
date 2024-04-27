@@ -20,7 +20,7 @@ package smile.math.blas;
 /**
  * The format of packed matrix storage. The packed storage format compactly
  * stores matrix elements when only one part of the matrix, the upper or lower
- * triangle, is necessary to determine all of the elements of the matrix.
+ * triangle, is necessary to determine all the elements of the matrix.
  * This is the case when the matrix is upper triangular, lower triangular,
  * symmetric, or Hermitian.
  */
@@ -28,7 +28,7 @@ public enum UPLO {
     /**
      * Upper triangle is stored. The packed storage format compactly stores
      * matrix elements when only one part of the matrix, the upper or lower
-     * triangle, is necessary to determine all of the elements of the matrix.
+     * triangle, is necessary to determine all the elements of the matrix.
      * This is the case when the matrix is upper triangular, lower triangular,
      * symmetric, or Hermitian.
      */
@@ -36,7 +36,7 @@ public enum UPLO {
     /**
      * Lower triangle is stored. The packed storage format compactly stores
      * matrix elements when only one part of the matrix, the upper or lower
-     * triangle, is necessary to determine all of the elements of the matrix.
+     * triangle, is necessary to determine all the elements of the matrix.
      * This is the case when the matrix is upper triangular, lower triangular,
      * symmetric, or Hermitian.
      */

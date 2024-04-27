@@ -33,12 +33,11 @@ import org.bytedeco.pytorch.global.torch;
  * @author Haifeng Li
  */
 public class PositionalEncoding implements Layer {
-    /** The module to register the buffer. */
-    private Module module;
+    private final Module module = new Module("PositionalEncoding");
     /** The dropout probability. */
-    private double dropout;
+    private final double dropout;
     /** The positional encoding tensor. */
-    private Tensor pe;
+    private final Tensor pe;
 
     /**
      * Constructor.
@@ -55,31 +54,24 @@ public class PositionalEncoding implements Layer {
      * @param maxLen the maximum length of token sequence.
      */
     public PositionalEncoding(int dModel, double dropout, int maxLen) {
-        this.module = new Module();
         this.dropout = dropout;
-        this.pe = Tensor.zeros(maxLen, dModel);
-        Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
-        Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel);
-        position.mul_(divTerm);
-        pe.put_(position.sin(), Colon, slice(0L, null, 2L));
-        pe.put_(position.cos(), Colon, slice(1L, null, 2L));
-        pe = pe.unsqueeze(0).transpose(0, 1);
-        module.register_buffer("pe", pe.asTorch());
+        try (Tensor tensor = Tensor.zeros(maxLen, dModel);
+             Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel)) {
+            position.mul_(divTerm);
+            tensor.put_(position.sin(), Colon, slice(0, null, 2));
+            tensor.put_(position.cos(), Colon, slice(1, null, 2));
+            pe = tensor.unsqueeze(0).transpose(0, 1);
+            pe.requireGrad(false);
+            module.register_buffer("pe", pe.asTorch());
+        }
     }
 
     @Override
-    public Tensor forward(Tensor x) {
-        Tensor p = pe.get(
-                slice(null, x.size(0)),
-                Colon
-        );
-        Tensor xp = x.add(p);
-        return Tensor.of(torch.dropout(xp.asTorch(), dropout, true));
-    }
-
-    @Override
-    public void register(String name, Layer parent) {
-        module = parent.asTorch().register_module(name, module);
+    public Tensor forward(Tensor input) {
+        Tensor p = pe.get(slice(null, input.size(0)), Colon);
+        Tensor xp = input.add(p);
+        return new Tensor(torch.dropout(xp.asTorch(), dropout, true));
     }
 
     @Override
@@ -93,7 +85,7 @@ public class PositionalEncoding implements Layer {
      * @return this encoder.
      */
     public PositionalEncoding to(Device device) {
-        module.to(device.asTorch(), true);
+        pe.to(device);
         return this;
     }
 }

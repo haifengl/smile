@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,6 +103,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameClassifier {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -146,10 +148,8 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         int splitFalseCount = 0;
 
         Measure measure = schema.field(j).measure;
-        if (measure instanceof NominalScale) {
+        if (measure instanceof NominalScale scale) {
             int splitValue = -1;
-
-            NominalScale scale = (NominalScale) measure;
             int m = scale.size();
             int[][] trueCount = new int[m][k];
 
@@ -305,7 +305,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
 
     /**
      * Fits a classification tree.
-     * The hyper-parameters in <code>prop</code> include
+     * The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.split.rule</code>
      * <li><code>smile.cart.node.size</code>
@@ -313,7 +313,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, Properties params) {
@@ -424,11 +424,11 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     /** The result of pruning a subtree. */
     private static class Prune {
         /** The merged node if pruned. Otherwise, the original node. */
-        Node node;
+        final Node node;
         /** The test error on this node. */
-        int error;
+        final int error;
         /** The training sample count of each class. */
-        int[] count;
+        final int[] count;
 
         /** Constructor. */
         Prune(Node node, int error, int[] count) {
@@ -440,8 +440,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
 
     /** Prunes a subtree. */
     private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, IntSet labels) {
-        if (node instanceof DecisionNode) {
-            DecisionNode leaf = (DecisionNode) node;
+        if (node instanceof DecisionNode leaf) {
             int y = leaf.output();
 
             int error = 0;

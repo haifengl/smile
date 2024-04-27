@@ -58,25 +58,29 @@ class JsonSerializerSpec extends Specification {
       val serializer = new JsonSerializer
       serializer.deserialize(serializer.serialize(JsLong(1302806349000L))) === JsLong(1302806349000L)
     }
+    "serialize '2015-08-10T10:00:00Z'" in {
+      val serializer = new JsonSerializer
+      serializer.deserialize(serializer.serialize(JsDate("2015-08-10T10:00:00Z"))) === JsDate("2015-08-10T10:00:00Z")
+    }
     "serialize '2015-08-10'" in {
       val serializer = new JsonSerializer
-      serializer.deserialize(serializer.serialize(JsDate("2015-08-10"))) === JsDate("2015-08-10")
+      serializer.deserialize(serializer.serialize(JsLocalDate("2015-08-10"))) === JsLocalDate("2015-08-10")
     }
     "serialize '10:00:00'" in {
       val serializer = new JsonSerializer
-      serializer.deserialize(serializer.serialize(JsTime("10:00:00"))) === JsTime("10:00:00")
+      serializer.deserialize(serializer.serialize(JsLocalTime("10:00:00"))) === JsLocalTime("10:00:00")
     }
     "serialize '10:00:00.123'" in {
       val serializer = new JsonSerializer
-      serializer.deserialize(serializer.serialize(JsTime("10:00:00.123"))) === JsTime("10:00:00")
+      serializer.deserialize(serializer.serialize(JsLocalTime("10:00:00.123"))) === JsLocalTime("10:00:00")
     }
     "serialize '2015-08-10T10:00:00'" in {
       val serializer = new JsonSerializer
-      serializer.deserialize(serializer.serialize(JsDateTime("2015-08-10T10:00:00"))) === JsDateTime("2015-08-10T10:00:00")
+      serializer.deserialize(serializer.serialize(JsLocalDateTime("2015-08-10T10:00:00"))) === JsLocalDateTime("2015-08-10T10:00:00")
     }
     "serialize '2015-08-10T10:00:00.123'" in {
       val serializer = new JsonSerializer
-      serializer.deserialize(serializer.serialize(JsDateTime("2015-08-10T10:00:00.123"))) === JsDateTime("2015-08-10T10:00:00")
+      serializer.deserialize(serializer.serialize(JsLocalDateTime("2015-08-10T10:00:00.123"))) === JsLocalDateTime("2015-08-10T10:00:00")
     }
     "serialize '2015-08-10 10:00:00.123'" in {
       val serializer = new JsonSerializer

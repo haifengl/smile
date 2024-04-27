@@ -74,7 +74,7 @@ public class Beta {
      */
     public static double regularizedIncompleteBetaFunction(double alpha, double beta, double x) {
         // This function is often used to calculate p-value of model fitting.
-        // Due to floating error, the model may provide a x that could be slightly
+        // Due to floating error, the model may provide an x that could be slightly
         // greater than 1 or less than 0. We allow tiny slack here to avoid brute exception.
         if (x < 0.0 && abs(x) < EPS) {
             return 0.0;

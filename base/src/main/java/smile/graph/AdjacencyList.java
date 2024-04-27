@@ -17,6 +17,7 @@
 
 package smile.graph;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import smile.util.PriorityQueue;
  * @author Haifeng Li
  */
 public class AdjacencyList implements Graph, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * Is the graph directed?

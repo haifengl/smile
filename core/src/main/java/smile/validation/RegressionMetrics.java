@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.io.Serial;
 import java.io.Serializable;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -26,6 +27,7 @@ import smile.validation.metric.*;
 
 /** The regression validation metrics. */
 public class RegressionMetrics implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The time in milliseconds of fitting the model. */

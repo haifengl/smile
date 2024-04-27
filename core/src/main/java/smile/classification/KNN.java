@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
@@ -65,10 +66,13 @@ import smile.neighbor.Neighbor;
  * achievable error rate given the distribution of the data). k-NN is
  * guaranteed to approach the Bayes error rate, for some value of k (where k
  * increases as a function of the number of data points).
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KNN<T> extends AbstractClassifier<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -76,7 +80,7 @@ public class KNN<T> extends AbstractClassifier<T> {
      */
     private final KNNSearch<T, T> knn;
     /**
-     * The labels of training samples.
+     * The labels of training sample.
      */
     private final int[] y;
     /**
@@ -128,8 +132,8 @@ public class KNN<T> extends AbstractClassifier<T> {
         }
 
         KNNSearch<T, T> knn;
-        if (distance instanceof Metric) {
-            knn = CoverTree.of(x, (Metric<T>) distance);
+        if (distance instanceof Metric<T> metric) {
+            knn = CoverTree.of(x, metric);
         } else {
             knn = LinearSearch.of(x, distance);
         }

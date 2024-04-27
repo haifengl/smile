@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Properties;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
@@ -40,6 +41,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class RDA extends QDA {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -69,7 +71,7 @@ public class RDA extends QDA {
      * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, Properties params) {

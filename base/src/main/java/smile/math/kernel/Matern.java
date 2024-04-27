@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * The class of Matérn kernels is a generalization of the Gaussian/RBF.
  * It has an additional parameter nu which controls the smoothness of
@@ -33,6 +35,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class Matern implements IsotropicKernel {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final double SQRT3 = Math.sqrt(3);
     private static final double SQRT5 = Math.sqrt(5);

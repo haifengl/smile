@@ -28,9 +28,9 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Delete implements Term {
+public class Delete implements Term {
     /** The term to delete. */
-    Term x;
+    final Term x;
 
     /**
      * Constructor.

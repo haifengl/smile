@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.util.*;
 import smile.sort.HeapSelect;
 import smile.vq.hebb.Neuron;
@@ -26,7 +27,7 @@ import smile.vq.hebb.Edge;
  * NeuralMap is an efficient competitive learning algorithm inspired by growing
  * neural gas and BIRCH. Like growing neural gas, NeuralMap has the ability to
  * add and delete neurons with competitive Hebbian learning. Edges exist between
- * neurons close to each other. Such edges are intended place holders for
+ * neurons close to each other. Such edges are intended placeholders for
  * localized data distribution. Such edges also help to locate distinct clusters
  * (those clusters are not connected by edges).
  *
@@ -37,6 +38,7 @@ import smile.vq.hebb.Edge;
  * @author Haifeng Li
  */
 public class NeuralMap implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

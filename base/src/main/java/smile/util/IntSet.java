@@ -17,6 +17,7 @@
 
 package smile.util;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class IntSet implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** Map of index to original values. */
@@ -75,11 +77,11 @@ public class IntSet implements Serializable {
 
     /**
      * Maps the value to index.
-     * @param x the value.
+     * @param value the value.
      * @return the index.
      */
-    public int indexOf(int x) {
-        return index.get(x);
+    public int indexOf(int value) {
+        return index.get(value);
     }
 
     /**
@@ -95,11 +97,11 @@ public class IntSet implements Serializable {
 
     /**
      * Finds the unique values from samples.
-     * @param y the samples.
+     * @param samples the samples.
      * @return the set.
      */
-    public static IntSet of(int[] y) {
-        int[] values = MathEx.unique(y);
+    public static IntSet of(int[] samples) {
+        int[] values = MathEx.unique(samples);
         Arrays.sort(values);
         return new IntSet(values);
     }

@@ -29,19 +29,19 @@ import smile.util.IntSet;
  */
 class DiscriminantAnalysis {
     /** The number of classes. */
-    int k;
+    final int k;
     /** The class labels in [0, k). */
-    int[] y;
+    final int[] y;
     /** The original class labels. */
-    IntSet labels;
+    final IntSet labels;
     /** The number of instances in each class. */
-    int[] ni;
+    final int[] ni;
     /** The priori probabilities. */
-    double[] priori;
+    final double[] priori;
     /** The mean vector. */
-    double[] mean;
+    final double[] mean;
     /** THe mean vector per class. */
-    double[][] mu;
+    final double[][] mu;
 
     /**
      * Constructor.

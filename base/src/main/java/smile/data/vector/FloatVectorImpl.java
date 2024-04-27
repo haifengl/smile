@@ -106,4 +106,13 @@ class FloatVectorImpl implements FloatVector {
     public String toString() {
         return toString(10);
     }
+
+    @Override
+    public void fillna(float value) {
+        for (int i = 0; i < vector.length; i++) {
+            if (Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
+                vector[i] = value;
+            }
+        }
+    }
 }

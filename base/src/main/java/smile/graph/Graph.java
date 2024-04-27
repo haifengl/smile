@@ -134,7 +134,7 @@ public interface Graph {
 
     /**
      * Returns an edge connecting source vertex to target vertex if such edge
-     * exist in this graph. Otherwise returns <code> null</code>.
+     * exist in this graph. Otherwise, returns <code> null</code>.
      * <p>
      * In undirected graphs, the returned edge may have its source and target
      * vertices in the opposite order.
@@ -144,7 +144,7 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      * @return an edge connecting source vertex to target vertex if there are
-     * connected. Otherwise null.
+     * connected. Otherwise, null.
      */
     Edge getEdge(int source, int target);
 
@@ -201,7 +201,7 @@ public interface Graph {
     int getDegree(int vertex);
 
     /**
-     * Returns the in-degree of the specified vertex. A in-degree of a vertex in an
+     * Returns the in-degree of the specified vertex. An in-degree of a vertex in a
      * directed graph is the number of edges head to that vertex.
      *
      * @param vertex the id of vertex.
@@ -210,7 +210,7 @@ public interface Graph {
     int getIndegree(int vertex);
 
     /**
-     * Returns the out-degree of the specified vertex. A out-degree of a vertex in an
+     * Returns the out-degree of the specified vertex. An out-degree of a vertex in a
      * directed graph is the number of edges from that vertex.
      *
      * @param vertex the id of vertex.

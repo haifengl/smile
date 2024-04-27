@@ -16,10 +16,9 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.pytorch.SymInt;
-import org.bytedeco.pytorch.SymIntOptional;
-import org.bytedeco.pytorch.TensorIndex;
+import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Tensor;
+import org.bytedeco.pytorch.global.torch;
 
 /**
  * Indexing a tensor.
@@ -28,7 +27,7 @@ import org.bytedeco.pytorch.Tensor;
  */
 public class Index {
     /** PyTorch tensor index. */
-    TensorIndex value;
+    final TensorIndex value;
 
     /**
      * Constructor.
@@ -41,14 +40,20 @@ public class Index {
     /**
      * The ellipsis (...) is used to slice higher-dimensional data structures as in numpy.
      * It's designed to mean at this point, insert as many full slices (:) to extend
-     * the multi-dimensional slice to all dimensions.
+     * the multidimensional slice to all dimensions.
      */
-    public static Index Ellipsis = new Index(new TensorIndex("..."));
+    public static final Index Ellipsis = new Index(new TensorIndex(torch.Ellipsis()));
 
     /**
      * The colon (:) is used to slice all elements of a dimension.
      */
-    public static Index Colon = new Index(new TensorIndex(":"));
+    public static final Index Colon = new Index(new TensorIndex(new Slice()));
+
+    /**
+     * The None is used to insert a singleton dimension ("unsqueeze"
+     * a dimension).
+     */
+    public static final Index None = new Index(new TensorIndex(torch.None()));
 
     /**
      * Returns the index of a single element in a dimension.
@@ -56,7 +61,17 @@ public class Index {
      * @param i the element index.
      * @return the index.
      */
-    public static Index index(long i) {
+    public static Index of(int i) {
+        return new Index(new TensorIndex(i));
+    }
+
+    /**
+     * Returns the index of a single element in a dimension.
+     *
+     * @param i the element index.
+     * @return the index.
+     */
+    public static Index of(long i) {
         return new Index(new TensorIndex(i));
     }
 
@@ -66,8 +81,67 @@ public class Index {
      * @param indices the indices of multiple elements.
      * @return the index.
      */
-    public static Index index(long... indices) {
+    public static Index of(int... indices) {
         return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the index of multiple elements in a dimension.
+     *
+     * @param indices the indices of multiple elements.
+     * @return the index.
+     */
+    public static Index of(long... indices) {
+        return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the index of multiple elements in a dimension.
+     *
+     * @param indices the boolean flags to select multiple elements.
+     *               The length of array should match that of the
+     *               corresponding dimension of tensor.
+     * @return the index.
+     */
+    public static Index of(boolean... indices) {
+        return new Index(new TensorIndex(Tensor.create(indices)));
+    }
+
+    /**
+     * Returns the tensor index along a dimension.
+     *
+     * @param index the tensor index.
+     * @return the index.
+     */
+    public static Index of(smile.deep.tensor.Tensor index) {
+        return new Index(new TensorIndex(index.value));
+    }
+
+    /**
+     * Returns the slice index for [start, end) with step 1.
+     *
+     * @param start the start index.
+     * @param end the end index.
+     * @return the slice.
+     */
+    public static Index slice(Integer start, Integer end) {
+        return slice(start, end, 1);
+    }
+
+    /**
+     * Returns the slice index for [start, end) with step 1.
+     *
+     * @param start the start index.
+     * @param end the end index.
+     * @param step the incremental step.
+     * @return the slice.
+     */
+    public static Index slice(Integer start, Integer end, Integer step) {
+        return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
+                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
+                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
+                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
+        )));
     }
 
     /**
@@ -78,7 +152,7 @@ public class Index {
      * @return the slice.
      */
     public static Index slice(Long start, Long end) {
-        return index(start, end, 1L);
+        return slice(start, end, 1L);
     }
 
     /**
@@ -91,9 +165,9 @@ public class Index {
      */
     public static Index slice(Long start, Long end, Long step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
-                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start.longValue())),
-                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end.longValue())),
-                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step.longValue()))
+                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
+                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
+                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
         )));
     }
 }

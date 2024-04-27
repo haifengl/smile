@@ -112,7 +112,7 @@ public class JSON {
     /**
      * Reads a JSON file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -139,7 +139,7 @@ public class JSON {
     /**
      * Reads a JSON file.
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
@@ -156,7 +156,7 @@ public class JSON {
     /**
      * Reads a limited number of records from a JSON file.
      * @param reader the file reader.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -171,7 +171,8 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<>() {
+            });
             for (Map<String, String> map : maps) {
                 rows.add(toTuple(map, parser));
                 if (rows.size() >= limit) break;
@@ -180,7 +181,8 @@ public class JSON {
             String line = reader.readLine();
             while (rows.size() < limit && line != null) {
                 try {
-                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
+                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {
+                    });
                     rows.add(toTuple(map, parser));
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
@@ -215,7 +217,7 @@ public class JSON {
      * </ol>
      *
      * @param reader the file reader.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -224,7 +226,8 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<>() {
+            });
             for (Map<String, String> map : maps) {
                 rows.add(map);
                 if (rows.size() >= limit) break;
@@ -233,7 +236,8 @@ public class JSON {
             String line = reader.readLine();
             while (rows.size() < limit && line != null) {
                 try {
-                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
+                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {
+                    });
                     rows.add(map);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);

@@ -32,7 +32,7 @@ import smile.math.rbf.RadialBasisFunction;
  * where the approximating function y(x) is represented as a sum of N radial
  * basis functions &phi;, each associated with a different center c<sub>i</sub>,
  * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
- * one usually chooses euclidean distance. The weights w<sub>i</sub> can
+ * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
  * be estimated using the matrix methods of linear least squares, because
  * the approximating function is linear in the weights.
  * <p>
@@ -44,11 +44,11 @@ import smile.math.rbf.RadialBasisFunction;
  * graphics, neural networks, for the solution of differential equations
  * via collocation methods and many other problems.
  * <p>
- * Other popular choices for &phi; comprise the Gaussian function and the so
- * called thin plate splines. Thin plate splines result from the solution of
+ * Other popular choices for &phi; comprise the Gaussian function and the
+ * so-called thin plate splines. Thin plate splines result from the solution of
  * a variational problem. The advantage of the thin plate splines is that
  * their conditioning is invariant under scaling. Gaussians, multi-quadrics
- * and inverse multi-quadrics are infinitely smooth and and involve a scale
+ * and inverse multi-quadrics are infinitely smooth and involve a scale
  * or shape parameter, r<sub><small>0</small></sub> {@code > 0}.
  * Decreasing r<sub><small>0</small></sub> tends to
  * flatten the basis function. For a given function, the quality of

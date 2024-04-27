@@ -27,7 +27,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-final class Intercept implements Term {
+public final class Intercept implements Term {
     /** The flag if the model has the intercept. */
     private final boolean bias;
 

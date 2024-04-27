@@ -38,7 +38,7 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
+public interface DataFrame extends Iterable<Tuple> {
     /**
      * Returns the schema of DataFrame.
      * @return the schema.
@@ -67,6 +67,51 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      */
     default Measure[] measures() {
         return schema().measures();
+    }
+
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
+    int size();
+
+    /**
+     * Returns true if the data frame is empty.
+     * @return true if the data frame is empty.
+     */
+    default boolean isEmpty() {
+        return size() == 0;
+    }
+
+    /**
+     * Returns the row at the specified index.
+     * @param i the row index.
+     * @return the i-th row.
+     */
+    Tuple get(int i);
+
+    /**
+     * Returns the row at the specified index. For Scala's convenience.
+     * @param i the row index.
+     * @return the i-th row.
+     */
+    default Tuple apply(int i) {
+        return get(i);
+    }
+
+    /**
+     * Returns a (possibly parallel) Stream of rows.
+     *
+     * @return a (possibly parallel) Stream of rows.
+     */
+    Stream<Tuple> stream();
+
+    /**
+     * Returns the <code>List</code> of rows.
+     * @return the <code>List</code> of rows.
+     */
+    default List<Tuple> toList() {
+        return stream().toList();
     }
 
     /**
@@ -103,6 +148,25 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      */
     default DataFrame omitNullRows() {
         return DataFrame.of(stream().filter(r -> !r.hasNull()), schema().unboxed());
+    }
+
+    /**
+     * Fills NaN/Inf values of floating number columns using the specified value.
+     * @param value the value to replace NAs.
+     * @return this data frame.
+     */
+    default DataFrame fillna(double value) {
+        for (int i = 0; i < ncol(); i++) {
+            var column = column(i);
+            if (column instanceof FloatVector vector) {
+                vector.fillna((float) value);
+            } else if (column instanceof DoubleVector vector) {
+                vector.fillna(value);
+            } else if (column instanceof NumberVector vector) {
+                vector.fillna(value);
+            }
+        }
+        return this;
     }
 
     /**
@@ -417,8 +481,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         Object o = get(i, j);
         if (o == null) return "null";
 
-        if (o instanceof String) {
-            return (String) o;
+        if (o instanceof String s) {
+            return s;
         } else {
             return schema().field(j).toString(o);
         }
@@ -541,7 +605,11 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     default String getScale(int i, int j) {
         int x = getInt(i, j);
         Measure measure = schema().field(j).measure;
-        return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
+        if (measure instanceof CategoricalMeasure cat) {
+            return cat.toString(x);
+        } else {
+            return String.valueOf(x);
+        }
     }
 
     /**
@@ -948,7 +1016,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Merges data frames horizontally by columns.
      * @param dataframes the data frames to merge.
      * @return a new data frame that combines this DataFrame
-     * with one more more other DataFrames by columns.
+     * with one more other DataFrames by columns.
      */
     DataFrame merge(DataFrame... dataframes);
 
@@ -956,7 +1024,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Merges vectors with this data frame.
      * @param vectors the vectors to merge.
      * @return a new data frame that combines this DataFrame
-     * with one more more additional vectors.
+     * with one more additional vectors.
      */
     DataFrame merge(BaseVector... vectors);
 
@@ -1043,8 +1111,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             StructField field = schema.field(j);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
@@ -1076,8 +1143,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             StructField field = schema.field(col);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
@@ -1137,8 +1203,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
@@ -1179,8 +1244,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
@@ -1313,12 +1377,11 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;
-        int maxColWidth;
-        switch (numCols) {
-            case 1: maxColWidth = 78; break;
-            case 2: maxColWidth = 38; break;
-            default: maxColWidth = 20;
-        }
+        int maxColWidth = switch (numCols) {
+            case 1 -> 78;
+            case 2 -> 38;
+            default -> 20;
+        };
         // To be used in lambda.
         final int maxColumnWidth = maxColWidth;
 
@@ -1364,7 +1427,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             header.append('|');
         }
         header.append('\n');
-        sb.append(header.toString());
+        sb.append(header);
         sb.append(sep);
 
         // data
@@ -1380,7 +1443,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                 line.append('|');
             }
             line.append('\n');
-            sb.append(line.toString());
+            sb.append(line);
         }
 
         sb.append(sep);

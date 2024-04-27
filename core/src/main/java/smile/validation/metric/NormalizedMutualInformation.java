@@ -17,6 +17,7 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import static java.lang.Math.log;
@@ -36,6 +37,7 @@ import static java.lang.Math.log;
  * @author Haifeng Li
  */
 public class NormalizedMutualInformation implements ClusteringMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
     public final static NormalizedMutualInformation JOINT = new NormalizedMutualInformation(Method.JOINT);
@@ -75,14 +77,14 @@ public class NormalizedMutualInformation implements ClusteringMetric {
 
     @Override
     public double score(int[] y1, int[] y2) {
-        switch (method) {
-            case JOINT: return joint(y1, y2);
-            case MAX: return max(y1, y2);
-            case MIN: return min(y1, y2);
-            case SUM: return sum(y1, y2);
-            case SQRT: return sqrt(y1, y2);
-            default: throw new IllegalStateException("Unknown normalization method: " + method);
-        }
+        return switch (method) {
+            case JOINT -> joint(y1, y2);
+            case MAX -> max(y1, y2);
+            case MIN -> min(y1, y2);
+            case SUM -> sum(y1, y2);
+            case SQRT -> sqrt(y1, y2);
+            default -> throw new IllegalStateException("Unknown normalization method: " + method);
+        };
     }
 
     /**

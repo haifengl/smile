@@ -28,7 +28,7 @@ import smile.data.type.StructType;
  * An abstract term in the formula. A term is recursively constructed
  * from constant symbols, variables and function symbols. A formula
  * consists of a series of terms. To be concise, we also allow
- * HyperTerms that can be can be expanded to multiple simple terms.
+ * HyperTerms that can be expanded to multiple simple terms.
  *
  * @author Haifeng Li
  */
@@ -41,8 +41,8 @@ public interface Term extends Serializable {
     List<Feature> bind(StructType schema);
 
     /**
-     * Returns the list of variables used in this term.
-     * @return the list of variables used in this term.
+     * Returns the set of variables used in this term.
+     * @return the set of variables used in this term.
      */
     Set<String> variables();
 

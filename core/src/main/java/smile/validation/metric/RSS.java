@@ -17,12 +17,15 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * Residual sum of squares.
  *
  * @author Haifeng Li
  */
 public class RSS implements RegressionMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static RSS instance = new RSS();

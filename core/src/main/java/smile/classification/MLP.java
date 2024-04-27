@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
@@ -38,7 +39,7 @@ import smile.util.Strings;
  * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  * <p>
- * The representational capabilities of a MLP are determined by the range of
+ * The representational capabilities of an MLP are determined by the range of
  * mappings it may implement through weight variation. Single layer perceptrons
  * are capable of solving only linearly separable problems. With the sigmoid
  * function as activation function, the single-layer network is identical
@@ -70,7 +71,7 @@ import smile.util.Strings;
  * at large &eta;, is to make the change in weight dependent on the past weight
  * change by adding a momentum term.
  * <p>
- * Although the back-propagation algorithm may performs gradient
+ * Although the back-propagation algorithm may perform gradient
  * descent on the total error of all instances in a batch way, 
  * the learning rule is often applied to each instance separately in an online
  * way or stochastic way. There exists empirical indication that the stochastic
@@ -81,7 +82,7 @@ import smile.util.Strings;
  * significantly exceeds the needed free parameters. There are two general
  * approaches for avoiding this problem: The first is to use cross-validation
  * and similar techniques to check for the presence of over-fitting and
- * optimally select hyper-parameters such as to minimize the generalization
+ * optimally select hyperparameters such as to minimize the generalization
  * error. The second is to use some form of regularization, which emerges
  * naturally in a Bayesian framework, where the regularization can be
  * performed by selecting a larger prior probability over simpler models;
@@ -108,6 +109,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class MLP extends MultilayerPerceptron implements Classifier<double[]>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
@@ -250,7 +252,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
      * Fits a MLP model.
      * @param x the training dataset.
      * @param y the training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static MLP fit(double[][] x, int[] y, Properties params) {

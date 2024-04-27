@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
@@ -49,6 +50,7 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public abstract class CentroidClustering<T, U> extends PartitionClustering implements Comparable<CentroidClustering<T, U>> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -79,11 +81,11 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
 
     /**
      * The distance function.
-     * @param x an observation.
-     * @param y the other observation.
+     * @param a an observation.
+     * @param b the other observation.
      * @return the distance.
      */
-    protected abstract double distance(T x, U y);
+    protected abstract double distance(T a, U b);
 
     /**
      * Classifies a new observation.

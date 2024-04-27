@@ -19,12 +19,15 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * Mean squared error.
  *
  * @author Haifeng Li
  */
 public class MSE implements RegressionMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MSE instance = new MSE();

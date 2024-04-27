@@ -16,21 +16,17 @@
  */
 package smile.deep;
 
-import java.util.Arrays;
-import java.util.Iterator;
 import org.bytedeco.pytorch.*;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.data.vector.BaseVector;
-import smile.deep.tensor.Tensor;
-import smile.math.MathEx;
 
 /**
- * A dataset consists of data and an associated target (label).
+ * A dataset consists of data and an associated target (label)
+ * and can be iterated in mini-batches.
  *
  * @author Haifeng Li
  */
-public interface Dataset extends Iterable<Sample> {
+public interface Dataset extends Iterable<SampleBatch>, AutoCloseable {
     /**
      * Returns the size of dataset.
      * @return the size of dataset.
@@ -38,109 +34,47 @@ public interface Dataset extends Iterable<Sample> {
     long size();
 
     /**
-     * Returns a dataset.
+     * Creates a dataset of numeric arrays.
+     * @param data the data.
+     * @param target the target.
+     * @param batch the mini-batch size.
+     * @return the dataset.
+     */
+    static Dataset of(float[][] data, int[] target, int batch) {
+        return new DatasetImpl(data, target, batch);
+    }
+
+    /**
+     * Creates a dataset of numeric arrays.
+     * @param data the data.
+     * @param target the target.
+     * @param batch the mini-batch size.
+     * @return the dataset.
+     */
+    static Dataset of(float[][] data, float[] target, int batch) {
+        return new DatasetImpl(data, target, batch);
+    }
+
+    /**
+     * Creates a dataset of numeric arrays.
      * @param data the data.
      * @param target the target.
      * @param batch the mini-batch size.
      * @return the dataset.
      */
     static Dataset of(double[][] data, int[] target, int batch) {
-        final int n = data.length;
-        final int p = data[0].length;
-
-        return new Dataset() {
-            @Override
-            public long size() {
-                return n;
-            }
-
-            @Override
-            public Iterator<Sample> iterator() {
-                final int[] permutation = MathEx.permutate(n);
-                return new Iterator<Sample>() {
-                    int i = 0;
-                    float[] x = new float[batch * p];
-                    long[] y = new long[batch];
-
-                    @Override
-                    public boolean hasNext() {
-                        return i < n;
-                    }
-
-                    @Override
-                    public Sample next() {
-                        int j = 0;
-                        for (; j < batch && i < n; j++, i++) {
-                            int k = permutation[i];
-                            y[j] = target[k];
-                            double[] xk = data[k];
-                            for (int l = 0; l < p; l++) {
-                                x[j*p + l] = (float) xk[l];
-                            }
-                        }
-
-                        if (i == n) {
-                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
-                        } else {
-                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
-                        }
-                    }
-                };
-            }
-        };
+        return new DatasetImpl(data, target, batch);
     }
 
     /**
-     * Returns a dataset.
+     * Creates a dataset of numeric arrays.
      * @param data the data.
      * @param target the target.
      * @param batch the mini-batch size.
      * @return the dataset.
      */
     static Dataset of(double[][] data, double[] target, int batch) {
-        final int n = data.length;
-        final int p = data[0].length;
-
-        return new Dataset() {
-            @Override
-            public long size() {
-                return n;
-            }
-
-            @Override
-            public Iterator<Sample> iterator() {
-                final int[] permutation = MathEx.permutate(n);
-                return new Iterator<Sample>() {
-                    int i = 0;
-                    float[] x = new float[batch * p];
-                    float[] y = new float[batch];
-
-                    @Override
-                    public boolean hasNext() {
-                        return i < n;
-                    }
-
-                    @Override
-                    public Sample next() {
-                        int j = 0;
-                        for (; j < batch && i < n; j++, i++) {
-                            int k = permutation[i];
-                            y[j] = (float) target[k];
-                            double[] xk = data[k];
-                            for (int l = 0; l < p; l++) {
-                                x[j*p + l] = (float) xk[l];
-                            }
-                        }
-
-                        if (i == n) {
-                            return new Sample(Tensor.of(Arrays.copyOf(x, j*p), j, p), Tensor.of(Arrays.copyOf(y, j), j));
-                        } else {
-                            return new Sample(Tensor.of(x, j, p), Tensor.of(y, j));
-                        }
-                    }
-                };
-            }
-        };
+        return new DatasetImpl(data, target, batch);
     }
 
     /**
@@ -152,7 +86,7 @@ public interface Dataset extends Iterable<Sample> {
      */
     static Dataset of(Formula formula, DataFrame df, int batch) {
         final double[][] x = formula.x(df).toArray();
-        final BaseVector y = formula.y(df);
+        final var y = formula.y(df);
         if (y.field().type.isIntegral()) {
             return of(x, y.toIntArray(), batch);
         } else {
@@ -171,13 +105,13 @@ public interface Dataset extends Iterable<Sample> {
      * @return the MNIST dataset.
      */
     static Dataset mnist(String path, boolean trainMode, int batch) {
-        int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
-        MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
-        MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
-                dataset, new RandomSampler(dataset.size().get()),
-                new DataLoaderOptions(batch));
-
         return new Dataset() {
+            int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
+            MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
+            MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
+                    dataset, new RandomSampler(dataset.size().get()),
+                    new DataLoaderOptions(batch));
+
             @Override
             public long size() {
                 return dataset.size().get();
@@ -186,6 +120,11 @@ public interface Dataset extends Iterable<Sample> {
             @Override
             public DataSampler iterator() {
                 return new DataSampler(loader.begin(), loader.end());
+            }
+
+            @Override
+            public void close() {
+                dataset.close();
             }
         };
     }

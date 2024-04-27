@@ -16,6 +16,7 @@
  */
 package smile.deep;
 
+import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.pytorch.*;
 
 /**
@@ -24,7 +25,7 @@ import org.bytedeco.pytorch.*;
  * @author Haifeng Li
  */
 public class Optimizer {
-    org.bytedeco.pytorch.Optimizer optimizer;
+    final org.bytedeco.pytorch.Optimizer optimizer;
 
     /** Constructor. */
     Optimizer(org.bytedeco.pytorch.Optimizer optimizer) {
@@ -39,6 +40,17 @@ public class Optimizer {
     /** Updates the parameters based on the calculated gradients. */
     public void step() {
         optimizer.step();
+    }
+
+    /**
+     * Sets the learning rate.
+     * @param rate the learning rate.
+     */
+    public void setLearningRate(double rate) {
+        var groups = optimizer.param_groups();
+        for (int i = 0; i < groups.size(); i++) {
+            groups.get(i).options().set_lr(rate);
+        }
     }
 
     /**
@@ -67,7 +79,7 @@ public class Optimizer {
         options.weight_decay().put(decay);
         options.dampening().put(dampening);
         options.nesterov().put(nesterov);
-        return new Optimizer(new SGD(model.net.parameters(), options));
+        return new Optimizer(new SGD(model.asTorch().parameters(), options));
     }
 
     /**
@@ -92,12 +104,14 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer Adam(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
+        DoublePointer betas = new DoublePointer(beta1, beta2);
         AdamOptions options = new AdamOptions(rate);
-        options.betas().put(beta1, beta2);
+        options.betas().put(betas);
         options.eps().put(eps);
         options.weight_decay().put(decay);
         options.amsgrad().put(amsgrad);
-        return new Optimizer(new Adam(model.net.parameters(), options));
+        betas.close();
+        return new Optimizer(new Adam(model.asTorch().parameters(), options));
     }
 
     /**
@@ -127,7 +141,7 @@ public class Optimizer {
         options.eps().put(eps);
         options.weight_decay().put(decay);
         options.amsgrad().put(amsgrad);
-        return new Optimizer(new AdamW(model.net.parameters(), options));
+        return new Optimizer(new AdamW(model.asTorch().parameters(), options));
     }
 
     /**
@@ -137,7 +151,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer RMSprop(Model model, double rate) {
-        return RMSprop(model, rate, 0.999, 1E-08, 0, 0, false);
+        return RMSprop(model, rate, 0.99, 1E-08, 0, 0, false);
     }
 
     /**
@@ -158,6 +172,6 @@ public class Optimizer {
         options.momentum().put(momentum);
         options.weight_decay().put(decay);
         options.centered().put(centered);
-        return new Optimizer(new RMSprop(model.net.parameters(), options));
+        return new Optimizer(new RMSprop(model.asTorch().parameters(), options));
     }
 }

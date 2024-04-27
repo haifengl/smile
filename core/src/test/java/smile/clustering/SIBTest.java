@@ -17,20 +17,15 @@
 
 package smile.clustering;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
-import smile.data.Dataset;
-import smile.data.Instance;
+import smile.data.SparseDataset;
+import smile.data.SampleInstance;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.metric.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -41,19 +36,19 @@ public class SIBTest {
     public SIBTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -63,12 +58,12 @@ public class SIBTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        Dataset<Instance<SparseArray>> test = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        SparseDataset<Integer> test = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
-        SparseArray[] trainx = train.stream().map(Instance::x).toArray(SparseArray[]::new);
-        int[] y = train.stream().mapToInt(Instance::label).toArray();
-        int[] testy = test.stream().mapToInt(Instance::label).toArray();
+        SparseArray[] trainx = train.stream().map(SampleInstance::x).toArray(SparseArray[]::new);
+        int[] y = train.stream().mapToInt(SampleInstance::y).toArray();
+        int[] testy = test.stream().mapToInt(SampleInstance::y).toArray();
             
         SIB model = SIB.fit(trainx, 20);
         System.out.println(model);

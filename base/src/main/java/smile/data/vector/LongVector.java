@@ -41,18 +41,28 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
     LongVector get(int... index);
 
     @Override
+    default boolean getBoolean(int i) {
+        return getLong(i) != 0;
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (char) getLong(i);
+    }
+
+    @Override
     default byte getByte(int i) {
-        throw new UnsupportedOperationException("cast long to byte");
+        return (byte) getLong(i);
     }
 
     @Override
     default short getShort(int i) {
-        throw new UnsupportedOperationException("cast long to short");
+        return (short) getLong(i);
     }
 
     @Override
     default int getInt(int i) {
-        throw new UnsupportedOperationException("cast long to int");
+        return (int) getLong(i);
     }
 
     @Override

@@ -33,8 +33,8 @@ import javax.swing.Icon;
  */
 public class AlphaIcon implements Icon {
 
-    private Icon icon;
-    private float alpha;
+    private final Icon icon;
+    private final float alpha;
 
     /**
      * Creates an

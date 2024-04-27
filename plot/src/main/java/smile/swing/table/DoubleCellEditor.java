@@ -30,8 +30,6 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
@@ -44,12 +42,12 @@ import javax.swing.text.NumberFormatter;
  */
 @SuppressWarnings("serial")
 public class DoubleCellEditor extends DefaultCellEditor {
-    private final static Logger LOGGER = Logger.getLogger(DoubleCellEditor.class.getName()); 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleCellEditor.class);
     private final static DoubleCellEditor instance = new DoubleCellEditor();
 
-    JFormattedTextField textField;
-    NumberFormat doubleFormat;
-    private Double minimum, maximum;
+    final JFormattedTextField textField;
+    final NumberFormat doubleFormat;
+    private final Double minimum, maximum;
 
     /**
      * Constructor.
@@ -98,6 +96,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
                         textField.commitEdit();     //so use it.
                         textField.postActionEvent(); //stop editing
                     } catch (java.text.ParseException ex) {
+                        logger.debug("Failed to commit edit: ", ex);
                     }
                 }
             }
@@ -124,13 +123,13 @@ public class DoubleCellEditor extends DefaultCellEditor {
         Object o = ftf.getValue();
         if (o instanceof Double) {
             return o;
-        } else if (o instanceof Number) {
-            return ((Number) o).doubleValue();
+        } else if (o instanceof Number n) {
+            return n.doubleValue();
         } else {
             try {
                 return doubleFormat.parseObject(o.toString());
             } catch (ParseException ex) {
-                LOGGER.log(Level.FINE, "getCellEditorValue: can't parse {0}", o);
+                logger.debug("getCellEditorValue: can't parse {}", o);
                 return null;
             }
         }
@@ -148,6 +147,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
             try {
                 ftf.commitEdit();
             } catch (java.text.ParseException ex) {
+                logger.debug("Failed to commit edit: ", ex);
             }
 
         } else { //text is invalid

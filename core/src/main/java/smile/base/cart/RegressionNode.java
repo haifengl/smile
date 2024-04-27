@@ -17,6 +17,7 @@
 
 package smile.base.cart;
 
+import java.io.Serial;
 import java.math.BigInteger;
 import java.util.List;
 import smile.data.type.StructField;
@@ -29,6 +30,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RegressionNode extends LeafNode {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The mean of response variable. */
@@ -98,7 +100,7 @@ public class RegressionNode extends LeafNode {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(" ".repeat(depth));
         line.append(id).append(") ");
 
         // split
@@ -122,8 +124,7 @@ public class RegressionNode extends LeafNode {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof RegressionNode) {
-            RegressionNode a = (RegressionNode) o;
+        if (o instanceof RegressionNode a) {
             return MathEx.equals(output, a.output);
         }
 

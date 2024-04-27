@@ -18,6 +18,7 @@ package smile.deep.layer;
 
 import org.bytedeco.javacpp.LongPointer;
 import org.bytedeco.pytorch.MaxPool2dImpl;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -27,33 +28,35 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class MaxPool2dLayer implements Layer {
-    /** The window/kernel size. */
-    int size;
-    /** Implementation. */
-    MaxPool2dImpl module;
+    private final MaxPool2dImpl module;
 
     /**
      * Constructor.
-     * @param size the window/kernel size.
+     * @param kernel the window/kernel size.
      */
-    public MaxPool2dLayer(int size) {
-        this.size = size;
-        LongPointer p = new LongPointer(1).put(size);
-        this.module = new MaxPool2dImpl(p);
+    public MaxPool2dLayer(int kernel) {
+        LongPointer kernelPointer = new LongPointer(kernel, kernel);
+        this.module = new MaxPool2dImpl(kernelPointer);
+        kernelPointer.close();
+    }
+
+    /**
+     * Constructor.
+     * @param height the window/kernel height.
+     * @param width the window/kernel width.
+     */
+    public MaxPool2dLayer(int height, int width) {
+        LongPointer kernel = new LongPointer(height, width);
+        this.module = new MaxPool2dImpl(kernel);
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public MaxPool2dImpl asTorch() {
-        return module;
+        return new Tensor(module.forward(input.asTorch()));
     }
 }

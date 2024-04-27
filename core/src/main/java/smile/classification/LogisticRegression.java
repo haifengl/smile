@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -76,27 +77,28 @@ import smile.validation.ModelSelection;
  * @author Haifeng Li
  */
 public abstract class LogisticRegression extends AbstractClassifier<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    int p;
+    final int p;
 
     /**
      * The number of classes.
      */
-    int k;
+    final int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    double L;
+    final double L;
 
     /**
      * Regularization factor.
      */
-    double lambda;
+    final double lambda;
 
     /**
      * learning rate for stochastic gradient descent.
@@ -311,7 +313,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(double[][] x, int[] y, Properties params) {
@@ -382,7 +384,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
@@ -460,7 +462,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LogisticRegression fit(double[][] x, int[] y, Properties params) {
@@ -497,31 +499,31 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         /**
          * Training instances.
          */
-        double[][] x;
+        final double[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
 
         /**
          * Constructor.
@@ -539,7 +541,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
 
         @Override
         public double f(double[] w) {
-            // Since BFGS try to minimize the objective function
+            // Since BFGS try to minimize the objective function,
             // and we try to maximize the log-likelihood, we really
             // return the negative log-likelihood here.
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
@@ -606,39 +608,39 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         /**
          * Training instances.
          */
-        double[][] x;
+        final double[][] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The number of classes.
          */
-        int k;
+        final int k;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
         /**
          * The workspace to store posteriori probability for each data partition.
          */
-        double[][] posterioris;
+        final double[][] posterioris;
 
         /**
          * Constructor.

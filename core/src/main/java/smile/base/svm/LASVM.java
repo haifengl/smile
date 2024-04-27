@@ -17,6 +17,7 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,9 +33,12 @@ import smile.math.kernel.MercerKernel;
  * LASVM requires considerably less memory than a regular SVM solver.
  * This becomes a considerable speed advantage for large training sets.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class LASVM<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASVM.class);
 
@@ -187,7 +191,7 @@ public class LASVM<T> implements Serializable {
         int cp = 0, cn = 0;
 
         for (int i : MathEx.permutate(x.length)) {
-            if (y[i] == +1 && cp < few) {
+            if (y[i] == 1 && cp < few) {
                 if (process(i, x[i], y[i])) cp++;
             } else if (y[i] == -1 && cn < few) {
                 if (process(i, x[i], y[i])) cn++;
@@ -366,7 +370,7 @@ public class LASVM<T> implements Serializable {
      * @return true if x is added to support vectors.
      */
     private boolean process(int i, T x, int y) {
-        if (y != +1 && y != -1) {
+        if (y != 1 && y != -1) {
             throw new IllegalArgumentException("Invalid label: " + y);
         }
 
@@ -384,7 +388,7 @@ public class LASVM<T> implements Serializable {
             // Parallel stream may cause unreproducible results due to
             // different numeric round-off because of different data
             // partitions (i.e. different number of cores/threads).
-            // The speed up of parallel stream is also limited as
+            // The speedup of parallel stream is also limited as
             // the number of support vectors is often small.
             double k = kernel.k(v.x, x);
             cache[v.i] = k;

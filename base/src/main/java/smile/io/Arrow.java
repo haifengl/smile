@@ -129,7 +129,7 @@ public class Arrow {
      * Reads an arrow file.
      *
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -153,7 +153,7 @@ public class Arrow {
      * Reads a limited number of records from an arrow file.
      *
      * @param path the input file path.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
@@ -166,7 +166,7 @@ public class Arrow {
      * Reads a limited number of records from an arrow file.
      *
      * @param input the input stream.
-     * @param limit the number number of records to read.
+     * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
      * @return the data frame.
      */
@@ -634,23 +634,19 @@ public class Arrow {
     private smile.data.vector.BaseVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalTime[] a = new LocalTime[count];
-        if (fieldVector instanceof TimeNanoVector) {
-            TimeNanoVector vector = (TimeNanoVector) fieldVector;
+        if (fieldVector instanceof TimeNanoVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i));
             }
-        } else if (fieldVector instanceof TimeMilliVector) {
-            TimeMilliVector vector = (TimeMilliVector) fieldVector;
+        } else if (fieldVector instanceof TimeMilliVector vector) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000);
+                a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000L);
             }
-        } else if (fieldVector instanceof TimeMicroVector) {
-            TimeMicroVector vector = (TimeMicroVector) fieldVector;
+        } else if (fieldVector instanceof TimeMicroVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
             }
-        } else if (fieldVector instanceof TimeSecVector) {
-            TimeSecVector vector = (TimeSecVector) fieldVector;
+        } else if (fieldVector instanceof TimeSecVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
             }
@@ -662,22 +658,21 @@ public class Arrow {
     private smile.data.vector.BaseVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalDateTime[] a = new LocalDateTime[count];
-        TimeStampVector vector = (TimeStampVector) fieldVector;
         String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
         ZoneOffset zone = timezone == null ? OffsetDateTime.now().getOffset() : ZoneOffset.of(timezone);
-        if (fieldVector instanceof TimeStampMilliVector) {
+        if (fieldVector instanceof TimeStampMilliVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone);
             }
-        } else if (fieldVector instanceof TimeStampNanoVector) {
+        } else if (fieldVector instanceof TimeStampNanoVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000000), zone);
             }
-        } else if (fieldVector instanceof TimeStampMicroVector) {
+        } else if (fieldVector instanceof TimeStampMicroVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)/1000), zone);
             }
-        } else if (fieldVector instanceof TimeStampSecVector) {
+        } else if (fieldVector instanceof TimeStampSecVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
             }
@@ -1272,11 +1267,11 @@ public class Arrow {
 
             case FloatingPoint:
                 FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
-                switch (precision) {
-                    case DOUBLE: return new StructField(name, nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType);
-                    case SINGLE: return new StructField(name, nullable ? DataTypes.FloatObjectType : DataTypes.FloatType);
-                    case HALF: throw new UnsupportedOperationException("Unsupported float precision: " + precision);
-                }
+                return switch (precision) {
+                    case DOUBLE -> new StructField(name, nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType);
+                    case SINGLE -> new StructField(name, nullable ? DataTypes.FloatObjectType : DataTypes.FloatType);
+                    case HALF -> throw new UnsupportedOperationException("Unsupported float precision: " + precision);
+                };
 
             case Bool:
                 return new StructField(name, nullable ? DataTypes.BooleanObjectType : DataTypes.BooleanType);

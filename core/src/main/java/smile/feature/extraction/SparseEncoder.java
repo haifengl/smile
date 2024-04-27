@@ -69,12 +69,12 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
                 if (i < base.length-1) {
                     base[i+1] = base[i] + 1;
                 }
-            } else if (field.measure instanceof CategoricalMeasure) {
+            } else if (field.measure instanceof CategoricalMeasure cat) {
                 if (i < base.length-1) {
-                    base[i+1] = base[i] + ((CategoricalMeasure) field.measure).size();
+                    base[i+1] = base[i] + cat.size();
                 }
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical"));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
             }
         }
     }
@@ -94,7 +94,7 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
             } else if (field.measure instanceof CategoricalMeasure) {
                 features.append(x.getInt(columns[i]) + base[i], 1);
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical"));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
             }
         }
 
@@ -107,6 +107,6 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
      * @return the sparse feature vectors.
      */
     public SparseArray[] apply(DataFrame data) {
-        return data.stream().map(this::apply).toArray(SparseArray[]::new);
+        return data.stream().map(this).toArray(SparseArray[]::new);
     }
 }

@@ -24,7 +24,7 @@ import smile.util.MutableInt;
 
 /**
  * An n-gram is a contiguous sequence of n words from a given sequence of text.
- * An n-gram of size 1 is referred to as a unigram; size 2 is a bigram;
+ * An n-gram of size 1 is referred to as an unigram; size 2 is a bigram;
  * size 3 is a trigram.
  *
  * @author Haifeng Li

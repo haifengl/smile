@@ -18,11 +18,7 @@
 package smile.feature.imputation;
 
 import java.util.function.Function;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
 import smile.test.data.SyntheticControl;
 import static smile.feature.imputation.SimpleImputerTest.impute;
@@ -36,23 +32,23 @@ public class KNNImputerTest {
     public KNNImputerTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("KNNImputer");
         double[][] data = SyntheticControl.x;

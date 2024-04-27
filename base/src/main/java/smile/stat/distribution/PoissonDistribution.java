@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Gamma;
 
+import java.io.Serial;
+
 /**
  * Poisson distribution expresses the probability of a number of events
  * occurring in a fixed period of time if these events occur with a known
@@ -43,6 +45,7 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class PoissonDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The average number of events per interval. */

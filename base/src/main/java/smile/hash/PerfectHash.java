@@ -127,13 +127,13 @@ public class PerfectHash implements Serializable {
     /** Keyword information. */
     private static class Key implements Comparable<Key> {
         /** selected characters in the string for hash computation. */
-        char[] ksig;
+        final char[] ksig;
         /** original key length. */
-        int klen;
+        final int klen;
         /** the frequency of each character. */
         int kfreq;
         /** the value of map. */
-        int value;
+        final int value;
 
         public Key(char[] ksig, int klen, int value) {
             this.ksig = ksig;

@@ -153,7 +153,7 @@ public class Contour extends Plot {
     /**
      * A line segment in contour line.
      */
-    class Segment {
+    static class Segment {
 
         double x0;
         double y0;
@@ -248,7 +248,6 @@ public class Contour extends Plot {
                 if (residual >= 0.4 && residual <= 0.7) {
                     // In case of too few grids, we use a half of precision unit.
                     precisionUnit /= 2;
-                    precisionDigits -= 1;
                 }
 
                 double lowerBound = precisionUnit * (Math.ceil(zMin / precisionUnit));
@@ -272,8 +271,7 @@ public class Contour extends Plot {
         Segment[][] segments = new Segment[ny][nx];
         double atom = 1E-7 * (zMax - zMin);
 
-        for (int c = 0; c < levels.length; c++) {
-            double zc = levels[c];
+        for (double zc : levels) {
             for (int i = 0; i < nx; i++) {
                 for (int j = 0; j < ny; j++) {
                     segments[j][i] = null;
@@ -446,7 +444,7 @@ public class Contour extends Plot {
                     Segment seglist = null;
                     if (k > 0) {
                         if (k == 2) {
-                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], seglist);
+                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], null);
                         } else if (k == 4) {
                             for (k = 3; k >= 1; k--) {
                                 int m = k;
@@ -468,7 +466,7 @@ public class Contour extends Plot {
                                 }
                             }
 
-                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], seglist);
+                            seglist = new Segment(xx[0], yy[0], xx[1], yy[1], null);
                             seglist = new Segment(xx[2], yy[2], xx[3], yy[3], seglist);
                         } else {
                             throw new IllegalStateException("k != 2 or 4");
@@ -486,7 +484,7 @@ public class Contour extends Plot {
             // 4. Save the contour
             for (int i = 0; i < nx - 1; i++) {
                 for (int j = 0; j < ny - 1; j++) {
-                    Segment seglist = null;
+                    Segment seglist;
                     while ((seglist = segments[j][i]) != null) {
                         ij[0] = i;
                         ij[1] = j;
@@ -498,7 +496,7 @@ public class Contour extends Plot {
                         double xend = seglist.x1;
                         double yend = seglist.y1;
 
-                        int dir = 0;
+                        int dir;
                         while ((dir = segdir(xend, yend, ij)) != 0) {
                             // tail
                             int ii = ij[0];
@@ -519,7 +517,7 @@ public class Contour extends Plot {
                         ij[1] = j;
                         xend = seglist.x0;
                         yend = seglist.y0;
-                        dir = 0;
+
                         while ((dir = segdir(xend, yend, ij)) != 0) {
                             // head
                             int ii = ij[0];
@@ -545,7 +543,7 @@ public class Contour extends Plot {
                             contour.add(s.x0, s.y0);
                         }
                         contour.add(s.x1, s.y1);
-                        
+
                         if (!contour.isEmpty()) {
                             contours.add(contour);
                         }
@@ -559,11 +557,7 @@ public class Contour extends Plot {
      * Returns true if zc is between z0 and z1.
      */
     private boolean isIntersect(double z0, double z1, double zc) {
-        if ((z0 - zc) * (z1 - zc) < 0.0) {
-            return true;
-        }
-
-        return false;
+        return (z0 - zc) * (z1 - zc) < 0.0;
     }
 
     /**
@@ -640,14 +634,6 @@ public class Contour extends Plot {
             case 3:
                 if (YMATCH(yend, seglist.y0)) {
                     if (!tail) {
-                        seglist.swap();
-                    }
-                    seg[1] = seglist;
-                    return seglist.next;
-                }
-
-                if (YMATCH(yend, seglist.y1)) {
-                    if (tail) {
                         seglist.swap();
                     }
                     seg[1] = seglist;

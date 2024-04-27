@@ -28,6 +28,7 @@ import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -40,6 +41,7 @@ import java.util.AbstractMap.SimpleEntry;
  * @author Haifeng Li
  */
 public abstract class CART implements SHAP<Tuple>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
 
@@ -244,7 +246,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Returns the predictors by the model formula if it is not null.
-     * Otherwise return the input tuple.
+     * Otherwise, return the input tuple.
      * @param x the input tuple.
      * @return the predictors.
      */
@@ -341,7 +343,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
     /**
      * Finds the best attribute to split on a set of samples. at the current node. Returns
-     * <code>Optional.empty</code> if a split doesn't exists to reduce the impurity.
+     * <code>Optional.empty</code> if a split doesn't exist to reduce the impurity.
      * @param node the leaf node to split.
      * @param lo the inclusive lower bound of the data partition in the reordered sample index array.
      * @param hi the exclusive upper bound of the data partition in the reordered sample index array.
@@ -350,7 +352,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     protected Optional<Split> findBestSplit(LeafNode node, int lo, int hi, boolean[] unsplittable) {
         if (node.size() < 2 * nodeSize) {
-            return Optional.empty(); // one child will has less than nodeSize samples.
+            return Optional.empty(); // one child will have less than nodeSize samples.
         }
 
         final double impurity = impurity(node);
@@ -453,10 +455,9 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             // leaf node
             builder.append(node.dot(schema, response, id));
 
-            if (node instanceof InternalNode) {
+            if (node instanceof InternalNode inode) {
                 int tid = 2 * id;
                 int fid = 2 * id + 1;
-                InternalNode inode = (InternalNode) node;
                 queue.add(new SimpleEntry<>(tid, inode.trueChild));
                 queue.add(new SimpleEntry<>(fid, inode.falseChild));
 
@@ -566,11 +567,11 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
     public double[] shap(Tuple x) {
         int k = 1;
         Node node = root;
-        while (node instanceof InternalNode) {
-            node = ((InternalNode) node).trueChild;
+        while (node instanceof InternalNode inode) {
+            node = inode.trueChild;
         }
-        if (node instanceof DecisionNode) {
-            k = ((DecisionNode) node).count().length;
+        if (node instanceof DecisionNode dnode) {
+            k = dnode.count().length;
         }
 
         int p = schema.length();
@@ -588,8 +589,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         int l = m.length;
         m = m.extend(pz, po, pi);
 
-        if (node instanceof InternalNode) {
-            InternalNode split = (InternalNode) node;
+        if (node instanceof InternalNode split) {
             int dj = split.feature();
             Node h, c;
             if (split.branch(x)) {
@@ -620,8 +620,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             recurse(phi, x, h, m, iz * rh / rj, io, dj);
             recurse(phi, x, c, m, iz * rc /rj, 0, dj);
         } else {
-            if (node instanceof DecisionNode) {
-                DecisionNode leaf = ((DecisionNode) node);
+            if (node instanceof DecisionNode leaf) {
                 int k = leaf.count().length;
                 double[] prob = new double[k];
                 leaf.posteriori(prob);
@@ -650,21 +649,21 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         /** The length of path. */
         int length;
         /** The unique feature index. */
-        int[] d;
+        final int[] d;
         /**
          * The fraction of zero paths (where this feature is not
          * in the non-zero index set S) that flow through this path.
          */
-        double[] z;
+        final double[] z;
         /**
-         * The fraction of one paths (where this feature is
+         * The fraction of one path (where this feature is
          * in the non-zero index set S) that flow through this path.
          */
-        double[] o;
+        final double[] o;
         /**
          * The proportion of sets of a given cardinality that are present.
          */
-        double[] w;
+        final double[] w;
 
         /**
          * Constructor.

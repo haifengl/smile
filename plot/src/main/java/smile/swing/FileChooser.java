@@ -31,6 +31,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -54,7 +55,7 @@ public class FileChooser extends JFileChooser {
      * Shared file chooser. An application should have only one file chooser
      * so that it always points to the recent directory.
      */
-    private static FileChooser chooser = new FileChooser();
+    private static final FileChooser chooser = new FileChooser();
 
     /**
      * Constructor.
@@ -73,7 +74,7 @@ public class FileChooser extends JFileChooser {
         return chooser;
     }
     
-    class FilePreview extends JComponent implements PropertyChangeListener {
+    static class FilePreview extends JComponent implements PropertyChangeListener {
         /**
          * The image of selected file.
          */
@@ -85,19 +86,19 @@ public class FileChooser extends JFileChooser {
         /**
          * A buffer to hold file header.
          */
-        char[] buf = new char[1024];
+        final char[] buf = new char[1024];
         /**
          * Font for header text.
          */
-        Font font = (Font) UIManager.get("Label.font"); 
+        final Font font = (Font) UIManager.get("Label.font");
         /**
          * Font metrics.
          */
-        FontMetrics fm = getFontMetrics(font);
+        final FontMetrics fm = getFontMetrics(font);
         /**
          * Color for header text.
          */
-        Color color = (Color) UIManager.get("Label.foreground"); 
+        final Color color = (Color) UIManager.get("Label.foreground");
         /**
          * Text file header.
          */
@@ -136,7 +137,7 @@ public class FileChooser extends JFileChooser {
                     reader.close();
                     boolean binary = false;
                     for (int i = 0; i < len; i++) {
-                        if (buf[i] >= 0 && buf[i] < 0x1F) {
+                        if (buf[i] < 0x1F) {
                             if (buf[i] != 0x09 && // tab
                                 buf[i] != 0x0A && // line feed
                                 buf[i] != 0x0C && // form feed
@@ -270,34 +271,29 @@ public class FileChooser extends JFileChooser {
         /**
          * Filter for readable image formats.
          */
-        private static SimpleFileFilter readableImageFilter;
+        private static final SimpleFileFilter readableImageFilter = new SimpleFileFilter("Readable Images", ImageIO.getReaderFormatNames());
         /**
          * Filter for writable image formats.
          */
-        private static SimpleFileFilter writableImageFilter;
-
-        static {
-            readableImageFilter = new SimpleFileFilter("Readable Images", ImageIO.getReaderFormatNames());
-            writableImageFilter = new SimpleFileFilter("Writable Images", ImageIO.getWriterFormatNames());
-        }
+        private static final SimpleFileFilter writableImageFilter = new SimpleFileFilter("Writable Images", ImageIO.getWriterFormatNames());
 
         /**
          * The file extensions in lower case.
          */
-        private TreeSet<String> filters = new TreeSet<>();
+        private final TreeSet<String> filters = new TreeSet<>();
         /**
-         * The human readable description of this filter.
+         * The human-readable description of this filter.
          */
         private String description = null;
         /**
-         * The human readable description of this filter with the list of
+         * The human-readable description of this filter with the list of
          * file extensions.
          */
         private String fullDescription = null;
 
         /**
          * Creates a file filter that accepts the given file type.
-         *
+         * <p>
          * Note that the "." before the extension is not needed. If
          * provided, it will be ignored.
          */
@@ -313,7 +309,7 @@ public class FileChooser extends JFileChooser {
 
         /**
          * Creates a file filter from the given string array and description.
-         *
+         * <p>
          * Note that the "." before the extension is not needed and will be ignored.
          */
         public SimpleFileFilter(String description, String... filters) {
@@ -321,15 +317,15 @@ public class FileChooser extends JFileChooser {
                 setDescription(description);
             }
 
-            for (int i = 0; i < filters.length; i++) {
+            for (String filter : filters) {
                 // add filters one by one
-                addExtension(filters[i]);
+                addExtension(filter);
             }
         }
 
         /**
          * Creates a file filter from the given string array and description.
-         *
+         * <p>
          * Note that the "." before the extension is not needed and will be ignored.
          */
         public SimpleFileFilter(String description, Collection<String> filters) {
@@ -383,25 +379,25 @@ public class FileChooser extends JFileChooser {
         }
 
         /**
-         * Returns the human readable description of this filter.
+         * Returns the human-readable description of this filter.
          */
         @Override
         public String getDescription() {
             if (fullDescription == null) {
-                fullDescription = description == null ? "(" : description + " (";
-                // build the description from the extension list
-                for (String extension : filters) {
-                    fullDescription += "." + extension;
+                StringBuilder sb = new StringBuilder();
+                if (description != null) {
+                    sb.append(description);
+                    sb.append(' ');
                 }
-
-                fullDescription += ")";
+                sb.append(Arrays.toString(filters.toArray(new String[0])));
+                fullDescription = sb.toString();
             }
 
             return fullDescription;
         }
 
         /**
-         * Sets the human readable description of this filter.
+         * Sets the human-readable description of this filter.
          */
         public void setDescription(String description) {
             this.description = description;

@@ -17,15 +17,19 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.function.ToIntFunction;
 
 /**
  * First-order Hidden Markov Model sequence labeler.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class HMMLabeler<T> implements SequenceLabeler<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The HMM model. */

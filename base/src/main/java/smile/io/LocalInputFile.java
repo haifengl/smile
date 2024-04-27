@@ -28,7 +28,7 @@ import org.apache.parquet.io.SeekableInputStream;
 
 /**
  * Parquet InputFile with a local java.nio.Path.
- * Adapted from https://github.com/tideworks/arvo2parquet
+ * Adapted from <a href="https://github.com/tideworks/arvo2parquet">arvo2parquet</a>.
  *
  * @author Haifeng Li
  */
@@ -51,7 +51,7 @@ class LocalInputFile implements InputFile {
     }
 
     @Override
-    public SeekableInputStream newStream() throws IOException {
+    public SeekableInputStream newStream() {
         return new SeekableInputStream() {
             private final byte[] page = new byte[8192];
             private long markPos = 0;

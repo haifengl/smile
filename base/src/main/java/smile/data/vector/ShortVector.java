@@ -41,8 +41,18 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
     ShortVector get(int... index);
 
     @Override
+    default boolean getBoolean(int i) {
+        return getShort(i) != 0;
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (char) getShort(i);
+    }
+
+    @Override
     default byte getByte(int i) {
-        throw new UnsupportedOperationException("cast short to byte");
+        return (byte) getShort(i);
     }
 
     @Override

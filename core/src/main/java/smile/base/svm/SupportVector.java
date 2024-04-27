@@ -17,14 +17,18 @@
 
 package smile.base.svm;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * Support vector.
  *
+ * @param <T> the data type of support vectors.
+ *
  * @author Haifeng Li
  */
 public class SupportVector<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

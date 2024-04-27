@@ -17,6 +17,7 @@
 
 package smile.vq;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -27,7 +28,7 @@ import smile.manifold.MDS;
 import smile.sort.QuickSort;
 
 /**
- * Self-Organizing Map. An SOM is a unsupervised learning method to produce
+ * Self-Organizing Map. An SOM is an unsupervised learning method to produce
  * a low-dimensional (typically two-dimensional) discretized representation
  * (called a map) of the input space of the training samples. The model was
  * first described as an artificial neural network by Teuvo Kohonen, and is
@@ -86,6 +87,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class SOM implements VectorQuantizer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

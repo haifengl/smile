@@ -17,6 +17,7 @@
 
 package smile.sequence;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
@@ -25,9 +26,12 @@ import smile.data.Tuple;
 /**
  * First-order CRF sequence labeler.
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class CRFLabeler<T> implements SequenceLabeler<T> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The CRF model. */
@@ -63,7 +67,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param sequences the training data.
      * @param labels the training sequence labels.
      * @param features the feature function.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param <T> the data type of observations.
      * @return the model.
      */

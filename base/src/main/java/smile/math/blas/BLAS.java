@@ -449,7 +449,7 @@ public interface BLAS {
     }
 
     /**
-     * Searches a vector for the first occurrence of the the maximum absolute
+     * Searches a vector for the first occurrence of the maximum absolute
      * value.
      *
      * @param n Number of elements in the vectors.
@@ -466,7 +466,7 @@ public interface BLAS {
     long iamax(int n, double[] x, int incx);
 
     /**
-     * Searches a vector for the first occurrence of the the maximum absolute
+     * Searches a vector for the first occurrence of the maximum absolute
      * value.
      *
      * @param n Number of elements in the vectors.
@@ -483,7 +483,7 @@ public interface BLAS {
     long iamax(int n, float[] x, int incx);
 
     /**
-     * Searches a vector for the first occurrence of the the maximum absolute
+     * Searches a vector for the first occurrence of the maximum absolute
      * value.
      *
      * @param x Vector to be searched.
@@ -495,7 +495,7 @@ public interface BLAS {
     }
 
     /**
-     * Searches a vector for the first occurrence of the the maximum absolute
+     * Searches a vector for the first occurrence of the maximum absolute
      * value.
      *
      * @param x Vector to be searched.
@@ -534,8 +534,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *           when {@code trans = 'N' or 'n'} and
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -571,8 +571,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *           when {@code trans = 'N' or 'n'} and
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -608,8 +608,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *           when {@code trans = 'N' or 'n'} and
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -645,8 +645,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1)*abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *           when {@code trans = 'N' or 'n'} and
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -682,8 +682,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *           when {@code trans = 'N' or 'n'} and
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -712,8 +712,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -740,8 +740,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -768,8 +768,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -796,8 +796,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -824,8 +824,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -851,8 +851,8 @@ public interface BLAS {
      * @param A the symmetric packed matrix.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -878,8 +878,8 @@ public interface BLAS {
      * @param A the symmetric packed matrix.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -905,8 +905,8 @@ public interface BLAS {
      * @param A the symmetric packed matrix.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -932,8 +932,8 @@ public interface BLAS {
      * @param A the symmetric packed matrix.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -1187,8 +1187,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -1222,8 +1222,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -1257,8 +1257,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -1292,8 +1292,8 @@ public interface BLAS {
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
      *          when {@code trans = 'N' or 'n'} and
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
@@ -1323,8 +1323,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))},
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -1352,8 +1352,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))},
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -1381,8 +1381,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -1410,8 +1410,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
@@ -1731,8 +1731,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1757,8 +1757,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1783,8 +1783,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1809,8 +1809,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1835,8 +1835,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1864,8 +1864,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1893,8 +1893,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1922,8 +1922,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1947,8 +1947,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
@@ -1972,8 +1972,8 @@ public interface BLAS {
      * @param lda the leading dimension of A as declared in the caller.
      * @param B the matrix B.
      * @param ldb the leading dimension of B as declared in the caller.
-     * @param beta the scalar beta. When beta is supplied as zero
-     *             then y need not be set on input.
+     * @param beta the scalar beta. When beta is supplied as zero,
+     *             y need not be set on input.
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */

@@ -17,15 +17,15 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Soft Shrink activation function.
  *
  * @author Haifeng Li
  */
-public class SoftShrink implements ActivationFunction {
+public class SoftShrink extends ActivationFunction {
     /** The lambda value in the formulation. */
     final double lambda;
 
@@ -39,6 +39,7 @@ public class SoftShrink implements ActivationFunction {
      * @param lambda The lambda value in the formulation.
      */
     public SoftShrink(double lambda) {
+        super(String.format("SoftShrink(%.4f)", lambda), false);
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid lambda: " + lambda);
         }
@@ -46,12 +47,7 @@ public class SoftShrink implements ActivationFunction {
     }
 
     @Override
-    public String name() {
-        return String.format("SoftShrink(%.4f)", lambda);
-    }
-
-    @Override
-    public Tensor apply(Tensor x) {
-        return torch.softshrink(x, lambda);
+    public Tensor forward(Tensor x) {
+        return new Tensor(torch.softshrink(x.asTorch(), lambda));
     }
 }

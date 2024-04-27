@@ -48,6 +48,31 @@ public class Device {
         this.value = new org.bytedeco.pytorch.Device(type.value, index);
     }
 
+    /**
+     * Constructor.
+     * @param device PyTorch device object.
+     */
+    Device(org.bytedeco.pytorch.Device device) {
+        this.value = device;
+        if (device.is_cpu()) {
+            type = DeviceType.CPU;
+        } else if (device.is_cuda()) {
+            type = DeviceType.CUDA;
+        } else if (device.is_mps()) {
+            type = DeviceType.MPS;
+        } else {
+            throw new IllegalArgumentException("Unsupported device: " + device);
+        }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Device x) {
+            return value.equals(x.value);
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return value.str().getString();
@@ -118,7 +143,7 @@ public class Device {
     }
 
     /**
-     * Returns the GPU for MacOS devices with Metal programming framework.
+     * Returns the GPU for macOS devices with Metal programming framework.
      *
      * @return the compute device.
      */
@@ -150,7 +175,7 @@ public class Device {
      * function calls which are called with an explicit device argument.
      * Factory calls will be performed as if they were passed device as
      * an argument.
-     *
+     * <p>
      * The default device is initially CPU. If you set the default tensor
      * device to another device (e.g., CUDA) without a device index,
      * tensors will be allocated on whatever the current device for

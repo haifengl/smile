@@ -16,6 +16,7 @@
  */
 package smile.deep.layer;
 
+import java.util.function.Function;
 import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Tensor;
@@ -25,14 +26,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public interface Layer {
-    /**
-     * Registers this layer to a neural network.
-     * @param name the name of this layer.
-     * @param parent the parent layer that this layer is registered to.
-     */
-    void register(String name, Layer parent);
-
+public interface Layer extends Function<Tensor, Tensor> {
     /**
      * Forward propagation (or forward pass) through the layer.
      *
@@ -40,6 +34,11 @@ public interface Layer {
      * @return the output tensor.
      */
     Tensor forward(Tensor input);
+
+    @Override
+    default Tensor apply(Tensor input) {
+        return forward(input);
+    }
 
     /**
      * Returns the PyTorch Module object.
@@ -63,8 +62,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer relu(int in, int out) {
-        return relu(in, out, 0.0);
+    static SequentialBlock relu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new ReLU(true)
+        );
     }
 
     /**
@@ -74,29 +76,44 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer relu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new ReLU(), dropout);
+    static SequentialBlock relu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new ReLU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
      * Returns a fully connected layer with leaky ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
+     * @param negativeSlope Controls the angle of the negative slope in leaky ReLU,
+     *                     which is used for negative input values.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer leaky(int in, int out) {
-        return leaky(in, out, 0.0);
+    static SequentialBlock leaky(int in, int out, double negativeSlope) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LeakyReLU(negativeSlope, true)
+        );
     }
 
     /**
      * Returns a fully connected layer with leaky ReLU activation function.
      * @param in the number of input features.
      * @param out the number of output features.
+     * @param negativeSlope Controls the angle of the negative slope in leaky ReLU,
+     *                     which is used for negative input values.
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer leaky(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new LeakyReLU(), dropout);
+    static SequentialBlock leaky(int in, int out, double negativeSlope, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LeakyReLU(negativeSlope, true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -105,8 +122,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer gelu(int in, int out) {
-        return silu(in, out, 0.0);
+    static SequentialBlock gelu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true)
+        );
     }
 
     /**
@@ -116,8 +136,12 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer gelu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new GELU(), dropout);
+    static SequentialBlock gelu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -126,8 +150,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer silu(int in, int out) {
-        return silu(in, out, 0.0);
+    static SequentialBlock silu(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new GELU(true)
+        );
     }
 
     /**
@@ -137,8 +164,12 @@ public interface Layer {
      * @param dropout the optional dropout probability.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer silu(int in, int out, double dropout) {
-        return new FullyConnectedLayer(in, out, new SiLU(), dropout);
+    static SequentialBlock silu(int in, int out, double dropout) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new SiLU(true),
+                new DropoutLayer(dropout)
+        );
     }
 
     /**
@@ -147,8 +178,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer tanh(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Tanh());
+    static SequentialBlock tanh(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Tanh(true)
+        );
     }
 
     /**
@@ -157,8 +191,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer sigmoid(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Sigmoid());
+    static SequentialBlock sigmoid(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Sigmoid(true)
+        );
     }
 
     /**
@@ -167,8 +204,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer logSigmoid(int in, int out) {
-        return new FullyConnectedLayer(in, out, new LogSigmoid());
+    static SequentialBlock logSigmoid(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LogSigmoid()
+        );
     }
 
     /**
@@ -177,8 +217,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer softmax(int in, int out) {
-        return new FullyConnectedLayer(in, out, new Softmax());
+    static SequentialBlock softmax(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new Softmax()
+        );
     }
 
     /**
@@ -187,8 +230,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer logSoftmax(int in, int out) {
-        return new FullyConnectedLayer(in, out, new LogSoftmax());
+    static SequentialBlock logSoftmax(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new LogSoftmax()
+        );
     }
 
     /**
@@ -197,8 +243,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer tanhShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new TanhShrink());
+    static SequentialBlock tanhShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new TanhShrink()
+        );
     }
 
     /**
@@ -207,8 +256,11 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer softShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new SoftShrink());
+    static SequentialBlock softShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new SoftShrink()
+        );
     }
 
     /**
@@ -217,37 +269,64 @@ public interface Layer {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer hardShrink(int in, int out) {
-        return new FullyConnectedLayer(in, out, new HardShrink());
+    static SequentialBlock hardShrink(int in, int out) {
+        return new SequentialBlock(
+                new FullyConnectedLayer(in, out),
+                new HardShrink()
+        );
     }
 
     /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output features.
-     * @param size the window size.
+     * @param kernel the window/kernel size.
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size) {
-        return new Conv2dLayer(in, out, size, 1, 1, 1, true);
+    static Conv2dLayer conv2d(int in, int out, int kernel) {
+        return new Conv2dLayer(in, out, kernel, 1, 0, 1, 1, true, "zeros");
     }
 
     /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output channels/features.
-     * @param size the window size.
+     * @param kernel the window/kernel size.
      * @param stride controls the stride for the cross-correlation.
+     * @param padding controls the amount of padding applied on both sides.
      * @param dilation controls the spacing between the kernel points.
-     *                It is harder to describe, but this link has a nice
-     *                visualization of what dilation does.
      * @param groups controls the connections between inputs and outputs.
      *              The in channels and out channels must both be divisible by groups.
      * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      * @return a convolutional layer.
      */
-    static Conv2dLayer conv2d(int in, int out, int size, int stride, int dilation, int groups, boolean bias) {
-        return new Conv2dLayer(in, out, size, stride, dilation, groups, bias);
+    static Conv2dLayer conv2d(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
+        return new Conv2dLayer(in, out, kernel, stride, padding, dilation, groups, bias, paddingMode);
+    }
+
+    /**
+     * Returns a convolutional layer.
+     * @param in the number of input channels.
+     * @param out the number of output channels/features.
+     * @param size the window/kernel size.
+     * @param stride controls the stride for the cross-correlation.
+     * @param padding "valid" or "same". With "valid" padding, there's no
+     *               "made-up" padding inputs. It drops the right-most columns
+     *               (or bottom-most rows). "same" tries to pad evenly left
+     *               and right, but if the amount of columns to be added
+     *               is odd, it will add the extra column to the right.
+     *               If stride is 1, the layer's outputs will have the
+     *               same spatial dimensions as its inputs.
+     * @param dilation controls the spacing between the kernel points.
+     * @param groups controls the connections between inputs and outputs.
+     *              The in channels and out channels must both be divisible by groups.
+     * @param bias If true, adds a learnable bias to the output.
+     * @param paddingMode "zeros", "reflect", "replicate" or "circular".
+     * @return a convolutional layer.
+     */
+    static Conv2dLayer conv2d(int in, int out, int size, int stride, String padding, int dilation, int groups, boolean bias, String paddingMode) {
+        return new Conv2dLayer(in, out, size, stride, padding, dilation, groups, bias, paddingMode);
     }
 
     /**
@@ -258,6 +337,25 @@ public interface Layer {
      */
     static MaxPool2dLayer maxPool2d(int size) {
         return new MaxPool2dLayer(size);
+    }
+
+    /**
+     * Returns an average pooling layer that reduces a tensor by combining cells,
+     * and assigning the average value of the input cells to the output cell.
+     * @param size the window/kernel size.
+     * @return a max pooling layer.
+     */
+    static AvgPool2dLayer avgPool2d(int size) {
+        return new AvgPool2dLayer(size);
+    }
+
+    /**
+     * Returns an adaptive average pooling layer.
+     * @param size the output size.
+     * @return an adaptive average pooling layer.
+     */
+    static AdaptiveAvgPool2dLayer adaptiveAvgPool2d(int size) {
+        return new AdaptiveAvgPool2dLayer(size);
     }
 
     /**
@@ -324,7 +422,7 @@ public interface Layer {
      * elements are chosen independently for each forward call and are
      * sampled from a Bernoulli distribution. Each channel will be zeroed
      * out independently on every forward call.
-     *
+     * <p>
      * This has proven to be an effective technique for regularization
      * and preventing the co-adaptation of neurons as described in the
      * paper "Improving Neural Networks by Preventing Co-adaptation
@@ -340,7 +438,7 @@ public interface Layer {
     /**
      * Returns an embedding layer that is a simple lookup table that stores
      * embeddings of a fixed dictionary and size.
-     *
+     * <p>
      * This layer is often used to store word embeddings and retrieve them
      * using indices. The input to the module is a list of indices, and the
      * output is the corresponding word embeddings.
@@ -356,7 +454,7 @@ public interface Layer {
     /**
      * Returns an embedding layer that is a simple lookup table that stores
      * embeddings of a fixed dictionary and size.
-     *
+     * <p>
      * This layer is often used to store word embeddings and retrieve them
      * using indices. The input to the module is a list of indices, and the
      * output is the corresponding word embeddings.

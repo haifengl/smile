@@ -30,8 +30,8 @@ import smile.data.DataFrame;
  */
 public interface Feature {
     /**
-     * Returns the meta data of feature.
-     * @return the meta data of feature.
+     * Returns the metadata of feature.
+     * @return the metadata of feature.
      */
     StructField field();
 
@@ -43,7 +43,7 @@ public interface Feature {
     Object apply(Tuple tuple);
 
     /**
-     * Applies the term on a data object and produces an double-valued result.
+     * Applies the term on a data object and produces a double-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */
@@ -52,7 +52,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an float-valued result.
+     * Applies the term on a data object and produces a float-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */
@@ -70,7 +70,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an long-valued result.
+     * Applies the term on a data object and produces a long-valued result.
      * @param tuple the input tuple
      * @return the feature value.
      */
@@ -79,7 +79,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an boolean-valued result.
+     * Applies the term on a data object and produces a boolean-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */
@@ -88,7 +88,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an byte-valued result.
+     * Applies the term on a data object and produces a byte-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */
@@ -97,7 +97,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an short-valued result.
+     * Applies the term on a data object and produces a short-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */
@@ -106,7 +106,7 @@ public interface Feature {
     }
 
     /**
-     * Applies the term on a data object and produces an char-valued result.
+     * Applies the term on a data object and produces a char-valued result.
      * @param tuple the input tuple.
      * @return the feature value.
      */

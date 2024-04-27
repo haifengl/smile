@@ -17,12 +17,15 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * Mean absolute deviation error.
  * 
  * @author Haifeng Li
  */
 public class MAD implements RegressionMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MAD instance = new MAD();

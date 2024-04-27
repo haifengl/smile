@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -25,7 +26,7 @@ import smile.util.IntSet;
 
 /**
  * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
- * The mean update for centroids is replace by the mode one which is
+ * The mean update for centroids is replaced by the mode one which is
  * a majority vote among element of each cluster.
  *
  * <h2>References</h2>
@@ -38,6 +39,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class KModes extends CentroidClustering<int[], int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KModes.class);
 

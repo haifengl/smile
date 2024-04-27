@@ -107,19 +107,20 @@ public class FontChooser extends JComponent {
     
     // instance variables
     protected int dialogResultValue = ERROR_OPTION;
-    private ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
+    private final ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
 
     protected String getMessage(String key) {
         String value = key;
         try {
             value = messageCatalog.getString(key);
-        } catch (MissingResourceException e) {
+        } catch (MissingResourceException ex) {
+            logger.debug("Failed to get message resource: ", ex);
         }
         return value;
     }
     private String[] fontStyleNames = null;
     private String[] fontFamilyNames = null;
-    private String[] fontSizeStrings = null;
+    private String[] fontSizeStrings;
     private JTextField fontFamilyTextField = null;
     private JTextField fontStyleTextField = null;
     private JTextField fontSizeTextField = null;
@@ -136,7 +137,7 @@ public class FontChooser extends JComponent {
      * Shared font chooser. An application should have only one font chooser
      * so that it always knows the latest chosen font.
      */
-    private static FontChooser chooser = new FontChooser();
+    private static final FontChooser chooser = new FontChooser();
 
     /**
      * Constructs a <code>FontChooser</code> object.
@@ -297,14 +298,14 @@ public class FontChooser extends JComponent {
      * @see #setSelectedFontSize
      **/
     public int getSelectedFontSize() {
-        int fontSize = 1;
+        int fontSize;
         String fontSizeString = getFontSizeTextField().getText();
         while (true) {
             try {
                 fontSize = Integer.parseInt(fontSizeString);
                 break;
             } catch (NumberFormatException e) {
-                fontSizeString = (String) getFontSizeList().getSelectedValue();
+                fontSizeString = getFontSizeList().getSelectedValue();
                 getFontSizeTextField().setText(fontSizeString);
             }
         }
@@ -320,8 +321,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font
      **/
     public Font getSelectedFont() {
-        Font font = new Font(getSelectedFontFamily(),
-                getSelectedFontStyle(), getSelectedFontSize());
+        Font font = new Font(getSelectedFontFamily(), getSelectedFontStyle(), getSelectedFontSize());
         return font;
     }
 
@@ -421,14 +421,13 @@ public class FontChooser extends JComponent {
 
         dialog.setVisible(true);
         dialog.dispose();
-        dialog = null;
 
         return dialogResultValue;
     }
 
     class ListSelectionHandler implements ListSelectionListener {
 
-        private JTextComponent textComponent;
+        private final JTextComponent textComponent;
 
         ListSelectionHandler(JTextComponent textComponent) {
             this.textComponent = textComponent;
@@ -436,10 +435,10 @@ public class FontChooser extends JComponent {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            if (e.getValueIsAdjusting() == false) {
+            if (!e.getValueIsAdjusting()) {
                 @SuppressWarnings("unchecked")
                 JList<String> list = (JList<String>) e.getSource();
-                String selectedValue = (String) list.getSelectedValue();
+                String selectedValue = list.getSelectedValue();
 
                 String oldValue = textComponent.getText();
                 textComponent.setText(selectedValue);
@@ -455,7 +454,7 @@ public class FontChooser extends JComponent {
 
     class TextFieldFocusHandlerForTextSelection extends FocusAdapter {
 
-        private JTextComponent textComponent;
+        private final JTextComponent textComponent;
 
         public TextFieldFocusHandlerForTextSelection(JTextComponent textComponent) {
             this.textComponent = textComponent;
@@ -473,9 +472,9 @@ public class FontChooser extends JComponent {
         }
     }
 
-    class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
+    static class TextFieldKeyHandlerForListSelectionUpDown extends KeyAdapter {
 
-        private JList<String> targetList;
+        private final JList<String> targetList;
 
         public TextFieldKeyHandlerForListSelectionUpDown(JList<String> list) {
             this.targetList = list;
@@ -505,9 +504,9 @@ public class FontChooser extends JComponent {
         }
     }
 
-    class ListSearchTextFieldDocumentHandler implements DocumentListener {
+    static class ListSearchTextFieldDocumentHandler implements DocumentListener {
 
-        JList<String> targetList;
+        final JList<String> targetList;
 
         public ListSearchTextFieldDocumentHandler(JList<String> targetList) {
             this.targetList = targetList;
@@ -555,7 +554,7 @@ public class FontChooser extends JComponent {
 
         public class ListSelector implements Runnable {
 
-            private int index;
+            private final int index;
 
             public ListSelector(int index) {
                 this.index = index;
@@ -571,7 +570,7 @@ public class FontChooser extends JComponent {
     class DialogOKAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "OK";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected DialogOKAction(JDialog dialog) {
             this.dialog = dialog;
@@ -590,7 +589,7 @@ public class FontChooser extends JComponent {
     class DialogCancelAction extends AbstractAction {
 
         protected static final String ACTION_NAME = "Cancel";
-        private JDialog dialog;
+        private final JDialog dialog;
 
         protected DialogCancelAction(JDialog dialog) {
             this.dialog = dialog;
@@ -607,8 +606,13 @@ public class FontChooser extends JComponent {
     }
 
     private JDialog createDialog(Component parent) {
-        Frame frame = parent instanceof Frame ? (Frame) parent
-                : (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
+        Frame frame;
+        if (parent instanceof Frame f) {
+            frame = f;
+        } else {
+            frame = (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
+        }
+
         JDialog dialog = new JDialog(frame, getMessage("SelectFont"), true);
 
         Action okAction = new DialogOKAction(dialog);
@@ -770,12 +774,12 @@ public class FontChooser extends JComponent {
 
     private String[] getFontStyleNames() {
         if (fontStyleNames == null) {
-            int i = 0;
-            fontStyleNames = new String[4];
-            fontStyleNames[i++] = getMessage("Plain");
-            fontStyleNames[i++] = getMessage("Bold");
-            fontStyleNames[i++] = getMessage("Italic");
-            fontStyleNames[i++] = getMessage("BoldItalic");
+            fontStyleNames = new String[] {
+                getMessage("Plain"),
+                getMessage("Bold"),
+                getMessage("Italic"),
+                getMessage("BoldItalic")
+            };
         }
         return fontStyleNames;
     }

@@ -17,6 +17,8 @@
 
 package smile.validation.metric;
 
+import java.io.Serial;
+
 /**
  * The precision or positive predictive value (PPV) is ratio of true positives
  * to combined true and false positives, which is different from sensitivity.
@@ -27,6 +29,7 @@ package smile.validation.metric;
  * @author Haifeng Li
  */
 public class Precision implements ClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Precision instance = new Precision();

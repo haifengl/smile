@@ -17,7 +17,6 @@
 
 package smile.feature.imputation;
 
-import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 /**

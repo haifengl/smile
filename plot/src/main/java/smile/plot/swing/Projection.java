@@ -23,7 +23,7 @@ package smile.plot.swing;
  *
  * @author Haifeng Li
  */
-abstract class Projection {
+public abstract class Projection {
     /**
      * The canvas associated with this projection. The base object of canvas
      * provides logical coordinate space and the Java2D coordinate space of

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * A simple implementation of dictionary interface.
@@ -31,6 +32,7 @@ import java.util.Iterator;
  * @author Haifeng Li
  */
 public class SimpleDictionary implements Dictionary {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleDictionary.class);
 
     /**
      * A list of abbreviations.
@@ -48,7 +50,7 @@ public class SimpleDictionary implements Dictionary {
         File file = new File(resource);
         try (BufferedReader input = file.exists() ?
              new BufferedReader(new FileReader(resource)) :
-             new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
+             new BufferedReader(new InputStreamReader(Objects.requireNonNull(this.getClass().getResourceAsStream(resource))))) {
             
             String line;
             while ((line = input.readLine()) != null) {
@@ -59,7 +61,7 @@ public class SimpleDictionary implements Dictionary {
                 }
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            logger.error("Failed to parse dictionary: ", ex);
         }
     }
 

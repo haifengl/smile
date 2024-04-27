@@ -17,6 +17,8 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.DropoutImpl;
+import org.bytedeco.pytorch.DropoutOptions;
+import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -25,7 +27,7 @@ import smile.deep.tensor.Tensor;
  * elements are chosen independently for each forward call and are
  * sampled from a Bernoulli distribution. Each channel will be zeroed
  * out independently on every forward call.
- *
+ * <p>
  * This has proven to be an effective technique for regularization
  * and preventing the co-adaptation of neurons as described in the
  * paper "Improving Neural Networks by Preventing Co-adaptation
@@ -34,32 +36,36 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class DropoutLayer implements Layer {
-    /** The dropout probability. */
-    double p;
-    /** Implementation. */
-    DropoutImpl module;
+    private final DropoutImpl module;
 
     /**
      * Constructor.
      * @param p the dropout probability.
      */
     public DropoutLayer(double p) {
-        this.p = p;
-        this.module = new DropoutImpl(p);
+        this(p, false);
+    }
+
+    /**
+     * Constructor.
+     * @param p the dropout probability.
+     * @param inplace true if the operation executes in-place.
+     */
+    public DropoutLayer(double p, boolean inplace) {
+        DropoutOptions options = new DropoutOptions();
+        options.p().put(p);
+        options.inplace().put(inplace);
+        this.module = new DropoutImpl(options);
     }
 
     @Override
-    public void register(String name, Layer parent) {
-        this.module = parent.asTorch().register_module(name, module);
+    public Module asTorch() {
+        return module;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return Tensor.of(module.forward(input.asTorch()));
-    }
-
-    @Override
-    public DropoutImpl asTorch() {
-        return module;
+        if (!module.is_training()) return input;
+        return new Tensor(module.forward(input.asTorch()));
     }
 }

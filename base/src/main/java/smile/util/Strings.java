@@ -148,14 +148,10 @@ public interface Strings {
      */
     static String ordinal(int i) {
         final String[] suffixes = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
-        switch (i % 100) {
-            case 11:
-            case 12:
-            case 13:
-                return i + "th";
-            default:
-                return i + suffixes[i % 10];
-        }
+        return switch (i % 100) {
+            case 11, 12, 13 -> i + "th";
+            default -> i + suffixes[i % 10];
+        };
     }
 
     /**

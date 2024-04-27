@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 /**
  * The finite mixture of distributions from multivariate exponential family.
  * The EM algorithm can be used to learn the mixture model from data.
@@ -26,6 +28,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MultivariateExponentialFamilyMixture.class);
 

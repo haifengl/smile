@@ -25,7 +25,7 @@ import java.util.Arrays;
  * be a set of <code>n</code> binary attributes called items. Let
  * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
  * be a set of transactions called the database. Each transaction in
- * <code>D</code> has an unique transaction ID and contains a subset
+ * <code>D</code> has a unique transaction ID and contains a subset
  * of the items in <code>I</code>. An association rule is defined
  * as an implication of the form <code>X &rArr; Y</code>
  * where <code>X, Y &sube; I</code> and <code>X &cap; Y = &Oslash;</code>.
@@ -92,10 +92,10 @@ public class AssociationRule {
      * measured against a random choice targeting model. A targeting model
      * is doing a good job if the response within the target is much better
      * than the average for the population as a whole.
-     *
+     * <p>
      * Lift is simply the ratio of these values: target response divided by
      * average response.
-     *
+     * <p>
      * For an association rule <code>X &rArr; Y</code>, if the lift is equal
      * to 1, it means that X and Y are independent. If the lift is higher
      * than 1, it means that X and Y are positively correlated.
@@ -133,8 +133,7 @@ public class AssociationRule {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof AssociationRule) {
-            AssociationRule a = (AssociationRule) o;
+        if (o instanceof AssociationRule a) {
             if (support != a.support) {
                 return false;
             }

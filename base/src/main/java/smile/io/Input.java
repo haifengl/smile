@@ -62,7 +62,7 @@ public interface Input {
      */
     static InputStream stream(String path) throws IOException, URISyntaxException {
         // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*\\S]?.*")) {
+        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
             return Files.newInputStream(Paths.get(path));
         }
 

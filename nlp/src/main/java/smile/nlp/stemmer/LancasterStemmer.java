@@ -33,7 +33,6 @@ import java.util.ArrayList;
  * <h2>References</h2>
  * <ol>
  * <li> Paice, Another stemmer, SIGIR Forum, 24(3), 56-61, 1990. </li>
- * <li> http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm </li>
  * </ol>
  *
  * @author Haifeng Li
@@ -190,16 +189,13 @@ public class LancasterStemmer implements Stemmer {
             //last letter
             //Check to see if there are any possible rules for stemming
             if ((ll >= 'a') && (ll <= 'z')) {
-                prt = index[charCode(ll)];
-                //pointer into rule-table
+                prt = index[charCode(ll)]; //pointer into rule-table
             } else {
-                prt = -1;
-                //0 is a vaild rule
+                prt = -1; //0 is a vaild rule
             }
 
             if (prt == -1) {
-                Continue = -1;
-                //no rule available
+                Continue = -1; //no rule available
             }
 
             if (Continue == 0) {
@@ -239,18 +235,15 @@ public class LancasterStemmer implements Stemmer {
                             ruleok = -1;
                         } else {
                             //  move on to compare next pair of letters
-                            ir = ir + 1;
-                            // move forwards along rule
-                            iw = iw - 1;
-                            // move backwards along word
+                            ir = ir + 1; // move forwards along rule
+                            iw = iw - 1; // move backwards along word
                         }
                     }
 
                     //if the rule that has just been checked is valid
                     if (ruleok == 1) {
-                        //  CHECK ACCEPTABILITY CONDITION FOR PROPOSED RULE
-                        xl = 0;
-                        //count any replacement letters
+                        // CHECK ACCEPTABILITY CONDITION FOR PROPOSED RULE
+                        xl = 0; //count any replacement letters
                         while (!((rule.charAt(ir + xl + 1) >= '.') && (rule.charAt(ir + xl + 1) <= '>'))) {
                             xl++;
                         }
@@ -261,16 +254,12 @@ public class LancasterStemmer implements Stemmer {
                             if (xl < 1) {
                                 // ...minimal stem is 2 letters
                                 ruleok = -1;
-                            } else {
-                                //ruleok=1; as ruleok must already be positive to reach this stage
                             }
                         } //if word start swith consonant...
                         else if ((xl < 2) | (xl < pfv)) {
                             ruleok = -1;
                             // ...minimal stem is 3 letters...
                             // ...including one or more vowel
-                        } else {
-                            //ruleok=1; as ruleok must already be positive to reach this stage
                         }
                     }
                     // if using the rule passes the assertion tests
@@ -322,28 +311,14 @@ public class LancasterStemmer implements Stemmer {
      * when ch == y
      */
     private boolean vowel(char ch, char prev) {
-        switch (ch) {
-            case 'a':
-            case 'e':
-            case 'i':
-            case 'o':
-            case 'u':
-                return true;
-            case 'y': {
-                switch (prev) {
-                    case 'a':
-                    case 'e':
-                    case 'i':
-                    case 'o':
-                    case 'u':
-                        return false;
-                    default:
-                        return true;
-                }
-            }
-            default:
-                return false;
-        }
+        return switch (ch) {
+            case 'a', 'e', 'i', 'o', 'u' -> true;
+            case 'y' -> switch (prev) {
+                case 'a', 'e', 'i', 'o', 'u' -> false;
+                default -> true;
+            };
+            default -> false;
+        };
     }
 
     /**

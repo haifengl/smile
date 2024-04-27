@@ -17,16 +17,16 @@
 package smile.deep;
 
 import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
+import smile.deep.metric.Averaging;
+import smile.deep.metric.Precision;
+import smile.deep.metric.Recall;
 import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -38,24 +38,21 @@ public class ModelTest {
     public ModelTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
-
-        // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl");
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -63,10 +60,10 @@ public class ModelTest {
     public void test() {
         Device device = Device.preferredDevice();
 
-        Model net = Model.of(
+        Model net = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10)
+                Layer.logSoftmax(32, 10))
         ).to(device);
 
         Dataset train = Dataset.mnist(mnist, true, 64);
@@ -75,23 +72,44 @@ public class ModelTest {
         // Instantiate an SGD optimization algorithm to update our Net's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
-        net.train(10, optimizer, loss, train, test, null);
+        net.train(10, optimizer, loss, train, test, null, new Accuracy(),
+                new Precision(Averaging.Micro),
+                new Precision(Averaging.Macro),
+                new Precision(Averaging.Weighted),
+                new Recall(Averaging.Micro),
+                new Recall(Averaging.Macro),
+                new Recall(Averaging.Weighted));
 
-        // Inference mode
-        Map<String, Double> metrics = net.eval(test, new Accuracy());
-        System.out.format("Test Accuracy: %.2f%%\n", 100 * metrics.get("Accuracy"));
+        double accuracy;
+        try (var guard = Tensor.noGradGuard()) {
+            Map<String, Double> metrics = net.eval(test,
+                    new Accuracy(),
+                    new Precision(Averaging.Micro),
+                    new Precision(Averaging.Macro),
+                    new Precision(Averaging.Weighted),
+                    new Recall(Averaging.Micro),
+                    new Recall(Averaging.Macro),
+                    new Recall(Averaging.Weighted));
+            for (var entry : metrics.entrySet()) {
+                System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+            }
+            accuracy = metrics.get("Accuracy");
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+            assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        }
 
-        // Serialize your model periodically as a checkpoint.
+        // Serialize the model as a checkpoint.
         net.save("mnist.pt");
 
         // Loads the model from checkpoint.
-        Model model = Model.of(
+        Model model = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10)
+                Layer.logSoftmax(32, 10))
         );
 
         model.load("mnist.pt").to(device).eval();
-        assertEquals(metrics.get("Accuracy"), model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+        assertEquals(accuracy, model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
     }
 }

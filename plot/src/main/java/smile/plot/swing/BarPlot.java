@@ -34,14 +34,13 @@ public class BarPlot extends Plot {
     /**
      * The legends of each bar group.
      */
-    final Optional<Legend[]> legends;
+    final Legend[] legends;
 
     /**
      * Constructor.
      */
     public BarPlot(Bar... bars) {
-        this.bars = bars;
-        legends = Optional.empty();
+        this(bars, null);
     }
 
     /**
@@ -49,7 +48,7 @@ public class BarPlot extends Plot {
      */
     public BarPlot(Bar[] bars, Legend[] legends) {
         this.bars = bars;
-        this.legends = Optional.of(legends);
+        this.legends = legends;
     }
 
     @Override
@@ -66,10 +65,10 @@ public class BarPlot extends Plot {
 
         for (int k = 1; k < bars.length; k++) {
             for (double[] x : bars[k].data) {
-                if (bound[0] < x[0] - bars[k].width / 2) {
+                if (bound[0] > x[0] - bars[k].width / 2) {
                     bound[0] = x[0] - bars[k].width / 2;
                 }
-                if (bound[1] < x[1]) {
+                if (bound[1] > x[1]) {
                     bound[1] = x[1];
                 }
             }
@@ -85,10 +84,10 @@ public class BarPlot extends Plot {
 
         for (int k = 1; k < bars.length; k++) {
             for (double[] x : bars[k].data) {
-                if (bound[0] > x[0] + bars[k].width / 2) {
+                if (bound[0] < x[0] + bars[k].width / 2) {
                     bound[0] = x[0] + bars[k].width / 2;
                 }
-                if (bound[1] > x[1]) {
+                if (bound[1] < x[1]) {
                     bound[1] = x[1];
                 }
             }
@@ -99,7 +98,7 @@ public class BarPlot extends Plot {
 
     @Override
     public Optional<Legend[]> legends() {
-        return legends;
+        return Optional.of(legends);
     }
 
     @Override

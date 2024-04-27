@@ -17,6 +17,7 @@
 
 package smile.ica;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
@@ -55,6 +56,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class ICA implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICA.class);
 
@@ -91,22 +93,17 @@ public class ICA implements Serializable {
      *             number of samples of mixed signals and the number of rows
      *             corresponding with the number of independent source signals.
      * @param p the number of independent components.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static ICA fit(double[][] data, int p, Properties params) {
         DifferentiableFunction f;
         String contrast = params.getProperty("smile.ica.contrast", "LogCosh");
-        switch (contrast) {
-            case "LogCosh":
-                f = new LogCosh();
-                break;
-            case "Gaussian":
-                f = new Exp();
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
-        }
+        f = switch (contrast) {
+            case "LogCosh" -> new LogCosh();
+            case "Gaussian" -> new Exp();
+            default -> throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
+        };
         double tol = Double.parseDouble(params.getProperty("smile.ica.tolerance", "1E-4"));
         int maxIter = Integer.parseInt(params.getProperty("smile.ica.iterations", "100"));
         return fit(data, p, f, tol, maxIter);

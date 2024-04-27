@@ -66,46 +66,53 @@ public interface TimeFunction extends Serializable {
      * changing the learning rate value across different invocations of
      * optimizer functions.
      *
-     * @param boundaries A list of integers with strictly increasing entries.
-     * @param values	 The values for the intervals defined by boundaries.
-     *                   It should have one more element than boundaries.
+     * @param milestones List of batch indices. Must be increasing.
+     * @param values The values for each interval defined by milestones.
+     *               It should have one more element than milestones.
      * @return the piecewise learning rate function.
      */
-    static TimeFunction piecewise(int[] boundaries, double[] values) {
-        if (values.length != boundaries.length + 1) {
-            throw new IllegalArgumentException("values should have one more element than boundaries");
+    static TimeFunction piecewise(int[] milestones, double[] values) {
+        TimeFunction[] schedules = new TimeFunction[values.length];
+        for (int i = 0; i < values.length; i++) {
+            schedules[i] = TimeFunction.constant(values[i]);
+        }
+        return piecewise(milestones, schedules);
+    }
+
+    /**
+     * Returns the piecewise constant learning rate. This can be useful for
+     * changing the learning rate value across different invocations of
+     * optimizer functions.
+     *
+     * @param milestones List of batch indices. Must be increasing.
+     * @param schedules	The time functions for each interval defined by milestones.
+     *                  It should have one more element than .
+     * @return the piecewise learning rate function.
+     */
+    static TimeFunction piecewise(int[] milestones, TimeFunction... schedules) {
+        if (schedules.length != milestones.length + 1) {
+            throw new IllegalArgumentException("values should have one more element than milestones");
         }
 
         return new TimeFunction() {
             @Override
             public double apply(int t) {
-                int i = Arrays.binarySearch(boundaries, t);
+                int i = Arrays.binarySearch(milestones, t);
                 if (i < 0) i = -i - 1;
-                return values[i];
+                return schedules[i].apply(t);
             }
 
             @Override
             public String toString() {
-                return String.format("Piecewise(%s, %s)", Arrays.toString(boundaries), Arrays.toString(values));
+                return String.format("Piecewise(%s, %s)", Arrays.toString(milestones), Arrays.toString(schedules));
             }
         };
     }
 
     /**
-     * Returns the linear learning rate decay function that ends at 0.0001.
-     *
-     * @param initLearningRate the initial learning rate.
-     * @param decaySteps the decay steps.
-     * @return the linear learning rate function.
-     */
-    static TimeFunction linear(double initLearningRate, double decaySteps) {
-        return linear(initLearningRate, decaySteps, 0.0001);
-    }
-
-    /**
      * Returns the linear learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
-     * decay steps..
+     * decay steps.
      *
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.
@@ -120,7 +127,7 @@ public interface TimeFunction extends Serializable {
      * Returns the polynomial learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
      * decay steps, without cycling.
-     *
+     * <p>
      * It is commonly observed that a monotonically decreasing learning rate,
      * whose degree of change is carefully chosen, results in a better performing
      * model.
@@ -139,7 +146,7 @@ public interface TimeFunction extends Serializable {
      * Returns the polynomial learning rate decay function that starts with
      * an initial learning rate and reach an end learning rate in the given
      * decay steps.
-     *
+     * <p>
      * It is commonly observed that a monotonically decreasing learning rate,
      * whose degree of change is carefully chosen, results in a better performing
      * model.
@@ -148,7 +155,7 @@ public interface TimeFunction extends Serializable {
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.
      * @param endLearningRate the end learning rate.
-     * @param cycle the flag whether or not it should cycle beyond decaySteps.
+     * @param cycle the flag indicating if it should cycle beyond decaySteps.
      * @return the polynomial learning rate function.
      */
     static TimeFunction polynomial(double degree, double initLearningRate, double decaySteps, double endLearningRate, boolean cycle) {
@@ -317,6 +324,37 @@ public interface TimeFunction extends Serializable {
     }
 
     /**
+     * Returns the cosine annealing function. Cosine Annealing has the effect
+     * of starting with a large learning rate that is relatively rapidly
+     * decreased to a minimum value before being increased rapidly again.
+     * The resetting of the learning rate acts like a simulated restart
+     * of the learning process and the re-use of good weights as the
+     * starting point of the restart is referred to as a "warm restart"
+     * in contrast to a "cold restart" where a new set of small random
+     * numbers may be used as a starting point.
+     * {@code initLearningRate * pow(endLearningRate / initLearningRate, min(t, decaySteps) / decaySteps)}.
+     *
+     * @param minLearningRate the minimum learning rate.
+     * @param decaySteps the maximum decay steps.
+     * @param maxLearningRate the maximum learning rate. It also serves as the
+     *                        initial learning rate.
+     * @return the cosine decay function.
+     */
+    static TimeFunction cosine(double minLearningRate, double decaySteps, double maxLearningRate) {
+        return new TimeFunction() {
+            @Override
+            public double apply(int t) {
+                return minLearningRate + 0.5 * (maxLearningRate - minLearningRate) * (1 + Math.cos(t /decaySteps * Math.PI));
+            }
+
+            @Override
+            public String toString() {
+                return String.format("CosineDecay(%f, %.0f, %f)", minLearningRate, decaySteps, maxLearningRate);
+            }
+        };
+    }
+
+    /**
      * Parses a time function.
      *
      * @param time the time function representation.
@@ -341,16 +379,16 @@ public interface TimeFunction extends Serializable {
             double initLearningRate = Double.parseDouble(m.group(2));
             double decaySteps = Double.parseDouble(m.group(3));
             double endLearningRate = Double.parseDouble(m.group(4));
-            boolean cycle = m.group(5) == null ? false : m.group(6).equals("true");
+            boolean cycle = m.group(5) != null && m.group(6).equals("true");
             return polynomial(degree, initLearningRate, decaySteps, endLearningRate, cycle);
         }
 
         if (time.startsWith("piecewise([") && time.endsWith("])")) {
             String[] tokens = time.substring(11, time.length()-2).split("\\],\\s*\\[");
             if (tokens.length == 2) {
-                int[] boundaries = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
+                int[] milestones = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
                 double[] values = Arrays.stream(tokens[1].split(",\\s*")).mapToDouble(Double::parseDouble).toArray();
-                return piecewise(boundaries, values);
+                return piecewise(milestones, values);
             }
         }
 
@@ -363,7 +401,7 @@ public interface TimeFunction extends Serializable {
                 return inverse(initLearningRate, decaySteps);
             } else {
                 double endLearningRate = Double.parseDouble(m.group(4));
-                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                boolean staircase = m.group(5) != null && m.group(6).equals("true");
                 return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
             }
         }
@@ -377,9 +415,18 @@ public interface TimeFunction extends Serializable {
                 return exp(initLearningRate, decaySteps);
             } else {
                 double endLearningRate = Double.parseDouble(m.group(4));
-                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
+                boolean staircase = m.group(5) != null && m.group(6).equals("true");
                 return exp(initLearningRate, decaySteps, endLearningRate, staircase);
             }
+        }
+
+        Pattern cosine = Pattern.compile(String.format("cosine(?:decay)?\\((%s),\\s*(%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
+        m = cosine.matcher(time);
+        if (m.matches()) {
+            double minLearningRate = Double.parseDouble(m.group(1));
+            double decaySteps = Double.parseDouble(m.group(2));
+            double maxLearningRate = Double.parseDouble(m.group(3));
+            return cosine(minLearningRate, decaySteps, maxLearningRate);
         }
 
         try {

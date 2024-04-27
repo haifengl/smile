@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  */
 public class SimpleParagraphSplitter implements ParagraphSplitter {
     /**
-     * Remove whitespaces in an blank line. Note to turn multiline mode.
+     * Remove whitespaces in a blank line. Note to turn multiline mode.
      */
     private static final Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
     /**

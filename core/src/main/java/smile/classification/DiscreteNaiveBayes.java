@@ -22,6 +22,7 @@ import smile.util.IntSet;
 import smile.util.SparseArray;
 import smile.stat.distribution.Distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -37,7 +38,7 @@ import java.util.Arrays;
  * situations and are very popular in Natural Language Processing (NLP).
  * <p>
  * For document classification in NLP, there are two major different ways we can set
- * up an naive Bayes classifier: multinomial model and Bernoulli model. The
+ * up a naive Bayes classifier: multinomial model and Bernoulli model. The
  * multinomial model generates one term from the vocabulary in each position
  * of the document. The multivariate Bernoulli model or Bernoulli model
  * generates an indicator for each term of the vocabulary, either indicating
@@ -82,13 +83,14 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 
     /**
      * The generation models of naive Bayes classifier.
      * For document classification in NLP, there are two different ways we can set
-     * up an naive Bayes classifier: multinomial model and Bernoulli model. The
+     * up a naive Bayes classifier: multinomial model and Bernoulli model. The
      * multinomial model generates one term from the vocabulary in each position
      * of the document. The multivariate Bernoulli model or Bernoulli model
      * generates an indicator for each term of the vocabulary, either indicating
@@ -111,7 +113,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
         /**
          * The document Polya Urn model is similar to MULTINOMIAL but
          * different in the conditional probability update during learning.
-         * It simply add twice for what is seen in training data instead of
+         * It simply adds twice for what is seen in training data instead of
          * one time.
          */
         POLYAURN,
@@ -341,7 +343,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
     @Override
     public void update(int[] x, int y) {
         if (!isGoodInstance(x)) {
-            logger.info("Skip updating the model with a sample without any feature word");
             return;
         }
 
@@ -396,7 +397,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
      */
     public void update(SparseArray x, int y) {
         if (!isGoodInstance(x)) {
-            logger.info("Skip updating the model with a sample without any feature word");
             return;
         }
 
@@ -410,15 +410,17 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case CNB:
             case WCNB:
                 for (SparseArray.Entry e : x) {
-                    ntc[y][e.i] += e.x;
-                    nt[y] += e.x;
+                    int ex = (int) e.x;
+                    ntc[y][e.i] += ex;
+                    nt[y] += ex;
                 }
                 break;
 
             case POLYAURN:
                 for (SparseArray.Entry e : x) {
-                    ntc[y][e.i] += e.x * 2;
-                    nt[y] += e.x * 2;
+                    int ex = (int) e.x;
+                    ntc[y][e.i] += ex * 2;
+                    nt[y] += ex * 2;
                 }
                 break;
 
@@ -457,7 +459,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case WCNB:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 
@@ -527,7 +528,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case POLYAURN:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 
@@ -545,7 +545,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case BERNOULLI:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 
@@ -584,14 +583,14 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case WCNB:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        ntc[yi][e.i] += e.x;
-                        nt[yi] += e.x;
+                        int ex = (int) e.x;
+                        ntc[yi][e.i] += ex;
+                        nt[yi] += ex;
                     }
 
                     n++;
@@ -654,14 +653,14 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case POLYAURN:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        ntc[yi][e.i] += e.x * 2;
-                        nt[yi] += e.x * 2;
+                        int ex = (int) e.x;
+                        ntc[yi][e.i] += ex * 2;
+                        nt[yi] += ex * 2;
                     }
 
                     n++;
@@ -672,7 +671,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case BERNOULLI:
                 for (int i = 0; i < x.length; i++) {
                     if (!isGoodInstance(x[i])) {
-                        logger.info("Skip updating the model with a sample without any feature word");
                         continue;
                     }
 

@@ -26,7 +26,7 @@ import javax.swing.JInternalFrame;
  * Useful for using swing components to export graphics to a file,
  * without requiring a connection to a display (with -Djava.awt.headless=true).
  * <p>
- * From FreeHEP VectorGraphics project (https://github.com/freehep/freehep-vectorgraphics).
+ * From (<a href="https://github.com/freehep/freehep-vectorgraphics">FreeHEP VectorGraphics</a> project.
  *
  * @author Tony Johnson
  * @author Mark Donszelmann

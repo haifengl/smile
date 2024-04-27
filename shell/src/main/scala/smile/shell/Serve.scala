@@ -30,6 +30,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 import smile.data._
@@ -49,9 +50,7 @@ case class ServeConfig(model: String = "",
 /**
   * Online prediction.
   */
-object Serve {
-  val log = org.slf4j.LoggerFactory.getLogger("smile.shell.Serve")
-
+object Serve extends LazyLogging {
   /**
     * Runs an online prediction HTTP server.
     * @param args the command line arguments.
@@ -192,7 +191,7 @@ object Serve {
         case "escape" => escape = getCsvFormatByte(format, option)
         case "header" => header = if (option.length == 1) true else option(1).toBoolean
         case unknown => if (!unknown.equals("csv"))
-          log.warn(s"Unknown CSV format specification: $token")
+          logger.warn(s"Unknown CSV format specification: $token")
       }
     }
 

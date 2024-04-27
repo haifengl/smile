@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.base.mlp.*;
@@ -39,6 +40,7 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
  public class MLP extends MultilayerPerceptron implements Regression<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
@@ -130,7 +132,7 @@ import smile.util.Strings;
      * Fits a MLP model.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static MLP fit(double[][] x, double[] y, Properties params) {

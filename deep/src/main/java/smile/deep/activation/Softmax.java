@@ -17,22 +17,24 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Softmax activation function.
  *
  * @author Haifeng Li
  */
-public class Softmax implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Softmax";
+public class Softmax extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public Softmax() {
+        super("Softmax", false);
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.softmax(x, 1);
+    public Tensor forward(Tensor x) {
+        return new Tensor(torch.softmax(x.asTorch(), 1));
     }
 }

@@ -26,21 +26,21 @@ import java.util.Arrays;
  */
 public class ArrayType implements DataType {
     /** Boolean array type. */
-    static ArrayType BooleanArrayType = new ArrayType(DataTypes.BooleanType);
+    static final ArrayType BooleanArrayType = new ArrayType(DataTypes.BooleanType);
     /** Char array type. */
-    static ArrayType CharArrayType = new ArrayType(DataTypes.CharType);
+    static final ArrayType CharArrayType = new ArrayType(DataTypes.CharType);
     /** Byte array type. */
-    static ArrayType ByteArrayType = new ArrayType(DataTypes.ByteType);
+    static final ArrayType ByteArrayType = new ArrayType(DataTypes.ByteType);
     /** Short array type. */
-    static ArrayType ShortArrayType = new ArrayType(DataTypes.ShortType);
+    static final ArrayType ShortArrayType = new ArrayType(DataTypes.ShortType);
     /** Integer array type. */
-    static ArrayType IntegerArrayType = new ArrayType(DataTypes.IntegerType);
+    static final ArrayType IntegerArrayType = new ArrayType(DataTypes.IntegerType);
     /** Long array type. */
-    static ArrayType LongArrayType = new ArrayType(DataTypes.LongType);
+    static final ArrayType LongArrayType = new ArrayType(DataTypes.LongType);
     /** Float array type. */
-    static ArrayType FloatArrayType = new ArrayType(DataTypes.FloatType);
+    static final ArrayType FloatArrayType = new ArrayType(DataTypes.FloatType);
     /** Double array type. */
-    static ArrayType DoubleArrayType = new ArrayType(DataTypes.DoubleType);
+    static final ArrayType DoubleArrayType = new ArrayType(DataTypes.DoubleType);
 
     /** Element data type. */
     private final DataType type;
@@ -78,26 +78,17 @@ public class ArrayType implements DataType {
 
     @Override
     public String toString(Object o) {
-        switch (type.id()) {
-            case Boolean:
-                return Arrays.toString((boolean[]) o);
-            case Byte:
-                return Arrays.toString((byte[]) o);
-            case Char:
-                return Arrays.toString((char[]) o);
-            case Short:
-                return Arrays.toString((short[]) o);
-            case Integer:
-                return Arrays.toString((int[]) o);
-            case Long:
-                return Arrays.toString((long[]) o);
-            case Float:
-                return Arrays.toString((float[]) o);
-            case Double:
-                return Arrays.toString((double[]) o);
-            default:
-                return Arrays.toString((Object[]) o);
-        }
+        return switch (type.id()) {
+            case Boolean -> Arrays.toString((boolean[]) o);
+            case Byte -> Arrays.toString((byte[]) o);
+            case Char -> Arrays.toString((char[]) o);
+            case Short -> Arrays.toString((short[]) o);
+            case Integer -> Arrays.toString((int[]) o);
+            case Long -> Arrays.toString((long[]) o);
+            case Float -> Arrays.toString((float[]) o);
+            case Double -> Arrays.toString((double[]) o);
+            default -> Arrays.toString((Object[]) o);
+        };
     }
 
     @Override

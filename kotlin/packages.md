@@ -193,7 +193,7 @@ on model parameters.
 - **Bias-variance tradeoff**:
 Mean squared error (MSE) can be broken down into two components:
 variance and squared bias, known as the bias-variance decomposition.
-Thus in order to minimize the MSE, we need to minimize both the bias and
+Thus, in order to minimize the MSE, we need to minimize both the bias and
 the variance. However, this is not trivial. Therefore, there is a tradeoff
 between bias and variance.
 
@@ -372,7 +372,7 @@ and curvilinear component analysis.
 
 A different approach to nonlinear dimensionality reduction is through the
 use of autoencoders, a special kind of feed-forward neural networks with
-a bottle-neck hidden layer. The training of deep encoders is typically
+a bottleneck hidden layer. The training of deep encoders is typically
 performed using a greedy layer-wise pre-training (e.g., using a stack of
 Restricted Boltzmann machines) that is followed by a finetuning stage based
 on backpropagation.

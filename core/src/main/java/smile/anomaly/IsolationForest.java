@@ -17,6 +17,7 @@
 
 package smile.anomaly;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +68,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class IsolationForest implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsolationForest.class);
 
@@ -117,7 +119,7 @@ public class IsolationForest implements Serializable {
      * Fits a random forest for classification.
      *
      * @param data the training data.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Properties params) {

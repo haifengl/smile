@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -38,13 +39,14 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class IsotonicRegressionScaling implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * Step-wise constant function.
      */
     private static class StepwiseConstant {
-        double lo;
+        final double lo;
         double hi;
         double val;
         int weight;

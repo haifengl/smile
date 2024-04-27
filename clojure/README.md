@@ -14,7 +14,7 @@ For Clojure API, add the following dependency to your project or build file:
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
-some clustering algorithms, Gaussian Process regression, MLP, etc).
+some clustering algorithms, Gaussian Process regression, MLP, etc.).
 To use these algorithms, you should include OpenBLAS for optimized matrix
 computation:
 ```

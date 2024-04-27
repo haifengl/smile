@@ -20,6 +20,7 @@ package smile.data;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -36,6 +37,7 @@ import smile.data.vector.Vector;
  * @author Haifeng Li
  */
 class DataFrameImpl implements DataFrame, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);
 
@@ -342,11 +344,6 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public Iterator<BaseVector> iterator() {
-        return columns.iterator();
-    }
-
-    @Override
     public int indexOf(String name) {
         return schema.indexOf(name);
     }
@@ -368,8 +365,13 @@ class DataFrameImpl implements DataFrame, Serializable {
 
     @Override
     public Stream<Tuple> stream() {
-        Spliterator<Tuple> spliterator = new DatasetSpliterator<>(this, Spliterator.ORDERED);
+        Spliterator<Tuple> spliterator = new DataFrameSpliterator(this, Spliterator.ORDERED);
         return java.util.stream.StreamSupport.stream(spliterator, true);
+    }
+
+    @Override
+    public Iterator<Tuple> iterator() {
+        return stream().iterator();
     }
 
     @Override
@@ -605,12 +607,12 @@ class DataFrameImpl implements DataFrame, Serializable {
 
         @Override
         public boolean getBoolean(int j) {
-            return ((BooleanVector) columns.get(j)).getBoolean(i);
+            return columns.get(j).getBoolean(i);
         }
 
         @Override
         public char getChar(int j) {
-            return ((CharVector) columns.get(j)).getChar(i);
+            return columns.get(j).getChar(i);
         }
 
         @Override

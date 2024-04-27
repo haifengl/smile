@@ -18,12 +18,12 @@
 package smile.math.random;
 
 /**
- * The so called "Universal Generator" based on multiplicative congruential
+ * The so-called "Universal Generator" based on multiplicative congruential
  * method, which originally appeared in "Toward a Universal Random Number
  * Generator" by Marsaglia, Zaman and Tsang. It was later modified by F. James
- * in "A Review of Pseudo-random Number Generators". It passes ALL of the tests
+ * in "A Review of Pseudo-random Number Generators". It passes ALL the tests
  * for random number generators and has a period of 2<sup>144</sup>. It is
- * completely portable (gives bit identical results on all machines with at
+ * completely portable (gives bit-identical results on all machines with at
  * least 24-bit mantissas in the floating point representation).
  *
  * @author Haifeng Li

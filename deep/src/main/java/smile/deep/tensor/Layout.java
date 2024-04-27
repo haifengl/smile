@@ -34,10 +34,10 @@ public enum Layout {
     SparseCSR(torch.Layout.SparseCsr);
 
     /** PyTorch tensor layout type. */
-    torch.Layout value;
+    final torch.Layout value;
 
     /** Constructor. */
-    private Layout(torch.Layout layout) {
+    Layout(torch.Layout layout) {
         this.value = layout;
     }
 }

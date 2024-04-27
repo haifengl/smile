@@ -33,7 +33,7 @@ import smile.math.MathEx;
  */
 public abstract class InternalNode implements Node {
     /** The number of samples in the node. */
-    int size;
+    final int size;
 
     /**
      * Children node.
@@ -48,17 +48,17 @@ public abstract class InternalNode implements Node {
     /**
      * The split feature for this node.
      */
-    int feature;
+    final int feature;
 
     /**
      * Reduction in impurity compared to parent.
      */
-    double score;
+    final double score;
 
     /**
      * The deviance of node.
      */
-    double deviance;
+    final double deviance;
 
     /**
      * Constructor.
@@ -153,10 +153,10 @@ public abstract class InternalNode implements Node {
         trueChild = trueChild.merge();
         falseChild = falseChild.merge();
 
-        if (trueChild instanceof DecisionNode && falseChild instanceof DecisionNode) {
-            if (((DecisionNode) trueChild).output() == ((DecisionNode) falseChild).output()) {
-                int[] a = ((DecisionNode) trueChild).count();
-                int[] b = ((DecisionNode) falseChild).count();
+        if (trueChild instanceof DecisionNode left && falseChild instanceof DecisionNode right) {
+            if (left.output() == right.output()) {
+                int[] a = left.count();
+                int[] b = right.count();
                 int[] count = new int[a.length];
                 for (int i = 0; i < count.length; i++) {
                     count[i] = a[i] + b[i];
@@ -208,7 +208,7 @@ public abstract class InternalNode implements Node {
         StringBuilder line = new StringBuilder();
 
         // indent
-        for (int i = 0; i < depth; i++) line.append(" ");
+        line.append(" ".repeat(depth));
         line.append(id).append(") ");
 
         // split
@@ -244,19 +244,17 @@ public abstract class InternalNode implements Node {
     private double sumy() {
         double t, f;
 
-        if (trueChild instanceof InternalNode) {
-            t = ((InternalNode) trueChild).sumy();
-        } else if (trueChild instanceof RegressionNode) {
-            RegressionNode leaf = (RegressionNode) trueChild;
+        if (trueChild instanceof InternalNode split) {
+            t = split.sumy();
+        } else if (trueChild instanceof RegressionNode leaf) {
             t = leaf.output() * leaf.size();
         } else {
             throw new IllegalStateException("Call sumy() on DecisionTree?");
         }
 
-        if (falseChild instanceof InternalNode) {
-            f = ((InternalNode) falseChild).sumy();
-        } else if (falseChild instanceof RegressionNode) {
-            RegressionNode leaf = (RegressionNode) falseChild;
+        if (falseChild instanceof InternalNode split) {
+            f = split.sumy();
+        } else if (falseChild instanceof RegressionNode leaf) {
             f = leaf.output() * leaf.size();
         } else {
             throw new IllegalStateException("Call sumy() on DecisionTree?");

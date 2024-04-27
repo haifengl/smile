@@ -20,6 +20,8 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 import smile.math.special.Beta;
 
+import java.io.Serial;
+
 import static java.lang.Math.*;
 import static smile.math.MathEx.lfactorial;
 
@@ -56,6 +58,7 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class BinomialDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */
@@ -184,10 +187,10 @@ public class BinomialDistribution extends DiscreteDistribution {
 
     /**
      * This function generates a random variate with the binomial distribution.
-     *
+     * <p>
      * Uses down/up search from the mode by chop-down technique for {@code n*p < 55},
      * and patchwork rejection method for {@code n*p >= 55}.
-     *
+     * <p>
      * For {@code n*p < 1E-6} numerical inaccuracy is avoided by poisson approximation.
      */
     @Override
@@ -196,7 +199,7 @@ public class BinomialDistribution extends DiscreteDistribution {
         boolean inv = p > 0.5;
         double np = n * Math.min(p, 1.0 - p);
 
-        // Poisson approximation for extremely low np
+        // Poisson's approximation for extremely low np
         int x;
         if (np < 1E-6) {
             x = PoissonDistribution.tinyLambdaRand(np);

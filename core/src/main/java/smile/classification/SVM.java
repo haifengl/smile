@@ -25,7 +25,6 @@ import smile.base.svm.LASVM;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.SparseArray;
-import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.*;
 
 /**
@@ -54,13 +53,13 @@ import smile.math.kernel.*;
  * transformed feature space. The transformation may be nonlinear and
  * the transformed space be high dimensional. For example, the feature space
  * corresponding Gaussian kernel is a Hilbert space of infinite dimension.
- * Thus though the classifier is a hyperplane in the high-dimensional feature
+ * Thus, though the classifier is a hyperplane in the high-dimensional feature
  * space, it may be nonlinear in the original input space. Maximum margin
  * classifiers are well regularized, so the infinite dimension does not spoil
  * the results.
  * <p>
  * The effectiveness of SVM depends on the selection of kernel, the kernel's
- * parameters, and the soft margin parameter C. Given a kernel, best combination
+ * parameters, and the soft margin parameter C. Given a kernel, the best combination
  * of C and kernel's parameters is often selected by a grid-search with
  * cross validation.
  * <p>
@@ -89,7 +88,9 @@ import smile.math.kernel.*;
  *
  * @see OneVersusOne
  * @see OneVersusRest
- * 
+ *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
@@ -145,7 +146,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<double[]> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<double[]>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
@@ -183,7 +184,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<int[]> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<int[]>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
@@ -221,7 +222,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         KernelMachine<SparseArray> svm = lasvm.fit(x, y, epochs);
 
         IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<SparseArray>(labels) {
+        return new AbstractClassifier<>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
@@ -266,7 +267,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * Fits a binary or multiclass SVM.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static Classifier<double[]> fit(double[][] x, int[] y, Properties params) {
@@ -292,7 +293,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
                 }
             case "binary":
                 Arrays.sort(classes);
-                if (classes[0] != -1 || classes[1] != +1) {
+                if (classes[0] != -1 || classes[1] != 1) {
                     y = y.clone();
                     for (int i = 0; i < y.length; i++) {
                         y[i] = y[i] == classes[0] ? -1 : +1;

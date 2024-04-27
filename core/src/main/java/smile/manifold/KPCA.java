@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.Function;
@@ -57,9 +58,12 @@ import smile.math.matrix.Matrix;
  * @see smile.manifold.LaplacianEigenmap
  * @see smile.manifold.SammonMapping
  *
+ * @param <T> the data type of model input objects.
+ *
  * @author Haifeng Li
  */
 public class KPCA<T> implements Function<T, double[]>, Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

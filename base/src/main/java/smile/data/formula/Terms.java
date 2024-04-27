@@ -38,13 +38,13 @@ import smile.data.type.StructType;
 public interface Terms {
     /**
      * Creates a variable.
-     * @param x the variable.
+     * @param name the variable name.
      * @return the term.
      */
-    static Term $(String x) {
-        x = x.trim();
+    static Term $(String name) {
+        name = name.trim();
 
-        switch (x) {
+        switch (name) {
             case ".":
                 return new Dot();
             case "0":
@@ -53,7 +53,7 @@ public interface Terms {
                 return new Intercept(true);
         }
 
-        String[] tokens = x.split(":");
+        String[] tokens = name.split(":");
         if (tokens.length > 1) {
             for (int i = 0; i < tokens.length; i++) {
                 tokens[i] = tokens[i].trim();
@@ -61,8 +61,8 @@ public interface Terms {
             return interact(tokens);
         }
 
-        if (x.startsWith("(") && x.endsWith(")")) {
-            String y = x.substring(1, x.length() - 1);
+        if (name.startsWith("(") && name.endsWith(")")) {
+            String y = name.substring(1, name.length() - 1);
             tokens = y.split("[+]", 2);
             if (tokens.length == 2) {
                 return add(tokens[0], tokens[1]);
@@ -82,9 +82,9 @@ public interface Terms {
         }
 
         Pattern regex = Pattern.compile("\\)(^(\\d+))?$");
-        Matcher matcher = regex.matcher(x);
-        if (x.startsWith("(") && matcher.find()) {
-            String y = x.substring(1, matcher.start());
+        Matcher matcher = regex.matcher(name);
+        if (name.startsWith("(") && matcher.find()) {
+            String y = name.substring(1, matcher.start());
             tokens = y.split(" x ");
             if (tokens.length > 1) {
                 for (int i = 0; i < tokens.length; i++) {
@@ -97,106 +97,106 @@ public interface Terms {
             }
         }
 
-        if (x.startsWith("abs(") && x.endsWith(")")) {
-            return abs(x.substring(4, x.length()-1));
+        if (name.startsWith("abs(") && name.endsWith(")")) {
+            return abs(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("ceil(") && x.endsWith(")")) {
-            return ceil(x.substring(5, x.length()-1));
+        if (name.startsWith("ceil(") && name.endsWith(")")) {
+            return ceil(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("floor(") && x.endsWith(")")) {
-            return floor(x.substring(6, x.length()-1));
+        if (name.startsWith("floor(") && name.endsWith(")")) {
+            return floor(name.substring(6, name.length()-1));
         }
 
-        if (x.startsWith("round(") && x.endsWith(")")) {
-            return round(x.substring(6, x.length()-1));
+        if (name.startsWith("round(") && name.endsWith(")")) {
+            return round(name.substring(6, name.length()-1));
         }
 
-        if (x.startsWith("rint(") && x.endsWith(")")) {
-            return rint(x.substring(5, x.length()-1));
+        if (name.startsWith("rint(") && name.endsWith(")")) {
+            return rint(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("exp(") && x.endsWith(")")) {
-            return exp(x.substring(4, x.length()-1));
+        if (name.startsWith("exp(") && name.endsWith(")")) {
+            return exp(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("expm1(") && x.endsWith(")")) {
-            return expm1(x.substring(6, x.length()-1));
+        if (name.startsWith("expm1(") && name.endsWith(")")) {
+            return expm1(name.substring(6, name.length()-1));
         }
 
-        if (x.startsWith("log(") && x.endsWith(")")) {
-            return log(x.substring(4, x.length()-1));
+        if (name.startsWith("log(") && name.endsWith(")")) {
+            return log(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("log1p(") && x.endsWith(")")) {
-            return log1p(x.substring(6, x.length()-1));
+        if (name.startsWith("log1p(") && name.endsWith(")")) {
+            return log1p(name.substring(6, name.length()-1));
         }
 
-        if (x.startsWith("log2(") && x.endsWith(")")) {
-            return log2(x.substring(5, x.length()-1));
+        if (name.startsWith("log2(") && name.endsWith(")")) {
+            return log2(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("log10(") && x.endsWith(")")) {
-            return log10(x.substring(6, x.length()-1));
+        if (name.startsWith("log10(") && name.endsWith(")")) {
+            return log10(name.substring(6, name.length()-1));
         }
 
-        if (x.startsWith("signum(") && x.endsWith(")")) {
-            return signum(x.substring(7, x.length()-1));
+        if (name.startsWith("signum(") && name.endsWith(")")) {
+            return signum(name.substring(7, name.length()-1));
         }
 
-        if (x.startsWith("sign(") && x.endsWith(")")) {
-            return sign(x.substring(5, x.length()-1));
+        if (name.startsWith("sign(") && name.endsWith(")")) {
+            return sign(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("sqrt(") && x.endsWith(")")) {
-            return sqrt(x.substring(5, x.length()-1));
+        if (name.startsWith("sqrt(") && name.endsWith(")")) {
+            return sqrt(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("cbrt(") && x.endsWith(")")) {
-            return cbrt(x.substring(5, x.length()-1));
+        if (name.startsWith("cbrt(") && name.endsWith(")")) {
+            return cbrt(name.substring(5, name.length()-1));
         }
-        if (x.startsWith("sin(") && x.endsWith(")")) {
-            return sin(x.substring(4, x.length()-1));
-        }
-
-        if (x.startsWith("cos(") && x.endsWith(")")) {
-            return cos(x.substring(4, x.length()-1));
+        if (name.startsWith("sin(") && name.endsWith(")")) {
+            return sin(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("tan(") && x.endsWith(")")) {
-            return tan(x.substring(4, x.length()-1));
+        if (name.startsWith("cos(") && name.endsWith(")")) {
+            return cos(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("asin(") && x.endsWith(")")) {
-            return asin(x.substring(5, x.length()-1));
+        if (name.startsWith("tan(") && name.endsWith(")")) {
+            return tan(name.substring(4, name.length()-1));
         }
 
-        if (x.startsWith("acos(") && x.endsWith(")")) {
-            return acos(x.substring(5, x.length()-1));
+        if (name.startsWith("asin(") && name.endsWith(")")) {
+            return asin(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("atan(") && x.endsWith(")")) {
-            return atan(x.substring(5, x.length()-1));
+        if (name.startsWith("acos(") && name.endsWith(")")) {
+            return acos(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("sinh(") && x.endsWith(")")) {
-            return sinh(x.substring(5, x.length()-1));
+        if (name.startsWith("atan(") && name.endsWith(")")) {
+            return atan(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("cosh(") && x.endsWith(")")) {
-            return cosh(x.substring(5, x.length()-1));
+        if (name.startsWith("sinh(") && name.endsWith(")")) {
+            return sinh(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("tanh(") && x.endsWith(")")) {
-            return tanh(x.substring(5, x.length()-1));
+        if (name.startsWith("cosh(") && name.endsWith(")")) {
+            return cosh(name.substring(5, name.length()-1));
         }
 
-        if (x.startsWith("ulp(") && x.endsWith(")")) {
-            return ulp(x.substring(4, x.length()-1));
+        if (name.startsWith("tanh(") && name.endsWith(")")) {
+            return tanh(name.substring(5, name.length()-1));
         }
 
-        return new Variable(x);
+        if (name.startsWith("ulp(") && name.endsWith(")")) {
+            return ulp(name.substring(4, name.length()-1));
+        }
+
+        return new Variable(name);
     }
 
     /**

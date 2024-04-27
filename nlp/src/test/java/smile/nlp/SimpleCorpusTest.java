@@ -20,14 +20,10 @@ package smile.nlp;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 import smile.nlp.relevance.BM25;
 import smile.nlp.relevance.Relevance;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -47,19 +43,19 @@ public class SimpleCorpusTest {
         }
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

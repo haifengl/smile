@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -37,27 +38,28 @@ import smile.validation.ModelSelection;
  * @author Haifeng Li
  */
 public abstract class SparseLogisticRegression extends AbstractClassifier<SparseArray> {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    int p;
+    final int p;
 
     /**
      * The number of classes.
      */
-    int k;
+    final int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    double L;
+    final double L;
 
     /**
      * Regularization factor.
      */
-    double lambda;
+    final double lambda;
 
     /**
      * learning rate for stochastic gradient descent.
@@ -244,33 +246,30 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
 
     /**
      * Fits binomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset x, int[] y) {
-        return binomial(x, y, new Properties());
+    public static Binomial binomial(SparseDataset<Integer> data) {
+        return binomial(data, new Properties());
     }
 
     /**
      * Fits binomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param data training data.
+     * @param params the hyperparameters.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset x, int[] y, Properties params) {
+    public static Binomial binomial(SparseDataset<Integer> data, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
         int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return binomial(x, y, lambda, tol, maxIter);
+        return binomial(data, lambda, tol, maxIter);
     }
 
     /**
      * Fits binomial logistic regression.
      *
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
@@ -278,11 +277,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
-        if (x.size() != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.size(), y.length));
-        }
-
+    public static Binomial binomial(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
         }
@@ -295,53 +290,55 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int p = x.ncol();
-        ClassLabels codec = ClassLabels.fit(y);
+        int n = data.size();
+        int p = data.ncol();
+        ClassLabels codec = ClassLabels.fit(data);
         int k = codec.k;
-        y = codec.y;
+        int[] y = codec.y;
 
         if (k != 2) {
             throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        BinomialObjective objective = new BinomialObjective(x, y, lambda);
+        SparseArray[] x = new SparseArray[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = data.get(i).x();
+        }
+        BinomialObjective objective = new BinomialObjective(x, y, p, lambda);
         double[] w = new double[p + 1];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
         Binomial model = new Binomial(w, L, lambda, codec.classes);
-        model.setLearningRate(0.1 / x.size());
+        model.setLearningRate(0.1 / n);
         return model;
     }
 
     /**
      * Fits multinomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset x, int[] y) {
-        return multinomial(x, y, new Properties());
+    public static Multinomial multinomial(SparseDataset<Integer> data) {
+        return multinomial(data, new Properties());
     }
 
     /**
      * Fits multinomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param data training data.
+     * @param params the hyperparameters.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset x, int[] y, Properties params) {
+    public static Multinomial multinomial(SparseDataset<Integer> data, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
         int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return multinomial(x, y, lambda, tol, maxIter);
+        return multinomial(data, lambda, tol, maxIter);
     }
 
     /**
      * Fits multinomial logistic regression.
      *
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
@@ -349,11 +346,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
-        if (x.size() != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.size(), y.length));
-        }
-
+    public static Multinomial multinomial(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
         }
@@ -366,16 +359,21 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int p = x.ncol();
-        ClassLabels codec = ClassLabels.fit(y);
+        int n = data.size();
+        int p = data.ncol();
+        ClassLabels codec = ClassLabels.fit(data);
         int k = codec.k;
-        y = codec.y;
+        int[] y = codec.y;
 
         if (k <= 2) {
             throw new IllegalArgumentException("Fits multinomial model on binary class data.");
         }
 
-        MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
+        SparseArray[] x = new SparseArray[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = data.get(i).x();
+        }
+        MultinomialObjective objective = new MultinomialObjective(x, y, p, k, lambda);
         double[] w = new double[(k - 1) * (p + 1)];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
@@ -387,39 +385,36 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         }
 
         Multinomial model = new Multinomial(W, L, lambda, codec.classes);
-        model.setLearningRate(0.1 / x.size());
+        model.setLearningRate(0.1 / data.size());
         return model;
     }
 
     /**
      * Fits logistic regression.
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset x, int[] y) {
-        return fit(x, y, new Properties());
+    public static SparseLogisticRegression fit(SparseDataset<Integer> data) {
+        return fit(data, new Properties());
     }
 
     /**
      * Fits logistic regression.
-     * @param x training samples.
-     * @param y training labels.
-     * @param params the hyper-parameters.
+     * @param data training data.
+     * @param params the hyperparameters.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties params) {
+    public static SparseLogisticRegression fit(SparseDataset<Integer> data, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
         int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return fit(x, y, lambda, tol, maxIter);
+        return fit(data, lambda, tol, maxIter);
     }
 
     /**
      * Fits logistic regression.
      *
-     * @param x training samples.
-     * @param y training labels.
+     * @param data training data.
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
@@ -427,12 +422,12 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
-        ClassLabels codec = ClassLabels.fit(y);
+    public static SparseLogisticRegression fit(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
+        ClassLabels codec = ClassLabels.fit(data);
         if (codec.k == 2)
-            return binomial(x, y, lambda, tol, maxIter);
+            return binomial(data, lambda, tol, maxIter);
         else
-            return multinomial(x, y, lambda, tol, maxIter);
+            return multinomial(data, lambda, tol, maxIter);
     }
 
     /**
@@ -442,53 +437,53 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         /**
          * Training instances.
          */
-        SparseDataset x;
+        final SparseArray[] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
 
         /**
          * Constructor.
          */
-        BinomialObjective(SparseDataset x, int[] y, double lambda) {
+        BinomialObjective(SparseArray[] x, int[] y, int p, double lambda) {
             this.x = x;
             this.y = y;
             this.lambda = lambda;
-            this.p = x.ncol();
+            this.p = p;
 
             partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
-            partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][p+1];
         }
 
         @Override
         public double f(double[] w) {
-            // Since BFGS try to minimize the objective function
+            // Since BFGS try to minimize the objective function,
             // and we try to maximize the log-likelihood, we really
             // return the negative log-likelihood here.
-            double f = IntStream.range(0, x.size()).parallel().mapToDouble(i -> {
-                double wx = dot(x.get(i), w);
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double wx = dot(x[i], w);
                 return MathEx.log1pe(wx) - y[i] * wx;
             }).sum();
 
@@ -509,10 +504,10 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
 
                 int begin = r * partitionSize;
                 int end = (r + 1) * partitionSize;
-                if (end > x.size()) end = x.size();
+                if (end > x.length) end = x.length;
 
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
-                    SparseArray xi = x.get(i);
+                    SparseArray xi = x[i];
                     double wx = dot(xi, w);
                     double err = y[i] - MathEx.sigmoid(wx);
                     for (SparseArray.Entry e : xi) {
@@ -551,52 +546,52 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         /**
          * Training instances.
          */
-        SparseDataset x;
+        final SparseArray[] x;
         /**
          * Training labels.
          */
-        int[] y;
+        final int[] y;
         /**
          * The number of classes.
          */
-        int k;
+        final int k;
         /**
          * The dimension of feature space.
          */
-        int p;
+        final int p;
         /**
          * Regularization factor.
          */
-        double lambda;
+        final double lambda;
         /**
          * The number of samples in a partition.
          */
-        int partitionSize;
+        final int partitionSize;
         /**
          * The number of partitions.
          */
-        int partitions;
+        final int partitions;
         /**
          * The workspace to store gradient for each data partition.
          */
-        double[][] gradients;
+        final double[][] gradients;
         /**
          * The workspace to store posteriori probability for each data partition.
          */
-        double[][] posterioris;
+        final double[][] posterioris;
 
         /**
          * Constructor.
          */
-        MultinomialObjective(SparseDataset x, int[] y, int k, double lambda) {
+        MultinomialObjective(SparseArray[] x, int[] y, int p, int k, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
             this.lambda = lambda;
-            this.p = x.ncol();
+            this.p = p;
 
             partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
-            partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][(k-1)*(p+1)];
             posterioris = new double[partitions][k];
         }
@@ -608,10 +603,10 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
 
                 int begin = r * partitionSize;
                 int end = (r+1) * partitionSize;
-                if (end > x.size()) end = x.size();
+                if (end > x.length) end = x.length;
 
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
-                    SparseArray xi = x.get(i);
+                    SparseArray xi = x[i];
                     posteriori[k - 1] = 0.0;
                     for (int j = 0; j < k - 1; j++) {
                         posteriori[j] = dot(xi, w, j, p);
@@ -646,10 +641,10 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
 
                 int begin = r * partitionSize;
                 int end = (r+1) * partitionSize;
-                if (end > x.size()) end = x.size();
+                if (end > x.length) end = x.length;
 
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
-                    SparseArray xi = x.get(i);
+                    SparseArray xi = x[i];
                     posteriori[k - 1] = 0.0;
                     for (int j = 0; j < k - 1; j++) {
                         posteriori[j] = dot(xi, w, j, p);

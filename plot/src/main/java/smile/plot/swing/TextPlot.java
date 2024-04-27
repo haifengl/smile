@@ -80,7 +80,7 @@ public class TextPlot extends Plot {
     /**
      * Create a text plot.
      * @param texts the texts.
-     * @param coordinates a n-by-2 or n-by-3 matrix that are the coordinates of texts.
+     * @param coordinates an n-by-2 or n-by-3 matrix that are the coordinates of texts.
      */
     public static TextPlot of(String[] texts, double[][] coordinates) {
         if (texts.length != coordinates.length) {

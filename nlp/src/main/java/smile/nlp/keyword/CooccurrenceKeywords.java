@@ -193,8 +193,9 @@ public interface CooccurrenceKeywords {
                     
                 double fwc = 0.0;
                 for (int k = 0; k < n; k++) {
-                    if (cluster[k] == j)
-                    fwc += table[i][k];
+                    if (cluster[k] == j) {
+                        fwc += table[i][k];
+                    }
                 }
                     
                 double expected = nw[i] * pc[j];
@@ -218,7 +219,6 @@ public interface CooccurrenceKeywords {
                         break;
                     } else {
                         keywords.remove(freqTerms[index[j]]);
-                        add = true;
                     }
                 }
             }

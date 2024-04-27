@@ -31,9 +31,9 @@ import smile.math.MathEx;
  * However, it this does not mean that the new generation is the same because
  * of mutation. Crossover is made in hope that new chromosomes will have good
  * parts of old chromosomes and maybe the new chromosomes will be better.
- * However it is good to leave some part of population survive to next
+ * However, it is good to leave some part of population survive to next
  * generation. Crossover rate generally should be high, about 80% - 95%.
- * However some results show that for some problems crossover rate about 60% is
+ * However, some results show that for some problems crossover rate about 60% is
  * the best.
  * <p>
  * Mutation rate determines how often will be parts of chromosome mutated.
@@ -45,7 +45,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class BitString implements Chromosome {
+public class BitString implements Chromosome<BitString> {
 
     /**
      * Binary encoding of chromosome.
@@ -189,13 +189,7 @@ public class BitString implements Chromosome {
     }
 
     @Override
-    public BitString[] crossover(Chromosome another) {
-        if (!(another instanceof BitString)) {
-            throw new IllegalArgumentException("NOT a BitString chromosome.");
-        }
-
-        BitString mother = (BitString) another;
-
+    public BitString[] crossover(BitString mother) {
         if (MathEx.random() < crossoverRate) {
             return crossover.apply(this, mother);
         } else {

@@ -17,6 +17,7 @@
 
 package smile.clustering;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -44,6 +45,7 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class XMeans extends CentroidClustering<double[], double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMeans.class);
     private static final double LOG2PI = Math.log(Math.PI * 2.0);

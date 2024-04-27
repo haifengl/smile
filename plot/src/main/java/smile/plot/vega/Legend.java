@@ -23,13 +23,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * Similar to axes, legends visualize scales. However, whereas axes aid
  * interpretation of scales with positional ranges, legends aid
  * interpretation of scales with ranges such as colors, shapes and sizes.
- *
+ * <p>
  * By default, Vega-Lite automatically creates legends with default properties
  * for color, opacity, size, and shape channels when they encode data fields.
  * User can set the legend property of a mark property channel's field
  * definition to an object to customize legend properties or set legend to
  * null to remove the legend.
- *
+ * <p>
  * Besides legend property of a field definition, the configuration object
  * (config) also provides legend config for setting default legend properties
  * for all legends.
@@ -302,7 +302,7 @@ public class Legend {
      * Sets the text format. When used with the default "number" and "time"
      * format type, the text formatting pattern for labels of guides (axes,
      * legends, headers) and text marks.
-     *
+     * <p>
      * If the format type is "number" (e.g., for quantitative fields), this is
      * D3's number format pattern. If the format type is "time" (e.g., for
      * temporal fields), this is D3's time format pattern.

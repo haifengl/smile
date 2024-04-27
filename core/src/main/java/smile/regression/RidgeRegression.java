@@ -35,7 +35,7 @@ import smile.math.matrix.Matrix;
  * errors in the observed response <code>Y</code>, producing a large variance.
  * <p>
  * Ridge regression is one method to address these issues. In ridge regression,
- * the matrix <code>X'X</code> is perturbed so as to make its determinant
+ * the matrix <code>X'X</code> is perturbed to make its determinant
  * appreciably different from 0.
  * <p>
  * Ridge regression is a kind of Tikhonov regularization, which is the most
@@ -56,14 +56,14 @@ import smile.math.matrix.Matrix;
  * variance 1), and then we perform ridge regression.
  * <p>
  * When including an intercept term in the regression, we usually leave
- * this coefficient unpenalized. Otherwise we could add some constant
+ * this coefficient unpenalized. Otherwise, we could add some constant
  * amount to the vector <code>y</code>, and this would not result in
  * the same solution. If we center the columns of <code>X</code>, then
  * the intercept estimate ends up just being the mean of <code>y</code>.
  * <p>
  * Ridge regression does not set coefficients exactly to zero unless
  * <code>&lambda; = &infin;</code>, in which case they're all zero.
- * Hence ridge regression cannot perform variable selection, and
+ * Hence, ridge regression cannot perform variable selection, and
  * even though it performs well in terms of prediction accuracy,
  * it does poorly in terms of offering a clear interpretation.
  *
@@ -82,7 +82,7 @@ public class RidgeRegression {
     }
 
     /**
-     * Fits a ridge regression model. The hyper-parameters in <code>prop</code> include
+     * Fits a ridge regression model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -92,7 +92,7 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {

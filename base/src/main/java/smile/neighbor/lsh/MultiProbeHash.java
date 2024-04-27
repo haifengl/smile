@@ -17,6 +17,7 @@
 
 package smile.neighbor.lsh;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -25,16 +26,17 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class MultiProbeHash extends Hash {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The minimum values of hashing functions for given dataset.
      */
-    double[] umin;
+    final double[] umin;
     /**
      * The maximum values of hashing functions for given dataset.
      */
-    double[] umax;
+    final double[] umax;
 
 
     /**
@@ -43,7 +45,7 @@ public class MultiProbeHash extends Hash {
      * @param k the number of random projection hash functions, which is usually
      *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently away
-     *          from 0. But we should not choose an w value that is too large,
+     *          from 0. But we should not choose a w value that is too large,
      *          which will increase the query time.
      * @param H the size of universal hash tables.
      */
@@ -77,7 +79,7 @@ public class MultiProbeHash extends Hash {
                 umax[i] = hi;
             }
 
-            g += c[i] * (int) Math.floor(hi);
+            g += c[i] * (long) Math.floor(hi);
         }
 
         int gint = (int) (g % P);

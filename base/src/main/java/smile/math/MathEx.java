@@ -171,37 +171,35 @@ public class MathEx {
     /**
      * High quality random number generator.
      */
-    private static final ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
-        protected Random initialValue() {
-            synchronized(DEFAULT_SEEDS) {
-                // For the first RNG instance, we use the default seed of RNG algorithms.
-                if (nextSeed < 0) {
-                    nextSeed = 0;
-                    return new Random();
-                }
-                if (nextSeed < DEFAULT_SEEDS.length) {
-                    return new Random(DEFAULT_SEEDS[nextSeed++]);
-                } else {
-                    return new Random(generateSeed());
-                }
+    private static final ThreadLocal<Random> random = ThreadLocal.withInitial(() -> {
+        synchronized(DEFAULT_SEEDS) {
+            // For the first RNG instance, we use the default seed of RNG algorithms.
+            if (nextSeed < 0) {
+                nextSeed = 0;
+                return new Random();
+            }
+            if (nextSeed < DEFAULT_SEEDS.length) {
+                return new Random(DEFAULT_SEEDS[nextSeed++]);
+            } else {
+                return new Random(generateSeed());
             }
         }
-    };
+    });
 
     /**
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
     private static class FPU {
-        int RADIX;
+        final int RADIX;
         int DIGITS;
-        int FLOAT_DIGITS = 24;
+        final int FLOAT_DIGITS = 24;
         int ROUND_STYLE;
         int MACHEP;
-        int FLOAT_MACHEP = -23;
+        final int FLOAT_MACHEP = -23;
         int NEGEP;
-        int FLOAT_NEGEP = -24;
-        float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
-        double EPSILON;
+        final int FLOAT_NEGEP = -24;
+        final float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
+        final double EPSILON;
 
         FPU() {
             double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
@@ -1533,13 +1531,13 @@ public class MathEx {
 
     /**
      * Returns the minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the minimum.
      */
-    public static int min(int[] x) {
-        int min = x[0];
+    public static int min(int[] array) {
+        int min = array[0];
 
-        for (int n : x) {
+        for (int n : array) {
             if (n < min) {
                 min = n;
             }
@@ -1550,13 +1548,13 @@ public class MathEx {
 
     /**
      * Returns the minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the minimum.
      */
-    public static float min(float[] x) {
+    public static float min(float[] array) {
         float min = Float.POSITIVE_INFINITY;
 
-        for (float n : x) {
+        for (float n : array) {
             if (n < min) {
                 min = n;
             }
@@ -1567,13 +1565,13 @@ public class MathEx {
 
     /**
      * Returns the minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the minimum.
      */
-    public static double min(double[] x) {
+    public static double min(double[] array) {
         double min = Double.POSITIVE_INFINITY;
 
-        for (double n : x) {
+        for (double n : array) {
             if (n < min) {
                 min = n;
             }
@@ -1584,16 +1582,16 @@ public class MathEx {
 
     /**
      * Returns the index of minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of minimum.
      */
-    public static int whichMin(int[] x) {
-        int min = x[0];
+    public static int whichMin(int[] array) {
+        int min = array[0];
         int which = 0;
 
-        for (int i = 1; i < x.length; i++) {
-            if (x[i] < min) {
-                min = x[i];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
                 which = i;
             }
         }
@@ -1603,16 +1601,16 @@ public class MathEx {
 
     /**
      * Returns the index of minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of minimum.
      */
-    public static int whichMin(float[] x) {
+    public static int whichMin(float[] array) {
         float min = Float.POSITIVE_INFINITY;
         int which = 0;
 
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] < min) {
-                min = x[i];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
                 which = i;
             }
         }
@@ -1622,16 +1620,16 @@ public class MathEx {
 
     /**
      * Returns the index of minimum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of minimum.
      */
-    public static int whichMin(double[] x) {
+    public static int whichMin(double[] array) {
         double min = Double.POSITIVE_INFINITY;
         int which = 0;
 
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] < min) {
-                min = x[i];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
                 which = i;
             }
         }
@@ -1641,13 +1639,13 @@ public class MathEx {
 
     /**
      * Returns the maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static int max(int[] x) {
-        int max = x[0];
+    public static int max(int[] array) {
+        int max = array[0];
 
-        for (int n : x) {
+        for (int n : array) {
             if (n > max) {
                 max = n;
             }
@@ -1658,13 +1656,13 @@ public class MathEx {
 
     /**
      * Returns the maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static float max(float[] x) {
+    public static float max(float[] array) {
         float max = Float.NEGATIVE_INFINITY;
 
-        for (float n : x) {
+        for (float n : array) {
             if (n > max) {
                 max = n;
             }
@@ -1675,13 +1673,13 @@ public class MathEx {
 
     /**
      * Returns the maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static double max(double[] x) {
+    public static double max(double[] array) {
         double max = Double.NEGATIVE_INFINITY;
 
-        for (double n : x) {
+        for (double n : array) {
             if (n > max) {
                 max = n;
             }
@@ -1692,16 +1690,16 @@ public class MathEx {
 
     /**
      * Returns the index of maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static int whichMax(int[] x) {
-        int max = x[0];
+    public static int whichMax(int[] array) {
+        int max = array[0];
         int which = 0;
 
-        for (int i = 1; i < x.length; i++) {
-            if (x[i] > max) {
-                max = x[i];
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
                 which = i;
             }
         }
@@ -1711,16 +1709,16 @@ public class MathEx {
 
     /**
      * Returns the index of maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static int whichMax(float[] x) {
+    public static int whichMax(float[] array) {
         float max = Float.NEGATIVE_INFINITY;
         int which = 0;
 
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] > max) {
-                max = x[i];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
                 which = i;
             }
         }
@@ -1730,16 +1728,16 @@ public class MathEx {
 
     /**
      * Returns the index of maximum value of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the index of maximum.
      */
-    public static int whichMax(double[] x) {
+    public static int whichMax(double[] array) {
         double max = Double.NEGATIVE_INFINITY;
         int which = 0;
 
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] > max) {
-                max = x[i];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
                 which = i;
             }
         }
@@ -1824,7 +1822,7 @@ public class MathEx {
     }
 
     /**
-     * Returns the index of minimum value of an matrix.
+     * Returns the index of minimum value of a matrix.
      * @param matrix the matrix.
      * @return the index of minimum.
      */
@@ -2372,119 +2370,119 @@ public class MathEx {
 
     /**
      * Returns the mean of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the mean.
      */
-    public static double mean(int[] x) {
-        return (double) sum(x) / x.length;
+    public static double mean(int[] array) {
+        return (double) sum(array) / array.length;
     }
 
     /**
      * Returns the mean of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the mean.
      */
-    public static double mean(float[] x) {
-        return sum(x) / x.length;
+    public static double mean(float[] array) {
+        return sum(array) / array.length;
     }
 
     /**
      * Returns the mean of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the mean.
      */
-    public static double mean(double[] x) {
-        return sum(x) / x.length;
+    public static double mean(double[] array) {
+        return sum(array) / array.length;
     }
 
     /**
      * Returns the variance of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the variance.
      */
-    public static double var(int[] x) {
-        if (x.length < 2) {
+    public static double var(int[] array) {
+        if (array.length < 2) {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
         double sum = 0.0;
         double sumsq = 0.0;
-        for (int xi : x) {
+        for (int xi : array) {
             sum += xi;
             sumsq += xi * xi;
         }
 
-        int n = x.length - 1;
-        return sumsq / n - (sum / x.length) * (sum / n);
+        int n = array.length - 1;
+        return sumsq / n - (sum / array.length) * (sum / n);
     }
 
     /**
      * Returns the variance of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the variance.
      */
-    public static double var(float[] x) {
-        if (x.length < 2) {
+    public static double var(float[] array) {
+        if (array.length < 2) {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
         double sum = 0.0;
         double sumsq = 0.0;
-        for (float xi : x) {
+        for (float xi : array) {
             sum += xi;
             sumsq += xi * xi;
         }
 
-        int n = x.length - 1;
-        return sumsq / n - (sum / x.length) * (sum / n);
+        int n = array.length - 1;
+        return sumsq / n - (sum / array.length) * (sum / n);
     }
 
     /**
      * Returns the variance of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the variance.
      */
-    public static double var(double[] x) {
-        if (x.length < 2) {
+    public static double var(double[] array) {
+        if (array.length < 2) {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
         double sum = 0.0;
         double sumsq = 0.0;
-        for (double xi : x) {
+        for (double xi : array) {
             sum += xi;
             sumsq += xi * xi;
         }
 
-        int n = x.length - 1;
-        return sumsq / n - (sum / x.length) * (sum / n);
+        int n = array.length - 1;
+        return sumsq / n - (sum / array.length) * (sum / n);
     }
 
     /**
      * Returns the standard deviation of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(int[] x) {
-        return sqrt(var(x));
+    public static double sd(int[] array) {
+        return sqrt(var(array));
     }
 
     /**
      * Returns the standard deviation of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(float[] x) {
-        return sqrt(var(x));
+    public static double sd(float[] array) {
+        return sqrt(var(array));
     }
 
     /**
      * Returns the standard deviation of an array.
-     * @param x the array.
+     * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(double[] x) {
-        return sqrt(var(x));
+    public static double sd(double[] array) {
+        return sqrt(var(array));
     }
 
     /**
@@ -2511,16 +2509,16 @@ public class MathEx {
      * differently: for example for large samples from a uniform continuous
      * distribution, this factor is about 1.1547.
      *
-     * @param x the array.
-     * @return the median abolute deviation.
+     * @param array the array.
+     * @return the median absolute deviation.
      */
-    public static double mad(int[] x) {
-        int m = median(x);
-        for (int i = 0; i < x.length; i++) {
-            x[i] = abs(x[i] - m);
+    public static double mad(int[] array) {
+        int m = median(array);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = abs(array[i] - m);
         }
 
-        return median(x);
+        return median(array);
     }
 
     /**
@@ -2547,16 +2545,16 @@ public class MathEx {
      * differently: for example for large samples from a uniform continuous
      * distribution, this factor is about 1.1547.
      *
-     * @param x the array.
+     * @param array the array.
      * @return the median abolute deviation.
      */
-    public static double mad(float[] x) {
-        float m = median(x);
-        for (int i = 0; i < x.length; i++) {
-            x[i] = abs(x[i] - m);
+    public static double mad(float[] array) {
+        float m = median(array);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = abs(array[i] - m);
         }
 
-        return median(x);
+        return median(array);
     }
 
     /**
@@ -2583,78 +2581,78 @@ public class MathEx {
      * differently: for example for large samples from a uniform continuous
      * distribution, this factor is about 1.1547.
      *
-     * @param x the array.
+     * @param array the array.
      * @return the median abolute deviation.
      */
-    public static double mad(double[] x) {
-        double m = median(x);
-        for (int i = 0; i < x.length; i++) {
-            x[i] = abs(x[i] - m);
+    public static double mad(double[] array) {
+        double m = median(array);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = abs(array[i] - m);
         }
 
-        return median(x);
+        return median(array);
     }
 
     /**
      * The Euclidean distance on binary sparse arrays,
      * which are the indices of nonzero elements in ascending order.
      *
-     * @param x a binary sparse vector.
-     * @param y a binary sparse vector.
+     * @param a a binary sparse vector.
+     * @param b a binary sparse vector.
      * @return the Euclidean distance.
      */
-    public static double distance(int[] x, int[] y) {
-        return sqrt(squaredDistance(x, y));
+    public static double distance(int[] a, int[] b) {
+        return sqrt(squaredDistance(a, b));
     }
 
     /**
      * The Euclidean distance.
      *
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the Euclidean distance.
      */
-    public static double distance(float[] x, float[] y) {
-        return sqrt(squaredDistance(x, y));
+    public static double distance(float[] a, float[] b) {
+        return sqrt(squaredDistance(a, b));
     }
 
     /**
      * The Euclidean distance.
      *
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the Euclidean distance.
      */
-    public static double distance(double[] x, double[] y) {
-        return sqrt(squaredDistance(x, y));
+    public static double distance(double[] a, double[] b) {
+        return sqrt(squaredDistance(a, b));
     }
 
     /**
      * The Euclidean distance.
      *
-     * @param x a sparse vector.
-     * @param y a sparse vector.
+     * @param a a sparse vector.
+     * @param b a sparse vector.
      * @return the Euclidean distance.
      */
-    public static double distance(SparseArray x, SparseArray y) {
-        return sqrt(squaredDistance(x, y));
+    public static double distance(SparseArray a, SparseArray b) {
+        return sqrt(squaredDistance(a, b));
     }
 
     /**
      * The squared Euclidean distance on binary sparse arrays,
      * which are the indices of nonzero elements in ascending order.
      *
-     * @param x a binary sparse vector.
-     * @param y a binary sparse vector.
+     * @param a a binary sparse vector.
+     * @param b a binary sparse vector.
      * @return the square of Euclidean distance.
      */
-    public static double squaredDistance(int[] x, int[] y) {
+    public static double squaredDistance(int[] a, int[] b) {
         double d = 0.0;
 
         int p1 = 0, p2 = 0;
-        while (p1 < x.length && p2 < y.length) {
-            int i1 = x[p1];
-            int i2 = y[p2];
+        while (p1 < a.length && p2 < b.length) {
+            int i1 = a[p1];
+            int i2 = b[p2];
             if (i1 == i2) {
                 p1++;
                 p2++;
@@ -2667,8 +2665,8 @@ public class MathEx {
             }
         }
 
-        d += x.length - p1;
-        d += y.length - p2;
+        d += a.length - p1;
+        d += b.length - p2;
 
         return d;
     }
@@ -2676,42 +2674,42 @@ public class MathEx {
     /**
      * The squared Euclidean distance.
      *
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the square of Euclidean distance.
      */
-    public static double squaredDistance(float[] x, float[] y) {
-        if (x.length != y.length) {
+    public static double squaredDistance(float[] a, float[] b) {
+        if (a.length != b.length) {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        switch (x.length) {
+        switch (a.length) {
             case 2: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
+                double d0 = (double) a[0] - (double) b[0];
+                double d1 = (double) a[1] - (double) b[1];
                 return d0 * d0 + d1 * d1;
             }
 
             case 3: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
-                double d2 = (double) x[2] - (double) y[2];
+                double d0 = (double) a[0] - (double) b[0];
+                double d1 = (double) a[1] - (double) b[1];
+                double d2 = (double) a[2] - (double) b[2];
                 return d0 * d0 + d1 * d1 + d2 * d2;
             }
 
             case 4: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
-                double d2 = (double) x[2] - (double) y[2];
-                double d3 = (double) x[3] - (double) y[3];
+                double d0 = (double) a[0] - (double) b[0];
+                double d1 = (double) a[1] - (double) b[1];
+                double d2 = (double) a[2] - (double) b[2];
+                double d3 = (double) a[3] - (double) b[3];
                 return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
             }
         }
 
         double sum = 0.0;
-        for (int i = 0; i < x.length; i++) {
+        for (int i = 0; i < a.length; i++) {
             // covert x and y for better precision
-            double d = (double) x[i] - (double) y[i];
+            double d = (double) a[i] - (double) b[i];
             sum += d * d;
         }
 
@@ -2721,41 +2719,41 @@ public class MathEx {
     /**
      * The squared Euclidean distance.
      *
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the square of Euclidean distance.
      */
-    public static double squaredDistance(double[] x, double[] y) {
-        if (x.length != y.length) {
+    public static double squaredDistance(double[] a, double[] b) {
+        if (a.length != b.length) {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        switch (x.length) {
+        switch (a.length) {
             case 2: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
+                double d0 = a[0] - b[0];
+                double d1 = a[1] - b[1];
                 return d0 * d0 + d1 * d1;
             }
 
             case 3: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
-                double d2 = x[2] - y[2];
+                double d0 = a[0] - b[0];
+                double d1 = a[1] - b[1];
+                double d2 = a[2] - b[2];
                 return d0 * d0 + d1 * d1 + d2 * d2;
             }
 
             case 4: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
-                double d2 = x[2] - y[2];
-                double d3 = x[3] - y[3];
+                double d0 = a[0] - b[0];
+                double d1 = a[1] - b[1];
+                double d2 = a[2] - b[2];
+                double d3 = a[3] - b[3];
                 return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
             }
         }
 
         double sum = 0.0;
-        for (int i = 0; i < x.length; i++) {
-            double d = x[i] - y[i];
+        for (int i = 0; i < a.length; i++) {
+            double d = a[i] - b[i];
             sum += d * d;
         }
 
@@ -2765,13 +2763,13 @@ public class MathEx {
     /**
      * The Euclidean distance on sparse arrays.
      *
-     * @param x a sparse vector.
-     * @param y a sparse vector.
+     * @param a a sparse vector.
+     * @param b a sparse vector.
      * @return the square of Euclidean distance.
      */
-    public static double squaredDistance(SparseArray x, SparseArray y) {
-        Iterator<SparseArray.Entry> it1 = x.iterator();
-        Iterator<SparseArray.Entry> it2 = y.iterator();
+    public static double squaredDistance(SparseArray a, SparseArray b) {
+        Iterator<SparseArray.Entry> it1 = a.iterator();
+        Iterator<SparseArray.Entry> it2 = b.iterator();
         SparseArray.Entry e1 = it1.hasNext() ? it1.next() : null;
         SparseArray.Entry e2 = it2.hasNext() ? it2.next() : null;
 
@@ -3263,16 +3261,16 @@ public class MathEx {
     /**
      * Returns the dot product between two binary sparse arrays,
      * which are the indices of nonzero elements in ascending order.
-     * @param x a binary sparse vector.
-     * @param y a binary sparse vector.
+     * @param a a binary sparse vector.
+     * @param b a binary sparse vector.
      * @return the dot product.
      */
-    public static int dot(int[] x, int[] y) {
+    public static int dot(int[] a, int[] b) {
         int sum = 0;
 
-        for (int p1 = 0, p2 = 0; p1 < x.length && p2 < y.length; ) {
-            int i1 = x[p1];
-            int i2 = y[p2];
+        for (int p1 = 0, p2 = 0; p1 < a.length && p2 < b.length; ) {
+            int i1 = a[p1];
+            int i2 = b[p2];
             if (i1 == i2) {
                 sum++;
                 p1++;
@@ -3289,18 +3287,18 @@ public class MathEx {
 
     /**
      * Returns the dot product between two vectors.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the dot product.
      */
-    public static float dot(float[] x, float[] y) {
-        if (x.length != y.length) {
+    public static float dot(float[] a, float[] b) {
+        if (a.length != b.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
         float sum = 0.0F;
-        for (int i = 0; i < x.length; i++) {
-            sum += x[i] * y[i];
+        for (int i = 0; i < a.length; i++) {
+            sum += a[i] * b[i];
         }
 
         return sum;
@@ -3308,18 +3306,18 @@ public class MathEx {
 
     /**
      * Returns the dot product between two vectors.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the dot product.
      */
-    public static double dot(double[] x, double[] y) {
-        if (x.length != y.length) {
+    public static double dot(double[] a, double[] b) {
+        if (a.length != b.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
         double sum = 0.0;
-        for (int i = 0; i < x.length; i++) {
-            sum += x[i] * y[i];
+        for (int i = 0; i < a.length; i++) {
+            sum += a[i] * b[i];
         }
 
         return sum;
@@ -3705,7 +3703,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.
@@ -3735,7 +3733,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.
@@ -3765,7 +3763,7 @@ public class MathEx {
 
     /**
      * The Spearman Rank Correlation Coefficient is a form of the Pearson
-     * coefficient with the data converted to rankings (ie. when variables
+     * coefficient with the data converted to rankings (i.e. when variables
      * are ordinal). It can be used when there is non-parametric data and hence
      * Pearson cannot be used.
      * @param x a vector.
@@ -4033,62 +4031,62 @@ public class MathEx {
 
     /**
      * Returns the cosine similarity.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the cosine similarity.
      */
-    public static float cos(float[] x, float[] y) {
-        return dot(x, y) / (norm2(x) * norm2(y));
+    public static float cos(float[] a, float[] b) {
+        return dot(a, b) / (norm2(a) * norm2(b));
     }
 
     /**
      * Returns the cosine similarity.
-     * @param x a vector.
-     * @param y a vector.
+     * @param a a vector.
+     * @param b a vector.
      * @return the cosine similarity.
      */
-    public static double cos(double[] x, double[] y) {
-        return dot(x, y) / (norm2(x) * norm2(y));
+    public static double cos(double[] a, double[] b) {
+        return dot(a, b) / (norm2(a) * norm2(b));
     }
 
     /**
      * Standardizes an array to mean 0 and variance 1.
-     * @param x the matrix.
+     * @param array the array.
      */
-    public static void standardize(double[] x) {
-        double mu = mean(x);
-        double sigma = sd(x);
+    public static void standardize(double[] array) {
+        double mu = mean(array);
+        double sigma = sd(array);
 
         if (isZero(sigma)) {
             logger.warn("array has variance of 0.");
             return;
         }
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] = (x[i] - mu) / sigma;
+        for (int i = 0; i < array.length; i++) {
+            array[i] = (array[i] - mu) / sigma;
         }
     }
 
     /**
      * Scales each column of a matrix to range [0, 1].
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void scale(double[][] x) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void scale(double[][] matrix) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
-        double[] min = colMin(x);
-        double[] max = colMax(x);
+        double[] min = colMin(matrix);
+        double[] max = colMax(matrix);
 
         for (int j = 0; j < p; j++) {
             double scale = max[j] - min[j];
             if (!isZero(scale)) {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] = (x[i][j] - min[j]) / scale;
+                    matrix[i][j] = (matrix[i][j] - min[j]) / scale;
                 }
             } else {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] = 0.5;
+                    matrix[i][j] = 0.5;
                 }
             }
         }
@@ -4096,29 +4094,29 @@ public class MathEx {
 
     /**
      * Standardizes each column of a matrix to 0 mean and unit variance.
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void standardize(double[][] x) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void standardize(double[][] matrix) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
-        double[] center = colMeans(x);
+        double[] center = colMeans(matrix);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
-                x[i][j] = x[i][j] - center[j];
+                matrix[i][j] = matrix[i][j] - center[j];
             }
         }
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (double[] xi : x) {
+            for (double[] xi : matrix) {
                 scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j] / (n-1));
 
             if (!isZero(scale[j])) {
                 for (int i = 0; i < n; i++) {
-                    x[i][j] /= scale[j];
+                    matrix[i][j] /= scale[j];
                 }
             }
         }
@@ -4126,33 +4124,33 @@ public class MathEx {
 
     /**
      * Unitizes each column of a matrix to unit length (L_2 norm).
-     * @param x the matrix.
+     * @param matrix the matrix.
      */
-    public static void normalize(double[][] x) {
-        normalize(x, false);
+    public static void normalize(double[][] matrix) {
+        normalize(matrix, false);
     }
 
     /**
      * Unitizes each column of a matrix to unit length (L_2 norm).
-     * @param x the matrix.
+     * @param matrix the matrix.
      * @param centerizing If true, centerize each column to 0 mean.
      */
-    public static void normalize(double[][] x, boolean centerizing) {
-        int n = x.length;
-        int p = x[0].length;
+    public static void normalize(double[][] matrix, boolean centerizing) {
+        int n = matrix.length;
+        int p = matrix[0].length;
 
         if (centerizing) {
-            double[] center = colMeans(x);
+            double[] center = colMeans(matrix);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < p; j++) {
-                    x[i][j] = x[i][j] - center[j];
+                    matrix[i][j] = matrix[i][j] - center[j];
                 }
             }
         }
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (double[] xi : x) {
+            for (double[] xi : matrix) {
                 scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j]);
@@ -4161,44 +4159,44 @@ public class MathEx {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 if (!isZero(scale[j])) {
-                    x[i][j] /= scale[j];
+                    matrix[i][j] /= scale[j];
                 }
             }
         }
     }
 
     /**
-     * Unitize an array so that L<sub>2</sub> norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of array = 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize(double[] x) {
-        unitize2(x);
+    public static void unitize(double[] array) {
+        unitize2(array);
     }
 
     /**
-     * Unitize an array so that L<sub>1</sub> norm of x is 1.
+     * Unitize an array so that L<sub>1</sub> norm of array is 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize1(double[] x) {
-        double n = norm1(x);
+    public static void unitize1(double[] array) {
+        double n = norm1(array);
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] /= n;
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= n;
         }
     }
 
     /**
-     * Unitize an array so that L<sub>2</sub> norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of array = 1.
      *
-     * @param x the vector.
+     * @param array the vector.
      */
-    public static void unitize2(double[] x) {
-        double n = norm(x);
+    public static void unitize2(double[] array) {
+        double n = norm(array);
 
-        for (int i = 0; i < x.length; i++) {
-            x[i] /= n;
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= n;
         }
     }
 
@@ -4594,17 +4592,17 @@ public class MathEx {
     }
 
     /**
-     * Element-wise subtraction of two arrays y = y - x.
-     * @param y the minuend array.
-     * @param x the subtrahend array.
+     * Element-wise subtraction of two arrays a -= b.
+     * @param a the minuend array.
+     * @param b the subtrahend array.
      */
-    public static void sub(double[] y, double[] x) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+    public static void sub(double[] a, double[] b) {
+        if (b.length != a.length) {
+            throw new IllegalArgumentException(String.format("Arrays have different length: a[%d] != b[%d]", a.length, b.length));
         }
 
-        for (int i = 0; i < x.length; i++) {
-            y[i] -= x[i];
+        for (int i = 0; i < b.length; i++) {
+            a[i] -= b[i];
         }
     }
 
@@ -4664,40 +4662,40 @@ public class MathEx {
 
     /**
      * Find unique elements of vector.
-     * @param x an integer array.
+     * @param array an integer array.
      * @return the same values as in x but with no repetitions.
      */
-    public static int[] unique(int[] x) {
-        return Arrays.stream(x).distinct().toArray();
+    public static int[] unique(int[] array) {
+        return Arrays.stream(array).distinct().toArray();
     }
 
     /**
      * Find unique elements of vector.
-     * @param x an array of strings.
+     * @param array an array of strings.
      * @return the same values as in x but with no repetitions.
      */
-    public static String[] unique(String[] x) {
-        return Arrays.stream(x).distinct().toArray(String[]::new);
+    public static String[] unique(String[] array) {
+        return Arrays.stream(array).distinct().toArray(String[]::new);
     }
 
     /**
      * Sorts each variable and returns the index of values in ascending order.
      * Note that the order of original array is NOT altered.
      * 
-     * @param x a set of variables to be sorted. Each row is an instance. Each
+     * @param matrix a set of variables to be sorted. Each row is an instance. Each
      * column is a variable.
      * @return the index of values in ascending order
      */
-    public static int[][] sort(double[][] x) {
-        int n = x.length;
-        int p = x[0].length;
+    public static int[][] sort(double[][] matrix) {
+        int n = matrix.length;
+        int p = matrix[0].length;
         
         double[] a = new double[n];
         int[][] index = new int[p][];
         
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                a[i] = x[i][j];
+                a[i] = matrix[i][j];
             }
             index[j] = QuickSort.sort(a);
         }

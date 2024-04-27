@@ -17,9 +17,11 @@
 
 package smile.classification;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import smile.data.Dataset;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.vector.BaseVector;
@@ -32,6 +34,7 @@ import smile.util.IntSet;
  * @author Haifeng Li
  */
 public class ClassLabels implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The number of classes. */
@@ -91,6 +94,20 @@ public class ClassLabels implements Serializable {
 
     /**
      * Fits the class label mapping.
+     * @param data the sample instances.
+     * @return the class label mapping.
+     */
+    public static ClassLabels fit(Dataset<?, Integer> data) {
+        int n = data.size();
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            y[i] = data.get(i).y();
+        }
+        return fit(y);
+    }
+
+    /**
+     * Fits the class label mapping.
      * @param y the sample labels.
      * @return the class label mapping.
      */
@@ -120,8 +137,7 @@ public class ClassLabels implements Serializable {
         int[] y = response.toIntArray();
 
         Measure measure = response.measure();
-        if (measure instanceof NominalScale) {
-            NominalScale scale = (NominalScale) measure;
+        if (measure instanceof NominalScale scale) {
             int k = scale.size();
             int[] labels = IntStream.range(0, k).toArray();
             IntSet encoder = new IntSet(labels);
@@ -132,10 +148,10 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Returns the number of samples per class.
+     * Returns the sample size per class.
      * @param y sample labels in [0, k)
      * @param k the number of classes.
-     * @return the number of samples per class.
+     * @return the sample size per class.
      */
     private static int[] count(int[] y, int k) {
         int[] ni = new int[k];

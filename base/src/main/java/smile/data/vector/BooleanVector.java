@@ -40,12 +40,10 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override
     BooleanVector get(int... index);
 
-    /**
-     * Returns the value at position i.
-     * @param i the index.
-     * @return the value.
-     */
-    boolean getBoolean(int i);
+    @Override
+    default char getChar(int i) {
+        return getBoolean(i) ? 'T' : 'F';
+    }
 
     @Override
     default byte getByte(int i) {

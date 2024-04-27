@@ -119,7 +119,7 @@ public enum PennTreebankPOS {
 
     /**
      * Modal verb. This category includes all verbs that don't take an -s
-     * ending in the third person singular present: can, could, (dare), may,
+     * ending in the third-person singular present: can, could, (dare), may,
      * might, must, ought, shall, should, will, would.
      */
     MD(false),
@@ -223,7 +223,7 @@ public enum PennTreebankPOS {
     /**
      * Symbol. This includes / [ = *, #, etc. This tag should be used for
      * mathematical, scientific and technical symbols or expressions that
-     * aren't words of English. It should not used for any and all technical
+     * aren't words of English. It should not be used for any and all technical
      * expressions. For instance, the names of chemicals, units of measurements
      * (including abbreviations thereof) and the like should be tagged as nouns.
      */
@@ -398,7 +398,7 @@ public enum PennTreebankPOS {
     };
 
     /**
-     * True if the POS is a open class.
+     * True if the POS is an open class.
      */
     public final boolean open;
 
@@ -446,7 +446,7 @@ public enum PennTreebankPOS {
     
     /**
      * Returns an enum value from a string. Note that valueOf cannot be
-     * overridden so we have to use this workaround for converting custom
+     * overridden, so we have to use this workaround for converting custom
      * strings to enum values without using valueOf method.
      *
      * @param value the string value.

@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 
+import java.io.Serial;
+
 import static smile.math.MathEx.lchoose;
 import static smile.math.MathEx.lfactorial;
 
@@ -35,6 +37,7 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class HyperGeometricDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The number of total samples. */
@@ -200,7 +203,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     abstract static class RandomNumberGenerator {
-        protected int N, m, n;
+        protected final int N, m, n;
         protected int fak;
         protected int addd;
 

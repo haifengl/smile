@@ -41,6 +41,16 @@ public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
     ByteVector get(int... index);
 
     @Override
+    default boolean getBoolean(int i) {
+        return getByte(i) != 0;
+    }
+
+    @Override
+    default char getChar(int i) {
+        return (char) getByte(i);
+    }
+
+    @Override
     default short getShort(int i) {
         return getByte(i);
     }

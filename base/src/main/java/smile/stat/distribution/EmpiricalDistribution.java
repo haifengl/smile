@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
@@ -26,13 +27,14 @@ import smile.util.IntSet;
  * An empirical distribution function or empirical cdf, is a cumulative
  * probability distribution function that concentrates probability 1/n at
  * each of the n numbers in a sample. As n grows the empirical distribution
- * will getting closer to the true distribution.
+ * will get closer to the true distribution.
  * Empirical distribution is a very important estimator in Statistics. In
  * particular, the Bootstrap method rely heavily on the empirical distribution.
  *
  * @author Haifeng Li
  */
 public class EmpiricalDistribution extends DiscreteDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

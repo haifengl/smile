@@ -27,7 +27,7 @@ import smile.math.matrix.Matrix;
  * Classical multidimensional scaling, also known as principal coordinates
  * analysis. Given a matrix of dissimilarities (e.g. pairwise distances), MDS
  * finds a set of points in low dimensional space that well-approximates the
- * dissimilarities. We are not restricted to using an Euclidean
+ * dissimilarities. We are not restricted to using Euclidean
  * distance metric. However, when Euclidean distances are used MDS is
  * equivalent to PCA.
  *
@@ -98,7 +98,7 @@ public class MDS {
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static MDS of(double[][] proximity, Properties params) {

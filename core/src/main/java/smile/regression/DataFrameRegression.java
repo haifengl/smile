@@ -37,7 +37,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
      */
     interface Trainer<M extends DataFrameRegression> {
         /**
-         * Fits a regression model with the default hyper-parameters.
+         * Fits a regression model with the default hyperparameters.
          * @param formula a symbolic description of the model to be fitted.
          * @param data the data frame of the explanatory and response variables.
          * @return the model
@@ -51,7 +51,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
          * Fits a regression model.
          * @param formula a symbolic description of the model to be fitted.
          * @param data the data frame of the explanatory and response variables.
-         * @param params the hyper-parameters.
+         * @param params the hyperparameters.
          * @return the model
          */
         M fit(Formula formula, DataFrame data, Properties params);
@@ -87,7 +87,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @param trainer the training lambda.
      * @return the model.
      */

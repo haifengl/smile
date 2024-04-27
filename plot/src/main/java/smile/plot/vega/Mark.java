@@ -180,7 +180,7 @@ public class Mark {
      * @return this object.
      */
     public Mark x(String width) {
-        assert width == "width" : "Invalid width: " + width;
+        assert "width".equals(width)  : "Invalid width: " + width;
         spec.put("x", width);
         return this;
     }
@@ -201,7 +201,7 @@ public class Mark {
      * @return this object.
      */
     public Mark x2(String width) {
-        assert width == "width" : "Invalid width: " + width;
+        assert "width".equals(width) : "Invalid width: " + width;
         spec.put("x2", width);
         return this;
     }
@@ -222,7 +222,7 @@ public class Mark {
      * @return this object.
      */
     public Mark y(String height) {
-        assert height == "height" : "Invalid height: " + height;
+        assert "height".equals(height) : "Invalid height: " + height;
         spec.put("y", height);
         return this;
     }
@@ -243,7 +243,7 @@ public class Mark {
      * @return this object.
      */
     public Mark y2(String height) {
-        assert height == "height" : "Invalid height: " + height;
+        assert "height".equals(height) : "Invalid height: " + height;
         spec.put("y2", height);
         return this;
     }
@@ -486,7 +486,7 @@ public class Mark {
 
     /**
      * Sets the extent of the band. Available options include:
-     *
+     * <p>
      * "ci" - Extend the band to the confidence interval of the mean.
      * "stderr" - The size of band are set to the value of standard error, extending from the mean.
      * "stdev" - The size of band are set to the value of standard deviation, extending from the mean.
@@ -523,7 +523,7 @@ public class Mark {
     /**
      * Sets the line interpolation method to use for line and area marks.
      * Available options include:
-     *
+     * <p>
      * "linear" - piecewise linear segments, as in a polyline.
      * "linear-closed" - close the linear segments to form a polygon.
      * "step" - alternate between horizontal and vertical segments, as in a step function.

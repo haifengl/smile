@@ -17,6 +17,8 @@
 
 package smile.math.rbf;
 
+import java.io.Serial;
+
 /**
  * Multiquadric RBF. <code>&phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>1/2</sup></code>
  * where r<sub>0</sub> is a scale factor. Multiquadrics are said to be less
@@ -33,6 +35,7 @@ package smile.math.rbf;
  * @author Haifeng Li
  */
 public class MultiquadricRadialBasis implements RadialBasisFunction {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

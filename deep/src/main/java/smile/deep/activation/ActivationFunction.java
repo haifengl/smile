@@ -18,29 +18,52 @@
 package smile.deep.activation;
 
 import java.io.Serializable;
-import java.util.function.Function;
-import smile.deep.tensor.Tensor;
+import org.bytedeco.pytorch.Module;
+import smile.deep.layer.Layer;
 
 /**
- * The non-linear activation function.
+ * The activation function. It also implements the layer interface
+ * so that it can be treated added into a network as a layer.
  *
  * @author Haifeng Li
  */
-public interface ActivationFunction extends
-        Function<org.bytedeco.pytorch.Tensor, org.bytedeco.pytorch.Tensor>,
-        Serializable {
+public abstract class ActivationFunction implements Layer, Serializable {
+    /** The module of activation function. */
+    final Module module;
+    /** The function name. */
+    final String name;
+    /** True if the operation executes in-place. */
+    final boolean inplace;
+
+    /**
+     * Constructor.
+     * @param name the function name.
+     * @param inplace true if the operation executes in-place.
+     */
+    public ActivationFunction(String name, boolean inplace) {
+        this.module = new Module(name);
+        this.name = name;
+        this.inplace = inplace;
+    }
+
     /**
      * Returns the name of activation function.
      * @return the name of activation function.
      */
-    String name();
+    public String name() {
+        return name;
+    }
 
     /**
-     * Applies this function to the given argument.
-     * @param x a tensor.
-     * @return the output tensor.
+     * Returns true if the operation executes in-place.
+     * @return true if the operation executes in-place.
      */
-    default Tensor apply(Tensor x) {
-        return Tensor.of(apply(x.asTorch()));
+    public boolean isInplace() {
+        return inplace;
+    }
+
+    @Override
+    public Module asTorch() {
+        return module;
     }
 }

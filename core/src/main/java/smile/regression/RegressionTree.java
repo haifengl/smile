@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.io.Serial;
 import java.util.*;
 import java.util.stream.IntStream;
 import smile.base.cart.*;
@@ -78,6 +79,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RegressionTree extends CART implements DataFrameRegression {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
@@ -100,7 +102,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         // in gradient tree boosting.
         double out = loss.output(nodeSamples, samples);
 
-        // RSS computation should always based on the sample mean in the node.
+        // RSS computation should always be based on the sample mean in the node.
         double mean = out;
         if (!loss.toString().equals("LeastSquares")) {
             int n = 0;
@@ -137,9 +139,8 @@ public class RegressionTree extends CART implements DataFrameRegression {
         int splitFalseCount = 0;
 
         Measure measure = schema.field(j).measure;
-        if (measure instanceof NominalScale) {
+        if (measure instanceof NominalScale scale) {
             int splitValue = -1;
-            NominalScale scale = (NominalScale) measure;
             int m = scale.size();
             int[] trueCount = new int[m];
             double[] trueSum = new double[m];
@@ -285,14 +286,14 @@ public class RegressionTree extends CART implements DataFrameRegression {
 
     /**
      * Fits a regression tree.
-     * The hyper-parameters in <code>prop</code> include
+     * The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.node.size</code>
      * <li><code>smile.cart.max.nodes</code>
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Properties params) {

@@ -21,6 +21,8 @@ import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 
+import java.io.Serial;
+
 /**
  * Random projection is a promising dimensionality reduction technique for
  * learning mixtures of Gaussians. According to Johnson-Lindenstrauss lemma,
@@ -53,6 +55,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class RandomProjection extends Projection {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**

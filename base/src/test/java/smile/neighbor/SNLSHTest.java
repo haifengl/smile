@@ -17,15 +17,12 @@
 
 package smile.neighbor;
 
-import org.junit.Before;
-import org.junit.Test;
-import smile.hash.SimHash;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
+import smile.hash.SimHash;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test data set: http://research.microsoft.com/en-us/downloads/607d14d9-20cd-47e3-85bc-a2f65cd28042/
@@ -45,7 +42,7 @@ public class SNLSHTest {
 
     }
 
-    @Before
+    @BeforeEach
     public void before() {
 
     }

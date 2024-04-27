@@ -21,7 +21,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 /**
- * This is specialized label for axis labels. Coordinates used here are are
+ * This is specialized label for axis labels. Coordinates used here are
  * proportional to the base coordinates.
  *
  * @author Haifeng Li

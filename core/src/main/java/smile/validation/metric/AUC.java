@@ -19,6 +19,8 @@ package smile.validation.metric;
 
 import smile.sort.QuickSort;
 
+import java.io.Serial;
+
 /**
  * The area under the curve (AUC). When using normalized units, the area under
  * the curve is equal to the probability that a classifier will rank a
@@ -34,12 +36,13 @@ import smile.sort.QuickSort;
  * AUC is quite noisy as a classification measure and has some other
  * significant problems in model comparison.
  * <p>
- * We calculate AUC based on Mann-Whitney U test
- * (https://en.wikipedia.org/wiki/Mann-Whitney_U_test).
+ * We calculate AUC based on
+ * <a href="https://en.wikipedia.org/wiki/Mann-Whitney_U_test">Mann-Whitney U test</a>.
  *
  * @author Haifeng Li
  */
 public class AUC implements ProbabilisticClassificationMetric {
+    @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static AUC instance = new AUC();

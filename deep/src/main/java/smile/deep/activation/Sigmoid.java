@@ -17,22 +17,31 @@
 
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Tensor;
 import org.bytedeco.pytorch.global.torch;
+import smile.deep.tensor.Tensor;
 
 /**
  * Sigmoid activation function.
  *
  * @author Haifeng Li
  */
-public class Sigmoid implements ActivationFunction {
-    @Override
-    public String name() {
-        return "Sigmoid";
+public class Sigmoid extends ActivationFunction {
+    /**
+     * Constructor.
+     * @param inplace true if the operation executes in-place.
+     */
+    public Sigmoid(boolean inplace) {
+        super("Sigmoid", inplace);
     }
 
     @Override
-    public Tensor apply(Tensor x) {
-        return torch.sigmoid(x);
+    public Tensor forward(Tensor input) {
+        var x = input.asTorch();
+        if (!module.is_training() && inplace) {
+            torch.sigmoid_(x);
+            return input;
+        } else {
+            return new Tensor(torch.sigmoid(x));
+        }
     }
 }

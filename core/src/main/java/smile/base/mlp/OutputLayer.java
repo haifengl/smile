@@ -17,12 +17,15 @@
 
 package smile.base.mlp;
 
+import java.io.Serial;
+
 /**
  * The output layer in the neural network.
  *
  * @author Haifeng Li
  */
 public class OutputLayer extends Layer {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /** The cost function. */

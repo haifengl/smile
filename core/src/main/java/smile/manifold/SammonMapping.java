@@ -38,7 +38,7 @@ import smile.math.MathEx;
  * trying to achieve equality between corresponding inter-point distances we
  * can minimize the difference between corresponding inter-point distances.
  * This is one goal of the Sammon's mapping algorithm. A second goal of the Sammon's
- * mapping algorithm is to preserve the topology as best as possible by giving
+ * mapping algorithm is to preserve the topology as good as possible by giving
  * greater emphasize to smaller interpoint distances. The Sammon's mapping
  * algorithm has the advantage that whenever it is possible to isometrically
  * project an object into a lower dimensional space it will be isometrically
@@ -107,7 +107,7 @@ public class SammonMapping {
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity, Properties params) {

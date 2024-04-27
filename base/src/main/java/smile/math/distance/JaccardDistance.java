@@ -17,6 +17,7 @@
 
 package smile.math.distance;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,9 +37,12 @@ import java.util.Set;
  * of the sizes of the union and the intersection of two sets by the size of
  * the union.
  *
+ * @param <T> the input type of distance function.
+ *
  * @author Haifeng Li
  */
 public class JaccardDistance<T> implements Distance<T[]> {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

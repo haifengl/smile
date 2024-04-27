@@ -17,18 +17,13 @@
 
 package smile.validation;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
 import smile.classification.DecisionTree;
 import smile.test.data.CPU;
 import smile.test.data.Iris;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -39,19 +34,19 @@ public class BootstrapTest {
     public BootstrapTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

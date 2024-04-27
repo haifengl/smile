@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import java.io.Serial;
+
 /**
  * The Hellinger kernel. The Hellinger distance is used to quantify the
  * similarity between two probability distributions. It is a type of
@@ -28,6 +30,7 @@ package smile.math.kernel;
  * @author Diego Catalano
  */
 public class HellingerKernel implements MercerKernel<double[]> {
+    @Serial
     private static final long serialVersionUID = 2L;
     
     /**

@@ -48,11 +48,11 @@ public class FontCellEditor extends AbstractCellEditor implements TableCellEdito
     /**
      * Editor component.
      */
-    private JButton button;
+    private final JButton button;
     /**
      * Font chooser.
      */
-    private FontChooser fontChooser;
+    private final FontChooser fontChooser;
 
     /**
      * Constructor.

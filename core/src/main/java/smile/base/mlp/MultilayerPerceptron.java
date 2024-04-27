@@ -18,6 +18,7 @@
 package smile.base.mlp;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
@@ -40,6 +41,7 @@ import smile.math.TimeFunction;
  * @author Haifeng Li
  */
 public abstract class MultilayerPerceptron implements Serializable {
+    @Serial
     private static final long serialVersionUID = 2L;
     /**
      * The dimensionality of input data.
@@ -132,6 +134,7 @@ public abstract class MultilayerPerceptron implements Serializable {
      * @throws IOException when fails to read the stream.
      * @throws ClassNotFoundException when fails to load the class.
      */
+    @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         init();
@@ -406,9 +409,9 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
     /**
-     * Sets MLP hyper-parameters such as learning rate, weight decay, momentum,
+     * Sets MLP hyperparameters such as learning rate, weight decay, momentum,
      * RMSProp, etc.
-     * @param params the MLP hyper-parameters.
+     * @param params the MLP hyperparameters.
      */
     public void setParameters(Properties params) {
         String learningRate = params.getProperty("smile.mlp.learning_rate");

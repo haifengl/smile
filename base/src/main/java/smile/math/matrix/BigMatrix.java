@@ -17,10 +17,7 @@
 
 package smile.math.matrix;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.IntPointer;
@@ -42,7 +39,8 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class BigMatrix extends IMatrix {
+public class BigMatrix extends IMatrix implements AutoCloseable {
+    @Serial
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
@@ -66,7 +64,7 @@ public class BigMatrix extends IMatrix {
 
         @Override
         protected long index(int i, int j) {
-            return i * ld + j;
+            return (long) i * ld + j;
         }
     }
 
@@ -120,7 +118,7 @@ public class BigMatrix extends IMatrix {
         this.n = n;
         this.ld = ld(m);
 
-        A = new DoublePointer(ld * n);
+        A = new DoublePointer((long) ld * n);
         fill(a);
     }
 
@@ -144,6 +142,11 @@ public class BigMatrix extends IMatrix {
         this.n = n;
         this.ld = ld;
         this.A = A;
+    }
+
+    @Override
+    public void close() {
+        A.close();
     }
 
     /**
@@ -419,6 +422,7 @@ public class BigMatrix extends IMatrix {
      * @param out the output stream.
      * @throws IOException when fails to write to the stream.
      */
+    @Serial
     private void writeObject(ObjectOutputStream out) throws IOException {
         // write default properties
         out.defaultWriteObject();
@@ -445,6 +449,7 @@ public class BigMatrix extends IMatrix {
      * @throws IOException when fails to read the stream.
      * @throws ClassNotFoundException when fails to load the class.
      */
+    @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // read default properties
         in.defaultReadObject();
@@ -452,7 +457,7 @@ public class BigMatrix extends IMatrix {
         // read buffer data
         if (layout() == COL_MAJOR) {
             this.ld = ld(m);
-            this.A = new DoublePointer(ld * n);
+            this.A = new DoublePointer((long) ld * n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, in.readDouble());
@@ -460,7 +465,7 @@ public class BigMatrix extends IMatrix {
             }
         } else {
             this.ld = ld(n);
-            this.A = new DoublePointer(m * ld);
+            this.A = new DoublePointer((long) m * ld);
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     set(i, j, in.readDouble());
@@ -481,7 +486,7 @@ public class BigMatrix extends IMatrix {
 
     @Override
     public long size() {
-        return m * n;
+        return (long) m * n;
     }
 
     /** Returns the length of double array pointer. */
@@ -520,7 +525,7 @@ public class BigMatrix extends IMatrix {
 
     /**
      * Sets the format of packed matrix.
-     * @param uplo the format of packed matrix..
+     * @param uplo the format of packed matrix.
      * @return this matrix.
      */
     public BigMatrix uplo(UPLO uplo) {
@@ -563,9 +568,8 @@ public class BigMatrix extends IMatrix {
         return diag;
     }
 
-    /** Returns a deep copy of matrix. */
     @Override
-    public BigMatrix clone() {
+    public BigMatrix copy() {
         BigMatrix matrix;
         if (layout() == COL_MAJOR) {
             DoublePointer pointer = new DoublePointer(length(A));
@@ -620,7 +624,7 @@ public class BigMatrix extends IMatrix {
         } else {
             if (layout() == COL_MAJOR) {
                 this.ld = ld(m);
-                this.A = new DoublePointer(ld * n);
+                this.A = new DoublePointer((long) ld * n);
 
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
@@ -629,7 +633,7 @@ public class BigMatrix extends IMatrix {
                 }
             } else {
                 this.ld = ld(n);
-                this.A = new DoublePointer(ld * m);
+                this.A = new DoublePointer((long) ld * m);
 
                 for (int i = 0; i < m; i++) {
                     for (int j = 0; j < n; j++) {
@@ -649,7 +653,7 @@ public class BigMatrix extends IMatrix {
      * @return the linearized index.
      */
     protected long index(int i , int j) {
-        return j * ld + i;
+        return (long) j * ld + i;
     }
 
     @Override
@@ -1508,22 +1512,23 @@ public class BigMatrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        BigMatrix lu = clone();
-        BigMatrix inv = eye(n);
-        IntPointer ipiv = new IntPointer(n);
-        if (isSymmetric()) {
-            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
-            if (info != 0) {
-                throw new ArithmeticException("SYSV fails: " + info);
+        try (BigMatrix lu = copy()) {
+            BigMatrix inv = eye(n);
+            IntPointer ipiv = new IntPointer(n);
+            if (isSymmetric()) {
+                int info = LAPACK.engine.sysv(lu.layout(), uplo, n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+                if (info != 0) {
+                    throw new ArithmeticException("SYSV fails: " + info);
+                }
+            } else {
+                int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+                if (info != 0) {
+                    throw new ArithmeticException("GESV fails: " + info);
+                }
             }
-        } else {
-            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
-            if (info != 0) {
-                throw new ArithmeticException("GESV fails: " + info);
-            }
-        }
 
-        return inv;
+            return inv;
+        }
     }
 
     /**
@@ -1564,20 +1569,22 @@ public class BigMatrix extends IMatrix {
 
     @Override
     public void mv(double[] work, int inputOffset, int outputOffset) {
-        DoublePointer pointer = new DoublePointer(work);
-        DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
-        DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
-        mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
-        pointer.get(work);
+        try (var pointer = new DoublePointer(work)) {
+            DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
+            DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
+            mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
+            pointer.get(work);
+        }
     }
 
     @Override
     public void tv(double[] work, int inputOffset, int outputOffset) {
-        DoublePointer pointer = new DoublePointer(work);
-        DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
-        DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
-        mv(TRANSPOSE, 1.0, xb, 0.0, yb);
-        pointer.get(work);
+        try (var pointer = new DoublePointer(work)) {
+            DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
+            DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
+            mv(TRANSPOSE, 1.0, xb, 0.0, yb);
+            pointer.get(work);
+        }
     }
 
     /**
@@ -1687,7 +1694,9 @@ public class BigMatrix extends IMatrix {
             }
         }
 
-        return transB == NO_TRANSPOSE ? AD.mm(B) : AD.mt(B);
+        try (AD) {
+            return transB == NO_TRANSPOSE ? AD.mm(B) : AD.mt(B);
+        }
     }
 
     /**
@@ -1765,7 +1774,7 @@ public class BigMatrix extends IMatrix {
      * @return LU decomposition.
      */
     public LU lu(boolean overwrite) {
-        BigMatrix lu = overwrite ? this : clone();
+        BigMatrix lu = overwrite ? this : copy();
         IntPointer ipiv = new IntPointer(Math.min(m, n));
         int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
@@ -1799,10 +1808,10 @@ public class BigMatrix extends IMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        BigMatrix lu = overwrite ? this : clone();
+        BigMatrix lu = overwrite ? this : copy();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
-            logger.error("LAPACK GETRF error code: {}", info);
+            logger.error("LAPACK POTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
@@ -1824,7 +1833,7 @@ public class BigMatrix extends IMatrix {
      * @return QR decomposition.
      */
     public QR qr(boolean overwrite) {
-        BigMatrix qr = overwrite ? this : clone();
+        BigMatrix qr = overwrite ? this : copy();
         DoublePointer tau = new DoublePointer(Math.min(m, n));
         int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
@@ -1838,7 +1847,7 @@ public class BigMatrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1857,7 +1866,7 @@ public class BigMatrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1877,29 +1886,32 @@ public class BigMatrix extends IMatrix {
         int k = Math.min(m, n);
         DoublePointer s = new DoublePointer(k);
 
-        BigMatrix W = overwrite ? this : clone();
+        BigMatrix W = overwrite ? this : copy();
         if (vectors) {
             BigMatrix U = new BigMatrix(m, k);
             BigMatrix VT = new BigMatrix(k, n);
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+            if (W != this) W.close();
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
-                throw new ArithmeticException("LAPACK GESDD error code: " + info);
+                logger.error("LAPACK GESDD with COMPACT error code: {}", info);
+                throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
             }
 
             return new SVD(s, U, VT.transpose());
         } else {
-            BigMatrix U = new BigMatrix(1, 1);
-            BigMatrix VT = new BigMatrix(1, 1);
+            try (BigMatrix U = new BigMatrix(1, 1);
+                 BigMatrix VT = new BigMatrix(1, 1)) {
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
-            if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
-                throw new ArithmeticException("LAPACK GESDD error code: " + info);
+                int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+                if (W != this) W.close();
+                if (info != 0) {
+                    logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
+                    throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
+                }
+
+                return new SVD(m, n, s);
             }
-
-            return new SVD(m, n, s);
         }
     }
 
@@ -1936,10 +1948,11 @@ public class BigMatrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        BigMatrix eig = overwrite ? this : clone();
+        BigMatrix eig = overwrite ? this : copy();
         if (isSymmetric()) {
             DoublePointer w = new DoublePointer(n);
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
+            if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK SYEV error code: {}", info);
                 throw new ArithmeticException("LAPACK SYEV error code: " + info);
@@ -1953,6 +1966,7 @@ public class BigMatrix extends IMatrix {
             BigMatrix Vl = vl ? new BigMatrix(n, n) : new BigMatrix(1, 1);
             BigMatrix Vr = vr ? new BigMatrix(n, n) : new BigMatrix(1, 1);
             int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
+            if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
@@ -1994,6 +2008,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class SVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
@@ -2111,7 +2126,7 @@ public class BigMatrix extends IMatrix {
         /**
          * Returns the L<sub>2</sub> norm condition number, which is max(S) / min(S).
          * A system of equations is considered to be well-conditioned if a small
-         * change in the coefficient matrix or a small change in the right hand
+         * change in the coefficient matrix or a small change on the right hand
          * side results in a small change in the solution vector. Otherwise, it is
          * called ill-conditioned. Condition number is defined as the product of
          * the norm of A and the norm of A<sup>-1</sup>. If we use the usual
@@ -2296,10 +2311,11 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class EVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
-         * By default the eigenvalues and eigenvectors are not always in
+         * By default, the eigenvalues and eigenvectors are not always in
          * sorted order. The <code>sort</code> function puts the eigenvalues
          * in descending order and reorder the corresponding eigenvectors.
          */
@@ -2440,6 +2456,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -2586,6 +2603,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
@@ -2686,6 +2704,7 @@ public class BigMatrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class QR implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.
@@ -2747,7 +2766,7 @@ public class BigMatrix extends IMatrix {
             int m = qr.m;
             int n = qr.n;
             int k = Math.min(m, n);
-            BigMatrix Q = qr.clone();
+            BigMatrix Q = qr.copy();
             int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);

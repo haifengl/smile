@@ -17,6 +17,7 @@
 
 package smile.math.matrix.fp32;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
@@ -39,6 +40,7 @@ import static smile.math.blas.UPLO.*;
  * @author Haifeng Li
  */
 public class Matrix extends IMatrix {
+    @Serial
     private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
 
@@ -478,7 +480,7 @@ public class Matrix extends IMatrix {
 
     @Override
     public long size() {
-        return m * n;
+        return (long) m * n;
     }
 
     /**
@@ -507,7 +509,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Sets the format of packed matrix.
-     * @param uplo the format of packed matrix..
+     * @param uplo the format of packed matrix.
      * @return this matrix.
      */
     public Matrix uplo(UPLO uplo) {
@@ -550,9 +552,8 @@ public class Matrix extends IMatrix {
         return diag;
     }
 
-    /** Returns a deep copy of matrix. */
     @Override
-    public Matrix clone() {
+    public Matrix copy() {
         Matrix matrix;
         if (layout() == COL_MAJOR) {
             matrix = new Matrix(m, n, ld, A.clone());
@@ -1499,7 +1500,7 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        Matrix lu = clone();
+        Matrix lu = copy();
         Matrix inv = eye(n);
         int[] ipiv = new int[n];
         if (isSymmetric()) {
@@ -1762,7 +1763,7 @@ public class Matrix extends IMatrix {
      * @return LU decomposition.
      */
     public Matrix.LU lu(boolean overwrite) {
-        Matrix lu = overwrite ? this : clone();
+        Matrix lu = overwrite ? this : copy();
         int[] ipiv = new int[Math.min(m, n)];
         int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
@@ -1796,10 +1797,10 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        Matrix lu = overwrite ? this : clone();
+        Matrix lu = overwrite ? this : copy();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
-            logger.error("LAPACK GETRF error code: {}", info);
+            logger.error("LAPACK POTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
@@ -1821,7 +1822,7 @@ public class Matrix extends IMatrix {
      * @return QR decomposition.
      */
     public Matrix.QR qr(boolean overwrite) {
-        Matrix qr = overwrite ? this : clone();
+        Matrix qr = overwrite ? this : copy();
         float[] tau = new float[Math.min(m, n)];
         int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
@@ -1835,7 +1836,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1854,7 +1855,7 @@ public class Matrix extends IMatrix {
 
     /**
      * Singular Value Decomposition.
-     * Returns an compact SVD of m-by-n matrix A:
+     * Returns a compact SVD of m-by-n matrix A:
      * <ul>
      * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>{@code m = n} — Equivalent to full SVD.</li>
@@ -1874,14 +1875,14 @@ public class Matrix extends IMatrix {
         int k = Math.min(m, n);
         float[] s = new float[k];
 
-        Matrix W = overwrite ? this : clone();
+        Matrix W = overwrite ? this : copy();
         if (vectors) {
             Matrix U = new Matrix(m, k);
             Matrix VT = new Matrix(k, n);
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with COMPACT error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
@@ -1892,7 +1893,7 @@ public class Matrix extends IMatrix {
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
+                logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
@@ -1933,7 +1934,7 @@ public class Matrix extends IMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        Matrix eig = overwrite ? this : clone();
+        Matrix eig = overwrite ? this : copy();
         if (isSymmetric()) {
             float[] w = new float[n];
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
@@ -1991,6 +1992,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class SVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
@@ -2109,7 +2111,7 @@ public class Matrix extends IMatrix {
         /**
          * Returns the L<sub>2</sub> norm condition number, which is max(S) / min(S).
          * A system of equations is considered to be well-conditioned if a small
-         * change in the coefficient matrix or a small change in the right hand
+         * change in the coefficient matrix or a small change on the right hand
          * side results in a small change in the solution vector. Otherwise, it is
          * called ill-conditioned. Condition number is defined as the product of
          * the norm of A and the norm of A<sup>-1</sup>. If we use the usual
@@ -2297,10 +2299,11 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class EVD implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
-         * By default the eigenvalues and eigenvectors are not always in
+         * By default, the eigenvalues and eigenvectors are not always in
          * sorted order. The <code>sort</code> function puts the eigenvalues
          * in descending order and reorder the corresponding eigenvectors.
          */
@@ -2441,6 +2444,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class LU implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
@@ -2584,6 +2588,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class Cholesky implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
@@ -2624,7 +2629,7 @@ public class Matrix extends IMatrix {
             int n = lu.n;
             float d = 0.0f;
             for (int i = 0; i < n; i++) {
-                d += Math.log(lu.get(i, i));
+                d += (float) Math.log(lu.get(i, i));
             }
 
             return 2.0f * d;
@@ -2681,6 +2686,7 @@ public class Matrix extends IMatrix {
      * @author Haifeng Li
      */
     public static class QR implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.
@@ -2742,7 +2748,7 @@ public class Matrix extends IMatrix {
             int m = qr.m;
             int n = qr.n;
             int k = Math.min(m, n);
-            Matrix Q = qr.clone();
+            Matrix Q = qr.copy();
             int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);

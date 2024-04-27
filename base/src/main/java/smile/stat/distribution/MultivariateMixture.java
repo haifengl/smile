@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class MultivariateMixture implements MultivariateDistribution {
+    @Serial
     private static final long serialVersionUID = 2L;
 
     /**
@@ -36,6 +38,7 @@ public class MultivariateMixture implements MultivariateDistribution {
      * and its weight in the mixture.
      */
     public static class Component implements Serializable {
+        @Serial
         private static final long serialVersionUID = 2L;
         /**
          * The priori probability of component.

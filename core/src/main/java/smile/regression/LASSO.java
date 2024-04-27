@@ -43,7 +43,7 @@ import smile.math.matrix.Matrix;
  * <p>
  * For over-determined systems (more instances than variables, commonly in
  * machine learning), we normalize variables with mean 0 and standard deviation
- * 1. For under-determined systems (less instances than variables, e.g.
+ * 1. For under-determined systems (fewer instances than variables, e.g.
  * compressed sensing), we assume white noise (i.e. no intercept in the linear
  * model) and do not perform normalization. Note that the solution
  * is not unique in this case.
@@ -81,7 +81,7 @@ public class LASSO {
     }
 
     /**
-     * Fits a L1-regularized least squares model. The hyper-parameters in <code>prop</code> include
+     * Fits a L1-regularized least squares model. The hyperparameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -91,7 +91,7 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyper-parameters.
+     * @param params the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
@@ -388,23 +388,23 @@ public class LASSO {
      */
     static class PCG extends IMatrix implements IMatrix.Preconditioner {
         /** The design matrix. */
-        Matrix A;
+        final Matrix A;
         /** A' * A */
         Matrix AtA;
         /** The number of columns of A. */
-        int p;
+        final int p;
         /** The right bottom of Hessian matrix. */
-        double[] d1;
+        final double[] d1;
         /** The last row/column of Hessian matrix. */
-        double[] d2;
+        final double[] d2;
         /** The vector used in preconditioner. */
-        double[] prb;
+        final double[] prb;
         /** The vector used in preconditioner. */
-        double[] prs;
+        final double[] prs;
         /** A * x */
-        double[] ax;
+        final double[] ax;
         /** A' * A * x. */
-        double[] atax;
+        final double[] atax;
 
         /**
          * Constructor.

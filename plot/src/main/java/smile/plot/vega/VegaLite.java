@@ -18,7 +18,6 @@ package smile.plot.vega;
 
 import java.awt.*;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
@@ -60,7 +59,7 @@ public class VegaLite {
     /**
      * The Vega-Lite specification.
      */
-    final ObjectNode spec = mapper.createObjectNode();
+    final ObjectNode spec = mapper.createObjectNode().put("$schema", schema);
     /**
      * The configuration object lists configuration properties
      * of a visualization for creating a consistent theme.
@@ -75,7 +74,6 @@ public class VegaLite {
      * Constructor.
      */
     public VegaLite() {
-        spec.put("$schema", schema);
         view.put("continuousWidth", 400);
         view.put("continuousHeight", 400);
     }
@@ -197,7 +195,7 @@ public class VegaLite {
      *                 setting includes the padding within the view size
      *                 calculations, such that the width and height settings
      *                 indicate the total intended size of the view.
-     * @link https://vega.github.io/vega-lite/docs/size.html#autosize
+     * @link <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
      */
     public VegaLite autosize(String type, boolean resize, String contains) {
         ObjectNode autosize = spec.putObject("autosize");
@@ -279,11 +277,11 @@ public class VegaLite {
         try {
             Path path = Files.createTempFile("smile-plot-", ".html");
             path.toFile().deleteOnExit();
-            Files.write(path, html().getBytes(StandardCharsets.UTF_8));
+            Files.writeString(path, html());
             Desktop.getDesktop().browse(path.toUri());
         } catch (Exception ex) {
             if (silent) {
-                logger.warn("Failed to show " + this.getClass().getSimpleName(), ex);
+                logger.warn("Failed to show {}", this.getClass().getSimpleName(), ex);
             } else {
                 throw ex;
             }
@@ -293,7 +291,7 @@ public class VegaLite {
     /**
      * Returns the HTML of plot specification with Vega Embed.
      */
-    public String html() throws JsonProcessingException {
+    public String html() {
         return html("en");
     }
 
@@ -302,7 +300,7 @@ public class VegaLite {
      * @param lang the primary language of document.
      * @return the HTML of plot specification with Vega Embed.
      */
-    public String html(String lang) throws JsonProcessingException {
+    public String html(String lang) {
         String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
@@ -315,9 +313,9 @@ public class VegaLite {
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
                    </head>
                    <body>
-                   
+                
                    <div id="vega-lite"></div>
-                   
+                
                    <script type="text/javascript">
                      var spec = %s;
                      var opt = {
@@ -344,7 +342,7 @@ public class VegaLite {
      *
      * @param id the iframe HTML id.
      */
-    public String iframe(String id) throws JsonProcessingException {
+    public String iframe(String id) {
         String src = Strings.htmlEscape(html());
         return String.format("""
                    <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>

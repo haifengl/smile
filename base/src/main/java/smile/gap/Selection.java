@@ -102,7 +102,7 @@ public interface Selection {
 
     /**
      * Rank Selection. The Roulette Wheel Selection will have problems when
-     * the fitnesses differs very much. For example, if the best chromosome
+     * the fitnesses differ very much. For example, if the best chromosome
      * fitness is 90% of all the roulette wheel then the other chromosomes
      * will have very few chances to be selected. Rank selection first ranks
      * the population and then every chromosome receives fitness from this
@@ -136,8 +136,8 @@ public interface Selection {
      * individual of some t individuals picked at random, with replacement,
      * from the population. First choose t (the tournament size) individuals
      * from the population at random. Then choose the best individual from
-     * tournament with probability p, choose the second best individual with
-     * probability p*(1-p), choose the third best individual with
+     * tournament with probability p, choose the second-best individual with
+     * probability p*(1-p), choose the third-best individual with
      * probability p*((1-p)<sup>2</sup>), and so on... Tournament Selection has become
      * the primary selection technique used for the Genetic Algorithm.
      * First, it's not sensitive to the particulars of the fitness function.

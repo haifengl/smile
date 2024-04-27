@@ -16,9 +16,6 @@
  */
 package smile.plot.vega;
 
-import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -66,7 +63,7 @@ public class View extends VegaLite {
      * @param width it should be set to "container".
      */
     public View width(String width) {
-        assert width == "container" : "Invalid width: " + width;
+        assert "container".equals(width) : "Invalid width: " + width;
         spec.put("width", width);
         return this;
     }
@@ -76,7 +73,7 @@ public class View extends VegaLite {
      * @param height it should be set to "container".
      */
     public View height(String height) {
-        assert height == "container" : "Invalid height: " + height;
+        assert "container".equals(height) : "Invalid height: " + height;
         spec.put("height", height);
         return this;
     }
@@ -91,7 +88,7 @@ public class View extends VegaLite {
     }
 
     /**
-     * For a discrete y-field, sets the height per discrete step..
+     * For a discrete y-field, sets the height per discrete step.
      */
     public View heightStep(int step) {
         ObjectNode height = spec.putObject("height");
@@ -125,7 +122,7 @@ public class View extends VegaLite {
      * applied to shape path for "geoshape" marks and to latitude and
      * "longitude" channels for other marks.
      * @param type The cartographic projection to use.
-     * @link https://vega.github.io/vega-lite/docs/projection.html#projection-types
+     * @link <a href="https://vega.github.io/vega-lite/docs/projection.html#projection-types">projection types</a>
      */
     public Projection projection(String type) {
         ObjectNode node = spec.putObject("projection");
