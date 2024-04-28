@@ -1,6 +1,10 @@
+import java.net.URL
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.base.DokkaBase
+import org.jetbrains.dokka.base.DokkaBaseConfiguration
+
 
 // compile bytecode to Java 8 (default is Java 6)
 tasks.withType<KotlinCompile> {
@@ -9,9 +13,15 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.8.22"
-    id("org.jetbrains.dokka") version "1.5.31"
+    kotlin("jvm") version "1.9.23"
+    id("org.jetbrains.dokka") version "1.9.20"
     signing
+}
+
+buildscript {
+    dependencies {
+        classpath("org.jetbrains.dokka:dokka-base:1.9.20")
+    }
 }
 
 group = "com.github.haifengl"
@@ -40,14 +50,19 @@ tasks.build {
 }
 
 // Configure existing Dokka task to output HTML
+tasks.dokkaHtml {
+    pluginConfiguration<DokkaBase, DokkaBaseConfiguration> {
+        footerMessage = "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."
+    }
+}
+
 tasks {
     dokkaHtml.configure {
         outputDirectory.set(buildDir.resolve("../../doc/api/kotlin"))
-        pageName = "Smile - Kotlin"
-        footerMessage = "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."
         dokkaSourceSets {
             configureEach {
                 includes.from("packages.md")
+                moduleName.set("Smile - Kotlin")
                 externalDocumentationLink {
                     url.set(URL("http://haifengl.github.io/api/java/"))
                 }

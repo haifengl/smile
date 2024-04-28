@@ -107,11 +107,11 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
+    "-dynamic-side-menu",
     "-project-version", "3.1.0",
     "-project-logo", "web/images/smile.jpg",
     "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
-                         |Use is subject to license terms.""".stripMargin,
-    "-dynamic-side-menu"
+                         |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
