@@ -62,7 +62,6 @@ tasks {
         dokkaSourceSets {
             configureEach {
                 includes.from("packages.md")
-                moduleName.set("Smile - Kotlin")
                 externalDocumentationLink {
                     url.set(URL("http://haifengl.github.io/api/java/"))
                 }
