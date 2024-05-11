@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Copy overrides.json to JupyterLab
+# Install Google Analytics extension
+pip install jupyterlab_google_analytics
 mkdir -p ${CONDA_DIR}/share/jupyter/lab/settings
 cp project/overrides.json ${CONDA_DIR}/share/jupyter/lab/settings/overrides.json
 
