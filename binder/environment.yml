@@ -8,3 +8,4 @@ dependencies:
   - ipywidgets
   - kotlin-jupyter-kernel
   - clojupyter
+  - jupyterlab_google_analytics
