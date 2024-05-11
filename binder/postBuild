@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copy overrides.json to JupyterLab
+mkdir -p ${CONDA_DIR}/share/jupyter/lab/settings
+cp project/overrides.json ${CONDA_DIR}/share/jupyter/lab/settings/overrides.json
+
 # Install coursier
 curl -Lo coursier https://git.io/coursier-cli
 chmod +x coursier
