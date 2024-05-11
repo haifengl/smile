@@ -17,11 +17,16 @@
 
 package smile.plot
 
+import scala.language.experimental.macros
 import smile.plot.swing.{Canvas, PlotGrid}
 import smile.plot.vega.VegaLite
 
 /** Implicit renderers. */
 object Render {
+  implicit def renderVega: VegaLite => Unit = macro RenderMacro.renderVega
+  implicit def renderCanvas: Canvas => Unit = macro RenderMacro.renderCanvas
+  implicit def renderPlotGrid: PlotGrid => Unit = macro RenderMacro.renderPlotGrid
+
   /** Desktop renderer of plot canvas. */
   def desktop(canvas: Canvas): Unit = {
     smile.plot.swing.JWindow(canvas)
