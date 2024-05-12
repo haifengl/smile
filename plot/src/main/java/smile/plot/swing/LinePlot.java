@@ -53,7 +53,7 @@ public class LinePlot extends Plot {
 
     @Override
     public Optional<Legend[]> legends() {
-        return Optional.of(legends);
+        return Optional.ofNullable(legends);
     }
 
     @Override
