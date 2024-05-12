@@ -18,13 +18,14 @@
 package smile.validation.metric;
 
 import java.io.Serializable;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * An abstract interface to measure the regression performance.
  *
  * @author Haifeng Li
  */
-public interface RegressionMetric extends Serializable {
+public interface RegressionMetric extends ToDoubleBiFunction<double[], double[]>, Serializable {
     /**
      * Returns a score to measure the quality of regression.
      * @param truth the true response values.
@@ -32,4 +33,9 @@ public interface RegressionMetric extends Serializable {
      * @return the metric.
      */
     double score(double[] truth, double[] prediction);
+
+    @Override
+    default double applyAsDouble(double[]  truth, double[] prediction) {
+        return score(truth, prediction);
+    }
 }
