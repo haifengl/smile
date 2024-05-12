@@ -18,13 +18,14 @@
 package smile.validation.metric;
 
 import java.io.Serializable;
+import java.util.function.ToDoubleBiFunction;
 
 /**
  * An abstract interface to measure the classification performance.
  *
  * @author Haifeng Li
  */
-public interface ClassificationMetric extends Serializable {
+public interface ClassificationMetric extends ToDoubleBiFunction<int[], int[]>, Serializable {
     /**
      * Returns a score to measure the quality of classification.
      * @param truth the true class labels.
@@ -32,4 +33,9 @@ public interface ClassificationMetric extends Serializable {
      * @return the metric.
      */
     double score(int[] truth, int[] prediction);
+
+    @Override
+    default double applyAsDouble(int[]  truth, int[] prediction) {
+        return score(truth, prediction);
+    }
 }
