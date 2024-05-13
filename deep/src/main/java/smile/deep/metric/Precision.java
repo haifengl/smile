@@ -77,6 +77,10 @@ public class Precision implements Metric {
     @Override
     public void update(Tensor output, Tensor target) {
         long numClasses = output.dim() == 2 ? output.size(1) : 2;
+        if (numClasses > 2 && strategy == null) {
+            throw new IllegalArgumentException("Averaging strategy is null for multi-class");
+        }
+
         if (this.tp == null) {
             long length = strategy == Averaging.Macro || strategy == Averaging.Weighted ? numClasses : 1;
             this.tp = output.newZeros(length);
@@ -91,7 +95,7 @@ public class Precision implements Metric {
         Tensor tp, fp;
         Tensor one = target.newOnes(target.size(0));
         Tensor size = target.newZeros(numClasses).scatterReduce_(0, target, one, "sum");
-        if (numClasses == 2) {
+        if (strategy == null) {
             tp = prediction.mul(target).sum();
             fp = prediction.sum().sub(tp);
         } else {

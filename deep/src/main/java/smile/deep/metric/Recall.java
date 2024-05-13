@@ -83,6 +83,10 @@ public class Recall implements Metric {
     @Override
     public void update(Tensor output, Tensor target) {
         long numClasses = output.dim() == 2 ? output.size(1) : 2;
+        if (numClasses > 2 && strategy == null) {
+            throw new IllegalArgumentException("Averaging strategy is null for multi-class");
+        }
+
         if (this.tp == null) {
             long length = strategy == Averaging.Macro || strategy == Averaging.Weighted ? numClasses : 1;
             this.tp = output.newZeros(length);
@@ -96,7 +100,7 @@ public class Recall implements Metric {
         Tensor tp;
         Tensor one = target.newOnes(target.size(0));
         Tensor size = target.newZeros(numClasses).scatterReduce_(0, target, one, "sum");
-        if (numClasses == 2) {
+        if (strategy == null) {
             tp = prediction.mul(target).sum();
         } else {
             Tensor eq = prediction.eq(target);
@@ -113,7 +117,13 @@ public class Recall implements Metric {
 
     @Override
     public double compute() {
-        Tensor recall = tp.size(0) == 1 ? tp.div(size.sum()) : tp.div(size);
+        Tensor recall;
+        if (tp.size(0) == 1) {
+            recall = strategy == null ? tp.div(size.getLong(1)) : tp.div(size.sum());
+        } else {
+            recall = tp.div(size);
+        }
+
         if (strategy == Averaging.Macro) {
             recall = recall.mean();
         } else if (strategy == Averaging.Weighted) {
