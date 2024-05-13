@@ -39,16 +39,11 @@ public class FScore implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** The F_1 score, the harmonic mean of precision and recall. */
-    public final static FScore F1 = new FScore(1.0);
+    public final static FScore F1 = new FScore(1.0, null);
     /** The F_2 score, which weighs recall higher than precision. */
-    public final static FScore F2 = new FScore(2.0);
+    public final static FScore F2 = new FScore(2.0, null);
     /** The F_0.5 score, which weighs recall lower than precision. */
-    public final static FScore FHalf = new FScore(0.5);
-
-    @Override
-    public double score(int[] truth, int[] prediction) {
-        return of(beta, truth, prediction);
-    }
+    public final static FScore FHalf = new FScore(0.5, null);
 
     /**
      * A positive value such that F-score measures the effectiveness of
@@ -57,10 +52,14 @@ public class FScore implements ClassificationMetric {
      * corresponds to F1-score.
      */
     private final double beta;
+    /** The aggregating strategy for multi-classes. */
+    private final Averaging strategy;
 
-    /** Constructor of F1 score. */
+    /**
+     * Constructor of F1 score.
+     */
     public FScore() {
-        this(1.0);
+        this(1.0, null);
     }
 
     /** Constructor of general F-score.
@@ -69,13 +68,25 @@ public class FScore implements ClassificationMetric {
      *             the effectiveness of retrieval with respect
      *             to a user who attaches &beta; times as much
      *             importance to recall as precision.
+     * @param strategy The aggregating strategy for multi-classes.
      */
-    public FScore(double beta) {
+    public FScore(double beta, Averaging strategy) {
         if (beta <= 0.0) {
             throw new IllegalArgumentException("Negative beta");
         }
 
         this.beta = beta;
+        this.strategy = strategy;
+    }
+
+    @Override
+    public double score(int[] truth, int[] prediction) {
+        return of(truth, prediction, beta, strategy);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("F-Score(%f%s)", beta, strategy == null ? "" : ", " + strategy);
     }
 
     /**
@@ -88,15 +99,10 @@ public class FScore implements ClassificationMetric {
      * @param prediction the prediction.
      * @return the metric.
      */
-    public static double of(double beta, int[] truth, int[] prediction) {
+    public static double of(int[] truth, int[] prediction, double beta, Averaging strategy) {
         double beta2 = beta * beta;
-        double p = Precision.of(truth, prediction);
-        double r = Recall.of(truth, prediction);
+        double p = Precision.of(truth, prediction, strategy);
+        double r = Recall.of(truth, prediction, strategy);
         return (1 + beta2) * (p * r) / (beta2 * p + r);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("F-Score(%f)", beta);
     }
 }
