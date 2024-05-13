@@ -22,7 +22,6 @@ import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
 import smile.deep.metric.Precision;
 import smile.deep.metric.Recall;
-import smile.util.Paths;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
 import org.junit.jupiter.api.*;
