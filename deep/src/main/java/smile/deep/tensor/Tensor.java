@@ -1022,6 +1022,33 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns the mean along a dimension in the tensor.
+     * @param dim the dimension to reduce.
+     * @param keepDim whether the output tensor has dim retained or not.
+     * @return the output tensor.
+     */
+    public Tensor mean(int dim, boolean keepDim) {
+        return new Tensor(value.mean(new long[]{dim}, keepDim, new ScalarTypeOptional(value.dtype())));
+    }
+
+    /**
+     * Returns the reciprocal of the square-root of each of the elements in the tensor.
+     * @return the output tensor.
+     */
+    public Tensor rsqrt() {
+        return new Tensor(value.rsqrt());
+    }
+
+    /**
+     * Returns the reciprocal of the square-root of each of the elements in the tensor.
+     * @return this tensor.
+     */
+    public Tensor rsqrt_() {
+        value.rsqrt_();
+        return this;
+    }
+
+    /**
      * Returns the exponential of elements in the tensor.
      * @return the output tensor.
      */
@@ -1358,6 +1385,25 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor div_(Tensor other) {
         value.div_(other.value);
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the power of the elements of input.
+     * @param exponent the exponent value.
+     * @return a new tensor with the power of the elements of input.
+     */
+    public Tensor pow(double exponent) {
+        return new Tensor(value.pow(new Scalar(exponent)));
+    }
+
+    /**
+     * Computes the power of the elements of input in place.
+     * @param exponent the exponent value.
+     * @return this tensor.
+     */
+    public Tensor pow_(double exponent) {
+        value.pow_(new Scalar(exponent));
         return this;
     }
 
