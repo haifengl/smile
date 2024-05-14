@@ -19,7 +19,6 @@ package smile.deep;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
-import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
