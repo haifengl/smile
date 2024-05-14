@@ -31,34 +31,33 @@ public class AutoScope implements AutoCloseable {
 
     /**
      * Constructors.
-     * @param resources the resources to be attached to this scope.
+     * @param resources the resources to be added to this scope.
      */
     public AutoScope(AutoCloseable... resources) {
-        attach(resources);
-    }
-
-    /**
-     * Attaches resources to this Scope.
-     * @param resources the resources to be attached to this scope.
-     * @return this object.
-     */
-    public void attach(AutoCloseable... resources) {
         for (var resource : resources) {
-            if (!this.resources.contains(resource)) {
-                this.resources.add(resource);
-            }
+            add(resource);
         }
     }
 
     /**
-     * Detaches resources from this Scope.
-     * @param resources the resources to be detached from this scope.
+     * Adds resource to this scope.
+     * @param resource the resource to be added to this scope.
+     * @return the resource object.
+     */
+    public <T extends AutoCloseable> T add(T resource) {
+        if (!this.resources.contains(resource)) {
+            this.resources.add(resource);
+        }
+        return resource;
+    }
+
+    /**
+     * Detaches resources from this scope.
+     * @param resource the resources to be detached from this scope.
      * @return this object.
      */
-    public void detach(AutoCloseable... resources) {
-        for (var resource : resources) {
-            this.resources.remove(resource);
-        }
+    public void remove(AutoCloseable resource) {
+        this.resources.remove(resource);
     }
 
     @Override
