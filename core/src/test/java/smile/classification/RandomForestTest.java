@@ -19,6 +19,7 @@ package smile.classification;
 
 import java.util.Arrays;
 import smile.base.cart.SplitRule;
+import smile.data.DataFrame;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -117,6 +118,10 @@ public class RandomForestTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+
+        // Test with data without response variable.
+        DataFrame test = WeatherNominal.data.drop("play");
+        model.predict(test);
     }
 
     @Test

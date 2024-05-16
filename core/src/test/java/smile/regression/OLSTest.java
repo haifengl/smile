@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.data.DataFrame;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -56,7 +57,7 @@ public class OLSTest {
 
     @Test
     public void testLongley() throws Exception {
-        System.out.println("longley");
+        System.out.println("Longley");
 
         LinearModel model = OLS.fit(Longley.formula, Longley.data);
         System.out.println(model);
@@ -97,6 +98,10 @@ public class OLSTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+
+        // Test with data without response variable.
+        DataFrame test = Longley.data.drop("deflator");
+        model.predict(test);
     }
 
     @Test

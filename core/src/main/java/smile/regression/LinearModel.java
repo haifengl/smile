@@ -382,7 +382,7 @@ public class LinearModel implements DataFrameRegression {
      */
     public void update(DataFrame data) {
         // Don't use data.stream, which may run in parallel.
-        // However, update is not multi-thread safe.
+        // Note that update is not multi-thread safe.
         int n = data.size();
         for (int i = 0; i < n; i++) {
             update(data.get(i));
