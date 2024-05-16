@@ -89,9 +89,7 @@ public interface Terms {
             if (tokens.length > 1) {
                 for (int i = 0; i < tokens.length; i++) {
                     tokens[i] = tokens[i].trim();
-                    System.out.print(tokens[i]+" ");
                 }
-                System.out.println();
                 String rank = matcher.group(2);
                 return cross(rank == null ? tokens.length : Integer.parseInt(rank), tokens);
             }
