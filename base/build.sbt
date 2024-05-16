@@ -3,7 +3,7 @@ name := "smile-base"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
 libraryDependencies ++= {
-  val arrowV = "16.0.0"
+  val arrowV = "16.1.0"
   Seq(
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
