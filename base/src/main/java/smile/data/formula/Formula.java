@@ -367,7 +367,7 @@ public class Formula implements Serializable {
                              .map(Feature::field)
                              .toArray(StructField[]::new)
                 );
-            } catch (NullPointerException ex) {
+            } catch (IllegalArgumentException ex) {
                 logger.debug("The response variable {} doesn't exist in the schema {}", response, inputSchema);
             }
         }
