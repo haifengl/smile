@@ -66,7 +66,7 @@ public class Conv2dNormActivation extends SequentialBlock {
          * @param kernel the window/kernel size.
          */
         public Options(int in, int out, int kernel) {
-            this(in, out, kernel, BatchNorm2dLayer::new, new ReLU(true));
+            this(in, out, kernel, channels -> new BatchNorm2dLayer(channels), new ReLU(true));
         }
 
         /**
