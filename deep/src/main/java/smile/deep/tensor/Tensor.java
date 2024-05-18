@@ -771,6 +771,34 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns a view tensor that shares the same underlying data with this
+     * base tensor. Supporting View avoids explicit data copy, thus allows us
+     * to do fast and memory efficient reshaping, slicing and element-wise
+     * operations.
+     * @param shape the shape of view tensor.
+     * @return the view tensor.
+     */
+    public Tensor view(long...shape) {
+        return new Tensor(value.view(shape));
+    }
+
+    /**
+     * Returns a view of tensor as a complex tensor.
+     * @return the complex tensor view.
+     */
+    public Tensor viewAsComplex() {
+        return new Tensor(torch.view_as_complex(value));
+    }
+
+    /**
+     * Returns a view of tensor as a real tensor.
+     * @return the real tensor view.
+     */
+    public Tensor viewAsReal() {
+        return new Tensor(torch.view_as_real(value));
+    }
+
+    /**
      * Returns the indices of the maximum value of a tensor across a dimension.
      *
      * @param dim the dimension to reduce.
@@ -841,6 +869,26 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor matmul(Tensor other) {
         return new Tensor(value.matmul(other.value));
+    }
+
+    /**
+     * Returns the outer product of two tensors.
+     * @param other another tensor.
+     * @return the outer product of two tensors.
+     */
+    public Tensor outer(Tensor other) {
+        return new Tensor(value.outer(other.value));
+    }
+
+    /**
+     * Returns a complex tensor whose elements are Cartesian coordinates
+     * corresponding to the polar coordinates with absolute value of this
+     * tensor and angle.
+     * @param angle The angle of the complex tensor.
+     * @return the complex tensor.
+     */
+    public Tensor polar(Tensor angle) {
+        return new Tensor(torch.polar(value, angle.value));
     }
 
     /**
