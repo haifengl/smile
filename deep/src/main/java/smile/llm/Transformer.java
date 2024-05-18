@@ -71,7 +71,7 @@ public class Transformer {
     public Transformer(Options options) {
         this.options = options;
         this.transformer = new TransformerImpl(options.asTorch());
-        this.posEncoder = new PositionalEncoding(options.dModel);
+        this.posEncoder = new PositionalEncoding(options.dModel, 5000);
         this.embedding = new EmbeddingImpl(options.numTokens, options.dModel);
         this.decoder = new LinearImpl(options.dModel, options.numTokens);
     }

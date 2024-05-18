@@ -24,44 +24,41 @@ import static smile.deep.tensor.Index.*;
 import org.bytedeco.pytorch.global.torch;
 
 /**
- * Positional encoding injects some information about the relative
- * or absolute position of the tokens in the sequence. The positional
- * encodings have the same dimension as the embeddings, so that the two
- * can be summed. This class uses sine and cosine functions of different
- * frequencies.
+ * Positional encoding in original Transformer. Positional encoding injects
+ * some information about the absolute position of the tokens in the sequence.
+ * The positional encodings have the same dimension as the embeddings, so that
+ * the two can be summed. This class uses sine and cosine functions of
+ * different frequencies.
  *
  * @author Haifeng Li
  */
 public class PositionalEncoding implements Layer {
     private final Module module = new Module("PositionalEncoding");
-    /** The dropout probability. */
-    private final double dropout;
     /** The positional encoding tensor. */
     private final Tensor pe;
 
     /**
      * Constructor.
-     * @param dModel the number of expected features in the token embedding.
+     * @param dim the dimension of the frequency tensor.
+     * @param end the end index for precomputing frequencies.
      */
-    public PositionalEncoding(int dModel) {
-        this(dModel, 0.1, 5000);
+    public PositionalEncoding(int dim, int end) {
+        this(dim, end, 10000.0);
     }
 
     /**
      * Constructor.
-     * @param dModel the number of expected features in the token embedding.
-     * @param dropout the dropout probability.
-     * @param maxLen the maximum length of token sequence.
+     * @param dim the dimension of the frequency tensor.
+     * @param end the end index for precomputing frequencies.
+     * @param theta the scaling factor for frequency computation.
      */
-    public PositionalEncoding(int dModel, double dropout, int maxLen) {
-        this.dropout = dropout;
-        try (Tensor tensor = Tensor.zeros(maxLen, dModel);
-             Tensor position = Tensor.arange(0, maxLen,1).unsqueeze(1);
-             Tensor divTerm = Tensor.arange(0, dModel, 2).exp_().mul_(-Math.log(10000.0) / dModel)) {
+    public PositionalEncoding(int dim, int end, double theta) {
+        try (Tensor position = Tensor.arange(0, end,1).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dim, 2).mul_(-Math.log(theta) / dim).exp_()) {
             position.mul_(divTerm);
-            tensor.put_(position.sin(), Colon, slice(0, null, 2));
-            tensor.put_(position.cos(), Colon, slice(1, null, 2));
-            pe = tensor.unsqueeze(0).transpose(0, 1);
+            pe = Tensor.zeros(end, dim);
+            pe.put_(position.sin(), Colon, slice(0, null, 2));
+            pe.put_(position.cos(), Colon, slice(1, null, 2));
             pe.requireGrad(false);
             module.register_buffer("pe", pe.asTorch());
         }
@@ -69,9 +66,9 @@ public class PositionalEncoding implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor p = pe.get(slice(null, input.size(0)), Colon);
-        Tensor xp = input.add(p);
-        return new Tensor(torch.dropout(xp.asTorch(), dropout, true));
+        try (Tensor p = pe.get(slice(null, input.size(0)), Colon)) {
+            return input.add(p);
+        }
     }
 
     @Override
