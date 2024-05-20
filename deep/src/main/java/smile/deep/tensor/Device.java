@@ -126,8 +126,9 @@ public class Device {
     public static Device preferredDevice() {
         if (torch.cuda_is_available()) {
             return Device.CUDA();
-        } else if (torch.hasMPS()) {
-            return Device.MPS();
+        // MPS is slower than CPU
+        // } else if (torch.hasMPS()) {
+        //    return Device.MPS();
         } else {
             return Device.CPU();
         }
