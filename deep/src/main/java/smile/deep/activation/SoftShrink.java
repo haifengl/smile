@@ -17,6 +17,7 @@
 
 package smile.deep.activation;
 
+import org.bytedeco.pytorch.Scalar;
 import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
@@ -27,7 +28,7 @@ import smile.deep.tensor.Tensor;
  */
 public class SoftShrink extends ActivationFunction {
     /** The lambda value in the formulation. */
-    final double lambda;
+    final Scalar lambda;
 
     /** Constructor. */
     public SoftShrink() {
@@ -43,7 +44,7 @@ public class SoftShrink extends ActivationFunction {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid lambda: " + lambda);
         }
-        this.lambda = lambda;
+        this.lambda = new Scalar(lambda);
     }
 
     @Override

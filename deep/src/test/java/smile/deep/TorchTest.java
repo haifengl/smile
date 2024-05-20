@@ -16,10 +16,11 @@
  */
 package smile.deep;
 
-import org.junit.jupiter.api.*;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
+import org.junit.jupiter.api.*;
 import static org.bytedeco.pytorch.global.torch.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -115,16 +116,18 @@ public class TorchTest {
 
         net.eval();
         int correct = 0;
-        int n = 0;
+        int size = 0;
         for (ExampleIterator it = dataLoader.begin(); !it.equals(dataLoader.end()); it = it.increment()) {
             Example batch = it.access();
             var output = net.forward(batch.data());
             var prediction = output.argmax(new LongOptional(1), false);
             correct += prediction.eq(batch.target()).sum().item_int();
-            n += batch.target().size(0);
+            size += batch.target().size(0);
             // Explicitly free native memory
             batch.close();
         }
-        System.out.format("Training accuracy = %.2f%%\n", 100.0 * correct / n);
+        double accuracy = (double) correct / size;
+        System.out.format("Training accuracy = %.2f%%\n", 100.0 * accuracy);
+        assertEquals(true, accuracy > 0.9);
     }
 }

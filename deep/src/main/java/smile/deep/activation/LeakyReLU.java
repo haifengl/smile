@@ -17,6 +17,7 @@
 
 package smile.deep.activation;
 
+import org.bytedeco.pytorch.Scalar;
 import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
@@ -27,7 +28,7 @@ import smile.deep.tensor.Tensor;
  */
 public class LeakyReLU extends ActivationFunction {
     /** Controls the angle of the negative slope. */
-    final double negativeSlope;
+    final Scalar negativeSlope;
 
     /**
      * Constructor.
@@ -44,17 +45,17 @@ public class LeakyReLU extends ActivationFunction {
      */
     public LeakyReLU(double negativeSlope, boolean inplace) {
         super(String.format("LeakyReLU(%.4f)", negativeSlope), inplace);
-        this.negativeSlope = negativeSlope;
+        this.negativeSlope = new Scalar(negativeSlope);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
         if (!module.is_training() && inplace) {
-            torch.leaky_relu(x, negativeSlope, true);
+            torch.leaky_relu_(x, negativeSlope);
             return input;
         } else {
-            return new Tensor(torch.leaky_relu(x, negativeSlope, false));
+            return new Tensor(torch.leaky_relu(x, negativeSlope));
         }
     }
 }
