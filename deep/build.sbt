@@ -2,6 +2,8 @@ name := "smile-deep"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.deep")
 
+Test / envVars += ("PYTORCH_ENABLE_MPS_FALLBACK" -> "1")
+
 libraryDependencies ++= Seq(
   "ai.djl.sentencepiece" % "sentencepiece"  % "0.28.0",
   "org.bytedeco"   % "pytorch-platform"     % "2.2.2-1.5.11-SNAPSHOT",
