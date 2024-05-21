@@ -79,6 +79,22 @@ public class Device {
     }
 
     /**
+     * Returns the number of threads used for intraop parallelism on CPU.
+     * @return the number of threads used for intraop parallelism on CPU.
+     */
+    public static int getNumThreads() {
+        return torch.get_num_threads();
+    }
+
+    /**
+     * Sets the number of threads used for intraop parallelism on CPU.
+     * @param n the number of threads used for intraop parallelism on CPU.
+     */
+    public static void setNumThreads(int n) {
+        torch.set_num_threads(n);
+    }
+
+    /**
      * Returns true if the device is CUDA.
      * @return true if the device is CUDA.
      */

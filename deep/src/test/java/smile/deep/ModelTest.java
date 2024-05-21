@@ -37,6 +37,7 @@ public class ModelTest {
 
     @BeforeAll
     public static void setUpClass() throws Exception {
+        System.out.format("Number of threads: %d\n", Device.getNumThreads());
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
     }
