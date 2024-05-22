@@ -394,6 +394,21 @@ public class MatrixTest {
     }
 
     @Test
+    public void testLU100() {
+        System.out.println("LU 100");
+
+        for (int size = 90; size <= 110; size++) {
+            long start = System.nanoTime();
+            Matrix a = Matrix.rand(size, size);
+            double[] b = MathEx.random(size);
+            Matrix.LU lu = a.lu();
+            lu.solve(b);
+            long stop = System.nanoTime();
+            System.out.format("size = %3d  time = %d\n", size, (stop-start));
+        }
+    }
+
+    @Test
     public void testQR() {
         System.out.println("QR");
         double[][] A = {
