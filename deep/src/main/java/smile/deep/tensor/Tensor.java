@@ -194,6 +194,25 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns a contiguous in memory tensor containing the same data as this tensor.
+     * @return a contiguous in memory tensor containing the same data as this tensor.
+     */
+    public Tensor contiguous() {
+        return new Tensor(value.contiguous());
+    }
+
+    /**
+     * Returns a new view of this tensor with singleton dimensions
+     * expanded to a larger size.
+     *
+     * @param size the desired expanded size.
+     * @return the tensor view with the expanded size.
+     */
+    public Tensor expand(long... size) {
+        return new Tensor(value.expand(size));
+    }
+
+    /**
      * Returns a tensor with the same data and number of elements
      * but with the specified shape. This method returns a view
      * if shape is compatible with the current shape.
@@ -768,6 +787,20 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor transpose(long dim0, long dim1) {
         return new Tensor(value.transpose(dim0, dim1));
+    }
+
+    /**
+     * Returns the upper triangular part of a matrix (2-D tensor) or batch of
+     * matrices input, the other elements of the result tensor out are set to 0.
+     * @param diagonal The parameter diagonal controls which diagonal to consider.
+     *                If diagonal = 0, all elements on and above the main diagonal
+     *                are retained. A positive value excludes just as many diagonals
+     *                above the main diagonal, and similarly a negative value includes
+     *                just as many diagonals below the main diagonal.
+     * @return the output tensor.
+     */
+    public Tensor triu(long diagonal) {
+        return new Tensor(value.triu());
     }
 
     /**
@@ -1562,6 +1595,16 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Rescales a tensor so that the elements lie in the range [0,1] and sum to 1.
+     * @param dim the dimension along which softmax will be computed.
+     * @return this tensor.
+     */
+    public Tensor softmax(int dim) {
+        torch.softmax(value, dim);
+        return this;
+    }
+
+    /**
      * Randomly zeroes some elements of the input tensor
      * with probability p.
      *
@@ -1621,6 +1664,16 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor eye(Options options, long shape) {
         return new Tensor(torch.eye(shape, options.value));
+    }
+
+    /**
+     * Returns a tensor filled with the given value.
+     * @param value the value to fill the output tensor with.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor full(double value, long... shape) {
+        return new Tensor(torch.full(shape, new Scalar((float) value)));
     }
 
     /**
