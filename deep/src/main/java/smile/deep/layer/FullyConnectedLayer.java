@@ -47,7 +47,8 @@ public class FullyConnectedLayer implements Layer {
      */
     public FullyConnectedLayer(int in, int out, boolean bias) {
         this.in = in;
-        var options = new LinearOptions(in, out).bias().put(bias);
+        var options = new LinearOptions(in, out);
+        options.bias().put(bias);
         this.module = new LinearImpl(options);
     }
 
