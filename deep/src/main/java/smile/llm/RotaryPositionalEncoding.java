@@ -16,10 +16,9 @@
  */
 package smile.llm;
 
+import java.util.Arrays;
 import smile.deep.tensor.Tensor;
 import smile.util.Tuple2;
-
-import java.util.Arrays;
 
 /**
  * Rotary positional encoding (RoPE). RoPE encodes the absolute position with
@@ -31,29 +30,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class RotaryPositionalEncoding {
-    /** The frequency tensor for complex exponentials (cis). */
-    private final Tensor cis;
-
-    /**
-     * Constructor.
-     * @param dim the dimension of the frequency tensor.
-     * @param end the end index for precomputing frequencies.
-     */
-    public RotaryPositionalEncoding(int dim, int end) {
-        this(dim, end, 10000);
-    }
-
-    /**
-     * Constructor.
-     * @param dim the dimension of the frequency tensor.
-     * @param end the end index for precomputing frequencies.
-     * @param theta the scaling factor for frequency computation.
-     */
-    public RotaryPositionalEncoding(int dim, int end, double theta) {
-        cis = computeFreqCis(dim, end, theta);
-    }
-
+public interface RotaryPositionalEncoding {
     /**
      * Applies rotary embeddings to the input query and key tensors.
      * It ensures that the output tensors have the same data type as
@@ -64,7 +41,7 @@ public class RotaryPositionalEncoding {
      * @return the tuple of modified query tensor and key tensor with
      * rotary embeddings.
      */
-    public Tuple2<Tensor, Tensor> forward(Tensor xq, Tensor xk) {
+    static Tuple2<Tensor, Tensor> apply(Tensor xq, Tensor xk, Tensor cis) {
         int ndim = xq.dim();
         long[] xqShape = Arrays.copyOf(xq.shape(), ndim + 1);
         long[] xkShape = Arrays.copyOf(xk.shape(), ndim + 1);
@@ -73,7 +50,7 @@ public class RotaryPositionalEncoding {
 
         try (Tensor xq_ = xq.reshape(xqShape).viewAsComplex();
              Tensor xk_ = xk.reshape(xkShape).viewAsComplex();
-             Tensor pe = reshapeForBroadcast(xq_)) {
+             Tensor pe = reshapeForBroadcast(cis, xq_)) {
             Tensor xq_out = xq_.mul_(pe).viewAsReal().flatten(3);
             Tensor xk_out = xk_.mul_(pe).viewAsReal().flatten(3);
             return new Tuple2<>(xq_out.to(xq.dtype()), xk_out.to(xk.dtype()));
@@ -81,21 +58,13 @@ public class RotaryPositionalEncoding {
     }
 
     /**
-     * Returns the frequency tensor for complex exponentials.
-     * @return the frequency tensor for complex exponentials.
-     */
-    public Tensor cis() {
-        return cis;
-    }
-
-    /**
      * Precompute the frequency tensor for complex exponentials (cis).
      * with default theta 10000.0.
      * @param dim the dimension of the frequency tensor.
      * @param end the end index for precomputing frequencies.
-     * @return the precomputed frequency tensor with complex exponentials.
+     * @return the precomputed frequency tensor for complex exponentials.
      */
-    private Tensor computeFreqCis(int dim, int end) {
+    static Tensor computeFreqCis(int dim, int end) {
         return  computeFreqCis(dim, end, 10000.0);
     }
 
@@ -104,9 +73,9 @@ public class RotaryPositionalEncoding {
      * @param dim the dimension of the frequency tensor.
      * @param end the end index for precomputing frequencies.
      * @param theta the scaling factor for frequency computation.
-     * @return the precomputed frequency tensor with complex exponentials.
+     * @return the precomputed frequency tensor for complex exponentials.
      */
-    private Tensor computeFreqCis(int dim, int end, double theta) {
+    static Tensor computeFreqCis(int dim, int end, double theta) {
         try (Tensor t = Tensor.arange(0, end,1);
              Tensor freqs = Tensor.arange(0, dim, 2).mul_(-Math.log(theta) / dim).exp_();
              Tensor tfreqs = t.outer(freqs)) {
@@ -119,10 +88,11 @@ public class RotaryPositionalEncoding {
      * Reshapes the cis tensor to match the shape of the target tensor x for
      * broadcasting purposes, allowing for element-wise operations between
      * tensors of compatible shapes.
+     * @param cis the frequency tensor for complex exponentials.
      * @param x the target tensor for broadcasting.
      * @return the reshaped cis tensor view.
      */
-    private Tensor reshapeForBroadcast(Tensor x) {
+    static Tensor reshapeForBroadcast(Tensor cis, Tensor x) {
         int ndim = x.dim();
         long[] xshape = x.shape();
         long[] shape = new long[ndim];
