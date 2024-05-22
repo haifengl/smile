@@ -6,7 +6,18 @@ Test / envVars += ("PYTORCH_ENABLE_MPS_FALLBACK" -> "1")
 
 libraryDependencies ++= Seq(
   "ai.djl.sentencepiece" % "sentencepiece"  % "0.28.0",
-  "org.bytedeco"   % "pytorch-platform"     % "2.3.0-1.5.11-SNAPSHOT",
-  "org.bytedeco"   % "pytorch-platform-gpu" % "2.3.0-1.5.11-SNAPSHOT" % Provided,
-  "org.bytedeco"   % "cuda" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided classifier "windows-x86_64-redist"
+  "org.bytedeco"   % "pytorch-platform"     % "2.3.0-1.5.11-SNAPSHOT"
+)
+
+val os = sys.props.get("os.name").get.toLowerCase
+val gpu = Seq(
+  "org.bytedeco"   % "pytorch" % "2.3.0-1.5.11-SNAPSHOT" % Provided classifier s"$os-x86_64-gpu",
+  "org.bytedeco"   % "cuda" % "12.3-8.9-1.5.11-SNAPSHOT" % Provided classifier s"$os-x86_64-redist"
+)
+
+libraryDependencies ++= (
+  os match {
+    case "linux" | "windows" => gpu
+    case _ => Seq.empty
+  }
 )
