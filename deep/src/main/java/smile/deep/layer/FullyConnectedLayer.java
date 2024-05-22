@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.LinearImpl;
+import org.bytedeco.pytorch.LinearOptions;
 import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
@@ -35,8 +36,19 @@ public class FullyConnectedLayer implements Layer {
      * @param out the number of output features.
      */
     public FullyConnectedLayer(int in, int out) {
+        this(in, out, true);
+    }
+
+    /**
+     * Constructor.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param bias If false, the layer will not learn an additive bias.
+     */
+    public FullyConnectedLayer(int in, int out, boolean bias) {
         this.in = in;
-        this.module = new LinearImpl(in, out);
+        var options = new LinearOptions(in, out).bias().put(bias);
+        this.module = new LinearImpl(options);
     }
 
     @Override
