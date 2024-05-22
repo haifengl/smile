@@ -6,5 +6,5 @@ channels:
 dependencies:
   - plotly
   - ipywidgets
-  - kotlin-jupyter-kernel
-  - clojupyter
+    #  - kotlin-jupyter-kernel
+    #  - clojupyter
