@@ -2,8 +2,8 @@
 
 # Install Google Analytics extension
 pip install jupyterlab_google_analytics
-mkdir -p ${CONDA_DIR}/share/jupyter/lab/settings
-cp project/overrides.json ${CONDA_DIR}/share/jupyter/lab/settings/overrides.json
+mkdir -p /srv/conda/envs/notebook/share/jupyter/lab/settings
+cp project/overrides.json /srv/conda/envs/notebook/share/jupyter/lab/settings/overrides.json
 
 # Install coursier
 curl -Lo coursier https://git.io/coursier-cli
@@ -15,7 +15,7 @@ SCALA_VERSION=2.13.12 ALMOND_VERSION=0.14.0-RC14
   --install \
   --id scala213 \
   --display-name "Scala (2.13)" \
-  --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0" \
+  --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0 --add-opens=java.base/java.nio=ALL-UNNAMED" \
   --variable-inspector \
   </dev/null 2>&1 | grep -v '^Download'
 
