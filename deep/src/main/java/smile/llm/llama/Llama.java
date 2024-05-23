@@ -91,7 +91,8 @@ public class Llama {
         var model = new Transformer(modelArgs);
 
         Collections.sort(checkpoints);
-        var checkpoint = checkpoints.get(checkpoints.size() - 1);
+        String rank = System.getenv("RANK");
+        var checkpoint = checkpoints.get(Integer.valueOf(rank == null ? "0" : rank));
         model.load(checkpoint);
         return new Llama(model, tokenizer);
     }
