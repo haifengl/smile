@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,13 @@
  */
 package smile.llm.llama;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
+
 /**
- * LLaMA model specification.
+ * LLaMA model hyperparameters.
  * @param dim the dimension of token embedding.
  * @param numLayers the number of transformer blocks.
  * @param numHeads the number of attention heads.
@@ -49,5 +54,30 @@ public record ModelArgs(int dim,
      */
     public ModelArgs() {
         this(4096, 32, 32, null, -1, 356, null, 1E-5, 500000, 32, 2048);
+    }
+
+    /**
+     * Loads the model hyperparameters from a JSON file.
+     * @param path the file path.
+     * @param maxBatchSize the maximum batch size.
+     * @param maxSeqLength the maximum sequence length for input data.
+     * @return the model hyperparameters.
+     */
+    public static ModelArgs from(String path, int maxBatchSize, int maxSeqLength) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        var node = mapper.readTree(new File(path));
+        return new ModelArgs(
+                node.get("dim").asInt(),
+                node.get("n_layers").asInt(),
+                node.get("n_heads").asInt(),
+                node.get("n_kv_heads").asInt(),
+                node.get("vocab_size").asInt(),
+                node.get("multiple_of").asInt(),
+                node.get("ffn_dim_multipler").asDouble(),
+                node.get("norm_eps").asDouble(),
+                node.get("rope_theta").asDouble(),
+                maxBatchSize,
+                maxSeqLength
+        );
     }
 }

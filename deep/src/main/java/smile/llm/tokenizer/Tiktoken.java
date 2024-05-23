@@ -87,6 +87,14 @@ public class Tiktoken implements Tokenizer {
     }
 
     /**
+     * Returns the vocabulary size.
+     * @return the vocabulary size.
+     */
+    public int size() {
+        return decoder.length;
+    }
+
+    /**
      * Returns the regex for special tokens.
      * @param tokens special tokens.
      * @return the pattern regex.
