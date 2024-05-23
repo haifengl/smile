@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.FullyConnectedLayer;
+import smile.deep.layer.LayerBlock;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
@@ -34,7 +35,7 @@ import smile.util.AutoScope;
  *
  * @author Haifeng Li
  */
-public class Transformer {
+public class Transformer extends LayerBlock {
     /** The model configuration parameters. */
     final ModelArgs params;
     /** The vocabulary size. */
@@ -104,5 +105,10 @@ public class Transformer {
             h = scope.add(norm.forward(h));
             return output.forward(h);
         }
+    }
+
+    @Override
+    public Tensor forward(Tensor tokens) {
+        return forward(tokens, 0);
     }
 }
