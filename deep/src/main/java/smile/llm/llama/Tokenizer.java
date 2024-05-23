@@ -77,9 +77,9 @@ public class Tokenizer extends Tiktoken {
         };
 
         int base = specialTokens.length;
-        specialTokens = Arrays.copyOf(specialTokens, specialTokens.length + numReservedSpecialTokens);
-        for (int i = 0; i < numReservedSpecialTokens; i++) {
-            specialTokens[base + i] = String.format("<|reserved_special_token_{%d}|>", i + 5);
+        specialTokens = Arrays.copyOf(specialTokens, numReservedSpecialTokens);
+        for (int i = base; i < numReservedSpecialTokens; i++) {
+            specialTokens[i] = String.format("<|reserved_special_token_{%d}|>", i - base + 5);
         }
 
         return specialTokens;
