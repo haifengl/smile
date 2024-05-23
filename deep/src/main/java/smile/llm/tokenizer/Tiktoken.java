@@ -87,11 +87,11 @@ public class Tiktoken implements Tokenizer {
     }
 
     /**
-     * Returns the size of vocabulary excluding special tokens.
-     * @return the size of vocabulary excluding special tokens.
+     * Returns the vocabulary size.
+     * @return the vocabulary size.
      */
     public int size() {
-        return ranks.size();
+        return decoder.length;
     }
 
     /**
