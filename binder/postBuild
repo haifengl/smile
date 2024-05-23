@@ -15,7 +15,7 @@ SCALA_VERSION=2.13.12 ALMOND_VERSION=0.14.0-RC14
   --install \
   --id scala213 \
   --display-name "Scala (2.13)" \
-  --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0" \
+  --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0 --add-opens=java.base/java.nio=ALL-UNNAMED" \
   --variable-inspector \
   </dev/null 2>&1 | grep -v '^Download'
 
