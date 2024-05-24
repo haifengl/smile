@@ -17,6 +17,8 @@
 package smile.llm;
 
 import java.util.Arrays;
+
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.util.Tuple2;
 
@@ -76,8 +78,8 @@ public interface RotaryPositionalEncoding {
      * @return the precomputed frequency tensor for complex exponentials.
      */
     static Tensor computeFreqCis(int dim, int end, double theta) {
-        try (Tensor t = Tensor.arange(0, end,1);
-             Tensor freqs = Tensor.arange(0, dim, 2).mul_(-Math.log(theta) / dim).exp_();
+        try (Tensor t = Tensor.arange(0, end,1).to(ScalarType.Float32);
+             Tensor freqs = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
              Tensor tfreqs = t.outer(freqs)) {
             var cis = Tensor.ones(tfreqs.shape()).polar(tfreqs);  // complex64
             return cis;

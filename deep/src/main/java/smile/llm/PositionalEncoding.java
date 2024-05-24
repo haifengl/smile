@@ -19,6 +19,7 @@ package smile.llm;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
 import org.bytedeco.pytorch.global.torch;
@@ -53,8 +54,8 @@ public class PositionalEncoding implements Layer {
      * @param theta the scaling factor for frequency computation.
      */
     public PositionalEncoding(int dim, int end, double theta) {
-        try (Tensor position = Tensor.arange(0, end,1).unsqueeze(1);
-             Tensor divTerm = Tensor.arange(0, dim, 2).mul_(-Math.log(theta) / dim).exp_()) {
+        try (Tensor position = Tensor.arange(0, end,1).to(ScalarType.Float32).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_()) {
             position.mul_(divTerm);
             pe = Tensor.zeros(end, dim);
             pe.put_(position.sin(), Colon, slice(0, null, 2));

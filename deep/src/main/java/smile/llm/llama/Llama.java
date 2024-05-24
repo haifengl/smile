@@ -46,12 +46,10 @@ public class Llama {
      * Builds a Llama instance by initializing and loading a model checkpoint.
      * @param checkpoint the directory path of checkpoint files.
      * @param tokenizer the path of tokenizer file.
-     * @param maxSeqLen the maximum sequence length for input text.
-     * @param maxBatchSize the maximum batch size for inference.
      * @return an instance of Llama model.
      */
-    public static Llama build(String checkpoint, String tokenizer, int maxBatchSize, int maxSeqLen) throws IOException {
-        return build(checkpoint, tokenizer, maxBatchSize, maxSeqLen, 1);
+    public static Llama build(String checkpoint, String tokenizer) throws IOException {
+        return build(checkpoint, tokenizer, 4, 2048, 1);
     }
 
     /**
