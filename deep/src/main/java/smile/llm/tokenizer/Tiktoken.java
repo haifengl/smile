@@ -128,6 +128,15 @@ public class Tiktoken implements Tokenizer {
         return allowSpecialTokens;
     }
 
+    /**
+     * Returns the special token id.
+     * @param token a special token.
+     * @return the special token id.
+     */
+    public Integer specialToken(String token) {
+        return specialTokens.get(token);
+    }
+
     @Override
     public int[] encode(String text) {
         return encode(text, false, false);
