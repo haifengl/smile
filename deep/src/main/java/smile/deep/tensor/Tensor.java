@@ -700,10 +700,18 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns the boolean value when the tensor holds a single value.
+     * @return the boolean value when the tensor holds a single value.
+     */
+    public boolean boolValue() {
+        return value.item_bool();
+    }
+
+    /**
      * Returns the byte value when the tensor holds a single value.
      * @return the byte value when the tensor holds a single value.
      */
-    public int byteValue() {
+    public byte byteValue() {
         return value.item_byte();
     }
 
@@ -711,7 +719,7 @@ public class Tensor implements AutoCloseable {
      * Returns the short value when the tensor holds a single value.
      * @return the short value when the tensor holds a single value.
      */
-    public int shortValue() {
+    public short shortValue() {
         return value.item_short();
     }
 
@@ -745,6 +753,54 @@ public class Tensor implements AutoCloseable {
      */
     public double doubleValue() {
         return value.item_double();
+    }
+
+    /**
+     * Returns the byte array of tensor elements
+     * @return the byte array of tensor elements.
+     */
+    public byte[] byteArray() {
+        return value.data_ptr_byte().asBuffer().array();
+    }
+
+    /**
+     * Returns the short integer array of tensor elements
+     * @return the short integer array of tensor elements.
+     */
+    public short[] shortArray() {
+        return value.data_ptr_short().asBuffer().array();
+    }
+
+    /**
+     * Returns the integer array of tensor elements
+     * @return the integer array of tensor elements.
+     */
+    public int[] intArray() {
+        return value.data_ptr_int().asBuffer().array();
+    }
+
+    /**
+     * Returns the long integer array of tensor elements
+     * @return the long integer array of tensor elements.
+     */
+    public long[] longrray() {
+        return value.data_ptr_long().asBuffer().array();
+    }
+
+    /**
+     * Returns the float array of tensor elements
+     * @return the float array of tensor elements.
+     */
+    public float[] floatArray() {
+        return value.data_ptr_float().asBuffer().array();
+    }
+
+    /**
+     * Returns the double array of tensor elements
+     * @return the double array of tensor elements.
+     */
+    public double[] doubleArray() {
+        return value.data_ptr_double().asBuffer().array();
     }
 
     /**
@@ -868,6 +924,56 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Performs top-p (nucleus) sampling on a probability distribution.
+     * Top-p sampling selects the smallest set of tokens whose cumulative
+     * probability mass exceeds the threshold p. The distribution is
+     * renormalized based on the selected tokens.
+     * @param p Probability threshold for top-p sampling.
+     * @return Sampled token indices.
+     */
+    public Tensor topp(double p) {
+        var sort = torch.sort(value, -1, true);
+        var probsSort = sort.get0();
+        var probsIdx = sort.get1();
+        var probsSum = torch.cumsum(probsSort, -1);
+        var mask = probsSum.sub_(probsSort).gt(new Scalar(p));
+        probsSort.put_(mask, torch.zeros(1));
+        probsSort.div_(probsSort.sum(new long[] {-1}, true, new ScalarTypeOptional()));
+        var sample = torch.multinomial(probsSort, 1);
+        sample = torch.gather(probsIdx, -1, sample);
+        return new Tensor(sample);
+    }
+
+    /**
+     * Computes the cross entropy loss between input logits and target.
+     *
+     * @param input Predicted unnormalized logits.
+     * @param target Ground truth class indices or class probabilities.
+     * @param reduction Specifies the reduction to apply to the output:
+     *                 "none" | "mean" | "sum". "none": no reduction will
+     *                 be applied, "mean": the sum of the output will be
+     *                 divided by the number of elements in the output,
+     *                 "sum": the output will be summed.
+     * @param ignoreIndex Specifies a target value that is ignored and does
+     *                   not contribute to the input gradient. Note that
+     *                   ignoreIndex is only applicable when the target
+     *                   contains class indices.
+     * @return the cross entropy loss between input logits and target.
+     */
+    public static Tensor crossEntropy(Tensor input, Tensor target, String reduction, long ignoreIndex) {
+        var kind = switch (reduction) {
+            case "none" -> new kMean();
+            case "mean" -> new kMean();
+            case "sum" -> new kSum();
+            default -> throw new IllegalArgumentException("Invalid reduction: " + reduction);
+        };
+        var options = new CrossEntropyLossOptions();
+        options.ignore_index().put(ignoreIndex);
+        options.reduction().put(kind);
+        return new Tensor(torch.cross_entropy(input.value, target.value, options));
+    }
+
+    /**
      * Returns a tensor of elements selected from either input or other,
      * depending on condition.
      *
@@ -877,7 +983,21 @@ public class Tensor implements AutoCloseable {
      * @param other value selected at indices where condition is false.
      * @return the output tensor.
      */
-    public Tensor where(Tensor condition, int input, int other) {
+    public static Tensor where(Tensor condition, Tensor input, Tensor other) {
+        return new Tensor(torch.where(condition.value, input.value, other.value));
+    }
+
+    /**
+     * Returns a tensor of elements selected from either input or other,
+     * depending on condition.
+     *
+     * @param condition a boolean tensor. When true (nonzero), yield input,
+     *                 otherwise yield other.
+     * @param input value selected at indices where condition is true.
+     * @param other value selected at indices where condition is false.
+     * @return the output tensor.
+     */
+    public static Tensor where(Tensor condition, int input, int other) {
         return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
     }
 
@@ -891,7 +1011,7 @@ public class Tensor implements AutoCloseable {
      * @param other value selected at indices where condition is false.
      * @return the output tensor.
      */
-    public Tensor where(Tensor condition, double input, double other) {
+    public static Tensor where(Tensor condition, double input, double other) {
         return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
     }
 
@@ -1557,6 +1677,40 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Tests if each element of this tensor is in other tensor. Returns a
+     * boolean tensor of the same shape.
+     * @param other another tensor.
+     * @return a boolean tensor.
+     */
+    public Tensor isin(Tensor other) {
+        return new Tensor(torch.isin(value, other.value));
+    }
+
+    /**
+     * Tests if all elements in the tensor are true.
+     * @return the output tensor.
+     */
+    public boolean all() {
+        return value.all().item_bool();
+    }
+
+    /**
+     * Returns logical NOT of this tensor.
+     * @return a new tensor of logical not results.
+     */
+    public Tensor not() {
+        return new Tensor(value.logical_not());
+    }
+
+    /**
+     * Returns logical NOT of this tensor.
+     * @return a new tensor of logical not results.
+     */
+    public Tensor not_() {
+        return new Tensor(value.logical_not_());
+    }
+
+    /**
      * Returns logical AND of two boolean tensors.
      * @param other another tensor.
      * @return a new tensor of logical and results.
@@ -1674,6 +1828,16 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor full(double value, long... shape) {
         return new Tensor(torch.full(shape, new Scalar((float) value)));
+    }
+
+    /**
+     * Returns a tensor filled with the given value.
+     * @param value the value to fill the output tensor with.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
+    public static Tensor full(long value, long... shape) {
+        return new Tensor(torch.full(shape, new Scalar(value)));
     }
 
     /**
@@ -1839,7 +2003,23 @@ public class Tensor implements AutoCloseable {
      * @param shape the dimensional shape of the resulting tensor.
      * @return the created tensor.
      */
+    public static Tensor of(boolean[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
+        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
+    }
+
+    /**
+     * Returns a tensor with given data and shape.
+     * @param data the initialization data.
+     * @param shape the dimensional shape of the resulting tensor.
+     * @return the created tensor.
+     */
     public static Tensor of(byte[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
@@ -1850,6 +2030,9 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(short[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
@@ -1860,6 +2043,9 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(int[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
@@ -1870,6 +2056,9 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(long[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
@@ -1880,6 +2069,9 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(float[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
@@ -1890,6 +2082,9 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(double[] data, long... shape) {
+        if (shape.length == 0) {
+            shape = new long[] { data.length };
+        }
         return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
