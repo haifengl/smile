@@ -16,7 +16,7 @@
  */
 package smile.llm.llama;
 
-import smile.deep.layer.FullyConnectedLayer;
+import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
@@ -39,7 +39,7 @@ public class Attention {
     /** The embedding dimension of each attention head. */
     final int headDim;
     /** Linear transformation for queries, keys, values, and output. */
-    final FullyConnectedLayer wq, wk, wv, wo;
+    final LinearLayer wq, wk, wv, wo;
     /** Cached keys and values. */
     Tensor cacheK, cacheV;
     public Attention(ModelArgs args) {
@@ -51,10 +51,10 @@ public class Attention {
         this.numRep = this.numLocalHeads / this.numLocalKvHeads;
         this.headDim = args.dim() / args.numHeads();
 
-        this.wq = new FullyConnectedLayer(args.dim(), args.numHeads() * headDim, false);
-        this.wk = new FullyConnectedLayer(args.dim(), numKvHeads * headDim, false);
-        this.wv = new FullyConnectedLayer(args.dim(), numKvHeads * headDim, false);
-        this.wo = new FullyConnectedLayer(args.numHeads() * headDim, args.dim(), false);
+        this.wq = new LinearLayer(args.dim(), args.numHeads() * headDim, false);
+        this.wk = new LinearLayer(args.dim(), numKvHeads * headDim, false);
+        this.wv = new LinearLayer(args.dim(), numKvHeads * headDim, false);
+        this.wo = new LinearLayer(args.numHeads() * headDim, args.dim(), false);
 
         long[] shape = {args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim};
         this.cacheK = Tensor.zeros(shape);

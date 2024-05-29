@@ -52,8 +52,8 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @param out the number of output features.
      * @return a fully connected layer.
      */
-    static FullyConnectedLayer linear(int in, int out) {
-        return new FullyConnectedLayer(in, out);
+    static LinearLayer linear(int in, int out) {
+        return new LinearLayer(in, out);
     }
 
     /**
@@ -64,7 +64,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock relu(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new ReLU(true)
         );
     }
@@ -78,7 +78,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock relu(int in, int out, double dropout) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new ReLU(true),
                 new DropoutLayer(dropout)
         );
@@ -94,7 +94,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock leaky(int in, int out, double negativeSlope) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new LeakyReLU(negativeSlope, true)
         );
     }
@@ -110,7 +110,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock leaky(int in, int out, double negativeSlope, double dropout) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new LeakyReLU(negativeSlope, true),
                 new DropoutLayer(dropout)
         );
@@ -124,7 +124,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock gelu(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new GELU(true)
         );
     }
@@ -138,7 +138,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock gelu(int in, int out, double dropout) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new GELU(true),
                 new DropoutLayer(dropout)
         );
@@ -152,7 +152,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock silu(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new GELU(true)
         );
     }
@@ -166,7 +166,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock silu(int in, int out, double dropout) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new SiLU(true),
                 new DropoutLayer(dropout)
         );
@@ -180,7 +180,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock tanh(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new Tanh(true)
         );
     }
@@ -193,7 +193,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock sigmoid(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new Sigmoid(true)
         );
     }
@@ -206,7 +206,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock logSigmoid(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new LogSigmoid()
         );
     }
@@ -219,7 +219,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock softmax(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new Softmax()
         );
     }
@@ -232,7 +232,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock logSoftmax(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new LogSoftmax()
         );
     }
@@ -245,7 +245,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock tanhShrink(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new TanhShrink()
         );
     }
@@ -258,7 +258,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock softShrink(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new SoftShrink()
         );
     }
@@ -271,7 +271,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static SequentialBlock hardShrink(int in, int out) {
         return new SequentialBlock(
-                new FullyConnectedLayer(in, out),
+                new LinearLayer(in, out),
                 new HardShrink()
         );
     }
