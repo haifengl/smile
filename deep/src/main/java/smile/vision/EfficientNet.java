@@ -107,7 +107,7 @@ public class EfficientNet extends LayerBlock {
         avgpool = new AdaptiveAvgPool2dLayer(1);
         classifier = new SequentialBlock(
                 new DropoutLayer(dropout, true),
-                new FullyConnectedLayer(lastChannel, numClasses));
+                new LinearLayer(lastChannel, numClasses));
         add("features", features);
         add("avgpool", avgpool);
         add("classifier", classifier);

@@ -19,7 +19,7 @@ package smile.llm.llama;
 import java.util.ArrayList;
 import java.util.List;
 import smile.deep.layer.EmbeddingLayer;
-import smile.deep.layer.FullyConnectedLayer;
+import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Index;
@@ -49,7 +49,7 @@ public class Transformer extends LayerBlock {
     /** The layer normalization for the model output. */
     final RMSNormLayer norm;
     /** The linear layer for final output. */
-    final FullyConnectedLayer output;
+    final LinearLayer output;
     /** The precomputed cosine and sine frequencies. */
     final Tensor cis;
 
@@ -70,7 +70,7 @@ public class Transformer extends LayerBlock {
         }
 
         this.norm = new RMSNormLayer(params.dim(), params.normEps());
-        this.output = new FullyConnectedLayer(params.dim(), params.vocabSize(), false);
+        this.output = new LinearLayer(params.dim(), params.vocabSize(), false);
 
         // Note that max_seq_len is multiplied by 2 because the token limit
         // for the Llama 2 generation of models is 4096.

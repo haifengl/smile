@@ -22,11 +22,11 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.tensor.Tensor;
 
 /**
- * A fully connected layer with nonlinear activation function.
+ * A fully connected linear layer.
  *
  * @author Haifeng Li
  */
-public class FullyConnectedLayer implements Layer {
+public class LinearLayer implements Layer {
     private final int in;
     private final LinearImpl module;
 
@@ -35,7 +35,7 @@ public class FullyConnectedLayer implements Layer {
      * @param in the number of input features.
      * @param out the number of output features.
      */
-    public FullyConnectedLayer(int in, int out) {
+    public LinearLayer(int in, int out) {
         this(in, out, true);
     }
 
@@ -45,7 +45,7 @@ public class FullyConnectedLayer implements Layer {
      * @param out the number of output features.
      * @param bias If false, the layer will not learn an additive bias.
      */
-    public FullyConnectedLayer(int in, int out, boolean bias) {
+    public LinearLayer(int in, int out, boolean bias) {
         this.in = in;
         var options = new LinearOptions(in, out);
         options.bias().put(bias);
