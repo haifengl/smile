@@ -17,7 +17,7 @@
 package smile.llm.llama;
 
 import smile.deep.activation.SiLU;
-import smile.deep.layer.FullyConnectedLayer;
+import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -27,7 +27,7 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class FeedForward {
-    final FullyConnectedLayer w1, w2, w3;
+    final LinearLayer w1, w2, w3;
     final SiLU silu;
 
     /**
@@ -47,9 +47,9 @@ public class FeedForward {
             hiddenDim = (int) (ffnDimMultiplier * hiddenDim);
         }
         hiddenDim = multipleOf * ((hiddenDim + multipleOf - 1) / multipleOf);
-        this.w1 = new FullyConnectedLayer(dim, hiddenDim, false);
-        this.w2 = new FullyConnectedLayer(hiddenDim, dim, false);
-        this.w3 = new FullyConnectedLayer(dim, hiddenDim, false);
+        this.w1 = new LinearLayer(dim, hiddenDim, false);
+        this.w2 = new LinearLayer(hiddenDim, dim, false);
+        this.w3 = new LinearLayer(dim, hiddenDim, false);
         this.silu = new SiLU(true);
     }
 
