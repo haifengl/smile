@@ -34,6 +34,8 @@ public class Tokenizer extends Tiktoken {
      * Token splitting regex.
      */
     private static final Pattern regex = Pattern.compile("(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+");
+    /** The stop tokens. */
+    private final int[] stopTokens = new int[2];
 
     /**
      * Constructor with default BOS, EOS, and special tokens.
@@ -54,6 +56,24 @@ public class Tokenizer extends Tiktoken {
      */
     public Tokenizer(Map<Bytes, Integer> ranks, String bos, String eos, String... specialTokens) {
         super(regex, ranks, bos, eos, specialTokens);
+        stopTokens[0] = specialToken("<|end_of_text|>");
+        stopTokens[1] = specialToken("<|eot_id|>");
+    }
+
+    /**
+     * Returns the padding token id.
+     * @return the padding token id.
+     */
+    public int pad() {
+        return -1;
+    }
+
+    /**
+     * Returns the stop tokens.
+     * @return the stop tokens.
+     */
+    public int[] stopTokens() {
+        return stopTokens;
     }
 
     /**
