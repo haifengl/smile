@@ -335,6 +335,19 @@ public class Tensor implements AutoCloseable {
      * @param indices the indices along the dimensions.
      * @return the index vector.
      */
+    private TensorIndexVector indexVector(Tensor... indices) {
+        TensorIndexVector vector = new TensorIndexVector();
+        for (var index : indices) {
+            vector.push_back(new TensorIndex(index.value));
+        }
+        return vector;
+    }
+
+    /**
+     * Returns a tensor index vector.
+     * @param indices the indices along the dimensions.
+     * @return the index vector.
+     */
     private TensorIndexVector indexVector(Index... indices) {
         TensorIndexVector vector = new TensorIndexVector();
         for (var index : indices) {
@@ -514,6 +527,18 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(float x, long... indices) {
+        value.index_put_(indexVector(indices), new Scalar((x)));
+        return this;
+    }
+
+    /**
+     * Updates elements in place.
+     *
+     * @param x the new element value.
+     * @param indices the element indices.
+     * @return this tensor.
+     */
+    public Tensor put_(float x, Tensor indices) {
         value.index_put_(indexVector(indices), new Scalar((x)));
         return this;
     }
@@ -937,7 +962,10 @@ public class Tensor implements AutoCloseable {
         var probsIdx = sort.get1();
         var probsSum = torch.cumsum(probsSort, -1);
         var mask = probsSum.sub_(probsSort).gt(new Scalar(p));
-        probsSort.put_(mask, torch.zeros(1));
+        TensorIndexVector indexVector = new TensorIndexVector();
+        indexVector.push_back(new TensorIndex(mask));
+
+        probsSort.index_put_(indexVector, new Scalar(0.0f));
         probsSort.div_(probsSort.sum(new long[] {-1}, true, new ScalarTypeOptional()));
         var sample = torch.multinomial(probsSort, 1);
         sample = torch.gather(probsIdx, -1, sample);
