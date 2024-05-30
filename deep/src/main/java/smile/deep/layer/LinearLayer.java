@@ -59,11 +59,6 @@ public class LinearLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        org.bytedeco.pytorch.Tensor x = input.asTorch();
-        if (x.dim() > 1) {
-            x = x.reshape(x.size(0), in);
-        }
-
-        return new Tensor(module.forward(x));
+        return new Tensor(module.forward(input.asTorch()));
     }
 }
