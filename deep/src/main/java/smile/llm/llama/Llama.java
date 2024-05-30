@@ -70,7 +70,7 @@ public class Llama {
         List<String> checkpoints = new ArrayList<>();
         for (var file : dir.listFiles()) {
             var path = file.getPath();
-            if (path.endsWith(".pth")) {
+            if (path.endsWith(".pt")) {
                 checkpoints.add(path);
             }
         }
