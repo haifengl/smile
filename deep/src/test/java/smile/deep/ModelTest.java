@@ -61,7 +61,8 @@ public class ModelTest {
         Model net = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10))
+                Layer.logSoftmax(32, 10)),
+                input -> input.reshape(input.size(0), 784)
         ).to(device);
 
         Dataset data = Dataset.mnist("deep/src/universal/data/mnist", true, 64);
@@ -104,7 +105,8 @@ public class ModelTest {
         Model model = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10))
+                Layer.logSoftmax(32, 10)),
+                input -> input.reshape(input.size(0), 784)
         );
 
         model.load("mnist.pt").to(device).eval();
