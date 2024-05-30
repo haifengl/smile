@@ -35,6 +35,8 @@ public class Model implements Function<Tensor, Tensor> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Model.class);
     /** The neural network. */
     private final LayerBlock net;
+    /** The data preprocessing function. */
+    private final Function<Tensor, Tensor> transform;
     /** The compute device on which the model is stored. */
     private Device device;
     /** The learning rate schedule. */
@@ -45,7 +47,17 @@ public class Model implements Function<Tensor, Tensor> {
      * @param net the neural network.
      */
     public Model(LayerBlock net) {
+        this(net, null);
+    }
+
+    /**
+     * Constructor.
+     * @param net the neural network.
+     * @param transform the optional data preprocessing function.
+     */
+    public Model(LayerBlock net, Function<Tensor, Tensor> transform) {
         this.net = net;
+        this.transform = transform;
     }
 
     @Override
@@ -161,12 +173,12 @@ public class Model implements Function<Tensor, Tensor> {
      * @param optimizer the optimization algorithm.
      * @param loss the loss function.
      * @param train the training data.
-     * @param val optional validation data.
+     * @param test optional validation data.
      * @param checkpoint optional checkpoint file path.
      * @param metrics the evaluation metrics.
      */
-    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset val, String checkpoint, Metric... metrics) {
-        if (val != null && metrics.length == 0) {
+    public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset test, String checkpoint, Metric... metrics) {
+        if (test != null && metrics.length == 0) {
             throw new IllegalArgumentException("Validation dataset is provided without metrics");
         }
 
@@ -178,6 +190,11 @@ public class Model implements Function<Tensor, Tensor> {
             for (SampleBatch batch : train) {
                 Tensor data = device == null ? batch.data() : batch.data().to(device);
                 Tensor target = device == null ? batch.target() : batch.target().to(device);
+
+                if (transform != null) {
+                    data = transform.apply(data);
+                }
+
                 // Reset gradients.
                 optimizer.reset();
                 // Execute the model on the input data.
@@ -213,9 +230,9 @@ public class Model implements Function<Tensor, Tensor> {
             }
 
             // Output the validation metrics.
-            if (val != null) {
+            if (test != null) {
                 String msg = String.format("Epoch: %d | Batch: %d", epoch, batchIndex);
-                Map<String, Double> result = eval(val, metrics);
+                Map<String, Double> result = eval(test, metrics);
                 StringBuilder sb = new StringBuilder(msg);
                 train(); // return to training mode
                 for (var metric : metrics) {
@@ -253,6 +270,11 @@ public class Model implements Function<Tensor, Tensor> {
         for (SampleBatch batch : dataset) {
             Tensor data = device == null ? batch.data() : batch.data().to(device);
             Tensor target = device == null ? batch.target() : batch.target().to(device);
+
+            if (transform != null) {
+                data = transform.apply(data);
+            }
+
             Tensor output = net.forward(data);
             for (var metric : metrics) {
                 metric.update(output, target);
