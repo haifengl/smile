@@ -19,6 +19,7 @@ package smile.llm.llama;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Tensor;
+import smile.util.AutoScope;
 
 /**
  * A block in Transformer model. It consists of an attention mechanism
@@ -83,8 +84,13 @@ public class TransformerBlock {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
-        try (Tensor h = x.add(attention.forward(attentionNorm.forward(x), startPos, cis, mask))) {
-            return h.add(feedForward.forward(ffnNorm.forward(h)));
+        try (var scope = new AutoScope()) {
+            Tensor anorm = scope.add(attentionNorm.forward(x));
+            Tensor ax = scope.add(attention.forward(anorm, startPos, cis, mask));
+            Tensor h = scope.add(x.add(ax));
+            Tensor fnorm = scope.add(ffnNorm.forward(h));
+            Tensor fx = scope.add(feedForward.forward(fnorm));
+            return h.add(fx);
         }
     }
 }

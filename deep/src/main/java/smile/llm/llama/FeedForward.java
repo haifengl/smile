@@ -20,6 +20,7 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Tensor;
+import smile.util.AutoScope;
 
 /**
  * Feedforward layer in Transformer. It has two linear transformations and
@@ -66,6 +67,9 @@ public class FeedForward {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x) {
-        return w2.forward(silu.forward(w1.forward(x)).mul(w3.forward(x)));
+        try (var w3x = w3.forward(x);
+             var w1x = w1.forward(x)) {
+            return w2.forward(silu.forward(w1x.mul_(w3x)));
+        }
     }
 }
