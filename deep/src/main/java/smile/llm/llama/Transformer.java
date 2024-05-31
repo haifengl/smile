@@ -19,11 +19,14 @@ package smile.llm.llama;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bytedeco.pytorch.DeviceGuardImplInterface;
 import org.bytedeco.pytorch.ModuleListImpl;
+import org.bytedeco.pytorch.global.torch;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.RMSNormLayer;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
@@ -54,13 +57,20 @@ public class Transformer extends LayerBlock {
     final LinearLayer output;
     /** The precomputed cosine and sine frequencies. */
     final Tensor cis;
+    /** The compute device. */
+    final Device device;
+    /** The device guard to set the default device. */
+    final DeviceGuardImplInterface deviceGuard;
 
     /**
      * Constructor.
      * @param args the model configuration parameters.
      */
-    public Transformer(ModelArgs args) {
+    public Transformer(ModelArgs args, Device device) {
         this.params = args;
+        this.device = device;
+        this.deviceGuard = torch.getDeviceGuardImpl(device.type().value());
+
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
