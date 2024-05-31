@@ -104,8 +104,8 @@ public class Transformer extends LayerBlock {
              Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen))) {
             Tensor mask = null;
             if (seqlen > 1) {
-                mask = Tensor.full(Float.NEGATIVE_INFINITY, 1, 1, seqlen, seqlen);
-                mask = mask.triu(startPos + 1);
+                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, 1, 1, seqlen, seqlen));
+                mask = scope.add(mask.triu(startPos + 1));
             }
             Tensor h = scope.add(tokEmbeddings.forward(tokens));
             for (var layer : layers) {
