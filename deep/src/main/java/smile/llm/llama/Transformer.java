@@ -18,6 +18,8 @@ package smile.llm.llama;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.bytedeco.pytorch.ModuleListImpl;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
@@ -61,12 +63,14 @@ public class Transformer extends LayerBlock {
         this.params = args;
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
-
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
 
         this.layers = new ArrayList<>();
+        var moduleList = new ModuleListImpl();
         for (int layerId = 0; layerId < params.numLayers(); layerId++) {
-            this.layers.add(new TransformerBlock(layerId, params));
+            var block = new TransformerBlock(layerId, params);
+            this.layers.add(block);
+            moduleList.push_back(block.module);
         }
 
         this.norm = new RMSNormLayer(params.dim(), params.normEps());
@@ -80,6 +84,11 @@ public class Transformer extends LayerBlock {
                 params.dim() / params.numHeads(),
                 params.maxSeqLength() * 2,
                 params.ropeTheta());
+
+        module.register_module("layers", moduleList);
+        add("tok_embeddings", tokEmbeddings);
+        add("norm", norm);
+        add("output", output);
     }
 
     /**
