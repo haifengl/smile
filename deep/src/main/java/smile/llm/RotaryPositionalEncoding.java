@@ -78,10 +78,12 @@ public interface RotaryPositionalEncoding {
      * @return the precomputed frequency tensor for complex exponentials.
      */
     static Tensor computeFreqCis(int dim, int end, double theta) {
+        // Explicitly convert tensor to float32 as the default is bf16.
+        // On the other hand, view_as_complex cannot apply on bf16.
         try (Tensor t = Tensor.arange(0, end,1).to(ScalarType.Float32);
              Tensor freqs = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
              Tensor tfreqs = t.outer(freqs)) {
-            var cis = Tensor.ones(tfreqs.shape()).polar(tfreqs);  // complex64
+            var cis = Tensor.polar(freqs.newOnes(), tfreqs);  // complex64
             return cis;
         }
     }

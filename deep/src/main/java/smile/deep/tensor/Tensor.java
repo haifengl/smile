@@ -961,6 +961,17 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns a complex tensor whose elements are Cartesian coordinates
+     * corresponding to the polar coordinates with abs and angle.
+     * @param abs The absolute value the complex tensor. Must be float or double.
+     * @param angle The angle of the complex tensor. Must be same dtype as abs.
+     * @return the complex tensor.
+     */
+    public static Tensor polar(Tensor abs, Tensor angle) {
+        return new Tensor(torch.polar(abs.value, angle.value));
+    }
+
+    /**
      * Computes the cross entropy loss between input logits and target.
      *
      * @param input Predicted unnormalized logits.
@@ -1047,17 +1058,6 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor outer(Tensor other) {
         return new Tensor(value.outer(other.value));
-    }
-
-    /**
-     * Returns a complex tensor whose elements are Cartesian coordinates
-     * corresponding to the polar coordinates with absolute value of this
-     * tensor and angle.
-     * @param angle The angle of the complex tensor.
-     * @return the complex tensor.
-     */
-    public Tensor polar(Tensor angle) {
-        return new Tensor(torch.polar(value, angle.value));
     }
 
     /**
@@ -1804,6 +1804,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public Tensor newZeros(long... shape) {
+        if (shape.length == 0) shape = shape();
         return new Tensor(value.new_zeros(shape));
     }
 
@@ -1814,6 +1815,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public Tensor newOnes(long... shape) {
+        if (shape.length == 0) shape = shape();
         return new Tensor(value.new_ones(shape));
     }
 
