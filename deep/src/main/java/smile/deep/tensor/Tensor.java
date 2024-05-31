@@ -1842,8 +1842,8 @@ public class Tensor implements AutoCloseable {
      * @param shape the dimensional shape of the resulting tensor.
      * @return the created tensor.
      */
-    public static Tensor full(double value, long... shape) {
-        return new Tensor(torch.full(shape, new Scalar((float) value)));
+    public static Tensor full(long value, long... shape) {
+        return new Tensor(torch.full(shape, new Scalar(value)));
     }
 
     /**
@@ -1852,8 +1852,8 @@ public class Tensor implements AutoCloseable {
      * @param shape the dimensional shape of the resulting tensor.
      * @return the created tensor.
      */
-    public static Tensor full(long value, long... shape) {
-        return new Tensor(torch.full(shape, new Scalar(value)));
+    public static Tensor full(double value, long... shape) {
+        return new Tensor(torch.full(shape, new Scalar((float) value)));
     }
 
     /**
@@ -1960,56 +1960,7 @@ public class Tensor implements AutoCloseable {
      * @param step the gap between each pair of adjacent points.
      * @return a 1-D tensor.
      */
-    public static Tensor arange(int start, int end, int step) {
-        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
-    }
-
-    /**
-     * Returns a 1-D tensor of size (end - start) / step with values from the
-     * interval [start, end) taken with common difference step beginning from
-     * start.
-     * @param start the starting value for the set of points.
-     * @param end the ending value for the set of points.
-     * @param step the gap between each pair of adjacent points.
-     * @return a 1-D tensor.
-     */
     public static Tensor arange(long start, long end, long step) {
-        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
-    }
-
-    /**
-     * Returns a 1-D tensor of size (end - start) / step with values from the
-     * interval [start, end) taken with common difference step beginning from
-     * start.
-     * <p>
-     * Note that step is subject to floating point rounding errors when
-     * comparing against end. To avoid inconsistency, we advise subtracting
-     * a small epsilon from end in such cases.
-     *
-     * @param start the starting value for the set of points.
-     * @param end the ending value for the set of points.
-     * @param step the gap between each pair of adjacent points.
-     * @return a 1-D tensor.
-     */
-    public static Tensor arange(float start, float end, float step) {
-        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
-    }
-
-    /**
-     * Returns a 1-D tensor of size (end - start) / step with values from the
-     * interval [start, end) taken with common difference step beginning from
-     * start.
-     * <p>
-     * Note that step is subject to floating point rounding errors when
-     * comparing against end. To avoid inconsistency, we advise subtracting
-     * a small epsilon from end in such cases.
-     *
-     * @param start the starting value for the set of points.
-     * @param end the ending value for the set of points.
-     * @param step the gap between each pair of adjacent points.
-     * @return a 1-D tensor.
-     */
-    public static Tensor arange(double start, double end, double step) {
         return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
     }
 
