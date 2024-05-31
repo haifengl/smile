@@ -30,6 +30,7 @@ import smile.llm.CompletionPrediction;
  * @author Haifeng Li
  */
 public class Llama {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /** The transformer model. */
     final Transformer model;
     /** The tokenizer. */
@@ -90,12 +91,16 @@ public class Llama {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
 
+        var startTime = System.currentTimeMillis();
         var model = new Transformer(modelArgs);
 
         Collections.sort(checkpoints);
         String rank = System.getenv("RANK");
         var checkpoint = checkpoints.get(Integer.valueOf(rank == null ? "0" : rank));
         model.load(checkpoint);
+
+        var time = System.currentTimeMillis() - startTime;
+        logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpoint, rank, time/1000, time%1000);
         return new Llama(model, tokenizer);
     }
 
