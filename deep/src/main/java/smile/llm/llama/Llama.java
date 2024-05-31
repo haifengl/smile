@@ -20,10 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
-import org.bytedeco.pytorch.global.torch_cuda;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
@@ -60,11 +58,31 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen) throws IOException {
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, 1);
+    }
+
+    /**
+     * Builds a Llama instance by initializing and loading a model checkpoint.
+     * @param checkpointDir the directory path of checkpoint files.
+     * @param tokenizerPath the path of tokenizer file.
+     * @param maxSeqLen the maximum sequence length for input text.
+     * @param maxBatchSize the maximum batch size for inference.
+     * @param seed the random number generation seed.
+     * @return an instance of Llama model.
+     */
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, long seed) throws IOException {
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
         Device device = Device.CUDA(rank);
+        var deviceGuard = torch.getDeviceGuardImpl(rank);
+        torch.manual_seed(seed);
+
+        var meta = new TypeMeta();
+        boolean bfloat16 = true; // torch.cuda.is_bf16_supported()
+        meta.put(bfloat16 ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
+        torch.set_default_dtype(meta);
 
         var startTime = System.currentTimeMillis();
         File dir = new File(checkpointDir);
@@ -91,13 +109,7 @@ public class Llama {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
 
-        var meta = new TypeMeta();
-        boolean bfloat16 = true; // torch.cuda.is_bf16_supported()
-        meta.put(bfloat16 ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-        torch.set_default_dtype(meta);
-
-        var model = new Transformer(modelArgs, device);
-
+        var model = new Transformer(modelArgs, device, deviceGuard);
         Collections.sort(checkpoints);
         var checkpoint = checkpoints.get(rank);
         model.load(checkpoint);
@@ -149,6 +161,10 @@ public class Llama {
             int prevPos = 0;
             Tensor eosReached = scope.add(Tensor.of(new boolean[batchSize], batchSize));
             Tensor inputTextMask = scope.add(tokens.ne(pad));
+
+            tokens = scope.add(tokens.to(model.device));
+            eosReached = scope.add(eosReached.to(model.device));
+            inputTextMask = scope.add(inputTextMask.to(model.device));
 
             if (minPromptLen == totalLen) {
                 var logits = scope.add(model.forward(tokens, prevPos));

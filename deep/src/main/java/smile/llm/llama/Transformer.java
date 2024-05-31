@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.bytedeco.pytorch.DeviceGuardImplInterface;
 import org.bytedeco.pytorch.ModuleListImpl;
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
@@ -66,10 +65,10 @@ public class Transformer extends LayerBlock {
      * Constructor.
      * @param args the model configuration parameters.
      */
-    public Transformer(ModelArgs args, Device device) {
+    public Transformer(ModelArgs args, Device device, DeviceGuardImplInterface deviceGuard) {
         this.params = args;
         this.device = device;
-        this.deviceGuard = torch.getDeviceGuardImpl(device.type().value());
+        this.deviceGuard = deviceGuard;
 
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
