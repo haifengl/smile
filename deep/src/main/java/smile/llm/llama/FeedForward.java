@@ -57,7 +57,7 @@ public class FeedForward {
         this.module = new Module();
         this.module.register_module("w1", w1.asTorch());
         this.module.register_module("w2", w2.asTorch());
-        this.module.register_module("w2", w3.asTorch());
+        this.module.register_module("w3", w3.asTorch());
     }
 
     /**
