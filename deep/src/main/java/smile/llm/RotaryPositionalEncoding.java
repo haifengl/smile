@@ -97,10 +97,12 @@ public interface RotaryPositionalEncoding {
      * @return the reshaped cis tensor view.
      */
     static Tensor reshapeForBroadcast(Tensor cis, Tensor x) {
-        int ndim = x.dim();
-        long[] shape = Arrays.copyOf(x.shape(), ndim);
-        shape[1] = 1;
-        shape[ndim - 1] = 1;
+        int dim = x.dim();
+        long[] xs = x.shape();
+        long[] shape = new long[dim];
+        Arrays.fill(shape, 1);
+        shape[1] = xs[1];
+        shape[dim-1] = xs[dim-1];
         return cis.view(shape);
     }
 }
