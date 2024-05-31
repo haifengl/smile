@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
 import smile.llm.CompletionPrediction;
+import smile.util.AutoScope;
 
 /**
  * LLaMA model specification.
@@ -35,6 +38,8 @@ public class Llama {
     final Transformer model;
     /** The tokenizer. */
     final Tokenizer tokenizer;
+    /** The compute device. */
+    final Device device = Device.CUDA();
 
     /**
      * Constructor.
@@ -117,36 +122,42 @@ public class Llama {
      * @return The generated text completion.
      */
     public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, boolean echo) {
-        int batchSize = prompts.length;
-        if (batchSize > model.params.maxBatchSize()) {
-            throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
-        }
+        try (var scope = new AutoScope()) {
+            int batchSize = prompts.length;
+            if (batchSize > model.params.maxBatchSize()) {
+                throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
+            }
 
-        int minPromptLen = Integer.MAX_VALUE;
-        int maxPromptLen = Integer.MIN_VALUE;
-        for (var prompt : prompts) {
-            minPromptLen = Math.min(minPromptLen, prompt.length);
-            maxPromptLen = Math.max(maxPromptLen, prompt.length);
-        }
-        if (maxPromptLen > model.params.maxSeqLength()) {
-            throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
-        }
+            int minPromptLen = Integer.MAX_VALUE;
+            int maxPromptLen = Integer.MIN_VALUE;
+            for (var prompt : prompts) {
+                minPromptLen = Math.min(minPromptLen, prompt.length);
+                maxPromptLen = Math.max(maxPromptLen, prompt.length);
+            }
+            if (maxPromptLen > model.params.maxSeqLength()) {
+                throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
+            }
 
-        int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
+            int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
 
-        int pad = tokenizer.pad();
-        long[] shape = {batchSize, totalLen};
-        Tensor tokens = Tensor.full(pad, shape);
-        for (int i = 0; i < batchSize; i++) {
-            tokens.put_(Tensor.of(prompts[i]), Index.of(i), Index.slice(0, prompts[i].length));
-        }
+            int pad = tokenizer.pad();
+            long[] shape = {batchSize, totalLen};
+            Tensor tokens = scope.add(Tensor.full(pad, shape));
+            for (int i = 0; i < batchSize; i++) {
+                var prompt = scope.add(Tensor.of(prompts[i]));
+                tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
+            }
 
-        int prevPos = 0;
-        Tensor eosReached = Tensor.of(new boolean[batchSize], batchSize);
-        Tensor inputTextMask = tokens.ne(pad);
+            int prevPos = 0;
+            Tensor eosReached = scope.add(Tensor.of(new boolean[batchSize], batchSize));
+            Tensor inputTextMask = scope.add(tokens.ne(pad));
 
-        if (minPromptLen == totalLen) {
-            var logits = model.forward(tokens, prevPos);
+            tokens = scope.add(tokens.to(device));
+            eosReached = scope.add(eosReached.to(device));
+            inputTextMask = scope.add(inputTextMask.to(device));
+
+            if (minPromptLen == totalLen) {
+                var logits = scope.add(model.forward(tokens, prevPos));
             /*
             tokenLogprobs = -F.cross_entropy(
                 input=logits.transpose(1, 2),
@@ -155,26 +166,26 @@ public class Llama {
                 ignore_index=pad_id,
                 )
              */
-        }
-
-        Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
-
-        for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
-            var logits = model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos);
-            Tensor nextToken;
-            if (temperature > 0) {
-                var probs = logits.get(Index.Colon, Index.of(-1)).div(temperature).softmax(-1);
-                nextToken = probs.topp(topp);
-            } else {
-                nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
             }
 
-            nextToken = nextToken.reshape(-1);
-            // only replace token if prompt has already been generated
-            nextToken = Tensor.where(inputTextMask.get(Index.Colon, Index.of(curPos)), tokens.get(Index.Colon, Index.of(curPos)), nextToken);
-            tokens.put_(nextToken, Index.Colon, Index.of(curPos));
+            Tensor stopTokens = scope.add(Tensor.of(tokenizer.stopTokens()));
 
-            if (logprobs) {
+            for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
+                var logits = scope.add(model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos));
+                Tensor nextToken;
+                if (temperature > 0) {
+                    var probs = logits.get(Index.Colon, Index.of(-1)).div(temperature).softmax(-1);
+                    nextToken = probs.topp(topp);
+                } else {
+                    nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                }
+
+                nextToken = scope.add(nextToken.reshape(-1));
+                // only replace token if prompt has already been generated
+                nextToken = scope.add(Tensor.where(inputTextMask.get(Index.Colon, Index.of(curPos)), tokens.get(Index.Colon, Index.of(curPos)), nextToken));
+                tokens.put_(nextToken, Index.Colon, Index.of(curPos));
+
+                if (logprobs) {
                 /*
                 tokenLogprobs[:,prev_pos + 1 :cur_pos + 1] = -Tensor.crossEntropy(
                         logits.transpose(1, 2),
@@ -182,33 +193,34 @@ public class Llama {
                         "none",
                         ignore_index = pad_id,
                 ); */
+                }
+
+                eosReached.or_(inputTextMask.get(Index.Colon, Index.of(curPos)).not().and(nextToken.isin(stopTokens)));
+                prevPos = curPos;
+                if (eosReached.all()) break;
             }
 
-            eosReached.or_(inputTextMask.get(Index.Colon, Index.of(curPos)).not().and(nextToken.isin(stopTokens)));
-            prevPos = curPos;
-            if (eosReached.all()) break;
-        }
-
-        CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
-        for (int i = 0; i < batchSize; i++) {
-            // cut to max gen len
-            int start = echo ? 0 : prompts[i].length;
-            var toks = tokens.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).intArray();
-            //probs = tokenLogprobs.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen);
-            // cut to after eos tok if any
-            for (var stopToken : tokenizer.stopTokens()) {
-                for (int eosIdx = 0; eosIdx < toks.length; eosIdx++) {
-                    if (toks[eosIdx] == stopToken) {
-                        toks = Arrays.copyOf(toks, eosIdx);
-                        // probs = probs[:eos_idx]if logprobs else None
-                        break;
+            CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
+            for (int i = 0; i < batchSize; i++) {
+                // cut to max gen len
+                int start = echo ? 0 : prompts[i].length;
+                var toks = tokens.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).intArray();
+                //probs = tokenLogprobs.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen);
+                // cut to after eos tok if any
+                for (var stopToken : tokenizer.stopTokens()) {
+                    for (int eosIdx = 0; eosIdx < toks.length; eosIdx++) {
+                        if (toks[eosIdx] == stopToken) {
+                            toks = Arrays.copyOf(toks, eosIdx);
+                            // probs = probs[:eos_idx]if logprobs else None
+                            break;
+                        }
                     }
                 }
-            }
 
-            predictions[i] = new CompletionPrediction(tokenizer.decode(toks));
+                predictions[i] = new CompletionPrediction(tokenizer.decode(toks));
+            }
+            return predictions;
         }
-        return predictions;
     }
 
     /**
