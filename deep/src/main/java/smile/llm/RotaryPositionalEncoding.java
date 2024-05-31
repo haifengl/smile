@@ -50,8 +50,8 @@ public interface RotaryPositionalEncoding {
         xqShape[ndim - 1] = xkShape[ndim - 1] = -1;
         xqShape[ndim] = xkShape[ndim] = 2;
 
-        try (Tensor xq_ = xq.reshape(xqShape).viewAsComplex();
-             Tensor xk_ = xk.reshape(xkShape).viewAsComplex();
+        try (Tensor xq_ = xq.to(ScalarType.Float32).reshape(xqShape).viewAsComplex();
+             Tensor xk_ = xk.to(ScalarType.Float32).reshape(xkShape).viewAsComplex();
              Tensor pe = reshapeForBroadcast(cis, xq_)) {
             Tensor xq_out = xq_.mul_(pe).viewAsReal().flatten(3);
             Tensor xk_out = xk_.mul_(pe).viewAsReal().flatten(3);
@@ -98,11 +98,9 @@ public interface RotaryPositionalEncoding {
      */
     static Tensor reshapeForBroadcast(Tensor cis, Tensor x) {
         int ndim = x.dim();
-        long[] xshape = x.shape();
-        long[] shape = new long[ndim];
-        for (int i = 0; i < ndim; i++) {
-            shape[i] = i == 1 || i == ndim - 1 ? xshape[i] : 1;
-        }
+        long[] shape = Arrays.copyOf(x.shape(), ndim);
+        shape[1] = 1;
+        shape[ndim - 1] = 1;
         return cis.view(shape);
     }
 }
