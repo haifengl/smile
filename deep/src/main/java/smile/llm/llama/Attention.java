@@ -16,6 +16,7 @@
  */
 package smile.llm.llama;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
@@ -42,6 +43,9 @@ public class Attention {
     final LinearLayer wq, wk, wv, wo;
     /** Cached keys and values. */
     Tensor cacheK, cacheV;
+    /** PyTorch module. */
+    final Module module;
+
     public Attention(ModelArgs args) {
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
         // JavaCPP doesn't support torch.distributed yet
@@ -59,6 +63,12 @@ public class Attention {
         long[] shape = {args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim};
         this.cacheK = Tensor.zeros(shape);
         this.cacheV = Tensor.zeros(shape);
+
+        this.module = new Module();
+        this.module.register_module("wq", wq.asTorch());
+        this.module.register_module("wk", wk.asTorch());
+        this.module.register_module("wv", wv.asTorch());
+        this.module.register_module("wo", wo.asTorch());
     }
 
     /**

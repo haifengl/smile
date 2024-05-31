@@ -16,6 +16,7 @@
  */
 package smile.llm.llama;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Tensor;
@@ -29,6 +30,7 @@ import smile.deep.tensor.Tensor;
 public class FeedForward {
     final LinearLayer w1, w2, w3;
     final SiLU silu;
+    final Module module;
 
     /**
      * Constructor.
@@ -51,6 +53,11 @@ public class FeedForward {
         this.w2 = new LinearLayer(hiddenDim, dim, false);
         this.w3 = new LinearLayer(dim, hiddenDim, false);
         this.silu = new SiLU(true);
+
+        this.module = new Module();
+        this.module.register_module("w1", w1.asTorch());
+        this.module.register_module("w2", w2.asTorch());
+        this.module.register_module("w2", w3.asTorch());
     }
 
     /**

@@ -16,6 +16,7 @@
  */
 package smile.llm.llama;
 
+import org.bytedeco.pytorch.Module;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Tensor;
 
@@ -43,6 +44,8 @@ public class TransformerBlock {
     final RMSNormLayer attentionNorm;
     /** The layer normalization for feed forward output. */
     final RMSNormLayer ffnNorm;
+    /** PyTorch module. */
+    final Module module;
 
     /**
      * Constructor.
@@ -63,6 +66,12 @@ public class TransformerBlock {
         );
         this.attentionNorm = new RMSNormLayer(args.dim(), args.normEps());
         this.ffnNorm = new RMSNormLayer(args.dim(), args.normEps());
+
+        this.module = new Module();
+        this.module.register_module("attention", attention.module);
+        this.module.register_module("feed_forward", feedForward.module);
+        this.module.register_module("attention_norm", attentionNorm.asTorch());
+        this.module.register_module("ffn_norm", ffnNorm.asTorch());
     }
 
     /**

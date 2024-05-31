@@ -532,18 +532,6 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
-     * Updates elements in place.
-     *
-     * @param x the new element value.
-     * @param indices the element indices.
-     * @return this tensor.
-     */
-    public Tensor put_(float x, Tensor indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
-    }
-
-    /**
      * Updates an element in place.
      *
      * @param x the new element value.
