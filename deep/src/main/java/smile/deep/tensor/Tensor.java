@@ -55,8 +55,9 @@ public class Tensor implements AutoCloseable {
     public static boolean isBF16Supported() {
         var device = torch_cuda.current_device();
         var props = torch_cuda.getDeviceProperties(device);
-        var cudaVersionMajor = torch.C10_CUDA_VERSION_MAJOR;
-        return cudaVersionMajor >= 11; // && props.major >= 8;
+        var cudaVersionMajor = torch.C10_CUDA_VERSION_MAJOR; // always 0
+        // return cudaVersionMajor >= 11 && props.major >= 8;
+        return true;
     }
 
     /**
