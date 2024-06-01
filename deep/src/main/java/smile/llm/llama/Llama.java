@@ -185,7 +185,7 @@ public class Llama {
              */
             }
 
-            Tensor stopTokens = scope.add(Tensor.of(tokenizer.stopTokens()));
+            Tensor stopTokens = scope.add(Tensor.of(tokenizer.stopTokens()).to(model.device));
 
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 var logits = scope.add(model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos));
