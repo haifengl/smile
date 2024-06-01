@@ -61,9 +61,8 @@ public class Attention {
         this.wv = new LinearLayer(args.dim(), numKvHeads * headDim, false);
         this.wo = new LinearLayer(args.numHeads() * headDim, args.dim(), false);
 
-        long[] shape = {args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim};
-        this.cacheK = Tensor.zeros(shape);
-        this.cacheV = Tensor.zeros(shape);
+        this.cacheK = Tensor.zeros(args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim);
+        this.cacheV = Tensor.zeros(args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim);
 
         this.module = new Module();
         this.module.register_module("wq", wq.asTorch());
@@ -97,8 +96,8 @@ public class Attention {
             xq = tuple._1();
             xk = tuple._2();
 
-            cacheK = cacheK.to(xq.device());
-            cacheV = cacheV.to(xq.device());
+            cacheK = cacheK.to(xq.device(), xq.dtype());
+            cacheV = cacheV.to(xq.device(), xq.dtype());
 
             cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
             cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
