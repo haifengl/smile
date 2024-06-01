@@ -19,6 +19,7 @@ package smile.deep.tensor;
 import java.util.Arrays;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
+import org.bytedeco.pytorch.global.torch_cuda;
 import smile.util.Tuple2;
 
 /**
@@ -32,8 +33,30 @@ public class Tensor implements AutoCloseable {
     /** PyTorch Tensor handle. */
     final org.bytedeco.pytorch.Tensor value;
 
+
+    /**
+     * Sets the default options to create tensors. This does not affect
+     * factory function calls which are called with an explicit options
+     * argument.
+     * @param options the construction options of a tensor.
+     */
     public static void setDefaultOptions(Options options) {
         defaultOptions = options;
+    }
+
+    /**
+     * Checks if the CUDA device supports bf16. On pre-ampere hardware
+     * bf16 works, but doesn't provide speed-ups compared to fp32 matmul
+     * operations, and some matmul operations are failing outright, so
+     * this check is more like "guaranteed to work and be performant"
+     * than "works somehow".
+     * @return true if bf16 works and is performant.
+     */
+    public static boolean isBF16Supported() {
+        var device = torch_cuda.current_device();
+        var props = torch_cuda.getDeviceProperties(device);
+        var cudaVersionMajor = torch.C10_CUDA_VERSION_MAJOR;
+        return cudaVersionMajor >= 11; // && props.major >= 8;
     }
 
     /**
@@ -2076,10 +2099,10 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
-     * A class that encapsulates the construction axes of a Tensor.
-     * With construction axis we mean a particular property of a Tensor
-     * that can be configured before its construction (and sometimes changed
-     * afterward).
+     * A class that encapsulates the construction axes of a tensor.
+     * With construction axis we mean a particular property of a tensor
+     * that can be configured before its construction (and sometimes
+     * changed afterward).
      */
     public static class Options {
         /** PyTorch options object. */
