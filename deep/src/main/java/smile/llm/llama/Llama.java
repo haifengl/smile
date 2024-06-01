@@ -77,9 +77,11 @@ public class Llama {
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
 
-        torch_cuda.set_device(rank);
+        // Unfortunately, the below calls hang for unknown reason. It is okay
+        // to comment it out as we don't support torch.distributed yet.
+        // torch_cuda.set_device(rank);
         // seed must be the same in all processes
-        torch.manual_seed(seed);
+        // torch.manual_seed(seed);
 
         Device device = Device.CUDA(rank);
         var options = new Tensor.Options().device(device);
@@ -120,7 +122,7 @@ public class Llama {
         model.load(checkpoint);
 
         var time = System.currentTimeMillis() - startTime;
-        logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpoint, rank, time/1000, time%1000);
+        logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
         return new Llama(model, tokenizer);
     }
 
