@@ -18,8 +18,6 @@ package smile.llm.llama;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.bytedeco.pytorch.DeviceGuardImplInterface;
 import org.bytedeco.pytorch.ModuleListImpl;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
@@ -58,17 +56,14 @@ public class Transformer extends LayerBlock {
     final Tensor cis;
     /** The compute device. */
     final Device device;
-    /** The device guard to set the default device. */
-    final DeviceGuardImplInterface deviceGuard;
 
     /**
      * Constructor.
      * @param args the model configuration parameters.
      */
-    public Transformer(ModelArgs args, Device device, DeviceGuardImplInterface deviceGuard) {
+    public Transformer(ModelArgs args, Device device) {
         this.params = args;
         this.device = device;
-        this.deviceGuard = deviceGuard;
 
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
@@ -92,7 +87,7 @@ public class Transformer extends LayerBlock {
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
                 params.maxSeqLength() * 2,
-                params.ropeTheta());
+                params.ropeTheta()).to(device);
 
         module.register_module("layers", moduleList);
         add("tok_embeddings", tokEmbeddings);

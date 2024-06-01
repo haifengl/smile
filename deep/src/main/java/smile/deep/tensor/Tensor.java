@@ -27,8 +27,14 @@ import smile.util.Tuple2;
  * @author Haifeng Li
  */
 public class Tensor implements AutoCloseable {
+    /** Default options such as device and dtype. */
+    static Options defaultOptions;
     /** PyTorch Tensor handle. */
     final org.bytedeco.pytorch.Tensor value;
+
+    public static void setDefaultOptions(Options options) {
+        defaultOptions = options;
+    }
 
     /**
      * Constructor.
@@ -1825,6 +1831,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor eye(long shape) {
+        if (defaultOptions != null) return eye(defaultOptions, shape);
         return new Tensor(torch.eye(shape));
     }
 
@@ -1845,7 +1852,10 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor full(long value, long... shape) {
-        return new Tensor(torch.full(shape, new Scalar(value)));
+        var tensor = defaultOptions == null ?
+                torch.full(shape, new Scalar(value)) :
+                torch.full(shape, new Scalar(value), defaultOptions.value);
+        return new Tensor(tensor);
     }
 
     /**
@@ -1855,7 +1865,10 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor full(double value, long... shape) {
-        return new Tensor(torch.full(shape, new Scalar((float) value)));
+        var tensor = defaultOptions == null ?
+                torch.full(shape, new Scalar((float) value)) :
+                torch.full(shape, new Scalar((float) value), defaultOptions.value);
+        return new Tensor(tensor);
     }
 
     /**
@@ -1864,6 +1877,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor empty(long... shape) {
+        if (defaultOptions != null) return empty(defaultOptions, shape);
         return new Tensor(torch.empty(shape));
     }
 
@@ -1883,6 +1897,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor zeros(long... shape) {
+        if (defaultOptions != null) return zeros(defaultOptions, shape);
         return new Tensor(torch.zeros(shape));
     }
 
@@ -1902,6 +1917,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor ones(long... shape) {
+        if (defaultOptions != null) return ones(defaultOptions, shape);
         return new Tensor(torch.ones(shape));
     }
 
@@ -1921,6 +1937,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor rand(long... shape) {
+        if (defaultOptions != null) return rand(defaultOptions, shape);
         return new Tensor(torch.rand(shape));
     }
 
@@ -1940,6 +1957,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor randn(long... shape) {
+        if (defaultOptions != null) return randn(defaultOptions, shape);
         return new Tensor(torch.randn(shape));
     }
 
