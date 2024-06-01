@@ -71,13 +71,15 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, long seed) throws IOException {
+        torch.manual_seed(seed);
+
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
         Device device = Device.CUDA(rank);
-        var deviceGuard = torch.getDeviceGuardImpl(rank);
-        torch.manual_seed(seed);
+        var options = new Tensor.Options().device(device);
+        Tensor.setDefaultOptions(options);
 
         var meta = new TypeMeta();
         boolean bfloat16 = true; // torch.cuda.is_bf16_supported()
@@ -109,7 +111,7 @@ public class Llama {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
 
-        var model = new Transformer(modelArgs, device, deviceGuard);
+        var model = new Transformer(modelArgs, device);
         Collections.sort(checkpoints);
         var checkpoint = checkpoints.get(rank);
         model.load(checkpoint);
