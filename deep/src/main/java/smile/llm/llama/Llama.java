@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.List;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
+import org.bytedeco.pytorch.global.torch_cuda;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
@@ -71,20 +72,18 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, long seed) throws IOException {
-        torch.manual_seed(seed);
-
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
+
+        torch_cuda.set_device(rank);
+        // seed must be the same in all processes
+        torch.manual_seed(seed);
+
         Device device = Device.CUDA(rank);
         var options = new Tensor.Options().device(device);
         Tensor.setDefaultOptions(options);
-
-        var meta = new TypeMeta();
-        boolean bfloat16 = true; // torch.cuda.is_bf16_supported()
-        meta.put(bfloat16 ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-        torch.set_default_dtype(meta);
 
         var startTime = System.currentTimeMillis();
         File dir = new File(checkpointDir);
@@ -110,6 +109,10 @@ public class Llama {
         if (tokenizer.size() != modelArgs.vocabSize()) {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
+
+        var meta = new TypeMeta();
+        meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
+        torch.set_default_dtype(meta);
 
         var model = new Transformer(modelArgs, device);
         Collections.sort(checkpoints);
