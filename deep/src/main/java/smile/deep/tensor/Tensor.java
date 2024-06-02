@@ -30,8 +30,9 @@ import smile.util.Tuple2;
  * @author Haifeng Li
  */
 public class Tensor implements AutoCloseable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tensor.class);
     /** Default options such as device and dtype. */
-    static Options defaultOptions;
+    private static Options defaultOptions;
     /** PyTorch Tensor handle. */
     final org.bytedeco.pytorch.Tensor value;
 
@@ -69,6 +70,7 @@ public class Tensor implements AutoCloseable {
             return version[0] >= 11000 && prop.major() >= 8;
         } catch (Throwable ex) {
             // UnsatisfiedLinkError
+            logger.info("Failed to get device properties: {}", ex.getMessage());
             return false;
         }
     }

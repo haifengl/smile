@@ -12,7 +12,7 @@ Test / javaOptions ++= Seq(
 libraryDependencies ++= Seq(
   "ai.djl.sentencepiece" % "sentencepiece" % "0.28.0",
   "org.bytedeco"   % "pytorch-platform"    % "2.3.0-1.5.11-SNAPSHOT",
-  "org.bytedeco"   % "cuda-platform"       % "12.3-8.9-1.5.11-SNAPSHOT" classifier ""
+  "org.bytedeco"   % "cuda-platform"    % "12.3-8.9-1.5.11-SNAPSHOT" classifier ""
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
