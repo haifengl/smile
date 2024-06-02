@@ -17,6 +17,8 @@
 package smile.deep.tensor;
 
 import java.util.Arrays;
+import org.bytedeco.cuda.cudart.cudaDeviceProp;
+import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
@@ -53,11 +55,22 @@ public class Tensor implements AutoCloseable {
      * @return true if bf16 works and is performant.
      */
     public static boolean isBF16Supported() {
-        var device = torch_cuda.current_device();
-        var props = torch_cuda.getDeviceProperties(device);
-        var cudaVersionMajor = torch.C10_CUDA_VERSION_MAJOR; // always 0
-        // return cudaVersionMajor >= 11 && props.major >= 8;
-        return true;
+        try {
+            var device = torch_cuda.current_device();
+            var prop = new cudaDeviceProp();
+            var code = cudart.cudaGetDeviceProperties(prop, device);
+            if (code != cudart.CUDA_SUCCESS) return false;
+
+            // The version is returned as (1000 major + 10 minor).
+            int[] version = new int[1];
+            code = cudart.cudaRuntimeGetVersion(version);
+            if (code != cudart.CUDA_SUCCESS) return false;
+
+            return version[0] >= 11000 && prop.major() >= 8;
+        } catch (Throwable ex) {
+            // UnsatisfiedLinkError
+            return false;
+        }
     }
 
     /**
