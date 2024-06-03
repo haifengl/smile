@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
@@ -77,11 +78,12 @@ public class Llama {
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
 
-        // Unfortunately, the below calls hang for unknown reason. It is okay
-        // to comment it out as we don't support torch.distributed yet.
-        // torch_cuda.set_device(rank);
+        // cuInit must be called first. Otherwise, set_device and manual_seed
+        // would hang.
+        cudart.cuInit(0);
+        torch_cuda.set_device(rank);
         // seed must be the same in all processes
-        // torch.manual_seed(seed);
+        torch.manual_seed(seed);
 
         Device device = Device.CUDA(rank);
         var options = new Tensor.Options().device(device);
