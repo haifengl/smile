@@ -182,7 +182,7 @@ public class Tiktoken implements Tokenizer {
      */
     private void bytePairEncode(Bytes piece, ArrayList<IntPair> parts, IntArrayList output) {
         bytePairMerge(piece, parts);
-        for (int i = 0; i < parts.size() - 1; i+=2) {
+        for (int i = 0; i < parts.size() - 1; i++) {
             int token = getRank(piece, parts.get(i)._1(), parts.get(i+1)._1());
             assert token != MAX : "Token should not be MAX";
             output.add(token);

@@ -109,5 +109,13 @@ public class TokenizerTest {
                 new Message(Role.system, "This is a test sentence."),
                 new Message(Role.user, "This is a response.")
         ));
+
+        int[] dialogTokens2 = {
+                128000, 128006,   882, 128007,    271,  12840,    374,    279,  11363,
+                315,    1253,   13767,   1082,     30, 128009, 128006,  78191, 128007,
+                271};
+        assertArrayEquals(dialogTokens2, tokenizer.encodeDialog(
+                new Message(Role.user, "what is the recipe of mayonnaise?")
+        ));
     }
 }
