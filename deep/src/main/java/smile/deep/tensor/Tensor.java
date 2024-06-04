@@ -1007,6 +1007,32 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Stacks tensors in sequence horizontally (column wise).
+     * @param tensors the tensors to concatenate.
+     * @return the output tensor.
+     */
+    public static Tensor hstack(Tensor... tensors) {
+        var vector = new TensorVector();
+        for (var tensor : tensors) {
+            vector.push_back(tensor.value);
+        }
+        return new Tensor(torch.hstack(vector));
+    }
+
+    /**
+     * Stacks tensors in sequence vertically (row wise).
+     * @param tensors the tensors to concatenate.
+     * @return the output tensor.
+     */
+    public static Tensor vstack(Tensor... tensors) {
+        var vector = new TensorVector();
+        for (var tensor : tensors) {
+            vector.push_back(tensor.value);
+        }
+        return new Tensor(torch.vstack(vector));
+    }
+
+    /**
      * Returns a complex tensor whose elements are Cartesian coordinates
      * corresponding to the polar coordinates with abs and angle.
      * @param abs The absolute value the complex tensor. Must be float or double.
