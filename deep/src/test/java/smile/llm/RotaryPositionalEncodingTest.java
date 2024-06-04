@@ -61,5 +61,8 @@ public class RotaryPositionalEncodingTest {
         assertEquals(0.8415f, real.getFloat(1, 0, 1), 1E-4);
         assertEquals(0.6861f, real.getFloat(1, 1, 0), 1E-4);
         assertEquals(0.7275f, real.getFloat(1, 1, 1), 1E-4);
+
+        assertEquals(0.9999f, real.getFloat(4095, 63, 0), 1E-4);
+        assertEquals(0.0101f, real.getFloat(4095, 63, 1), 1E-4);
     }
 }
