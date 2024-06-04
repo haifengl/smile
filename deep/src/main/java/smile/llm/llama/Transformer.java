@@ -25,6 +25,7 @@ import smile.deep.layer.LayerBlock;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
 import smile.util.AutoScope;
@@ -60,6 +61,7 @@ public class Transformer extends LayerBlock {
     /**
      * Constructor.
      * @param args the model configuration parameters.
+     * @param device the compute device.
      */
     public Transformer(ModelArgs args, Device device) {
         this.params = args;
@@ -87,7 +89,7 @@ public class Transformer extends LayerBlock {
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
                 params.maxSeqLength() * 2,
-                params.ropeTheta()).to(device);
+                params.ropeTheta());
 
         module.register_module("layers", moduleList);
         add("tok_embeddings", tokEmbeddings);
@@ -104,13 +106,14 @@ public class Transformer extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        try (var scope = new AutoScope();
-             Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen))) {
+        try (var scope = new AutoScope()) {
             Tensor h = scope.add(tokEmbeddings.forward(tokens));
+            cis.to(h.device());
+            Tensor freqs = scope.add(cis.get(Index.slice(startPos, startPos+seqlen)));
             Tensor mask = null;
             if (seqlen > 1) {
                 mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
-                mask = scope.add(mask.triu(1));
+                mask.triu_(1);
                 // When performing key-value caching, we compute the attention scores
                 // only for the new sequence. Thus, the matrix of scores is of size
                 // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
@@ -121,7 +124,8 @@ public class Transformer extends LayerBlock {
                 h = scope.add(layer.forward(h, startPos, freqs, mask));
             }
             h = scope.add(norm.forward(h));
-            return output.forward(h);
+            var out = scope.add(output.forward(h));
+            return out.to(ScalarType.Float32);
         }
     }
 
