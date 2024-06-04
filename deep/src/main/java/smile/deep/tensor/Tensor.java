@@ -240,6 +240,23 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns a new tensor with the negative of the elements of input.
+     * @return the output tensor.
+     */
+    public Tensor neg() {
+        return new Tensor(value.neg());
+    }
+
+    /**
+     * Returns the tensor with the negative of the elements of input.
+     * @return this tensor.
+     */
+    public Tensor neg_() {
+        value.neg_();
+        return this;
+    }
+
+    /**
      * Returns a contiguous in memory tensor containing the same data as this tensor.
      * @return a contiguous in memory tensor containing the same data as this tensor.
      */
