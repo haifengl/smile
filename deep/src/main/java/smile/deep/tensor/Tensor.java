@@ -1816,8 +1816,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor softmax(int dim) {
-        torch.softmax(value, dim);
-        return this;
+        return new Tensor(torch.softmax(value, dim));
     }
 
     /**
