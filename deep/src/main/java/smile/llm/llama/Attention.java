@@ -19,6 +19,7 @@ package smile.llm.llama;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
 import smile.util.AutoScope;
@@ -116,7 +117,7 @@ public class Attention {
             if (mask != null) {
                 scores = scores.add_(mask);  // (bs, n_local_heads, seqlen, cache_len + seqlen)
             }
-            scores = scope.add(scores.softmax(-1));
+            scores = scope.add(scores.to(ScalarType.Float32).softmax(-1).to(xq.dtype()));
             var output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
             output = output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1);
             return wo.forward(output);

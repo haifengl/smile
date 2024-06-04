@@ -106,12 +106,17 @@ public class Transformer extends LayerBlock {
         int seqlen = (int) shape[1];
         try (var scope = new AutoScope();
              Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen))) {
+            Tensor h = scope.add(tokEmbeddings.forward(tokens));
             Tensor mask = null;
             if (seqlen > 1) {
-                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, 1, 1, seqlen, seqlen));
-                mask = scope.add(mask.triu(startPos + 1));
+                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                mask = scope.add(mask.triu(1));
+                // When performing key-value caching, we compute the attention scores
+                // only for the new sequence. Thus, the matrix of scores is of size
+                // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
+                // j > cache_len + i, since row i corresponds to token cache_len + i.
+                mask = Tensor.hstack(Tensor.zeros(seqlen, startPos), mask).to(h.dtype());
             }
-            Tensor h = scope.add(tokEmbeddings.forward(tokens));
             for (var layer : layers) {
                 h = scope.add(layer.forward(h, startPos, freqs, mask));
             }
