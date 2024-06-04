@@ -22,7 +22,7 @@ package smile.llm;
  * @param tokens the optional list of generated tokens.
  * @param logprobs the optional list of log probabilities of generated tokens.
  */
-public record CompletionPrediction(String generation, int[] tokens, double[] logprobs) {
+public record CompletionPrediction(String generation, int[] tokens, float[] logprobs) {
     /**
      * Constructor without tokens and logprobs.
      */
