@@ -915,7 +915,22 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor triu(long diagonal) {
-        return new Tensor(value.triu());
+        return new Tensor(value.triu(diagonal));
+    }
+
+    /**
+     * Returns the upper triangular part of a matrix (2-D tensor) or batch of
+     * matrices input, the other elements of the result tensor out are set to 0.
+     * @param diagonal The parameter diagonal controls which diagonal to consider.
+     *                If diagonal = 0, all elements on and above the main diagonal
+     *                are retained. A positive value excludes just as many diagonals
+     *                above the main diagonal, and similarly a negative value includes
+     *                just as many diagonals below the main diagonal.
+     * @return this tensor.
+     */
+    public Tensor triu_(long diagonal) {
+        value.triu_(diagonal);
+        return this;
     }
 
     /**
