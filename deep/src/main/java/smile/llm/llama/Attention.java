@@ -18,6 +18,7 @@ package smile.llm.llama;
 
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LinearLayer;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
@@ -31,6 +32,8 @@ import smile.util.AutoScope;
  * @author Haifeng Li
  */
 public class Attention {
+    /** PyTorch module. */
+    final Module module;
     /** The number of key and value heads. */
     final int numKvHeads;
     /** The number of local query heads. */
@@ -45,9 +48,11 @@ public class Attention {
     final LinearLayer wq, wk, wv, wo;
     /** Cached keys and values. */
     Tensor cacheK, cacheV;
-    /** PyTorch module. */
-    final Module module;
 
+    /**
+     * Constructor.
+     * @param args the model configuration parameters.
+     */
     public Attention(ModelArgs args) {
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
         // JavaCPP doesn't support torch.distributed yet
@@ -81,10 +86,11 @@ public class Attention {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        long[] shape = x.shape();
+        int batchSize = (int) shape[0];
+        int seqlen = (int) shape[1];
+
         try (var scope = new AutoScope()) {
-            long[] shape = x.shape();
-            int batchSize = (int) shape[0];
-            int seqlen = (int) shape[1];
             Tensor xq = scope.add(wq.forward(x));
             Tensor xk = scope.add(wk.forward(x));
             Tensor xv = scope.add(wv.forward(x));
@@ -107,8 +113,8 @@ public class Attention {
             var values = cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
 
             // repeat k/v heads if n_kv_heads < n_heads
-            keys = repeatKV(keys, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
-            values = repeatKV(values, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
+            keys = scope.add(repeatKV(keys, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
+            values = scope.add(repeatKV(values, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
 
             xq = xq.transpose(1, 2);  // (bs, n_local_heads, seqlen, head_dim)
             keys = keys.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
@@ -139,9 +145,10 @@ public class Attention {
             long seqlen = shape[1];
             long numKvHeads = shape[2];
             long headDim = shape[3];
-            var x = input.get(Index.Colon, Index.Colon, Index.Colon, Index.None, Index.Colon);
-            return x.expand(batchSize, seqlen, numKvHeads, numRep, headDim)
-                    .reshape(batchSize, seqlen, numKvHeads * numRep, headDim);
+            try (var x = input.get(Index.Colon, Index.Colon, Index.Colon, Index.None, Index.Colon)) {
+                return x.expand(batchSize, seqlen, numKvHeads, numRep, headDim)
+                        .reshape(batchSize, seqlen, numKvHeads * numRep, headDim);
+            }
         }
     }
 }
