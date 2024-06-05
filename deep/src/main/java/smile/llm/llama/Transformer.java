@@ -89,7 +89,7 @@ public class Transformer extends LayerBlock {
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
                 params.maxSeqLength() * 2,
-                params.ropeTheta());
+                params.ropeTheta()).to(device);
 
         module.register_module("layers", moduleList);
         add("tok_embeddings", tokEmbeddings);
@@ -108,7 +108,6 @@ public class Transformer extends LayerBlock {
         int seqlen = (int) shape[1];
         try (var scope = new AutoScope()) {
             Tensor h = scope.add(tokEmbeddings.forward(tokens));
-            cis.to(h.device());
             Tensor freqs = scope.add(cis.get(Index.slice(startPos, startPos+seqlen)));
             Tensor mask = null;
             if (seqlen > 1) {
