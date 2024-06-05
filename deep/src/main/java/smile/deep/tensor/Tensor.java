@@ -848,6 +848,9 @@ public class Tensor implements AutoCloseable {
      * @return the byte array of tensor elements.
      */
     public byte[] byteArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new byte[(int) length()];
         var data = value.data_ptr_byte();
         data.get(array);
@@ -859,6 +862,9 @@ public class Tensor implements AutoCloseable {
      * @return the short integer array of tensor elements.
      */
     public short[] shortArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new short[(int) length()];
         var data = value.data_ptr_short();
         data.get(array);
@@ -870,6 +876,9 @@ public class Tensor implements AutoCloseable {
      * @return the integer array of tensor elements.
      */
     public int[] intArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new int[(int) length()];
         var data = value.data_ptr_int();
         data.get(array);
@@ -881,6 +890,9 @@ public class Tensor implements AutoCloseable {
      * @return the long integer array of tensor elements.
      */
     public long[] longArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new long[(int) length()];
         var data = value.data_ptr_long();
         data.get(array);
@@ -892,6 +904,9 @@ public class Tensor implements AutoCloseable {
      * @return the float array of tensor elements.
      */
     public float[] floatArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new float[(int) length()];
         var data = value.data_ptr_float();
         data.get(array);
@@ -903,6 +918,9 @@ public class Tensor implements AutoCloseable {
      * @return the double array of tensor elements.
      */
     public double[] doubleArray() {
+        if (value.is_view()) {
+            throw new UnsupportedOperationException("copy tensor view to array");
+        }
         var array = new double[(int) length()];
         var data = value.data_ptr_double();
         data.get(array);
