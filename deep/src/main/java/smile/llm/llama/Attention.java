@@ -47,7 +47,7 @@ public class Attention {
     /** Linear transformation for queries, keys, values, and output. */
     final LinearLayer wq, wk, wv, wo;
     /** Cached keys and values. */
-    Tensor cacheK, cacheV;
+    final Tensor cacheK, cacheV;
 
     /**
      * Constructor.
@@ -102,9 +102,6 @@ public class Attention {
             var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
             xq = tuple._1();
             xk = tuple._2();
-
-            cacheK = cacheK.to(xq.device(), xq.dtype());
-            cacheV = cacheV.to(xq.device(), xq.dtype());
 
             cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
             cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
