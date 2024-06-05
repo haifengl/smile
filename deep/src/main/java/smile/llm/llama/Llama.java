@@ -221,14 +221,26 @@ public class Llama {
                 if (eosReached.all()) break;
             }
 
+            var tokenArray = scope.add(tokens.to(Device.CPU())).longArray();
+            float[] logprobArray = null;
+            if (logprobs) {
+                logprobArray = scope.add(tokenLogprobs.to(Device.CPU())).floatArray();
+            }
             CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = echo ? 0 : prompts[i].length;
-                var longs = tokens.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).longArray();
-                var toks = Arrays.stream(longs).mapToInt(x -> (int) x).toArray();
-                var probs = !logprobs ? null :
-                        tokenLogprobs.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).floatArray();
+                var toks = Arrays.stream(tokenArray)
+                        .skip(i * totalLen + start)
+                        .mapToInt(x -> (int) x)
+                        .limit(prompts[i].length + maxGenLen - start)
+                        .toArray();
+
+                float[] probs = null;
+                if (logprobs) {
+                    probs = Arrays.copyOfRange(logprobArray, i * totalLen + start, i * totalLen + prompts[i].length + maxGenLen);
+                }
+
                 // cut to after eos tok if any
                 for (var stopToken : tokenizer.stopTokens()) {
                     for (int eosIdx = 0; eosIdx < toks.length; eosIdx++) {
