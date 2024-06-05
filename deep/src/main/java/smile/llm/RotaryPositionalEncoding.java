@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.util.AutoScope;
 import smile.util.Tuple2;
 
 /**
@@ -50,11 +51,12 @@ public interface RotaryPositionalEncoding {
         xqShape[ndim - 1] = xkShape[ndim - 1] = -1;
         xqShape[ndim] = xkShape[ndim] = 2;
 
-        try (Tensor xq_ = xq.to(ScalarType.Float32).reshape(xqShape).viewAsComplex();
-             Tensor xk_ = xk.to(ScalarType.Float32).reshape(xkShape).viewAsComplex();
-             Tensor pe = reshapeForBroadcast(cis, xq_)) {
-            Tensor xq_out = xq_.mul_(pe).viewAsReal().flatten(3);
-            Tensor xk_out = xk_.mul_(pe).viewAsReal().flatten(3);
+        try (var scope = new AutoScope()) {
+            Tensor xq_ = scope.add(xq.to(ScalarType.Float32).reshape(xqShape).viewAsComplex());
+            Tensor xk_ = scope.add(xk.to(ScalarType.Float32).reshape(xkShape).viewAsComplex());
+            Tensor pe = scope.add(reshapeForBroadcast(cis, xq_));
+            Tensor xq_out = scope.add(xq_.mul_(pe).viewAsReal().flatten(3));
+            Tensor xk_out = scope.add(xk_.mul_(pe).viewAsReal().flatten(3));
             return new Tuple2<>(xq_out.to(xq.dtype()), xk_out.to(xk.dtype()));
         }
     }
