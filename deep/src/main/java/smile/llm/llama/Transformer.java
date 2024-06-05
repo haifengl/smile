@@ -117,7 +117,9 @@ public class Transformer extends LayerBlock {
                 // only for the new sequence. Thus, the matrix of scores is of size
                 // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
                 // j > cache_len + i, since row i corresponds to token cache_len + i.
-                mask = Tensor.hstack(Tensor.zeros(seqlen, startPos), mask).to(h.dtype());
+                var zeros = scope.add(Tensor.zeros(seqlen, startPos));
+                mask = scope.add(Tensor.hstack(zeros, mask));
+                mask = scope.add(mask.to(h.dtype()));
             }
             for (var layer : layers) {
                 h = scope.add(layer.forward(h, startPos, freqs, mask));
