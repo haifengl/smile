@@ -124,6 +124,7 @@ public class Llama {
         }
 
         var model = new Transformer(modelArgs, device);
+        model.eval();
         Collections.sort(checkpoints);
         var checkpoint = checkpoints.get(rank);
         model.load(checkpoint);
