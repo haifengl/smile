@@ -95,9 +95,9 @@ public class Attention {
             Tensor xk = scope.add(wk.forward(x));
             Tensor xv = scope.add(wv.forward(x));
 
-            xq = xq.view(batchSize, seqlen, numLocalHeads, headDim);
-            xk = xk.view(batchSize, seqlen, numLocalKvHeads, headDim);
-            xv = xv.view(batchSize, seqlen, numLocalKvHeads, headDim);
+            xq = scope.add(xq.view(batchSize, seqlen, numLocalHeads, headDim));
+            xk = scope.add(xk.view(batchSize, seqlen, numLocalKvHeads, headDim));
+            xv = scope.add(xv.view(batchSize, seqlen, numLocalKvHeads, headDim));
 
             var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
             xq = scope.add(tuple._1());
@@ -106,16 +106,16 @@ public class Attention {
             cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
             cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
 
-            var keys = cacheK.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
-            var values = cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
+            var keys = scope.add(cacheK.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen)));
+            var values = scope.add(cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen)));
 
             // repeat k/v heads if n_kv_heads < n_heads
             keys = scope.add(repeatKV(keys, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
             values = scope.add(repeatKV(values, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
 
-            xq = xq.transpose(1, 2);  // (bs, n_local_heads, seqlen, head_dim)
-            keys = keys.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            values = values.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            xq = scope.add(xq.transpose(1, 2));  // (bs, n_local_heads, seqlen, head_dim)
+            keys = scope.add(keys.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            values = scope.add(values.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
             var scores = scope.add(xq.matmul(keys.transpose(2, 3)).div_(Math.sqrt(headDim)));
             if (mask != null) {
                 scores = scores.add_(mask);  // (bs, n_local_heads, seqlen, cache_len + seqlen)
