@@ -69,5 +69,6 @@ public class AutoScope implements AutoCloseable {
                 logger.error(e.getMessage(), e);
             }
         }
+        resources.clear();
     }
 }
