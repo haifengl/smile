@@ -162,6 +162,7 @@ public class Llama {
         }
 
         try (var scope = new AutoScope()) {
+            Tensor.push(scope);
             int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
 
             int pad = tokenizer.pad();
@@ -268,6 +269,7 @@ public class Llama {
 
                 predictions[i] = new CompletionPrediction(tokenizer.decode(toks), toks, probs);
             }
+            Tensor.pop();
             return predictions;
         }
     }
