@@ -225,7 +225,8 @@ public class Llama {
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = echo ? 0 : prompts[i].length;
-                var toks = tokens.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).intArray();
+                var longs = tokens.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).longArray();
+                var toks = Arrays.stream(longs).mapToInt(x -> (int) x).toArray();
                 var probs = !logprobs ? null :
                         tokenLogprobs.get(Index.of(i), Index.slice(start, prompts[i].length + maxGenLen)).floatArray();
                 // cut to after eos tok if any

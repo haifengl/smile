@@ -859,7 +859,7 @@ public class Tensor implements AutoCloseable {
      * Returns the long integer array of tensor elements
      * @return the long integer array of tensor elements.
      */
-    public long[] longrray() {
+    public long[] longArray() {
         return value.data_ptr_long().asBuffer().array();
     }
 
