@@ -79,11 +79,16 @@ public class Llama {
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
 
-        // cuInit must be called first. Otherwise, set_device and manual_seed
-        // would hang.
+        // cuInit must be called first. Otherwise, set_device and manual_seed would hang.
         var startTime = System.currentTimeMillis();
         cudart.cuInit(0);
         torch_cuda.set_device(rank);
+
+        // half precision to lower memory usage.
+        var meta = new TypeMeta();
+        meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
+        torch.set_default_dtype(meta);
+
         // seed must be the same in all processes
         torch.manual_seed(seed);
 
@@ -91,7 +96,7 @@ public class Llama {
         var options = new Tensor.Options().device(device);
         Tensor.setDefaultOptions(options);
         var time = System.currentTimeMillis() - startTime;
-        logger.info("Initialized CUDA[{}]: loaded in {}.{} seconds", rank, time/1000, time%1000);
+        logger.info("Initialized CUDA[{}]: {}.{} seconds", rank, time/1000, time%1000);
 
         startTime = System.currentTimeMillis();
         File dir = new File(checkpointDir);
@@ -117,10 +122,6 @@ public class Llama {
         if (tokenizer.size() != modelArgs.vocabSize()) {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
-
-        var meta = new TypeMeta();
-        meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-        torch.set_default_dtype(meta);
 
         var model = new Transformer(modelArgs, device);
         Collections.sort(checkpoints);
