@@ -195,36 +195,40 @@ public class Llama {
             }
 
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
-                var logits = scope.add(model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos));
-                Tensor nextToken;
-                if (temperature > 0) {
-                    var probs = scope.add(logits.get(Index.Colon, Index.of(-1)).div_(temperature).softmax(-1));
-                    nextToken = probs.topp(topp);
-                } else {
-                    nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                try (var loopScope = new AutoScope()) {
+                    var logits = loopScope.add(model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos));
+                    Tensor nextToken;
+                    if (temperature > 0) {
+                        var probs = loopScope.add(logits.get(Index.Colon, Index.of(-1)).div_(temperature).softmax(-1));
+                        nextToken = probs.topp(topp);
+                    } else {
+                        nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                    }
+
+                    nextToken = loopScope.add(nextToken.reshape(-1));
+                    // only replace token if prompt has already been generated
+                    nextToken = loopScope.add(Tensor.where(
+                            inputTextMask.get(Index.Colon, Index.of(curPos)),
+                            tokens.get(Index.Colon, Index.of(curPos)),
+                            nextToken));
+                    tokens.put_(nextToken, Index.Colon, Index.of(curPos));
+
+                    if (logprobs) {
+                        var entropy = loopScope.add(Tensor.crossEntropy(
+                                logits.transpose(1, 2),
+                                tokens.get(Index.Colon, Index.slice(prevPos + 1, curPos + 1)),
+                                "none", pad).neg_());
+                        tokenLogprobs.put_(entropy, Index.Colon, Index.slice(prevPos + 1, curPos + 1));
+                    }
+
+                    var text = loopScope.add(inputTextMask.get(Index.Colon, Index.of(curPos)).not());
+                    var stop = loopScope.add(nextToken.isin(stopTokens));
+                    eosReached.or_(text.and_(stop));
+                    prevPos = curPos;
                 }
-
-                nextToken = scope.add(nextToken.reshape(-1));
-                // only replace token if prompt has already been generated
-                nextToken = scope.add(Tensor.where(
-                        inputTextMask.get(Index.Colon, Index.of(curPos)),
-                        tokens.get(Index.Colon, Index.of(curPos)),
-                        nextToken));
-                tokens.put_(nextToken, Index.Colon, Index.of(curPos));
-
-                if (logprobs) {
-                    var entropy = scope.add(Tensor.crossEntropy(
-                            logits.transpose(1, 2),
-                            tokens.get(Index.Colon, Index.slice(prevPos+1, curPos+1)),
-                            "none", pad).neg_());
-                    tokenLogprobs.put_(entropy, Index.Colon, Index.slice(prevPos+1, curPos+1));
-                }
-
-                eosReached.or_(inputTextMask.get(Index.Colon, Index.of(curPos)).not().and(nextToken.isin(stopTokens)));
-                prevPos = curPos;
                 // Free up memory and device cache
-                logits.close();
-                //System.gc(); // G1 takes significant time. ZGC is preferred.
+                // G1 takes significant time. ZGC is preferred.
+                //System.gc();
                 model.device.emptyCache();
                 if (eosReached.all()) break;
             }
