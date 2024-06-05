@@ -81,6 +81,7 @@ public class Llama {
 
         // cuInit must be called first. Otherwise, set_device and manual_seed
         // would hang.
+        var startTime = System.currentTimeMillis();
         cudart.cuInit(0);
         torch_cuda.set_device(rank);
         // seed must be the same in all processes
@@ -89,8 +90,10 @@ public class Llama {
         Device device = Device.CUDA(rank);
         var options = new Tensor.Options().device(device);
         Tensor.setDefaultOptions(options);
+        var time = System.currentTimeMillis() - startTime;
+        logger.info("Initialized CUDA[{}]: loaded in {}.{} seconds", rank, time/1000, time%1000);
 
-        var startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         File dir = new File(checkpointDir);
         List<String> checkpoints = new ArrayList<>();
         for (var file : dir.listFiles()) {
@@ -124,7 +127,7 @@ public class Llama {
         var checkpoint = checkpoints.get(rank);
         model.load(checkpoint);
 
-        var time = System.currentTimeMillis() - startTime;
+        time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
         return new Llama(model, tokenizer);
     }
