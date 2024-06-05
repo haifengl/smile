@@ -100,8 +100,8 @@ public class Attention {
             xv = xv.view(batchSize, seqlen, numLocalKvHeads, headDim);
 
             var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
-            xq = tuple._1();
-            xk = tuple._2();
+            xq = scope.add(tuple._1());
+            xk = scope.add(tuple._2());
 
             cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
             cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
@@ -122,7 +122,7 @@ public class Attention {
             }
             scores = scope.add(scores.to(ScalarType.Float32).softmax(-1).to(xq.dtype()));
             var output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
-            output = output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1);
+            output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
             return wo.forward(output);
         }
     }

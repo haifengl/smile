@@ -170,7 +170,7 @@ public class Llama {
             Tensor tokenLogprobs = null;
             if (logprobs) {
                 var options = new Tensor.Options().device(model.device).dtype(ScalarType.Float32);
-                tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
+                tokenLogprobs = scope.add(Tensor.zeros(options, batchSize, totalLen));
             }
 
             Tensor eosReached = scope.add(Tensor.of(new boolean[batchSize]));
@@ -218,6 +218,10 @@ public class Llama {
 
                 eosReached.or_(inputTextMask.get(Index.Colon, Index.of(curPos)).not().and(nextToken.isin(stopTokens)));
                 prevPos = curPos;
+                // Free up memory and device cache
+                logits.close();
+                //System.gc(); // G1 takes significant time. ZGC is preferred.
+                model.device.emptyCache();
                 if (eosReached.all()) break;
             }
 
