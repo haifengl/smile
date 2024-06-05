@@ -45,9 +45,7 @@ public class AutoScope implements AutoCloseable {
      * @return the resource object.
      */
     public <T extends AutoCloseable> T add(T resource) {
-        if (!this.resources.contains(resource)) {
-            this.resources.add(resource);
-        }
+        this.resources.add(resource);
         return resource;
     }
 
