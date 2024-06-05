@@ -22,6 +22,7 @@ import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
+import smile.util.AutoScope;
 import smile.util.Tuple2;
 
 /**
@@ -1071,19 +1072,21 @@ public class Tensor implements AutoCloseable {
      * @return Sampled token indices.
      */
     public Tensor topp(double p) {
-        var sort = torch.sort(value, -1, true);
-        var probsSort = sort.get0();
-        var probsIdx = sort.get1();
-        var probsSum = torch.cumsum(probsSort, -1);
-        var mask = probsSum.sub_(probsSort).gt(new Scalar(p));
-        TensorIndexVector indexVector = new TensorIndexVector();
-        indexVector.push_back(new TensorIndex(mask));
+        try (var scope = new AutoScope()) {
+            var sort = torch.sort(value, -1, true);
+            var probsSort = scope.add(sort.get0());
+            var probsIdx = scope.add(sort.get1());
+            var probsSum = scope.add(torch.cumsum(probsSort, -1));
+            var mask = scope.add(probsSum.sub_(probsSort).gt(new Scalar(p)));
+            TensorIndexVector indexVector = new TensorIndexVector();
+            indexVector.push_back(new TensorIndex(mask));
 
-        probsSort.index_put_(indexVector, new Scalar(0.0f));
-        probsSort.div_(probsSort.sum(new long[] {-1}, true, new ScalarTypeOptional()));
-        var sample = torch.multinomial(probsSort, 1);
-        sample = torch.gather(probsIdx, -1, sample);
-        return new Tensor(sample);
+            probsSort.index_put_(indexVector, new Scalar(0.0f));
+            probsSort.div_(probsSort.sum(new long[]{-1}, true, new ScalarTypeOptional()));
+            var sample = scope.add(torch.multinomial(probsSort, 1));
+            sample = torch.gather(probsIdx, -1, sample);
+            return new Tensor(sample);
+        }
     }
 
     /**
