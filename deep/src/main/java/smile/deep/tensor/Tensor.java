@@ -240,6 +240,18 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns the flatten length of tensor.
+     * @return the flatten length of tensor.
+     */
+    public long length() {
+        long length = 1;
+        for (var size : value.shape()) {
+            length *= size;
+        }
+        return length;
+    }
+
+    /**
      * Returns a new tensor with the negative of the elements of input.
      * @return the output tensor.
      */
@@ -836,7 +848,10 @@ public class Tensor implements AutoCloseable {
      * @return the byte array of tensor elements.
      */
     public byte[] byteArray() {
-        return value.data_ptr_byte().asBuffer().array();
+        var array = new byte[(int) length()];
+        var data = value.data_ptr_byte();
+        data.get(array);
+        return array;
     }
 
     /**
@@ -844,7 +859,10 @@ public class Tensor implements AutoCloseable {
      * @return the short integer array of tensor elements.
      */
     public short[] shortArray() {
-        return value.data_ptr_short().asBuffer().array();
+        var array = new short[(int) length()];
+        var data = value.data_ptr_short();
+        data.get(array);
+        return array;
     }
 
     /**
@@ -852,7 +870,10 @@ public class Tensor implements AutoCloseable {
      * @return the integer array of tensor elements.
      */
     public int[] intArray() {
-        return value.data_ptr_int().asBuffer().array();
+        var array = new int[(int) length()];
+        var data = value.data_ptr_int();
+        data.get(array);
+        return array;
     }
 
     /**
@@ -860,7 +881,10 @@ public class Tensor implements AutoCloseable {
      * @return the long integer array of tensor elements.
      */
     public long[] longArray() {
-        return value.data_ptr_long().asBuffer().array();
+        var array = new long[(int) length()];
+        var data = value.data_ptr_long();
+        data.get(array);
+        return array;
     }
 
     /**
@@ -868,7 +892,10 @@ public class Tensor implements AutoCloseable {
      * @return the float array of tensor elements.
      */
     public float[] floatArray() {
-        return value.data_ptr_float().asBuffer().array();
+        var array = new float[(int) length()];
+        var data = value.data_ptr_float();
+        data.get(array);
+        return array;
     }
 
     /**
@@ -876,7 +903,10 @@ public class Tensor implements AutoCloseable {
      * @return the double array of tensor elements.
      */
     public double[] doubleArray() {
-        return value.data_ptr_double().asBuffer().array();
+        var array = new double[(int) length()];
+        var data = value.data_ptr_double();
+        data.get(array);
+        return array;
     }
 
     /**
