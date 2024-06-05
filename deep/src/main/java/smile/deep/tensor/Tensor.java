@@ -17,6 +17,7 @@
 package smile.deep.tensor;
 
 import java.util.Arrays;
+import java.util.Stack;
 import org.bytedeco.cuda.cudart.cudaDeviceProp;
 import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.*;
@@ -32,6 +33,8 @@ import smile.util.Tuple2;
  */
 public class Tensor implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tensor.class);
+    /** A scope controls the lifecycle of tensors, providing timely deallocation. */
+    private static final Stack<AutoScope> scopes = new Stack<>();
     /** Default options such as device and dtype. */
     private static Options defaultOptions;
     /** PyTorch Tensor handle. */
@@ -78,11 +81,35 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Pushes a scope onto the top of the tensor scope stack.
+     * Newly created tensors will be automatically added to this scope.
+     *
+     * @param scope a scope to automatically release tensors.
+     */
+    public static void push(AutoScope scope) {
+        scopes.push(scope);
+    }
+
+    /**
+     * Removes the scope at the top of the tensor stack. All tensors
+     * added to this scope will be released.
+     * @return the top level scope.
+     */
+    public static AutoScope pop() {
+        var scope = scopes.pop();
+        scope.close();
+        return scope;
+    }
+
+    /**
      * Constructor.
      * @param tensor PyTorch Tensor object.
      */
     public Tensor(org.bytedeco.pytorch.Tensor tensor) {
         this.value = tensor;
+        if (!scopes.isEmpty()) {
+            scopes.peek().add(this);
+        }
     }
 
     /** Prints the tensor on the standard output. */
