@@ -200,9 +200,9 @@ public class Llama {
                     Tensor nextToken;
                     if (temperature > 0) {
                         var probs = loopScope.add(logits.get(Index.Colon, Index.of(-1)).div_(temperature).softmax(-1));
-                        nextToken = probs.topp(topp);
+                        nextToken = loopScope.add(probs.topp(topp));
                     } else {
-                        nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                        nextToken = loopScope.add(logits.get(Index.Colon, Index.of(-1)).argmax(-1, false));
                     }
 
                     nextToken = loopScope.add(nextToken.reshape(-1));
