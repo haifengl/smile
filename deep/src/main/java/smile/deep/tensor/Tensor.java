@@ -81,6 +81,24 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Disables gradient calculation. Disabling gradient calculation is useful
+     * for inference, when you are sure that you will not call backward.
+     * It will reduce memory consumption for computations that would otherwise
+     * have requireGrad(true).
+     * <p>
+     * In this mode, the result of every computation will have requireGrad(false),
+     * even when the inputs have requireGrad(true).
+     * <p>
+     * This context manager is thread-local; it will not affect computation in
+     * other threads.
+     *
+     * @return no grad guard to be used with try-with scope.
+     */
+    public static NoGradGuard noGradGuard() {
+        return new NoGradGuard();
+    }
+
+    /**
      * Pushes a scope onto the top of the tensor scope stack.
      * Newly created tensors will be automatically added to this scope.
      *
@@ -151,7 +169,7 @@ public class Tensor implements AutoCloseable {
      *                operations on this tensor.
      * @return this tensor.
      */
-    public Tensor requireGrad(boolean required) {
+    public Tensor setRequireGrad(boolean required) {
         value.set_requires_grad(required);
         return this;
     }
@@ -160,26 +178,8 @@ public class Tensor implements AutoCloseable {
      * Returns true if autograd should record operations on this tensor.
      * @return true if autograd should record operations on this tensor.
      */
-    public boolean requireGrad() {
+    public boolean getRequireGrad() {
         return value.requires_grad();
-    }
-
-    /**
-     * Disables gradient calculation. Disabling gradient calculation is useful
-     * for inference, when you are sure that you will not call backward.
-     * It will reduce memory consumption for computations that would otherwise
-     * have requireGrad(true).
-     * <p>
-     * In this mode, the result of every computation will have requireGrad(false),
-     * even when the inputs have requireGrad(true).
-     * <p>
-     * This context manager is thread-local; it will not affect computation in
-     * other threads.
-     *
-     * @return no grad guard to be used with try-with scope.
-     */
-    public static NoGradGuard noGradGuard() {
-        return new NoGradGuard();
     }
 
     /**

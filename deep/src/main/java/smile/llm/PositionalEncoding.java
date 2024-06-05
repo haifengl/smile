@@ -60,7 +60,7 @@ public class PositionalEncoding implements Layer {
             pe = Tensor.zeros(end, dim);
             pe.put_(position.sin(), Colon, slice(0, null, 2));
             pe.put_(position.cos(), Colon, slice(1, null, 2));
-            pe.requireGrad(false);
+            pe.setRequireGrad(false);
             module.register_buffer("pe", pe.asTorch());
         }
     }
