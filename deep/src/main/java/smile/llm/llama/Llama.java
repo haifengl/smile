@@ -161,7 +161,8 @@ public class Llama {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
 
-        try (var scope = new AutoScope()) {
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
             Tensor.push(scope);
             int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
 
