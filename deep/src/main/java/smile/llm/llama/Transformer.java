@@ -108,6 +108,7 @@ public class Transformer extends LayerBlock {
         int seqlen = (int) shape[1];
         Tensor h = tokEmbeddings.forward(tokens);
         Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen));
+
         Tensor mask = null;
         if (seqlen > 1) {
             mask = Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen);
@@ -120,12 +121,13 @@ public class Transformer extends LayerBlock {
             mask = Tensor.hstack(zeros, mask);
             mask = mask.to(h.dtype());
         }
+
         for (var layer : layers) {
             h = layer.forward(h, startPos, freqs, mask);
         }
+
         h = norm.forward(h);
-        var out = output.forward(h);
-        return out.to(ScalarType.Float32);
+        return output.forward(h).to(ScalarType.Float32);
     }
 
     @Override
