@@ -72,10 +72,15 @@ public class SequentialBlock extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
+        // We should not add input to scope as
+        // it may be used in skip connections in ResNet.
+        // That is, input + f(input).
         try (var scope = new AutoScope()) {
             Tensor output = input;
             for (var layer : layers) {
-                output = scope.add(layer.forward(output));
+                output = layer.forward(input);
+                if (output != input) scope.add(output);
+                input = output;
             }
             scope.remove(output);
             return output;
