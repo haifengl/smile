@@ -253,12 +253,12 @@ public class Model implements Function<Tensor, Tensor> {
         }
     }
 
-    /** Free up memory and device cache. */
+    /**
+     * Free up tensors that was not managed by AutoScope.
+     * For example, SequentialBlock doesn't release input
+     * in case that it is used again in ResNet. */
     private void free() {
         System.gc();
-        if (device != null) {
-            device.emptyCache();
-        }
     }
 
     /**
