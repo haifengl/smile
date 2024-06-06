@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
@@ -79,6 +80,7 @@ public class Llama {
         byte rank = Byte.valueOf(localRank);
 
         var startTime = System.currentTimeMillis();
+        cudart.cuInit(0);
         torch_cuda.set_device(rank);
 
         // half precision to lower memory usage.
@@ -267,6 +269,7 @@ public class Llama {
                 predictions[i] = new CompletionPrediction(tokenizer.decode(toks), toks, probs);
             }
             Tensor.pop();
+            System.gc();
             return predictions;
         }
     }

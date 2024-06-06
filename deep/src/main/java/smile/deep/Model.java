@@ -226,8 +226,8 @@ public class Model implements Function<Tensor, Tensor> {
                         msg += String.format(" | LR: %.5f", rate);
                     }
                     logger.info(msg);
-                    free();
                     lossValue = 0.0;
+                    free();
                 }
             }
 
