@@ -268,8 +268,8 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
-     * Returns the flatten length of tensor.
-     * @return the flatten length of tensor.
+     * Returns the number of tensor elements.
+     * @return the number of tensor elements.
      */
     public long length() {
         long length = 1;
@@ -1109,7 +1109,8 @@ public class Tensor implements AutoCloseable {
             indexVector.push_back(new TensorIndex(mask));
 
             probsSort.index_put_(indexVector, new Scalar(0.0f));
-            probsSort.div_(probsSort.sum(new long[]{-1}, true, new ScalarTypeOptional()));
+            var sum = scope.add(probsSort.sum(new long[]{-1}, true, new ScalarTypeOptional()));
+            probsSort.div_(sum);
             var sample = scope.add(torch.multinomial(probsSort, 1));
             sample = torch.gather(probsIdx, -1, sample);
             return new Tensor(sample);
@@ -1828,7 +1829,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the sine of the elements of input.
      */
     public Tensor sin() {
-        return new Tensor(value.cos());
+        return new Tensor(value.sin());
     }
 
     /**
@@ -1836,7 +1837,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor sin_() {
-        value.cos_();
+        value.sin_();
         return this;
     }
 
@@ -1862,7 +1863,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the arcsine of the elements of input.
      */
     public Tensor asin() {
-        return new Tensor(value.acos());
+        return new Tensor(value.asin());
     }
 
     /**
@@ -1870,7 +1871,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor asin_() {
-        value.acos_();
+        value.asin_();
         return this;
     }
 
