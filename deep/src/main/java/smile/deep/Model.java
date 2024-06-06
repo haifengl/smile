@@ -192,7 +192,9 @@ public class Model implements Function<Tensor, Tensor> {
                 Tensor target = device == null ? batch.target() : batch.target().to(device);
 
                 if (transform != null) {
-                    data = transform.apply(data);
+                    var input = data;
+                    data = transform.apply(input);
+                    input.close();
                 }
 
                 // Reset gradients.
@@ -272,7 +274,9 @@ public class Model implements Function<Tensor, Tensor> {
             Tensor target = device == null ? batch.target() : batch.target().to(device);
 
             if (transform != null) {
-                data = transform.apply(data);
+                var input = data;
+                data = transform.apply(input);
+                input.close();
             }
 
             Tensor output = net.forward(data);
