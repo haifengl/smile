@@ -27,10 +27,14 @@ import org.bytedeco.pytorch.global.torch_cuda;
  */
 public class Device {
     static {
-        // Initializes the driver API and must be called before any other
-        // function from the driver API in the current process.
-        // Currently, the Flags parameter must be 0.
-        cudart.cuInit(0);
+        try {
+            // Initializes the driver API and must be called before any other
+            // function from the driver API in the current process.
+            // Currently, the Flags parameter must be 0.
+            cudart.cuInit(0);
+        } catch (Throwable ex) {
+            // cudart may not be available, e.g. on macOS
+        }
     }
 
     /** Device type. */
