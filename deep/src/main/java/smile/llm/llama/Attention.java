@@ -90,41 +90,39 @@ public class Attention {
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];
 
-        try (var scope = new AutoScope()) {
-            Tensor xq = scope.add(wq.forward(x));
-            Tensor xk = scope.add(wk.forward(x));
-            Tensor xv = scope.add(wv.forward(x));
+        Tensor xq = wq.forward(x);
+        Tensor xk = wk.forward(x);
+        Tensor xv = wv.forward(x);
 
-            xq = scope.add(xq.view(batchSize, seqlen, numLocalHeads, headDim));
-            xk = scope.add(xk.view(batchSize, seqlen, numLocalKvHeads, headDim));
-            xv = scope.add(xv.view(batchSize, seqlen, numLocalKvHeads, headDim));
+        xq = xq.view(batchSize, seqlen, numLocalHeads, headDim);
+        xk = xk.view(batchSize, seqlen, numLocalKvHeads, headDim);
+        xv = xv.view(batchSize, seqlen, numLocalKvHeads, headDim);
 
-            var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
-            xq = scope.add(tuple._1());
-            xk = scope.add(tuple._2());
+        var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
+        xq = tuple._1();
+        xk = tuple._2();
 
-            cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
-            cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
+        cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
+        cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
 
-            var keys = scope.add(cacheK.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen)));
-            var values = scope.add(cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen)));
+        var keys = cacheK.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
+        var values = cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
 
-            // repeat k/v heads if n_kv_heads < n_heads
-            keys = scope.add(repeatKV(keys, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
-            values = scope.add(repeatKV(values, numRep));  // (bs, cache_len + seqlen, n_local_heads, head_dim)
+        // repeat k/v heads if n_kv_heads < n_heads
+        keys = repeatKV(keys, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
+        values = repeatKV(values, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
 
-            xq = scope.add(xq.transpose(1, 2));  // (bs, n_local_heads, seqlen, head_dim)
-            keys = scope.add(keys.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            values = scope.add(values.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            var scores = scope.add(xq.matmul(keys.transpose(2, 3)).div_(Math.sqrt(headDim)));
-            if (mask != null) {
-                scores = scores.add_(mask);  // (bs, n_local_heads, seqlen, cache_len + seqlen)
-            }
-            scores = scope.add(scores.to(ScalarType.Float32).softmax(-1).to(xq.dtype()));
-            var output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
-            output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
-            return wo.forward(output);
+        xq = xq.transpose(1, 2);  // (bs, n_local_heads, seqlen, head_dim)
+        keys = keys.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+        values = values.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+        var scores = xq.matmul(keys.transpose(2, 3)).div_(Math.sqrt(headDim));
+        if (mask != null) {
+            scores = scores.add_(mask);  // (bs, n_local_heads, seqlen, cache_len + seqlen)
         }
+        scores = scores.to(ScalarType.Float32).softmax(-1).to(xq.dtype());
+        var output = scores.matmul(values);  // (bs, n_local_heads, seqlen, head_dim)
+        output = output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1);
+        return wo.forward(output);
     }
 
     /**
