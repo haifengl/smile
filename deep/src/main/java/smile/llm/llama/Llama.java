@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
@@ -79,9 +78,7 @@ public class Llama {
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         byte rank = Byte.valueOf(localRank);
 
-        // cuInit must be called first. Otherwise, set_device and manual_seed would hang.
         var startTime = System.currentTimeMillis();
-        cudart.cuInit(0);
         torch_cuda.set_device(rank);
 
         // half precision to lower memory usage.

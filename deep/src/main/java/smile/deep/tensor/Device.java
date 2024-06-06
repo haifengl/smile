@@ -16,6 +16,7 @@
  */
 package smile.deep.tensor;
 
+import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.global.torch;
 import org.bytedeco.pytorch.global.torch_cuda;
 
@@ -25,6 +26,15 @@ import org.bytedeco.pytorch.global.torch_cuda;
  * @author Haifeng Li
  */
 public class Device {
+    {
+        if (torch.cuda_is_available()) {
+            // Initializes the driver API and must be called before any other
+            // function from the driver API in the current process.
+            // Currently, the Flags parameter must be 0.
+            cudart.cuInit(0);
+        }
+    }
+
     /** Device type. */
     final DeviceType type;
     /** PyTorch device. */
