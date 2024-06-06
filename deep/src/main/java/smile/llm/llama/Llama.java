@@ -167,32 +167,32 @@ public class Llama {
             int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
 
             int pad = tokenizer.pad();
-            Tensor tokens = scope.add(Tensor.full(pad, batchSize, totalLen));
+            Tensor tokens = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
-                var prompt = scope.add(Tensor.of(prompts[i]));
+                var prompt = Tensor.of(prompts[i]);
                 tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
             }
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
                 var options = new Tensor.Options().device(model.device).dtype(ScalarType.Float32);
-                tokenLogprobs = scope.add(Tensor.zeros(options, batchSize, totalLen));
+                tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
             }
 
-            Tensor eosReached = scope.add(Tensor.of(new boolean[batchSize]));
-            Tensor inputTextMask = scope.add(tokens.ne(pad));
-            Tensor stopTokens = scope.add(Tensor.of(tokenizer.stopTokens()));
+            Tensor eosReached = Tensor.of(new boolean[batchSize]);
+            Tensor inputTextMask = tokens.ne(pad);
+            Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
 
-            tokens = scope.add(tokens.to(model.device));
-            eosReached = scope.add(eosReached.to(model.device));
-            inputTextMask = scope.add(inputTextMask.to(model.device));
-            stopTokens = scope.add(stopTokens.to(model.device));
+            tokens = tokens.to(model.device);
+            eosReached = eosReached.to(model.device);
+            inputTextMask = inputTextMask.to(model.device);
+            stopTokens = stopTokens.to(model.device);
 
             int prevPos = 0;
             if (minPromptLen == totalLen) {
-                var logits = scope.add(model.forward(tokens, prevPos));
+                var logits = model.forward(tokens, prevPos);
                 if (logprobs) {
-                    tokenLogprobs = scope.add(Tensor.crossEntropy(logits.transpose(1, 2), tokens, "none", pad).neg_());
+                    tokenLogprobs = Tensor.crossEntropy(logits.transpose(1, 2), tokens, "none", pad).neg_();
                 }
             }
 
@@ -235,10 +235,10 @@ public class Llama {
                 if (eosReached.all()) break;
             }
 
-            var tokenArray = scope.add(tokens.to(Device.CPU())).longArray();
+            var tokenArray = tokens.to(Device.CPU()).longArray();
             float[] logprobArray = null;
             if (logprobs) {
-                logprobArray = scope.add(tokenLogprobs.to(Device.CPU())).floatArray();
+                logprobArray = tokenLogprobs.to(Device.CPU()).floatArray();
             }
             CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
             for (int i = 0; i < batchSize; i++) {
