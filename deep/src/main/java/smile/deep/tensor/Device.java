@@ -26,13 +26,11 @@ import org.bytedeco.pytorch.global.torch_cuda;
  * @author Haifeng Li
  */
 public class Device {
-    {
-        if (torch.cuda_is_available()) {
-            // Initializes the driver API and must be called before any other
-            // function from the driver API in the current process.
-            // Currently, the Flags parameter must be 0.
-            cudart.cuInit(0);
-        }
+    static {
+        // Initializes the driver API and must be called before any other
+        // function from the driver API in the current process.
+        // Currently, the Flags parameter must be 0.
+        cudart.cuInit(0);
     }
 
     /** Device type. */
