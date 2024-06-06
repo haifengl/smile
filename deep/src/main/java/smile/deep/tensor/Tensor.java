@@ -1104,11 +1104,13 @@ public class Tensor implements AutoCloseable {
             var probsSort = scope.add(sort.get0());
             var probsIdx = scope.add(sort.get1());
             var probsSum = scope.add(torch.cumsum(probsSort, -1));
-            var mask = scope.add(probsSum.sub_(probsSort).gt(new Scalar(p)));
+
+            var mask = scope.add(probsSum.sub_(probsSort));
+            mask = scope.add(mask.gt(new Scalar(p)));
             TensorIndexVector indexVector = new TensorIndexVector();
             indexVector.push_back(new TensorIndex(mask));
-
             probsSort.index_put_(indexVector, new Scalar(0.0f));
+
             var sum = scope.add(probsSort.sum(new long[]{-1}, true, new ScalarTypeOptional()));
             probsSort.div_(sum);
             var sample = scope.add(torch.multinomial(probsSort, 1));

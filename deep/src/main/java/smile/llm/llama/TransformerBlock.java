@@ -84,12 +84,11 @@ public class TransformerBlock {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
-        try (var scope = new AutoScope(x)) {
-            Tensor anorm = scope.add(attentionNorm.forward(x));
-            Tensor ax = scope.add(attention.forward(anorm, startPos, cis, mask));
-            Tensor h = scope.add(x.add(ax));
-            Tensor fnorm = scope.add(ffnNorm.forward(h));
-            Tensor fx = scope.add(feedForward.forward(fnorm));
+        try (Tensor anorm = attentionNorm.forward(x);
+             Tensor ax = attention.forward(anorm, startPos, cis, mask);
+             Tensor h = x.add(ax);
+             Tensor fnorm = ffnNorm.forward(h);
+             Tensor fx = feedForward.forward(fnorm)) {
             return h.add(fx);
         }
     }
