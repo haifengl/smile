@@ -106,28 +106,26 @@ public class Transformer extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        try (var scope = new AutoScope()) {
-            Tensor h = scope.add(tokEmbeddings.forward(tokens));
-            Tensor freqs = scope.add(cis.get(Index.slice(startPos, startPos+seqlen)));
-            Tensor mask = null;
-            if (seqlen > 1) {
-                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
-                mask.triu_(1);
-                // When performing key-value caching, we compute the attention scores
-                // only for the new sequence. Thus, the matrix of scores is of size
-                // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
-                // j > cache_len + i, since row i corresponds to token cache_len + i.
-                var zeros = scope.add(Tensor.zeros(seqlen, startPos));
-                mask = scope.add(Tensor.hstack(zeros, mask));
-                mask = scope.add(mask.to(h.dtype()));
-            }
-            for (var layer : layers) {
-                h = scope.add(layer.forward(h, startPos, freqs, mask));
-            }
-            h = scope.add(norm.forward(h));
-            var out = scope.add(output.forward(h));
-            return out.to(ScalarType.Float32);
+        Tensor h = tokEmbeddings.forward(tokens);
+        Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen));
+        Tensor mask = null;
+        if (seqlen > 1) {
+            mask = Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen);
+            mask.triu_(1);
+            // When performing key-value caching, we compute the attention scores
+            // only for the new sequence. Thus, the matrix of scores is of size
+            // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
+            // j > cache_len + i, since row i corresponds to token cache_len + i.
+            var zeros = Tensor.zeros(seqlen, startPos);
+            mask = Tensor.hstack(zeros, mask);
+            mask = mask.to(h.dtype());
         }
+        for (var layer : layers) {
+            h = layer.forward(h, startPos, freqs, mask);
+        }
+        h = norm.forward(h);
+        var out = output.forward(h);
+        return out.to(ScalarType.Float32);
     }
 
     @Override
