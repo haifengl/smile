@@ -92,7 +92,7 @@ public class Llama {
         torch.manual_seed(seed);
 
         Device device = Device.CUDA(rank);
-        var options = new Tensor.Options().device(device);
+        var options = new Tensor.Options().device(device).requireGradients(false);
         Tensor.setDefaultOptions(options);
         var time = System.currentTimeMillis() - startTime;
         logger.info("Initialized CUDA[{}]: {}.{} seconds", rank, time/1000, time%1000);
@@ -175,7 +175,7 @@ public class Llama {
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
-                var options = new Tensor.Options().device(model.device).dtype(ScalarType.Float32);
+                var options = new Tensor.Options().device(model.device).requireGradients(false).dtype(ScalarType.Float32);
                 tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
             }
 
