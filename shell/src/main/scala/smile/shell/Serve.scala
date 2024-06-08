@@ -72,7 +72,7 @@ object Serve extends LazyLogging {
       import builder._
       OParser.sequence(
         programName("smile serve"),
-        head("Smile", "2.x"),
+        head("Smile", BuildInfo.version),
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
