@@ -146,7 +146,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, spark, shell)
+  .aggregate(core, base, nlp, deep, plot, json, scala, spark, shell, serve)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -184,3 +184,8 @@ lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
+
+lazy val serve = project.in(file("serve"))
+  .settings(scalaSettings: _*)
+  .settings(publish / skip := true)
+  .dependsOn(deep)
