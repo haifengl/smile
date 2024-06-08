@@ -18,15 +18,11 @@ package smile.llm;
 
 /**
  * Prompt completion prediction.
- * @param generation the generated text completion.
- * @param tokens the optional list of generated tokens.
+ * @param content the generated text completion.
+ * @param promptTokens the list of prompt tokens.
+ * @param completionTokens the list of generated tokens.
  * @param logprobs the optional list of log probabilities of generated tokens.
  */
-public record CompletionPrediction(String generation, int[] tokens, float[] logprobs) {
-    /**
-     * Constructor without tokens and logprobs.
-     */
-    public CompletionPrediction(String generation) {
-        this(generation, null, null);
-    }
+public record CompletionPrediction(String content, int[] promptTokens, int[] completionTokens, float[] logprobs) {
+
 }

@@ -244,7 +244,7 @@ public class Llama {
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = echo ? 0 : prompts[i].length;
-                var toks = Arrays.stream(tokenArray)
+                var completion = Arrays.stream(tokenArray)
                         .skip(i * totalLen + start)
                         .mapToInt(x -> (int) x)
                         .limit(prompts[i].length + maxGenLen - start)
@@ -257,9 +257,9 @@ public class Llama {
 
                 // cut to after eos tok if any
                 for (var stopToken : tokenizer.stopTokens()) {
-                    for (int eosIdx = 0; eosIdx < toks.length; eosIdx++) {
-                        if (toks[eosIdx] == stopToken) {
-                            toks = Arrays.copyOf(toks, eosIdx);
+                    for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
+                        if (completion[eosIdx] == stopToken) {
+                            completion = Arrays.copyOf(completion, eosIdx);
                             if (logprobs) {
                                 probs = Arrays.copyOf(probs, eosIdx);
                             }
@@ -268,7 +268,7 @@ public class Llama {
                     }
                 }
 
-                predictions[i] = new CompletionPrediction(tokenizer.decode(toks), toks, probs);
+                predictions[i] = new CompletionPrediction(tokenizer.decode(completion), prompts[i], completion, probs);
             }
             Tensor.pop();
             System.gc();
