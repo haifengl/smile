@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
+import smile.llm.Message;
+import smile.llm.Role;
 import smile.llm.tokenizer.Tiktoken;
 import smile.util.Bytes;
 import smile.util.IntArrayList;
