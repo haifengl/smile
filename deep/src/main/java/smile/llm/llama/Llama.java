@@ -160,14 +160,14 @@ public class Llama {
             minPromptLen = Math.min(minPromptLen, prompt.length);
             maxPromptLen = Math.max(maxPromptLen, prompt.length);
         }
-        if (maxPromptLen > model.params.maxSeqLength()) {
+        if (maxPromptLen > model.params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
 
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
-            int totalLen = Math.min(model.params.maxSeqLength(), maxGenLen + maxPromptLen);
+            int totalLen = Math.min(model.params.maxSeqLen(), maxGenLen + maxPromptLen);
 
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);

@@ -67,8 +67,8 @@ public class Attention {
         this.wv = new LinearLayer(args.dim(), numKvHeads * headDim, false);
         this.wo = new LinearLayer(args.numHeads() * headDim, args.dim(), false);
 
-        this.cacheK = Tensor.zeros(args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim);
-        this.cacheV = Tensor.zeros(args.maxBatchSize(), args.maxSeqLength(), numLocalKvHeads, headDim);
+        this.cacheK = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
+        this.cacheV = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
 
         this.module = new Module();
         this.module.register_module("wq", wq.asTorch());

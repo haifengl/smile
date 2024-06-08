@@ -33,7 +33,7 @@ import java.io.IOException;
  * @param normEps the epsilon value used for numerical stability in normalization layers.
  * @param ropeTheta the theta parameter in rotary positional encoding.
  * @param maxBatchSize the maximum batch size.
- * @param maxSeqLength the maximum sequence length for input data.
+ * @param maxSeqLen the maximum sequence length for input data.
  *
  * @author Haifeng Li
  */
@@ -47,7 +47,7 @@ public record ModelArgs(int dim,
                         double normEps,
                         double ropeTheta,
                         int maxBatchSize,
-                        int maxSeqLength) {
+                        int maxSeqLen) {
 
     /**
      * Constructor with default parameter values.
@@ -60,10 +60,10 @@ public record ModelArgs(int dim,
      * Loads the model hyperparameters from a JSON file.
      * @param path the file path.
      * @param maxBatchSize the maximum batch size.
-     * @param maxSeqLength the maximum sequence length for input data.
+     * @param maxSeqLen the maximum sequence length for input data.
      * @return the model hyperparameters.
      */
-    public static ModelArgs from(String path, int maxBatchSize, int maxSeqLength) throws IOException {
+    public static ModelArgs from(String path, int maxBatchSize, int maxSeqLen) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         var node = mapper.readTree(new File(path));
         return new ModelArgs(
@@ -77,7 +77,7 @@ public record ModelArgs(int dim,
                 node.get("norm_eps").asDouble(),
                 node.get("rope_theta").asDouble(),
                 maxBatchSize,
-                maxSeqLength
+                maxSeqLen
         );
     }
 }
