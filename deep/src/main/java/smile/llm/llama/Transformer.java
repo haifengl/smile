@@ -88,7 +88,7 @@ public class Transformer extends LayerBlock {
         // dynamism of token lengths while training or fine-tuning.
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
-                params.maxSeqLength() * 2,
+                params.maxSeqLen() * 2,
                 params.ropeTheta()).to(device);
 
         module.register_module("layers", moduleList);
