@@ -298,7 +298,7 @@ public class Llama {
                     }
                 }
 
-                predictions[i] = new CompletionPrediction(tokenizer.decode(completion), prompts[i], completion, probs);
+                predictions[i] = new CompletionPrediction(name, tokenizer.decode(completion), prompts[i], completion, probs);
             }
             Tensor.pop();
             System.gc();

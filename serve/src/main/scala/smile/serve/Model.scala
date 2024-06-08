@@ -48,7 +48,7 @@ final case class CompletionResponse(id: String,
 
 object CompletionResponse {
   def apply(completion: CompletionPrediction): CompletionResponse = {
-    new CompletionResponse(UUID.randomUUID.toString, "llama3",
+    new CompletionResponse(UUID.randomUUID.toString, completion.model,
       Usage(completion.promptTokens.length, completion.completionTokens.length), 
       Array(new Message(Role.assistant, completion.content)))
   }
