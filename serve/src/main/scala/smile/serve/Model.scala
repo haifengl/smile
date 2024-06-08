@@ -36,7 +36,7 @@ final case class CompletionRequest(model: String,
                                    max_tokens: Int = 2048,
                                    temperature: Double = 0.6,
                                    top_p: Double = 0.9,
-                                   seed: Option[Int] = None,
+                                   seed: Option[Long] = None,
                                    logprobs: Boolean = false)
 
 final case class CompletionResponse(id: String,

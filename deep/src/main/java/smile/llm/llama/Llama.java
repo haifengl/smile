@@ -19,7 +19,6 @@ package smile.llm.llama;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
@@ -99,7 +98,7 @@ public class Llama {
      * @param tokenizerPath the path of tokenizer file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
-     * @param seed the optional random number generation seed.
+     * @param seed the optional random number generation seed to sample deterministically.
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Long seed) throws IOException {
@@ -173,10 +172,10 @@ public class Llama {
      * @param temperature Temperature value for controlling randomness in sampling.
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
-     * @param echo Flag indicating whether to include prompt tokens in the generated output.
+     * @param seed the optional random number generation seed to sample deterministically.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, boolean echo) {
+    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
         int batchSize = prompts.length;
         if (batchSize > model.params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
@@ -190,6 +189,11 @@ public class Llama {
         }
         if (maxPromptLen > model.params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
+        }
+
+        // seed must be the same in all processes
+        if (seed != null) {
+            torch.manual_seed(seed);
         }
 
         try (var guard = Tensor.noGradGuard();
@@ -273,7 +277,7 @@ public class Llama {
             CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
-                int start = echo ? 0 : prompts[i].length;
+                int start = prompts[i].length;
                 var completion = Arrays.stream(tokenArray)
                         .skip(i * totalLen + start)
                         .mapToInt(x -> (int) x)
@@ -313,17 +317,17 @@ public class Llama {
      * @param temperature Temperature value for controlling randomness in sampling.
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
-     * @param echo Flag indicating whether to include prompt tokens in the generated output.
+     * @param seed the optional random number generation seed to sample deterministically.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, boolean echo) {
+    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
         int batchSize = prompts.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encode(prompts[i], true, false);
         }
 
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, echo);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed);
     }
 
     /**
@@ -333,15 +337,16 @@ public class Llama {
      * @param temperature Temperature value for controlling randomness in sampling.
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
+     * @param seed the optional random number generation seed to sample deterministically.
      * @return The generated chat responses.
      */
-    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs) {
+    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
         int batchSize = dialogs.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encodeDialog(dialogs[i]);
         }
 
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, false);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed);
     }
 }
