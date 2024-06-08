@@ -82,10 +82,7 @@ public class Transformer extends LayerBlock {
         this.norm = new RMSNormLayer(params.dim(), params.normEps());
         this.output = new LinearLayer(params.dim(), params.vocabSize(), false);
 
-        // Note that max_seq_len is multiplied by 2 because the token limit
-        // for the Llama 2 generation of models is 4096.
-        // Adding this multiplier instead of using 4096 directly allows for
-        // dynamism of token lengths while training or fine-tuning.
+        // Note that max_seq_len is multiplied by 2.
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
                 params.maxSeqLen() * 2,
