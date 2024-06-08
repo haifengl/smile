@@ -39,6 +39,10 @@ import smile.util.AutoScope;
  */
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
+    /** The model family name. */
+    final String family = "llama3";
+    /** The model instance name. */
+    final String name;
     /** The transformer model. */
     final Transformer model;
     /** The tokenizer. */
@@ -46,11 +50,35 @@ public class Llama {
 
     /**
      * Constructor.
+     * @param name the model name.
      * @param model the transformer model.
+     * @param tokenizer the tokenizer.
      */
-    public Llama(Transformer model, Tokenizer tokenizer) {
+    public Llama(String name, Transformer model, Tokenizer tokenizer) {
+        this.name = name;
         this.model = model;
         this.tokenizer = tokenizer;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%s]", family, name);
+    }
+
+    /**
+     * Returns the model family name.
+     * @return the model family name.
+     */
+    public String getFamily() {
+        return family;
+    }
+
+    /**
+     * Returns the model instance name.
+     * @return the model instance name.
+     */
+    public String getName() {
+        return name;
     }
 
     /**
@@ -133,7 +161,7 @@ public class Llama {
 
         time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
-        return new Llama(model, tokenizer);
+        return new Llama(dir.getName(), model, tokenizer);
     }
 
     /**
