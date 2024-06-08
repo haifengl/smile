@@ -62,7 +62,7 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen) throws IOException {
-        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, 1);
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, null);
     }
 
     /**
@@ -71,10 +71,10 @@ public class Llama {
      * @param tokenizerPath the path of tokenizer file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
-     * @param seed the random number generation seed.
+     * @param seed the optional random number generation seed.
      * @return an instance of Llama model.
      */
-    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, long seed) throws IOException {
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Long seed) throws IOException {
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
@@ -90,7 +90,9 @@ public class Llama {
         torch.set_default_dtype(meta);
 
         // seed must be the same in all processes
-        torch.manual_seed(seed);
+        if (seed != null) {
+            torch.manual_seed(seed);
+        }
 
         Device device = Device.CUDA(rank);
         var options = new Tensor.Options().device(device).requireGradients(false);
