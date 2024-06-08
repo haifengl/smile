@@ -17,6 +17,8 @@
 package smile.llm.llama;
 
 import java.io.IOException;
+import smile.llm.Message;
+import smile.llm.Role;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

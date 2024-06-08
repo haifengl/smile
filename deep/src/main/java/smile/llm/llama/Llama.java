@@ -29,6 +29,7 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.CompletionPrediction;
+import smile.llm.Message;
 import smile.util.AutoScope;
 
 /**
