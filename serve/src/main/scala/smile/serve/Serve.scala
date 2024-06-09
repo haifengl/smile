@@ -85,11 +85,11 @@ object Serve extends LazyLogging with JsonSupport {
         opt[Int]("max-seq-len")
           .optional()
           .action((x, c) => c.copy(maxSeqLen = x))
-          .text("maximum sequence length"),
+          .text("The maximum sequence length"),
         opt[Int]("max-batch-size")
           .optional()
           .action((x, c) => c.copy(maxBatchSize = x))
-          .text("maximum batch size"),
+          .text("The maximum batch size"),
         opt[Int]("port")
           .optional()
           .action((x, c) => c.copy(port = x))
@@ -118,10 +118,14 @@ object Serve extends LazyLogging with JsonSupport {
       path("smile" / "v1" / "chat" / "completions") {
         post {
           entity(as[CompletionRequest]) { request =>
-            val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
-            val completions = generator.chat(Array(request.messages), request.max_tokens,
-              request.temperature, request.top_p, request.logprobs, seed)
-            complete(CompletionResponse(completions(0)))
+            if (request.model == generator.family()) {
+              val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
+              val completions = generator.chat(Array(request.messages), request.max_tokens,
+                request.temperature, request.top_p, request.logprobs, seed)
+              complete(CompletionResponse(completions(0)))
+            } else {
+              complete(StatusCodes.BadRequest, s"Unknown model: ${request.model}")
+            }
           }
         }
       }
