@@ -2708,7 +2708,7 @@ public class MathEx {
 
         double sum = 0.0;
         for (int i = 0; i < a.length; i++) {
-            // covert x and y for better precision
+            // convert x and y for better precision
             double d = (double) a[i] - (double) b[i];
             sum += d * d;
         }
