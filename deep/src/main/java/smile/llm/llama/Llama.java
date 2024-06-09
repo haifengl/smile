@@ -68,7 +68,7 @@ public class Llama {
      * Returns the model family name.
      * @return the model family name.
      */
-    public String getFamily() {
+    public String family() {
         return family;
     }
 
@@ -76,7 +76,7 @@ public class Llama {
      * Returns the model instance name.
      * @return the model instance name.
      */
-    public String getName() {
+    public String name() {
         return name;
     }
 
