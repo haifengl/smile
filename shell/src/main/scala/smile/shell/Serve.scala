@@ -41,11 +41,9 @@ import smile.model.{ClassificationModel, RegressionModel}
   * Serve command options.
   * @param model the model file path.
   * @param probability the flag if output posteriori probabilities for soft classifiers.
-  * @param port HTTP server port number.
   */
-case class ServeConfig(model: String = "",
-                       probability: Boolean = false,
-                       port: Int = -1)
+case class ServeConfig(model: String,
+                       probability: Boolean = false)
 
 /**
   * Online prediction.
@@ -77,10 +75,6 @@ object Serve extends LazyLogging {
           .required()
           .action((x, c) => c.copy(model = x))
           .text("The model file"),
-        opt[Int]("port")
-          .optional()
-          .action((x, c) => c.copy(port = x))
-          .text("HTTP port number"),
         opt[Unit]("probability")
           .optional()
           .action((_, c) => c.copy(probability = true))
@@ -88,7 +82,7 @@ object Serve extends LazyLogging {
       )
     }
 
-    OParser.parse(parser, args, ServeConfig())
+    OParser.parse(parser, args, ServeConfig(""))
     // If arguments be bad, the error message would have been displayed.
   }
 
@@ -154,10 +148,11 @@ object Serve extends LazyLogging {
       }
 
     val conf = ConfigFactory.load()
-    val port = if (config.port >= 0) config.port else conf.getInt("smile.http.server.default-http-port")
-    val bindingFuture = Http().newServerAt("localhost", port).bind(route)
+    val addr = conf.getString("smile.http.server.interface")
+    val port = conf.getInt("smile.http.server.port")
+    val bindingFuture = Http().newServerAt(addr, port).bind(route)
 
-    println(s"Smile online at http://localhost:$port/\nPress RETURN to stop...")
+    println(s"Smile online at http://$addr:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

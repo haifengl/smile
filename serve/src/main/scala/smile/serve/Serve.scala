@@ -34,13 +34,11 @@ import smile.llm.llama._
   * @param tokenizer the tokenizer model file path.
   * @param maxSeqLen the maximum sequence length.
   * @param maxBatchSize the maximum batch size.
-  * @param port HTTP server port number.
   */
 case class ServeConfig(model: String,
                        tokenizer: String,
                        maxSeqLen: Int = 2048,
-                       maxBatchSize: Int = 4,
-                       port: Int = -1)
+                       maxBatchSize: Int = 4)
 
 /**
   * Online prediction.
@@ -83,11 +81,7 @@ object Serve extends LazyLogging with JsonSupport {
         opt[Int]("max-batch-size")
           .optional()
           .action((x, c) => c.copy(maxBatchSize = x))
-          .text("The maximum batch size"),
-        opt[Int]("port")
-          .optional()
-          .action((x, c) => c.copy(port = x))
-          .text("HTTP port number"),
+          .text("The maximum batch size")
       )
     }
 
@@ -126,10 +120,11 @@ object Serve extends LazyLogging with JsonSupport {
       }
 
     val conf = ConfigFactory.load()
-    val port = if (config.port > 0) config.port else conf.getInt("smile.http.server.default-http-port")
-    val bindingFuture = Http().newServerAt("localhost", port).bind(route)
+    val addr = conf.getString("smile.http.server.interface")
+    val port = conf.getInt("smile.http.server.port")
+    val bindingFuture = Http().newServerAt(addr, port).bind(route)
 
-    println(s"Smile serve at http://localhost:$port/\nPress RETURN to stop...")
+    println(s"Smile serve at http://$addr:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
