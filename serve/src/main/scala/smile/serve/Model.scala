@@ -20,7 +20,7 @@ import java.util.UUID
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
-import smile.llm.{CompletionPrediction, Message, Role}
+import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
 
 // domain model
 final case class Usage(promptTokens: Int, completionTokens: Int, totalTokens: Int)
@@ -39,23 +39,52 @@ final case class CompletionRequest(model: String,
                                    logprobs: Option[Boolean],
                                    seed: Option[Long])
 
+final case class CompletionChoice(index: Int,
+                                  message: Message,
+                                  finish_reason: FinishReason,
+                                  logprobs: Option[Array[Float]])
+
 final case class CompletionResponse(id: String,
                                     model: String,
                                     usage: Usage,
-                                    choices: Array[Message],
+                                    choices: Array[CompletionChoice],
                                     `object`: String = "chat.completion",
                                     created: Long = System.currentTimeMillis)
 
 object CompletionResponse {
   def apply(completion: CompletionPrediction): CompletionResponse = {
-    new CompletionResponse(UUID.randomUUID.toString, completion.model,
+    CompletionResponse(UUID.randomUUID.toString, completion.model,
       Usage(completion.promptTokens.length, completion.completionTokens.length), 
-      Array(new Message(Role.assistant, completion.content)))
+      Array(CompletionChoice(0, new Message(Role.assistant, completion.content),
+                             completion.reason, Option(completion.logprobs))))
   }
 }
 
 // collect json format instances into a support trait:
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+  /** Generic JSON format for Scala enum types. */
+  def enumFormat[T <: Enumeration](implicit enu: T): RootJsonFormat[T#Value] =
+    new RootJsonFormat[T#Value] {
+      def write(obj: T#Value): JsValue = JsString(obj.toString)
+      def read(json: JsValue): T#Value = {
+        json match {
+          case JsString(txt) => enu.withName(txt)
+          case somethingElse => throw DeserializationException(s"Expected a value from enum $enu instead of $somethingElse")
+        }
+      }
+    }
+
+  implicit object FinishReasonJsonFormat extends RootJsonFormat[FinishReason] {
+    override def write(reason: FinishReason): JsValue = JsString(reason.toString)
+
+    override def read(json: JsValue): FinishReason = {
+      json match {
+        case JsString(text) => FinishReason.valueOf(text)
+        case _ => throw DeserializationException(s"Expected a value from enum FinishReason instead of $json")
+      }
+    }
+  }
+
   implicit object MessageJsonFormat extends RootJsonFormat[Message] {
     def write(message: Message) = JsObject(
       "role" -> JsString(message.role.toString),
@@ -96,6 +125,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
+  implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
   implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat7(CompletionRequest.apply)
   implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
 }
