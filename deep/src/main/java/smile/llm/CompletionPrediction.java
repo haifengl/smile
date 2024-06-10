@@ -24,6 +24,6 @@ package smile.llm;
  * @param completionTokens the list of generated tokens.
  * @param logprobs the optional list of log probabilities of generated tokens.
  */
-public record CompletionPrediction(String model, String content, int[] promptTokens, int[] completionTokens, float[] logprobs) {
+public record CompletionPrediction(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
 
 }
