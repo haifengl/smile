@@ -33,11 +33,11 @@ object Usage {
 
 final case class CompletionRequest(model: String,
                                    messages: Array[Message],
-                                   max_tokens: Int = 2048,
-                                   temperature: Double = 0.6,
-                                   top_p: Double = 0.9,
-                                   seed: Option[Long] = None,
-                                   logprobs: Boolean = false)
+                                   max_tokens: Option[Int],
+                                   temperature: Option[Double],
+                                   top_p: Option[Double],
+                                   logprobs: Option[Boolean],
+                                   seed: Option[Long])
 
 final case class CompletionResponse(id: String,
                                     model: String,
