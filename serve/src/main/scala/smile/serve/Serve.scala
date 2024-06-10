@@ -33,12 +33,13 @@ import smile.llm.llama._
 
 /**
   * Serve command options.
-  * @param model the model file path.
-  * @param probability the flag if output posteriori probabilities for soft classifiers.
+  * @param model the model checkpoint directory path.
+  * @param tokenizer the tokenizer model file path.
+  * @param maxSeqLen the maximum sequence length.
+  * @param maxBatchSize the maximum batch size.
   * @param port HTTP server port number.
   */
 case class ServeConfig(model: String,
-                       path: String,
                        tokenizer: String,
                        maxSeqLen: Int = 2048,
                        maxBatchSize: Int = 4,
@@ -73,10 +74,6 @@ object Serve extends LazyLogging with JsonSupport {
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
-          .text("The model name"),
-        opt[String]("path")
-          .required()
-          .action((x, c) => c.copy(path = x))
           .text("The model checkpoint directory path"),
         opt[String]("tokenizer")
           .required()
@@ -97,7 +94,7 @@ object Serve extends LazyLogging with JsonSupport {
       )
     }
 
-    OParser.parse(parser, args, ServeConfig("llama3", "Llama3-8B-Instruct", "Llama3-8B-Instruct/tokenizer.model"))
+    OParser.parse(parser, args, ServeConfig("Llama3-8B-Instruct", "Llama3-8B-Instruct/tokenizer.model"))
     // If arguments be bad, the error message would have been displayed.
   }
 
@@ -106,7 +103,7 @@ object Serve extends LazyLogging with JsonSupport {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val generator = Llama.build(config.path, config.tokenizer, config.maxBatchSize, config.maxSeqLen)
+    val generator = Llama.build(config.model, config.tokenizer, config.maxBatchSize, config.maxSeqLen)
 
     implicit val system = ActorSystem(Behaviors.empty, "smile")
     // needed for the future flatMap/onComplete in the end
@@ -115,7 +112,7 @@ object Serve extends LazyLogging with JsonSupport {
     implicit val jsonStreamingSupport = EntityStreamingSupport.json()
 
     val route =
-      path("smile" / "v1" / "chat" / "completions") {
+      path("v1" / "chat" / "completions") {
         post {
           entity(as[CompletionRequest]) { request =>
             if (request.model == generator.family()) {
