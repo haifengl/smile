@@ -33,10 +33,10 @@ permalink: "{{ page.filePathStem }}.html"
     $ sbt package
     </code></pre>
 
-    <p>To build with Scala 2.12, run</p>
+    <p>To build with Scala 3, run</p>
 
     <pre class="prettyprint lang-sh"><code>
-    $ sbt ++2.12.10 scala/package
+    $ sbt ++3.3.3 scala/package
     </code></pre>
 
     <p>To test the latest code, run the following</p>
@@ -144,7 +144,7 @@ smile&gt;
                 it automatically. Note that the format <code>org:library:version</code> is similar
                 with the library dependency in SBT. For Scala library, it is recommended to use
                 the format <code>org::library:version</code>, which will choose the library in the
-                same Scala major version (e.g. 2.13 vs 2.12).</p>
+                same Scala major version (e.g. 2.13 vs 3).</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; import $ivy.`org.scalaz::scalaz-core:7.2.7`, scalaz._, Scalaz._
