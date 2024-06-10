@@ -99,30 +99,28 @@ public class Llama {
      * @param tokenizerPath the path of tokenizer file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
-     * @param seed the optional random number generation seed to sample deterministically.
+     * @param seed the optional CUDA device ID.
      * @return an instance of Llama model.
      */
-    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Long seed) throws IOException {
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Integer deviceId) throws IOException {
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
-        byte rank = Byte.valueOf(localRank);
+        int rank = Integer.valueOf(localRank);
+        if (deviceId == null) {
+            deviceId = rank;
+        }
 
         var startTime = System.currentTimeMillis();
         cudart.cuInit(0);
-        torch_cuda.set_device(rank);
+        torch_cuda.set_device(deviceId.byteValue());
 
         // half precision to lower memory usage.
         var meta = new TypeMeta();
         meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
         torch.set_default_dtype(meta);
 
-        // seed must be the same in all processes
-        if (seed != null) {
-            torch.manual_seed(seed);
-        }
-
-        Device device = Device.CUDA(rank);
+        Device device = Device.CUDA(deviceId.byteValue());
         var options = new Tensor.Options().device(device).requireGradients(false);
         Tensor.setDefaultOptions(options);
         var time = System.currentTimeMillis() - startTime;
