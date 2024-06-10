@@ -1,5 +1,7 @@
 name := "smile-serve"
 
+packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.serve")
+
 Compile / mainClass := Some("smile.serve.Main")
 
 // native packager
@@ -51,6 +53,18 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
   "com.typesafe.akka" %% "akka-stream" % "2.8.5",
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.3",
-  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "6.0.2"
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.3"
+)
+
+val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
+val gpu = Seq(
+  "org.bytedeco"   % "pytorch" % "2.3.0-1.5.11-SNAPSHOT" classifier s"$os-x86_64-gpu",
+  "org.bytedeco"   % "cuda" % "12.3-8.9-1.5.11-SNAPSHOT" classifier s"$os-x86_64-redist"
+)
+
+libraryDependencies ++= (
+  os match {
+    case "linux" | "windows" => gpu
+    case _ => Seq.empty
+  }
 )
