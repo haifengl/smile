@@ -17,10 +17,9 @@
 package smile.serve
 
 import java.util.UUID
-import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json._
 import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
+import spray.json._
 
 // domain model
 final case class Usage(promptTokens: Int, completionTokens: Int, totalTokens: Int)
