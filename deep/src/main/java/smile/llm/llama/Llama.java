@@ -28,6 +28,7 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.CompletionPrediction;
+import smile.llm.FinishReason;
 import smile.llm.Message;
 import smile.util.AutoScope;
 
@@ -290,9 +291,11 @@ public class Llama {
                 }
 
                 // cut to after eos tok if any
+                boolean stop = false;
                 for (var stopToken : tokenizer.stopTokens()) {
                     for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
                         if (completion[eosIdx] == stopToken) {
+                            stop = true;
                             completion = Arrays.copyOf(completion, eosIdx);
                             if (logprobs) {
                                 probs = Arrays.copyOf(probs, eosIdx);
@@ -302,7 +305,8 @@ public class Llama {
                     }
                 }
 
-                predictions[i] = new CompletionPrediction(name, tokenizer.decode(completion), prompts[i], completion, probs);
+                var reason = stop ? FinishReason.stop : FinishReason.length;
+                predictions[i] = new CompletionPrediction(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
             }
             Tensor.pop();
             System.gc();

@@ -17,13 +17,17 @@
 package smile.llm;
 
 /**
- * Prompt completion prediction.
- * @param model the model used for the chat completion.
- * @param content the generated text completion.
- * @param promptTokens the list of prompt tokens.
- * @param completionTokens the list of generated tokens.
- * @param logprobs the optional list of log probabilities of generated tokens.
+ * The reasons that the chat completions finish.
+ *
+ * @author Karl Li
  */
-public record CompletionPrediction(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
-
+public enum FinishReason {
+    /** A message terminated by one of the stop tokens. */
+    stop,
+    /** Incomplete model output due to token limit. */
+    length,
+    /** The model decided to call a function. */
+    function_call, 
+    /** Omitted content due to a flag from content filters. */
+    content_filter
 }
