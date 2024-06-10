@@ -38,7 +38,8 @@ import smile.llm.llama._
 case class ServeConfig(model: String,
                        tokenizer: String,
                        maxSeqLen: Int = 2048,
-                       maxBatchSize: Int = 4)
+                       maxBatchSize: Int = 4,
+                       device: Int = 0)
 
 /**
   * Online prediction.
@@ -81,7 +82,11 @@ object Serve extends LazyLogging with JsonSupport {
         opt[Int]("max-batch-size")
           .optional()
           .action((x, c) => c.copy(maxBatchSize = x))
-          .text("The maximum batch size")
+          .text("The maximum batch size"),
+        opt[Int]("device")
+          .optional()
+          .action((x, c) => c.copy(device = x))
+          .text("The CUDA device ID")
       )
     }
 
@@ -94,7 +99,8 @@ object Serve extends LazyLogging with JsonSupport {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val generator = Llama.build(config.model, config.tokenizer, config.maxBatchSize, config.maxSeqLen)
+    val generator = Llama.build(config.model, config.tokenizer,
+      config.maxBatchSize, config.maxSeqLen, config.device)
 
     implicit val system = ActorSystem(Behaviors.empty, "smile")
     // needed for the future flatMap/onComplete in the end
@@ -124,7 +130,7 @@ object Serve extends LazyLogging with JsonSupport {
     val port = conf.getInt("smile.http.server.port")
     val bindingFuture = Http().newServerAt(addr, port).bind(route)
 
-    println(s"Smile serve at http://$addr:$port/\nPress RETURN to stop...")
+    println(s"Smile serves at http://$addr:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
