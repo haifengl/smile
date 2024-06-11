@@ -27,14 +27,12 @@ batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile-serve.ini")
 
 bashScriptExtraDefines ++= Seq(
   """addJava "-Dsmile.home=${app_home}/.."""",
-  """addJava "-Dscala.usejavacp=true"""",
-  """addJava "-Dconfig.file=${app_home}/../conf/smile-serve.conf""""
+  """addJava "-Dscala.usejavacp=true""""
 )
 
 batScriptExtraDefines ++= Seq(
   """call :add_java -Dsmile.home=%APP_HOME%""",
   """call :add_java -Dscala.usejavacp=true""",
-  """call :add_java -Dconfig.file=%APP_HOME%\conf\smile-serve.conf""",
   """call :add_java -Djava.library.path=%APP_HOME%\bin""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
