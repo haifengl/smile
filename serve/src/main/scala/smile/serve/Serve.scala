@@ -26,7 +26,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.common._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import smile.llm.llama._
@@ -107,6 +107,17 @@ object Serve extends JsonSupport {
   def serve(config: ServeConfig): ActorSystem[Nothing] = {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
+      implicit val exceptionHandler = ExceptionHandler {
+        case ex: IllegalArgumentException =>
+          system.log.error("HTTP exception handler", ex)
+          complete(HttpResponse(StatusCodes.BadRequest, entity = exceptionMessage(ex)))
+        case ex: SecurityException =>
+          system.log.error("HTTP exception handler", ex)
+          complete(HttpResponse(StatusCodes.Unauthorized))
+      }
+
+      // asking someone requires a timeout if the timeout hits without response
+      // the ask is failed with a TimeoutException
       implicit val timeout = Timeout.create(conf.getDuration("smile.serve.timeout"))
       val generator = context.spawn(Generator(config), "Generator")
       context.watch(generator)
@@ -143,6 +154,14 @@ object Serve extends JsonSupport {
       }
     }
     ActorSystem[Nothing](rootBehavior, "SmileServe")
+  }
+
+  /**
+    * Returns exception message. In case getMessage returns null
+    * (e.g. NullPointerException), the class name is returned.
+    */
+  private def exceptionMessage(ex: Throwable): String = {
+    Option(ex.getMessage).getOrElse(s"${ex.getClass.getName}(null)")
   }
 
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
