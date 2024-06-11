@@ -107,7 +107,7 @@ object Serve extends JsonSupport {
   def serve(config: ServeConfig): ActorSystem[Nothing] = {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
-      implicit val timeout: Timeout = 300.seconds
+      implicit val timeout = Timeout.create(conf.getDuration("smile.serve.timeout"))
       val generator = context.spawn(Generator(config), "Generator")
       context.watch(generator)
 
