@@ -16,16 +16,19 @@
  */
 package smile.serve
 
-import scala.io.StdIn
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 import scopt.OParser
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.{ActorSystem, Terminated}
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.common._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import com.typesafe.scalalogging.LazyLogging
 import smile.llm.llama._
 
 /**
@@ -41,10 +44,13 @@ case class ServeConfig(model: String,
                        maxBatchSize: Int = 4,
                        device: Int = 0)
 
-/**
-  * Online prediction.
+/** LLM Serving.
+  *
+  * @author Karl Li
   */
-object Serve extends LazyLogging with JsonSupport {
+object Serve extends JsonSupport {
+  val conf = ConfigFactory.load()
+
   /**
     * Runs an online prediction HTTP server.
     * @param args the command line arguments.
@@ -98,20 +104,22 @@ object Serve extends LazyLogging with JsonSupport {
     * Online prediction.
     * @param config the serve configuration.
     */
-  def serve(config: ServeConfig): Unit = {
-    val generator = Llama.build(config.model, config.tokenizer,
-      config.maxBatchSize, config.maxSeqLen, config.device)
+  def serve(config: ServeConfig): ActorSystem[Nothing] = {
+    val rootBehavior = Behaviors.setup[Nothing] { context =>
+      implicit val system = context.system
+      implicit val timeout: Timeout = 300.seconds
+      val generator = context.spawn(Generator(config), "Generator")
+      context.watch(generator)
 
-    implicit val system = ActorSystem(Behaviors.empty, "smile")
-    // needed for the future flatMap/onComplete in the end
-    implicit val executionContext = system.executionContext
-    // Source rendering support trait
-    implicit val jsonStreamingSupport = EntityStreamingSupport.json()
-
-    val route =
-      path("v1" / "chat" / "completions") {
-        post {
-          entity(as[CompletionRequest]) { request =>
+      val routes = Route.seal {
+        // Route.seal internally wraps its argument route with the handleExceptions
+        // directive in order to catch and handle any exception.
+        path("v1" / "chat" / "completions") {
+          post {
+            entity(as[CompletionRequest]) { request =>
+              val result = generator.ask(ref => Generator.Chat(request, ref))
+              complete(result)
+            /*
             if (request.model == generator.family()) {
               val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
               val completions = generator.chat(Array(request.messages),
@@ -120,20 +128,36 @@ object Serve extends LazyLogging with JsonSupport {
               complete(CompletionResponse(completions(0)))
             } else {
               complete(StatusCodes.BadRequest, s"Unknown model: ${request.model}")
+            }*/
             }
           }
         }
       }
 
-    val conf = ConfigFactory.load()
-    val addr = conf.getString("smile.http.server.interface")
-    val port = conf.getInt("smile.http.server.port")
-    val bindingFuture = Http().newServerAt(addr, port).bind(route)
+      startHttpServer(routes)(context.system)
+      Behaviors.receiveSignal[Nothing] {
+        case (context, Terminated(ref)) =>
+          context.log.info("Actor {} stopped. Akka system is terminating...", ref.path.name)
+          system.terminate()
+          Behaviors.stopped
+      }
+    }
+    ActorSystem[Nothing](rootBehavior, "SmileServe")
+  }
 
-    println(s"Smile serves at http://$addr:$port/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+  private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
+    import system.executionContext
+
+    val interface = conf.getString("akka.http.server.interface")
+    val port = conf.getInt("akka.http.server.port")
+    val futureBinding = Http().newServerAt(interface, port).bind(routes)
+    futureBinding.onComplete {
+      case Success(binding) =>
+        val address = binding.localAddress
+        system.log.info("SmileServe service online at http://{}:{}/", address.getHostString, address.getPort)
+      case Failure(ex) =>
+        system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
+        system.terminate()
+    }
   }
 }
