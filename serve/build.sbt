@@ -8,15 +8,7 @@ Compile / mainClass := Some("smile.serve.Main")
 enablePlugins(JavaAppPackaging)
 maintainer := "Karl Li <kkli@umich.edu>"
 packageName := "smile-serve"
-packageSummary := "Statistical Machine Intelligence and Learning Engine"
-packageDescription :=
-  """
-    |Smile is a fast and comprehensive machine learning, NLP, linear algebra,
-    |graph, interpolation, and visualization system in Java and Scala.
-    |With advanced data structures and algorithms, Smile delivers
-    |state-of-art performance. Smile is well documented and please check out
-    |the project website for programming guides and more information.
-    |""".stripMargin
+packageSummary := "LLM Serving by SMILE"
 
 // dealing with long classpaths
 scriptClasspath := Seq("*")
@@ -46,8 +38,8 @@ buildInfoPackage := "smile.serve"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
-  "ch.qos.logback"   %  "logback-classic" % "1.5.6",
-  "com.github.scopt" %% "scopt" % "4.1.0",
+  "ch.qos.logback"    %  "logback-classic" % "1.5.6",
+  "com.github.scopt"  %% "scopt" % "4.1.0",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
   "com.typesafe.akka" %% "akka-stream" % "2.8.5",
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
