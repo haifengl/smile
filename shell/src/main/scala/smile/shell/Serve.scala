@@ -148,8 +148,8 @@ object Serve extends LazyLogging {
       }
 
     val conf = ConfigFactory.load()
-    val addr = conf.getString("smile.http.server.interface")
-    val port = conf.getInt("smile.http.server.port")
+    val addr = conf.getString("akka.http.server.interface")
+    val port = conf.getInt("akka.http.server.port")
     val bindingFuture = Http().newServerAt(addr, port).bind(route)
 
     println(s"Smile online at http://$addr:$port/\nPress RETURN to stop...")
