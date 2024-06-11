@@ -61,18 +61,6 @@ object CompletionResponse {
 
 // collect json format instances into a support trait:
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  /** Generic JSON format for Scala enum types. */
-  def enumFormat[T <: Enumeration](implicit enu: T): RootJsonFormat[T#Value] =
-    new RootJsonFormat[T#Value] {
-      def write(obj: T#Value): JsValue = JsString(obj.toString)
-      def read(json: JsValue): T#Value = {
-        json match {
-          case JsString(txt) => enu.withName(txt)
-          case somethingElse => throw DeserializationException(s"Expected a value from enum $enu instead of $somethingElse")
-        }
-      }
-    }
-
   implicit object FinishReasonJsonFormat extends RootJsonFormat[FinishReason] {
     override def write(reason: FinishReason): JsValue = JsString(reason.toString)
 
