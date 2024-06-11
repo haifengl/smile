@@ -153,8 +153,7 @@ object Serve extends JsonSupport {
     val futureBinding = Http().newServerAt(interface, port).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
-        val address = binding.localAddress
-        system.log.info("SmileServe service online at http://{}:{}/", address.getHostString, address.getPort)
+        system.log.info("SmileServe service online at http://{}:{}/", interface, port)
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()
