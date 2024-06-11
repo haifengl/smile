@@ -16,7 +16,7 @@
  */
 package smile.serve
 
-/** An object that runs SmileServe service.
+/** The main entry to start SmileServe service.
   *
   * @author Karl Li
   */
