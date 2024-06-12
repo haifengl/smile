@@ -47,8 +47,9 @@ object Generator {
             val completions = model.chat(Array(request.messages.toArray),
                 request.max_tokens.getOrElse(2048), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
-            log.info("Chat completion: {}", completions(0))
-            replyTo ! StatusReply.Success(CompletionResponse(completions(0)))
+            val response = CompletionResponse(completions(0))
+            log.info("Reply {}", response)
+            replyTo ! StatusReply.Success(response)
           } catch {
             case e: Throwable => replyTo ! StatusReply.Error(e)
           }
