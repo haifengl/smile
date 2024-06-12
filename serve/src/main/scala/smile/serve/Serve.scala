@@ -129,7 +129,7 @@ object Serve extends JsonSupport {
         path("v1" / "chat" / "completions") {
           post {
             entity(as[CompletionRequest]) { request =>
-              log.info("Chat completion request: {}", request)
+              log.info("Receive {}", request)
               val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
               complete(result)
             }
