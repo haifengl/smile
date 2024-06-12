@@ -31,7 +31,7 @@ object Usage {
 }
 
 final case class CompletionRequest(model: String,
-                                   messages: Array[Message],
+                                   messages: Seq[Message],
                                    max_tokens: Option[Int],
                                    temperature: Option[Double],
                                    top_p: Option[Double],
@@ -46,7 +46,7 @@ final case class CompletionChoice(index: Int,
 final case class CompletionResponse(id: String,
                                     model: String,
                                     usage: Usage,
-                                    choices: Array[CompletionChoice],
+                                    choices: Seq[CompletionChoice],
                                     `object`: String = "chat.completion",
                                     created: Long = System.currentTimeMillis)
 
@@ -54,8 +54,8 @@ object CompletionResponse {
   def apply(completion: CompletionPrediction): CompletionResponse = {
     CompletionResponse(UUID.randomUUID.toString, completion.model,
       Usage(completion.promptTokens.length, completion.completionTokens.length), 
-      Array(CompletionChoice(0, new Message(Role.assistant, completion.content),
-                             completion.reason, Option(completion.logprobs))))
+      Seq(CompletionChoice(0, new Message(Role.assistant, completion.content),
+                           completion.reason, Option(completion.logprobs))))
   }
 }
 
@@ -86,7 +86,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
         case Seq(JsString(role), JsString(content)) =>
           new Message(Role.valueOf(role), content)
         case _ =>
-          throw new DeserializationException("Message expected")
+          throw DeserializationException("Message expected")
       }
     }
   }
@@ -107,7 +107,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
         case Seq(JsNumber(promptTokens), JsNumber(completionTOkens), JsNumber(totalTokens)) =>
           new Usage(promptTokens.intValue, completionTOkens.intValue, totalTokens.intValue)
         case _ =>
-          throw new DeserializationException("Usage expected")
+          throw DeserializationException("Usage expected")
       }
     }
   }

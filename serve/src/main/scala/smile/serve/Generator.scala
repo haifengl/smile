@@ -16,7 +16,6 @@
  */
 package smile.serve
 
-import scala.util.{Failure, Success}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
@@ -33,8 +32,7 @@ object Generator {
 
   def apply(config: ServeConfig): Behavior[Command] = {
     Behaviors.setup { context =>
-      implicit val ec = context.executionContext
-      val log = context.log // context cannot be used inside Future.onComplete, which is outside of an actor.
+      val log = context.log
       val model = Llama.build(config.model, config.tokenizer,
         config.maxBatchSize, config.maxSeqLen, config.device)
 
@@ -46,9 +44,10 @@ object Generator {
             }
 
             val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
-            val completions = model.chat(Array(request.messages),
+            val completions = model.chat(Array(request.messages.toArray),
                 request.max_tokens.getOrElse(2048), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
+            log.info("Chat completion: {}", completions(0))
             replyTo ! StatusReply.Success(CompletionResponse(completions(0)))
           } catch {
             case e: Throwable => replyTo ! StatusReply.Error(e)
