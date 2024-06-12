@@ -19,6 +19,7 @@ package smile.serve
 import scala.util.{Failure, Success}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import akka.pattern.StatusReply
 import smile.llm.llama._
 
 /** GenAI actor.
@@ -28,7 +29,7 @@ import smile.llm.llama._
 object Generator {
   // actor protocol
   sealed trait Command
-  final case class Chat(request: CompletionRequest, replyTo: ActorRef[CompletionResponse]) extends Command
+  final case class Chat(request: CompletionRequest, replyTo: ActorRef[StatusReply[CompletionResponse]]) extends Command
 
   def apply(config: ServeConfig): Behavior[Command] = {
     Behaviors.setup { context =>
@@ -39,11 +40,19 @@ object Generator {
 
       Behaviors.receiveMessage {
         case Chat(request, replyTo) =>
-          val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
-          val completions = model.chat(Array(request.messages),
+          try {
+            if (request.model != model.family()) {
+              throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
+            }
+
+            val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
+            val completions = model.chat(Array(request.messages),
                 request.max_tokens.getOrElse(2048), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
-          replyTo ! CompletionResponse(completions(0))
+            replyTo ! StatusReply.Success(CompletionResponse(completions(0)))
+          } catch {
+            case e: Throwable => replyTo ! StatusReply.Error(e)
+          }
           Behaviors.same
       }
     }
