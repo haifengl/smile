@@ -37,6 +37,8 @@ import smile.llm.llama._
   * @param tokenizer the tokenizer model file path.
   * @param maxSeqLen the maximum sequence length.
   * @param maxBatchSize the maximum batch size.
+  * @param device the CUDA device ID. Note that CUDA won’t concurrently run
+  *               kernels on multiple devices from a single process.
   */
 case class ServeConfig(model: String,
                        tokenizer: String,
