@@ -128,18 +128,8 @@ object Serve extends JsonSupport {
         path("v1" / "chat" / "completions") {
           post {
             entity(as[CompletionRequest]) { request =>
-              val result = generator.ask(ref => Generator.Chat(request, ref))
+              val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
               complete(result)
-            /*
-            if (request.model == generator.family()) {
-              val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
-              val completions = generator.chat(Array(request.messages),
-                request.max_tokens.getOrElse(2048), request.temperature.getOrElse(0.6),
-                request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
-              complete(CompletionResponse(completions(0)))
-            } else {
-              complete(StatusCodes.BadRequest, s"Unknown model: ${request.model}")
-            }*/
             }
           }
         }
