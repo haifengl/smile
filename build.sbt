@@ -129,6 +129,21 @@ lazy val javaCppSettings = Seq(
   )
 )
 
+lazy val akkaSettings = Seq(
+  libraryDependencies ++= {
+    val akkaVersion     = "2.9.3"
+    val akkaHttpVersion = "10.6.3"
+    Seq(
+      "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
+      "com.typesafe.akka" %% "akka-http"                % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-spray-json"     % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion     % Test,
+      "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test
+    )
+  }
+)
+
 JavaUnidoc / unidoc / javacOptions ++= Seq(
   "-Xdoclint:none",
   "--allow-script-in-comments",
@@ -183,10 +198,12 @@ lazy val spark = project.in(file("spark"))
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
+  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
 
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
+  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(deep)

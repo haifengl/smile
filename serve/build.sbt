@@ -39,11 +39,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
   "ch.qos.logback"    %  "logback-classic" % "1.5.6",
-  "com.github.scopt"  %% "scopt" % "4.1.0",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.9.3",
-  "com.typesafe.akka" %% "akka-stream" % "2.9.3",
-  "com.typesafe.akka" %% "akka-http" % "10.6.3",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.6.3"
+  "com.github.scopt"  %% "scopt" % "4.1.0"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
