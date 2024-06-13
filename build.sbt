@@ -5,6 +5,7 @@ lazy val scala3 = "3.3.3"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
+  resolvers += "Akka library repository".at("https://repo.akka.io/maven"),
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
@@ -116,7 +117,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     "org.slf4j" % "slf4j-simple" % "2.0.13" % Test,
-    "org.specs2" %% "specs2-core" % "4.20.6" % Test
+    "org.specs2" %% "specs2-core" % "4.20.7" % Test
   ),
 )
 

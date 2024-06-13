@@ -67,9 +67,9 @@ libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "4.1.0",
   "org.scala-lang" % "scala-compiler" % "2.13.14",
   "org.slf4j" % "slf4j-simple" % "2.0.13",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
-  "com.typesafe.akka" %% "akka-stream" % "2.8.5",
-  "com.typesafe.akka" %% "akka-http" % "10.5.3",
-  "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.3",
-  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "6.0.2"
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.9.3",
+  "com.typesafe.akka" %% "akka-stream" % "2.9.3",
+  "com.typesafe.akka" %% "akka-http" % "10.6.3",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.6.3",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "8.0.0"
 )
