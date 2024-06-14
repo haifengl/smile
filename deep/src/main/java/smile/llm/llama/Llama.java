@@ -40,7 +40,7 @@ import smile.util.AutoScope;
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /** The model family name. */
-    final String family = "llama3";
+    final String family = "meta/llama3";
     /** The model instance name. */
     final String name;
     /** The transformer model. */
@@ -62,7 +62,7 @@ public class Llama {
 
     @Override
     public String toString() {
-        return String.format("%s[%s]", family, name);
+        return String.format("%s/%s", family, name);
     }
 
     /**
