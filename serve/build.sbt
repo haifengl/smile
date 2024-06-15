@@ -1,5 +1,7 @@
 name := "smile-serve"
 
+//scalaVersion := "3.4.2"
+
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.serve")
 
 Compile / mainClass := Some("smile.serve.Main")
