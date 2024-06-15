@@ -49,6 +49,8 @@ case class ServeConfig(model: String,
   */
 object Serve extends JsonSupport {
   val conf = ConfigFactory.load()
+  val home = System.getProperty("smile.home", ".")
+  val assets = home + "/chat"
 
   /**
     * Runs an online prediction HTTP server.
@@ -133,6 +135,14 @@ object Serve extends JsonSupport {
               val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
               complete(result)
             }
+          }
+        } ~
+        pathPrefix("chat") {
+          get {
+            pathEndOrSingleSlash {
+              getFromFile(assets + "/index.html")
+            } ~
+            getFromDirectory(assets)
           }
         }
       }
