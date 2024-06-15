@@ -108,7 +108,7 @@ object Serve extends JsonSupport {
       implicit val system = context.system
       // context cannot be used inside Future.onComplete, which is outside of an actor.
       val log = context.log
-      implicit val exceptionHandler = ExceptionHandler {
+      implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
         case ex: IllegalArgumentException =>
           log.error("HTTP exception handler", ex)
           complete(HttpResponse(StatusCodes.BadRequest, entity = exceptionMessage(ex)))
@@ -156,7 +156,7 @@ object Serve extends JsonSupport {
     Option(ex.getMessage).getOrElse(s"${ex.getClass.getName}(null)")
   }
 
-  private def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
+  private def startHttpServer(routes: Route)(implicit system: ActorSystem[?]): Unit = {
     import system.executionContext
 
     val interface = conf.getString("akka.http.server.interface")
