@@ -32,6 +32,8 @@ object Usage {
 
 final case class CompletionRequest(model: String,
                                    messages: Seq[Message],
+                                   // The maximum number of tokens to generate,
+                                   // i.e. maxGenLen parameter of Llama.generate().
                                    max_tokens: Option[Int],
                                    temperature: Option[Double],
                                    top_p: Option[Double],
