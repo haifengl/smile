@@ -45,7 +45,7 @@ object Generator {
 
             val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
             val completions = model.chat(Array(request.messages.toArray),
-                request.max_tokens.getOrElse(2048), request.temperature.getOrElse(0.6),
+                request.max_tokens.getOrElse(config.maxSeqLen / 2), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
             val response = CompletionResponse(completions(0))
             log.info("Reply {}", response)
