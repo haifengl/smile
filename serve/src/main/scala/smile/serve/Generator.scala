@@ -19,6 +19,7 @@ package smile.serve
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
+import akka.stream.scaladsl.SourceQueueWithComplete
 import smile.llm.llama._
 
 /** GenAI actor.
@@ -29,6 +30,7 @@ object Generator {
   // actor protocol
   sealed trait Command
   final case class Chat(request: CompletionRequest, replyTo: ActorRef[StatusReply[CompletionResponse]]) extends Command
+  final case class ChatStream(request: CompletionRequest, queue: SourceQueueWithComplete[String]) extends Command
 
   def apply(config: ServeConfig): Behavior[Command] = {
     Behaviors.setup { context =>
@@ -53,6 +55,11 @@ object Generator {
           } catch {
             case e: Throwable => replyTo ! StatusReply.Error(e)
           }
+          Behaviors.same
+
+        case ChatStream(request, queue) =>
+          queue.offer("[DONE]")
+          queue.complete()
           Behaviors.same
       }
     }

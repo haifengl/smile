@@ -38,7 +38,8 @@ final case class CompletionRequest(model: String,
                                    temperature: Option[Double],
                                    top_p: Option[Double],
                                    logprobs: Option[Boolean],
-                                   seed: Option[Long])
+                                   seed: Option[Long],
+                                   stream: Option[Boolean])
 
 final case class CompletionChoice(index: Int,
                                   message: Message,
@@ -51,6 +52,18 @@ final case class CompletionResponse(id: String,
                                     choices: Seq[CompletionChoice],
                                     `object`: String = "chat.completion",
                                     created: Long = System.currentTimeMillis)
+
+final case class CompletionChunk(index: Int,
+                                 delta: Message,
+                                 finish_reason: FinishReason,
+                                 logprobs: Option[Array[Float]])
+
+final case class CompletionChunkResponse(id: String,
+                                         model: String,
+                                         usage: Usage,
+                                         choices: Seq[CompletionChunk],
+                                         `object`: String = "chat.completion.chunk",
+                                         created: Long = System.currentTimeMillis)
 
 object CompletionResponse {
   def apply(completion: CompletionPrediction): CompletionResponse = {
@@ -114,7 +127,9 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
+  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat8(CompletionRequest.apply)
   implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
-  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat7(CompletionRequest.apply)
-  implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
+  implicit val chunkFormat: RootJsonFormat[CompletionChunk] = jsonFormat4(CompletionChunk.apply)
+  implicit val choiceResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
+  implicit val chunkResponseFormat: RootJsonFormat[CompletionChunkResponse] = jsonFormat6(CompletionChunkResponse.apply)
 }

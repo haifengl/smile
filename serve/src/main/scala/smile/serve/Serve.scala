@@ -23,8 +23,11 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
+import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
+import akka.stream.OverflowStrategy
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 
@@ -126,14 +129,24 @@ object Serve extends JsonSupport {
       context.watch(generator)
 
       val routes = Route.seal {
+        import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
         // Route.seal internally wraps its argument route with the handleExceptions
         // directive in order to catch and handle any exception.
         path("v1" / "chat" / "completions") {
           post {
             entity(as[CompletionRequest]) { request =>
               log.info("Receive {}", request)
-              val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
-              complete(result)
+              if (request.stream.getOrElse(false)) {
+                val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
+                complete(result)
+              } else {
+                val (queue, events) = Source.queue[String](Int.MaxValue, OverflowStrategy.backpressure)
+                  .map(message => ServerSentEvent(message))
+                  .toMat(BroadcastHub.sink[ServerSentEvent])(Keep.both)
+                  .run()
+                generator ! Generator.ChatStream(request, queue)
+                complete(events)
+              }
             }
           }
         } ~
