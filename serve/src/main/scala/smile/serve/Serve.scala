@@ -72,15 +72,15 @@ object Serve extends JsonSupport {
             entity(as[CompletionRequest]) { request =>
               log.info("Receive {}", request)
               if (request.stream.getOrElse(false)) {
-                val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
-                complete(result)
-              } else {
                 val publisher = new SubmissionPublisher[String]()
                 val source = JavaFlowSupport.Source.fromPublisher(publisher)
                   .map(message => ServerSentEvent(message))
 
                 generator ! Generator.ChatStream(request, publisher)
                 complete(source)
+              } else {
+                val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
+                complete(result)
               }
             }
           }
