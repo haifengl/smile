@@ -19,6 +19,7 @@ package smile.llm.llama;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.SubmissionPublisher;
 import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.TypeMeta;
 import org.bytedeco.pytorch.global.torch;
@@ -172,12 +173,18 @@ public class Llama {
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
      * @param seed the optional random number generation seed to sample deterministically.
+     * @param publisher an optional flow publisher that asynchronously issues generated chunks.
+     * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
+    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         if (batchSize > model.params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
+        }
+
+        if (publisher != null && batchSize > 1) {
+            throw new IllegalArgumentException("The batch size is > 1 while publisher is provided");
         }
 
         int minPromptLen = Integer.MAX_VALUE;
@@ -230,6 +237,7 @@ public class Llama {
                 }
             }
 
+            int chunkPos = minPromptLen;
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 try (var loopScope = new AutoScope()) {
                     Tensor.push(loopScope);
@@ -265,6 +273,15 @@ public class Llama {
                     // Free up memory at each iteration
                     Tensor.pop();
                 }
+
+                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eosReached.all())) {
+                    var tokenArray = tokens.get(Index.of(0), Index.slice(chunkPos, curPos+1)).to(Device.CPU()).longArray();
+                    var completion = Arrays.stream(tokenArray).mapToInt(x -> (int) x).toArray();
+                    var chunk = tokenizer.decode(completion);
+                    publisher.submit(chunk);
+                    chunkPos = curPos + 1;
+                }
+
                 if (eosReached.all()) break;
             }
 
@@ -320,16 +337,18 @@ public class Llama {
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
      * @param seed the optional random number generation seed to sample deterministically.
+     * @param publisher an optional flow publisher that asynchronously issues generated chunks.
+     * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
+    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encode(prompts[i], true, false);
         }
 
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, publisher);
     }
 
     /**
@@ -340,15 +359,17 @@ public class Llama {
      * @param topp Top-p probability threshold for nucleus sampling.
      * @param logprobs Flag indicating whether to compute token log probabilities.
      * @param seed the optional random number generation seed to sample deterministically.
+     * @param publisher an optional flow publisher that asynchronously issues generated chunks.
+     * The batch size must be 1.
      * @return The generated chat responses.
      */
-    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed) {
+    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
         int batchSize = dialogs.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encodeDialog(dialogs[i]);
         }
 
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, publisher);
     }
 }

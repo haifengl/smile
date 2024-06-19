@@ -16,10 +16,10 @@
  */
 package smile.serve
 
+import java.util.concurrent.SubmissionPublisher
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
-import akka.stream.scaladsl.SourceQueueWithComplete
 import smile.llm.llama._
 
 /** GenAI actor.
@@ -30,7 +30,7 @@ object Generator {
   // actor protocol
   sealed trait Command
   final case class Chat(request: CompletionRequest, replyTo: ActorRef[StatusReply[CompletionResponse]]) extends Command
-  final case class ChatStream(request: CompletionRequest, queue: SourceQueueWithComplete[String]) extends Command
+  final case class ChatStream(request: CompletionRequest, publisher: SubmissionPublisher[String]) extends Command
 
   def apply(config: ServeConfig): Behavior[Command] = {
     Behaviors.setup { context =>
@@ -48,7 +48,7 @@ object Generator {
             val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
             val completions = model.chat(Array(request.messages.toArray),
                 request.max_tokens.getOrElse(config.maxSeqLen / 2), request.temperature.getOrElse(0.6),
-                request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed)
+                request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, null)
             val response = CompletionResponse(completions(0))
             log.info("Reply {}", response)
             replyTo ! StatusReply.Success(response)
@@ -57,9 +57,24 @@ object Generator {
           }
           Behaviors.same
 
-        case ChatStream(request, queue) =>
-          queue.offer("[DONE]")
-          queue.complete()
+        case ChatStream(request, publisher) =>
+          try {
+            if (request.model != model.family()) {
+              throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
+            }
+
+            val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
+            val completions = model.chat(Array(request.messages.toArray),
+                request.max_tokens.getOrElse(config.maxSeqLen / 2), request.temperature.getOrElse(0.6),
+                request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, publisher)
+            val response = CompletionResponse(completions(0))
+            log.info("Reply {}", response)
+          } catch {
+            case e: Throwable => log.error("ChatStream: ", e)
+          } finally {
+            publisher.submit("[DONE]")
+            publisher.close()
+          }
           Behaviors.same
       }
     }
