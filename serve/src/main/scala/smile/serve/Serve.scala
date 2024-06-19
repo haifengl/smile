@@ -17,7 +17,6 @@
 package smile.serve
 
 import scala.util.{Failure, Success}
-import scopt.OParser
 import akka.actor.typed.{ActorSystem, Terminated}
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
@@ -31,21 +30,6 @@ import akka.stream.OverflowStrategy
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 
-/**
-  * Serve command options.
-  * @param model the model checkpoint directory path.
-  * @param tokenizer the tokenizer model file path.
-  * @param maxSeqLen the maximum sequence length.
-  * @param maxBatchSize the maximum batch size.
-  * @param device the CUDA device ID. Note that CUDA won’t concurrently run
-  *               kernels on multiple devices from a single process.
-  */
-case class ServeConfig(model: String,
-                       tokenizer: String,
-                       maxSeqLen: Int = 2048,
-                       maxBatchSize: Int = 4,
-                       device: Int = 0)
-
 /** LLM Serving.
   *
   * @author Karl Li
@@ -57,58 +41,9 @@ object Serve extends JsonSupport {
 
   /**
     * Runs an online prediction HTTP server.
-    * @param args the command line arguments.
+    * @param config the service configuration.
     */
-  def apply(args: Array[String]): Unit = {
-    parse(args) match {
-      case Some(config) => serve(config)
-      case _ => ()
-    }
-  }
-
-  /**
-    * Parses the serve job arguments.
-    * @param args the command line arguments.
-    */
-  def parse(args: Array[String]): Option[ServeConfig] = {
-    val builder = OParser.builder[ServeConfig]
-    val parser = {
-      import builder._
-      OParser.sequence(
-        programName("smile-serve"),
-        head("SmileServe", "- Large Language Model (LLM) Inference Server"),
-        opt[String]("model")
-          .required()
-          .action((x, c) => c.copy(model = x))
-          .text("The model checkpoint directory path"),
-        opt[String]("tokenizer")
-          .required()
-          .action((x, c) => c.copy(tokenizer = x))
-          .text("The tokenizer model file path"),
-        opt[Int]("max-seq-len")
-          .optional()
-          .action((x, c) => c.copy(maxSeqLen = x))
-          .text("The maximum sequence length"),
-        opt[Int]("max-batch-size")
-          .optional()
-          .action((x, c) => c.copy(maxBatchSize = x))
-          .text("The maximum batch size"),
-        opt[Int]("device")
-          .optional()
-          .action((x, c) => c.copy(device = x))
-          .text("The CUDA device ID")
-      )
-    }
-
-    OParser.parse(parser, args, ServeConfig("Llama3-8B-Instruct", "Llama3-8B-Instruct/tokenizer.model"))
-    // If arguments be bad, the error message would have been displayed.
-  }
-
-  /**
-    * Online prediction.
-    * @param config the serve configuration.
-    */
-  def serve(config: ServeConfig): ActorSystem[Nothing] = {
+  def apply(config: ServeConfig): ActorSystem[Nothing] = {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
       // context cannot be used inside Future.onComplete, which is outside of an actor.
