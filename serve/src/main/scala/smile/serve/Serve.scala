@@ -16,6 +16,7 @@
  */
 package smile.serve
 
+import java.util.concurrent.SubmissionPublisher
 import scala.util.{Failure, Success}
 import akka.actor.typed.{ActorSystem, Terminated}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -25,8 +26,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
-import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 
@@ -75,12 +75,12 @@ object Serve extends JsonSupport {
                 val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
                 complete(result)
               } else {
-                val (queue, events) = Source.queue[String](Int.MaxValue, OverflowStrategy.backpressure)
+                val publisher = new SubmissionPublisher[String]()
+                val source = JavaFlowSupport.Source.fromPublisher(publisher)
                   .map(message => ServerSentEvent(message))
-                  .toMat(BroadcastHub.sink[ServerSentEvent])(Keep.both)
-                  .run()
-                generator ! Generator.ChatStream(request, queue)
-                complete(events)
+
+                generator ! Generator.ChatStream(request, publisher)
+                complete(source)
               }
             }
           }
