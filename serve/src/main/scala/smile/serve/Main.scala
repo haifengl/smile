@@ -17,6 +17,7 @@
 package smile.serve
 
 import scopt.OParser
+import akka.actor.CoordinatedShutdown
 
 /**
   * Serve command options.
@@ -73,7 +74,7 @@ object Main {
     }
 
     val home = System.getProperty("smile.home", ".")
-    val model = home + "/model/Llama3-8B-Instruct"
+    val model = home + "/model/Llama-3-8B-Instruct"
     OParser.parse(parser, args, ServeConfig(model, model + "/tokenizer.model"))
   }
 
@@ -94,7 +95,10 @@ object Main {
           |  Welcome to Smile Serve ${BuildInfo.version}! Built at ${BuildInfo.builtAtString}
           |===============================================================================
         """.stripMargin)
-        Serve(config)
+        val system = Serve(config)
+        CoordinatedShutdown(system).addJvmShutdownHook {
+          println("System shutdown...")
+        }
       case _ => () // If arguments be invalid, the error message would have been displayed.
     }
   }
