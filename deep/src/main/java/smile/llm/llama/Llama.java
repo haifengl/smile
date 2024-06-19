@@ -274,15 +274,17 @@ public class Llama {
                     Tensor.pop();
                 }
 
-                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eosReached.all())) {
-                    var tokenArray = tokens.get(Index.of(0), Index.slice(chunkPos, curPos+1)).to(Device.CPU()).longArray();
+                boolean eos = eosReached.all();
+                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
+                    int end = eosReached.all() ? curPos : curPos + 1;
+                    var tokenArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
                     var completion = Arrays.stream(tokenArray).mapToInt(x -> (int) x).toArray();
                     var chunk = tokenizer.decode(completion);
                     publisher.submit(chunk);
                     chunkPos = curPos + 1;
                 }
 
-                if (eosReached.all()) break;
+                if (eos) break;
             }
 
             var tokenArray = tokens.to(Device.CPU()).longArray();
