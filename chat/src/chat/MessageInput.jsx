@@ -6,12 +6,10 @@ export default function MessageInput({
     placeholder = 'Send a message...',
     theme = '#6ea9d7'
 }) {
-    const inputRef = useRef(null);
     const [text, setText] = useState("")
     
     const handleSubmit = () => {
         if (text.trim().length > 0) {
-            inputRef.current.innerText = ''
             onSendMessage && onSendMessage(text.trim())
             setText("")
         }
@@ -31,22 +29,19 @@ export default function MessageInput({
                     <div className="input-background" style={{ backgroundColor: theme }}/>
                     <div className="input-element-container">
                         <input className="input-element"
-                            ref={inputRef}
                             data-testid='message-input'
-                            onInput={(event) => setText(event.target.innerText)}
-                            contentEditable={true}
-                            suppressContentEditableWarning={true}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    event.preventDefault();  // Prevents adding a new line
+                            type="text"
+                            value={text}
+                            placeholder={placeholder}
+                            onChange={(e) => (setText(e.target.value))}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();  // Prevents adding a new line
                                     handleSubmit();
                                     return;
                                 }
                             }}
                         />
-                        {text === '' &&
-                            <span className="message-placeholder">{placeholder}</span>
-                        }
                     </div>
                 </div>
 
