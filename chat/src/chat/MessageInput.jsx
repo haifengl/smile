@@ -3,42 +3,15 @@ import './MessageInput.css'
 
 export default function MessageInput({
     onSendMessage,
-    onStartTyping,
-    onEndTyping,
-    placeholder = 'Type prompt here...',
+    placeholder = 'Send a message...',
     theme = '#6ea9d7'
 }) {
     const inputRef = useRef(null);
     const [text, setText] = useState("")
-    const [typing, setTyping] = useState(false);
     
-    let timeout;
-
-    useEffect(() => {
-        //call the function when typing starts or ends but should not call it on every render and should only be called when the value of typing changes
-        if (typing) {
-            onStartTyping && onStartTyping()
-        } else {
-            onEndTyping && onEndTyping()
-        }
-
-    }, [typing])
-
-    const onKeyDown = () => {
-        clearTimeout(timeout);
-        setTyping(true);
-    }
-
-    const onKeyUp = () => {
-        timeout = setTimeout(() => {
-            setTyping(false);
-        }, 2_000);
-    }
-
     const handleSubmit = () => {
         if (text.trim().length > 0) {
             inputRef.current.innerText = ''
-            setTyping(false)
             onSendMessage && onSendMessage(text.trim())
             setText("")
         }
