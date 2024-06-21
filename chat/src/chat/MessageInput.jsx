@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import './MessageInput.css'
 
 export default function MessageInput({
@@ -28,12 +28,13 @@ export default function MessageInput({
             >
                 <div className="attach-placeholder" />
                 <div className="input-container">
-                    <div className="input-background" style={{ backgroundColor: theme}}/>
+                    <div className="input-background" style={{ backgroundColor: theme }}/>
                     <div className="input-element-container">
-                        <div className="input-element"
+                        <input className="input-element"
                             ref={inputRef}
                             data-testid='message-input'
                             onInput={(event) => setText(event.target.innerText)}
+                            contentEditable={true}
                             suppressContentEditableWarning={true}
                             onKeyDown={(event) => {
                                 if (event.key === 'Enter') {
@@ -41,17 +42,10 @@ export default function MessageInput({
                                     handleSubmit();
                                     return;
                                 }
-
-                                inputProps.onKeyDown()
-                                onKeyDown && onKeyDown(event)
-                            }}
-                            onKeyUp={(event) => {
-                                inputProps.onKeyUp()
-                                onKeyUp && onKeyUp(event)
                             }}
                         />
                         {text === '' &&
-                            <span className="placeholder">{placeholder}</span>
+                            <span className="message-placeholder">{placeholder}</span>
                         }
                     </div>
                 </div>
