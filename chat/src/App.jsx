@@ -102,7 +102,7 @@ function App() {
   }
 
   return (
-      <Chat style={{ height: '95vh', width: '600px', border: 'none', margin: '0', padding: '0' }}
+      <Chat style={{ height: '90vh', width: '600px', border: 'none', margin: '0', padding: '0' }}
           userId={user.id}
           messages={messages}
           onSendMessage={sendMessage}
