@@ -1,0 +1,61 @@
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  margin-left: 42px;
+  margin-bottom: 16px;
+  margin-top: 16px;
+}
+
+.loading-animation {
+  display: flex;
+  align-items: center;
+}
+  
+@keyframes loading-animation-move {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.text {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size:12px;
+  line-height:auto;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.dot1 {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  animation: loading-animation-move 0.7s ease-in-out infinite;
+  margin-right: 4px;
+  animation-delay: 0ms;
+}
+
+
+.dot2 {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  animation: loading-animation-move 0.7s ease-in-out infinite;
+  margin-right: 4px;
+  animation-delay: 0.2s;
+}
+
+.dot3 {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  animation: loading-animation-move 0.7s ease-in-out infinite;
+  margin-right: 0;
+  animation-delay: 0.4s;
+}

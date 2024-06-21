@@ -277,8 +277,8 @@ public class Llama {
                 boolean eos = eosReached.all();
                 if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
                     int end = eosReached.all() ? curPos : curPos + 1;
-                    var tokenArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
-                    var completion = Arrays.stream(tokenArray).mapToInt(x -> (int) x).toArray();
+                    var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
+                    var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
                     var chunk = tokenizer.decode(completion);
                     publisher.submit(chunk);
                     chunkPos = curPos + 1;
@@ -287,7 +287,7 @@ public class Llama {
                 if (eos) break;
             }
 
-            var tokenArray = tokens.to(Device.CPU()).longArray();
+            var longArray = tokens.to(Device.CPU()).longArray();
             float[] logprobArray = null;
             if (logprobs) {
                 logprobArray = tokenLogprobs.to(Device.CPU()).floatArray();
@@ -296,7 +296,7 @@ public class Llama {
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = prompts[i].length;
-                var completion = Arrays.stream(tokenArray)
+                var completion = Arrays.stream(longArray)
                         .skip(i * totalLen + start)
                         .mapToInt(x -> (int) x)
                         .limit(prompts[i].length + maxGenLen - start)
