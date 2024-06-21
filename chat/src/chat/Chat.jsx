@@ -12,6 +12,7 @@ export default function Chat({
     showTypingIndicator,
     title = "SmileServe - Llama3",
     placeholder = "Type prompt here",
+    theme = '#6ea9d7',
 }) {
     return (
         <div className="chat-container" style={style}>
@@ -23,10 +24,12 @@ export default function Chat({
                     messages={messages}
                     userId={userId}
                     showTypingIndicator={showTypingIndicator}
+                    theme={theme}
                 />
                 <MessageInput
                     onSendMessage={sendMessage}
                     placeholder={placeholder}
+                    theme={theme}
                 />
             </div>
         </div>
