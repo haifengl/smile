@@ -27,6 +27,8 @@ export default function OutgoingMessage({
                         />
                     </div>
                     <div className="name">{user?.name}</div>
+
+                    <Timestamp date={timestamp}/>
                 </div>
 
                 <div>
@@ -35,8 +37,6 @@ export default function OutgoingMessage({
                         <TextContent>
                             {text}
                         </TextContent>
-
-                        <Timestamp date={timestamp}/>
                     </div>
                 </div>
             </div>

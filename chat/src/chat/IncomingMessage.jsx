@@ -27,6 +27,8 @@ export default function IncomingMessage({
                         />
                     </div>
                     <div className="name">{user?.name}</div>
+
+                    <Timestamp date={timestamp}/>
                 </div>
 
                 <div style={{ display: "flex" }}>
@@ -35,8 +37,6 @@ export default function IncomingMessage({
                         <TextContent>
                             {text}
                         </TextContent>
-
-                        <Timestamp date={timestamp}/>
                     </div>
                 </div>
             </div>
