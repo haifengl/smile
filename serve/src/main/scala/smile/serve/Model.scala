@@ -53,18 +53,6 @@ final case class CompletionResponse(id: String,
                                     `object`: String = "chat.completion",
                                     created: Long = System.currentTimeMillis)
 
-final case class CompletionChunk(index: Int,
-                                 delta: Message,
-                                 finish_reason: FinishReason,
-                                 logprobs: Option[Array[Float]])
-
-final case class CompletionChunkResponse(id: String,
-                                         model: String,
-                                         usage: Usage,
-                                         choices: Seq[CompletionChunk],
-                                         `object`: String = "chat.completion.chunk",
-                                         created: Long = System.currentTimeMillis)
-
 object CompletionResponse {
   def apply(completion: CompletionPrediction): CompletionResponse = {
     CompletionResponse(UUID.randomUUID.toString, completion.model,
@@ -127,9 +115,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
-  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat8(CompletionRequest.apply)
   implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
-  implicit val chunkFormat: RootJsonFormat[CompletionChunk] = jsonFormat4(CompletionChunk.apply)
-  implicit val choiceResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
-  implicit val chunkResponseFormat: RootJsonFormat[CompletionChunkResponse] = jsonFormat6(CompletionChunkResponse.apply)
+  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat8(CompletionRequest.apply)
+  implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
 }
