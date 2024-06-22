@@ -108,6 +108,8 @@
 .incoming-header-container {
   display: flex;
   align-items: center;
+  margin-left: 4px;
+  margin-right: 4px;
   margin-top: 16px;
   margin-bottom: 6px;
 }
@@ -116,7 +118,8 @@
   display: flex;
   align-items: center;
   justify-content: end;
-  margin-right: 10px;
+  margin-left: 4px;
+  margin-right: 4px;
   margin-top: 16px;
   margin-bottom: 6px;
 }
