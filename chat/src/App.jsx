@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Chat from './chat/Chat'
+import InternetIcon from './assets/internet.svg'
 import './App.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
   const server = {
     id: 'server',
     name: 'Server',
+    avatar: InternetIcon,
   };
 
   const system = {
@@ -39,8 +41,8 @@ function App() {
 
   const sendMessage = (text) => {
     messages.push({
-      text: textMessage(text),
       user: user,
+      text: textMessage(text),
       createdAt: new Date(),
     });
 
