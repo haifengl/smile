@@ -18,9 +18,9 @@ export default function IncomingMessage({
     }, [user])
 
     return (
-        <div data-testid="incoming-message" className='incoming-wrapper'>
+        <div data-testid="incoming-message" className="incoming-wrapper">
             <div className="text-wrapper">
-                <div className="header-container">
+                <div className="incoming-header-container">
                     <div className="picture-container">
                         <img src={avatar} className="profile-picture"
                             onError={() => setAvatar(ProfileIcon)}

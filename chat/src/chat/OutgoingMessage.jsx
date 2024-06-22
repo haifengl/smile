@@ -18,9 +18,9 @@ export default function OutgoingMessage({
     }, [user])
 
     return (
-        <div data-testid="outgoing-message" className='outgoing-wrapper'>
+        <div data-testid="outgoing-message" className="outgoing-wrapper">
             <div className="text-wrapper">
-                <div className="header-container">
+                <div className="outgoing-header-container">
                     <div className="picture-container">
                         <img src={avatar} className="profile-picture"
                             onError={() => setAvatar(ProfileIcon)}
@@ -29,7 +29,7 @@ export default function OutgoingMessage({
                     <div className="name">{user?.name}</div>
                 </div>
 
-                <div style={{ display: "flex" }}>
+                <div>
                     <div className="outgoing-message-container">
                         <div className="outgoing-background"/>
                         <TextContent>
