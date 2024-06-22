@@ -42,7 +42,7 @@ function App() {
 
     const data = {
       "model": "meta/llama3",
-      "stream": false,
+      "stream": true,
       "messages": [
         {
           "role": "system",
@@ -55,6 +55,7 @@ function App() {
       ]
     };
 
+    const url = '/v1/chat/completions';
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -63,38 +64,95 @@ function App() {
       body: JSON.stringify(data),
     };
 
-    fetch('/v1/chat/completions', requestOptions)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log(data);
+    if (data["stream"]) {
+      requestOptions['headers']['Accept'] = 'text/event-stream';
+      fetch(url, requestOptions)
+        .then(response => {
+          // Get the reader from the stream
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          const history = messages;
+          const message = {
+            text: '',
+            user: bot,
+            createdAt: new Date(),
+          };
 
-        let content = data['choices'][0]['message']['content'];
-        content = content.trim();
+          // Recursive function to read each chunk
+          const readChunk = () => {
+            // Read a chunk from the reader
+            reader.read()
+              .then(({value, done}) => {
+                if (done) {
+                  if (message.text === '') {
+                    message.user = server;
+                    message.text = 'Empty response. Probably bad request.';
+                    setMessages([...history, message]);
+                  }
+                  setShowTypingIndicator(false);
+                  return;
+                }
+                // Convert the chunk value to a string
+                const chunk = decoder.decode(value);
+                for (let link of chunk.split('data:')) {
+                  message.text += link;
+                }
+                setMessages([...history, message]);
+                // Read the next chunk
+                readChunk();
+              })
+              .catch(error => {
+                console.error(error);
+                throw error;
+              });
+          };
+          // Start reading the chunks
+          readChunk();
+        })
+        .catch(error => {
+          messages.push({
+            text: error.message,
+            user: server,
+            createdAt: new Date(),
+          });
 
-        messages.push({
-          text: content,
-          user: bot,
-          createdAt: new Date(data['created']),
+          setMessages([...messages]);
+          setShowTypingIndicator(false);
         });
+    } else {
+      fetch(url, requestOptions)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log(data);
 
-        setMessages([...messages]);
-        setShowTypingIndicator(false);
-      })
-      .catch(error => {
-        messages.push({
-          text: error.message,
-          user: server,
-          createdAt: new Date(),
+          let content = data['choices'][0]['message']['content'];
+          content = content.trim();
+
+          messages.push({
+            text: content,
+            user: bot,
+            createdAt: new Date(data['created']),
+          });
+
+          setMessages([...messages]);
+          setShowTypingIndicator(false);
+        })
+        .catch(error => {
+          messages.push({
+            text: error.message,
+            user: server,
+            createdAt: new Date(),
+          });
+
+          setMessages([...messages]);
+          setShowTypingIndicator(false);
         });
-
-        setMessages([...messages]);
-        setShowTypingIndicator(false);
-      });
+    }
   }
 
   return (
