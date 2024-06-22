@@ -8,7 +8,7 @@ export default function Chat({
     style,
     userId,
     messages,
-    sendMessage,
+    onSendMessage,
     showTypingIndicator,
     title = "SmileServe - Llama3",
     placeholder = "Type prompt here",
@@ -27,7 +27,7 @@ export default function Chat({
                     theme={theme}
                 />
                 <MessageInput
-                    onSendMessage={sendMessage}
+                    onSendMessage={onSendMessage}
                     placeholder={placeholder}
                     theme={theme}
                 />
