@@ -10,7 +10,7 @@ export default function Chat({
     messages,
     onSendMessage,
     showTypingIndicator,
-    title = "SmileServe - Llama3",
+    title = "SmileChat - Llama3",
     placeholder = "Type prompt here",
     theme = '#6ea9d7',
 }) {

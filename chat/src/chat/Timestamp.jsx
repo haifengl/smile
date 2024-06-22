@@ -39,7 +39,6 @@ function calculateTimeAgo(date) {
 export default function Timestamp({
     date,
 }) {
-
     const [dateSent, setDateSent] = useState()
 
     useEffect(() => {

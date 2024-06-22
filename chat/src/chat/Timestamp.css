@@ -28,7 +28,7 @@
 }
 
 .timestamp-container {
-  display:flex;
+  display: flex;
   width: 100%; 
   position: relative;
   justify-content: end;
