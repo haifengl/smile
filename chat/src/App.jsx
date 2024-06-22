@@ -77,13 +77,13 @@ function App() {
       .then(data => {
         console.log(data);
 
-        let response = data['outputs'][0]['data'][0];
-        response = response.trim();
+        let content = data['choices'][0]['message']['content'];
+        content = content.trim();
 
         messages.push({
-          text: textMessage(response),
+          text: textMessage(content),
           user: bot,
-          createdAt: new Date(),
+          createdAt: new Date(data['created']),
         });
 
         setMessages([...messages]);
