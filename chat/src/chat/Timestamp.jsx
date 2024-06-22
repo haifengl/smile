@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import './Timestamp.css'
 
 function calculateDifferences(date) {
     try {
@@ -55,7 +56,7 @@ export default function Timestamp({
 
     return (
         <div className="timestamp-container">
-            <div className="content">{dateSent}</div>
+            <div className="timestamp-content">{dateSent}</div>
         </div>
     )
 }
