@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './MessageList.css'
-import Message from './Message'
+import IncomingMessage from './IncomingMessage'
+import OutgoingMessage from './OutgoingMessage'
 import TypingIndicator from './TypingIndicator'
 
 export default function MessageList({
@@ -107,20 +108,17 @@ export default function MessageList({
                         }
                     }}
                 >
-                    {messages && scrollContainerRef.current && bottomBufferRef.current && messages.map(({ user, text, media, loading: messageLoading, seen, createdAt }, index) => {
+                    {messages && scrollContainerRef.current && bottomBufferRef.current && messages.map(({ user, text, createdAt }, index) => {
                         if (user.id == (userId && userId.toLowerCase())) {
-                            // my message
-                            return <Message key={index}
-                                    type="outgoing"
+                            return <OutgoingMessage key={index}
+                                    user={user}
                                     text={text}
                                     timestamp={createdAt}
                                 />
                         } else {
-                            // other message
-                            return <Message key={index}
-                                    type='incoming'
-                                    text={text}
+                            return <IncomingMessage key={index}
                                     user={user}
+                                    text={text}
                                     timestamp={createdAt}
                                 />
                         }
