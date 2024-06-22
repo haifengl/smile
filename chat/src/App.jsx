@@ -93,17 +93,17 @@ function App() {
                   return;
                 }
 
-                // Always parse again from beginning.
+                // Always parse from beginning.
                 // The format of a chunk may be ill-formed
-                // due to the streaming and SSE's newline
-                // for each 'data:' event.
+                // due to the streaming chunk braks and
+                // SSE's newline breaks between events.
                 content += decoder.decode(value);
-                // SSE adds \n\n between events.
-                content = content.replace(/\n\ndata:/, 'data:');
-                message.text = '';
-                for (let line of content.split(/data:/)) {
-                  message.text += line;
-                }
+                // strip first data:
+                message.text = content.substring(5);
+                // remove \n\n between events
+                message.text = message.text.replaceAll('\n\ndata:', '');
+                // process multiline event
+                message.text = message.text.replaceAll('\ndata:', '\n');
                 setMessages([...history, message]);
                 // Read the next chunk
                 readChunk();
