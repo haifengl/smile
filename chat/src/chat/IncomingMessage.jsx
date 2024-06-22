@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react'
 import './Message.css'
-import ProfilePicture from '../assets/profile.png'
+import ProfileIcon from '../assets/profile.svg'
 import TextContent from './TextContent'
 import Timestamp from './Timestamp'
 
 export default function IncomingMessage({
+    user,
     text,
     timestamp,
-    user,
 }) {
-    const [avatar, setAvatar] = React.useState(ProfilePicture)
+    const [avatar, setAvatar] = React.useState(ProfileIcon)
 
     useEffect(() => {
         if (user?.avatar && user.avatar.trim().length > 0) {
@@ -23,7 +23,7 @@ export default function IncomingMessage({
                 <div className="header-container">
                     <div className="picture-container">
                         <img src={avatar} className="profile-picture"
-                            onError={() => setAvatar(ProfilePicture)}
+                            onError={() => setAvatar(ProfileIcon)}
                         />
                     </div>
                     <div className="name">{user?.name}</div>

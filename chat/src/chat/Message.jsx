@@ -3,15 +3,16 @@ import OutgoingMessage from './OutgoingMessage'
 import IncomingMessage from './IncomingMessage'
 
 export default function Message({
+    user,
     text,
     timestamp,
-    user,
     type = "outgoing",
 }) {
 
     return (
         type === "outgoing" ?
             <OutgoingMessage
+                user={user}
                 text={text}
                 timestamp={timestamp}
             />
