@@ -2,8 +2,8 @@
   display: flex;
   justify-content: end;
   margin-right: 10px;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   position: relative;
   box-sizing: border-box;
   z-index: 1;
@@ -14,8 +14,8 @@
   justify-content: start;
   align-items: flex-end;
   margin-right: 10px;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   position: relative;
   box-sizing: border-box;
   z-index: 1;
