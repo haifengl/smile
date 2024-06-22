@@ -31,13 +31,11 @@ export default function OutgoingMessage({
                     <Timestamp date={timestamp}/>
                 </div>
 
-                <div>
-                    <div className="outgoing-message-container">
-                        <div className="outgoing-background"/>
-                        <TextContent>
-                            {text}
-                        </TextContent>
-                    </div>
+                <div className="outgoing-message-container">
+                    <div className="outgoing-background"/>
+                    <TextContent>
+                        {text}
+                    </TextContent>
                 </div>
             </div>
         </div>

@@ -31,15 +31,13 @@ export default function IncomingMessage({
                     <Timestamp date={timestamp}/>
                 </div>
 
-                <div style={{ display: "flex" }}>
-                    <div className="incoming-message-container">
-                        <div className="incoming-background"/>
+                <div className="incoming-message-container">
+                    <div className="incoming-background"/>
                         <TextContent>
                             {text}
                         </TextContent>
                     </div>
                 </div>
-            </div>
         </div>
     )
 }
