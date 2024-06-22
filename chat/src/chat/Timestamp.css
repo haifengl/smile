@@ -4,7 +4,8 @@
   position: relative;
   justify-content: end;
   align-items: center;
-  margin-top: -8px;
+  margin-top: 2px;
+  margin-right: 10px;
   user-select: none;
 }
 
@@ -13,7 +14,6 @@
   vertical-align: text-top;
   font-size: 12px;
   margin-right: 4px;
-  align-self: flex-start;
   line-height: auto;
   color: rgb(75 85 99);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
