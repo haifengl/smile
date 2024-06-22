@@ -7,23 +7,14 @@ import TypingIndicator from './TypingIndicator'
 export default function MessageList({
     messages,
     userId,
-    onScrollToTop,
     showTypingIndicator,
     typingIndicatorContent,
     theme = '#6ea9d7',
 }) {
-    /** keeps track of whether messages was previously empty or whether it has already scrolled */
     const [messagesWasEmpty, setMessagesWasEmpty] = useState(true)
     const containerRef = useRef()
     const bottomBufferRef = useRef()
     const scrollContainerRef = useRef()
-
-    const detectTop = (ref) => {
-        if (ref.current) {
-            return ref.current.scrollTop < 50
-        }
-        return false
-    }
 
     const detectBottom = (ref) => {
         if (ref.current) {
@@ -34,7 +25,8 @@ export default function MessageList({
     }
 
     useEffect(() => {
-        //detecting when the scroll view is first rendered and messages have rendered then you can scroll to the bottom
+        // scroll to the bottom when the scroll view is first rendered
+        // and messages have rendered.
         if (bottomBufferRef.current && scrollContainerRef.current && !messagesWasEmpty) {
             scrollToBottom()
         }
@@ -49,15 +41,15 @@ export default function MessageList({
 
         if (messages) {
             if (messagesWasEmpty) {
-                //if the messages object was previously empty then scroll to bottom
-                // this is for when the first page of messages arrives
-                //if a user has instead scrolled to the top and the next page of messages arrives then don't scroll to bottom
-
+                // scroll to bottom if the messages object was previously empty
+                // e.g., when the first page of messages arrives.
+                // However, don't scroll to bottom if the next page of messages arrives.
                 setMessagesWasEmpty(false)
                 scrollToBottom()
             }
 
-            // when closer to the bottom of the scroll bar and a new message arrives then scroll to bottom
+            // scroll to bottom when closer to the bottom of the scroll bar
+            // and a new message arrives.
             if (detectBottom(scrollContainerRef)) {
                 scrollToBottom()
             }
@@ -65,12 +57,8 @@ export default function MessageList({
         }
     }, [messages])
 
-
     useEffect(() => {
-        //TODO when closer to the bottom of the scroll bar and a new message arrives then scroll to bottom
-        if (detectBottom(scrollContainerRef)) {
-            scrollToBottom()
-        }
+        scrollToBottom()
     }, [showTypingIndicator])
 
     const scrollToBottom = async () => {
@@ -85,7 +73,7 @@ export default function MessageList({
             const scrollOffset = childRect.top + container.scrollTop - parentRect.top;
 
             if (container.scrollBy) {
-                container.scrollBy({ top: scrollOffset, behavior: "auto" });
+                container.scrollBy({ top: scrollOffset, behavior: "smooth" });
             } else {
                 container.scrollTop = scrollOffset;
             }
@@ -101,12 +89,6 @@ export default function MessageList({
             <div style={{ "height" : "100%" }}>
                 <div className="scroll-container"
                     ref={scrollContainerRef}
-                    onScroll={() => {
-                        //detect when scrolled to top
-                        if (detectTop(scrollContainerRef)) {
-                            onScrollToTop && onScrollToTop()
-                        }
-                    }}
                 >
                     {messages && scrollContainerRef.current && bottomBufferRef.current && messages.map(({ user, text, createdAt }, index) => {
                         if (user.id == (userId && userId.toLowerCase())) {
