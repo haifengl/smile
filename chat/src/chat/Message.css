@@ -23,8 +23,9 @@
   
 .outgoing-message-container {
   max-width: 90%;
-  min-width: 80px;
-  margin-left: 10px;
+  min-width: 120px;
+  margin-left: auto;
+  margin-right: 10px;
   justify-content: flex-end;
   align-items: flex-end;
   gap: 10px;
@@ -34,7 +35,7 @@
 
 .incoming-message-container {
   max-width: 90%;
-  min-width: 80px;
+  min-width: 120px;
   margin-left: 0px;
   margin-bottom: 0px;
   justify-content: flex-end;
@@ -105,9 +106,18 @@
   box-sizing: border-box;
 }
 
-.header-container {
+.incoming-header-container {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+.outgoing-header-container {
   display: flex; 
   align-items: center;
+  justify-content: end;
+  margin-right: 10px;
   margin-top: 16px;
   margin-bottom: 6px;
 }
