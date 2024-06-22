@@ -20,7 +20,7 @@ export default function OutgoingMessage({
     return (
         <div data-testid="outgoing-message" className='outgoing-wrapper'>
             <div className="text-wrapper">
-            <div className="header-container">
+                <div className="header-container">
                     <div className="picture-container">
                         <img src={avatar} className="profile-picture"
                             onError={() => setAvatar(ProfileIcon)}
