@@ -68,7 +68,7 @@ function App() {
       requestOptions['headers']['Accept'] = 'text/event-stream';
       fetch(url, requestOptions)
         .then(response => {
-          // Get the reader from the stream
+          let content = '';
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           const history = messages;
@@ -92,18 +92,31 @@ function App() {
                   setShowTypingIndicator(false);
                   return;
                 }
-                // Convert the chunk value to a string
-                const chunk = decoder.decode(value);
-                for (let link of chunk.split('data:')) {
-                  message.text += link;
+
+                // Always parse again from beginning.
+                // The format of a chunk may be ill-formed
+                // due to the streaming and SSE's newline
+                // for each 'data:' event.
+                content += decoder.decode(value);
+                // SSE adds \n\n between events.
+                content = content.replace(/\n\ndata:/, 'data:');
+                message.text = '';
+                for (let line of content.split(/data:/)) {
+                  message.text += line;
                 }
                 setMessages([...history, message]);
                 // Read the next chunk
                 readChunk();
               })
               .catch(error => {
-                console.error(error);
-                throw error;
+                messages.push({
+                  text: error.message,
+                  user: server,
+                  createdAt: new Date(),
+                });
+
+                setMessages([...messages]);
+                setShowTypingIndicator(false);
               });
           };
           // Start reading the chunks
