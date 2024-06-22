@@ -21,11 +21,6 @@ function App() {
     avatar: InternetIcon,
   };
 
-  const system = {
-    role: "system",
-    content: "You are a helpful, respectful and honest assistant."
-  };
-
   const textMessage = (text) => {
     return `<span style="white-space: pre-wrap">${text}</span>`;
   }
@@ -51,9 +46,12 @@ function App() {
 
     const data = {
       "model": "meta/llama3",
-      "stream": true,
+      "stream": false,
       "messages": [
-        system,
+        {
+          "role": "system",
+          "content": "You are a helpful, respectful and honest assistant."
+        },
         {
           "role": "user",
           "content": text
