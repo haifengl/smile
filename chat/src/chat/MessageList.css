@@ -41,7 +41,7 @@
 }
 
 .buffer {
-  height: 2px;
+  height: 10px;
   width: 100%;
   position: relative;
 }
