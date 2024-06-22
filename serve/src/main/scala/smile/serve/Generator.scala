@@ -72,7 +72,6 @@ object Generator {
           } catch {
             case e: Throwable => log.error("ChatStream: ", e)
           } finally {
-            publisher.submit("[DONE]")
             publisher.close()
           }
           Behaviors.same
