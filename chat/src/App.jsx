@@ -12,7 +12,7 @@ function App() {
   const bot = {
     id: 'meta/llama3',
     name: 'Copilot',
-    avatar: 'http://haifengl.github.io/images/smile.jpg',
+    avatar: 'https://haifengl.github.io/images/smile.jpg',
   };
   
   const server = {
@@ -21,13 +21,9 @@ function App() {
     avatar: InternetIcon,
   };
 
-  const textMessage = (text) => {
-    return `<span style="white-space: pre-wrap">${text}</span>`;
-  }
-
   const [messages, setMessages] = useState([
     {
-      text: textMessage('Hello! How are you today? As a helpful, respectful and honest assistant, I am happy to serve you.'),
+      text: 'Hello! How are you today? As a helpful, respectful and honest assistant, I am happy to serve you.',
       user: bot,
     },
   ]);
@@ -37,7 +33,7 @@ function App() {
   const sendMessage = (text) => {
     messages.push({
       user: user,
-      text: textMessage(text),
+      text: text,
       createdAt: new Date(),
     });
 
@@ -81,7 +77,7 @@ function App() {
         content = content.trim();
 
         messages.push({
-          text: textMessage(content),
+          text: content,
           user: bot,
           createdAt: new Date(data['created']),
         });
@@ -91,7 +87,7 @@ function App() {
       })
       .catch(error => {
         messages.push({
-          text: textMessage(error.message),
+          text: error.message,
           user: server,
           createdAt: new Date(),
         });
