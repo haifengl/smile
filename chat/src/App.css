@@ -1,6 +1,8 @@
 #root {
   max-width: 600px;
   height: 100vh;
+  /* mobile viewport bug fix */
+  min-height: -webkit-fill-available;
   overflow: hidden;
   margin: 0 auto;
   padding: 0;
