@@ -276,12 +276,14 @@ public class Llama {
 
                 boolean eos = eosReached.all();
                 if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
-                    int end = eosReached.all() ? curPos : curPos + 1;
-                    var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
-                    var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
-                    var chunk = tokenizer.decode(completion);
-                    publisher.submit(chunk);
-                    chunkPos = curPos + 1;
+                    int end = eos ? curPos : curPos + 1;
+                    if (end > chunkPos) {
+                        var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
+                        var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
+                        var chunk = tokenizer.decode(completion);
+                        publisher.submit(chunk);
+                        chunkPos = curPos + 1;
+                    }
                 }
 
                 if (eos) break;
