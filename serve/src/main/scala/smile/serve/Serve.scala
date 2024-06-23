@@ -29,12 +29,13 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import smile.serve.chat.{ChatRoutes, Generator}
 
 /** LLM Serving.
   *
   * @author Karl Li
   */
-object Serve extends JsonSupport {
+object Serve {
   val conf = ConfigFactory.load()
   val home = System.getProperty("smile.home", ".")
   val assets = home + "/chat"
@@ -62,28 +63,13 @@ object Serve extends JsonSupport {
       implicit val timeout = Timeout.create(conf.getDuration("smile.serve.timeout"))
       val generator = context.spawn(Generator(config), "Generator")
       context.watch(generator)
+      val chat = new ChatRoutes(generator)
 
       val routes = Route.seal {
-        import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
         // Route.seal internally wraps its argument route with the handleExceptions
         // directive in order to catch and handle any exception.
-        path("v1" / "chat" / "completions") {
-          post {
-            entity(as[CompletionRequest]) { request =>
-              log.info("Receive {}", request)
-              if (request.stream.getOrElse(false)) {
-                val publisher = new SubmissionPublisher[String]()
-                val source = JavaFlowSupport.Source.fromPublisher(publisher)
-                  .map(message => ServerSentEvent(message))
-
-                generator ! Generator.ChatStream(request, publisher)
-                complete(source)
-              } else {
-                val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
-                complete(result)
-              }
-            }
-          }
+        path("v1" / "chat") {
+          chat.routes
         } ~
         pathPrefix("chat") {
           get {
