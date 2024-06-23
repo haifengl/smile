@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.serve
+package smile.serve.chat
 
 import java.util.concurrent.SubmissionPublisher
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
 import smile.llm.llama._
+import smile.serve.ServeConfig
 
 /** GenAI actor.
   *

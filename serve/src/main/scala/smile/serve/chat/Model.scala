@@ -14,14 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.serve
+package smile.serve.chat
 
 import java.util.UUID
+import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
 import spray.json._
 
 // domain model
+final case class Thread(id: Long, createdAt: Instant)
+final case class ThreadMessage(id: Long,
+                               threadId: Long,
+                               role: String,
+                               content: String,
+                               status: String,
+                               completedAt: Instant,
+                               createdAt: Instant)
+
 final case class Usage(promptTokens: Int, completionTokens: Int, totalTokens: Int)
 
 object Usage {
