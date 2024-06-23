@@ -30,27 +30,25 @@ class ChatRoutes(generator: ActorRef[Generator.Command])(implicit val system: Ac
   private implicit val ec: ExecutionContext = system.executionContext
   private val log = system.log
 
-  val routes: Route = pathPrefix("v1" / "chat") {
-    concat(
-      path("completions") {
-        post {
-          import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
-          entity(as[CompletionRequest]) { request =>
-            log.info("Receive {}", request)
-            if (request.stream.getOrElse(false)) {
-              val publisher = new SubmissionPublisher[String]()
-              val source = JavaFlowSupport.Source.fromPublisher(publisher)
-                .map(message => ServerSentEvent(message))
+  val routes: Route = concat(
+    path("completions") {
+      post {
+        import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+        entity(as[CompletionRequest]) { request =>
+          log.info("Receive {}", request)
+          if (request.stream.getOrElse(false)) {
+            val publisher = new SubmissionPublisher[String]()
+            val source = JavaFlowSupport.Source.fromPublisher(publisher)
+              .map(message => ServerSentEvent(message))
 
-              generator ! Generator.ChatStream(request, publisher)
-              complete(source)
-            } else {
-              val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
-              complete(result)
-            }
+            generator ! Generator.ChatStream(request, publisher)
+            complete(source)
+          } else {
+            val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
+            complete(result)
           }
         }
       }
-    )
-  }
+    }
+  )
 }
