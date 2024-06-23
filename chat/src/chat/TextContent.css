@@ -6,10 +6,10 @@
   line-height: auto;
   color: #000000;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  padding-left:16px;
-  padding-right:16px;
-  padding-top:8px;
-  padding-bottom:8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-top: -8px;
+  margin-bottom: -8px;
   position: relative;
   box-sizing: border-box;
   word-wrap: break-word;
