@@ -68,7 +68,7 @@ object Serve {
       val routes = Route.seal {
         // Route.seal internally wraps its argument route with the handleExceptions
         // directive in order to catch and handle any exception.
-        path("v1" / "chat") {
+        pathPrefix("v1" / "chat") {
           chat.routes
         } ~
         pathPrefix("chat") {
@@ -97,7 +97,7 @@ object Serve {
     * (e.g. NullPointerException), the class name is returned.
     */
   private def exceptionMessage(ex: Throwable): String = {
-    Option(ex.getMessage).getOrElse(s"${ex.getClass.getName}(null)")
+    Option(ex.getMessage()).getOrElse(s"${ex.getClass.getName}(null)")
   }
 
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[?]): Unit = {
