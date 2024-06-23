@@ -40,8 +40,10 @@ buildInfoPackage := "smile.serve"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
-  "ch.qos.logback"    %  "logback-classic" % "1.5.6",
-  "com.github.scopt"  %% "scopt" % "4.1.0"
+  "com.github.scopt"   %% "scopt" % "4.1.0",
+  "com.typesafe.slick" %% "slick" % "3.5.1",
+  "com.h2database"     %  "h2"    % "2.2.224",
+  "ch.qos.logback"     %  "logback-classic" % "1.5.6"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
