@@ -8,11 +8,7 @@ export default function TextContent({
 }) {
     return (
         <div className="text-content">
-            <Markdown remarkPlugins={[remarkGfm]}
-                components={{
-                    p: React.Fragment,
-                }}
-            >
+            <Markdown remarkPlugins={[remarkGfm]}>
                 {children}
             </Markdown>
         </div>
