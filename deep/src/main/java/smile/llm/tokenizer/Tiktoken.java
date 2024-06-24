@@ -258,13 +258,13 @@ public class Tiktoken implements Tokenizer {
     @Override
     public String decode(int[] tokens) {
         byte[] buffer = new byte[10 * tokens.length];
-        int pos = 0;
+        int offset = 0;
         for (var token : tokens) {
             var array = decoder[token].array();
-            System.arraycopy(array, 0, buffer, pos, array.length);
-            pos += array.length;
+            System.arraycopy(array, 0, buffer, offset, array.length);
+            offset += array.length;
         }
-        return new String(buffer, 0, pos, StandardCharsets.UTF_8);
+        return new String(buffer, 0, offset, StandardCharsets.UTF_8);
     }
 
     @Override
