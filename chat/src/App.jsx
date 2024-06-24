@@ -100,13 +100,13 @@ function App() {
                 // SSE's newline breaks between events.
                 buffer.set(value, offset);
                 offset += value.length;
-                const content = decoder.decode(buffer.subarray(0, offset));
+                let content = decoder.decode(buffer.subarray(0, offset));
                 // strip first data:
-                message.text = content.substring(5);
+                content = content.substring(5);
                 // remove \n\n between events
-                message.text = message.text.replaceAll('\n\ndata:', '');
+                content = content.replaceAll('\n\ndata:', '');
                 // process multiline event
-                message.text = message.text.replaceAll('\ndata:', '\n');
+                message.text = content.replaceAll('\ndata:', '\n');
                 setMessages([...history, message]);
                 // Read the next chunk
                 readChunk();
