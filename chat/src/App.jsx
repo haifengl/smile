@@ -68,7 +68,8 @@ function App() {
       requestOptions['headers']['Accept'] = 'text/event-stream';
       fetch(url, requestOptions)
         .then(response => {
-          let content = '';
+          let offset = 0;
+          const buffer = new Uint8Array(327680); // 32K tokens x 10 chars
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           const history = messages;
@@ -97,7 +98,9 @@ function App() {
                 // The format of a chunk may be ill-formed
                 // due to the streaming chunk braks and
                 // SSE's newline breaks between events.
-                content += decoder.decode(value);
+                buffer.set(value, offset);
+                offset += value.length;
+                const content = decoder.decode(buffer.subarray(0, offset));
                 // strip first data:
                 message.text = content.substring(5);
                 // remove \n\n between events
@@ -109,6 +112,7 @@ function App() {
                 readChunk();
               })
               .catch(error => {
+                console.error(error);
                 messages.push({
                   text: error.message,
                   user: server,
@@ -123,6 +127,7 @@ function App() {
           readChunk();
         })
         .catch(error => {
+          console.error(error);
           messages.push({
             text: error.message,
             user: server,
