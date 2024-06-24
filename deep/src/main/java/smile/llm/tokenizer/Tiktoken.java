@@ -19,6 +19,7 @@ package smile.llm.tokenizer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -256,11 +257,14 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String decode(int[] tokens) {
-        StringBuilder sb = new StringBuilder();
+        byte[] buffer = new byte[10 * tokens.length];
+        int pos = 0;
         for (var token : tokens) {
-            sb.append(decoder[token].toString());
+            var array = decoder[token].array();
+            System.arraycopy(array, 0, buffer, pos, array.length);
+            pos += array.length;
         }
-        return sb.toString();
+        return new String(buffer, 0, pos, StandardCharsets.UTF_8);
     }
 
     @Override
