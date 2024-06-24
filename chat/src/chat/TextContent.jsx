@@ -9,7 +9,7 @@ export default function TextContent({
 }) {
     return (
         <div className="text-content">
-            <Markdown remarkPlugins={[remarkGfm, remarkGemoji]}>
+            <Markdown className="line-break" remarkPlugins={[remarkGfm, remarkGemoji]}>
                 {children}
             </Markdown>
         </div>

@@ -18,3 +18,7 @@
     color: 'blue';
   }
 }
+
+.line-break p {
+  white-space: pre-wrap;
+}
