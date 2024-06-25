@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -57,6 +58,11 @@ public class Tiktoken implements Tokenizer {
      * Otherwise, they will be encoded as special tokens.
      */
     private boolean allowSpecialTokens = false;
+    /**
+     * The default Charset.decode() method doesn't throw exceptions.
+     * Constructs a new decoder for tryDecode method.
+     */
+    private CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
 
     /**
      * Constructor.
@@ -278,7 +284,7 @@ public class Tiktoken implements Tokenizer {
             System.arraycopy(array, 0, buffer, offset, array.length);
             offset += array.length;
         }
-        return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(buffer, 0, offset)).toString();
+        return charsetDecoder.decode(ByteBuffer.wrap(buffer, 0, offset)).toString();
     }
 
     @Override
