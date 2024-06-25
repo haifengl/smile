@@ -1,8 +1,8 @@
 import React, { } from 'react'
-import "./Chat.css"
 import ChatHeader from './ChatHeader'
 import MessageInput from './MessageInput'
 import MessageList from './MessageList'
+import "./Chat.css"
 
 export default function Chat({
     style,
