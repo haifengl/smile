@@ -38,11 +38,12 @@ object Generator {
   final case class ChatStream(request: CompletionRequest, publisher: SubmissionPublisher[String]) extends Command
 
   def apply(config: ServeConfig, dao: ChatDB): Behavior[Command] = {
+    val model = Llama.build(config.model, config.tokenizer,
+      config.maxBatchSize, config.maxSeqLen, config.device)
+
     Behaviors.setup { context =>
       implicit val ec = context.executionContext
       val log = context.log
-      val model = Llama.build(config.model, config.tokenizer,
-        config.maxBatchSize, config.maxSeqLen, config.device)
 
       Behaviors.receiveMessage {
         case Chat(request, replyTo) =>
@@ -72,14 +73,15 @@ object Generator {
           Behaviors.same
 
         case ChatStream(request, publisher) =>
-          try {
-            if (request.model != model.family()) {
-              throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
-            }
+          if (request.model != model.family()) {
+            publisher.close()
+            throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
+          }
 
-            val result = dao.insertMessages(request)
-            Await.ready(result, 10.seconds).onComplete {
-              case Success((threadId, context)) =>
+          val result = dao.insertMessages(request)
+          Await.ready(result, 10.seconds).onComplete {
+            case Success((threadId, context)) =>
+              try {
                 val messages = context.reverse.map(msg => new Message(Role.valueOf(msg.role), msg.content)) ++ request.messages
                 val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
                 val completions = model.chat(Array(messages.toArray),
@@ -88,14 +90,16 @@ object Generator {
                 val response = CompletionResponse(completions(0))
                 log.info("Reply {}", response)
                 dao.insertMessages(threadId, response)
-              case Failure(ex) =>
-                log.error("ChatStream: ", ex)
-            }
-          } catch {
-            case e: Throwable => log.error("ChatStream: ", e)
-          } finally {
-            publisher.close()
+              } catch {
+                case e: Throwable => log.error("ChatStream: ", e)
+              } finally {
+                publisher.close()
+              }
+            case Failure(ex) =>
+              publisher.close()
+              log.error("ChatStream: ", ex)
           }
+
           Behaviors.same
       }
     }
