@@ -31,7 +31,8 @@ function App() {
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
   // Conversation thread ID
-  let threadId = 0;
+  const [threadId, setThreadId] = useState(0);
+
   useEffect(() => {
     if (threadId <= 0) {
       const requestOptions = {
@@ -50,14 +51,12 @@ function App() {
           return response.json();
         })
         .then(thread => {
-          console.log(thread);
-          threadId = thread.id;
+          setThreadId(thread.id);
         })
         .catch(error => {
           console.error(error);
         });
     }
-    getAns();
   }, [])
 
   /** Computes the longest proper prefix which is also a suffix as in KMP algorithm. */
@@ -126,15 +125,19 @@ function App() {
       "stream": true,
       "messages": [
         {
-          "role": "system",
-          "content": "You are a helpful, respectful and honest assistant."
-        },
-        {
           "role": "user",
           "content": text
         }
       ]
     };
+
+    // Guide the system if this is the first user message.
+    if (messages.length == 2) {
+      data.messages.unshift({
+          "role": "system",
+          "content": "You are a helpful, respectful and honest assistant."
+      });
+    }
 
     const url = '/v1/chat/completions';
     const requestOptions = {
@@ -227,8 +230,6 @@ function App() {
           return response.json();
         })
         .then(data => {
-          console.log(data);
-
           let content = data['choices'][0]['message']['content'];
           content = content.trim();
 
