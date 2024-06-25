@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 0;
 
-  height: 100vh;
+  height: 100dvh;
   /* mobile viewport bug fix */
   min-height: -webkit-fill-available;
 
