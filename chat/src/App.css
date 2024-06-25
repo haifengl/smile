@@ -1,11 +1,14 @@
 #root {
-  max-width: 600px;
+  width: 800px;
+  max-width: calc(100% - 20px);
+  margin: 0 auto;
+  padding: 0 10px;
+
   height: 100vh;
   /* mobile viewport bug fix */
   min-height: -webkit-fill-available;
+
   overflow: hidden;
-  margin: 0 auto;
-  padding: 0;
   text-align: center;
 }
 
