@@ -103,7 +103,7 @@ trait ChatDB extends Schema {
     val insert = request.threadId match {
       case Some(threadId) if threadId > 0 =>
         for {
-          context <- messages.sortBy(_.id.desc).take(2).result
+          context <- messages.filter(_.threadId === threadId).sortBy(_.id.desc).take(2).result
           _ <- insertMessages(threadId, request.messages)
         } yield (threadId, context)
       case _ =>
