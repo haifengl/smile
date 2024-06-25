@@ -28,7 +28,7 @@ final case class ThreadMessage(id: Long,
                                threadId: Long,
                                role: String,
                                content: String,
-                               status: String,
+                               status: Option[String],
                                createdAt: Instant)
 
 final case class Usage(promptTokens: Int, completionTokens: Int, totalTokens: Int)
@@ -41,6 +41,7 @@ object Usage {
 
 final case class CompletionRequest(model: String,
                                    messages: Seq[Message],
+                                   threadId: Option[Long],
                                    // The maximum number of tokens to generate,
                                    // i.e. maxGenLen parameter of Llama.generate().
                                    max_tokens: Option[Int],
@@ -136,6 +137,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val threadFormat: RootJsonFormat[Thread] = jsonFormat2(Thread.apply)
   implicit val threadMessageFormat: RootJsonFormat[ThreadMessage] = jsonFormat6(ThreadMessage.apply)
   implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
-  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat8(CompletionRequest.apply)
+  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat9(CompletionRequest.apply)
   implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
 }

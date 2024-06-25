@@ -77,20 +77,48 @@ trait ChatDB extends Schema {
   }
 
   /** Only sender/receive can get message. */
-  def getMessage(id: Long, threadId: Long): Future[Option[ThreadMessage]] = {
+  def getMessage(threadId: Long, id: Long): Future[Option[ThreadMessage]] = {
     db.run(messages.filter(row => row.id === id && row.threadId === threadId).result.headOption)
   }
 
-  def insertMessage(msg: Message, threadId: Long): Future[ThreadMessage] = {
+  def insertMessage(threadId: Long, message: Message): Future[ThreadMessage] = {
+    db.run(insertMessage += ThreadMessage(0, threadId, message.role.toString, message.content, None, Instant.now))
+  }
+
+  private def insertMessages(threadId: Long, messages: Seq[Message], status: Option[String] = None)
+                            (implicit ec: ExecutionContext) = {
     val now = Instant.now
-    val message = ThreadMessage(0, threadId, msg.role.toString, msg.content, "InProgress", now)
-    db.run(insertMessage += message)
+    this.messages ++= messages.map { message =>
+      ThreadMessage(0, threadId, message.role.toString, message.content, status, now)
+    }
+  }
+
+  def insertMessages(request: CompletionRequest)
+                    (implicit ec: ExecutionContext) : Future[Long] = {
+    val now = Instant.now
+    val insert = if (request.threadId.isDefined && request.threadId.get > 0) {
+      for {
+        _ <- insertMessages(request.threadId.get, request.messages)
+      } yield request.threadId.get
+    } else {
+      for {
+        thread <- insertThread += Thread(0, now)
+        _ <- insertMessages(thread.id, request.messages)
+      } yield thread.id
+    }
+    db.run(insert.transactionally)
+  }
+
+  def insertMessages(threadId: Long, response: CompletionResponse)
+                    (implicit ec: ExecutionContext): Future[Option[Int]] = {
+    val now = Instant.now
+    db.run(messages ++= response.choices.map { choice =>
+      ThreadMessage(0, threadId, choice.message.role.toString, choice.message.content, Some(choice.finish_reason.toString), now)
+    })
   }
 
   def updateMessage(id: Long, status: String): Future[Int] = {
-    val q = messages.filter(_.id === id)
-      .map(_.status)
-      .update(status)
+    val q = messages.filter(_.id === id).map(_.status).update(Some(status))
     db.run(q)
   }
 }

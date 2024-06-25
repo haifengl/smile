@@ -35,6 +35,7 @@ object Generator {
 
   def apply(config: ServeConfig, dao: ChatDB): Behavior[Command] = {
     Behaviors.setup { context =>
+      implicit val ec = context.executionContext
       val log = context.log
       val model = Llama.build(config.model, config.tokenizer,
         config.maxBatchSize, config.maxSeqLen, config.device)
@@ -46,12 +47,14 @@ object Generator {
               throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
             }
 
+            val threadId = dao.insertMessages(request)
             val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
             val completions = model.chat(Array(request.messages.toArray),
                 request.max_tokens.getOrElse(config.maxSeqLen / 2), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, null)
             val response = CompletionResponse(completions(0))
             log.info("Reply {}", response)
+            threadId.map(dao.insertMessages(_, response))
             replyTo ! StatusReply.Success(response)
           } catch {
             case e: Throwable => replyTo ! StatusReply.Error(e)
@@ -64,12 +67,14 @@ object Generator {
               throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
             }
 
+            val threadId = dao.insertMessages(request)
             val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
             val completions = model.chat(Array(request.messages.toArray),
                 request.max_tokens.getOrElse(config.maxSeqLen / 2), request.temperature.getOrElse(0.6),
                 request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, publisher)
             val response = CompletionResponse(completions(0))
             log.info("Reply {}", response)
+            threadId.map(dao.insertMessages(_, response))
           } catch {
             case e: Throwable => log.error("ChatStream: ", e)
           } finally {
