@@ -43,7 +43,7 @@ trait ChatDB extends Schema {
   def getThreads(limit: Int = 100, cursor: Option[Long]): Future[Seq[Thread]] = {
     val q = cursor.map(before => threads.filter(_.id < before))
       .getOrElse(threads)
-      .sortBy(_.createdAt.desc.nullsFirst)
+      .sortBy(_.id.desc)
       .take(limit)
       .result
 
@@ -69,7 +69,7 @@ trait ChatDB extends Schema {
     val rows = messages.filter(_.threadId === threadId)
     val q = cursor.map(before => rows.filter(_.id < before))
       .getOrElse(rows)
-      .sortBy(_.createdAt.desc.nullsFirst)
+      .sortBy(_.id)
       .take(limit)
       .result
 
@@ -79,10 +79,6 @@ trait ChatDB extends Schema {
   /** Only sender/receive can get message. */
   def getMessage(threadId: Long, id: Long): Future[Option[ThreadMessage]] = {
     db.run(messages.filter(row => row.id === id && row.threadId === threadId).result.headOption)
-  }
-
-  def insertMessage(threadId: Long, message: Message): Future[ThreadMessage] = {
-    db.run(insertMessage += ThreadMessage(0, threadId, message.role.toString, message.content, None, Instant.now))
   }
 
   private def insertMessages(threadId: Long, messages: Seq[Message], status: Option[String] = None)
@@ -115,6 +111,10 @@ trait ChatDB extends Schema {
     db.run(messages ++= response.choices.map { choice =>
       ThreadMessage(0, threadId, choice.message.role.toString, choice.message.content, Some(choice.finish_reason.toString), now)
     })
+  }
+
+  def insertMessage(threadId: Long, message: Message): Future[ThreadMessage] = {
+    db.run(insertMessage += ThreadMessage(0, threadId, message.role.toString, message.content, None, Instant.now))
   }
 
   def updateMessage(id: Long, status: String): Future[Int] = {
