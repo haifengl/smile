@@ -285,7 +285,7 @@ public class Llama {
                             publisher.submit(chunk);
                             chunkPos = curPos + 1;
                         } catch (Exception ex) {
-                            logger.info("Cannot decode a chunk", ex);
+                            logger.debug("Cannot decode a chunk", ex);
                         }
                     }
                 }
