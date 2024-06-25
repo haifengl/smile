@@ -2,8 +2,7 @@
   box-sizing: border-box;
   position: relative;
   width: 100%;
-  display: flex; 
-  padding-right: 12px;
+  display: flex;
 }
 
 .input-form {

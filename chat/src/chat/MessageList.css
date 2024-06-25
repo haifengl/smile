@@ -1,10 +1,8 @@
 .message-list {
   height: 100%;
   position: relative;
-  max-height: 100vh;
+  max-height: 100dvh;
   overflow-y: hidden;
-  padding-left: 0px;
-  padding-right: 12px; 
 }
 
 .scroll-background {
@@ -20,7 +18,6 @@
   height: 100%;
   z-index: 0;
   box-sizing: border-box;
-  padding-right: 12px;
 }
 
 .scroll-container {
