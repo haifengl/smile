@@ -21,7 +21,9 @@ batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile-serve.ini")
 
 bashScriptExtraDefines ++= Seq(
   """addJava "-Dsmile.home=${app_home}/.."""",
-  """addJava "-Dscala.usejavacp=true""""
+  """addJava "-Dscala.usejavacp=true"""",
+  """addJava "-Dorg.bytedeco.javacpp.pathsFirst=true"""",
+  """addJava "-Djava.library.path=${app_home}/../torch/lib""""
 )
 
 batScriptExtraDefines ++= Seq(

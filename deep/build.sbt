@@ -6,7 +6,7 @@ Test / envVars += ("PYTORCH_ENABLE_MPS_FALLBACK" -> "1")
 
 Test / javaOptions ++= Seq(
   "-Dorg.bytedeco.javacpp.pathsFirst=true",
-  "-Djava.library.path=deep/lib/torch/lib"
+  "-Djava.library.path=serve/src/universal/torch/lib"
 )
 
 libraryDependencies ++= Seq(
