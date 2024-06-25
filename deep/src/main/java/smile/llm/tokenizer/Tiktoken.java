@@ -19,6 +19,8 @@ package smile.llm.tokenizer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -265,6 +267,18 @@ public class Tiktoken implements Tokenizer {
             offset += array.length;
         }
         return new String(buffer, 0, offset, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public String tryDecode(int[] tokens) throws CharacterCodingException {
+        byte[] buffer = new byte[10 * tokens.length];
+        int offset = 0;
+        for (var token : tokens) {
+            var array = decoder[token].array();
+            System.arraycopy(array, 0, buffer, offset, array.length);
+            offset += array.length;
+        }
+        return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(buffer, 0, offset)).toString();
     }
 
     @Override

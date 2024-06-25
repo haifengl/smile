@@ -17,6 +17,7 @@
 package smile.llm.tokenizer;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.util.Map;
 import java.util.regex.Pattern;
 import smile.util.Bytes;
@@ -45,10 +46,24 @@ public interface Tokenizer {
 
     /**
      * Decodes a list of token IDs into a string.
+     * Note that a token may contain only partial bytes of a character.
+     * This method always replaces malformed-input and unmappable-character
+     * sequences with this charset's default replacement string.
      * @param tokens The list of token IDs to be decoded.
      * @return The decoded string.
      */
     String decode(int[] tokens);
+
+    /**
+     * Try to decode a list of token IDs into a string. This method throws
+     * CharacterCodingException if the byte sequence is not legal UTF-8.
+     * @param tokens The list of token IDs to be decoded.
+     * @return The decoded string.
+     * @exception CharacterCodingException If the byte sequence is not legal UTF-8.
+     */
+    default String tryDecode(int[] tokens) throws CharacterCodingException {
+        return decode(tokens);
+    }
 
     /**
      * Segments text into tokens.
