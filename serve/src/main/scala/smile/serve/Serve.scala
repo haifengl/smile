@@ -37,28 +37,28 @@ import smile.serve.chat.{ChatRoutes, Generator}
   * @author Karl Li
   */
 object Serve {
-  val conf = ConfigFactory.load()
-  val home = System.getProperty("smile.home", ".")
-  val assets = home + "/chat"
-  val dao = new DAO(DatabaseConfig.forConfig[JdbcProfile](conf.getString("smile.serve.db.config")))
+  private val conf = ConfigFactory.load()
+  private val assets = System.getProperty("smile.home", ".") + "/chat"
+  private val dao = new DAO(DatabaseConfig.forConfig[JdbcProfile](conf.getString("smile.serve.db.config")))
 
   /**
     * Runs an online prediction HTTP server.
     * @param config the service configuration.
     */
   def apply(config: ServeConfig): ActorSystem[Nothing] = {
+    print("SmileServe initializing...")
+    implicit val ec = scala.concurrent.ExecutionContext.global
+    Await.ready(dao.setup(), Duration.Inf) onComplete {
+      case Success(_) => println("succeed")
+      case Failure(ex) => println("failed: " + ex.getMessage)
+        System.exit(1)
+    }
+
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
       implicit val ec = context.executionContext
       // context cannot be used inside Future.onComplete, which is outside of an actor.
       val log = context.log
-
-      log.info("SmileServe initializing...")
-      Await.ready(dao.setup(), Duration.Inf) onComplete {
-        case Success(_) => log.info("SmileServe initialization succeed")
-        case Failure(ex) => log.error("SmileServe initialization failed", ex)
-          System.exit(1)
-      }
 
       implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
         case ex: IllegalArgumentException =>
