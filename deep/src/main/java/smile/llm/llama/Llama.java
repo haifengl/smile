@@ -280,9 +280,13 @@ public class Llama {
                     if (end > chunkPos) {
                         var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
                         var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
-                        var chunk = tokenizer.decode(completion);
-                        publisher.submit(chunk);
-                        chunkPos = curPos + 1;
+                        try {
+                            var chunk = tokenizer.tryDecode(completion);
+                            publisher.submit(chunk);
+                            chunkPos = curPos + 1;
+                        } catch (Exception ex) {
+                            logger.info("Cannot decode a chunk", ex);
+                        }
                     }
                 }
 

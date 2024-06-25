@@ -44,7 +44,7 @@ function App() {
         body: JSON.stringify({}),
       };
 
-      fetch('http://ai-lab-01/v1/threads', requestOptions)
+      fetch('/v1/threads', requestOptions)
         .then(response => {
           if (!response.ok) {
             throw new Error(response.statusText);
@@ -90,7 +90,7 @@ function App() {
       });
     }
 
-    const url = 'http://ai-lab-01/v1/chat/completions';
+    const url = '/v1/chat/completions';
     const requestOptions = {
       method: 'POST',
       headers: {
