@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
@@ -60,6 +60,7 @@ function App() {
     }
   }, [])
 
+  const controller = useRef(null);
   const sendMessage = (text) => {
     messages.push({
       user: user,
@@ -100,8 +101,8 @@ function App() {
     };
 
     if (data["stream"]) {
-      const ctrl = new AbortController();
-      requestOptions['signal'] = ctrl.signal;
+      controller.current = new AbortController();
+      requestOptions['signal'] = controller.current.signal;
       requestOptions['headers']['Accept'] = 'text/event-stream';
 
       const history = messages;
@@ -144,6 +145,7 @@ function App() {
 
           setMessages([...messages]);
           setShowTypingIndicator(false);
+          throw error; // rethrow to stop the operation
         }
       });
     } else {
