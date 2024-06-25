@@ -30,7 +30,7 @@ import scopt.OParser
 case class ServeConfig(model: String,
                        tokenizer: String,
                        maxSeqLen: Int = 4096,
-                       maxBatchSize: Int = 4,
+                       maxBatchSize: Int = 1,
                        device: Int = 0)
 
 /** The main entry to start SmileServe service.
