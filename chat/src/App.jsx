@@ -60,7 +60,6 @@ function App() {
     }
   }, [])
 
-  const controller = useRef(null);
   const sendMessage = (text) => {
     messages.push({
       user: user,
@@ -101,8 +100,6 @@ function App() {
     };
 
     if (data["stream"]) {
-      controller.current = new AbortController();
-      requestOptions['signal'] = controller.current.signal;
       requestOptions['headers']['Accept'] = 'text/event-stream';
 
       const history = messages;
