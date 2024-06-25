@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd chat
+npm install
 npm run build
 cd ../
 sbt serve/stage
