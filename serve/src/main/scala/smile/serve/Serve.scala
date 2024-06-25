@@ -16,6 +16,8 @@
  */
 package smile.serve
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.{ActorSystem, Terminated}
@@ -47,8 +49,17 @@ object Serve {
   def apply(config: ServeConfig): ActorSystem[Nothing] = {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
+      implicit val ec = context.executionContext
       // context cannot be used inside Future.onComplete, which is outside of an actor.
       val log = context.log
+
+      log.info("SmileServe initializing...")
+      Await.ready(dao.setup(), Duration.Inf) onComplete {
+        case Success(_) => log.info("SmileServe initialization succeed")
+        case Failure(ex) => log.error("SmileServe initialization failed", ex)
+          System.exit(1)
+      }
+
       implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {
         case ex: IllegalArgumentException =>
           log.error("HTTP exception handler", ex)
