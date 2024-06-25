@@ -29,7 +29,7 @@ import scopt.OParser
   */
 case class ServeConfig(model: String,
                        tokenizer: String,
-                       maxSeqLen: Int = 2048,
+                       maxSeqLen: Int = 4096,
                        maxBatchSize: Int = 4,
                        device: Int = 0)
 
