@@ -98,18 +98,21 @@ trait ChatDB extends Schema {
   }
 
   def insertMessages(request: CompletionRequest)
-                    (implicit ec: ExecutionContext) : Future[Long] = {
+                    (implicit ec: ExecutionContext) : Future[(Long, Seq[ThreadMessage])] = {
     val now = Instant.now
-    val insert = if (request.threadId.isDefined && request.threadId.get > 0) {
-      for {
-        _ <- insertMessages(request.threadId.get, request.messages)
-      } yield request.threadId.get
-    } else {
-      for {
-        thread <- insertThread += Thread(0, now)
-        _ <- insertMessages(thread.id, request.messages)
-      } yield thread.id
+    val insert = request.threadId match {
+      case Some(threadId) if threadId > 0 =>
+        for {
+          context <- messages.sortBy(_.id.desc).take(2).result
+          _ <- insertMessages(threadId, request.messages)
+        } yield (threadId, context)
+      case _ =>
+        for {
+          thread <- insertThread += Thread(0, now)
+          _ <- insertMessages(thread.id, request.messages)
+        } yield (thread.id, Seq.empty)
     }
+
     db.run(insert.transactionally)
   }
 
