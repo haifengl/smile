@@ -17,7 +17,6 @@
 package smile.serve
 
 import scopt.OParser
-import akka.actor.CoordinatedShutdown
 
 /**
   * Serve command options.
@@ -95,10 +94,7 @@ object Main {
           |  Welcome to Smile Serve ${BuildInfo.version}! Built at ${BuildInfo.builtAtString}
           |===============================================================================
         """.stripMargin)
-        val system = Serve(config)
-        CoordinatedShutdown(system).addJvmShutdownHook {
-          println("System shutdown...")
-        }
+        Serve(config)
       case _ => () // If arguments be invalid, the error message would have been displayed.
     }
   }

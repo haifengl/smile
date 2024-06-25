@@ -16,19 +16,18 @@
  */
 package smile.serve
 
-import java.util.concurrent.SubmissionPublisher
 import scala.util.{Failure, Success}
+import akka.actor.CoordinatedShutdown
 import akka.actor.typed.{ActorSystem, Terminated}
-import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 import smile.serve.chat.{ChatRoutes, Generator}
 
 /** LLM Serving.
@@ -39,6 +38,7 @@ object Serve {
   val conf = ConfigFactory.load()
   val home = System.getProperty("smile.home", ".")
   val assets = home + "/chat"
+  val dao = new DAO(DatabaseConfig.forConfig[JdbcProfile](conf.getString("smile.serve.db.config")))
 
   /**
     * Runs an online prediction HTTP server.
@@ -61,14 +61,14 @@ object Serve {
       // asking someone requires a timeout if the timeout hits without response
       // the ask is failed with a TimeoutException
       implicit val timeout = Timeout.create(conf.getDuration("smile.serve.timeout"))
-      val generator = context.spawn(Generator(config), "Generator")
+      val generator = context.spawn(Generator(config, dao), "Generator")
       context.watch(generator)
-      val chat = new ChatRoutes(generator)
+      val chat = new ChatRoutes(generator, dao)
 
       val routes = Route.seal {
         // Route.seal internally wraps its argument route with the handleExceptions
         // directive in order to catch and handle any exception.
-        pathPrefix("v1" / "chat") {
+        pathPrefix("v1") {
           chat.routes
         } ~
         pathPrefix("chat") {
@@ -89,7 +89,12 @@ object Serve {
           Behaviors.stopped
       }
     }
-    ActorSystem[Nothing](rootBehavior, "SmileServe")
+
+    val system = ActorSystem[Nothing](rootBehavior, "SmileServe")
+    CoordinatedShutdown(system).addJvmShutdownHook {
+      dao.db.close()
+    }
+    system
   }
 
   /**
