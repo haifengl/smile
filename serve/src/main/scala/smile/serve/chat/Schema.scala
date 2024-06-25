@@ -39,7 +39,7 @@ trait Schema {
     def threadId = column[Long]("THREAD_ID")
     def role = column[String]("ROLE")
     def content = column[String]("CONTENT")
-    def status = column[String]("STATUS")
+    def status = column[Option[String]]("STATUS")
     def createdAt = column[Instant]("CREATED_AT")
 
     def * = (id, threadId, role, content, status, createdAt).mapTo[ThreadMessage]
