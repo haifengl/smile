@@ -42,7 +42,7 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
           if (request.stream.getOrElse(false)) {
             val publisher = new SubmissionPublisher[String]()
             val source = JavaFlowSupport.Source.fromPublisher(publisher)
-              .map(message => ServerSentEvent(message))
+              .map(message => ServerSentEvent(" " + message)) // in case client eats the space after 'data:'
 
             generator ! Generator.ChatStream(request, publisher)
             complete(source)
