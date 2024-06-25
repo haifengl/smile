@@ -46,7 +46,7 @@ object Serve {
     * @param config the service configuration.
     */
   def apply(config: ServeConfig): ActorSystem[Nothing] = {
-    print("SmileServe initializing...")
+    print("SmileServe database initializing...")
     implicit val ec = scala.concurrent.ExecutionContext.global
     Await.ready(dao.setup(), Duration.Inf) onComplete {
       case Success(_) => println("succeed")

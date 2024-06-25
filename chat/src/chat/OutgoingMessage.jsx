@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
-import './Message.css'
 import ProfileIcon from '../assets/profile.svg'
 import TextContent from './TextContent'
 import Timestamp from './Timestamp'
+import './Message.css'
 
 export default function OutgoingMessage({
     user,

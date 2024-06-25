@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
 import './App.css'
@@ -43,7 +44,7 @@ function App() {
         body: JSON.stringify({}),
       };
 
-      fetch('/v1/threads', requestOptions)
+      fetch('http://ai-lab-01/v1/threads', requestOptions)
         .then(response => {
           if (!response.ok) {
             throw new Error(response.statusText);
@@ -58,56 +59,6 @@ function App() {
         });
     }
   }, [])
-
-  /** Computes the longest proper prefix which is also a suffix as in KMP algorithm. */
-  const computeLPS = function(word) {
-    word = word.split('');
-    let results = [];
-    let pos = 2;
-    let cnd = 0;
-
-    results[0] = -1;
-    results[1] = 0;
-    while (pos < word.length) {
-        if (word[pos - 1] == word[cnd]) {
-            cnd++;
-            results[pos] = cnd;
-            pos++;
-        } else if (cnd > 0) {
-            cnd = results[cnd];
-        } else {
-            results[pos] = 0;
-            pos++;
-        }
-    }
-    return results;
-  };
-
-  const lps1 = computeLPS('\ndata:');
-  const lps2 = computeLPS('\n\ndata:');
-
-  const replaceAll = function(array, word, lps, replacement) {
-    let index = -1;
-    let m = 0;
-    let i = 0;
-
-    while (m + i < array.length) {
-        if (word[i] == array[m + i]) {
-            if (i == word.length - 1) {
-                return m;
-            }
-            i++;
-        } else {
-            m = m + i - lps[i];
-            if (lps[i] > -1) {
-                i = lps[i];
-            } else {
-                i = 0;
-            }
-        }
-    }
-    return index;
-  };
 
   const sendMessage = (text) => {
     messages.push({
@@ -139,7 +90,7 @@ function App() {
       });
     }
 
-    const url = '/v1/chat/completions';
+    const url = 'http://ai-lab-01/v1/chat/completions';
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -149,68 +100,41 @@ function App() {
     };
 
     if (data["stream"]) {
+      const ctrl = new AbortController();
+      requestOptions['signal'] = ctrl.signal;
       requestOptions['headers']['Accept'] = 'text/event-stream';
-      fetch(url, requestOptions)
-        .then(response => {
-          let offset = 0;
-          const buffer = new Uint8Array(327680); // 32K tokens x 10 chars
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          const history = messages;
-          const message = {
-            text: '',
-            user: bot,
-            createdAt: new Date(),
-          };
 
-          // Recursive function to read each chunk
-          const readChunk = () => {
-            // Read a chunk from the reader
-            reader.read()
-              .then(({value, done}) => {
-                if (done) {
-                  if (message.text === '') {
-                    message.user = server;
-                    message.text = 'Empty response. Probably bad request.';
-                    setMessages([...history, message]);
-                  }
-                  setShowTypingIndicator(false);
-                  return;
-                }
+      const history = messages;
+      const message = {
+        text: '',
+        user: bot,
+        createdAt: new Date(),
+      };
 
-                // Always parse from beginning.
-                // The format of a chunk may be ill-formed
-                // due to the streaming chunk breaks and
-                // SSE's newline breaks between events.
-                buffer.set(value, offset);
-                offset += value.length;
-                let content = decoder.decode(buffer.subarray(0, offset));
-                // strip first data:
-                content = content.substring(5);
-                // remove \n\n between events
-                content = content.replaceAll('\n\ndata:', '');
-                // process multiline event
-                message.text = content.replaceAll('\ndata:', '\n');
-                setMessages([...history, message]);
-                // Read the next chunk
-                readChunk();
-              })
-              .catch(error => {
-                console.error(error);
-                messages.push({
-                  text: error.message,
-                  user: server,
-                  createdAt: new Date(),
-                });
+      fetchEventSource(url, {
+        ...requestOptions,
+        async onopen(response) {
+          if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
+            return; // everything's good
+          } else {
+            throw new Error(response.statusText);
+          }
+        },
+        onmessage(msg) {
+          // if the server emits an error message, throw an exception
+          // so it gets handled by the onerror callback below:
+          if (msg.event === 'FatalError') {
+            throw new Error(msg.data);
+          }
 
-                setMessages([...messages]);
-                setShowTypingIndicator(false);
-              });
-          };
-          // Start reading the chunks
-          readChunk();
-        })
-        .catch(error => {
+          message.text += msg.data;
+          setMessages([...history, message]);
+        },
+        onclose() {
+          console.log("Server closes the connection");
+          setShowTypingIndicator(false);
+        },
+        onerror(error) {
           console.error(error);
           messages.push({
             text: error.message,
@@ -220,7 +144,8 @@ function App() {
 
           setMessages([...messages]);
           setShowTypingIndicator(false);
-        });
+        }
+      });
     } else {
       fetch(url, requestOptions)
         .then(response => {

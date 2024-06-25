@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import './MessageList.css'
 import IncomingMessage from './IncomingMessage'
 import OutgoingMessage from './OutgoingMessage'
 import TypingIndicator from './TypingIndicator'
+import './MessageList.css'
 
 export default function MessageList({
     messages,
