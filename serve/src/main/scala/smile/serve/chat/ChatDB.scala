@@ -18,6 +18,8 @@ package smile.serve.chat
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
+import slick.dbio.DBIOAction
+import slick.jdbc.meta.MTable
 import smile.llm.Message
 import spray.json.JsObject
 
@@ -33,9 +35,15 @@ trait ChatDB extends Schema {
   // setup database
   def setupChatDB()(implicit ec: ExecutionContext): Future[Unit] = {
     val actions = for {
-      _ <- threads.schema.createIfNotExists
-      _ <- messages.schema.createIfNotExists
-    } yield ()
+      tables <- MTable.getTables
+
+      result <- if (!tables.exists(_.name.name == threads.baseTableRow.tableName)) {
+        for {
+          _ <- threads.schema.create
+          _ <- messages.schema.create
+        } yield ()
+      } else DBIOAction.successful(())
+    } yield result
 
     db.run(actions.transactionally)
   }
