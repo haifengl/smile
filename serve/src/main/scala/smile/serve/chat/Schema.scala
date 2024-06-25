@@ -40,10 +40,10 @@ trait Schema {
     def role = column[String]("ROLE")
     def content = column[String]("CONTENT")
     def status = column[String]("STATUS")
-    def completedAt = column[Instant]("COMPLETED_AT")
     def createdAt = column[Instant]("CREATED_AT")
 
-    def * = (id, threadId, role, content, status, completedAt, createdAt).mapTo[ThreadMessage]
+    def * = (id, threadId, role, content, status, createdAt).mapTo[ThreadMessage]
+    def threadFK = foreignKey("THREAD_FK", threadId, threads)(_.id)
     def createdIdx = index("MESSAGE_CREATED_IDX", createdAt)
   }
   val messages = TableQuery[Messages]

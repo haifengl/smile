@@ -29,7 +29,6 @@ final case class ThreadMessage(id: Long,
                                role: String,
                                content: String,
                                status: String,
-                               completedAt: Instant,
                                createdAt: Instant)
 
 final case class Usage(promptTokens: Int, completionTokens: Int, totalTokens: Int)
@@ -74,7 +73,16 @@ object CompletionResponse {
 
 // collect json format instances into a support trait:
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit object FinishReasonJsonFormat extends RootJsonFormat[FinishReason] {
+  implicit val instantJsonFormat: JsonFormat[Instant] = new JsonFormat[Instant] {
+    override def write(ts: Instant): JsValue = JsString(ts.toString)
+
+    override def read(json: JsValue): Instant = json match {
+      case JsString(x) => Instant.parse(x)
+      case _ => throw new IllegalArgumentException(s"Can not parse json value [$json] to an Instant object")
+    }
+  }
+
+  implicit val finishReasonJsonFormat: JsonFormat[FinishReason] = new JsonFormat[FinishReason] {
     override def write(reason: FinishReason): JsValue = JsString(reason.toString)
 
     override def read(json: JsValue): FinishReason = {
@@ -125,6 +133,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
+  implicit val threadFormat: RootJsonFormat[Thread] = jsonFormat2(Thread.apply)
+  implicit val threadMessageFormat: RootJsonFormat[ThreadMessage] = jsonFormat6(ThreadMessage.apply)
   implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
   implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat8(CompletionRequest.apply)
   implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)

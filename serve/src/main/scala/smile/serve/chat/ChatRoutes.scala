@@ -18,20 +18,23 @@ package smile.serve.chat
 
 import java.util.concurrent.SubmissionPublisher
 import scala.concurrent.ExecutionContext
+import spray.json.JsObject
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
 
-class ChatRoutes(generator: ActorRef[Generator.Command])(implicit val system: ActorSystem[_], implicit val timeout: Timeout) extends JsonSupport {
+class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
+                (implicit val system: ActorSystem[_], implicit val timeout: Timeout) extends JsonSupport {
   private implicit val ec: ExecutionContext = system.executionContext
   private val log = system.log
 
   val routes: Route = concat(
-    path("completions") {
+    path("chat" / "completions") {
       post {
         import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
         entity(as[CompletionRequest]) { request =>
@@ -49,6 +52,47 @@ class ChatRoutes(generator: ActorRef[Generator.Command])(implicit val system: Ac
           }
         }
       }
+    },
+    pathPrefix("threads") {
+      concat(
+        pathEnd {
+          concat(
+            get {
+              parameters("limit".as[Int].withDefault(100), "cursor".?) { (limit, cursor) =>
+                complete(dao.getThreads(Math.min(500, limit), cursor.map(_.toLong)))
+              }
+            },
+            post {
+              entity(as[JsObject]) { metadata =>
+                onSuccess(dao.insertThread(metadata)) { thread =>
+                  complete(StatusCodes.Created, thread)
+                }
+              }
+            }
+          )
+        },
+        pathPrefix(LongNumber) { threadId =>
+          concat(
+            pathEnd {
+              complete(dao.getThread(threadId))
+            },
+            pathPrefix("messages") {
+              concat(
+                pathEnd {
+                  get {
+                    parameters("limit".as[Int].withDefault(100), "cursor".?) { (limit, cursor) =>
+                      complete(dao.getMessages(threadId, Math.min(500, limit), cursor.map(_.toLong)))
+                    }
+                  }
+                },
+                path(LongNumber) { id =>
+                  complete(dao.getMessage(threadId, id))
+                }
+              )
+            }
+          )
+        }
+      )
     }
   )
 }

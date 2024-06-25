@@ -33,7 +33,7 @@ object Generator {
   final case class Chat(request: CompletionRequest, replyTo: ActorRef[StatusReply[CompletionResponse]]) extends Command
   final case class ChatStream(request: CompletionRequest, publisher: SubmissionPublisher[String]) extends Command
 
-  def apply(config: ServeConfig): Behavior[Command] = {
+  def apply(config: ServeConfig, dao: ChatDB): Behavior[Command] = {
     Behaviors.setup { context =>
       val log = context.log
       val model = Llama.build(config.model, config.tokenizer,
