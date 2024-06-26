@@ -141,12 +141,10 @@ public abstract class LayerBlock implements Layer {
         module.eval();
     }
 
-    /**
-     * Moves the layer block to a device.
-     * @param device the compute device.
-     */
-    public void to(Device device) {
+    @Override
+    public LayerBlock to(Device device) {
         module.to(device.asTorch(), true);
+        return this;
     }
 
     /**

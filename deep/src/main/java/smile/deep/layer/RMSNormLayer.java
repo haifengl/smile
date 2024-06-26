@@ -69,14 +69,4 @@ public class RMSNormLayer implements Layer {
     public Module asTorch() {
         return module;
     }
-
-    /**
-     * Moves the layer to a device.
-     * @param device the compute device.
-     * @return this layer.
-     */
-    public RMSNormLayer to(Device device) {
-        weight.to(device);
-        return this;
-    }
 }
