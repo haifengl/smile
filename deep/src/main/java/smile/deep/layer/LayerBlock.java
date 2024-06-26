@@ -169,6 +169,9 @@ public abstract class LayerBlock implements Layer {
         if (device != null) deviceOptional.put(device.asTorch());
         archive.load_from(path, deviceOptional);
         module.load(archive);
+        archive.close();
+        deviceOptional.close();
+        if (device != null) device.emptyCache();
     }
 
     /**
@@ -179,6 +182,7 @@ public abstract class LayerBlock implements Layer {
         OutputArchive archive = new OutputArchive();
         module.save(archive);
         archive.save_to(path);
+        archive.close();
     }
 
     /**
