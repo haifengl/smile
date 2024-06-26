@@ -216,7 +216,7 @@ public class Llama {
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
-                var options = new Tensor.Options().device(model.device).requireGradients(false).dtype(ScalarType.Float32);
+                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float32);
                 tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
             }
 
@@ -224,10 +224,10 @@ public class Llama {
             Tensor inputTextMask = tokens.ne(pad);
             Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
 
-            tokens = tokens.to(model.device);
-            eosReached = eosReached.to(model.device);
-            inputTextMask = inputTextMask.to(model.device);
-            stopTokens = stopTokens.to(model.device);
+            tokens = tokens.to(model.device());
+            eosReached = eosReached.to(model.device());
+            inputTextMask = inputTextMask.to(model.device());
+            stopTokens = stopTokens.to(model.device());
 
             int prevPos = 0;
             if (minPromptLen == totalLen) {

@@ -55,8 +55,6 @@ public class Transformer extends LayerBlock {
     final LinearLayer output;
     /** The precomputed cosine and sine frequencies. */
     final Tensor cis;
-    /** The compute device. */
-    final Device device;
 
     /**
      * Constructor.
@@ -65,8 +63,6 @@ public class Transformer extends LayerBlock {
      */
     public Transformer(ModelArgs args, Device device) {
         this.params = args;
-        this.device = device;
-
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
@@ -92,6 +88,7 @@ public class Transformer extends LayerBlock {
         add("tok_embeddings", tokEmbeddings);
         add("norm", norm);
         add("output", output);
+        to(device);
     }
 
     /**

@@ -16,6 +16,7 @@
  */
 package smile.deep.layer;
 
+import org.bytedeco.pytorch.DeviceOptional;
 import org.bytedeco.pytorch.InputArchive;
 import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.OutputArchive;
@@ -32,7 +33,10 @@ import smile.deep.tensor.Device;
  * @author Haifeng Li
  */
 public abstract class LayerBlock implements Layer {
+    /** The neural network module.  */
     protected final Module module;
+    /** The compute device. */
+    protected Device device;
 
     /**
      * Constructor.
@@ -141,9 +145,17 @@ public abstract class LayerBlock implements Layer {
         module.eval();
     }
 
+    /**
+     * Returns the compute device of module.
+     */
+    public Device device() {
+        return device;
+    }
+
     @Override
     public LayerBlock to(Device device) {
         module.to(device.asTorch(), true);
+        this.device = device;
         return this;
     }
 
@@ -153,7 +165,9 @@ public abstract class LayerBlock implements Layer {
      */
     public void load(String path) {
         InputArchive archive = new InputArchive();
-        archive.load_from(path);
+        var deviceOptional = new DeviceOptional();
+        if (device != null) deviceOptional.put(device.asTorch());
+        archive.load_from(path, deviceOptional);
         module.load(archive);
     }
 
