@@ -19,6 +19,7 @@ package smile.deep.layer;
 import java.util.function.Function;
 import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -45,6 +46,15 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @return the PyTorch Module object.
      */
     Module asTorch();
+
+    /**
+     * Moves the layer block to a device.
+     * @param device the compute device.
+     */
+    default public Layer to(Device device) {
+        asTorch().to(device.asTorch(), true);
+        return this;
+    }
 
     /**
      * Returns a linear fully connected layer.
