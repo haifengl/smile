@@ -10,7 +10,6 @@ import smile.base.rbf.RBF;
 import smile.base.mlp.*;
 import smile.classification.*;
 import smile.clustering.KMeans;
-import smile.feature.*;
 import smile.math.*;
 import smile.math.distance.*;
 import smile.math.kernel.*;
@@ -37,17 +36,17 @@ System.out.println("Training Random Forest of 200 trees...");
 var prop = new java.util.Properties();
 prop.setProperty("smile.random.forest.trees", "200");
 var forest = RandomForest.fit(formula, zipTrain, prop);
-System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
+System.out.println(forest.metrics());
 
-var pred = Validation.test(forest, zipTest);
+var pred = forest.predict(zipTest);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 
 // Gradient Tree Boost
 System.out.println("Training Gradient Tree Boost of 200 trees...")
 prop.setProperty("smile.gbt.trees", "200");
-var gbm =GradientTreeBoost.fit(formula, zipTrain, prop)
-pred = Validation.test(gbm, zipTest);
+var gbm = GradientTreeBoost.fit(formula, zipTrain, prop)
+pred = gbm.predict(zipTest);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 
@@ -55,7 +54,7 @@ System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 System.out.println("Training SVM, one epoch...")
 var kernel = new GaussianKernel(8.0);
 var svm = OneVersusOne.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
-pred = Validation.test(svm, testx);
+pred = svm.predict(testx);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 
@@ -65,14 +64,14 @@ var kmeans = KMeans.fit(x, 200);
 var distance = new EuclideanDistance();
 var neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
 var rbfnet = RBFNetwork.fit(x, y, neurons);
-pred = Validation.test(rbfnet, testx);
+pred = rbfnet.predict(testx);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 
 // Logistic Regression
 System.out.println("Training Logistic regression...")
 var logit = LogisticRegression.fit(x, y, 0.3, 1E-3, 1000);
-pred = Validation.test(logit, testx);
+pred = logit.predict(testx);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 

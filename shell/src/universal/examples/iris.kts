@@ -10,4 +10,4 @@ println(data)
 
 val formula = Formula.lhs("class")
 val rf = randomForest(formula, data)
-println("OOB error = ${rf.error()}")
+println(rf.metrics())

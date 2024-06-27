@@ -1,5 +1,13 @@
 // Benchmark on Airline data
 // https://github.com/szilard/benchm-ml
+import smile._
+import smile.util._
+import smile.classification._
+import smile.data._
+import smile.data.formula._
+import smile.data.measure._
+import smile.data.`type`._
+import smile.validation._
 
 val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
   "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
@@ -62,28 +70,21 @@ val classWeight = Array(4, 1)
 
 // Random Forest
 println("Training Random Forest of 500 trees...")
-val forest = test2soft(formula, train, test) { (formula, data) =>
+val rfMetrics = validate.classification(formula, train, test) { (formula, data) =>
   randomForest(formula, data, 500, subsample = 0.632, classWeight = classWeight)
 }
-
-val leafs = forest.trees.map(_.root.leafs)
-println("Tree Leaf Nodes:")
-summary(leafs)
-
-val depth = forest.trees.map(_.root.depth)
-println("Tree Depth:")
-summary(depth)
-
-println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
+println(rfMetrics)
 
 // Gradient Tree Boost
 println("Training Gradient Tree Boost of 300 trees...")
-test2soft(formula, train, test) { (formula, data) =>
+val gbmMetrics = validate.classification(formula, train, test) { (formula, data) =>
   gbm(formula, train, 300, shrinkage = 0.1, subsample = 0.632)
 }
+println(rfMetrics)
 
 // AdaBoost
 println("Training AdaBoost of 300 trees...")
-test2soft(formula, train, test) { (formula, data) =>
+val adaMetrics = validate.classification(formula, train, test) { (formula, data) =>
   adaboost(formula, train, 300)
 }
+println(rfMetrics)

@@ -10,7 +10,7 @@ System.out.println(data);
 
 var formula = Formula.lhs("class");
 var rf = RandomForest.fit(formula, data);
-System.out.format("OOB error = %.2f%%%n", 100 * rf.error());
+println(rf.metrics());
 
 // exit JShell
 /exit
