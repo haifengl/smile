@@ -20,7 +20,8 @@ var perplexity = 20;
 var tsne = new TSNE(X, 2, perplexity, 200, 1000);
 
 var plot = ScatterPlot.of(tsne.coordinates, labels, '@');
-plot.setTitle("t-SNE of MNIST");
-plot.canvas().window();
+var canvas = plot.canvas();
+canvas.setTitle("t-SNE of MNIST");
+canvas.window();
 
 /exit
