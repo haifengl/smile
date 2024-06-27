@@ -1,14 +1,13 @@
 {
-  "name": "web",
+  "name": "smile-web",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Statistical Machine Intelligence &amp; Learning Engine",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "ELEVENTY_ENV=dev npx @11ty/eleventy --serve",
+    "deploy": "npx @11ty/eleventy"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Haifeng Li",
+  "license": "GPL-3",
   "devDependencies": {
     "@11ty/eleventy": "^2.0.1"
   }
