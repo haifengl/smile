@@ -28,6 +28,7 @@ object Main {
         case "train" => return Train(args.drop(1))
         case "predict" => return Predict(args.drop(1))
         case "serve" => return Serve(args.drop(1))
+        case _ => () // will run below code
       }
     }
 
