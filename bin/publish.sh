@@ -44,8 +44,14 @@ cd ../web
 npx @11ty/eleventy
 check_error "!!"
 
+# build smile-kotlin.jar and copy it to shell
+rm shell/src/universal/bin/smile-kotlin-*.jar
+cd ../kotlin
+./gradlew build
+
+# build shell's smile.zip
 cd ..
-sbt universal:packageBin
+sbt shell/universal:packageBin
 check_error "!!"
 
 while true; do
