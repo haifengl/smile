@@ -558,7 +558,7 @@ smile&gt;
         <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
-    val formula: Formula = "V1" ~
+    val formula: Formula = "V1" ~ "."
 
     val forest = randomForest(formula, zipTrain, ntrees = 200)
     println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
