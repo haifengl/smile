@@ -1,12 +1,15 @@
-module.exports = function(eleventyConfig) {
+module.exports = function(config) {
   // passthrough file copy
-  eleventyConfig.addPassthroughCopy("favicon.ico");
-  eleventyConfig.addPassthroughCopy("images");
-  eleventyConfig.addPassthroughCopy("gallery");
-  eleventyConfig.addPassthroughCopy("css");
-  eleventyConfig.addPassthroughCopy("js");
+  config.addPassthroughCopy("./src/favicon.ico");
+  config.addPassthroughCopy("./src/images");
+  config.addPassthroughCopy("./src/gallery");
+  config.addPassthroughCopy("./src/css");
+  config.addPassthroughCopy("./src/js");
 
   return {
-    htmlTemplateEngine: "njk"
+    htmlTemplateEngine: "njk",
+    dir: {
+      input: "src"
+    }
   };
 };
