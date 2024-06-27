@@ -203,6 +203,65 @@ permalink: "{{ page.filePathStem }}.html"
         </dd>
     </dl>
 
+    <h2 id="self-learning">Self-Supervised Learning</h2>
+
+    <p>A self-supervised learning model is trained on a task using the data itself to
+        generate supervisory signals, rather than relying on external labels
+        provided by humans. Like supervised learning methods, the goal of
+        self-supervised learning is to generate a classified output from the input.
+        Meanwhile, it does not require the explicit use of labeled input-output pairs.
+        Instead, correlations, metadata embedded in the data, or domain knowledge
+        present in the input are implicitly and autonomously extracted from the data
+        for training. For example, Transformer, a self-supervised language model,
+        essentially learns to "fill in the blanks."</p>
+
+    <h2 id="GenAI">Generative AI</h2>
+
+    <p>Generative AI (GenAI) can produce a wide variety of highly realistic and
+        complex content, such as images, videos, audio, text, and 3D models by
+        learning patterns from training data. Transformer is the state-of-the-art
+        GenAI model architecture in natural language generation. It is based on
+        the multi-head attention mechanism. Text is converted to numerical
+        representations called tokens, and each token is converted into a vector
+        via looking up from a word embedding table. At each layer, each token is
+        then contextualized within the scope of the context window with other
+        (unmasked) tokens via a parallel multi-head softmax-based attention mechanism
+        allowing the signal for key tokens to be amplified and less important tokens
+        to be diminished. GPTs (Generative pre-trained transformers) are are based on
+        the decoder-only transformer architecture. Each generation of GPT models
+        is significantly more capable than the previous, due to increased model size
+        (number of trainable parameters) and larger training data.</p>
+
+    <p>Stable Diffusion is a text-to-image deep learning model based on latent
+        diffusion techniques. Diffusion models are trained with the objective
+        of removing successive applications of Gaussian noise on training images,
+        which can be thought of as a sequence of denoising autoencoders.
+        Stable Diffusion consists of 3 parts: the variational autoencoder (VAE),
+        U-Net, and an optional text encoder. The VAE encoder compresses the image
+        from pixel space to a smaller dimensional latent space, capturing a more
+        fundamental semantic meaning of the image. Gaussian noise is iteratively
+        applied to the compressed latent representation during forward diffusion.
+        The U-Net block, composed of a ResNet backbone, denoises the output from
+        forward diffusion backwards to obtain a latent representation. Finally,
+        the VAE decoder generates the final image by converting the representation
+        back into pixel space.</p>
+
+    <p>Generative adversarial network (GAN) is another framework for approaching
+        generative AI. In GAN, two neural networks contest with each other in a game.
+        The generative network generates candidates while the discriminative network evaluates
+        them. The contest operates in terms of data distributions. Typically, the generative
+        network learns to map from a latent space to a data distribution of interest, while
+        the discriminative network distinguishes candidates produced by the generator from
+        the true data distribution. The generative network's training objective is to increase
+        the error rate of the discriminative network.</p>
+
+    <p>A known dataset serves as the initial training data for the discriminator.
+        Typically, the generator is seeded with randomized input that is sampled
+        from a predefined latent space. Thereafter, candidates synthesized by the
+        generator are evaluated by the discriminator. Backpropagation is applied
+        in both networks so that the generator produces better images, while the
+        discriminator becomes more skilled at flagging synthetic images.</p>
+
     <h2 id="reinforcement-learning">Reinforcement Learning</h2>
 
     <p>Reinforcement learning is about a learning agent interacting with its environment
@@ -257,27 +316,6 @@ permalink: "{{ page.filePathStem }}.html"
         will behave. For example, given a state and action, the model might
         predict the result, next state and next reward, which can be used for
         planning.</p>
-
-    <h2 id="gan">Generative Adversarial Network</h2>
-
-    <p>In generative adversarial network (GAN), two neural networks contest with each other
-        in a game. Given a training set, this technique learns to generate new data with the
-        same statistics as the training set. Though originally proposed as a form of generative
-        model for unsupervised learning, GANs have also proven useful for semi-supervised
-        learning, supervised learning, and reinforcement learning.</p>
-
-    <p>The generative network generates candidates while the discriminative network evaluates
-        them. The contest operates in terms of data distributions. Typically, the generative
-        network learns to map from a latent space to a data distribution of interest, while
-        the discriminative network distinguishes candidates produced by the generator from
-        the true data distribution. The generative network's training objective is to increase
-        the error rate of the discriminative network.</p>
-
-    <p>A known dataset serves as the initial training data for the discriminator.
-        Typically, the generator is seeded with randomized input that is sampled from a predefined
-        latent space. Thereafter, candidates synthesized by the generator are evaluated by the
-        discriminator. Backpropagation is applied in both networks so that the generator produces
-        better images, while the discriminator becomes more skilled at flagging synthetic images.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
