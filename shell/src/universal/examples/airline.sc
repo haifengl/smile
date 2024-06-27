@@ -48,7 +48,7 @@ val schema = DataTypes.struct(
   new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
 )
 
-val formula: Formula = "dep_delayed_15min" ~
+val formula: Formula = "dep_delayed_15min" ~ "."
 val train = read.csv(Paths.getTestData("airline/train-1m.csv").toString, schema = schema)
 val test = read.csv(Paths.getTestData("airline/test.csv").toString, schema = schema)
 
