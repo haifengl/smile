@@ -12,7 +12,7 @@ function App() {
 
   const bot = {
     id: 'meta/llama3',
-    name: 'Copilot',
+    name: 'Llama3',
     avatar: 'https://haifengl.github.io/images/smile.jpg',
   };
   
