@@ -226,7 +226,7 @@ smile&gt;
                 option <code>-R-Xmx</code>. For example,</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ ./bin/jshell.sh -R-Xmx30G
+    $ bin/jshell.sh -R-Xmx30G
     </code></pre>
 
             <h3 id="basics_java">Basics</h3>
@@ -316,7 +316,7 @@ smile&gt;
                 option <code>-J-Xmx</code>. For example,</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ ./bin/kotlin.sh -J-Xmx30G
+    $ bin/kotlin.sh -J-Xmx30G
     </code></pre>
 
             <h3 id="basics_kotlin">Basics</h3>
@@ -518,8 +518,8 @@ smile&gt;
         <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
-    val zipTrain = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
-    val zipTest = read.csv("data/usps/zip.test", delimiter = ' ', header = false)
+    val zipTrain = read.csv("data/usps/zip.train", delimiter = " ", header = false)
+    val zipTest = read.csv("data/usps/zip.test", delimiter = " ", header = false)
     </code></pre>
             </div>
         </div>
@@ -606,10 +606,10 @@ smile&gt;
         <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
-    val x = formula.x(zipTrain).toArray
-    val y = formula.y(zipTrain).toIntArray
-    val testx = formula.x(zipTest).toArray
-    val testy = formula.y(zipTest).toIntArray
+    val x = formula.x(zipTrain).toArray()
+    val y = formula.y(zipTrain).toIntArray()
+    val testx = formula.x(zipTest).toArray()
+    val testy = formula.y(zipTest).toIntArray()
     </code></pre>
             </div>
         </div>
@@ -644,10 +644,8 @@ smile&gt;
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
     val kernel = new GaussianKernel(8.0)
-    val svm = test(x, y, testx, testy) { (x, y) =>
-      ovo(x, y) { (x, y) =>
-        SVM.fit(x, y, kernel, 5, 1E-3)
-      }
+    val svm = ovo(x, y) { (x, y) =>
+      SVM.fit(x, y, kernel, 5, 1E-3)
     }
     </code></pre>
             </div>
@@ -696,25 +694,21 @@ smile&gt;
         <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
-    val scaler = Standardizer.fit(x)
-    val scaledX = scaler.transform(x)
-    val scaledTestX = scaler.transform(testx)
-    
-    val net = new MLP(256,
+    val net = new MLP(Layer.input(256),
       Layer.sigmoid(768),
       Layer.sigmoid(192),
       Layer.sigmoid(30),
       Layer.mle(10, OutputFunction.SIGMOID)
     )
-    net.setLearningRate(0.1)
-    net.setMomentum(0.0)
+
+    net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
     
     (0 until 10).foreach(epoch => {
       println("----- epoch %d -----" format epoch)
       MathEx.permutate(x.length).foreach(i =>
-        net.update(scaledX(i), y(i))
+        net.update(x(i), y(i))
       )
-      val prediction = net.predict(scaledTestX)
+      val prediction = net.predict(testx)
       println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
     })
     </code></pre>
@@ -748,7 +742,7 @@ smile&gt;
     val posteriori = new Array[Double](10)
     forest.predict(zipTest.get(0), posteriori)
     svm.predict(testx(0))
-    net.predict(scaledTestX(0), posteriori)
+    net.predict(testx(0), posteriori)
     </code></pre>
             </div>
         </div>
