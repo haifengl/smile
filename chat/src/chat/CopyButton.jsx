@@ -1,14 +1,15 @@
 import React from "react";
+import 'font-awesome/css/font-awesome.min.css'
 import './CopyButton.css';
 
 export default function CopyButton({ children }) {
     const [copyOk, setCopyOk] = React.useState(false);
 
     const iconColor = copyOk ? '#0af20a' : '#ddd';
-    const icon = copyOk ? 'fa-check-square' : 'fa-copy';
+    const icon = copyOk ? 'fa-check-square' : 'fa-clone';
 
     const handleClick = (e) => {
-        navigator.clipboard.writeText(children[0].props.children[0]);
+        navigator.clipboard.writeText(children.props.children);
 
         setCopyOk(true);
         setTimeout(() => {
@@ -18,7 +19,7 @@ export default function CopyButton({ children }) {
 
     return (
         <div className="copy-btn">
-            <i className={`fas ${icon}`} onClick={handleClick} style={{color: iconColor}} />
+            <i className={`fa ${icon}`} onClick={handleClick} style={{color: iconColor}} />
         </div>
     )
 }

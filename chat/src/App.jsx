@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
