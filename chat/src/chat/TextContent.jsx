@@ -36,7 +36,6 @@ export default function TextContent({
                             style={a11yDark}
                             showLineNumbers={true}
                             wrapLongLines={true}
-                            useInlineStyles={true}
                         />
                     ) :
                     (
