@@ -673,19 +673,19 @@ smile&gt;
     import smile.classification.MLP;
     import smile.math.MathEx;
     
-    var net = new MLP(256,
+    var net = new MLP(Layer.input(256),
       Layer.sigmoid(768),
       Layer.sigmoid(192),
       Layer.sigmoid(30),
       Layer.mle(10, OutputFunction.SIGMOID)
     );
-    net.setLearningRate(0.1);
-    net.setMomentum(0.0);
+
+    net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
     
     for (int epoch = 0; epoch < 10; epoch++) {
       System.out.format("----- epoch %d -----%n", epoch);
       for (int i : MathEx.permutate(x.length)) {
-        net.update(trainx[i], y[i]);
+        net.update(x[i], y[i]);
       }
       var prediction = net.predict(testx);
       System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
@@ -738,7 +738,7 @@ smile&gt;
     var posteriori = new double[10];
     forest.predict(zipTest.get(0), posteriori);
     svm.predict(testx[0]);
-    net.predict(scaledTestX[0], posteriori);
+    net.predict(testx[0], posteriori);
           </code></pre>
             </div>
         </div>
