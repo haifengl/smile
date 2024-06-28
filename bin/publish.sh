@@ -34,6 +34,11 @@ gradle dokkaHtml
 check_error "!!"
 find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
+# build smile-kotlin.jar and copy it to shell
+rm shell/src/universal/bin/smile-kotlin-*.jar
+gradle build
+check_error "!!"
+
 cd ../clojure
 lein codox
 check_error "!!"
@@ -41,13 +46,8 @@ find doc/api/clojure -name '*.html' -exec tidy -m {} \;
 find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
 cd ../web
-npx @11ty/eleventy
+npm run deploy
 check_error "!!"
-
-# build smile-kotlin.jar and copy it to shell
-rm shell/src/universal/bin/smile-kotlin-*.jar
-cd ../kotlin
-./gradlew build
 
 # build shell's smile.zip
 cd ..
