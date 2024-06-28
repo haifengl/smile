@@ -79,12 +79,12 @@ title: Smile - Data Processing
         DataFrames are immutable and contain a fixed number of named columns.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val iris = read.arff("data/weka/iris.arff")
@@ -119,7 +119,7 @@ title: Smile - Data Processing
     </code></pre>
         </div>
     </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     jshell> import smile.data.*
@@ -206,12 +206,12 @@ title: Smile - Data Processing
 
     <p>We can get a row with the array syntax or refer a column by its name.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris(0)
@@ -228,7 +228,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> iris.get(0)
@@ -265,12 +265,12 @@ title: Smile - Data Processing
 
     <p>Similarly, we can select a few columns to create a new data frame. </p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris.select("sepallength", "sepalwidth")
@@ -293,7 +293,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> iris.select("sepallength", "sepalwidth")
@@ -349,12 +349,12 @@ title: Smile - Data Processing
         The <code>predicate</code> of these functions expect a <code>Tuple</code></p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; iris.exists(_.getDouble(0) > 4.5)
@@ -401,7 +401,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
@@ -495,12 +495,12 @@ title: Smile - Data Processing
     <p>Besides numeric and nominal values, many other data types
         are also supported.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val strings = read.arff("data/weka/string.arff")
@@ -538,7 +538,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var strings = Read.arff("data/weka/string.arff")
@@ -602,12 +602,12 @@ title: Smile - Data Processing
         are <code>map</code> and <code>groupBy</code>.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; iris.map { row =>
@@ -646,7 +646,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var x6 = iris.stream().map(row -> {
@@ -748,12 +748,12 @@ title: Smile - Data Processing
         classification function.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris.groupBy(row => row.getString("class"))
@@ -786,7 +786,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
@@ -936,12 +936,12 @@ title: Smile - Data Processing
         nested data structures. It uses the record shredding and
         assembly algorithm described in the Dremel paper.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.parquet("data/kylo/userdata1.parquet")
@@ -961,7 +961,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var df = Read.parquet("data/kylo/userdata1.parquet")
@@ -1017,12 +1017,12 @@ title: Smile - Data Processing
         is stored with it. Avro schemas are defined with JSON.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
@@ -1042,7 +1042,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
@@ -1105,12 +1105,12 @@ title: Smile - Data Processing
         file and then read it back.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val temp = java.io.File.createTempFile("chinook", "arrow")
@@ -1139,7 +1139,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var temp = java.io.File.createTempFile("chinook", "arrow")
@@ -1205,12 +1205,12 @@ title: Smile - Data Processing
         used for storing SAS datasets across all platforms.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))
@@ -1233,7 +1233,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_11">
+        <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var sasdf = Read.sas("data/sas/airline.sas7bdat")
@@ -1286,11 +1286,11 @@ title: Smile - Data Processing
     <p>It is also easy to load data from relation databases through JDBC.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> import $ivy.`org.xerial:sqlite-jdbc:3.28.0`
@@ -1341,7 +1341,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_12">
+        <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> Class.forName("org.sqlite.JDBC")
@@ -1410,12 +1410,12 @@ title: Smile - Data Processing
         by HTTP, FTP, etc.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
@@ -1439,7 +1439,7 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_13">
+        <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
@@ -1497,19 +1497,19 @@ title: Smile - Data Processing
         <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_14">
+        <div class="tab-pane active" id="java_14">
             <p>In Java API, the user may provide a
                 <a href="https://javadoc.io/doc/org.apache.commons/commons-csv/latest/index.html">CSVFormat</a>
                 argument to specify the format of a CSV file.</p>
@@ -1549,12 +1549,12 @@ title: Smile - Data Processing
     <p>The parser tries it best to infer the schema of data from the top rows.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_15">
+        <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
@@ -1562,7 +1562,7 @@ title: Smile - Data Processing
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_15">
+        <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> import org.apache.commons.csv.CSVFormat
@@ -1591,11 +1591,11 @@ title: Smile - Data Processing
     <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_16">
+        <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile> val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
@@ -1656,7 +1656,7 @@ airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_16">
+        <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> import smile.data.type.*
@@ -1748,12 +1748,12 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         it to dense arrays.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_17">
+        <div class="tab-pane" id="scala_17">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val glass = read.libsvm("data/libsvm/glass.txt")
@@ -1761,7 +1761,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_17">
+        <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
@@ -1783,12 +1783,12 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         for more efficient matrix computation.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_18">
+        <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> SparseDataset.of(glass).toMatrix
@@ -1796,7 +1796,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_18">
+        <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
@@ -1866,12 +1866,12 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <p>The sample data <code>data/sparse/kos.txt</code> is in the coordinate format.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_19">
+        <div class="tab-pane" id="scala_19">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
@@ -1879,7 +1879,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_19">
+        <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
@@ -1919,12 +1919,12 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         the Harwell-Boeing format.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_20">
+        <div class="tab-pane" id="scala_20">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
@@ -1932,7 +1932,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_20">
+        <div class="tab-pane active" id="java_20">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> import smile.math.matrix.*;
@@ -1960,12 +1960,12 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <code>SparseMatrix.harwell(Path path)</code>. </p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_21">
+        <div class="tab-pane" id="scala_21">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile> val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
@@ -1978,7 +1978,7 @@ five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_21">
+        <div class="tab-pane active" id="java_21">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
@@ -1994,13 +1994,13 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
             <div class="tab-pane" id="kotlin_21">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
-    [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
-    [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key     
-    [main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
-    [main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
-    [main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)            
-    res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@37672764
+>>> SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+[main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
+[main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
+[main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
+[main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
+[main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
+res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@37672764
     </code></pre>
     </div>
     </div>
@@ -2094,20 +2094,30 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
 
     <p>To serialize a model, you may use</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_25" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_25" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_25">
+        <div class="tab-pane" id="scala_25">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
+    import smile._
     write(model, file)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="java_25">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    import smile.io.Write;
+    Write.object(model, file)
     </code></pre>
             </div>
         </div>
     </div>
 
-    <p>This method is in the Scala API <code>smile.write</code> object and serialize the model to Java
-        serialization format. This is handy if you want to use a model in Spark.</p>
+    <p>This method serializes the model in Java serialization format. This is handy
+        if you want to use a model in Spark.</p>
 
     <p>You can also save a <code>DataFrame</code> to an ARFF file with the method
         <code>write.arff(data, file)</code>. The ARFF file keeps the data type information.
