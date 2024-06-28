@@ -1,14 +1,14 @@
 import smile.classification.RandomForest;
 import smile.data.formula.Formula;
+import smile.hpo.Hyperparameters;
 import smile.io.*;
 import smile.validation.*;
 import smile.validation.metric.*;
 
-var hp = new Hyperparameters()
-    .add("smile.random.forest.trees", 100) // a fixed value
-    .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
-    .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
-
+var hp = new Hyperparameters();
+hp.add("smile.random.forest.trees", 100); // a fixed value
+hp.add("smile.random.forest.mtry", new int[] {2, 3, 4}); // an array of values to choose
+hp.add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
 
 var train = Read.arff("data/weka/segment-challenge.arff");
 var test = Read.arff("data/weka/segment-test.arff");
@@ -32,3 +32,5 @@ hp.random().limit(20).forEach(prop -> {
     System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
     System.out.println(ConfusionMatrix.of(testy, pred));
 });
+
+/exit
