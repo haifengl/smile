@@ -75,28 +75,4 @@ pred = logit.predict(testx);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
 
-// Neural Network
-var scaler = Standardizer.fit(x);
-var scaledX = scaler.transform(x);
-var scaledTestX = scaler.transform(testx);
-
-System.out.println("Training Neural Network, 10 epoch...");
-var net = new MLP(256,
-  Layer.sigmoid(768),
-  Layer.sigmoid(192),
-  Layer.sigmoid(30),
-  Layer.mle(k, OutputFunction.SIGMOID)
-);
-net.setLearningRate(0.1);
-net.setMomentum(0.0);
-
-for (int epoch = 0; epoch < 10; epoch++) {
-  System.out.format("----- epoch %d -----%n", epoch);
-  for (int i : MathEx.permutate(n)) {
-    net.update(scaledX[i], y[i]);
-  }
-  var prediction = Validation.test(net, scaledTestX);
-  System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
-}
-
 /exit
