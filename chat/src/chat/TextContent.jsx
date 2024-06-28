@@ -4,16 +4,23 @@ import remarkGemoji from 'remark-gemoji'
 import remarkGfm from 'remark-gfm'
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import CopyButton from './CopyButton';
 import './TextContent.css'
 
 export default function TextContent({
     children
 }) {
+    const Pre = ({ children }) => <pre className="code-pre">
+        <CopyButton>{children}</CopyButton>
+        {children}
+    </pre>
+
     return (
         <div className="text-content">
             <Markdown className="line-break"
                 remarkPlugins={[remarkGfm, remarkGemoji]}
                 components={{
+                  pre: Pre,
                   code(props) {
                     const {children, className, node, ...rest} = props
                     const language = /language-(\w+)/.exec(className || '');

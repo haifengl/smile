@@ -26,6 +26,13 @@
 .inlineCode{
   display: inline;
   padding: 0 4px;
+  border-radius: 4px;
   background-color: #4b4b59;
   color: white;
+}
+
+.code-pre {
+  -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0);
+  box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0);
+  position: relative;
 }
