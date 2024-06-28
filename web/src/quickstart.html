@@ -282,7 +282,7 @@ smile&gt;
 
     var formula = Formula.lhs("class");
     var rf = RandomForest.fit(formula, data);
-    System.out.format("OOB error = %.2f%%%n", 100 * rf.error());
+    System.out.println(rf.metrics());
     </code></pre>
 
             <p>It can be run directly from the shell:</p>
@@ -369,7 +369,7 @@ smile&gt;
 
     val formula = Formula.lhs("class")
     val rf = randomForest(formula, data)
-    println("OOB error = ${rf.error()}")
+    println(rf.metrics())
     </code></pre>
 
             <p>It can be run directly from the shell:</p>
@@ -551,7 +551,7 @@ smile&gt;
     var prop = new java.util.Properties();
     prop.setProperty("smile.random.forest.trees", "200");
     var forest = RandomForest.fit(formula, zipTrain, prop);
-    System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
+    System.out.println(forest.metrics());
           </code></pre>
             </div>
         </div>
@@ -561,7 +561,7 @@ smile&gt;
     val formula: Formula = "V1" ~ "."
 
     val forest = randomForest(formula, zipTrain, ntrees = 200)
-    println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    println(forest.metrics())
     </code></pre>
             </div>
         </div>
@@ -634,7 +634,7 @@ smile&gt;
 
     var kernel = new GaussianKernel(8.0);
     var svm = OneVersusOne.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
-    var pred = Validation.test(svm, testx);
+    var pred = svm.predict(testx);
     System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
     System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
           </code></pre>
@@ -670,12 +670,8 @@ smile&gt;
                 <pre class="prettyprint lang-java"><code>
     import smile.base.mlp.Layer;
     import smile.base.mlp.OutputFunction;
-    import smile.feature.Standardizer;
+    import smile.classification.MLP;
     import smile.math.MathEx;
-
-    var scaler = Standardizer.fit(x);
-    var scaledX = scaler.transform(x);
-    var scaledTestX = scaler.transform(testx);
     
     var net = new MLP(256,
       Layer.sigmoid(768),
@@ -689,9 +685,9 @@ smile&gt;
     for (int epoch = 0; epoch < 10; epoch++) {
       System.out.format("----- epoch %d -----%n", epoch);
       for (int i : MathEx.permutate(x.length)) {
-        net.update(scaledX[i], y[i]);
+        net.update(trainx[i], y[i]);
       }
-      var prediction = Validation.test(net, scaledTestX);
+      var prediction = net.predict(testx);
       System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
     }
           </code></pre>
@@ -718,7 +714,7 @@ smile&gt;
       MathEx.permutate(x.length).foreach(i =>
         net.update(scaledX(i), y(i))
       )
-      val prediction = Validation.test(net, scaledTestX)
+      val prediction = net.predict(scaledTestX)
       println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
     })
     </code></pre>
