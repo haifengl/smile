@@ -16,7 +16,6 @@
  */
 package smile.serve.chat
 
-import java.util.UUID
 import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
@@ -64,8 +63,8 @@ final case class CompletionResponse(id: String,
                                     created: Long = System.currentTimeMillis)
 
 object CompletionResponse {
-  def apply(completion: CompletionPrediction): CompletionResponse = {
-    CompletionResponse(UUID.randomUUID.toString, completion.model,
+  def apply(id: Long, completion: CompletionPrediction): CompletionResponse = {
+    CompletionResponse(id.toHexString, completion.model,
       Usage(completion.promptTokens.length, completion.completionTokens.length), 
       Seq(CompletionChoice(0, new Message(Role.assistant, completion.content),
                            completion.reason, Option(completion.logprobs))))

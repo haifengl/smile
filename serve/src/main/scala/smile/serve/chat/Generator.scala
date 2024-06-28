@@ -60,7 +60,7 @@ object Generator {
                 val completions = model.chat(Array(messages.toArray),
                   request.max_tokens.getOrElse(config.maxSeqLen / 4), request.temperature.getOrElse(0.6),
                   request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, null)
-                val response = CompletionResponse(completions(0))
+                val response = CompletionResponse(threadId, completions(0))
                 log.info("Reply {}", response)
                 dao.insertMessages(threadId, response)
                 replyTo ! StatusReply.Success(response)
@@ -87,7 +87,7 @@ object Generator {
                 val completions = model.chat(Array(messages.toArray),
                   request.max_tokens.getOrElse(config.maxSeqLen / 4), request.temperature.getOrElse(0.6),
                   request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, publisher)
-                val response = CompletionResponse(completions(0))
+                val response = CompletionResponse(threadId, completions(0))
                 log.info("Reply {}", response)
                 dao.insertMessages(threadId, response)
               } catch {
