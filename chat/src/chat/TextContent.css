@@ -22,3 +22,10 @@
 .line-break p {
   white-space: pre-wrap;
 }
+
+.inlineCode{
+  display: inline;
+  padding: 0 4px;
+  background-color: #4b4b59;
+  color: white;
+}
