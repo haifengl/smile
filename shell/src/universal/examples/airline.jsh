@@ -78,13 +78,7 @@ int[] classWeight = {4, 1};
 // Random Forest
 System.out.println("Training Random Forest of 500 trees...");
 var forest = RandomForest.fit(formula, train, 500, 2, SplitRule.GINI, 20, train.size()/5, 5, 0.632, classWeight);
-System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
-
-var leafs = Arrays.stream(forest.trees()).mapToInt(tree -> tree.root().leafs());
-System.out.format("Tree Leaf Nodes: %s%n", leafs.summaryStatistics());
-
-var depth = Arrays.stream(forest.trees()).mapToInt(tree -> tree.root().depth());
-System.out.format("Tree Depth: %s%n", depth.summaryStatistics());
+System.out.println(forest.metrics());
 
 var y = new int[testy.length]
 var prob = new double[testy.length]
@@ -98,9 +92,9 @@ System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, y)));
 System.out.format("Sensitivity/Recall = %.2f%%%n", (100.0 * Sensitivity.of(testy, y)));
 System.out.format("Specificity = %.2f%%%n", (100.0 * Specificity.of(testy, y)));
 System.out.format("Precision = %.2f%%%n", (100.0 * Precision.of(testy, y)));
-System.out.format("F1-Score = %.2f%%%n", (100.0 * FMeasure.of(testy, y)));
-System.out.format("F2-Score = %.2f%%%n", (100.0 * new FMeasure(2).measure(testy, y)));
-System.out.format("F0.5-Score = %.2f%%%n", (100.0 * new FMeasure(0.5).measure(testy, y)));
+System.out.format("F1-Score = %.2f%%%n", (100.0 * FScore.F1.score(testy, y)));
+System.out.format("F2-Score = %.2f%%%n", (100.0 * FScore.F2.score(testy, y)));
+System.out.format("F0.5-Score = %.2f%%%n", (100.0 * FScore.FHalf.score(testy, y)));
 System.out.format("AUC = %.2f%%%n", (100.0 * AUC.of(testy, prob)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, y));
 
@@ -116,9 +110,9 @@ System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, y)));
 System.out.format("Sensitivity/Recall = %.2f%%%n", (100.0 * Sensitivity.of(testy, y)));
 System.out.format("Specificity = %.2f%%%n", (100.0 * Specificity.of(testy, y)));
 System.out.format("Precision = %.2f%%%n", (100.0 * Precision.of(testy, y)));
-System.out.format("F1-Score = %.2f%%%n", (100.0 * FMeasure.of(testy, y)));
-System.out.format("F2-Score = %.2f%%%n", (100.0 * new FMeasure(2).measure(testy, y)));
-System.out.format("F0.5-Score = %.2f%%%n", (100.0 * new FMeasure(0.5).measure(testy, y)));
+System.out.format("F1-Score = %.2f%%%n", (100.0 * FScore.F1.score(testy, y)));
+System.out.format("F2-Score = %.2f%%%n", (100.0 * FScore.F2.score(testy, y)));
+System.out.format("F0.5-Score = %.2f%%%n", (100.0 * FScore.FHalf.score(testy, y)));
 System.out.format("AUC = %.2f%%%n", (100.0 * AUC.of(testy, prob)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, y));
 
@@ -134,9 +128,9 @@ System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, y)));
 System.out.format("Sensitivity/Recall = %.2f%%%n", (100.0 * Sensitivity.of(testy, y)));
 System.out.format("Specificity = %.2f%%%n", (100.0 * Specificity.of(testy, y)));
 System.out.format("Precision = %.2f%%%n", (100.0 * Precision.of(testy, y)));
-System.out.format("F1-Score = %.2f%%%n", (100.0 * FMeasure.of(testy, y)));
-System.out.format("F2-Score = %.2f%%%n", (100.0 * new FMeasure(2).measure(testy, y)));
-System.out.format("F0.5-Score = %.2f%%%n", (100.0 * new FMeasure(0.5).measure(testy, y)));
+System.out.format("F1-Score = %.2f%%%n", (100.0 * FScore.F1.score(testy, y)));
+System.out.format("F2-Score = %.2f%%%n", (100.0 * FScore.F2.score(testy, y)));
+System.out.format("F0.5-Score = %.2f%%%n", (100.0 * FScore.FHalf.score(testy, y)));
 System.out.format("AUC = %.2f%%%n", (100.0 * AUC.of(testy, prob)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, y));
 
