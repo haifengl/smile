@@ -6,15 +6,18 @@ export default function CopyButton({ children }) {
     const [copyOk, setCopyOk] = React.useState(false);
 
     const iconColor = copyOk ? '#0af20a' : '#ddd';
-    const icon = copyOk ? 'fa-check-square' : 'fa-clone';
+    const icon = navigator.clipboard ? (copyOk ? 'fa-check-square' : 'fa-clone') : 'fa-fw';
 
     const handleClick = (e) => {
-        navigator.clipboard.writeText(children.props.children);
+        // clipboard requires a secure origin — either HTTPS or localhost
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(children.props.children);
 
-        setCopyOk(true);
-        setTimeout(() => {
-            setCopyOk(false);
-        }, 500);
+            setCopyOk(true);
+            setTimeout(() => {
+                setCopyOk(false);
+            }, 500);
+        }
     }
 
     return (
