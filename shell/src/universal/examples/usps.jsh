@@ -7,7 +7,7 @@ import smile.data.type.*;
 import smile.io.*;
 import smile.base.cart.SplitRule;
 import smile.base.rbf.RBF;
-import smile.base.mlp.*;
+import smile.base.mlp.Layer;
 import smile.classification.*;
 import smile.clustering.KMeans;
 import smile.math.*;
@@ -74,5 +74,25 @@ var logit = LogisticRegression.fit(x, y, 0.3, 1E-3, 1000);
 pred = logit.predict(testx);
 System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
 System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
+
+// Neural Network
+System.out.println("Training Neural Network, 10 epoch...");
+var net = new MLP(Layer.input(256),
+  Layer.sigmoid(768),
+  Layer.sigmoid(192),
+  Layer.sigmoid(30),
+  Layer.mle(10, OutputFunction.SIGMOID)
+);
+
+net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
+
+for (int epoch = 0; epoch < 10; epoch++) {
+  System.out.format("----- epoch %d -----%n", epoch);
+  for (int i : MathEx.permutate(x.length)) {
+    net.update(x[i], y[i]);
+  }
+  var prediction = net.predict(testx);
+  System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
+}
 
 /exit
