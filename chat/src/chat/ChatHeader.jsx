@@ -2,13 +2,15 @@ import React from 'react'
 import './ChatHeader.css'
 
 export default function ChatHeader({
-    children
+    logo,
+    title
 }) {
     return (
         <div className="chat-header">
             <div className="inner-container">
                 <div className="heading-container">
-                    <div className="chat-title">{children}</div>
+                    <img src={logo} height='48px' />
+                    <div className="title">{title}</div>
                 </div>
             </div>
         </div>

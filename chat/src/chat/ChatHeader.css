@@ -14,7 +14,7 @@
   width: 100%;
   padding: 0px;
   box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.07999999821186066);
-  position:relative;
+  position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -22,19 +22,23 @@
 }
 
 .heading-container {
-  position: absolute;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   width: 100%;
 }
 
-.chat-title {
+.title {
   text-align: center;
   vertical-align: text-top;
-  font-size: 16px;
+  font-size: 24px;
   line-height: auto;
   color: #000000;
   user-select: none;
   position: relative;
-  width: 100%;
   font-weight: 500;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
