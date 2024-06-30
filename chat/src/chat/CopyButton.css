@@ -19,23 +19,3 @@
   background-size: cover;
   height: 16px;
 }
-
-.clone {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 16px;
-  background-color: #ddd;
-  -webkit-mask: url('../assets/clone.svg') no-repeat center;
-  mask: url('../assets/clone.svg') no-repeat center;
-}
-
-.check {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 16px;
-  background-color: #0af20a;
-  -webkit-mask: url('../assets/check-square.svg') no-repeat center;
-  mask: url('../assets/check-square.svg') no-repeat center;
-}

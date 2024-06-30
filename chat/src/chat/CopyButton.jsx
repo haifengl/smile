@@ -18,18 +18,6 @@ export default function CopyButton({ children }) {
         }
     }
 
-    /* css based, working but throw warnings. src must be specified, other <img>
-       won't show. Meanwhile, it must be a wrong path so that <img> shows only
-       the background that already draws the icon as background mask.
-    const icon = clicked ? 'check' : 'clone';
-    return (
-        <div className="copy-btn">
-            {navigator.clipboard &&
-                <img src='../assets/clone.svg' className={icon} onClick={handleClick} />
-            }
-        </div>
-    )
-    */
     const button = clicked ? <Check className='icon' fill='#0af20a' />
         : <Clone className='icon' onClick={handleClick} fill='#ddd' />;
 
