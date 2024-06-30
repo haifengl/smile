@@ -1,14 +1,41 @@
 .copy-btn {
-    color: white;
-    position: absolute;
-    right: 10px;
-    top: -2px;
-    font-size: 1.5em;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
+  color: white;
+  position: absolute;
+  right: 10px;
+  top: -2px;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
 .copy-btn:hover {
-    transform: scale(1.1);
-    opacity: 0.9;
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+.icon {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 16px;
+}
+
+.clone {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 16px;
+  background-color: #ddd;
+  -webkit-mask: url('../assets/clone.svg') no-repeat center;
+  mask: url('../assets/clone.svg') no-repeat center;
+}
+
+.check {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 16px;
+  background-color: #0af20a;
+  -webkit-mask: url('../assets/check-square.svg') no-repeat center;
+  mask: url('../assets/check-square.svg') no-repeat center;
 }
