@@ -12,10 +12,3 @@
   transform: scale(1.1);
   opacity: 0.9;
 }
-
-.icon {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 16px;
-}

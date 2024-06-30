@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Check from '../assets/check-circle.svg?react';
 import PaperPlane from '../assets/paper-plane.svg?react';
 import './MessageInput.css'
 
@@ -8,13 +9,22 @@ export default function MessageInput({
     theme = '#6ea9d7'
 }) {
     const [text, setText] = useState("")
+    const [submit, setSubmit] = React.useState(false);
     
     const handleSubmit = () => {
-        if (text.trim().length > 0) {
+        if (!submit && text.trim().length > 0) {
             onSendMessage && onSendMessage(text.trim())
             setText("")
+
+            setSubmit(true);
+            setTimeout(() => {
+                setSubmit(false);
+            }, 500);
         }
     }
+
+    const button = submit ? <Check height='24px' fill='#0af20a' />
+        : <PaperPlane height='24px' onClick={handleSubmit} fill={theme} />;
 
     return (
         <div className="message-input">
@@ -47,7 +57,7 @@ export default function MessageInput({
                 </div>
 
                 <div className="send-container" onClick={handleSubmit}>
-                    <PaperPlane fill={theme} style={{ height: '24px' }}/>
+                    {button}
                 </div>
             </form >
         </div>

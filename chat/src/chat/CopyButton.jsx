@@ -18,8 +18,8 @@ export default function CopyButton({ children }) {
         }
     }
 
-    const button = clicked ? <Check className='icon' fill='#0af20a' />
-        : <Clone className='icon' onClick={handleClick} fill='#ddd' />;
+    const button = clicked ? <Check height='16px' fill='#0af20a' />
+        : <Clone height='16px' onClick={handleClick} fill='#ddd' />;
 
     return (
         <div className="copy-btn">
