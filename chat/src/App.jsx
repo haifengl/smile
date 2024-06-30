@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
+import LlamaIcon from './assets/llama.svg'
 import './App.css'
 
 function App() {
@@ -13,7 +14,7 @@ function App() {
   const bot = {
     id: 'meta/llama3',
     name: 'Llama3',
-    avatar: 'https://haifengl.github.io/images/smile.jpg',
+    avatar: LlamaIcon,
   };
   
   const server = {
