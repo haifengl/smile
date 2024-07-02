@@ -9,7 +9,7 @@ export default function ChatHeader({
         <div className="chat-header">
             <div className="inner-container">
                 <div className="heading-container">
-                    <img src={logo} height='48px' />
+                    <img src={logo} height='32px' />
                     <div className="title">{title}</div>
                 </div>
             </div>
