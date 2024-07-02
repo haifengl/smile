@@ -1,7 +1,6 @@
 .message-list {
   height: 100%;
   position: relative;
-  max-height: 100dvh;
   overflow-y: hidden;
 }
 
@@ -25,7 +24,6 @@
   position: relative;
   height: 100%;
   width: 100%;
-  max-height: 100vh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
