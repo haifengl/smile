@@ -18,8 +18,13 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("https://haifengl.github.io/")),
   version := "3.1.0",
 
+  // Run in a separate JVM, to make sure sbt waits until all threads have
+  // finished before returning.
+  // If you want to keep the application running while executing other
+  // sbt tasks, consider https://github.com/spray/sbt-revolver/
+  fork := true,
+
   autoAPIMappings := true,
-  Test / fork := true,
   Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
   Test / parallelExecution := false,
   Test / publishArtifact := false,
