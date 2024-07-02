@@ -14,7 +14,7 @@ export default function Chat({
     logo = ChatbotIcon,
     title = "Smile Chat",
     placeholder = "Type prompt here",
-    theme = '#6ea9d7',
+    theme = '#8dd4e8',
 }) {
     return (
         <div className="chat-container" style={style}>
