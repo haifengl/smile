@@ -4,7 +4,7 @@ import './MessageInput.css'
 export default function MessageInput({
     onSendMessage,
     placeholder = 'Send a message...',
-    theme = '#6ea9d7'
+    theme = '#8dd4e8'
 }) {
     const [text, setText] = useState("")
     const [submit, setSubmit] = React.useState(false);
@@ -76,3 +76,4 @@ export default function MessageInput({
         </div>
     )
 }
+

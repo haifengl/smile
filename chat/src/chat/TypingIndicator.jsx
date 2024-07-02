@@ -3,7 +3,7 @@ import './TypingIndicator.css'
 
 export default function TypingIndicator({
     content,
-    theme = '#6ea9d7'
+    theme = '#8dd4e8'
 }) {
     return (
         <div className="typing-indicator">
@@ -17,3 +17,4 @@ export default function TypingIndicator({
         </div>
     )
 }
+

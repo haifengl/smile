@@ -9,7 +9,7 @@ export default function MessageList({
     userId,
     showTypingIndicator,
     typingIndicatorContent,
-    theme = '#6ea9d7',
+    theme = '#8dd4e8',
 }) {
     const bottomBufferRef = useRef();
     const scrollContainerRef = useRef();
@@ -75,3 +75,4 @@ export default function MessageList({
         </div>
     )
 }
+

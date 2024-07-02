@@ -188,6 +188,7 @@ function App() {
           onSendMessage={sendMessage}
           showTypingIndicator={showTypingIndicator}
           placeholder="Type prompt here"
+          theme='#8dd4e8'
       />
   )
 }
