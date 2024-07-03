@@ -68,15 +68,15 @@ val text = unicode.normalize
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-import smile.math.MathEx
-import smile.nlp.*
-import smile.nlp.tokenizer.*
-import smile.nlp.normalizer.*
-import smile.nlp.collocation.*
-import smile.nlp.dictionary.*
-import smile.nlp.keyword.*
-import smile.nlp.stemmer.*
-import smile.nlp.pos.*
+import smile.math.MathEx;
+import smile.nlp.*;
+import smile.nlp.tokenizer.*;
+import smile.nlp.normalizer.*;
+import smile.nlp.collocation.*;
+import smile.nlp.dictionary.*;
+import smile.nlp.keyword.*;
+import smile.nlp.stemmer.*;
+import smile.nlp.pos.*;
 
 var unicode = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.\n\n" +
         "\"It was very strange to see the seal. I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.\n\n" +
@@ -84,9 +84,9 @@ var unicode = "When airport foreman Scott Babcock went out onto the runway at Wi
         " Normal air traffic soon resumed, the station said.\n\n" +
         "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  \"low sealings\" in the North Slope region - a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.\n\n" +
         "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.\n\n" +
-        "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press. \"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare\""
+        "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press. \"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare\"";
 
-var text = SimpleNormalizer.getInstance().normalize(unicode)
+var text = SimpleNormalizer.getInstance().normalize(unicode);
           </code></pre>
             </div>
         </div>
@@ -137,10 +137,10 @@ sentences: Array[String] = Array(
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var sentences = SimpleSentenceSplitter.getInstance().split(text)
+smile> var sentences = SimpleSentenceSplitter.getInstance().split(text)
 sentences ==> String[10] { "When airport foreman Scott Babcock  ... mmal strikes are rare\"" }
 
-jshell> for (int i = 0; i < sentences.length; i++) System.out.println(sentences[i]+"\n")
+smile> for (int i = 0; i < sentences.length; i++) System.out.println(sentences[i]+"\n")
 When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
 
 "It was very strange to see the seal.
@@ -196,45 +196,20 @@ Though this was the first seal sighting on the runway at the airport, the depart
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; sentences.flatMap(_.words())
-res6: Array[String] = Array(
-  "airport",
-  "foreman",
-  "Scott",
-  "Babcock",
-  "went",
-  "runway",
-  "Wiley",
-  "Post-Will",
-  "Rogers",
-  "Memorial",
-  "Airport",
-  "Utqiagvik",
-  "Alaska",
-  "Monday",
-  "clear",
-  "snow",
-  "surprised",
-  "visitor",
-  "waiting",
-  "asphalt",
-  "450-pound",
-  "bearded",
-  "seal",
-  "chilling",
-...
+res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport...
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var tokenizer = new SimpleTokenizer(true)
+smile> var tokenizer = new SimpleTokenizer(true)
 tokenizer ==> smile.nlp.tokenizer.SimpleTokenizer@6b53e23f
 
-jshell> var words = Arrays.stream(sentences).
-   ...>               flatMap(s -> Arrays.stream(tokenizer.split(s))).
-   ...>               filter(w -> !(EnglishStopWords.DEFAULT.contains(w.toLowerCase()) || EnglishPunctuations.getInstance().contains(w))).
-   ...>               toArray(String[]::new)
+smile> var words = Arrays.stream(sentences).
+         flatMap(s -> Arrays.stream(tokenizer.split(s))).
+         filter(w -> !(EnglishStopWords.DEFAULT.contains(w.toLowerCase()) || EnglishPunctuations.getInstance().contains(w))).
+         toArray(String[]::new)
 words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runway", "Wiley", "Post-Will", "Rogers", "Memorial", "Airport", "Utqiagvik", "Alaska", "Monday", "clear", "snow", "surprised", "visitor", "waiting", "asphalt", "450-pound", "bearded", "seal", "chilling", "milky", "sunshine", "strange", "seal", "seen", "lot", "things", "runways", "seal", "Babcock", "told", "ABC", "News", "footage", "hefty", "mammal", "went", "viral", "posted", "Facebook", "According", "local", "TV", "station", "KTVA", "animal", "control", "called", "eventually", "moved", "seal", "help", "sled.", "Normal", "air", "traffic", "soon", "resumed", "station", "said", "Poking", "fun ... spotted", "past", "Wildlife", "strikes", "aircraft", "pose", "significant", "safety", "hazard", "cost", "aviation", "industry", "hundreds", "millions", "dollars", "year", "department", "spokeswoman", "Meadow", "Bailey", "told", "Associated", "Press", "Birds", "make", "90", "percent", "strikes", "U.S.", "mammal", "strikes", "rare" }
           </code></pre>
             </div>
@@ -303,9 +278,9 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
         <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; porter("democratization")
+    smile&gt; porter.stem("democratization")
     res10: String = "democrat"
-    smile&gt; lancaster("democratization")
+    smile&gt; lancaster.stem("democratization")
     res11: String = "democr"
     </code></pre>
             </div>
@@ -313,16 +288,16 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var porter = new PorterStemmer()
+smile> var porter = new PorterStemmer()
 porter ==> smile.nlp.stemmer.PorterStemmer@5ea434c8
 
-jshell> var lancaster = new LancasterStemmer()
+smile> var lancaster = new LancasterStemmer()
 lancaster ==> smile.nlp.stemmer.LancasterStemmer@2aa5fe93
 
-jshell> porter.stem("democratization")
+smile> porter.stem("democratization")
 $42 ==> "democrat"
 
-jshell> lancaster.stem("democratization")
+smile> lancaster.stem("democratization")
 $43 ==> "democr"
           </code></pre>
             </div>
@@ -356,42 +331,17 @@ $43 ==> "democr"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; text.bag()
-res12: Map[String, Int] = Map(
-  "move" -> 1,
-  "90" -> 1,
-  "call" -> 1,
-  "spokeswoman" -> 1,
-  "snow" -> 1,
-  "anim" -> 2,
-  "post" -> 1,
-  "footag" -> 1,
-  "wait" -> 1,
-  "carib" -> 1,
-  "industri" -> 1,
-  "sunshin" -> 1,
-  "seen" -> 1,
-  "abc" -> 1,
-  "said" -> 2,
-  "pun" -> 1,
-  "polar" -> 1,
-  "bear" -> 1,
-  "soon" -> 1,
-  "warn" -> 1,
-  "sight" -> 1,
-  "babcock" -> 2,
-  "u.s." -> 1,
-  "clear" -> 1,
-...
+res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, snow -> 1, anim -> 2, post -> 1, footag -> 1, wait -> 1, carib -> 1, industri -> 1, sunshin -> 1, seen -> 1, abc -> 1, said -> 2, pun -> 1, polar -> 1, bear -> 1, soon -> 1, warn -> 1, sight -> 1, babcock -> 2, u.s. -> 1, clear -> 1, normal -> 1, appear -> 1, sled. -> 1, strike -> 3, foreman -> 1, milki -> 1, resum -> 1, meadow -> 1, bailei -> 1, bird -> 2, us -> 1, dollar -> 1, poke -> 1, mondai -> 1, local -> 1, term -> 1, thing -> 1, scott -> 1, year -> 1, associat -> 1, ktva -> 1, tv -> 1, told -> 2, visibl -> 1, eventu -> 1, seal -> 7, hundr -> 1, surpris -> 2, aircraft -> 1, runwai -> 3, ceil -> 1, includ -> 1, asphalt -> 1, visitor -> 1, help -> 1, hazard -> 1, transport -> ...
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var map = Arrays.stream(words).
-   ...>               map(porter::stem).
-   ...>               map(String::toLowerCase).
-   ...>               collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(e -> 1)))
+smile> var map = Arrays.stream(words).
+         map(porter::stem).
+         map(String::toLowerCase).
+         collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)))
 map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, sled.=1}
           </code></pre>
             </div>
@@ -430,7 +380,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines.toArray
+    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines().toSeq
     val corpus = lines.map(_.bag())
 
     val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
@@ -442,7 +392,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var lines = Files.lines(Paths.get("data/text/movie.txt"));
+    var lines = Files.lines(java.nio.file.Paths.get("data/text/movie.txt"));
     var corpus = lines.map(line -> {
               var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(line));
               var words = Arrays.stream(sentences).
@@ -453,7 +403,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
               var bag = Arrays.stream(words).
                   map(porter::stem).
                   map(String::toLowerCase).
-                  collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(e -> 1)));
+                  collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)));
 
               return bag;
           });
@@ -556,14 +506,14 @@ res16: Array[collocation.BigramCollocation] = Array(
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var corpus = new SimpleCorpus()
+smile> var corpus = new SimpleCorpus()
 corpus ==> smile.nlp.SimpleCorpus@59309333
 
-jshell> Files.lines(Paths.get("data/text/movie.txt")).forEach(text -> corpus.add(new Text(text)));
+smile> Files.lines(java.nio.file.Paths.get("data/text/movie.txt")).forEach(text -> corpus.add(new Text(text)));
 
-jshell> import smile.nlp.collocation.Bigram;
+smile> import smile.nlp.collocation.Bigram;
 
-jshell> Bigram.of(corpus, 10, 5);
+smile> Bigram.of(corpus, 10, 5);
 $119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85), (= =, 226, 2560.62), (star wars, 165, 2184.18), (high school, 173, 1911.50), (science fiction, 126, 1733.94), (ve seen, 191, 1669.02), (hong kong, 90, 1592.32), (star trek, 119, 1463.29), (pulp fiction, 93, 1419.28) }
           </code></pre>
             </div>
@@ -625,28 +575,28 @@ res20: Seq[NGram] = Buffer(
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var turing = Files.lines(Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
+smile> var turing = Files.lines(java.nio.file.Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
 turing ==> "COMPUTING MACHINERY AND INTELLIGENCE  1. The Imi ... e imitation game, the part
 
-jshell> var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(turing))
+smile> var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(turing))
 sentences ==> String[571] { "COMPUTING MACHINERY AND INTELLIGEN ...  wish we can make this sup
 
-jshell> var text = Arrays.stream(sentences).
-   ...>                   map(s -> Arrays.stream(tokenizer.split(s)).
-   ...>                       map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-   ...>                       toArray(String[]::new)
-   ...>               ).collect(Collectors.toList())
+smile> var text = Arrays.stream(sentences).
+         map(s -> Arrays.stream(tokenizer.split(s)).
+         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
+         toArray(String[]::new)).
+         collect(Collectors.toList())
 text ==> [[Ljava.lang.String;@71238fc2, [Ljava.lang.String ... ava.lang.String;@28cda624]
 
-jshell> import smile.nlp.collocation.NGram
+smile> import smile.nlp.collocation.NGram
 
-jshell> var phrase = NGram.of(text, 4, 4)
+smile> var phrase = NGram.of(text, 4, 4)
 phrase ==> NGram[5][] { NGram[0] {  }, NGram[335] { ([machin ... ew], 4) }, NGram[0] {  } }
 
-jshell> phrase[2]
+smile> phrase[2]
 $135 ==> NGram[16] { ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([storage, capacity], 11), ([human, computer], 10), ([machine, think], 9), ([child, machine], 7), ([scientific, induction], 6), ([well-establish, fact], 5), ([learn, machine], 5), ([someth, like], 5), ([lady, lovelace], 5), ([analytical, engine], 5), ([manchester, machine], 4), ([differential, analyser], 4), ([subject, matter], 4) }
 
-jshell> phrase[3]
+smile> phrase[3]
 $136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winter, 's, day], 5), ([rule, of, conduct], 5), ([argument, from, consciousness], 4), ([machine, in, question], 4), ([punishment, and, reward], 4), ([point, of, view], 4) }
           </code></pre>
             </div>
@@ -699,7 +649,7 @@ res21: Seq[NGram] = Buffer(
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
+smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
 $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
           </code></pre>
             </div>
@@ -808,16 +758,16 @@ res2: Array[pos.PennTreebankPOS] = Array(
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
+smile> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.";
 sentence ==> "When airport foreman Scott Babcock went out onto ... ng in the milky sunshine."
 
-jshell> var words = Arrays.stream(tokenizer.split(sentence)).
-   ...>                       map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-   ...>                       toArray(String[]::new)
+smile> var words = Arrays.stream(tokenizer.split(sentence)).
+         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
+         toArray(String[]::new)
 words ==> String[52] { "when", "airport", "foreman", "scott ... "milky", "sunshine", "." }
 |    update replaced variable map, reset to null
 
-jshell> HMMPOSTagger.getDefault().tag(words)
+smile> HMMPOSTagger.getDefault().tag(words)
 $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, PRP, MD, VB, JJ, NN, IN, NNP, ,, NNP, ,, IN, NN, TO, VB, DT, NN, ,, PRP, VBD, NN, TO, VB, DT, NN, NN, IN, PRP, IN, DT, NN, :, DT, NN, NN, NN, NN, IN, DT, JJ, NN, . }
           </code></pre>
             </div>

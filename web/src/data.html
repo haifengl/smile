@@ -75,8 +75,8 @@ title: Smile - Data Processing
 
     <p>Many Smile algorithms take simple <code>double[]</code> as input. But we also use
         the encapsulation class <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
-        In fact, the output of most Smile data parsers is a DataFrame object.
-        DataFrames are immutable and contain a fixed number of named columns.</p>
+        In fact, the output of most Smile data parsers is a DataFrame object that contains
+        a number of named columns.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
@@ -122,16 +122,16 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
-    jshell> import smile.data.*
+    smile> import smile.data.*
 
-    jshell> import smile.io.*
+    smile> import smile.io.*
 
-    jshell> var iris = Read.arff("data/weka/iris.arff")
+    smile> var iris = Read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
     iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
     140 more rows...
 
-    jshell> iris
+    smile> iris
     [main] INFO smile.io.Arff - Read ARFF relation iris
     $3 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
     +-----------+----------+-----------+----------+-----------+
@@ -150,7 +150,7 @@ title: Smile - Data Processing
     +-----------+----------+-----------+----------+-----------+
     140 more rows...
 
-    jshell> iris.summary()
+    smile> iris.summary()
     $5 ==> [column: String, count: long, min: double, avg: double, max: double]
     +-----------+-----+---+--------+---+
     |     column|count|min|     avg|max|
@@ -231,7 +231,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> iris.get(0)
+    smile> iris.get(0)
     $7 ==> {
       sepallength: 5.1,
       sepalwidth: 3.5,
@@ -240,7 +240,7 @@ title: Smile - Data Processing
       class: Iris-setosa
     }
 
-    jshell> iris.column("sepallength")
+    smile> iris.column("sepallength")
     $8 ==> [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
           </code></pre>
             </div>
@@ -296,7 +296,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> iris.select("sepallength", "sepalwidth")
+    smile> iris.select("sepallength", "sepalwidth")
     $9 ==> [sepallength: float, sepalwidth: float]
     +-----------+----------+
     |sepallength|sepalwidth|
@@ -404,13 +404,13 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
+    smile> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
     $14 ==> true
 
-    jshell> iris.stream().allMatch(row -> row.getDouble(0) < 10)
+    smile> iris.stream().allMatch(row -> row.getDouble(0) < 10)
     $15 ==> true
 
-    jshell> iris.stream().filter(row -> row.getByte("class") == 1).findAny()
+    smile> iris.stream().filter(row -> row.getByte("class") == 1).findAny()
     $17 ==> Optional[{
       sepallength: 6.2,
       sepalwidth: 2.9,
@@ -419,7 +419,7 @@ title: Smile - Data Processing
       class: Iris-versicolor
     }]
 
-    jshell> iris.stream().filter(row -> row.getString("class").equals("Iris-versicolor")).findAny()
+    smile> iris.stream().filter(row -> row.getString("class").equals("Iris-versicolor")).findAny()
     $18 ==> Optional[{
       sepallength: 6.2,
       sepalwidth: 2.9,
@@ -428,7 +428,7 @@ title: Smile - Data Processing
       class: Iris-versicolor
     }]
 
-    jshell> DataFrame.of(iris.stream().filter(row -> row.getDouble(1) > 3 && row.getByte("class") != 0))
+    smile> DataFrame.of(iris.stream().filter(row -> row.getDouble(1) > 3 && row.getByte("class") != 0))
     $20 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
     +-----------+----------+-----------+----------+---------------+
     |sepallength|sepalwidth|petallength|petalwidth|          class|
@@ -541,7 +541,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var strings = Read.arff("data/weka/string.arff")
+    smile> var strings = Read.arff("data/weka/string.arff")
     [main] INFO smile.io.Arff - Read ARFF relation LCCvsLCSH
     strings ==> [LCC: String, LCSH: String]
     +-----+--------------------------------------+
@@ -554,7 +554,7 @@ title: Smile - Data Processing
     |AS281|Astronomy, Assyro-Babylonian.;Moon ...|
     +-----+--------------------------------------+
 
-    jshell> var dates = Read.arff("data/weka/date.arff")
+    smile> var dates = Read.arff("data/weka/date.arff")
     [main] INFO smile.io.Arff - Read ARFF relation Timestamps
     dates ==> [timestamp: DateTime]
     +-------------------+
@@ -649,7 +649,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var x6 = iris.stream().map(row -> {
+    smile> var x6 = iris.stream().map(row -> {
        ...>     var x = new double[6];
        ...>     for (int i = 0; i < 4; i++) x[i] = row.getDouble(i);
        ...>     x[4] = x[0] * x[1];
@@ -658,7 +658,7 @@ title: Smile - Data Processing
        ...> })
     x6 ==> java.util.stream.ReferencePipeline$3@32eff876
 
-    jshell> x6.forEach(xi -> System.out.println(Arrays.toString(xi)))
+    smile> x6.forEach(xi -> System.out.println(Arrays.toString(xi)))
     [6.199999809265137, 2.9000000953674316, 4.300000190734863, 1.2999999523162842, 17.980000038146954, 5.590000042915335]
     [7.300000190734863, 2.9000000953674316, 6.300000190734863, 1.7999999523162842, 21.170001249313373, 11.340000042915335]
     [7.699999809265137, 3.0, 6.099999904632568, 2.299999952316284, 23.09999942779541, 14.029999489784245]
@@ -789,7 +789,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
+    smile> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
     $24 ==> {Iris-versicolor=[{
       sepallength: 7,
       sepalwidth: 3.2,
@@ -964,7 +964,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var df = Read.parquet("data/kylo/userdata1.parquet")
+    smile> var df = Read.parquet("data/kylo/userdata1.parquet")
     df ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1045,7 +1045,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
+    smile> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     avrodf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1142,16 +1142,16 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var temp = java.io.File.createTempFile("chinook", "arrow")
+    smile> var temp = java.io.File.createTempFile("chinook", "arrow")
     temp ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
 
-    jshell> var path = temp.toPath()
+    smile> var path = temp.toPath()
     path ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
 
-    jshell> Write.arrow(df, path)
+    smile> Write.arrow(df, path)
     [main] INFO smile.io.Arrow - write 1000 rows
 
-    jshell> var arrowdf = Read.arrow(path)
+    smile> var arrowdf = Read.arrow(path)
     [main] INFO smile.io.Arrow - read 1000 rows and 13 columns
     arrowdf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1236,7 +1236,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var sasdf = Read.sas("data/sas/airline.sas7bdat")
+    smile> var sasdf = Read.sas("data/sas/airline.sas7bdat")
     sasdf ==> [YEAR: double, Y: double, W: double, R: double, L: double, K: double]
     +----+-----+-----+------+-----+-----+
     |YEAR|    Y|    W|     R|    L|    K|
@@ -1344,28 +1344,28 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> Class.forName("org.sqlite.JDBC")
+    smile> Class.forName("org.sqlite.JDBC")
     $1 ==> class org.sqlite.JDBC
 
-    jshell> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
+    smile> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
     url ==> "jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
 
-    jshell> var sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total " +
+    smile> var sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total " +
                      "from employees as e " +
                      "join customers as c on e.employeeid = c.supportrepid " +
                      "join invoices as i on c.customerid = i.customerid "
     sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid "
 
-    jshell> var conn = java.sql.DriverManager.getConnection(url)
+    smile> var conn = java.sql.DriverManager.getConnection(url)
     conn ==> org.sqlite.jdbc4.JDBC4Connection@1df82230
 
-    jshell> var stmt = conn.createStatement()
+    smile> var stmt = conn.createStatement()
     stmt ==> org.sqlite.jdbc4.JDBC4Statement@75329a49
 
-    jshell> var rs = stmt.executeQuery(sql)
+    smile> var rs = stmt.executeQuery(sql)
     rs ==> org.sqlite.jdbc4.JDBC4ResultSet@48aaecc3
 
-    jshell> var sqldf = DataFrame.of(rs)
+    smile> var sqldf = DataFrame.of(rs)
     sqldf ==> [Employee First: String, Employee Last: String, Customer First: String, Customer Last: String, Country: String, Total: Double]
     +--------------+-------------+--------------+-------------+-------+-----+
     |Employee First|Employee Last|Customer First|Customer Last|Country|Total|
@@ -1442,7 +1442,7 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
+    smile> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     cpu ==> [MYCT: float, MMIN: float, MMAX: float, CACH: float, CHMIN: float, CHMAX: float, class: float]
     +----+-----+-----+----+-----+-----+-----+
@@ -1565,13 +1565,13 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import org.apache.commons.csv.CSVFormat
+    smile> import org.apache.commons.csv.CSVFormat
 
-    jshell> var format = CSVFormat.DEFAULT.withDelimiter(' ')
+    smile> var format = CSVFormat.DEFAULT.withDelimiter(' ')
     format ==> Delimiter=< > QuoteChar=<"> RecordSeparator=<
     >  ... red SkipHeaderRecord:false
 
-    jshell> var zip = Read.csv("data/usps/zip.train", format)
+    smile> var zip = Read.csv("data/usps/zip.train", format)
     zip ==> [V1: int, V2: double, V3: double, V4: double, V5: ...   -1|-0.454| 0.879|-0.745|
           </code></pre>
             </div>
@@ -1659,11 +1659,11 @@ airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8
         <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> import smile.data.type.*
+smile> import smile.data.type.*
 
-jshell> import smile.data.measure.*
+smile> import smile.data.measure.*
 
-jshell> var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+smile> var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
    ...>   "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
    ...>   "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
    ...>   "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
@@ -1695,7 +1695,7 @@ jshell> var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
    ...>   "YKM", "YUM")
 airport ==> nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, A ... , WYS, XNA, YAK, YKM, YUM]
 
-jshell> var schema = DataTypes.struct(
+smile> var schema = DataTypes.struct(
    ...>   new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
    ...>     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
    ...>   new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
@@ -1713,11 +1713,11 @@ jshell> var schema = DataTypes.struct(
    ...> )
 schema ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... 15min: byte nominal[N, Y]]
 
-jshell> var format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+smile> var format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
 format ==> Delimiter=<,> QuoteChar=<"> RecordSeparator=<
 >  ... eaderRecord:true Header:[]
 
-jshell> var airline = Read.csv("data/airline/train-1m.csv", format, schema);
+smile> var airline = Read.csv("data/airline/train-1m.csv", format, schema);
 airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
 999990 more rows...
           </code></pre>
@@ -1764,7 +1764,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
+    smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@524f3b3a
           </code></pre>
             </div>
@@ -1799,10 +1799,10 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
+    smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@17baae6e
 
-    jshell> SparseDataset.of(glass).toMatrix()
+    smile> SparseDataset.of(glass).toMatrix()
     $4 ==> smile.math.matrix.SparseMatrix@6b53e23f
           </code></pre>
             </div>
@@ -1882,7 +1882,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
+    smile> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos ==> smile.data.SparseDatasetImpl@4d826d77
           </code></pre>
             </div>
@@ -1935,9 +1935,9 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         <div class="tab-pane active" id="java_20">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import smile.math.matrix.*;
+    smile> import smile.math.matrix.*;
 
-    jshell> var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+    smile> var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
     blocks ==> smile.math.matrix.SparseMatrix@7ff95560
           </code></pre>
             </div>
@@ -1981,7 +1981,7 @@ five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
         <div class="tab-pane active" id="java_21">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+smile> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
 [main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
