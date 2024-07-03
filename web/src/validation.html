@@ -101,7 +101,7 @@ title: Smile - Model Validation
     var model = RandomForest.fit(Formula.lhs("class"), segTrain);
     var pred = model.predict(segTest);
 
-    jshell> Accuracy.of(segTest.column("class").toIntArray(), pred)
+    smile> Accuracy.of(segTest.column("class").toIntArray(), pred)
     $161 ==> 0.9617283950617284
           </code></pre>
             </div>
@@ -183,25 +183,25 @@ title: Smile - Model Validation
     var testy = toyTest.column(0).toIntArray();
     var pred = Arrays.stream(testx).mapToInt(xi -> model.predict(xi)).toArray();
 
-    jshell>     Accuracy.of(testy, pred)
+    smile>     Accuracy.of(testy, pred)
     $171 ==> 0.81435
 
-    jshell>     Recall.of(testy, pred)
+    smile>     Recall.of(testy, pred)
     $172 ==> 0.7828
 
-    jshell>     Sensitivity.of(testy, pred)
+    smile>     Sensitivity.of(testy, pred)
     $173 ==> 0.7828
 
-    jshell>     Specificity.of(testy, pred)
+    smile>     Specificity.of(testy, pred)
     $174 ==> 0.8459
 
-    jshell>     Fallout.of(testy, pred)
+    smile>     Fallout.of(testy, pred)
     $175 ==> 0.15410000000000001
 
-    jshell>     FDR.of(testy, pred)
+    smile>     FDR.of(testy, pred)
     $176 ==> 0.16447859963710107
 
-    jshell> FScore.of(testy, pred)
+    smile> FScore.of(testy, pred)
     $177 ==> 0.808301925757654
 
     // Calculate posteriori probability for AUC computation.
@@ -211,7 +211,7 @@ title: Smile - Model Validation
             return posteriori[1];
         }).toArray();
 
-    jshell> AUC.of(testy, prob)
+    smile> AUC.of(testy, prob)
     $180 ==> 0.8650958
           </code></pre>
             </div>
@@ -342,7 +342,7 @@ title: Smile - Model Validation
     var model = RandomForest.fit(formula, segTrain);
     var pred = model.predict(segTest);
 
-    jshell> ConfusionMatrix.of(formula.y(segTest).toIntArray(), pred)
+    smile> ConfusionMatrix.of(formula.y(segTest).toIntArray(), pred)
     $187 ==> ROW=truth and COL=predicted
     class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
     class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
@@ -536,21 +536,21 @@ title: Smile - Model Validation
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var iris = Read.arff("data/weka/iris.arff");
+    smile> var iris = Read.arff("data/weka/iris.arff");
     [main] INFO smile.io.Arff - Read ARFF relation iris
     iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
     140 more rows...
 
-    jshell> var pred = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
+    smile> var pred = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
     pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }
 
-    jshell> var y = iris.column("class").toIntArray()
+    smile> var y = iris.column("class").toIntArray()
     y ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 2, 2, 2, 2 }
 
-    jshell> Accuracy.of(y, pred)
+    smile> Accuracy.of(y, pred)
     $193 ==> 0.9266666666666666
 
-    jshell> ConfusionMatrix.of(y, pred)
+    smile> ConfusionMatrix.of(y, pred)
     $194 ==> ROW=truth and COL=predicted
     class  0 |      50 |       0 |       0 |
     class  1 |       0 |      45 |       5 |
@@ -640,18 +640,18 @@ title: Smile - Model Validation
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var x = iris.drop("class").toArray();
+    smile> var x = iris.drop("class").toArray();
     x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
 
-    jshell> var pred = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
+    smile> var pred = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
     Mar 11, 2020 10:14:52 AM com.github.fommil.jni.JniLoader load
     INFO: already loaded netlib-native_system-osx-x86_64.jnilib
     pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 1, 2, 2, 2 }
 
-    jshell> Accuracy.of(y, pred)
+    smile> Accuracy.of(y, pred)
     $197 ==> 0.8533333333333334
 
-    jshell> ConfusionMatrix.of(y, pred)
+    smile> ConfusionMatrix.of(y, pred)
     $198 ==> ROW=truth and COL=predicted
     class  0 |      49 |       1 |       0 |
     class  1 |       0 |      41 |       9 |
@@ -759,7 +759,7 @@ title: Smile - Model Validation
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
+    smile> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
     $199 ==> double[100] { 0.11111111111111116, 0.18867924528301883, 0.09090909090909094, 0.2068965517241379, 0.1428571428571429, 0.19999999999999996, 0.16981132075471694, 0.21153846153846156, 0.1785714285714286, 0.109375, 0.16666666666666663, 0.2142857142857143, 0.1071428571428571, 0.11764705882352944, 0.2545454545454545, 0.21568627450980393, 0.25806451612903225, 0.06382978723404253, 0.14814814814814814, 0.2222222222222222, 0.1578947368421053, 0.15517241379310343, 0.25, 0.18965517241379315, 0.17543859649122806, 0.18333333333333335, 0.12765957446808507, 0.0892857142857143, 0.17307692307692313, 0.16666666666666663, 0.17647058823529416, 0.2142857142857143, 0.12, 0.1818 ... 615, 0.1724137931034483, 0.11111111111111116, 0.1071428571428571, 0.1228070175438597, 0.2142857142857143, 0.23076923076923073, 0.07843137254901966, 0.13793103448275867, 0.06896551724137934, 0.17021276595744683, 0.1578947368421053, 0.2075471698113207, 0.1568627450980392, 0.1636363636363637, 0.18518518518518523, 0.15384615384615385 }
           </code></pre>
             </div>
