@@ -158,9 +158,9 @@ title: Smile - Regression
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var planes = Read.arff("data/weka/regression/2dplanes.arff")
-    jshell> var model = OLS.fit(Formula.lhs("y"), planes)
-    jshell> System.out.println(model)
+    smile> var planes = Read.arff("data/weka/regression/2dplanes.arff")
+    smile> var model = OLS.fit(Formula.lhs("y"), planes)
+    smile> System.out.println(model)
     Linear Model:
 
     Residuals:
@@ -246,7 +246,7 @@ title: Smile - Regression
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> model.predict(planes.get(0))
+    smile> model.predict(planes.get(0))
     $238 ==> 5.073347388203141
           </code></pre>
             </div>
@@ -379,9 +379,9 @@ title: Smile - Regression
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var longley = Read.arff("data/weka/regression/longley.arff")
-    jshell> var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
-    jshell> System.out.println(model)
+    smile> var longley = Read.arff("data/weka/regression/longley.arff")
+    smile> var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
+    smile> System.out.println(model)
     Linear Model:
 
     Residuals:

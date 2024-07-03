@@ -225,9 +225,9 @@ title: Smile - Association Rule Mining
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import smile.association.*
+    smile> import smile.association.*
 
-    jshell> int[][] itemsets = {
+    smile> int[][] itemsets = {
        ...>         {1, 3},
        ...>         {2},
        ...>         {4},
@@ -241,10 +241,10 @@ title: Smile - Association Rule Mining
        ...>     }
     itemsets ==> int[10][] { int[2] { 1, 3 }, int[1] { 2 }, int[1] ...  3 }, int[3] { 1, 2, 3 } }
 
-    jshell> var tree = FPTree.of(3, itemsets)
+    smile> var tree = FPTree.of(3, itemsets)
     tree ==> smile.association.FPTree@2a7b6f69
 
-    jshell> FPGrowth.apply(tree).forEach(itemset -> System.out.println(itemset))
+    smile> FPGrowth.apply(tree).forEach(itemset -> System.out.println(itemset))
     4 (3)
     1 (5)
     2 1 (3)
@@ -322,7 +322,7 @@ title: Smile - Association Rule Mining
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var tree = FPTree.of(1000, () -> {
+    smile> var tree = FPTree.of(1000, () -> {
        ...>         try {
        ...>             return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").
        ...>                 map(line -> Arrays.stream(line.split(" ")).
@@ -337,7 +337,7 @@ title: Smile - Association Rule Mining
        ...>     })
     tree ==> smile.association.FPTree@3dddbe65
 
-    jshell> FPGrowth.apply(tree).limit(10).forEach(itemset -> System.out.println(itemset))
+    smile> FPGrowth.apply(tree).limit(10).forEach(itemset -> System.out.println(itemset))
     5634 (1000)
     3805 (1001)
     3376 (1001)
@@ -453,7 +453,7 @@ title: Smile - Association Rule Mining
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> ARM.apply(0.6, tree).limit(10).forEach(rule -> System.out.println(rule))
+    smile> ARM.apply(0.6, tree).limit(10).forEach(rule -> System.out.println(rule))
     (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
     (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
     (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123

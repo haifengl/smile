@@ -34,13 +34,13 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> "Hello, World"
+    smile> "Hello, World"
     $9 ==> "Hello, World"
 
-    jshell> 2
+    smile> 2
     $10 ==> 2
 
-    jshell> 2+3
+    smile> 2+3
     $11 ==> 5
           </code></pre>
             </div>
@@ -72,12 +72,12 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import static smile.math.MathEx.*
+    smile> import static smile.math.MathEx.*
 
-    jshell> logistic(3.0)
+    smile> logistic(3.0)
     $13 ==> 0.9525741268224334
 
-    jshell> choose(10, 3)
+    smile> choose(10, 3)
     $14 ==> 120.0
           </code></pre>
             </div>
@@ -119,12 +119,12 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import smile.math.special.*
+    smile> import smile.math.special.*
 
-    jshell> Erf.erf(1.0)
+    smile> Erf.erf(1.0)
     $16 ==> 0.8427007929497149
 
-    jshell> Gamma.digamma(1.0)
+    smile> Gamma.digamma(1.0)
     $17 ==> -0.5772156649015328
           </code></pre>
             </div>
@@ -156,10 +156,10 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> double[] x = {1.0, 2.0, 3.0, 4.0}
+    smile> double[] x = {1.0, 2.0, 3.0, 4.0}
     x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
 
-    jshell> double[] y = {4.0, 3.0, 2.0, 1.0}
+    smile> double[] y = {4.0, 3.0, 2.0, 1.0}
     y ==> double[4] { 4.0, 3.0, 2.0, 1.0 }
 
     // vector expression is not supported in Java
@@ -199,12 +199,12 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> norm(x)
+    smile> norm(x)
     $20 ==> 5.477225575051661
 
-    jshell> unitize(y)
+    smile> unitize(y)
 
-    jshell> y
+    smile> y
     y ==> double[4] { 0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536 }
           </code></pre>
             </div>
@@ -334,13 +334,13 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> double[]x = {1.0, 2.0, 3.0}
+    smile> double[]x = {1.0, 2.0, 3.0}
     x ==> double[3] { 1.0, 2.0, 3.0 }
 
-    jshell> double[] y = {3.0, 2.0, 1.0}
+    smile> double[] y = {3.0, 2.0, 1.0}
     y ==> double[3] { 3.0, 2.0, 1.0 }
 
-    jshell> a.axpy(x, y, 1.5)
+    smile> a.axpy(x, y, 1.5)
     Mar 08, 2020 11:39:34 AM com.github.fommil.jni.JniLoader liberalLoad
     INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader5115843775479590258netlib-native_system-osx-x86_64.jnilib
     $48 ==> double[3] { 7.4290416, 2.06434916, 3.63196466 }
@@ -369,12 +369,12 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var d = Matrix.zeros(3, 3)
+    smile> var d = Matrix.zeros(3, 3)
     d ==> 3 x 3
       0.0000    0.0000    0.0000
       0.0000     ... 000    0.0000    0.0000
 
-    jshell> a.add(b, d) // result saved in d, a.add(b) update a directly
+    smile> a.add(b, d) // result saved in d, a.add(b) update a directly
     $44 ==> 3 x 3
       1.4102    0.0000    1.4102
       0.1052    0.0000    0.1052
@@ -404,7 +404,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> a.mul(b, d)
+    smile> a.mul(b, d)
     $45 ==> 3 x 3
       0.4969   -0.0051    0.4969
      -0.0980   -0.7929   -0.0980
@@ -435,7 +435,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> a.abmm(b).abmm(c)
+    smile> a.abmm(b).abmm(c)
     $49 ==> 3 x 3
       0.9984    0.0067    0.0554
      -0.0257    0.9361    0.3508
@@ -469,7 +469,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> a.abtmm(b).abmm(c)
+    smile> a.abtmm(b).abmm(c)
     $50 ==> 3 x 3
       0.8978   -0.4369    0.0543
       0.4189    0.8856    0.2006
@@ -503,28 +503,28 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var a = Matrix.randn( 300,  900)
+    smile> var a = Matrix.randn( 300,  900)
     [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
     a ==> 300 x 900
      -0.9299   -0.4984    1.3793    1.8589  ... 4842   -0.5907  ...
       ...
 
-    jshell> var b = Matrix.randn( 900,  150)
+    smile> var b = Matrix.randn( 900,  150)
     b ==> 900 x 150
       0.9851    0.9842    0.7543   -0.6598  ... 9706    0.9420  ...
       ...
 
-    jshell> var c = Matrix.randn( 150, 1800)
+    smile> var c = Matrix.randn( 150, 1800)
     c ==> 150 x 1800
       0.8682   -1.9094   -0.2466    0.1238 ... 2070   -1.1657  ...
       ...
 
-    jshell> var d = Matrix.randn(1800,   30)
+    smile> var d = Matrix.randn(1800,   30)
     d ==> 1800 x 30
      -0.1421   -0.4016   -1.7960    0.2153  ... 6566   -1.0292  ...
       ...
 
-    jshell> a.abmm(b).abmm(c).abmm(d)
+    smile> a.abmm(b).abmm(c).abmm(d)
     $55 ==> 300 x 30
     1027.7940  -7083.7899  20850.3728  14316.0928  3122.5039  6656.6392  -14332.0066  ...
     -15355.3544  18424.0367  3362.8806  1969.2299  -23705.3085  -8948.9324  7468.9138  ...
@@ -592,7 +592,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> a.inverse()
+    smile> a.inverse()
     Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
     INFO: already loaded netlib-native_system-osx-x86_64.jnilib
     $62 ==> 3 x 3
@@ -600,7 +600,7 @@ title: Smile - Linear Algebra
       0.0712   -0.8904    0.4495
       0.6882    0.3700    0.6241
 
-    jshell> var inv = a.inverse()
+    smile> var inv = a.inverse()
     Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
     INFO: already loaded netlib-native_system-osx-x86_64.jnilib
     inv ==> 3 x 3
@@ -608,18 +608,18 @@ title: Smile - Linear Algebra
       0.0712   -0.8904    0.4495
       0.6882    0.3700    0.6241
 
-    jshell> inv.abmm(a)
+    smile> inv.abmm(a)
     $67 ==> 3 x 3
       1.0000   -0.0000    0.0000
      -0.0000    1.0000    0.0000
       0.0000    0.0000    1.0000
 
-    jshell> var lu = a.lu()
+    smile> var lu = a.lu()
     lu ==> smile.netlib.LU@702657cc
 
-    jshell> lu.solve(x)
+    smile> lu.solve(x)
 
-    jshell> x
+    smile> x
     x ==> double[3] { 2.9290414582113184, -0.9356509345036078, 2.131964578605774 }
           </code></pre>
             </div>

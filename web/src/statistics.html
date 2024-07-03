@@ -40,17 +40,17 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import static smile.math.MathEx.*
+    smile> import static smile.math.MathEx.*
 
-    jshell> import smile.stat.*
+    smile> import smile.stat.*
 
-    jshell> double[] x = {1.0, 2.0, 3.0, 4.0}
+    smile> double[] x = {1.0, 2.0, 3.0, 4.0}
     x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
 
-    jshell> mean(x)
+    smile> mean(x)
     $4 ==> 2.5
 
-    jshell> sd(x)
+    smile> sd(x)
     $5 ==> 1.2909944487358054
           </code></pre>
             </div>
@@ -126,46 +126,46 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import smile.stat.distribution.*
+    smile> import smile.stat.distribution.*
 
-    jshell> var e = new ExponentialDistribution(1.0)
+    smile> var e = new ExponentialDistribution(1.0)
     e ==> Exponential Distribution(1.0000)
 
-    jshell> e.mean()
+    smile> e.mean()
     $8 ==> 1.0
 
-    jshell> e.variance()
+    smile> e.variance()
     $9 ==> 1.0
 
-    jshell> e.sd()
+    smile> e.sd()
     $10 ==> 1.0
 
-    jshell> e.entropy()
+    smile> e.entropy()
     $11 ==> 1.0
 
-    jshell> e.rand()
+    smile> e.rand()
     [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
     $12 ==> 0.38422274023788616
 
-    jshell> e.p(2)
+    smile> e.p(2)
     $13 ==> 0.1353352832366127
 
-    jshell> e.cdf(2)
+    smile> e.cdf(2)
     $14 ==> 0.8646647167633873
 
-    jshell> e.quantile(0.1)
+    smile> e.quantile(0.1)
     $15 ==> 0.10536051565782628
 
-    jshell> double[] samples = {1.0, 1.1, 0.9, 1.5}
+    smile> double[] samples = {1.0, 1.1, 0.9, 1.5}
     samples ==> double[4] { 1.0, 1.1, 0.9, 1.5 }
 
-    jshell> e.logLikelihood(samples)
+    smile> e.logLikelihood(samples)
     $17 ==> -4.5
 
-    jshell> double[] data = {1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5}
+    smile> double[] data = {1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5}
     data ==> double[8] { 1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5 }
 
-    jshell> var d = ExponentialDistribution.fit(data)
+    smile> var d = ExponentialDistribution.fit(data)
     d ==> Exponential Distribution(0.7477)
           </code></pre>
             </div>
@@ -203,34 +203,34 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var gaussian = new GaussianDistribution(-2.0, 1.0)
+    smile> var gaussian = new GaussianDistribution(-2.0, 1.0)
     gaussian ==> Gaussian Distribution(-2.0000, 1.0000)
 
-    jshell> var exp = new ExponentialDistribution(0.8)
+    smile> var exp = new ExponentialDistribution(0.8)
     exp ==> Exponential Distribution(0.8000)
 
-    jshell> var gamma = new GammaDistribution(2.0, 3.0)
+    smile> var gamma = new GammaDistribution(2.0, 3.0)
     gamma ==> Gamma Distribution(3.0000, 2.0000)
 
-    jshell>     import java.util.stream.*
+    smile>     import java.util.stream.*
 
-    jshell> var data = DoubleStream.concat(
+    smile> var data = DoubleStream.concat(
        ...>     DoubleStream.concat(
        ...>         DoubleStream.generate(gaussian::rand).limit(500),
        ...>         DoubleStream.generate(exp::rand).limit(500)),
        ...>     DoubleStream.generate(gamma::rand).limit(1000)).toArray()
     data ==> double[2000] { -2.396693222610913, -3.11796309434 ... 0928, 2.995037488374675, 1
 
-    jshell> var a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
+    smile> var a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
     a ==> smile.stat.distribution.Mixture$Component@32a068d1
 
-    jshell> var b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
+    smile> var b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
     b ==> smile.stat.distribution.Mixture$Component@365c30cc
 
-    jshell> var c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
+    smile> var c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
     c ==> smile.stat.distribution.Mixture$Component@4148db48
 
-    jshell> var mixture = ExponentialFamilyMixture.fit(data, a, b, c)
+    smile> var mixture = ExponentialFamilyMixture.fit(data, a, b, c)
     mixture ==> Mixture(3)[0.31 x Gaussian Distribution(-1.3630, 1.5056) + 0.17 x Exponential Distribution(0.5566) + 0.52 x Gamma Distribution(3.7170, 1.5014)]
           </code></pre>
             </div>
@@ -265,13 +265,13 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var k = new KernelDensity(data)
+    smile> var k = new KernelDensity(data)
     k ==> smile.stat.distribution.KernelDensity@146044d7
 
-    jshell> k.p(1)
+    smile> k.p(1)
     $32 ==> 0.11955905354604122
 
-    jshell> mixture.p(1)
+    smile> mixture.p(1)
     $33 ==> 0.14009430199392497
           </code></pre>
             </div>
@@ -316,15 +316,15 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> import smile.stat.hypothesis.*
+    smile> import smile.stat.hypothesis.*
 
-    jshell> int[] bins = {20, 22, 13, 22, 10, 13}
+    smile> int[] bins = {20, 22, 13, 22, 10, 13}
     bins ==> int[6] { 20, 22, 13, 22, 10, 13 }
 
-    jshell> double[] prob = {1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6}
+    smile> double[] prob = {1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6}
     prob ==> double[6] { 0.16666666666666666, 0.16666666666666 ... 666, 0.16666666666666666 }
 
-    jshell> ChiSqTest.test(bins, prob)
+    smile> ChiSqTest.test(bins, prob)
     $37 ==> One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
           </code></pre>
             </div>
@@ -357,13 +357,13 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> int[] bins1 = {8, 13, 16, 10, 3}
+    smile> int[] bins1 = {8, 13, 16, 10, 3}
     bins1 ==> int[5] { 8, 13, 16, 10, 3 }
 
-    jshell> int[] bins2 = {4,  9, 14, 16, 7}
+    smile> int[] bins2 = {4,  9, 14, 16, 7}
     bins2 ==> int[5] { 4, 9, 14, 16, 7 }
 
-    jshell> ChiSqTest.test(bins1, bins2)
+    smile> ChiSqTest.test(bins1, bins2)
     $40 ==> Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
           </code></pre>
             </div>
@@ -401,10 +401,10 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> int[][] x = { {12, 7}, {5, 7} }
+    smile> int[][] x = { {12, 7}, {5, 7} }
     x ==> int[2][] { int[2] { 12, 7 }, int[2] { 5, 7 } }
 
-    jshell> ChiSqTest.test(x)
+    smile> ChiSqTest.test(x)
     $42 ==> Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
           </code></pre>
             </div>
@@ -510,26 +510,26 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
+    smile> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
        ...>             1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
        ...>             2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
        ...>             1.28461394, -0.02906355}
     x ==> double[20] { 0.48074284, -0.52975023, 1.28590721, ...  1.28461394, -0.02906355 }
 
-    jshell> double[] y = {1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
+    smile> double[] y = {1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
        ...>             -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
        ...>             1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592}
     y ==> double[18] { 1.7495879, 1.9359727, 3.1294928, 0.0 ... 3, 1.3422381, -0.1701592 }
 
-    jshell> FTest.test(x, y)
+    smile> FTest.test(x, y)
     $45 ==> F-test(f = 1.0958, df1 = 17, df2 = 19, p-value = 0.841464)
 
-    jshell> double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
+    smile> double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
        ...>             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
        ...>             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096}
     z ==> double[18] { 0.6621329, 0.4688975, -0.1553013, 0. ... 07, 1.8695506, 1.2139096 }
 
-    jshell> FTest.test(x, z)
+    smile> FTest.test(x, z)
     $47 ==> F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
           </code></pre>
             </div>
@@ -561,10 +561,10 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> TTest.test(x, 1.0)
+    smile> TTest.test(x, 1.0)
     $48 ==> One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
 
-    jshell> TTest.test(x, 1.1)
+    smile> TTest.test(x, 1.1)
     $49 ==> One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
           </code></pre>
             </div>
@@ -591,7 +591,7 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> TTest.testPaired(y, z)
+    smile> TTest.testPaired(y, z)
     $53 ==> Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
           </code></pre>
             </div>
@@ -629,16 +629,16 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> TTest.test(x, y, false)
+    smile> TTest.test(x, y, false)
     $54 ==> Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
 
-    jshell> TTest.test(x, y, true)
+    smile> TTest.test(x, y, true)
     $55 ==> Equal Variance Two Sample t-test(t = -1.1247, df = 36.000, p-value = 0.268153)
 
-    jshell> TTest.test(x, z, false)
+    smile> TTest.test(x, z, false)
     $56 ==> Unequal Variance Two Sample t-test(t = -1.5180, df = 34.025, p-value = 0.138243)
 
-    jshell> TTest.test(x, z, true)
+    smile> TTest.test(x, z, true)
     $57 ==> Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
           </code></pre>
             </div>
@@ -706,7 +706,7 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
+    smile> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
        ...>             -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
        ...>             2.75342248, -0.90675303, -1.05971929, 0.49922388, -1.23214498, 0.79284888,
        ...>             0.85309580, 0.17903487, 0.39894754, -0.52744720, 0.08516943, -1.93817962,
@@ -717,7 +717,7 @@ title: Smile - Statistics
        ...>             -0.20922486, -0.15265994}
     x ==> double[50] { 0.53236606, -1.36750258, -1.47239199 ... -0.20922486, -0.15265994 }
 
-    jshell> KSTest.test(x, new GaussianDistribution(0, 1))
+    smile> KSTest.test(x, new GaussianDistribution(0, 1))
     $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
           </code></pre>
             </div>
@@ -780,17 +780,17 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> KSTest.test(x, new GaussianDistribution(0, 1))
+    smile> KSTest.test(x, new GaussianDistribution(0, 1))
     $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
 
-    jshell> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
+    smile> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
        ...>               0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
        ...>               0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
        ...>               0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
        ...>               0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694}
     y ==> double[30] { 0.95791391, 0.16203847, 0.56622013,  ... , 0.82871088, 0.83988694 }
 
-    jshell> KSTest.test(x, y)
+    smile> KSTest.test(x, y)
     $61 ==> Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
           </code></pre>
             </div>
@@ -829,13 +829,13 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1}
+    smile> double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1}
     x ==> double[9] { 44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1 }
 
-    jshell> double[] y = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8}
+    smile> double[] y = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8}
     y ==> double[9] { 2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8 }
 
-    jshell> CorTest.pearson(x, y)
+    smile> CorTest.pearson(x, y)
     $64 ==> Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
           </code></pre>
             </div>
@@ -870,7 +870,7 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> CorTest.spearman(x, y)
+    smile> CorTest.spearman(x, y)
     $65 ==> Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
           </code></pre>
             </div>
@@ -901,7 +901,7 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> CorTest.kendall(x, y)
+    smile> CorTest.kendall(x, y)
     $66 ==> Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
           </code></pre>
             </div>
