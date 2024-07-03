@@ -50,7 +50,7 @@ title: Smile - Linear Algebra
     <h2 id="functions" class="title">Math Functions</h2>
 
     <p>Besides <code>java.lang.Math</code> functions, <code>smile.math.MathEx</code>
-        provides many other important mathematical functions such as <code>logistic</code>,
+        provides many other important mathematical functions such as
         <code>factorial</code>, <code>choose</code>, etc.</p>
 
     <ul class="nav nav-tabs">
@@ -61,9 +61,6 @@ title: Smile - Linear Algebra
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; logistic(3.0)
-    res7: Double = 0.9525741268224334
-
     smile&gt; choose(10, 3)
     res8: Double = 120.0
     </code></pre>
@@ -73,9 +70,6 @@ title: Smile - Linear Algebra
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> import static smile.math.MathEx.*
-
-    smile> logistic(3.0)
-    $13 ==> 0.9525741268224334
 
     smile> choose(10, 3)
     $14 ==> 120.0
@@ -284,26 +278,26 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    import smile.math.matrix.*
+    import smile.math.matrix.*;
 
     double[][] A = {
         {0.7220180, 0.07121225, 0.6881997},
         {-0.2648886, -0.89044952, 0.3700456},
         {-0.6391588, 0.44947578, 0.6240573}
-    }
+    };
     double[][] B = {
         {0.6881997, -0.07121225, 0.7220180},
         {0.3700456, 0.89044952, -0.2648886},
         {0.6240573, -0.44947578, -0.6391588}
-    }
+    };
     double[][] C = {
         {0.9527204, -0.2973347, 0.06257778},
         {-0.2808735, -0.9403636, -0.19190231},
         {0.1159052, 0.1652528, -0.97941688}
-    }
-    var a = Matrix.of(A)
-    var b = Matrix.of(B)
-    var c = Matrix.of(C)
+    };
+    var a = Matrix.of(A);
+    var b = Matrix.of(B);
+    var c = Matrix.of(C);
           </code></pre>
             </div>
         </div>
@@ -325,8 +319,6 @@ title: Smile - Linear Algebra
     y: Array[Double] = Array(3.0, 2.0, 1.0)
 
     smile> val res: Array[Double] = a * x + 1.5 * y
-    Mar 08, 2020 11:42:19 AM com.github.fommil.jni.JniLoader liberalLoad
-    INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader2257171274871727108netlib-native_system-osx-x86_64.jnilib
     res: Array[Double] = Array(7.4290416, 2.06434916, 3.63196466)
     </code></pre>
             </div>
@@ -340,9 +332,7 @@ title: Smile - Linear Algebra
     smile> double[] y = {3.0, 2.0, 1.0}
     y ==> double[3] { 3.0, 2.0, 1.0 }
 
-    smile> a.axpy(x, y, 1.5)
-    Mar 08, 2020 11:39:34 AM com.github.fommil.jni.JniLoader liberalLoad
-    INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader5115843775479590258netlib-native_system-osx-x86_64.jnilib
+    smile> a.mv(1.0, x, 1.5, y)
     $48 ==> double[3] { 7.4290416, 2.06434916, 3.63196466 }
           </code></pre>
             </div>
@@ -435,7 +425,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> a.abmm(b).abmm(c)
+    smile> a.mm(b).mm(c)
     $49 ==> 3 x 3
       0.9984    0.0067    0.0554
      -0.0257    0.9361    0.3508
@@ -469,7 +459,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> a.abtmm(b).abmm(c)
+    smile> a.mt(b).mm(c)
     $50 ==> 3 x 3
       0.8978   -0.4369    0.0543
       0.4189    0.8856    0.2006
@@ -524,7 +514,7 @@ title: Smile - Linear Algebra
      -0.1421   -0.4016   -1.7960    0.2153  ... 6566   -1.0292  ...
       ...
 
-    smile> a.abmm(b).abmm(c).abmm(d)
+    smile> a.mm(b).mm(c).mm(d)
     $55 ==> 300 x 30
     1027.7940  -7083.7899  20850.3728  14316.0928  3122.5039  6656.6392  -14332.0066  ...
     -15355.3544  18424.0367  3362.8806  1969.2299  -23705.3085  -8948.9324  7468.9138  ...
@@ -549,7 +539,7 @@ title: Smile - Linear Algebra
 
     <p>In linear algebra, a matrix decomposition or matrix factorization
         is a factorization of a matrix into a product of matrices.
-        There are many different matrix decompositions. In Smile, we provide
+        There are various matrix decompositions. In Smile, we provide
         LU, QR, Cholesky, eigen, and SVD decomposition by functions
         <code>lu</code>, <code>qr</code>, <code>cholesky</code>,
         <code>eigen</code>, and <code>svd</code>, respectively.</p>
@@ -592,35 +582,26 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> a.inverse()
-    Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
-    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
-    $62 ==> 3 x 3
-      0.7220   -0.2649   -0.6392
-      0.0712   -0.8904    0.4495
-      0.6882    0.3700    0.6241
+    smile> double[] x = {1.0, 2.0, 3.0}
+    x ==> double[3] { 1.0, 2.0, 3.0 }
 
     smile> var inv = a.inverse()
-    Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
-    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
     inv ==> 3 x 3
       0.7220   -0.2649   -0.6392
       0.0712   -0.8904    0.4495
       0.6882    0.3700    0.6241
 
-    smile> inv.abmm(a)
+    smile> inv.mm(a)
     $67 ==> 3 x 3
       1.0000   -0.0000    0.0000
      -0.0000    1.0000    0.0000
       0.0000    0.0000    1.0000
 
     smile> var lu = a.lu()
-    lu ==> smile.netlib.LU@702657cc
+    lu ==> smile.math.matrix.Matrix$LU@5f375618
 
     smile> lu.solve(x)
-
-    smile> x
-    x ==> double[3] { 2.9290414582113184, -0.9356509345036078, 2.131964578605774 }
+    $69 ==> double[3] { -1.7252356779053744, -0.3612592362819077, 3.3004624918302046 }
           </code></pre>
             </div>
         </div>
