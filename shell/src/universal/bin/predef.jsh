@@ -17,7 +17,7 @@
 
 // Define Smile feedback mode and prompt
 /set mode smile -command
-/set prompt smile "\nsmile> " "  ...> "
+/set prompt smile "%nsmile> " "  ...> "
 /set format smile action "created" added-primary
 /set format smile action "modified" modified-primary
 /set format smile action "replaced" replaced-primary
@@ -77,6 +77,21 @@
 /set format smile until " which cannot be invoked until" defined-method-update
 /set format smile until " which cannot be referenced until" notdefined-update
 /set format smile value "%3$s"
+
+// Welcome message
+println("""
+                                                       ..::''''::..
+                                                     .;''        ``;.
+     ....                                           ::    ::  ::    ::
+   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                       ``::,,,,::''
+|  Welcome to Smile  -- Version  4.0.0
+===============================================================================""")
+
 
 // Imports Smile packages.
 import org.apache.commons.csv.CSVFormat;
