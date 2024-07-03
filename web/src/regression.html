@@ -41,12 +41,12 @@ title: Smile - Regression
         variances.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def lm(formula: Formula,
@@ -57,7 +57,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class OLS {
@@ -116,12 +116,12 @@ title: Smile - Regression
     <p>It is straightforward to fit an OLS model.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
@@ -155,7 +155,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var planes = Read.arff("data/weka/regression/2dplanes.arff")
@@ -230,12 +230,12 @@ title: Smile - Regression
     <p>We then can apply the regression model on a new data point.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> model.predict(planes(0))
@@ -243,7 +243,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> model.predict(planes.get(0))
@@ -305,19 +305,19 @@ title: Smile - Regression
         distribution.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RidgeRegression {
@@ -345,12 +345,12 @@ title: Smile - Regression
         collinear regression.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val longley = read.arff("data/weka/regression/longley.arff")
@@ -376,7 +376,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var longley = Read.arff("data/weka/regression/longley.arff")
@@ -475,12 +475,12 @@ title: Smile - Regression
         as by specific algorithms such as the least angle regression algorithm.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def lasso(formula: Formula,
@@ -491,7 +491,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LASSO {
@@ -536,12 +536,12 @@ title: Smile - Regression
         The data used in the below example has 64 columns that consists of basic
         data plus certain interactions.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val diabetes = read.csv("data/regression/diabetes.csv")
@@ -551,7 +551,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
@@ -614,12 +614,12 @@ title: Smile - Regression
         network's parameters.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
@@ -628,7 +628,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RBFNetwork {
@@ -660,12 +660,12 @@ title: Smile - Regression
         increases).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val y = diabetes("y").toDoubleArray
@@ -674,7 +674,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var y = diabetes.column("y").toDoubleArray();
@@ -724,12 +724,12 @@ title: Smile - Regression
         the &epsilon; threshold).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def svr[T](x: Array[T],
@@ -741,7 +741,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SVR {
@@ -779,19 +779,19 @@ title: Smile - Regression
         and <code>tol</code> the tolerance of convergence test.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, x, y) { case (x, y) => svr(x, y, new GaussianKernel(0.06), 20, 10) }
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_11">
+        <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, x, y, (x, y) -> SVR.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
@@ -839,12 +839,12 @@ title: Smile - Regression
         of information gain.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def cart(formula: Formula,
@@ -856,7 +856,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_12">
+        <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RegressionTree {
@@ -897,19 +897,19 @@ title: Smile - Regression
         with regression trees of 200 nodes.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.cart(formula, data, 200) }
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_13">
+        <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> RegressionTree.fit(formula, data));
@@ -988,12 +988,12 @@ title: Smile - Regression
     </ol>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def randomForest(formula: Formula,
@@ -1007,7 +1007,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_14">
+        <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RandomForest {
@@ -1061,19 +1061,19 @@ title: Smile - Regression
         a single regression tree.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_15">
+        <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.randomForest(formula, data, maxNodes = 100) }
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_15">
+        <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.RandomForest.fit(formula, data));
@@ -1153,12 +1153,12 @@ title: Smile - Regression
         prediction: lower learning rate requires more iterations.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_16">
+        <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gbm(formula: Formula,
@@ -1173,7 +1173,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_16">
+        <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class GradientTreeBoost {
@@ -1228,19 +1228,19 @@ title: Smile - Regression
         uses only 6 nodes for each regression tree.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_17">
+        <div class="tab-pane" id="scala_17">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.gbm(formula, data) }
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_17">
+        <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
@@ -1322,12 +1322,12 @@ title: Smile - Regression
     <p>This function fits a regular Gaussian process model.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_18">
+        <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object gpr {
@@ -1341,7 +1341,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_18">
+        <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class GaussianProcessRegression {
@@ -1383,12 +1383,12 @@ title: Smile - Regression
         randomly from the training set or as the centers of k-means clustering.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_19">
+        <div class="tab-pane" id="scala_19">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, x, y) { (x, y) =>
@@ -1398,7 +1398,7 @@ title: Smile - Regression
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_19">
+        <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, x, y, (x, y) -> {

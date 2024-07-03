@@ -60,12 +60,12 @@ title: Smile - Clustering
         distinct advantage that any valid measure of distance can be used.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
@@ -74,7 +74,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class HierarchicalClustering {
@@ -161,11 +161,11 @@ title: Smile - Clustering
         distributions, each 300 samples.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
@@ -174,7 +174,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     import smile.clustering.*;
@@ -201,11 +201,11 @@ title: Smile - Clustering
         into several groups by specifying the desired number or the cut height.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val y = clusters.partition(6)
@@ -213,7 +213,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var y = clusters.partition(6);
@@ -263,19 +263,19 @@ title: Smile - Clustering
         algorithm by Kanungo, et al.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class KMeans {
@@ -300,11 +300,11 @@ title: Smile - Clustering
         (e.g. 10 ~ 20).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = kmeans(x, 6, runs = 20)
@@ -312,7 +312,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 6));
@@ -332,11 +332,11 @@ title: Smile - Clustering
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/elongate.txt", header=false, delimiter='\t').toArray
@@ -345,7 +345,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/gaussian/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
@@ -377,19 +377,19 @@ title: Smile - Clustering
         Criterion (BIC).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class XMeans {
@@ -410,11 +410,11 @@ title: Smile - Clustering
     <p>where the parameter <code>k</code> is the maximum number of clusters</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = xmeans(x, 50)
@@ -422,7 +422,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = XMeans.fit(x, 50);
@@ -447,19 +447,19 @@ title: Smile - Clustering
         the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class GMeans {
@@ -485,11 +485,11 @@ title: Smile - Clustering
     </div>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = gmeans(x, 50)
@@ -497,7 +497,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = GMeans.fit(x, 50);
@@ -572,19 +572,19 @@ title: Smile - Clustering
         then at zero temperature a hard clustering solution is obtained.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_11">
+        <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class DeterministicAnnealing {
@@ -607,11 +607,11 @@ title: Smile - Clustering
         is decreasing as <code>T<sub>i+1</sub> = alpha * T<sub>i</sub></code>.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> dac(x, 12, 0.9)
@@ -632,7 +632,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_12">
+        <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> DeterministicAnnealing.fit(x, 12, 0.9, 100, 1E-4, 1E-2)
@@ -696,19 +696,19 @@ title: Smile - Clustering
         use the regular/unweighted Jensen-Shannon divergence.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_13">
+        <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SIB {
@@ -731,11 +731,11 @@ title: Smile - Clustering
         clusters it into 20 clusters.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val data = read.libsvm("data/libsvm/news20.dat")
@@ -744,7 +744,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_14">
+        <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var data = Read.libsvm("data/libsvm/news20.dat");
@@ -783,19 +783,19 @@ title: Smile - Clustering
         entire process is repeated multiple time to find better.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_15">
+        <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def clarans[T](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_15">
+        <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class CLARANS {
@@ -820,11 +820,11 @@ title: Smile - Clustering
         needs to be obtained.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_16">
+        <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
@@ -832,7 +832,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_16">
+        <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = PartitionClustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
@@ -856,12 +856,12 @@ title: Smile - Clustering
         distribution of corresponding nodes.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_17">
+        <div class="tab-pane" id="scala_17">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     // DBSCAN with a customized data structure for neighborhood search
@@ -874,7 +874,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_17">
+        <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class DBSCAN {
@@ -923,11 +923,11 @@ title: Smile - Clustering
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_18">
+        <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
@@ -936,7 +936,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_18">
+        <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
@@ -997,19 +997,19 @@ title: Smile - Clustering
         noise levels while still guaranteeing to find the clustering.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_19">
+        <div class="tab-pane" id="scala_19">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_19">
+        <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class DENCLUE {
@@ -1041,11 +1041,11 @@ title: Smile - Clustering
         high-dimensional data in general.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_20">
+        <div class="tab-pane" id="scala_20">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
@@ -1054,7 +1054,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_20">
+        <div class="tab-pane active" id="java_20">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
@@ -1087,12 +1087,12 @@ title: Smile - Clustering
         observed to perform clustering.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_21">
+        <div class="tab-pane" id="scala_21">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def specc(W: Array[Array[Double]], k: Int): SpectralClustering
@@ -1104,7 +1104,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_21">
+        <div class="tab-pane active" id="java_21">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SpectralClustering {
@@ -1141,11 +1141,11 @@ title: Smile - Clustering
         random samples.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_22" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_22">
+        <div class="tab-pane" id="scala_22">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/nonconvex/sincos.txt", header=false, delimiter='\t').toArray
@@ -1154,7 +1154,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_22">
+        <div class="tab-pane active" id="java_22">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/nonconvex/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
@@ -1193,12 +1193,12 @@ title: Smile - Clustering
         identify outliers simultaneously.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_23" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_23" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_23" data-toggle="tab">Scala</a></li>
         <li><a href="#kotlin_23" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_23">
+        <div class="tab-pane" id="scala_23">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
@@ -1207,7 +1207,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_23">
+        <div class="tab-pane active" id="java_23">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class MEC {
@@ -1233,11 +1233,11 @@ title: Smile - Clustering
         etc. Note that a random initialization is NOT appropriate.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_24" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_24">
+        <div class="tab-pane" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
@@ -1246,7 +1246,7 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_24">
+        <div class="tab-pane active" id="java_24">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();

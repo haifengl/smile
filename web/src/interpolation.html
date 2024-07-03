@@ -29,11 +29,11 @@ title: Smile - Interpolation
         is that the interpolant is not differentiable at the control points.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
@@ -52,7 +52,7 @@ title: Smile - Interpolation
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     double[] x = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
@@ -98,11 +98,11 @@ title: Smile - Interpolation
         phenomenon.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val cubic = new CubicSplineInterpolation1D(x, y)
@@ -118,7 +118,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var cubic = new CubicSplineInterpolation1D(x, y)
@@ -158,11 +158,11 @@ title: Smile - Interpolation
     </div>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val x1 = Array(1950.0, 1960, 1970, 1980, 1990)
@@ -200,7 +200,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     double[] x1 = {1950.0, 1960, 1970, 1980, 1990}
@@ -254,11 +254,11 @@ title: Smile - Interpolation
         We implement ordinary kriging for interpolation with power variogram.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val kriging = new KrigingInterpolation1D(x, y)
@@ -274,7 +274,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var kriging = new KrigingInterpolation1D(x, y)
@@ -336,11 +336,11 @@ title: Smile - Interpolation
         to the RBF method, or vice versa.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
@@ -356,7 +356,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
@@ -387,11 +387,11 @@ title: Smile - Interpolation
         is &phi;(r) = r<sup>-p</sup> with (typically) 1 &lt; p &le; 3.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val shepard = new ShepardInterpolation1D(x, y, 3)
@@ -407,7 +407,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var shepard = new ShepardInterpolation1D(x, y, 3)
@@ -445,11 +445,11 @@ title: Smile - Interpolation
         a very sparse linear equations with biconjugate gradient method.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     val zz = Array.ofDim[Double](101, 101)
@@ -470,7 +470,7 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     double[][] zz = new double[101][101]
