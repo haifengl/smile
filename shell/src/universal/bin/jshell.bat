@@ -92,7 +92,7 @@ if "%JAVAOK%"=="false" (
 set _JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
 
 rem Call the application and pass all arguments unchanged.
-"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" !_APP_ARGS!
+"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" --feedback smile !_APP_ARGS!
 
 @endlocal
 

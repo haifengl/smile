@@ -15,6 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
+// Define Smile feedback mode and prompt
+/set mode smile -command
+/set prompt smile "smile> " "  ...> "
+
 // Imports Smile packages.
 import org.apache.commons.csv.CSVFormat;
 import smile.util.*;
