@@ -31,11 +31,15 @@ realpath () {
 )
 }
 
-get_kotlin_cmd() {
-  if [[ -n "$KOTLIN_HOME" ]] && [[ -x "$KOTLIN_HOME/bin/kotlinc-jvm" ]];  then
-    echo "$KOTLIN_HOME/bin/kotlinc-jvm"
+# Detect if we should use JAVA_HOME or just try PATH.
+get_java_cmd() {
+  # High-priority override for Jlink images
+  if [[ -n "$bundled_jvm" ]];  then
+    echo "$bundled_jvm/bin/java"
+  elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    echo "$JAVA_HOME/bin/java"
   else
-    echo "kotlinc-jvm"
+    echo "java"
   fi
 }
 
@@ -65,10 +69,10 @@ execRunner () {
 
 # Actually runs the script.
 run() {
-  execRunner "$kotlin_cmd" \
-    -J-D"smile.home=$smile_home" \
+  execRunner "$java_cmd" \
+    -D"smile.home=$smile_home" \
     -classpath "$app_classpath" \
-    -jvm-target 1.8 \
+    -jar $app_home/ki-shell-*.jar \
     "$@"
 
   local exit_code=$?
@@ -85,6 +89,6 @@ declare -r smile_home="${app_home}/../"
 declare -r lib_dir="$(realpath "${app_home}/../lib")"
 declare -r app_classpath=$(get_classpath)
 
-declare kotlin_cmd=$(get_kotlin_cmd)
+declare java_cmd=$(get_java_cmd)
 
 run "$@"
