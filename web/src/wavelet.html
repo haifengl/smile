@@ -85,11 +85,11 @@ title: Smile - Wavelet
         0 padding can be applied.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val sp500 = Array(
@@ -138,7 +138,7 @@ title: Smile - Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     double[] sp500 = {
@@ -194,18 +194,18 @@ title: Smile - Wavelet
         it back, the method <code>inverse</code> can be applied.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; haar.inverse(sp500)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell&gt; haar.inverse(sp500)
@@ -264,11 +264,11 @@ title: Smile - Wavelet
     <p>The class <code>WaveletShrinkage</code> implements this process.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val d4 = wavelet("d4")
@@ -280,7 +280,7 @@ title: Smile - Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var d4 = new D4Wavelet()

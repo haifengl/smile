@@ -19,11 +19,11 @@ title: Smile - Statistics
         <code>variance</code>, <code>sd</code>, <code>mad</code> (median absolute deviation),
         <code>min</code>, <code>max</code>, <code>whichMin</code>, <code>whichMax</code>, etc.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val x = Array(1.0, 2.0, 3.0, 4.0)
@@ -37,7 +37,7 @@ title: Smile - Statistics
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> import static smile.math.MathEx.*
@@ -78,11 +78,11 @@ title: Smile - Statistics
         log likelihood of a sample set.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val e = new ExponentialDistribution(1.0)
@@ -123,7 +123,7 @@ title: Smile - Statistics
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> import smile.stat.distribution.*
@@ -175,11 +175,11 @@ title: Smile - Statistics
     <p>The below is a more advanced example of estimating a mixture model of Gaussian, exponential and gamma distribution.
         The result is quite accurate for this complicated case.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val gaussian = new GaussianDistribution(-2.0, 1.0)
@@ -200,7 +200,7 @@ title: Smile - Statistics
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var gaussian = new GaussianDistribution(-2.0, 1.0)
@@ -244,11 +244,11 @@ title: Smile - Statistics
         Parzen window method.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val k = new KernelDensity(data)
@@ -262,7 +262,7 @@ title: Smile - Statistics
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> var k = new KernelDensity(data)
@@ -295,11 +295,11 @@ title: Smile - Statistics
         indicates a significant difference between the distributions.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val bins = Array(20, 22, 13, 22, 10, 13)
@@ -313,7 +313,7 @@ title: Smile - Statistics
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> import smile.stat.hypothesis.*
@@ -336,11 +336,11 @@ title: Smile - Statistics
         sets of binned data, and given one constraint, a small value of
         p-value indicates a significant difference between two distributions.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val bins1 = Array(8, 13, 16, 10, 3)
@@ -354,7 +354,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> int[] bins1 = {8, 13, 16, 10, 3}
@@ -383,11 +383,11 @@ title: Smile - Statistics
         calculated as Cramer's V.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val x = Array(Array(12, 7), Array(5, 7))
@@ -398,7 +398,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> int[][] x = { {12, 7}, {5, 7} }
@@ -417,11 +417,11 @@ title: Smile - Statistics
         Small values of p-value indicate that the two arrays have significantly
         different variances.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val x = Array(0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
@@ -507,7 +507,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
@@ -543,11 +543,11 @@ title: Smile - Statistics
         population has a value specified in a null hypothesis. Small values of
         p-value indicate that the array has significantly different mean.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> ttest(x, 1.0)
@@ -558,7 +558,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> TTest.test(x, 1.0)
@@ -576,11 +576,11 @@ title: Smile - Statistics
         different means. Small values of p-value indicate that the two arrays
         have significantly different means.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> ttest(y, z)
@@ -588,7 +588,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> TTest.testPaired(y, z)
@@ -605,11 +605,11 @@ title: Smile - Statistics
       drawn from populations with the same true variance. Otherwise, The data
       arrays are allowed to be drawn from populations with unequal variances.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> ttest2(x, y)
@@ -626,7 +626,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_11">
+        <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> TTest.test(x, y, false)
@@ -654,11 +654,11 @@ title: Smile - Statistics
         the given distribution. The array x is modified by being sorted into
         ascending order.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val x = Array(
@@ -703,7 +703,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_12">
+        <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
@@ -732,11 +732,11 @@ title: Smile - Statistics
         ascending order.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val y = Array(
@@ -777,7 +777,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_13">
+        <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> KSTest.test(x, new GaussianDistribution(0, 1))
@@ -808,11 +808,11 @@ title: Smile - Statistics
         sampled randomly. If this is not true, then it is better to use
         Spearman's coefficient of rank correlation (for non-parametric variables).</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> val x = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
@@ -826,7 +826,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_14">
+        <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1}
@@ -855,11 +855,11 @@ title: Smile - Statistics
     <p>The p-value is calculated by approximation, which is good for n &gt; 10.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_15">
+        <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> spearmantest(x, y)
@@ -867,7 +867,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_15">
+        <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> CorTest.spearman(x, y)
@@ -886,11 +886,11 @@ title: Smile - Statistics
         approximation, which is good for n &gt; 10.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_16">
+        <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
     smile> kendalltest(x, y)
@@ -898,7 +898,7 @@ title: Smile - Statistics
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_16">
+        <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     jshell> CorTest.kendall(x, y)

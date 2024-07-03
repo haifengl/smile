@@ -40,11 +40,11 @@ title: Smile - NLP
     </ul>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
@@ -65,7 +65,7 @@ val text = unicode.normalize
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 import smile.math.MathEx
@@ -110,11 +110,11 @@ var text = SimpleNormalizer.getInstance().normalize(unicode)
         to return an array of sentences. Any carriage returns
         in the text will be replaced by whitespace.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val sentences = text.sentences
@@ -134,7 +134,7 @@ sentences: Array[String] = Array(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var sentences = SimpleSentenceSplitter.getInstance().split(text)
@@ -188,11 +188,11 @@ Though this was the first seal sighting on the runway at the airport, the depart
         splits a set of sentences and flat out the results into one
         array.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; sentences.flatMap(_.words())
@@ -225,7 +225,7 @@ res6: Array[String] = Array(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var tokenizer = new SimpleTokenizer(true)
@@ -296,11 +296,11 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
         <code>LancasterStemmer</code> allows the user to load customized rules.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; porter("democratization")
@@ -310,7 +310,7 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var porter = new PorterStemmer()
@@ -348,11 +348,11 @@ $43 ==> "democr"
         is used instead of frequencies.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; text.bag()
@@ -385,7 +385,7 @@ res12: Map[String, Int] = Map(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var map = Arrays.stream(words).
@@ -423,11 +423,11 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         frequency-inverse document frequency).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines.toArray
@@ -439,7 +439,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var lines = Files.lines(Paths.get("data/text/movie.txt"));
@@ -529,11 +529,11 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         frequency of collocation in the corpus.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; bigram(10, 5, lines: _*)
@@ -553,7 +553,7 @@ res16: Array[collocation.BigramCollocation] = Array(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var corpus = new SimpleCorpus()
@@ -580,11 +580,11 @@ $119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85),
         length at most maxNGramSize that occur at least minFreq times in the
         text.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines.mkString
@@ -622,7 +622,7 @@ res20: Seq[NGram] = Buffer(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var turing = Files.lines(Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
@@ -673,11 +673,11 @@ $136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winte
         "digital computer", "discrete-state machine", etc.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; turing.keywords(10)
@@ -696,7 +696,7 @@ res21: Seq[NGram] = Buffer(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
@@ -736,11 +736,11 @@ $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46),
         on an array of words.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
@@ -805,7 +805,7 @@ res2: Array[pos.PennTreebankPOS] = Array(
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."

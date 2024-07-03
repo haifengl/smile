@@ -233,11 +233,11 @@ title: Smile - Feature Engineering
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
+        <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
@@ -251,7 +251,7 @@ title: Smile - Feature Engineering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_3">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var iris = Read.arff("data/weka/iris.arff");
@@ -293,11 +293,11 @@ title: Smile - Feature Engineering
         the scores for feature selection (higher is better).</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val model = smile.classification.randomForest("class" ~, iris)
@@ -305,7 +305,7 @@ title: Smile - Feature Engineering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_4">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var model = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
@@ -350,11 +350,11 @@ title: Smile - Feature Engineering
         assumptions about feature dependence. </p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_14">
+        <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val housing = read.arff("data/weka/regression/housing.arff")
@@ -412,7 +412,7 @@ LSTAT                 2.6838
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_14">
+        <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
 jshell&gt; import smile.io.*
@@ -544,11 +544,11 @@ LSTAT                 2.6772
     </div>
 <!-- GAFE deadlock on scala
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     val train = read.csv("data/usps/zip.train", header=false, delimiter=' ')
@@ -570,7 +570,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
@@ -624,18 +624,18 @@ LSTAT                 2.6772
         eigenvectors.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_6">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
               <pre class="prettyprint lang-java"><code>
     public class PCA {
@@ -654,11 +654,11 @@ LSTAT                 2.6772
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_7">
+        <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pendigits = read.csv("data/classification/pendigits.txt", delimiter='\t', header = false)
@@ -675,7 +675,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_7">
+        <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
@@ -729,18 +729,18 @@ LSTAT                 2.6772
         by maximum likelihood method.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_8">
+        <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def ppca(data: Array[Array[Double]], k: Int): PPCA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_8">
+        <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     public class PPCA {
@@ -754,11 +754,11 @@ LSTAT                 2.6772
     <p>Similar to PCA example, we apply probabilistic PCA to the pen-digits data.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_9">
+        <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = ppca(x, 3)
@@ -767,7 +767,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_9">
+        <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     var pca = PPCA.fit(x, 3);
@@ -802,18 +802,18 @@ LSTAT                 2.6772
         it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_10">
+        <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_10">
+        <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     public class KPCA {
@@ -827,11 +827,11 @@ LSTAT                 2.6772
     <p>Here we apply kernel PCA to the pen-digits data.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_11">
+        <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = kpca(x, new GaussianKernel(45), 3)
@@ -840,7 +840,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_11">
+        <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     var pca = KPCA.fit(x, new GaussianKernel(45), 3);
@@ -880,11 +880,11 @@ LSTAT                 2.6772
         and larger asymptotic mean-square error, which is intuitively satisfying.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_12">
+        <div class="tab-pane" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
@@ -893,7 +893,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_12">
+        <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     public class GHA {
@@ -909,11 +909,11 @@ LSTAT                 2.6772
         starts with a given projection matrix.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_13">
+        <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = gha(x, 3, 0.00001)
@@ -922,7 +922,7 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="java_13">
+        <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
     var gha = new GHA(x[0].length, 3, 0.00001);
