@@ -72,6 +72,7 @@ run() {
   execRunner "$jshell_cmd" \
     -R-D"smile.home=$smile_home" \
     --class-path "$app_classpath" \
+    --feedback smile \
     --startup DEFAULT \
     --startup PRINTING \
     --startup "${app_home}/predef.jsh" \
