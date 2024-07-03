@@ -45,9 +45,7 @@ package object nlp {
     * step fires and control passes to the next step or there are no more rules
     * in that step whence control moves to the next step.
     */
-  val porter: PorterStemmer = new stemmer.PorterStemmer {
-    def apply(word: String): String = stem(word)
-  }
+  val porter: PorterStemmer = new stemmer.PorterStemmer
 
   /** The Paice/Husk Lancaster stemming algorithm. The stemmer is a conflation
     * based iterative stemmer. The stemmer, although remaining efficient and
@@ -55,9 +53,7 @@ package object nlp {
     * utilizes a single table of rules, each of which may specify
     * the removal or replacement of an ending.
     */
-  val lancaster: LancasterStemmer = new stemmer.LancasterStemmer {
-    def apply(word: String): String = stem(word)
-  }
+  val lancaster: LancasterStemmer = new stemmer.LancasterStemmer
 
   /** Creates an in-memory text corpus.
     *
@@ -173,6 +169,16 @@ package object nlp {
     */
   private def tfidf(tf: Double, maxtf: Double, n: Int, df: Int): Double = {
     (tf / maxtf) * Math.log((1.0 + n) / (1.0 + df))
+  }
+
+  /** Converts a corpus to TF-IDF feature vectors, which
+    * are normalized to L2 norm 1.
+    *
+    * @param corpus the corpus of documents in bag-of-words representation.
+    * @return a matrix of which each row is the TF-IDF feature vector.
+    */
+  def tfidf(corpus: Seq[Array[Double]]): Array[Array[Double]] = {
+    tfidf(corpus.toArray)
   }
 
   /** Converts a corpus to TF-IDF feature vectors, which

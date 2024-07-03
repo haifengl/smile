@@ -17,6 +17,8 @@
 
 package smile.nlp.stemmer;
 
+import java.util.function.Function;
+
 /**
  * A Stemmer transforms a word into its root form. The stemming is a process
  * for removing the commoner morphological and inflexional endings from words
@@ -24,11 +26,16 @@ package smile.nlp.stemmer;
  *
  * @author Haifeng Li
  */
-public interface Stemmer {
+public interface Stemmer extends Function<String, String> {
     /**
      * Transforms a word into its root form.
      * @param word the word.
      * @return the stem.
      */
     String stem(String word);
+
+    @Override
+    default String apply(String word) {
+        return stem(word);
+    }
 }
