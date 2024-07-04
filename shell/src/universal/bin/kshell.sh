@@ -31,15 +31,11 @@ realpath () {
 )
 }
 
-# Detect if we should use JAVA_HOME or just try PATH.
-get_java_cmd() {
-  # High-priority override for Jlink images
-  if [[ -n "$bundled_jvm" ]];  then
-    echo "$bundled_jvm/bin/java"
-  elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
-    echo "$JAVA_HOME/bin/java"
+get_kotlin_cmd() {
+  if [[ -n "$KOTLIN_HOME" ]] && [[ -x "$KOTLIN_HOME/bin/kotlinc-jvm" ]];  then
+    echo "$KOTLIN_HOME/bin/kotlinc-jvm"
   else
-    echo "java"
+    echo "kotlinc-jvm"
   fi
 }
 
@@ -47,7 +43,9 @@ get_classpath() {
   JARS=("$lib_dir"/*.jar)
   for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala).* ]] && unset -v 'JARS[$index]' ; done
   CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
-  echo $CLASSPATH:$app_home/smile-kotlin-*.jar
+  JARS=("$app_home"/smile-kotlin-*.jar)
+  BIN_CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
+  echo $CLASSPATH:$BIN_CLASSPATH
 }
 
 execRunner () {
@@ -69,10 +67,10 @@ execRunner () {
 
 # Actually runs the script.
 run() {
-  execRunner "$java_cmd" \
-    -D"smile.home=$smile_home" \
+  execRunner "$kotlin_cmd" \
+    -J-D"smile.home=$smile_home" \
     -classpath "$app_classpath" \
-    -jar $app_home/ki-shell-*.jar \
+    -jvm-target 17 \
     "$@"
 
   local exit_code=$?
@@ -89,6 +87,6 @@ declare -r smile_home="${app_home}/../"
 declare -r lib_dir="$(realpath "${app_home}/../lib")"
 declare -r app_classpath=$(get_classpath)
 
-declare java_cmd=$(get_java_cmd)
+declare kotlin_cmd=$(get_kotlin_cmd)
 
 run "$@"
