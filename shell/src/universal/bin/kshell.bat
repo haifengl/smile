@@ -39,21 +39,25 @@ rem We keep in _JAVA_PARAMS all -J-prefixed and -D-prefixed arguments
 rem "-J" is stripped, "-D" is left as is, and everything is appended to JAVA_OPTS
 set _JAVA_PARAMS=
 set _APP_ARGS=
+set _JARS=
 
-set "APP_CLASSPATH=%APP_LIB_DIR%\*;%APP_HOME%\bin\smile-kotlin-*.jar"
-call :add_java -J-Dsmile.home=%APP_HOME%
-call :add_java -J-Djava.library.path=%APP_HOME%\bin
+for /f "Delims=" %%i in ('dir /s /b /a-d %APP_LIB_DIR%\*.jar^|findstr /Riv "typesafe scala"') do call :add_jar %%i
+for %%i in (%APP_HOME%\smile-kotlin-*.jar) do call :add_jar %%i
+set "APP_CLASSPATH=%_JARS%"
+
+call :add_java -Dsmile.home=%APP_HOME%
+call :add_java -Djava.library.path=%APP_HOME%\bin
 set PATH=!PATH!;%~dp0
 
 if "%KOTLIN_HOME%" neq "" (
-  if exist "%KOTLIN_HOME%\bin\kotlinc-jvm.bat" set "_JAVACMD=%JAVA_HOME%\bin\kotlinc-jvm.bat"
+  if exist "%KOTLIN_HOME%\bin\kotlinc.bat" set "_JAVACMD=%KOTLIN_HOME%\bin\kotlinc.bat"
 )
 
-if "%_JAVACMD%"=="" set _JAVACMD=kotlinc-jvm.bat
+if "%_JAVACMD%"=="" set _JAVACMD=kotlinc.bat
 
 rem Detect if this java is ok to use.
 for /F %%j in ('"%_JAVACMD%" -version  2^>^&1') do (
-  if %%~j==info set JAVAINSTALLED=1
+  if %%~j==info: set JAVAINSTALLED=1
 )
 
 rem BAT has no logical or, so we do it OLD SCHOOL! Oppan Redmond Style
@@ -62,27 +66,29 @@ if not defined JAVAINSTALLED set JAVAOK=false
 
 if "%JAVAOK%"=="false" (
   echo.
-  echo A Java JDK is not installed or can't be found.
-  if not "%JAVA_HOME%"=="" (
-    echo JAVA_HOME = "%JAVA_HOME%"
+  echo Kotlin is not installed or can't be found.
+  if not "%KOTLIN_HOME%"=="" (
+    echo KOTLIN_HOME = "%KOTLIN_HOME%"
   )
   echo.
   echo Please go to
-  echo   http://www.oracle.com/technetwork/java/javase/downloads/index.html
-  echo and download a valid Java JDK and install before running smile.
+  echo   https://kotlinlang.org/docs/command-line.html
+  echo and download a valid Kotlin command-line compiler and
+  echo install before running smile.
   echo.
   echo If you think this message is in error, please check
-  echo your environment variables to see if "java.exe" and "javac.exe" are
-  echo available via JAVA_HOME or PATH.
+  echo your environment variables to see if "kotlin" and "kotlinc" are
+  echo available via KOTLIN_HOME or PATH.
   echo.
   if defined DOUBLECLICKED pause
   exit /B 1
 )
 
-set _JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
+set CLASSPATH=%CLASSPATH%;%APP_CLASSPATH%
+set JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
 
 rem Call the application and pass all arguments unchanged.
-"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" !_APP_ARGS!
+"%_JAVACMD%" !_APP_ARGS!
 
 @endlocal
 
@@ -101,6 +107,11 @@ rem Second argument is the name of the environment variable to write to.
     )
   )
   set %2=!_PARSE_OUT!
+exit /B 0
+
+
+:add_jar
+  set _JARS=!_JARS!;%1
 exit /B 0
 
 
