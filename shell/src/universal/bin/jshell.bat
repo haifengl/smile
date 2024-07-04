@@ -38,7 +38,7 @@ if "!_JAVA_OPTS!"=="" set _JAVA_OPTS=!CFG_OPTS!
 rem We keep in _JAVA_PARAMS all -J-prefixed and -D-prefixed arguments
 rem "-J" is stripped, "-D" is left as is, and everything is appended to JAVA_OPTS
 set _JAVA_PARAMS=
-set _APP_ARGS=--startup "%APP_HOME%\bin\predef.jsh"
+set _APP_ARGS=--startup DEFAULT --startup PRINTING --startup "%APP_HOME%\bin\predef.jsh"
 
 set "APP_CLASSPATH=%APP_LIB_DIR%\*"
 call :add_java -J-Dsmile.home=%APP_HOME%
