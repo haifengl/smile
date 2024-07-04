@@ -40,7 +40,7 @@ rem "-J" is stripped, "-D" is left as is, and everything is appended to JAVA_OPT
 set _JAVA_PARAMS=
 set _APP_ARGS=
 
-set "APP_CLASSPATH=%APP_LIB_DIR%\*;%APP_HOME%\smile-kotlin-*.jar"
+set "APP_CLASSPATH=%APP_LIB_DIR%\*;%APP_HOME%\bin\smile-kotlin-*.jar"
 call :add_java -Dsmile.home=%APP_HOME%
 call :add_java -Djava.library.path=%APP_HOME%\bin
 set PATH=!PATH!;%~dp0
@@ -92,7 +92,7 @@ if "%JAVAOK%"=="false" (
 set _JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
 
 rem Call the application and pass all arguments unchanged.
-"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" -jar %APP_HOME%\ki-shell-*.jar !_APP_ARGS!
+"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" -jar %APP_HOME%\bin\ki-shell.jar !_APP_ARGS!
 
 @endlocal
 
