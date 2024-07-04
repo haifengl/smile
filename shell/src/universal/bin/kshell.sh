@@ -32,10 +32,10 @@ realpath () {
 }
 
 get_kotlin_cmd() {
-  if [[ -n "$KOTLIN_HOME" ]] && [[ -x "$KOTLIN_HOME/bin/kotlinc-jvm" ]];  then
-    echo "$KOTLIN_HOME/bin/kotlinc-jvm"
+  if [[ -n "$KOTLIN_HOME" ]] && [[ -x "$KOTLIN_HOME/bin/kotlinc" ]];  then
+    echo "$KOTLIN_HOME/bin/kotlinc"
   else
-    echo "kotlinc-jvm"
+    echo "kotlinc"
   fi
 }
 
