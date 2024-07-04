@@ -39,8 +39,11 @@ rem We keep in _JAVA_PARAMS all -J-prefixed and -D-prefixed arguments
 rem "-J" is stripped, "-D" is left as is, and everything is appended to JAVA_OPTS
 set _JAVA_PARAMS=
 set _APP_ARGS=--startup DEFAULT --startup PRINTING --startup "%APP_HOME%\bin\predef.jsh"
+set "_JARS=%CLASSPATH%"
 
-set "APP_CLASSPATH=%APP_LIB_DIR%\*"
+for /f "Delims=" %%i in ('dir /s /b /a-d %APP_LIB_DIR%\*.jar^|findstr /Riv "typesafe scala"') do call :add_jar %%i
+set APP_CLASSPATH=%_JARS%
+
 call :add_java -J-Dsmile.home=%APP_HOME%
 call :add_java -J-Djava.library.path=%APP_HOME%\bin
 set PATH=!PATH!;%~dp0
@@ -111,6 +114,11 @@ rem Second argument is the name of the environment variable to write to.
     )
   )
   set %2=!_PARSE_OUT!
+exit /B 0
+
+
+:add_jar
+  set _JARS=!_JARS!;%1
 exit /B 0
 
 
