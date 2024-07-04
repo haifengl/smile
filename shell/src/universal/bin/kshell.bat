@@ -41,29 +41,19 @@ set _JAVA_PARAMS=
 set _APP_ARGS=
 
 set "APP_CLASSPATH=%APP_LIB_DIR%\*;%APP_HOME%\bin\smile-kotlin-*.jar"
-call :add_java -Dsmile.home=%APP_HOME%
-call :add_java -Djava.library.path=%APP_HOME%\bin
+call :add_java -J-Dsmile.home=%APP_HOME%
+call :add_java -J-Djava.library.path=%APP_HOME%\bin
 set PATH=!PATH!;%~dp0
 
-rem Bundled JRE has priority over standard environment variables
-if defined BUNDLED_JVM (
-  set "_JAVACMD=%BUNDLED_JVM%\bin\java.exe"
-) else (
-  if "%JAVACMD%" neq "" (
-    set "_JAVACMD=%JAVACMD%"
-  ) else (
-    if "%JAVA_HOME%" neq "" (
-      if exist "%JAVA_HOME%\bin\java.exe" set "_JAVACMD=%JAVA_HOME%\bin\java.exe"
-    )
-  )
+if "%KOTLIN_HOME%" neq "" (
+  if exist "%KOTLIN_HOME%\bin\kotlinc-jvm.bat" set "_JAVACMD=%JAVA_HOME%\bin\kotlinc-jvm.bat"
 )
 
-if "%_JAVACMD%"=="" set _JAVACMD=java
+if "%_JAVACMD%"=="" set _JAVACMD=kotlinc-jvm.bat
 
 rem Detect if this java is ok to use.
 for /F %%j in ('"%_JAVACMD%" -version  2^>^&1') do (
-  if %%~j==java set JAVAINSTALLED=1
-  if %%~j==openjdk set JAVAINSTALLED=1
+  if %%~j==info set JAVAINSTALLED=1
 )
 
 rem BAT has no logical or, so we do it OLD SCHOOL! Oppan Redmond Style
@@ -92,7 +82,7 @@ if "%JAVAOK%"=="false" (
 set _JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
 
 rem Call the application and pass all arguments unchanged.
-"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" -jar %APP_HOME%\bin\ki-shell.jar !_APP_ARGS!
+"%_JAVACMD%" !_JAVA_OPTS! --class-path "%APP_CLASSPATH%" !_APP_ARGS!
 
 @endlocal
 
