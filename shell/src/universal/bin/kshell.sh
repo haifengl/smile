@@ -41,7 +41,7 @@ get_kotlin_cmd() {
 
 get_classpath() {
   JARS=("$lib_dir"/*.jar)
-  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala).* ]] && unset -v 'JARS[$index]' ; done
+  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(typesafe|scala).* ]] && unset -v 'JARS[$index]' ; done
   CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
   JARS=("$app_home"/smile-kotlin-*.jar)
   BIN_CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
