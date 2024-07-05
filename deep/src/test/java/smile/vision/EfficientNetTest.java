@@ -16,7 +16,6 @@
  */
 package smile.vision;
 
-import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import smile.deep.Loss;
@@ -26,6 +25,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
 import smile.math.TimeFunction;
+import smile.util.Paths;
 import smile.vision.transform.Transform;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -63,8 +63,8 @@ public class EfficientNetTest {
         model.eval();
         model.to(device);
 
-        var lenna = ImageIO.read(new File("deep/src/universal/data/image/Lenna.png"));
-        var panda = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
+        var lenna = ImageIO.read(Paths.getTestData("image/Lenna.png").toFile());
+        var panda = ImageIO.read(Paths.getTestData("image/panda.jpg").toFile());
 
         try (var guard = Tensor.noGradGuard()) {
             // https://discuss.pytorch.org/t/libtorchs-cpu-inference-is-much-slower-on-windows-than-on-linux/166194/2
@@ -127,8 +127,8 @@ public class EfficientNetTest {
         model.to(device);
 
         var transform = Transform.classification(64, 64);
-        var data = new ImageDataset(32, "deep/src/universal/data/imagenet-mini/train", transform, ImageNet.folder2Target);
-        var test = new ImageDataset(128, "deep/src/universal/data/imagenet-mini/val", transform, ImageNet.folder2Target);
+        var data = new ImageDataset(32, Paths.getTestData("imagenet-mini/train").toString(), transform, ImageNet.folder2Target);
+        var test = new ImageDataset(128, Paths.getTestData("imagenet-mini/val").toString(), transform, ImageNet.folder2Target);
 
         var schedule = TimeFunction.piecewise(new int[] { 10000 },
                 TimeFunction.linear(0.00001, 10000, 0.00005),

@@ -19,6 +19,7 @@ package smile.deep;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.junit.jupiter.api.*;
+import smile.util.Paths;
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,7 +81,7 @@ public class TorchTest {
         Net net = new Net();
 
         // Create a multi-threaded data loader for the MNIST dataset.
-        MNISTMapDataset dataset = new MNIST("deep/src/universal/data/mnist").map(new ExampleStack());
+        MNISTMapDataset dataset = new MNIST(Paths.getTestData("mnist").toString()).map(new ExampleStack());
         MNISTRandomDataLoader dataLoader = new MNISTRandomDataLoader(
                 dataset, new RandomSampler(dataset.size().get()),
                 new DataLoaderOptions(64));

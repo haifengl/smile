@@ -16,11 +16,11 @@
  */
 package smile.vision.transform;
 
-import java.io.File;
 import java.io.IOException;
 import java.awt.Image;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
+import smile.util.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.deep.tensor.Index.*;
 
@@ -52,7 +52,7 @@ public class TransformTest {
     @Test
     public void test() throws IOException {
         var t = Transform.classification(384, 384);
-        var img = ImageIO.read(new File("deep/src/universal/data/image/panda.jpg"));
+        var img = ImageIO.read(Paths.getTestData("image/panda.jpg").toFile());
 
         // warm up AWT
         var resized = t.resize(img, 384, Image.SCALE_FAST);
