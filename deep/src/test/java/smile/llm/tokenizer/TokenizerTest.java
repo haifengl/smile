@@ -48,7 +48,7 @@ public class TokenizerTest {
 
     @Test
     public void testSentencePiece() throws IOException {
-        var tokenizer = Tokenizer.sentencePiece("deep/src/universal/models/llama_tokenizer_v2.model");
+        var tokenizer = Tokenizer.sentencePiece("model/Llama-2/tokenizer.model");
         System.out.println(Arrays.toString(tokenizer.tokenize("This is a test sentence.")));
 
         int[] tokens1 = { 1, 910, 338, 263, 1243, 10541, 29889, 2 };
