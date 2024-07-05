@@ -44,8 +44,8 @@ set "_JARS=%CLASSPATH%"
 for /f "Delims=" %%i in ('dir /s /b /a-d %APP_LIB_DIR%\*.jar^|findstr /Riv "typesafe scala"') do call :add_jar %%i
 set APP_CLASSPATH=%_JARS%
 
-call :add_java -J-Dsmile.home=%APP_HOME%
-call :add_java -J-Djava.library.path=%APP_HOME%\bin
+call :add_java -R-Dsmile.home=%APP_HOME%
+call :add_java -R-Djava.library.path=%APP_HOME%\bin
 set PATH=!PATH!;%~dp0
 
 rem Bundled JRE has priority over standard environment variables
