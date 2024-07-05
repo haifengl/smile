@@ -175,7 +175,7 @@ public class EfficientNet extends LayerBlock {
      * @return the model.
      */
     public static VisionModel V2S() {
-        return V2S("deep/src/universal/models/efficientnet_v2_s.pt");
+        return V2S("model/EfficientNet/efficientnet_v2_s.pt");
     }
 
     /**
@@ -206,7 +206,7 @@ public class EfficientNet extends LayerBlock {
      * @return the model.
      */
     public static VisionModel V2M() {
-        return V2M("deep/src/universal/models/efficientnet_v2_m.pt");
+        return V2M("model/EfficientNet/efficientnet_v2_m.pt");
     }
 
     /**
@@ -238,7 +238,7 @@ public class EfficientNet extends LayerBlock {
      * @return the model.
      */
     public static VisionModel V2L() {
-        return V2L("deep/src/universal/models/efficientnet_v2_l.pt");
+        return V2L("model/EfficientNet/efficientnet_v2_l.pt");
     }
 
     /**
