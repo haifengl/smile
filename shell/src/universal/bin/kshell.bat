@@ -84,10 +84,10 @@ if "%JAVAOK%"=="false" (
   exit /B 1
 )
 
-set JAVA_OPTS=!_JAVA_OPTS! -cp %APP_CLASSPATH% !_JAVA_PARAMS!
+set JAVA_OPTS=!_JAVA_OPTS! !_JAVA_PARAMS!
 
 rem Call the application and pass all arguments unchanged.
-"%_JAVACMD%" !_APP_ARGS!
+"%_JAVACMD%" -cp !APP_CLASSPATH! !_APP_ARGS!
 
 @endlocal
 
