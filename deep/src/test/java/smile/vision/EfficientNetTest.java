@@ -120,23 +120,23 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
-        Device device = Device.preferredDevice();
+        Device device = Device.CUDA((byte) 1); //.preferredDevice();
         device.setDefaultDevice();
 
         var model = EfficientNet.V2S();
         model.to(device);
 
-        var transform = Transform.classification(64, 64);
-        var data = new ImageDataset(32, Paths.getTestData("imagenet-mini/train").toString(), transform, ImageNet.folder2Target);
-        var test = new ImageDataset(128, Paths.getTestData("imagenet-mini/val").toString(), transform, ImageNet.folder2Target);
+        var transform = Transform.classification(384, 384);
+        var data = new ImageDataset(4096, "../imagenet/train", transform, ImageNet.folder2Target);
+        var test = new ImageDataset(4096, "../imagenet/val", transform, ImageNet.folder2Target);
 
         var schedule = TimeFunction.piecewise(new int[] { 10000 },
                 TimeFunction.linear(0.00001, 10000, 0.00005),
                 TimeFunction.cosine(0.00001, 5000, 0.00005));
-        model.setLearningRateSchedule(schedule);
+        //model.setLearningRateSchedule(schedule);
         // Use parameters from the paper, the rests are Keras default values.
         // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
-        Optimizer optimizer = Optimizer.RMSprop(model, 0.00001, 0.9, 1E-07, 1E-05, 0.9, false);
+        Optimizer optimizer = Optimizer.RMSprop(model, 0.01, 0.9, 1E-07, 1E-05, 0.9, false);
         model.train(20, optimizer, Loss.nll(), data, test, null, new Accuracy());
     }
 }
