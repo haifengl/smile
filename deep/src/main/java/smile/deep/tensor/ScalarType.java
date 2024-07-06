@@ -63,4 +63,8 @@ public enum ScalarType {
     ScalarType(torch.ScalarType dtype) {
         this.value = dtype;
     }
+
+    public torch.ScalarType asTorch() {
+        return value;
+    }
 }

@@ -22,6 +22,7 @@ import smile.deep.Loss;
 import smile.deep.Optimizer;
 import smile.deep.metric.Accuracy;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
 import smile.math.TimeFunction;
@@ -34,10 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class EfficientNetTest {
-    Device device = Device.CUDA((byte) 1); //.preferredDevice();
 
     public EfficientNetTest() {
-        device.setDefaultDevice();
     }
 
     @BeforeAll
@@ -58,9 +57,11 @@ public class EfficientNetTest {
 
     @Test
     public void test() throws IOException {
+        Device device = Device.preferredDevice();
+
         var model = EfficientNet.V2S();
-        model.eval();
         model.to(device);
+        model.eval();
 
         var lenna = ImageIO.read(Paths.getTestData("image/Lenna.png").toFile());
         var panda = ImageIO.read(Paths.getTestData("image/panda.jpg").toFile());
@@ -119,20 +120,26 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
+        Device device = Device.CUDA((byte) 1);
+        device.setDefaultDevice();
+
+        // half precision to lower memory usage.
+        var dtype = ScalarType.BFloat16;
+
         var model = EfficientNet.V2S();
-        model.to(device);
+        model.to(device, dtype);
 
         var transform = Transform.classification(384, 384);
-        var data = new ImageDataset(4096, "../imagenet/train", transform, ImageNet.folder2Target);
-        var test = new ImageDataset(4096, "../imagenet/val", transform, ImageNet.folder2Target);
+        var data = new ImageDataset(16, "../imagenet/train", transform, ImageNet.folder2Target);
+        var test = new ImageDataset( 4, "../imagenet/val",   transform, ImageNet.folder2Target);
 
-        var schedule = TimeFunction.piecewise(new int[] { 10000 },
-                TimeFunction.linear(0.00001, 10000, 0.00005),
-                TimeFunction.cosine(0.00001, 5000, 0.00005));
+        var schedule = TimeFunction.piecewise(new int[] { 1281167 },
+                TimeFunction.linear(0.00001, 1281167, 0.01),
+                TimeFunction.cosine(0.01, 2 * 1281167, 0.00005));
         //model.setLearningRateSchedule(schedule);
         // Use parameters from the paper, the rests are Keras default values.
         // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
         Optimizer optimizer = Optimizer.RMSprop(model, 0.01, 0.9, 1E-07, 1E-05, 0.9, false);
-        model.train(20, optimizer, Loss.nll(), data, test, null, new Accuracy());
+        model.train(5, optimizer, Loss.nll(), data, test, null, new Accuracy());
     }
 }
