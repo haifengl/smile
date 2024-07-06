@@ -34,8 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class EfficientNetTest {
+    Device device = Device.CUDA((byte) 1); //.preferredDevice();
 
     public EfficientNetTest() {
+        device.setDefaultDevice();
     }
 
     @BeforeAll
@@ -56,9 +58,6 @@ public class EfficientNetTest {
 
     @Test
     public void test() throws IOException {
-        Device device = Device.preferredDevice();
-        device.setDefaultDevice();
-
         var model = EfficientNet.V2S();
         model.eval();
         model.to(device);
@@ -120,9 +119,6 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
-        Device device = Device.CUDA((byte) 1); //.preferredDevice();
-        device.setDefaultDevice();
-
         var model = EfficientNet.V2S();
         model.to(device);
 
