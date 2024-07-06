@@ -23,6 +23,7 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.math.TimeFunction;
 
@@ -39,6 +40,8 @@ public class Model implements Function<Tensor, Tensor> {
     private final Function<Tensor, Tensor> transform;
     /** The compute device on which the model is stored. */
     private Device device;
+    /** The data type. */
+    private ScalarType dtype;
     /** The learning rate schedule. */
     private TimeFunction learningRateSchedule;
 
@@ -100,6 +103,14 @@ public class Model implements Function<Tensor, Tensor> {
     }
 
     /**
+     * Returns the data type.
+     * @return the data type.
+     */
+    public ScalarType dtype() {
+        return dtype;
+    }
+
+    /**
      * Moves the model to a device.
      * @param device the compute device.
      * @return this model.
@@ -107,6 +118,19 @@ public class Model implements Function<Tensor, Tensor> {
     public Model to(Device device) {
         this.device = device;
         net.to(device);
+        return this;
+    }
+
+    /**
+     * Moves the model to a device.
+     * @param device the compute device.
+     * @param dtype the data type.
+     * @return this model.
+     */
+    public Model to(Device device, ScalarType dtype) {
+        this.device = device;
+        this.dtype = dtype;
+        net.to(device, dtype);
         return this;
     }
 
@@ -188,7 +212,7 @@ public class Model implements Function<Tensor, Tensor> {
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             // Iterate the data loader to yield batches from the dataset.
             for (SampleBatch batch : train) {
-                Tensor data = device == null ? batch.data() : batch.data().to(device);
+                Tensor data = device == null ? batch.data() : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));
                 Tensor target = device == null ? batch.target() : batch.target().to(device);
 
                 if (transform != null) {
@@ -270,7 +294,7 @@ public class Model implements Function<Tensor, Tensor> {
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
         for (SampleBatch batch : dataset) {
-            Tensor data = device == null ? batch.data() : batch.data().to(device);
+            Tensor data = device == null ? batch.data() : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));;
             Tensor target = device == null ? batch.target() : batch.target().to(device);
 
             if (transform != null) {

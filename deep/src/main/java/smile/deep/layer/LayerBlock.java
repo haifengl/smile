@@ -22,6 +22,7 @@ import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.OutputArchive;
 import smile.deep.Model;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
 
 /**
  * A block is combinations of one or more layers. Blocks form the basis of
@@ -37,6 +38,8 @@ public abstract class LayerBlock implements Layer {
     protected final Module module;
     /** The compute device. */
     protected Device device;
+    /** The data type. */
+    protected ScalarType dtype;
 
     /**
      * Constructor.
@@ -152,10 +155,25 @@ public abstract class LayerBlock implements Layer {
         return device;
     }
 
+    /**
+     * Returns the compute device of module.
+     */
+    public ScalarType dtype() {
+        return dtype;
+    }
+
     @Override
     public LayerBlock to(Device device) {
         module.to(device.asTorch(), true);
         this.device = device;
+        return this;
+    }
+
+    @Override
+    public LayerBlock to(Device device, ScalarType dtype) {
+        module.to(device.asTorch(), dtype.asTorch(), true);
+        this.device = device;
+        this.dtype = dtype;
         return this;
     }
 
