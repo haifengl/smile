@@ -249,6 +249,19 @@ public class Model implements Function<Tensor, Tensor> {
                         double rate = learningRateSchedule.apply(batchIndex);
                         msg += String.format(" | LR: %.5f", rate);
                     }
+
+                    if (batchIndex % 2000 == 0) {
+                        Map<String, Double> result = eval(test, metrics);
+                        StringBuilder sb = new StringBuilder(msg);
+                        train(); // return to training mode
+                        for (var metric : metrics) {
+                            String name = metric.name();
+                            sb.append(String.format(" | %s: %.2f%%", name, 100 * result.get(name)));
+                            metric.reset();
+                        }
+                        msg = sb.toString();
+                    }
+
                     logger.info(msg);
                     lossValue = 0.0;
                     free();

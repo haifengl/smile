@@ -130,12 +130,12 @@ public class EfficientNetTest {
         model.to(device, dtype);
 
         var transform = Transform.classification(384, 384);
-        var data = new ImageDataset(48, "../imagenet/train", transform, ImageNet.folder2Target);
+        var data = new ImageDataset(64, "../imagenet/train", transform, ImageNet.folder2Target);
         var test = new ImageDataset(16, "../imagenet/val",   transform, ImageNet.folder2Target);
 
-        var schedule = TimeFunction.piecewise(new int[] { 200000 },
-                TimeFunction.linear(0.00001, 200000, 0.01),
-                TimeFunction.cosine(0.0001, 200000, 0.01));
+        var schedule = TimeFunction.piecewise(new int[] { 50000 },
+                TimeFunction.linear(0.0001, 50000, 0.01),
+                TimeFunction.cosine(0.0001, 50000, 0.01));
         model.setLearningRateSchedule(schedule);
         // Use parameters from the paper, the rests are Keras default values.
         // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
