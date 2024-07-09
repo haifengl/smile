@@ -73,14 +73,15 @@ title: Smile - Feature Engineering
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
+    import smile.base.mlp.Layer;
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
-    var x = pendigits.drop(16).toArray();
+    var df = pendigits.drop(16);
     var y = pendigits.column(16).toIntArray();
-    var scaler = WinsorScaler.fit(x, 0.01, 0.99);
-    x = scaler.transform(x);
+    var scaler = WinsorScaler.fit(df, 0.01, 0.99);
+    var x = scaler.apply(df).toArray();
 
     CrossValidation.classification(10, x, y, (x, y) -> {
-        var model = new smile.classification.MLP(16,
+        var model = new smile.classification.MLP(Layer.input(16),
                     Layer.sigmoid(50),
                     Layer.mle(10, OutputFunction.SIGMOID)
             );
@@ -112,21 +113,21 @@ title: Smile - Feature Engineering
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
-    var x = zip.drop(0).toArray();
+    var df = zip.drop(0);
     var y = zip.column(0).toIntArray();
 
-    var scaler = Standardizer.fit(x);
-    x = scaler.transform(x);
+    var scaler = Standardizer.fit(df);
+    var x = scaler.apply(df).toArray();
 
-    var model = new smile.classification.MLP(256,
+    var model = new smile.classification.MLP(Layer.input(256),
                 Layer.sigmoid(768),
                 Layer.sigmoid(192),
                 Layer.sigmoid(30),
                 Layer.mle(10, OutputFunction.SIGMOID)
         );
 
-    model.setLearningRate(0.1);
-    model.setMomentum(0.0);
+    model.setLearningRate(TimeFunction.constant(0.1));
+    model.setMomentum(TimeFunction.constant(0.0));
 
     for (int epoch = 0; epoch < 10; epoch++) {
         for (int i : MathEx.permutate(x.length)) {
@@ -234,35 +235,16 @@ title: Smile - Feature Engineering
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    val iris = read.arff("data/weka/iris.arff")
-    ssr("class" ~, iris)
-
-    val x = iris.select(2,3).toArray // take last two columns
-    val y = iris("class").toIntArray
-    val canvas = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    canvas.setAxisLabels(iris.names.slice(2,4): _*)
-    show(canvas)
-    </code></pre>
-            </div>
-        </div>
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var iris = Read.arff("data/weka/iris.arff");
-    var x = iris.drop("class").toArray();
-    var y = iris.column("class").toIntArray();
-    SumSquaresRatio.of(x, y);
+    SumSquaresRatio.fit(iris, "class");
 
-    x = iris.select(2,3).toArray();
-    char[] legends = {'*', '+', 'o'};
-    Color[] colors = {Color.RED, Color.BLUE, Color.CYAN};
-    var canvas = ScatterPlot.plot(x, y, legends, colors);
+    var df = iris.select("petallength", "petalwidth", "class");
+    var canvas = ScatterPlot.of(df, "petallength", "petalwidth", "class", '*').canvas();
     canvas.setAxisLabels(iris.names()[2], iris.names()[3]);
     canvas.window();
           </code></pre>
@@ -300,7 +282,8 @@ title: Smile - Feature Engineering
         <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val model = smile.classification.randomForest("class" ~, iris)
+    val iris = read.arff("data/weka/iris.arff")
+    val model = smile.classification.randomForest("class" ~ ".", iris)
     println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
     </code></pre>
             </div>
@@ -376,7 +359,7 @@ housing: DataFrame = [CRIM: float, ZN: float, INDUS: float, CHAS: byte nominal[0
 +------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
 496 more rows...
 
-smile&gt; val model = smile.regression.randomForest("class" ~, housing)
+smile&gt; val model = smile.regression.randomForest("class" ~ ".", housing)
 [main] INFO smile.util.package$ - Random Forest runtime: 0:00:00.495102
 model: regression.RandomForest = smile.regression.RandomForest@52d63b7e
 
@@ -415,32 +398,32 @@ LSTAT                 2.6838
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-jshell&gt; import smile.io.*
+smile&gt; import smile.io.*
 
-jshell&gt; import smile.data.formula.*
+smile&gt; import smile.data.formula.*
 
-jshell&gt; import smile.regression.*
+smile&gt; import smile.regression.*
 
-jshell&gt; var housing = Read.arff("data/weka/regression/housing.arff")
+smile&gt; var housing = Read.arff("data/weka/regression/housing.arff")
 [main] INFO smile.io.Arff - Read ARFF relation housing
 housing ==&gt; [CRIM: float, ZN: float, INDUS: float, CHAS: byte ... -+-----+
 496 more rows...
 
-jshell&gt; var model = RandomForest.fit(Formula.lhs("class"), housing)
+smile&gt; var model = smile.regression.RandomForest.fit(Formula.lhs("class"), housing)
 model ==&gt; smile.regression.RandomForest@6b419da
 
-jshell&gt; var importance = model.importance()
+smile&gt; var importance = model.importance()
 importance ==&gt; double[13] { 1055236.1223483568, 140436.296249959 ... 12613, 5995848.431410795 }
 
-jshell&gt; var shap = model.shap(housing.stream().parallel())
+smile&gt; var shap = model.shap(housing.stream().parallel())
 shap ==&gt; double[13] { 0.512298718958897, 0.053544797051652 ... 24552, 2.677155911786813 }
 
-jshell&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
+smile&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
 fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", "B", "LSTAT" }
 
-jshell&gt; smile.sort.QuickSort.sort(importance, fields);
+smile&gt; smile.sort.QuickSort.sort(importance, fields);
 
-jshell&gt; for (int i = 0; i &lt; importance.length; i++) {
+smile&gt; for (int i = 0; i &lt; importance.length; i++) {
    ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
    ...&gt; }
 CHAS              86870.7977
@@ -457,12 +440,12 @@ PTRATIO         1406441.0265
 LSTAT           5995848.4314
 RM              6202612.7762
 
-jshell&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
+smile&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
 fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", "B", "LSTAT" }
 
-jshell&gt; smile.sort.QuickSort.sort(shap, fields);
+smile&gt; smile.sort.QuickSort.sort(shap, fields);
 
-jshell&gt; for (int i = 0; i &lt; shap.length; i++) {
+smile&gt; for (int i = 0; i &lt; shap.length; i++) {
    ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
    ...&gt; }
 CHAS                  0.0486
@@ -661,17 +644,17 @@ LSTAT                 2.6772
         <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val pendigits = read.csv("data/classification/pendigits.txt", delimiter='\t', header = false)
-    val formula: Formula = "V17" ~
-    val x = formula.x(pendigits).toArray
-    val y = formula.y(pendigits).toIntArray
+    val pendigits = read.csv("data/classification/pendigits.txt", delimiter="\t", header = false)
+    val formula: Formula = "V17" ~ "."
+    val df = formula.x(pendigits)
+    val x = df.toArray()
+    val y = formula.y(pendigits).toIntArray()
 
-    val pc = pca(x)
-    screeplot(pc)
+    val pc = pca(df)
+    show(screeplot(pc.varianceProportion()))
 
-    pc.setProjection(3)
-    val x2 = pc.project(x)
-    show(plot(x2, y, '.', Palette.COLORS))
+    val x2 = pc.getProjection(3)(x)
+    show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
@@ -684,11 +667,12 @@ LSTAT                 2.6772
     var y = formula.y(pendigits).toIntArray();
 
     var pca = PCA.fit(x);
-    PlotCanvas.screeplot(pca).window();
+    var canvas = new ScreePlot(pca.varianceProportion()).canvas();
+    canvas.window();
 
-    pca.setProjection(3);
-    var x2 = pca.project(x);
-    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+    var p = pca.getProjection(3);
+    var x2 = p.apply(x);
+    ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
             </div>
         </div>
@@ -761,18 +745,18 @@ LSTAT                 2.6772
         <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val pc = ppca(x, 3)
-    val x2 = pc.project(x)
-    show(plot(x2, y, '.', Palette.COLORS))
+    val pc = ppca(df, 3)
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
-    var pca = PPCA.fit(x, 3);
-    var x2 = pca.project(x);
-    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+    var pca = ProbabilisticPCA.fit(x, 3);
+    var x2 = pca.apply(x);
+    ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
             </div>
         </div>
@@ -834,18 +818,18 @@ LSTAT                 2.6772
         <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val pc = kpca(x, new GaussianKernel(45), 3)
-    val x2 = pc.project(x)
-    show(plot(x2, y, '.', Palette.COLORS))
+    val pc = kpca(df, new GaussianKernel(45), 3)
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
-    var pca = KPCA.fit(x, new GaussianKernel(45), 3);
-    var x2 = pca.project(x);
-    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+    var pca = KernelPCA.fit(pendigits.drop("V17"), new GaussianKernel(45), 3);
+    var x2 = pca.apply(x);
+    ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
             </div>
         </div>
@@ -916,19 +900,19 @@ LSTAT                 2.6772
         <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val pc = gha(x, 3, 0.00001)
-    val x2 = pc.project(x)
-    show(plot(x2, y, '.', Palette.COLORS))
+    val pc = gha(x, 3, TimeFunction.constant(0.00001))
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
                   <pre class="prettyprint lang-java"><code>
-    var gha = new GHA(x[0].length, 3, 0.00001);
+    var gha = new GHA(x[0].length, 3, TimeFunction.constant(0.00001));
     Arrays.stream(x).forEach(xi -> gha.update(xi));
-    var x2 = gha.project(x);
-    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+    var x2 = gha.apply(x);
+    ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
             </div>
         </div>
