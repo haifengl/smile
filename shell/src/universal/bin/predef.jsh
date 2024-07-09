@@ -95,6 +95,7 @@ println("""
 
 
 // Imports Smile packages.
+import java.awt.Color;
 import org.apache.commons.csv.CSVFormat;
 import smile.util.*;
 import smile.math.*;
