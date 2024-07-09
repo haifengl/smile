@@ -128,11 +128,6 @@ title: Smile - Data Processing
 
     smile> var iris = Read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
-    iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
-    140 more rows...
-
-    smile> iris
-    [main] INFO smile.io.Arff - Read ARFF relation iris
     $3 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
     +-----------+----------+-----------+----------+-----------+
     |sepallength|sepalwidth|petallength|petalwidth|      class|
@@ -241,7 +236,7 @@ title: Smile - Data Processing
     }
 
     smile> iris.column("sepallength")
-    $8 ==> [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
+    $8 ==> [5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ... 140 more]
           </code></pre>
             </div>
         </div>
@@ -455,7 +450,7 @@ title: Smile - Data Processing
     >>> iris.stream().allMatch({row -> row.getDouble(0) < 10})
     res11: kotlin.Boolean = true
     >>> iris.stream().filter({row -> row.getByte("class") == 1.toByte()}).findAny()
-    res14: java.util.Optional<smile.data.Tuple!>! = Optional[{
+    res14: java.util.Optional&lt;smile.data.Tuple!&gt;! = Optional[{
       sepallength: 6.2,
       sepalwidth: 2.9,
       petallength: 4.3,
@@ -463,7 +458,7 @@ title: Smile - Data Processing
       class: Iris-versicolor
     }]
     >>> iris.stream().filter({row -> row.getString("class").equals("Iris-versicolor")}).findAny()
-    res15: java.util.Optional<smile.data.Tuple!>! = Optional[{
+    res15: java.util.Optional&lt;smile.data.Tuple!&gt;! = Optional[{
       sepallength: 5.4,
       sepalwidth: 3,
       petallength: 4.5,
@@ -853,7 +848,7 @@ title: Smile - Data Processing
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> iris.stream().collect(java.util.stream.Collectors.groupingBy({row: Tuple -> row.getString("class")}))
-    res98: kotlin.collections.(Mutable)Map<kotlin.String!, kotlin.collections.(Mutable)List<smile.data.Tuple!>!>! = {Iris-versicolor=[{
+    res98: kotlin.collections.(Mutable)Map&lt;kotlin.String!, kotlin.collections.(Mutable)List&lt;smile.data.Tuple!&gt;!&gt;! = {Iris-versicolor=[{
       sepallength: 7,
       sepalwidth: 3.2,
       petallength: 4.7,
@@ -906,6 +901,124 @@ title: Smile - Data Processing
     </code></pre>
     </div>
     </div>
+    </div>
+
+    <h2 id="SQL">SQL</h2>
+
+    <p>While Smile provides many imperative way to manipulate DataFrames as showned above, it is probably
+        easier to do so with SQL.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_26" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_26">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> SQL sql = new SQL();
+      ...> sql.parquet("user", "data/kylo/userdata1.parquet");
+      ...> sql.json("books", "data/kylo/books_array.json");
+      ...> sql.csv("gdp", "data/regression/gdp.csv");
+      ...> sql.csv("diabetes", "data/regression/diabetes.csv");
+
+    smile> var tables = sql.tables();
+    tables ==> [TABLE_NAME: String, REMARKS: String]
+    +----------+-------+
+    |TABLE_NAME|REMARKS|
+    +----------+-------+
+    |     books|   null|
+    |  diabetes|   null|
+    |       gdp|   null|
+    |      user|   null|
+    +----------+-------+
+
+    smile> var columns = sql.describe("user");
+    columns ==> [COLUMN_NAME: String, TYPE_NAME: String, IS_NULLABLE: String]
+    +-----------------+---------+-----------+
+    |      COLUMN_NAME|TYPE_NAME|IS_NULLABLE|
+    +-----------------+---------+-----------+
+    |registration_dttm|TIMESTAMP|        YES|
+    |               id|  INTEGER|        YES|
+    |       first_name|  VARCHAR|        YES|
+    |        last_name|  VARCHAR|        YES|
+    |            email|  VARCHAR|        YES|
+    |           gender|  VARCHAR|        YES|
+    |       ip_address|  VARCHAR|        YES|
+    |               cc|  VARCHAR|        YES|
+    |          country|  VARCHAR|        YES|
+    |        birthdate|  VARCHAR|        YES|
+    +-----------------+---------+-----------+
+    3 more rows...
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the above, we create a database and create four tables by loading parquet, json, and csv files.
+        We also use the <code>describe</code> function to obtain the schema of the table user. With SQL,
+        it is easy to filter data and the result is a DataFrame.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_27" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_27">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+smile> var user = sql.query("SELECT * FROM user WHERE country = 'China'");
+[main] INFO smile.data.SQL - SELECT * FROM user WHERE country = 'China'
+user ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
++-------------------+---+----------+----------+--------------------+------+---------------+-------------------+-------+---------+---------+--------------------+--------+
+|  registration_dttm| id|first_name| last_name|               email|gender|     ip_address|                 cc|country|birthdate|   salary|               title|comments|
++-------------------+---+----------+----------+--------------------+------+---------------+-------------------+-------+---------+---------+--------------------+--------+
+|2016-02-03T00:36:21|  4|    Denise|     Riley|    driley3@gmpg.org|Female|  140.35.109.83|   3576031598965625|  China| 4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T18:04:34| 12|     Alice|     Berry|aberryb@wikipedia...|Female| 246.225.12.189|   4917830851454417|  China|8/12/1968| 22944.53|    Quality Engineer|        |
+|2016-02-03T10:30:36| 20|   Rebecca|      Bell| rbellj@bandcamp.com|Female|172.215.104.127|                   |  China|         |137251.19|                    |        |
+|2016-02-03T08:41:26| 27|     Henry|     Henry| hhenryq@godaddy.com|  Male| 191.88.236.116|4905730021217853521|  China|9/22/1995|284300.15|Nuclear Power Eng...|        |
+|2016-02-03T20:46:39| 37|   Dorothy|     Gomez|dgomez10@jiathis.com|Female| 65.111.200.146| 493684876859391834|  China|         | 57194.86|                    |        |
+|2016-02-03T08:34:26| 43|    Amanda|      Gray|  agray16@cdbaby.com|Female| 252.20.193.145|   3561501596653859|  China|8/28/1967|213410.26|Senior Quality En...|        |
+|2016-02-03T00:05:52| 53|     Ralph|     Price|  rprice1g@tmall.com|  Male|   152.6.235.33|   4844227560658222|  China|8/26/1986| 168208.4|             Teacher|        |
+|2016-02-03T16:03:13| 55|      Anna|Montgomery|amontgomery1i@goo...|Female|  80.111.141.47|   3586860392406446|  China| 9/6/1957|  92837.5|Software Test Eng...|     1E2|
+|2016-02-03T00:33:25| 57|    Willie|    Palmer|wpalmer1k@t-onlin...|  Male| 164.107.46.161|   4026614769857244|  China|8/23/1986|184978.64|Environmental Spe...|        |
+|2016-02-03T05:55:57| 58|    Arthur|     Berry|    aberry1l@unc.edu|  Male|    52.42.24.55|   3542761473624274|  China|         |144164.88|                    |        |
++-------------------+---+----------+----------+--------------------+------+---------------+-------------------+-------+---------+---------+--------------------+--------+
+179 more rows...
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Of course, join is very useful to prepare data from multiple sources. The result DataFrame
+        may be feed to downstream machine learning algorithms.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_28" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_28">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+smile> var gdp = sql.query("SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country");
+[main] INFO smile.data.SQL - SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country
+gdp ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String, Country: String, GDP Growth: Double, Debt: Double, Interest: Double]
++-------------------+---+----------+---------+--------------------+------+---------------+------------------+---------+----------+---------+--------------------+--------------------+---------+----------+-----+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|     ip_address|                cc|  country| birthdate|   salary|               title|            comments|  Country|GDP Growth| Debt|Interest|
++-------------------+---+----------+---------+--------------------+------+---------------+------------------+---------+----------+---------+--------------------+--------------------+---------+----------+-----+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|    1.197.201.2|  6759521864920116|Indonesia|  3/8/1971| 49756.53|    Internal Auditor|               1E+02|Indonesia|       6.5| 26.2|     7.7|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male| 218.111.175.34|                  |   Canada| 1/16/1968|150280.17|       Accountant IV|                    |   Canada|       2.5| 52.5|     9.5|
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female| 195.131.81.179|  3583136326049310|Indonesia| 2/25/1983| 69227.11|   Account Executive|                    |Indonesia|       6.5| 26.2|     7.7|
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male| 232.234.81.197|  3582641366974690| Portugal|12/18/1987| 14247.62|Senior Financial ...|                    | Portugal|      -1.6| 92.5|     9.7|
+|2016-02-03T18:29:47| 10|     Emily|  Stewart|estewart9@opensou...|Female| 143.28.251.245|  3574254110301671|  Nigeria| 1/28/1997| 27234.28|     Health Coach IV|                    |  Nigeria|       7.4|    3|     6.6|
+|2016-02-03T08:53:23| 15|   Dorothy|   Hudson|dhudsone@blogger.com|Female|       8.59.7.0|  3542586858224170|    Japan|12/20/1989|157099.71|  Nurse Practicioner|        alert('hi...|    Japan|      -0.6|174.8|    15.7|
+|2016-02-03T00:44:01| 16|     Bruce|   Willis|bwillisf@bluehost...|  Male|239.182.219.189|  3573030625927601|   Brazil|          |239100.65|                    |                    |   Brazil|       2.7| 52.8|    24.1|
+|2016-02-03T16:44:24| 18|   Stephen|  Wallace|swallaceh@netvibe...|  Male|  152.49.213.62|  5433943468526428|  Ukraine| 1/15/1978|248877.99|Account Represent...|                    |  Ukraine|       5.2| 27.4|     5.2|
+|2016-02-03T18:50:55| 23|   Gregory|   Barnes|  gbarnesm@google.ru|  Male| 220.22.114.145|  3538432455620641|  Tunisia| 1/23/1971|182233.49|Senior Sales Asso...|         사회과학원 어학연구소|  Tunisia|        -2|   44|     5.8|
+|2016-02-03T08:02:34| 26|   Anthony| Lawrence|alawrencep@miitbe...|  Male| 121.211.242.99|564182969714151470|    Japan|12/10/1979|170085.81| Electrical Engineer|                    |    Japan|      -0.6|174.8|    15.7|
++-------------------+---+----------+---------+--------------------+------+---------------+------------------+---------+----------+---------+--------------------+--------------------+---------+----------+-----+--------+
+990 more rows...
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <h2 id="sparse">Sparse Dataset</h2>
@@ -1773,7 +1886,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> read.libsvm("data/libsvm/glass.txt")
-    res118: smile.data.Dataset<smile.data.SampleInstance<smile.util.SparseArray>> = smile.data.DatasetImpl@50d667c3
+    res118: smile.data.Dataset&lt;smile.data.SampleInstance&lt;smile.util.SparseArray&gt;&gt; = smile.data.DatasetImpl@50d667c3
     </code></pre>
             </div>
         </div>
