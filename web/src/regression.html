@@ -192,7 +192,9 @@ title: Smile - Regression
     <div class="tab-pane" id="kotlin_2">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.*;
     >>> import smile.regression.*
+    >>> import smile.data.formula.*;
     >>> val planes = read.arff("data/weka/regression/2dplanes.arff")
     [main] INFO smile.io.Arff - Read ARFF relation 2dplanes
     >>> val model = lm(Formula.lhs("y"), planes)
@@ -668,8 +670,8 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val y = diabetes("y").toDoubleArray
-    val x = diabetes.select(1 until 11).toArray // use only the primary attributes
+    val y = diabetes("y").toDoubleArray()
+    val x = diabetes.select((1 until 11).toArray: _*).toArray() // use only the primary attributes
     cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
     </code></pre>
             </div>
@@ -686,6 +688,8 @@ title: Smile - Regression
         <div class="tab-pane" id="kotlin_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
+    import smile.base.rbf.*;
+    import smile.validation.*;
     val y = diabetes.column("y").toDoubleArray()
     val x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray() // use only the primary attributes
     CrossValidation.regression(10, x, y, { x, y -> rbfnet(x, y, RBF.fit(x, 10), false) })
@@ -732,7 +736,7 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def svr[T](x: Array[T],
+    def svm[T](x: Array[T],
                y: Array[Double],
                kernel: MercerKernel[T],
                eps: Double,
@@ -744,7 +748,7 @@ title: Smile - Regression
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    public class SVR {
+    public class SVM {
         public static KernelMachine&lt;T&gt; fit(T[] x,
                                                  double[] y,
                                                  MercerKernel&lt;T&gt; kernel,
@@ -758,7 +762,7 @@ title: Smile - Regression
         <div class="tab-pane" id="kotlin_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun &lt;T&gt; svr(x: Array&lt;T&gt;,
+    fun &lt;T&gt; svm(x: Array&lt;T&gt;,
                y: DoubleArray,
                kernel: MercerKernel&lt;T&gt;,
                eps: Double,
@@ -787,21 +791,23 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    cv.regression(10, x, y) { case (x, y) => svr(x, y, new GaussianKernel(0.06), 20, 10) }
+    import smile.validation.*;
+    import smile.math.kernel.*;
+    cv.regression(10, x, y) { case (x, y) => smile.regression.svm(x, y, new GaussianKernel(0.06), 20, 10) }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    CrossValidation.regression(10, x, y, (x, y) -> SVR.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
+    CrossValidation.regression(10, x, y, (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    CrossValidation.regression(10, x, y, { x, y -> svr(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
+    CrossValidation.regression(10, x, y, { x, y -> smile.regression.svm(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
           </code></pre>
             </div>
         </div>

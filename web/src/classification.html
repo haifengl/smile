@@ -178,7 +178,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    fun knn(x: Array<DoubleArray>, y: IntArray, k: Int): KNN<DoubleArray>
+    fun knn(x: Array&lt;DoubleArray&gt;, y: IntArray, k: Int): KNN&lt;DoubleArray&gt;
     </code></pre>
             </div>
         </div>
@@ -198,8 +198,8 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
-    val x = iris.drop("class").toArray
-    val y = iris("class").toIntArray
+    val x = iris.drop("class").toArray()
+    val y = iris("class").toIntArray()
     cv.classification(10, x, y) { case (x, y) => knn(x, y, 3) }
     </code></pre>
             </div>
@@ -335,10 +335,10 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toy = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
-    val x = toy.select(1, 2).toArray
-    val y = toy.column(0).toIntArray
-    show(plot(x, y, knn(x, y, 3)))
+    val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val x = toy.select(1, 2).toArray()
+    val y = toy.column(0).toIntArray()
+    knn(x, y, 3)
     </code></pre>
             </div>
         </div>
@@ -355,6 +355,8 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
+    import smile.*;
+    import smile.classification.*;
     val toy = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
     val x = toy.select(1, 2).toArray()
     val y = toy.column(0).toIntArray()
@@ -409,7 +411,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun lda(x: Array<DoubleArray>, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): LDA
+    fun lda(x: Array&lt;DoubleArray&gt;, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): LDA
     </code></pre>
             </div>
         </div>
@@ -429,7 +431,7 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(x, y, lda(x, y)))
+    lda(x, y)
     </code></pre>
             </div>
         </div>
@@ -510,7 +512,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun fisher(x: Array<DoubleArray>, y: IntArray, L: Int = -1, tol: Double = 0.0001): FLD
+    fun fisher(x: Array&lt;DoubleArray&gt;, y: IntArray, L: Int = -1, tol: Double = 0.0001): FLD
           </code></pre>
             </div>
         </div>
@@ -541,7 +543,7 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(x, y, fisher(x, y)))
+    fisher(x, y)
     </code></pre>
             </div>
         </div>
@@ -608,7 +610,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun qda(x: Array<DoubleArray>, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): QDA
+    fun qda(x: Array&lt;DoubleArray&gt;, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): QDA
           </code></pre>
             </div>
         </div>
@@ -627,7 +629,7 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_11">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(x, y, qda(x, y)))
+    qda(x, y)
     </code></pre>
             </div>
         </div>
@@ -690,7 +692,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun rda(x: Array<DoubleArray>, y: IntArray, alpha: Double, priori: DoubleArray? = null, tol: Double = 0.0001): RDA
+    fun rda(x: Array&lt;DoubleArray&gt;, y: IntArray, alpha: Double, priori: DoubleArray? = null, tol: Double = 0.0001): RDA
           </code></pre>
             </div>
         </div>
@@ -715,7 +717,7 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(x, y, rda(x, y, 0.1)))
+    rda(x, y, 0.1)
     </code></pre>
             </div>
         </div>
@@ -777,7 +779,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_14">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun logit(x: Array<DoubleArray>,
+    fun logit(x: Array&lt;DoubleArray&gt;,
               y: IntArray,
               lambda: Double = 0.0,
               tol: Double = 1E-5,
@@ -800,7 +802,7 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(x, y, logit(x, y)))
+    logit(x, y)
     </code></pre>
             </div>
         </div>
@@ -895,7 +897,7 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun maxent(x: Array<IntArray>,
+    fun maxent(x: Array&lt;IntArray&gt;,
                y: IntArray,
                p: Int,
                lambda: Double = 0.1,
@@ -950,9 +952,11 @@ title: Smile - Classification
             y: Array[Int],
             builders: Array[LayerBuilder],
             epochs: Int = 10,
-            eta: Double = 0.1,
-            alpha: Double = 0.0,
-            lambda: Double = 0.0): MLP
+            learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
+            momentum: TimeFunction = TimeFunction.constant(0.0),
+            weightDecay: Double = 0.0,
+            rho: Double = 0.0,
+            epsilon: Double = 1E-7): MLP
     </code></pre>
             </div>
         </div>
@@ -968,13 +972,15 @@ title: Smile - Classification
         <div class="tab-pane" id="kotlin_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    fun mlp(x: Array<DoubleArray>,
+    fun mlp(x: Array&lt;DoubleArray&gt;,
             y: IntArray,
-            builders: Array<LayerBuilder>,
+            builders: Array&lt;LayerBuilder&gt;,
             epochs: Int = 10,
-            eta: Double = 0.1,
-            alpha: Double = 0.0,
-            lambda: Double = 0.0): MLP {
+            learningRate: TimeFunction = TimeFunction.linear(0.01, 10000.0, 0.001),
+            momentum: TimeFunction = TimeFunction.constant(0.0),
+            weightDecay: Double = 0.0,
+            rho: Double = 0.0,
+            epsilon: Double = 1E-7): MLP
           </code></pre>
             </div>
         </div>
@@ -1014,8 +1020,8 @@ title: Smile - Classification
         <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val net = mlp(x, y, Array(Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)), eta = 0.1, alpha = 0.1)
-    show(plot(x, y, net))
+    val net = mlp(x, y, Array(Layer.input(2), Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)),
+        learningRate = TimeFunction.constant(0.1), momentum = TimeFunction.constant(0.1))
     </code></pre>
             </div>
         </div>
@@ -1023,13 +1029,13 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     import smile.base.mlp.*;
-    var net = new MLP(2,
+    var net = new MLP(Layer.input(2),
                 Layer.sigmoid(10),
                 Layer.mle(1, OutputFunction.SIGMOID)
             );
 
-    net.setLearningRate(0.1);
-    net.setMomentum(0.1);
+    net.setLearningRate(TimeFunction.constant(0.1));
+    net.setMomentum(TimeFunction.constant(0.1));
 
     for (int epoch = 0; epoch < 10; epoch++) {
         for (int i : MathEx.permutate(x.length)) {
@@ -1043,7 +1049,9 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     import smile.base.mlp.*
-    mlp(x, y, arrayOf(Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)), eta = 0.1, alpha = 0.1)
+    import smile.math.*;
+    mlp(x, y, arrayOf(Layer.input(2), Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)),
+        learningRate = TimeFunction.constant(0.1), momentum = TimeFunction.constant(0.1))
     </code></pre>
             </div>
         </div>
@@ -1192,7 +1200,6 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val rbf = rbfnet(x, y, RBF.fit(x, 50), false)
-    show(plot(x, y, rbf))
     </code></pre>
             </div>
         </div>
@@ -1365,8 +1372,8 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val zip = read.csv("data/usps/zip.train", delimiter = ' ' , header = false)
-    val x = zip.drop(0).toArray
-    val y = zip.column(0).toIntArray
+    val x = zip.drop(0).toArray()
+    val y = zip.column(0).toIntArray()
     val kernel = new GaussianKernel(8.0)
     val model = ovr(x, y) { (x, y) => SVM.fit(x, y, kernel, 5, 1E-3) }
     </code></pre>
