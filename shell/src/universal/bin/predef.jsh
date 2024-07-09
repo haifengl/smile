@@ -138,6 +138,7 @@ import smile.feature.imputation.*;
 import smile.feature.selection.*;
 import smile.feature.transform.*;
 import smile.clustering.*;
+import smile.hpo.*;
 import smile.vq.*;
 import smile.manifold.*;
 import smile.sequence.*;

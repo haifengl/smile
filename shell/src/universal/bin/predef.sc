@@ -56,6 +56,7 @@ import smile.regression.{lm, ridge, lasso, gpr}
 import smile.feature._
 import smile.feature.extraction._
 import smile.clustering._
+import smile.hpo._
 import smile.vq._
 import smile.manifold._
 import smile.sequence._
