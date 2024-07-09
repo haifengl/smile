@@ -84,10 +84,10 @@ title: Smile - Model Validation
     val segTrain = read.arff("data/weka/segment-challenge.arff")
     val segTest = read.arff("data/weka/segment-test.arff")
 
-    val model = randomForest("class" ~, segTrain)
+    val model = randomForest("class" ~ ".", segTrain)
     val pred = model.predict(segTest)
 
-    smile&gt; accuracy(segTest("class").toIntArray, pred)
+    smile&gt; accuracy(segTest("class").toIntArray(), pred)
     res5: Double = 0.9728395061728395
     </code></pre>
             </div>
@@ -125,15 +125,15 @@ title: Smile - Model Validation
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
-    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter="\t", header=false)
 
-    val x = toyTrain.select(1, 2).toArray
-    val y = toyTrain.column(0).toIntArray
+    val x = toyTrain.select(1, 2).toArray()
+    val y = toyTrain.column(0).toIntArray()
     val model = logit(x, y, 0.1, 0.001)
 
-    val testx = toyTest.select(1, 2).toArray
-    val testy = toyTest.column(0).toIntArray
+    val testx = toyTest.select(1, 2).toArray()
+    val testy = toyTest.column(0).toIntArray()
     val pred = testx.map(model.predict(_))
 
     smile&gt; accuracy(testy, pred)
@@ -183,25 +183,25 @@ title: Smile - Model Validation
     var testy = toyTest.column(0).toIntArray();
     var pred = Arrays.stream(testx).mapToInt(xi -> model.predict(xi)).toArray();
 
-    smile>     Accuracy.of(testy, pred)
+    smile> Accuracy.of(testy, pred)
     $171 ==> 0.81435
 
-    smile>     Recall.of(testy, pred)
+    smile> Recall.of(testy, pred)
     $172 ==> 0.7828
 
-    smile>     Sensitivity.of(testy, pred)
+    smile> Sensitivity.of(testy, pred)
     $173 ==> 0.7828
 
-    smile>     Specificity.of(testy, pred)
+    smile> Specificity.of(testy, pred)
     $174 ==> 0.8459
 
-    smile>     Fallout.of(testy, pred)
+    smile> Fallout.of(testy, pred)
     $175 ==> 0.15410000000000001
 
-    smile>     FDR.of(testy, pred)
+    smile> FDR.of(testy, pred)
     $176 ==> 0.16447859963710107
 
-    smile> FScore.of(testy, pred)
+    smile> FScore.F1.score(testy, pred)
     $177 ==> 0.808301925757654
 
     // Calculate posteriori probability for AUC computation.
@@ -317,11 +317,12 @@ title: Smile - Model Validation
     <pre class="prettyprint lang-scala"><code>
     val segTrain = read.arff("data/weka/segment-challenge.arff")
     val segTest = read.arff("data/weka/segment-test.arff")
+    val model = randomForest("class" ~ ".", segTrain)
+    val pred = model.predict(segTest)
 
-    smile&gt; test("class" ~, segTrain, segTest) { case (formula, data) => smile.classification.randomForest(formula, data) }
-    [main] INFO smile.util.package$ - testing runtime: 0:00:00.103314
-    Accuracy = 97.65%
-    Confusion Matrix: ROW=truth and COL=predicted
+    smile&gt; ConfusionMatrix.of(segTest("class").toIntArray(), pred)
+    val res10: smile.validation.metric.ConfusionMatrix =
+    ROW=truth and COL=predicted
     class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
     class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
     class  2 |       3 |       0 |     117 |       1 |       1 |       0 |       0 |
@@ -329,7 +330,6 @@ title: Smile - Model Validation
     class  4 |       1 |       0 |       6 |       2 |     117 |       0 |       0 |
     class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
     class  6 |       0 |       0 |       1 |       2 |       0 |       0 |     120 |
-    res21: RandomForest = smile.classification.RandomForest@77f95e19
     </code></pre>
             </div>
         </div>
@@ -363,49 +363,48 @@ title: Smile - Model Validation
         <div class="tab-pane active" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
-    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter="\t", header=false)
 
-    val x = toyTrain.select(1, 2).toArray
-    val y = toyTrain.column(0).toIntArray
+    val x = toyTrain.select(1, 2).toArray()
+    val y = toyTrain.column(0).toIntArray()
 
-    val testx = toyTest.select(1, 2).toArray
-    val testy = toyTest.column(0).toIntArray
+    val testx = toyTest.select(1, 2).toArray()
+    val testy = toyTest.column(0).toIntArray()
 
-    smile&gt; test2(x, y, testx, testy) { case (x, y) => lda(x, y) }
-    training...
-    testing...
-    [main] INFO smile.util.package$ - runtime: 78.653061 ms
-    Accuracy = 81.23%
-    Sensitivity/Recall = 78.28%
-    Specificity = 84.17%
-    Precision = 83.18%
-    F1-Score = 80.66%
-    F2-Score = 79.21%
-    F0.5-Score = 82.15%
-    Confusion Matrix: ROW=truth and COL=predicted
-    class 0	: 8417	| 1583	|
-    class 1	: 2172	| 7828	|
-    res5: LDA = smile.classification.LDA@5a524a19
+    smile&gt; validate.classification(x, y, testx, testy) { case (x, y) => lda(x, y) }
+    val res13: smile.validation.ClassificationValidation[smile.classification.LDA] =
+    {
+      fit time: 360.135 ms,
+      score time: 22.309 ms,
+      validation data size: 20000,
+      error: 3755,
+      accuracy: 81.23%,
+      sensitivity: 78.28%,
+      specificity: 84.17%,
+      precision: 83.18%,
+      F1 score: 80.66%,
+      MCC: 62.56%,
+      AUC: 86.35%,
+      log loss: 0.4999
+    }
 
-    smile&gt; test2(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
-    training...
-    testing...
-    Accuracy = 81.44%
-    Sensitivity/Recall = 78.28%
-    Specificity = 84.59%
-    Precision = 83.55%
-    F1-Score = 80.83%
-    F2-Score = 79.28%
-    F0.5-Score = 82.44%
-    Confusion Matrix: ROW=truth and COL=predicted
-    class  0 |    8459 |    1541 |
-    class  1 |    2172 |    7828 |
-    res29: LogisticRegression = smile.classification.LogisticRegression@6b0bcea5
-
-    // AUC will be reported in binary classification
-    test2soft(x, y, testx, testy) { case (x, y) => lda(x, y) }
-    test2soft(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
+    smile&gt; validate.classification(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
+    val res14: smile.validation.ClassificationValidation[smile.classification.LogisticRegression] =
+    {
+      fit time: 3.960 ms,
+      score time: 4.046 ms,
+      validation data size: 20000,
+      error: 3713,
+      accuracy: 81.44%,
+      sensitivity: 78.28%,
+      specificity: 84.59%,
+      precision: 83.55%,
+      F1 score: 80.83%,
+      MCC: 63.00%,
+      AUC: 86.51%,
+      log loss: 0.4907
+    }
     </code></pre>
             </div>
         </div>
@@ -427,7 +426,8 @@ title: Smile - Model Validation
         <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val rf = smile.classification.randomForest("class" ~, iris)
+    val iris = read.arff("data/weka/iris.arff");
+    val rf = smile.classification.randomForest("class" ~ ".", iris)
     println(s"OOB metrics = ${rf.metrics}")
     </code></pre>
             </div>
@@ -435,6 +435,7 @@ title: Smile - Model Validation
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
+    var iris = Read.arff("data/weka/iris.arff");
     var rf = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
     System.out.println("OOB metrics = " + rf.metrics());
           </code></pre>
@@ -512,49 +513,31 @@ title: Smile - Model Validation
         <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; val iris = read.arff("data/weka/iris.arff")
-    smile> cv.classification(10, "class" ~, iris) { case (formula, data) => smile.classification.cart(formula, data) }
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.4392
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1187
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1340
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1120
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.876
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1105
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1570
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.818
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1013
-    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.929
-    Confusion Matrix: ROW=truth and COL=predicted
-    class  0 |      50 |       0 |       0 |
-    class  1 |       0 |      45 |       5 |
-    class  2 |       0 |       5 |      45 |
-    Accuracy: 93.33%
-    res35: Array[Double] = Array(0.9333333333333333)
+    smile> cv.classification(10, "class" ~ ".", iris) { case (formula, data) => smile.classification.cart(formula, data) }
+    val res16: smile.validation.ClassificationValidations[smile.classification.DecisionTree] =
+    {
+      fit time: 1.966 ms ± 1.764,
+      score time: 0.024 ms ± 0.024,
+      validation data size: 15 ± 0,
+      error: 1 ± 0,
+      accuracy: 95.33% ± 3.22,
+      cross entropy: 0.1858 ± 0.0729
+    }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> var iris = Read.arff("data/weka/iris.arff");
-    [main] INFO smile.io.Arff - Read ARFF relation iris
-    iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
-    140 more rows...
-
-    smile> var pred = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
-    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }
-
-    smile> var y = iris.column("class").toIntArray()
-    y ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 2, 2, 2, 2 }
-
-    smile> Accuracy.of(y, pred)
-    $193 ==> 0.9266666666666666
-
-    smile> ConfusionMatrix.of(y, pred)
-    $194 ==> ROW=truth and COL=predicted
-    class  0 |      50 |       0 |       0 |
-    class  1 |       0 |      45 |       5 |
-    class  2 |       0 |       6 |      44 |
+    smile> var cv = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
+    cv ==> {
+      fit time: 0.823 ms ± 0.471,
+      score time: 0.016 ms ± 0.015,
+      validation data size: 15 ± 0,
+      error: 1 ± 1,
+      accuracy: 94.00% ± 6.63,
+      cross entropy: 0.2473 ± 0.1981
+    }
           </code></pre>
             </div>
         </div>
@@ -629,11 +612,21 @@ title: Smile - Model Validation
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; loocv.classification(x, y) { case (x, y) => lda(x, y) }
-    Confusion Matrix: ROW=truth and COL=predicted
-    class  0 |      80 |      20 |
-    class  1 |      19 |      81 |
-    Accuracy: 80.50%
-    res41: Array[Double] = Array(0.805)
+    val res17: smile.validation.ClassificationMetrics =
+    {
+      fit time: 0.148 ms,
+      score time: 0.003 ms,
+      validation data size: 200,
+      error: 39,
+      accuracy: 80.50%,
+      sensitivity: 81.00%,
+      specificity: 80.00%,
+      precision: 80.20%,
+      F1 score: 80.60%,
+      MCC: 61.00%,
+      AUC: 88.19%,
+      log loss: 0.4915
+    }
     </code></pre>
             </div>
         </div>
@@ -643,19 +636,15 @@ title: Smile - Model Validation
     smile> var x = iris.drop("class").toArray();
     x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
 
-    smile> var pred = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
-    Mar 11, 2020 10:14:52 AM com.github.fommil.jni.JniLoader load
-    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
-    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 1, 2, 2, 2 }
-
-    smile> Accuracy.of(y, pred)
-    $197 ==> 0.8533333333333334
-
-    smile> ConfusionMatrix.of(y, pred)
-    $198 ==> ROW=truth and COL=predicted
-    class  0 |      49 |       1 |       0 |
-    class  1 |       0 |      41 |       9 |
-    class  2 |       0 |      12 |      38 |
+    smile> var loocv = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
+    loocv ==> {
+      fit time: 1.967 ms,
+      score time: 0.014 ms,
+      validation data size: 150,
+      error: 22,
+      accuracy: 85.33%,
+      cross entropy: 0.4803
+    }
           </code></pre>
             </div>
         </div>
@@ -729,30 +718,21 @@ title: Smile - Model Validation
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; bootstrap.classification(100, x, y) { case (x, y) => lda(x, y) }
-    res40: Array[Double] = Array(
-      0.21212121212121215,
-      0.22499999999999998,
-      0.16901408450704225,
-      0.16666666666666663,
-      0.25,
-      0.19480519480519476,
-      0.19999999999999996,
-      0.273972602739726,
-      0.125,
-      0.1842105263157895,
-      0.16129032258064513,
-      0.17808219178082196,
-      0.18461538461538463,
-      0.23750000000000004,
-      0.22972972972972971,
-      0.14864864864864868,
-      0.17808219178082196,
-      0.17333333333333334,
-      0.2777777777777778,
-      0.16666666666666663,
-      0.18666666666666665,
-      0.22388059701492535,
-    ...
+    val res18: smile.validation.ClassificationValidations[smile.classification.LDA] =
+    {
+      fit time: 0.184 ms ± 0.176,
+      score time: 0.213 ms ± 0.194,
+      validation data size: 73 ± 5,
+      error: 15 ± 3,
+      accuracy: 79.54% ± 4.39,
+      sensitivity: 81.47% ± 7.98,
+      specificity: 78.69% ± 9.88,
+      precision: 78.90% ± 8.98,
+      F1 score: 79.46% ± 4.47,
+      MCC: 60.36% ± 7.79,
+      AUC: 87.88% ± 3.24,
+      log loss: 0.5004 ± 0.0328
+    }
     </code></pre>
             </div>
         </div>
@@ -760,7 +740,14 @@ title: Smile - Model Validation
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
-    $199 ==> double[100] { 0.11111111111111116, 0.18867924528301883, 0.09090909090909094, 0.2068965517241379, 0.1428571428571429, 0.19999999999999996, 0.16981132075471694, 0.21153846153846156, 0.1785714285714286, 0.109375, 0.16666666666666663, 0.2142857142857143, 0.1071428571428571, 0.11764705882352944, 0.2545454545454545, 0.21568627450980393, 0.25806451612903225, 0.06382978723404253, 0.14814814814814814, 0.2222222222222222, 0.1578947368421053, 0.15517241379310343, 0.25, 0.18965517241379315, 0.17543859649122806, 0.18333333333333335, 0.12765957446808507, 0.0892857142857143, 0.17307692307692313, 0.16666666666666663, 0.17647058823529416, 0.2142857142857143, 0.12, 0.1818 ... 615, 0.1724137931034483, 0.11111111111111116, 0.1071428571428571, 0.1228070175438597, 0.2142857142857143, 0.23076923076923073, 0.07843137254901966, 0.13793103448275867, 0.06896551724137934, 0.17021276595744683, 0.1578947368421053, 0.2075471698113207, 0.1568627450980392, 0.1636363636363637, 0.18518518518518523, 0.15384615384615385 }
+    $43 ==> {
+      fit time: 0.057 ms ± 0.020,
+      score time: 0.163 ms ± 0.236,
+      validation data size: 55 ± 4,
+      error: 9 ± 3,
+      accuracy: 83.96% ± 4.68,
+      cross entropy: 0.4847 ± 0.0530
+    }
           </code></pre>
             </div>
         </div>
