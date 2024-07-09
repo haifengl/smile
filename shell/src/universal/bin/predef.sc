@@ -40,6 +40,7 @@ import smile.plot.swing.Palette.{DARK_RED, VIOLET_RED, DARK_GREEN, LIGHT_GREEN, 
 import smile.plot.swing._
 import smile.plot.vega._
 import smile.plot.show
+import smile.plot.Render._
 import smile.json._
 import smile.interpolation._
 import smile.validation._
