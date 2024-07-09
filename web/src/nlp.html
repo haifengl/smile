@@ -42,6 +42,7 @@ title: Smile - NLP
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
         <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_1">
@@ -90,6 +91,29 @@ var text = SimpleNormalizer.getInstance().normalize(unicode);
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+import smile.nlp.*;
+
+val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
+
+“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
+
+According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
+
+Normal air traffic soon resumed, the station said.
+
+Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
+
+Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
+
+“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
+
+val text = unicode.normalize()
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <h2 id="sentence" class="title">Sentence Breaking</h2>
@@ -112,6 +136,7 @@ var text = SimpleNormalizer.getInstance().normalize(unicode);
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
         <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_2">
@@ -163,6 +188,13 @@ Though this was the first seal sighting on the runway at the airport, the depart
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val sentences = text.sentences()
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <h2 id="tokenizer" class="title">Word Segmentation</h2>
@@ -190,6 +222,7 @@ Though this was the first seal sighting on the runway at the airport, the depart
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
         <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_3">
@@ -212,6 +245,14 @@ smile> var words = Arrays.stream(sentences).
          toArray(String[]::new)
 words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runway", "Wiley", "Post-Will", "Rogers", "Memorial", "Airport", "Utqiagvik", "Alaska", "Monday", "clear", "snow", "surprised", "visitor", "waiting", "asphalt", "450-pound", "bearded", "seal", "chilling", "milky", "sunshine", "strange", "seal", "seen", "lot", "things", "runways", "seal", "Babcock", "told", "ABC", "News", "footage", "hefty", "mammal", "went", "viral", "posted", "Facebook", "According", "local", "TV", "station", "KTVA", "animal", "control", "called", "eventually", "moved", "seal", "help", "sled.", "Normal", "air", "traffic", "soon", "resumed", "station", "said", "Poking", "fun ... spotted", "past", "Wildlife", "strikes", "aircraft", "pose", "significant", "safety", "hazard", "cost", "aviation", "industry", "hundreds", "millions", "dollars", "year", "department", "spokeswoman", "Meadow", "Bailey", "told", "Associated", "Press", "Birds", "make", "90", "percent", "strikes", "U.S.", "mammal", "strikes", "rare" }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> sentences.flatMap{ it.words().asIterable() }
+res6: kotlin.collections.List<kotlin.String> = [airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport, department, said, animals, including, birds, caribou, polar, bears, spotted, past, Wildlife, strikes, aircraft, pose, significant, safety, hazard, cost, aviation, industry, hundreds, millions, dollars, year, department, spokeswoman, Meadow, Bailey, told, Associated, Press, Birds, make, 90, percent, strikes, U.S., mammal, strikes, rare.]
+    </code></pre>
             </div>
         </div>
     </div>
@@ -273,6 +314,7 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
         <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_4">
@@ -302,6 +344,16 @@ $43 ==> "democr"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> porter("democratization")
+    res18: kotlin.String = democrat
+    >>> lancaster("democratization")
+    res19: kotlin.String = democr
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>Different from stemming that commonly collapses derivationally
@@ -325,6 +377,7 @@ $43 ==> "democr"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
         <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_5">
@@ -344,6 +397,14 @@ smile> var map = Arrays.stream(words).
          collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)))
 map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, sled.=1}
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> text.bag()
+res20: kotlin.collections.Map<kotlin.String, kotlin.Int> = {airport=3, foreman=1, scott=1, babcock=2, went=2, runwai=3, wilei=1, post-wil=1, roger=1, memori=1, utqiagvik=1, alaska=2, mondai=1, clear=1, snow=1, surpris=2, visitor=1, wait=1, asphalt=1, 450-pound=1, beard=1, seal=7, chill=1, milki=1, sunshin=1, strang=1, seen=1, lot=1, thing=1, told=2, abc=1, new=1, footag=1, hefti=1, mammal=2, viral=1, post=1, facebook=1, accord=1, local=1, tv=1, station=2, ktva=1, anim=2, control=1, call=1, eventu=1, move=1, help=1, sled.=1, normal=1, air=1, traffic=1, soon=1, resum=1, said=2, poke=1, fun=1, appear=1, depart=3, transport=1, warn=1, pilot=1, tuesdai=1, low=3, north=1, slope=1, region=1, pun=1, ceil=1, term=1, us=1, cloud=1, poor=1, visibl=1, sight=1, includ=1, bird=2, carib=1, polar=1, bear=1, spot=1, past=1, wildlif=1, strike=3, aircraft=1, pose=1, signific=1, safeti=1, hazard=1, cost=1, aviat=1, industri=1, hundr=1, million=1, dollar=1, year=1, spokeswoman=1, meadow=1, bailei=1, associat=1, press=1, make=1, 90=1, percent=1, u.s.=1, rare.=1}
+    </code></pre>
             </div>
         </div>
     </div>
@@ -375,6 +436,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
         <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_6">
@@ -438,6 +500,19 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    import java.io.File
+    val lines = File("data/text/movie.txt").readLines()
+    val corpus = lines.map{ it.bag() }
+
+    val features = arrayOf("like", "good", "perform", "littl", "love", "bad", "best")
+    val bags = corpus.map{ vectorize(features, it) }
+    val data = tfidf(bags)
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>In the example, we load a file, of which each line is a document.
@@ -481,6 +556,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
         <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_7">
@@ -518,6 +594,13 @@ $119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85),
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> bigram(10, 5, lines)
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>In the output, the second column is the frequency of bigrams and
@@ -532,6 +615,7 @@ $119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85),
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
         <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_8">
@@ -601,6 +685,14 @@ $136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winte
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> val turing = File("data/text/turing.txt").readLines()
+>>> val phrase = ngram(4, 4, turing)
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The result is an array list of sets of n-grams. The i-th entry is the set of i-grams.</p>
@@ -625,6 +717,7 @@ $136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winte
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
         <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_9">
@@ -652,6 +745,13 @@ res21: Seq[NGram] = Buffer(
 smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
 $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> turing.joinToString("\n").keywords(10)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -688,6 +788,7 @@ $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46),
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
         <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_10">
@@ -770,6 +871,17 @@ words ==> String[52] { "when", "airport", "foreman", "scott ... "milky", "sunshi
 smile> HMMPOSTagger.getDefault().tag(words)
 $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, PRP, MD, VB, JJ, NN, IN, NNP, ,, NNP, ,, IN, NN, TO, VB, DT, NN, ,, PRP, VBD, NN, TO, VB, DT, NN, NN, IN, PRP, IN, DT, NN, :, DT, NN, NN, NN, NN, IN, DT, JJ, NN, . }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+>>> val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
+
+>>> sentence.postag()
+
+>>> postag(sentence.words("none"))
+    </code></pre>
             </div>
         </div>
     </div>
