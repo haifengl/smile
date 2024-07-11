@@ -228,17 +228,17 @@ title: Smile - Association Rule Mining
     smile> import smile.association.*
 
     smile> int[][] itemsets = {
-       ...>         {1, 3},
-       ...>         {2},
-       ...>         {4},
-       ...>         {2, 3, 4},
-       ...>         {2, 3},
-       ...>         {2, 3},
-       ...>         {1, 2, 3, 4},
-       ...>         {1, 3},
-       ...>         {1, 2, 3},
-       ...>         {1, 2, 3}
-       ...>     }
+                {1, 3},
+                {2},
+                {4},
+                {2, 3, 4},
+                {2, 3},
+                {2, 3},
+                {1, 2, 3, 4},
+                {1, 3},
+                {1, 2, 3},
+                {1, 2, 3}
+            }
     itemsets ==> int[10][] { int[2] { 1, 3 }, int[1] { 2 }, int[1] ...  3 }, int[3] { 1, 2, 3 } }
 
     smile> var tree = FPTree.of(3, itemsets)
@@ -259,6 +259,7 @@ title: Smile - Association Rule Mining
         <div class="tab-pane" id="kotlin_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.association.*
     >>> val itemsets = arrayOf(
         intArrayOf(1, 3),
         intArrayOf(2),
@@ -272,7 +273,7 @@ title: Smile - Association Rule Mining
         intArrayOf(1, 2, 3)
     )
 
-    >>> fpgrowth(3, itemsets).forEach { itemset -> println(itemset) }
+    >>> fpgrowth(3, itemsets).forEach { println(it) }
     4 (3)
     1 (5)
     2 1 (3)
@@ -323,18 +324,18 @@ title: Smile - Association Rule Mining
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> var tree = FPTree.of(1000, () -> {
-       ...>         try {
-       ...>             return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").
-       ...>                 map(line -> Arrays.stream(line.split(" ")).
-       ...>                     mapToInt(Integer::valueOf).
-       ...>                     toArray()
-       ...>                 );
-       ...>         } catch (IOException ex) {
-       ...>             ex.printStackTrace();
-       ...>         }
-       ...>
-       ...>         return Stream.empty();
-       ...>     })
+                try {
+                    return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").
+                        map(line -> Arrays.stream(line.split(" ")).
+                            mapToInt(Integer::valueOf).
+                            toArray()
+                        );
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                return Stream.empty();
+            })
     tree ==> smile.association.FPTree@3dddbe65
 
     smile> FPGrowth.apply(tree).limit(10).forEach(itemset -> System.out.println(itemset))
@@ -354,16 +355,19 @@ title: Smile - Association Rule Mining
         <div class="tab-pane" id="kotlin_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> class Parser : Supplier&lt;Stream&lt;IntArray&gt;&gt; {
+    >>> import smile.util.*;
+        import java.util.function.*;
+        import java.util.stream.*;
+        class Parser : Supplier&lt;Stream&lt;IntArray&gt;&gt; {
             override fun get(): Stream&lt;IntArray&gt; {  
                return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line ->
                    line.split(" ").map({ w -> w.toInt() }).toIntArray()
                }
             }
         }
-    >>> val tree = fptree(1000, Parser())
+        val tree = fptree(1000, Parser())
 
-    >>> fpgrowth(tree).limit(10).forEach { itemset -> println(itemset) }
+    >>> fpgrowth(tree).limit(10).forEach { println(it) }
     5634 (1000)
     3805 (1001)
     3376 (1001)
@@ -470,7 +474,7 @@ title: Smile - Association Rule Mining
         <div class="tab-pane" id="kotlin_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> arm(0.6, tree).limit(10).forEach { rule -> println(rule) }
+    >>> arm(0.6, tree).limit(10).forEach { println(it) }
     (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
     (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
     (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123
