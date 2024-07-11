@@ -47,6 +47,7 @@ set "APP_CLASSPATH=%_JARS%"
 
 call :add_java -Dsmile.home=%APP_HOME%
 call :add_java -Djava.library.path=%APP_HOME%\bin
+call :add_java -Djava.awt.headless=false
 set PATH=!PATH!;%~dp0
 
 if "%KOTLIN_HOME%" neq "" (
