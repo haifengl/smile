@@ -385,9 +385,9 @@ title: Smile - Wavelet
     <pre class="prettyprint lang-kotlin"><code>
     import java.awt.Color;
     import smile.plot.swing.*;
-    val d4 = wavelet("d4")
-    val smooth = sp500.clone()
-    WaveletShrinkage.denoise(smooth, d4)
+    val d4 = wavelet("d4");
+    val smooth = sp500.clone();
+    WaveletShrinkage.denoise(smooth, d4);
     val canvas = LinePlot.of(sp500).canvas();
     canvas.add(LinePlot.of(smooth, Color.BLUE));
     canvas.window();

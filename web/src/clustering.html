@@ -163,12 +163,13 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
         <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = hclust(x, "complete")
     show(dendrogram(clusters))
     </code></pre>
@@ -180,10 +181,25 @@ title: Smile - Clustering
     import smile.clustering.*;
     import smile.clustering.linkage.*;
 
-    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = HierarchicalClustering.fit(CompleteLinkage.of(x));
-    Dendrogram.plot(clusters.getTree(), clusters.getHeight()).window();
+    var plot = new Dendrogram(clusters.tree(), clusters.height());
+    plot.canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    import smile.*;
+    import smile.clustering.*;
+    import smile.plot.swing.*;
+    import java.awt.Color;
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray();
+    val clusters = hclust(x, "complete");
+    val plot = Dendrogram(clusters.tree(), clusters.height());
+    plot.canvas().window();
+    </code></pre>
             </div>
         </div>
     </div>
@@ -203,13 +219,14 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
         <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val y = clusters.partition(6)
-    show(plot(x, y, '.', Palette.COLORS))
+    show(plot(x, y, '.'))
     </code></pre>
             </div>
         </div>
@@ -217,8 +234,16 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var y = clusters.partition(6);
-    ScatterPlot.plot(x, y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val y = clusters.partition(6)
+    ScatterPlot.of(x, y, '.').canvas().window();
+    </code></pre>
             </div>
         </div>
     </div>
@@ -302,13 +327,14 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
         <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = kmeans(x, 6, runs = 20)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
@@ -316,8 +342,16 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 6));
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val clusters = kmeans(x, 6, runs = 20)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -334,24 +368,34 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
         <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/gaussian/elongate.txt", header=false, delimiter='\t').toArray
+    val x = read.csv("data/clustering/elongate.txt", header=false, delimiter="\t").toArray()
     val clusters = kmeans(x, 2, runs = 20)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/gaussian/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var x = Read.csv("data/clustering/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
     var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 2));
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/elongate.txt", header=false, delimiter='\t').toArray()
+    val clusters = kmeans(x, 2, runs = 20)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -412,22 +456,34 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
         <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = xmeans(x, 50)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = XMeans.fit(x, 50);
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
+    val clusters = xmeans(x, 50)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -487,13 +543,14 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
         <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = gmeans(x, 50)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
@@ -501,8 +558,16 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = GMeans.fit(x, 50);
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val clusters = gmeans(x, 50)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -609,6 +674,7 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
         <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_12">
@@ -651,6 +717,27 @@ title: Smile - Clustering
     Cluster   11    143 ( 7.9%)
     Cluster   12    159 ( 8.8%)
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> dac(x, 12, 0.9)
+    res22: smile.clustering.DeterministicAnnealing = Cluster distortion: 2862.52100
+    Cluster size of 1800 data points:
+    Cluster    1    297 (16.5%)
+    Cluster    2    105 ( 5.8%)
+    Cluster    3    159 ( 8.8%)
+    Cluster    4    137 ( 7.6%)
+    Cluster    5    139 ( 7.7%)
+    Cluster    6     21 ( 1.2%)
+    Cluster    7    292 (16.2%)
+    Cluster    8    149 ( 8.3%)
+    Cluster    9    140 ( 7.8%)
+    Cluster   10     59 ( 3.3%)
+    Cluster   11    143 ( 7.9%)
+    Cluster   12    159 ( 8.8%)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -733,14 +820,15 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
         <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val data = read.libsvm("data/libsvm/news20.dat")
-    val sparse = (0 until data.size).map(i => data(i).x).toArray
-    val clusters = sib(sparse, 20, 100)
+    val sparse = (0 until data.size).map(i => data(i).x).toSeq
+    val clusters = sib(sparse.toArray, 20, 100)
     </code></pre>
             </div>
         </div>
@@ -751,6 +839,15 @@ title: Smile - Clustering
     var sparse = data.stream().map(i -> i.x()).toArray(SparseArray[]::new);
     var clusters = SIB.fit(sparse, 20, 100);
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val data = read.libsvm("data/libsvm/news20.dat")
+    val sparse = data.map { it.x }
+    val clusters = sib(sparse, 20, 100)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -822,13 +919,14 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
         <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
@@ -836,8 +934,17 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var clusters = PartitionClustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    import smile.math.distance.*;
+    val clusters = clarans(x, EuclideanDistance(), 6, 10, 20)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -925,14 +1032,15 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
         <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
+    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=" ").toArray()
     val clusters = dbscan(x, 20, 10)
-    plot(x, clusters.y, '.', Palette.COLORS)
+    plot(x, clusters.y, '.')
     </code></pre>
             </div>
         </div>
@@ -941,8 +1049,17 @@ title: Smile - Clustering
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = DBSCAN.fit(x, 20, 10);
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray()
+    val clusters = dbscan(x, 20, 10.0)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -1043,24 +1160,34 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
         <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_20">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = denclue(x, 1.0, 50)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_20">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = DENCLUE.fit(x, 1.0, 50);
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_20">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
+    val clusters = denclue(x, 1.0, 50)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -1143,24 +1270,34 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
         <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_22" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_22">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/nonconvex/sincos.txt", header=false, delimiter='\t').toArray
+    val x = read.csv("data/clustering/sincos.txt", header=false, delimiter="\t").toArray()
     val clusters = specc(x, 2, 0.2)
-    show(plot(x, clusters.y, 'o', Palette.COLORS))
+    show(plot(x, clusters.y, 'o'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_22">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/nonconvex/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var x = Read.csv("data/clustering/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
     var clusters = SpectralClustering.fit(x, 2, 0.2);
-    ScatterPlot.plot(x, clusters.y, 'o', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, 'o').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_22">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/sincos.txt", header=false, delimiter='\t').toArray()
+    val clusters = specc(x, 2, 0.2)
+    ScatterPlot.of(x, clusters.y, 'o').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
@@ -1235,24 +1372,34 @@ title: Smile - Clustering
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
         <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_24" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = mec(x, 20, 2.0)
-    show(plot(x, clusters.y, '.', Palette.COLORS))
+    show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_24">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
-    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+    ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_24">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
+    val clusters = mec(x, 20, 2.0)
+    ScatterPlot.of(x, clusters.y, '.').canvas().window()
+    </code></pre>
             </div>
         </div>
     </div>
