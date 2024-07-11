@@ -88,32 +88,36 @@ title: Smile - Missing Value Imputation
         better performance in cases where the missing data is structurally absent,
         rather than missing due to measurement noise.</p>
 
-    <p>Smile provides several methods to impute missing values. The <code>NaN</code> values
-        in the input data matrix are treated as missing values and will be replaced with imputed
-        values after the processing.</p>
+    <p>Smile provides several methods to impute missing values. The <code>null</code>
+        values in a DataFrame or <code>NaN</code> values in a matrix are treated
+        as missing values and can be handled by the following mechanisms.</p>
 
-    <h2 id="average">Average Value Imputation</h2>
+    <h2 id="simple">SimpleImputer</h2>
 
-    <p>In this approach, we impute missing values with the average of other attributes in the instance.
-        Assume the attributes of the dataset are of same kind, e.g. microarray gene
-        expression data, the missing values can be estimated as the average of
-        non-missing attributes in the same instance. Note that this is not the
-        average of same attribute across different instances.</p>
+    <p>The <code>SimpleImputer</code> replaces missing values with the constant value
+        along each column. By default, SimpleImputer imputes all the numeric
+        columns with median, boolean/nominal columns with mode, and text
+        columns with empty string. It is also possible to impute the numeric
+        columns with the mean of values in the range <code>[lower, upper]</code>,
+        where lower and upper are in terms of percentiles of the original distribution.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_1">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    def avgimpute(data: Array[Array[Double]]): Unit
+    <pre class="prettyprint lang-java"><code>
+    var format = CSVFormat.Builder.create().setDelimiter(' ').build();
+    var data = Read.csv("data/clustering/synthetic_control.data", format);
+    SimpleImputer imputer = SimpleImputer.fit(data);
+    var completeData = imputer.apply(data);
     </code></pre>
             </div>
         </div>
     </div>
 
-    <h2 id="knn">K-Nearest Neighbor Imputation</h2>
+    <h2 id="knn">KNNImputer</h2>
 
     <p>The KNN-based method selects instances similar to the instance of interest to impute
         missing values. If we consider instance <code>A</code> that has one missing value on
@@ -124,51 +128,40 @@ title: Smile - Missing Value Imputation
         neighbors is then used as an estimate for the missing value in instance <code>A</code>.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    def knnimpute(data: Array[Array[Double]], k: Int = 5)
+    <pre class="prettyprint lang-java"><code>
+    // KNN is a lazy algorithm. So no "training" is needed.
+    var imputer = new KNNImputer(data, 5);
     </code></pre>
             </div>
         </div>
     </div>
 
-    <h2 id="kmeans">K-Means Imputation</h2>
+    <h2 id="kmeans">KMedoidsImputer</h2>
 
-    <p>This method first cluster data by K-Means
-     with missing values and then impute missing values with the average value of each attribute
-     in the clusters.</p>
-
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    def impute(data: Array[Array[Double]], k: Int, runs: Int = 1): Unit
-    </code></pre>
-            </div>
-        </div>
-    </div>
-
-    <h2 id="lls">Local Least Squares Imputation</h2>
-
-    <p>The local least squares imputation method represents a target instance that has missing values as
-        a linear combination of similar instances, which are selected by k-nearest
-        neighbors method.</p>
+    <p>The k-medoids algorithm is an adaptation of the k-means algorithm.
+        Rather than calculate the mean of the items in each cluster,
+        a representative item, or medoid, is chosen for each cluster
+        at each iteration. The missing values of an instance are replaced
+        the corresponding ones of the nearest medoid.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    def llsimpute(data: Array[Array[Double]], k: Int): Unit
+    <pre class="prettyprint lang-java"><code>
+    Distance&lt;Tuple&gt; distance = (x, y) -> {
+        double[] xd = x.toArray();
+        double[] yd = y.toArray();
+        return MathEx.squaredDistanceWithMissingValues(xd, yd);
+    };
+    var imputer = KMedoidsImputer.fit(data, distance,20);
     </code></pre>
             </div>
         </div>
@@ -194,14 +187,19 @@ title: Smile - Missing Value Imputation
         obtained matrix, until the total change in the matrix falls below the
         empirically determined threshold (say 0.01).</p>
 
+    <p>Different from above methods, <code>SVDImputer</code> is applied on a <code>double[][]</code>
+        matrix, where missing values are represented as <code>NaN</code>. The output is also
+        a <code>double[][]</code> matrix with imputed values.</p>
+
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_5">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
-    def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10)): Unit
+    <pre class="prettyprint lang-java"><code>
+    var matrix = data.toArray();
+    double[][] completeMatrix = SVDImputer.impute(matrix, 5, 10)
     </code></pre>
             </div>
         </div>
