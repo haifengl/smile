@@ -38,6 +38,7 @@ title: Smile - Interpolation
     <pre class="prettyprint lang-scala"><code>
     val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
+    val points = (0 until x.length).map(i => Array(x(i), y(i))).toArray
 
     val linear = new LinearInterpolation(x, y)
 
@@ -47,7 +48,8 @@ title: Smile - Interpolation
       Array(x, y)
     }.toArray
 
-    val canvas = line(data)
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.RED))
     show(canvas)
     </code></pre>
             </div>
@@ -55,19 +57,24 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    double[] x = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
-    double[] y = {0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794}
+    double[] x = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+    double[] y = {0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794};
+    double[][] points = new double[x.length][2];
+    for (int i = 0; i < x.length; i++) {
+      points[i][0] = x[i];
+      points[i][1] = y[i];
+    }
 
-    var linear = new LinearInterpolation(x, y)
-
-    double[][] data = new double[61][2]
+    var linear = new LinearInterpolation(x, y);
+    double[][] data = new double[61][2];
     for (int i = 0; i < data.length; i++) {
       data[i][0] = i * 0.1;
       data[i][1] = linear.interpolate(data[i][0]);
     }
 
-    var canvas = LinePlot.plot(data, Line.Style.SOLID)
-    canvas.window()
+    var canvas = ScatterPlot.of(points, '@', Color.BLACK).canvas();
+    canvas.add(LinePlot.of(data, Color.RED));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -113,7 +120,8 @@ title: Smile - Interpolation
       Array(x, y)
     }.toArray
 
-    canvas.line("Cubic", data, RED)
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.BLUE))
     show(canvas)
           </code></pre>
             </div>
@@ -121,16 +129,17 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var cubic = new CubicSplineInterpolation1D(x, y)
+    var cubic = new CubicSplineInterpolation1D(x, y);
 
-    double[][] data = new double[61][2]
+    double[][] data = new double[61][2];
     for (int i = 0; i < data.length; i++) {
       data[i][0] = i * 0.1;
       data[i][1] = cubic.interpolate(data[i][0]);
     }
 
-    canvas.line("Cubic", data, Color.RED)
-    canvas.window()
+    var canvas = ScatterPlot.of(points, '@', Color.BLACK).canvas();
+    canvas.add(LinePlot.of(data, Color.BLUE));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -203,34 +212,34 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    double[] x1 = {1950.0, 1960, 1970, 1980, 1990}
-    double[] x2 = {10.0, 20, 30}
+    double[] x1 = {1950.0, 1960, 1970, 1980, 1990};
+    double[] x2 = {10.0, 20, 30};
     double[][] y = {
             {150.697, 199.592, 187.625},
             {179.323, 195.072, 250.287},
             {203.212, 179.092, 322.767},
             {226.505, 153.706, 426.730},
             {249.633, 120.281, 598.243}
-        }
+        };
 
-    var canvas = Heatmap.plot(y, Palette.jet(256))
-    canvas.setTitle("Original")
-    canvas.window()
+    var canvas = Heatmap.of(y, Palette.jet(256)).canvas();
+    canvas.setTitle("Original");
+    canvas.window();
 
-    var cubic = new CubicSplineInterpolation2D(x1, x2, y)
+    var cubic = new CubicSplineInterpolation2D(x1, x2, y);
 
-    double[][] data = new double[101][101]
+    double[][] data = new double[101][101];
     for (int i = 0; i <= 100; i++) {
         for (int j = 0; j <= 100; j++) {
             data[i][j] = cubic.interpolate(1950 + i*0.4, 10 + j*0.2);
         }
     }
 
-    var cubicPlot = Heatmap.plot(data, Palette.jet(256))
-    cubicPlot.setTitle("Cubic")
-    cubicPlot.window()
+    var cubicPlot = Heatmap.of(data, Palette.jet(256)).canvas();
+    cubicPlot.setTitle("Cubic");
+    cubicPlot.window();
 
-    val bicubic = new BicubicInterpolation(x1, x2, y)
+    var bicubic = new BicubicInterpolation(x1, x2, y);
 
     for (int i = 0; i <= 100; i++) {
         for (int j = 0; j <= 100; j++) {
@@ -238,9 +247,9 @@ title: Smile - Interpolation
         }
     }
 
-    var bicubicPlot = Heatmap.plot(data, Palette.jet(256))
-    bicubicPlot.setTitle("Bicubic")
-    bicubicPlot.window()
+    var bicubicPlot = Heatmap.of(data, Palette.jet(256)).canvas();
+    bicubicPlot.setTitle("Bicubic");
+    bicubicPlot.window();
           </code></pre>
             </div>
         </div>
@@ -269,7 +278,8 @@ title: Smile - Interpolation
       data(i)(1) = kriging.interpolate(data(i)(0))
     }
 
-    canvas.line("Kriging", data, CYAN)
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.CYAN))
     show(canvas)
           </code></pre>
             </div>
@@ -277,16 +287,17 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var kriging = new KrigingInterpolation1D(x, y)
+    var kriging = new KrigingInterpolation1D(x, y);
 
-    double[][] data = new double[61][2]
+    double[][] data = new double[61][2];
     for (int i = 0; i < data.length; i++) {
       data[i][0] = i * 0.1;
       data[i][1] = kriging.interpolate(data[i][0]);
     }
 
-    canvas.line("Kriging", data, Color.CYAN)
-    canvas.window()
+    var canvas = ScatterPlot.of(points, '@', Color.BLACK).canvas();
+    canvas.add(LinePlot.of(data, Color.CYAN));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -351,7 +362,8 @@ title: Smile - Interpolation
       data(i)(1) = rbf.interpolate(data(i)(0))
     }
 
-    canvas.line("RBF", data, GREEN)
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.GREEN))
     show(canvas)
           </code></pre>
             </div>
@@ -359,16 +371,17 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
+    var rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis());
 
-    double[][] data = new double[61][2]
+    double[][] data = new double[61][2];
     for (int i = 0; i < data.length; i++) {
       data[i][0] = i * 0.1;
       data[i][1] = rbf.interpolate(data[i][0]);
     }
 
-    canvas.line("RBF", data, Color.GREEN)
-    canvas.window()
+    var canvas = ScatterPlot.of(points, '@', Color.BLACK).canvas();
+    canvas.add(LinePlot.of(data, Color.GREEN));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -402,7 +415,8 @@ title: Smile - Interpolation
       data(i)(1) = shepard.interpolate(data(i)(0))
     }
 
-    canvas.line("Shepard", data, PINK)
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.PINK))
     show(canvas)
           </code></pre>
             </div>
@@ -410,16 +424,17 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var shepard = new ShepardInterpolation1D(x, y, 3)
+    var shepard = new ShepardInterpolation1D(x, y, 3);
 
-    double[][] data = new double[61][2]
+    double[][] data = new double[61][2];
     for (int i = 0; i < data.length; i++) {
       data[i][0] = i * 0.1;
       data[i][1] = shepard.interpolate(data[i][0]);
     }
 
-    canvas.line("Shepard", data, Color.PINK)
-    canvas.window()
+    var canvas = ScatterPlot.of(points, '@', Color.BLACK).canvas();
+    canvas.add(LinePlot.of(data, Color.PINK));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -473,8 +488,8 @@ title: Smile - Interpolation
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    double[][] zz = new double[101][101]
-    double[][] ww = new double[101][101]
+    double[][] zz = new double[101][101];
+    double[][] ww = new double[101][101];
     for (int i = 0; i <= 100; i++) {
         for (int j = 0; j <= 100; j++) {
             zz[i][j] = Math.random() < 0.2 ? Double.NaN : data[i][j];
@@ -482,14 +497,14 @@ title: Smile - Interpolation
         }
     }
 
-    var canvas = Heatmap.plot(ww, Palette.jet(256))
-    canvas.setTitle("Missing Values")
-    canvas.window()
+    var canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
+    canvas.setTitle("Missing Values");
+    canvas.window();
 
-    LaplaceInterpolation.interpolate(zz)
-    var canvas = Heatmap.plot(zz, Palette.jet(256))
-    canvas.setTitle("Laplace")
-    canvas.window()
+    LaplaceInterpolation.interpolate(zz);
+    var canvas = Heatmap.of(zz, Palette.jet(256)).canvas();
+    canvas.setTitle("Laplace");
+    canvas.window();
           </code></pre>
             </div>
         </div>

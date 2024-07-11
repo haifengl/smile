@@ -122,16 +122,19 @@ title: Smile - Manifold Learning
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
         <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter='\t').toArray
+    val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter="\t").toArray()
     plot(swissroll, '.', BLUE)
 
     val map = isomap(swissroll.slice(0, 2000), 7)
     val vertices = map.coordinates
+
+    import scala.jdk.CollectionConverters._
     val edges = map.graph.getEdges.asScala.map(edge => Array(edge.v1, edge.v2)).toArray
 
     wireframe(vertices, edges).window()
@@ -150,6 +153,25 @@ title: Smile - Manifold Learning
 
     Wireframe.of(vertices, edges).canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    import java.awt.Color;
+    import smile.*;
+    import smile.manifold.*;
+    import smile.plot.swing.*;
+
+    val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter='\t').toArray();
+    ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
+
+    val map = isomap(swissroll.slice(0..2000).toTypedArray(), 7);
+    val vertices = map.coordinates;
+    val edges = map.graph.getEdges().map{ intArrayOf(it.v1, it.v2) }.toTypedArray();
+
+    Wireframe.of(vertices, edges).canvas().window();
+    </code></pre>
             </div>
         </div>
     </div>
@@ -215,6 +237,7 @@ title: Smile - Manifold Learning
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
         <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_4">
@@ -229,6 +252,13 @@ title: Smile - Manifold Learning
           <pre class="prettyprint lang-java"><code>
     var map = LLE.of(Arrays.copyOf(swissroll, 2000), 8);
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val map = lle(swissroll.slice(0..2000).toTypedArray(), 8)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -291,6 +321,7 @@ title: Smile - Manifold Learning
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
         <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_6">
@@ -305,6 +336,13 @@ title: Smile - Manifold Learning
           <pre class="prettyprint lang-java"><code>
     var map = LaplacianEigenmap.of(Arrays.copyOf(swissroll, 1000), 10, 2, 25.0);
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kolin"><code>
+    val map = laplacian(swissroll.slice(0..1000).toTypedArray(), 10, 2, 25.0)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -374,16 +412,16 @@ title: Smile - Manifold Learning
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
         <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray
-    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray
-    val pc = pca(x)
-    pc.setProjection(50)
-    val x50 = pc.project(x)
+    val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=" ")
+    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=" ").column(0).toIntArray()
+    val pc = pca(mnist).getProjection(50)
+    val x50 = pc(mnist).toArray()
     val sne = tsne(x50, 3, 20, 200, 1000)
     show(plot(sne.coordinates, y, 'o'))
     </code></pre>
@@ -393,20 +431,35 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var format = CSVFormat.DEFAULT.withDelimiter(' ');
-    var mnist = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
-    var labels = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
+    var mnist = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
+    var labels = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
 
-    var pca = PCA.fit(mnist);
-    pca.setProjection(50);
-    var X = pca.project(mnist);
+    var pca = PCA.fit(mnist).getProjection(50);
+    var X = pca.apply(mnist);
 
     var perplexity = 20;
     var tsne = new TSNE(X, 2, perplexity, 200, 1000);
 
-    var canvas = ScatterPlot.of(tsne.coordinates, labels, '@', Palette).canvas();
+    var canvas = ScatterPlot.of(tsne.coordinates, labels, '@').canvas();
     canvas.setTitle("t-SNE of MNIST");
     canvas.window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    import smile.feature.extraction.*;
+    val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray();
+    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray();
+    val pc = pca(mnist).getProjection(50);
+    val x50 = pc.apply(mnist);
+    val sne = tsne(x50, 3, 20.0, 200.0, 1000);
+
+    val canvas = ScatterPlot.of(sne.coordinates, y, '@').canvas();
+    canvas.setTitle("t-SNE of MNIST");
+    canvas.window();
+    </code></pre>
             </div>
         </div>
     </div>
@@ -523,12 +576,13 @@ title: Smile - Manifold Learning
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
         <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val map = umap(x)
+    val map = umap(mnist.toArray())
     val canvas = plot(map.coordinates, map.index.map(i =&gt; y(i)), 'o')
     show(canvas)
     </code></pre>
@@ -537,10 +591,19 @@ title: Smile - Manifold Learning
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var map = UMAP.of(mnist)
-    var y = Arrays.stream(map.index).map(i -&gt; labels[i]).toArray()
-    ScatterPlot.of(map.coordinates, y, '@').canvas().window()
+    var map = UMAP.of(mnist);
+    var y = Arrays.stream(map.index).map(i -&gt; labels[i]).toArray();
+    ScatterPlot.of(map.coordinates, y, '@').canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val map = umap(mnist);
+    val labels = map.index.map{ y[it] }.toIntArray();
+    ScatterPlot.of(map.coordinates, labels, '@').canvas().window();
+    </code></pre>
             </div>
         </div>
     </div>

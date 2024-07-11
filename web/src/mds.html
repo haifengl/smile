@@ -105,9 +105,9 @@ title: Smile - MDS
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = false)
-    val dist = eurodist.drop(0).toArray
-    val citys = eurodist.stringVector(0).toArray
+    val eurodist = read.csv("data/mds/eurodist.txt", delimiter = "\t", header = false)
+    val dist = eurodist.drop(0).toArray()
+    val citys = eurodist.stringVector(0).toArray()
     val x = mds(dist, 2).coordinates
     show(text(citys, x))
     </code></pre>
@@ -116,7 +116,7 @@ title: Smile - MDS
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var eurodist = Read.csv("data/projection/eurodist.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var eurodist = Read.csv("data/mds/eurodist.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var dist = eurodist.drop(0).toArray();
     var citys = eurodist.stringVector(0).toArray();
     var x = MDS.of(dist, 2).coordinates;
@@ -127,10 +127,14 @@ title: Smile - MDS
         <div class="tab-pane" id="kotlin_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = false)
+    import smile.*;
+    import smile.manifold.*;
+    import smile.plot.swing.*;
+    val eurodist = read.csv("data/mds/eurodist.txt", delimiter = '\t', header = false)
     val dist = eurodist.drop(0).toArray()
     val citys = eurodist.stringVector(0).toArray()
     val x = mds(dist, 2).coordinates
+    TextPlot.of(citys, x).canvas().window()
     </code></pre>
             </div>
         </div>
@@ -205,14 +209,15 @@ title: Smile - MDS
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = IsotonicMDS.of(dist, 2).coordinates;
-    TextPlot.plot(citys, x).canvas().window();
+    TextPlot.of(citys, x).canvas().window();
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    isomds(dist, 2)
+    val x = isomds(dist, 2).coordinates
+    TextPlot.of(citys, x).canvas().window()
     </code></pre>
             </div>
         </div>
@@ -296,7 +301,7 @@ title: Smile - MDS
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = sammon(dist, 2).coordinates
-    show(plot(citys, x))
+    show(text(citys, x))
     </code></pre>
             </div>
         </div>
@@ -311,7 +316,8 @@ title: Smile - MDS
         <div class="tab-pane" id="kotlin_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    sammon(dist, 2)
+    val x = sammon(dist, 2).coordinates
+    TextPlot.of(citys, x).canvas().window()
     </code></pre>
             </div>
         </div>
