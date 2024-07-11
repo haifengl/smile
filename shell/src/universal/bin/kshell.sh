@@ -69,6 +69,7 @@ execRunner () {
 run() {
   execRunner "$kotlin_cmd" \
     -J-D"smile.home=$smile_home" \
+    -J-Djava.awt.headless=false \
     -classpath "$app_classpath" \
     -jvm-target 17 \
     "$@"
