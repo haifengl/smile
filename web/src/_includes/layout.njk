@@ -11,6 +11,9 @@
 
   <!-- prettify js and CSS -->
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=scala&lang=kotlin&lang=clj"></script>
+  <style>
+      .prettyprint ol.linenums > li { list-style-type: decimal; }
+  </style>
 
   <!-- Bootstrap core CSS -->
   <link href="css/cerulean.min.css" rel="stylesheet">
@@ -115,6 +118,7 @@
         <ul class="dropdown-menu">
           <li><a href="classification.html">Classification</a></li>
           <li><a href="regression.html">Regression</a></li>
+          <li><a href="deep-learning.html">Deep Learning</a></li>
           <li><a href="feature.html">Feature Engineering</a></li>
           <li><a href="validation.html">Model Validation</a></li>
           <li><a href="missing-value-imputation.html">Missing Value Imputation</a></li>
@@ -130,7 +134,13 @@
           <li><a href="manifold.html">Manifold Learning</a></li>
         </ul>
       </li>
-      <li><a href="nlp.html">NLP</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">LLM & NLP <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a href="llm.html">Large Language Model (LLM)</a></li>
+          <li><a href="nlp.html">Natural Language Processing (NLP)</a></li>
+        </ul>
+      </li>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Math <b class="caret"></b></a>
         <ul class="dropdown-menu">

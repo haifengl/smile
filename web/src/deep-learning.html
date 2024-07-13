@@ -1,0 +1,189 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: Smile - Deep Learning
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="feature-top" class="title">Deep Learning</h1>
+
+    <p>Deep learning is based on artificial neural networks (ANNs)
+        with representation learning. The adjective "deep" refers to the use of
+        multiple layers in the network. Fundamentally, deep learning algorithms,
+        such as convolutional neural networks and transformers, leverage a hierarchy
+        of layers to transform input data into a slightly more abstract and composite
+        representation.</p>
+
+    <p>Importantly, a deep learning process can learn which features to optimally
+        place in which level on its own. Prior to deep learning, machine learning
+        techniques often involved hand-crafted feature engineering to transform
+        the data into a more suitable representation for a classification algorithm
+        to operate upon. In the deep learning approach, features are not hand-crafted
+        and the model discovers useful feature representations from the data automatically.
+        This does not eliminate the need for hand-tuning; for example, varying numbers
+        of layers and layer sizes can provide different degrees of abstraction.</p>
+
+    <p>While smile-core module provides MLP (multi-layer perceptron) for classification
+        and regression tasks on tabular data, smile-deep module provides advanced
+        algorithms for computer vision and large language models (LLMs). Furthermore,
+        smile-deep supports GPU devices.</p>
+
+    <h2 id="mnist">A Gentle Example</h2>
+
+    <p>In the below code snippets, we show how to train a model on MNIST dataset.
+        On line 5, we call the function <code>Device.preferredDevice()</code> that
+        will return a GPU device if it exists, otherwise the default CPU device.
+        You can also create a Device object by calling its factory methods such as
+        <code>Device.GPU(0)</code>, <code>Device.MPS()</code>, or <code>Device.CPU()</code>.
+        Then we set the returned device as the default compute device. Line 5 and 6 are optional.
+        Without them, we will use CPU as the default compute device.</p>
+
+    <p>On Line 8, we define a deep learning model with a sequential block of layers.
+        For complicated models, it is helpful to print out its structure for verification
+        as we do on Line 14. On Line 15, we move the model to the preferred compute
+        device.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint linenums lang-java">
+    <code>import smile.deep.layer.*;
+    import smile.deep.metric.*;
+    import smile.deep.tensor.*;
+
+    Device device = Device.preferredDevice();
+    device.setDefaultDevice();
+
+    Model net = new Model(new SequentialBlock(
+            Layer.relu(784, 64, 0.5),
+            Layer.relu(64, 32),
+            Layer.logSoftmax(32, 10))
+    );
+
+    System.out.println(net);
+    net.to(device);
+
+    CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+    double[][] x = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
+    int[] y = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
+    Dataset dataset = Dataset.of(x, y, 64);
+
+    Optimizer optimizer = Optimizer.SGD(net, 0.01);
+    Loss loss = Loss.nll();
+    net.train(100, optimizer, loss, dataset);
+
+    try (var guard = Tensor.noGradGuard()) {
+        Map&lt;String, Double&gt; metrics = net.eval(dataset,
+                new Accuracy(),
+                new Precision(Averaging.Micro),
+                new Precision(Averaging.Macro),
+                new Precision(Averaging.Weighted),
+                new Recall(Averaging.Micro),
+                new Recall(Averaging.Macro),
+                new Recall(Averaging.Weighted));
+        for (var entry : metrics.entrySet()) {
+            System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+        }
+    }</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>From line 17 to 19, we load a sample data of MNIST. This is same as we used to do with
+        smile-core. The data are read in as plain <code>double[][]</code>. Then on line 20, we
+        create a <code>Dataset</code> object that wraps the data and target labels.
+        The <code>Dataset</code> object implements the <code>Iterable</code> interface
+        so that it may emit mini-batch samples of size 64 as specified by the third parameter
+        if we loop through it.</p>
+
+    <p>From line 22 to 24, we create an SGD (stochastic gradient descent) optimizer,
+        the negative log-likelihood (NLL) loss function, and train the model for 100 epochs.
+        The whole process should finish very quickly (e.g. 15 seconds with CPU). Finally,
+        we evaluate the model with a variety of metrics from line 26 to 38. Note that
+        the evaluation is on the training data only for demonstration purpose. In practice,
+        it is better to evaluate on a hold-out test dataset. On line 26, we create a
+        no-grad guard in a try-with statement to prevent gradient computation. The inference
+        code should be inside this try-with block. This is very helpful for inference
+        as it minimizes the memory usage and avoids a lot of unnecessary computation. The guard
+        object will be automatically released after the code block finishes.</p>
+
+    <h2 id="efficient-net">EfficientNet</h2>
+
+    <p>In previous section, we train a model from scratch. In this section, we demonstrate
+        image classification with pretrained EfficientNetV2 models.
+        EfficientNetV2 is a new family of convolutional networks that have faster training
+        speed and better parameter efficiency than previous models.</p>
+
+    <p>On line 1, we create an instance of EfficientNet V2_S (small) model, which will load
+        the pretrained weights at <code>model/EfficientNet/efficientnet_v2_s.pt</code>
+        from the working directory. You may download the weights from
+        <a href="https://smile-ai.org/model/EfficientNet/efficientnet_v2_s.pt">smile-ai.org</a>.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint linenums lang-java">
+    <code>var model = EfficientNet.V2S();
+    model.to(device);
+    model.eval();
+
+    var lenna = ImageIO.read(new File("data/image/Lenna.png"));
+    var panda = ImageIO.read(new File("data/image/panda.jpg"));
+
+    try (var guard = Tensor.noGradGuard()) {
+        long startTime = System.nanoTime();
+        var output = model.forward(panda);
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+        System.out.println("1st run elapsed time: " + duration + "ms");
+
+        startTime = System.nanoTime();
+        output = model.forward(lenna, panda);
+        endTime = System.nanoTime();
+        duration = (endTime - startTime) / 1000000;
+        System.out.println("2nd run elapsed time: " + duration + "ms");
+
+        var topk = output.topk(5);
+        topk._2().to(Device.CPU());
+        String[] images = {"Lenna", "Panda"};
+        for (int i = 0; i &lt; 2; i++) {
+            System.out.println("======== " + images[i] + " ========");
+            for (int j = 0; j &lt; 5; j++) {
+                System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
+            }
+        }</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that we run the inference twice for benchmarking.
+        The first inference is typically slow due to multiple reasons.
+        The very first CUDA call (it could be a tensor creation etc.)
+        is creating the CUDA context, which loads the driver etc.
+        The first inference also needs to allocate new memory, which will then
+        be reused through the CUDACachingAllocator. However, the initial
+        cudaMalloc calls are also "expensive" (compared to just reusing the
+        already allocated memory) and you would thus also
+        see a slow iteration time until your workload reached the peak memory
+        and is able to reuse the GPU memory. Note that new cudaMalloc calls
+        could of course still happen during the training, e.g. if your input
+        size increases etc.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="regression.html" title="Previous Section: Regression"><span>Regression</span></a>
+        <a class="btn-next-text" href="validation.html" title="Next Section: Model Validation"><span>Model Validation</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
