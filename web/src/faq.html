@@ -57,6 +57,40 @@ title: Smile - FAQ
         </div>
     </div>
 
+    <p>To leverage GPU and deep learning, add</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#maven_2" data-toggle="tab">Maven</a></li>
+        <li><a href="#gradle_2" data-toggle="tab">Gradle (Kotlin)</a></li>
+        <li><a href="#sbt_2" data-toggle="tab">SBT</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="maven_2">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint"><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+        &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
+        &lt;version&gt;4.0.0&lt;/version&gt;
+    &lt;/dependency&gt;
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="gradle_2">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    implementation("com.github.haifengl:smile-deep:4.0.0")
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="sbt_2">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    libraryDependencies += "com.github.haifengl" %% "smile-deep" % "4.0.0"
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
     <p>For Scala API, add</p>
     <div class="code" style="text-align: left;">
     <pre class="prettyprint"><code>
@@ -66,14 +100,13 @@ title: Smile - FAQ
 
     <p>Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
         some clustering algorithms, Gaussian Process regression, MLP, etc.).
-        To use these algorithms, you should include OpenBLAS for optimized
-        matrix computation:</p>
+        By default, Smile includes OpenBLAS for macOS, Windows, and Linux:</p>
     <div class="code" style="text-align: left;">
     <pre class="prettyprint"><code>
     libraryDependencies ++= Seq(
-      "org.bytedeco" % "javacpp"   % "1.5.8"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-      "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-      "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+      "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "openblas"  % "0.3.27-1.5.11" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "arpack-ng" % "3.1.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
     )
     </code></pre>
     </div>
@@ -91,7 +124,39 @@ title: Smile - FAQ
     <p>For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
         Or you may add the following dependencies to your project, which
         includes MKL binaries. Smile will automatically switch to MKL.</p>
-    <pre><code>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#maven_3" data-toggle="tab">Maven</a></li>
+        <li><a href="#gradle_3" data-toggle="tab">Gradle (Kotlin)</a></li>
+        <li><a href="#sbt_3" data-toggle="tab">SBT</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="maven_3">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint"><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
+        &lt;artifactId&gt;mkl-platform&lt;/artifactId&gt;
+        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
+        &lt;artifactId&gt;mkl-platform-redist&lt;/artifactId&gt;
+        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
+    &lt;/dependency&gt;
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="gradle_3">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    implementation("org.bytedeco:mkl-platform:2024.0-1.5.10")
+    implementation("org.bytedeco:mkl-platform-redist:2024.0-1.5.10")
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="sbt_3">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
     libraryDependencies ++= {
       val version = "2024.0-1.5.10"
       Seq(
@@ -99,7 +164,10 @@ title: Smile - FAQ
         "org.bytedeco" % "mkl-platform-redist" % version
       )
     }
-    </code></pre>
+            </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
     <p class="answer">To serialize a model, you may use</p>
