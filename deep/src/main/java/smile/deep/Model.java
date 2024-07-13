@@ -250,7 +250,7 @@ public class Model implements Function<Tensor, Tensor> {
                         msg += String.format(" | LR: %.5f", rate);
                     }
 
-                    if (batchIndex % 2000 == 0) {
+                    if (test != null && batchIndex % 1000 == 0) {
                         Map<String, Double> result = eval(test, metrics);
                         StringBuilder sb = new StringBuilder(msg);
                         train(); // return to training mode
