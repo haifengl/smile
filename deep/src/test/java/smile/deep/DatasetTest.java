@@ -19,6 +19,7 @@ package smile.deep;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
+import smile.deep.layer.Layer;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
@@ -28,7 +29,6 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.io.Read;
 import smile.util.Paths;
-import smile.deep.layer.Layer;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -69,14 +69,16 @@ public class DatasetTest {
 
         System.out.println(net);
         net.to(device);
+
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
-
         Dataset dataset = Dataset.of(x, y, 64);
+
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset);
+
         try (var guard = Tensor.noGradGuard()) {
             Map<String, Double> metrics = net.eval(dataset,
                     new Accuracy(),
