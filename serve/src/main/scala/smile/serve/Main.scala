@@ -68,7 +68,8 @@ object Main {
         opt[Int]("device")
           .optional()
           .action((x, c) => c.copy(device = x))
-          .text("The CUDA device ID")
+          .text("The CUDA device ID"),
+        help("help").text("Display the usage information")
       )
     }
 
