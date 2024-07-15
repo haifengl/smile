@@ -73,8 +73,7 @@ object Main {
       )
     }
 
-    val home = System.getProperty("smile.home", ".")
-    val model = home + "/model/Llama-3-8B-Instruct"
+    val model = "./model/Llama-3-8B-Instruct"
     OParser.parse(parser, args, ServeConfig(model, model + "/tokenizer.model"))
   }
 
