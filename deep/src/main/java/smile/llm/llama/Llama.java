@@ -85,7 +85,7 @@ public class Llama {
     /**
      * Builds a Llama instance by initializing and loading a model checkpoint.
      * @param checkpointDir the directory path of checkpoint files.
-     * @param tokenizerPath the path of tokenizer file.
+     * @param tokenizerPath the path of tokenizer model file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
      * @return an instance of Llama model.
@@ -97,13 +97,18 @@ public class Llama {
     /**
      * Builds a Llama instance by initializing and loading a model checkpoint.
      * @param checkpointDir the directory path of checkpoint files.
-     * @param tokenizerPath the path of tokenizer file.
+     * @param tokenizerPath the path of tokenizer model file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
      * @param deviceId the optional CUDA device ID.
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Integer deviceId) throws IOException {
+        File dir = new File(checkpointDir);
+        if (!dir.exists()) {
+            throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
+        }
+
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
         int modelParallelSize = Integer.valueOf(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
@@ -128,7 +133,6 @@ public class Llama {
         logger.info("Initialized CUDA[{}]: {}.{} seconds", rank, time/1000, time%1000);
 
         startTime = System.currentTimeMillis();
-        File dir = new File(checkpointDir);
         List<String> checkpoints = new ArrayList<>();
         for (var file : dir.listFiles()) {
             var path = file.getPath();
