@@ -1,0 +1,151 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: Smile - LLM
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="llm-top" class="title">Large Language Model</h1>
+
+    <p>A large language model (LLM) is a computational model notable for its ability
+        to achieve general-purpose language generation and other NLP tasks such as
+        classification. Transformer, the state-of-the-art LLM architecture, is based on
+        the multi-head attention mechanism. Text is converted to numerical
+        representations called tokens, and each token is converted into a vector
+        via looking up from a word embedding table. At each layer, each token is
+        then contextualized within the scope of the context window with other
+        (unmasked) tokens via a parallel multi-head softmax-based attention mechanism
+        allowing the signal for key tokens to be amplified and less important tokens
+        to be diminished. GPTs (Generative pre-trained transformers) are are based on
+        the decoder-only transformer architecture. Each generation of GPT models
+        is significantly more capable than the previous, due to increased model size
+        (number of trainable parameters) and larger training data.</p>
+
+    <h2 id="llama" class="title">Llama 3</h2>
+
+    <p>Smile provides an inference implementation of Llama 3 from Meta AI,
+        the latest version of Llama that is accessible to individuals, organizations,
+        and businesses of all sizes.</p>
+
+    <p>To build a model instance, call <code>Llama.build()</code> with the directory
+        path of checkpoint files, the path of tokenizer model file, maximum batch size, maximum
+        sequence length, and optionally CUDA device id:</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.llm.llama.*;
+
+    var model = Llama.build("model/Meta-Llama-3-8B-Instruct",
+              "model/Llama-3-8B-Instruct/tokenizer.model",
+              4,     // maximum batch size
+              8192,  // maximum sequence length for input text
+              0      // CUDA device id
+          );
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For a pretrained model, one should call <code>generate()</code> method with a batch
+        of prompots to generate the text. For fine-tuned chat models, we should instead
+        call <code>chat()</code> method to generate conversation responses.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    // List of conversational dialogs, where each dialog is a list of messages.
+    Message[][] dialogs = {
+          {
+              new Message(Role.user, "what is the recipe of mayonnaise?"),
+          },
+          {
+              new Message(Role.user, "I am going to Paris, what should I see?"),
+              new Message(Role.assistant, """
+Paris, the capital of France, is known for its stunning architecture, art museums, historical landmarks, and romantic atmosphere. Here are some of the top attractions to see in Paris:
+
+1. The Eiffel Tower: The iconic Eiffel Tower is one of the most recognizable landmarks in the world and offers breathtaking views of the city.
+2. The Louvre Museum: The Louvre is one of the world's largest and most famous museums, housing an impressive collection of art and artifacts, including the Mona Lisa.
+3. Notre-Dame Cathedral: This beautiful cathedral is one of the most famous landmarks in Paris and is known for its Gothic architecture and stunning stained glass windows.
+
+These are just a few of the many attractions that Paris has to offer. With so much to see and do, it's no wonder that Paris is one of the most popular tourist destinations in the world."""),
+              new Message(Role.user, "What is so great about #1?"),
+          },
+          {
+              new Message(Role.system, "Always answer with Haiku"),
+              new Message(Role.user, "I am going to Paris, what should I see?"),
+          },
+          {
+              new Message(Role.system, "Always answer with emojis"),
+              new Message(Role.user, "How to go from Beijing to NY?"),
+          },
+    };
+
+    model.chat(dialogs,
+              2048,  // maximum length of the generated text sequence
+              0.6,   // temperature for controlling randomness in sampling
+              0.9,   // top_p probability threshold for nucleus sampling
+              false, // true to compute token log probabilities
+              null,  // the optional random number generation seed
+              null   // streaming publisher
+          );
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="serving" class="title">Serving</h2>
+
+    <p>Smile also provides an LLM inference server for quick start. The script <code>bin/serve.sh</code>
+        builds and starts the inference server. You should have Node.js and npm installed to build the
+        frontend.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#bash_3" data-toggle="tab">Shell</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="bash_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-bash"><code>
+$ bin/serve.sh --help
+SmileServe - Large Language Model (LLM) Inference Server
+Usage: smile-serve [options]
+
+  --model <value>          The model checkpoint directory path
+  --tokenizer <value>      The tokenizer model file path
+  --max-seq-len <value>    The maximum sequence length
+  --max-batch-size <value> The maximum batch size
+  --device <value>         The CUDA device ID
+  --help            Display the usage information
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>By default, SmileServe binds at localhost:3801. If you prefer a different port and/or
+        want to expose the server to other hosts, you may set the binding inference and port
+        with <code>-J-Dakka.http.server.interface=0.0.0.0</code> and
+        <code>-J-Dakka.http.server.port=8000</code>, for example. The service exposes the API
+        <code>/v1/chat/completions</code> that is compatible with OpenAI API.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="graph.html" title="Previous Section: Graph"><span>Graph</span></a>
+        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>
