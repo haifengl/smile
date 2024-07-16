@@ -17,6 +17,7 @@
 
 package smile.clustering.linkage;
 
+import java.util.Arrays;
 import smile.math.distance.Distance;
 
 /**
@@ -60,9 +61,7 @@ public class UPGMCLinkage extends Linkage {
     /** Initialize sample size. */
     private void init() {
         n = new int[size];
-        for (int i = 0; i < size; i++) {
-            n[i] = 1;
-        }
+        Arrays.fill(n, 1);
 
         for (int i = 0; i < proximity.length; i++) {
             proximity[i] *= proximity[i];
