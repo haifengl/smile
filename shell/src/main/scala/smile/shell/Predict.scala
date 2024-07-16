@@ -61,7 +61,7 @@ object Predict {
       import builder._
       OParser.sequence(
         programName("smile predict"),
-        head("Smile", "2.x"),
+        head("Smile", BuildInfo.version),
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
