@@ -404,7 +404,7 @@ smile>
 
     <h3 id="cli">Training and Inference CLI</h3>
 
-    <p>A secret functionality of Smile shell is that it can be used for training and
+    <p>A secret functionality of Smile Shell is that it can be used for training and
         inference through command line (CLI).</p>
 
     <ul class="nav nav-tabs">
@@ -593,9 +593,10 @@ Usage: smile serve [options]
 
     <p>To train a model, one should specify the data file, the output model file,
         the machine learning algorithm and its hyperparameters, and the model formula.
-        Once the training done, it also prints the training metrics on the console.
+        Once the training done, it saves the model to the specified path and
+        also prints the training metrics on the console.
         If the optional test data is provided too, the validation metrics will be
-        computed too.</p>
+        computed and displayed too.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#train_2" data-toggle="tab">Training</a></li>
@@ -637,9 +638,10 @@ Training metrics: {
         </div>
     </div>
 
-    <p>To run a batch inference on a file, do the following. In this example,
-        we specify the option <code>--probability</code> to compute the posteri probability.
-        If you don't need it, simply skip this option.</p>
+    <p>To run a batch inference on a file, run <code>smile predict</code> command
+        with the model file and data file path. In this example,
+        we also specify the optional flag <code>--probability</code> to compute
+        the posterior probability. If you don't need it, simply skip this option.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#predict_2" data-toggle="tab">Batch Inference</a></li>
@@ -674,7 +676,7 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
         </div>
     </div>
 
-    <p>It is also easy to create an endpoint to serve online request.</p>
+    <p>It is also easy to create an endpoint to serve online requests.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#serve_2" data-toggle="tab">Online Serving</a></li>
     </ul>
@@ -684,7 +686,7 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
     <pre class="prettyprint lang-shell"><code>
 $ bin/smile serve --model iris_random_forest.model --probability
 [smile-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-Smile online at http://localhost:8080/
+Smile online at http://localhost:8080/v1/infer
 Press RETURN to stop...
   </code></pre>
             </div>
@@ -712,7 +714,8 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
         </div>
     </div>
 
-    <p>To infer on multiple samples, simply provides a JSON array in the request body.</p>
+    <p>To infer on multiple samples, simply provides JSON array or JSON Lines (JSONL)
+        in the request body. CSV is also supported.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#serve_4" data-toggle="tab">Online Serving</a></li>
@@ -722,22 +725,31 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
 $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json" \
-        -d '[
-          {
-            "sepallength": 5.1,
-            "sepalwidth": 3.5,
-            "petallength": 1.4,
-            "petalwidth": 0.2
-          },
-          {
-            "sepallength": 6.3,
-            "sepalwidth": 3.3,
-            "petallength": 6.0,
-            "petalwidth": 2.5
-          }
-        ]'
+        -d '{"sepallength": 5.1, "sepalwidth": 3.5, "petallength": 1.4,"petalwidth": 0.2}
+          {"sepallength": 6.3, "sepalwidth": 3.3, "petallength": 6.0,"petalwidth": 2.5}'
 [{"class":0,"probability":[0.9599005925578108,0.0205362892965633,0.01956311814562593]},
  {"class":2,"probability":[0.023727657781681327,0.051035220743102516,0.9252371214752161]}]
+  </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In fact, Smile serving endpoint is an end-to-end streaming API
+        which applies back pressure throughout the entire stack. It can process the
+        request body (e.g., a JSON array or CSV stream) on an element-by-element basis,
+        and render the response immediately without waiting for the rest inference
+        to complete first. Therefore, it is safe to send very large requests (multi-GB) to
+        the endpoint!</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#serve_5" data-toggle="tab">Online Serving with Streaming</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="serve_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-shell"><code>
+$ for i in {1..1000}; do tail -n 153 data/weka/iris.arff | head -n 150 >> iris.txt; done
+$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8080/v1/infer?format=csv
   </code></pre>
             </div>
         </div>
