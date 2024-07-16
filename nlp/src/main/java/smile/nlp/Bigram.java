@@ -63,19 +63,15 @@ public class Bigram {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
+        if (this == obj) {
+            return true;
         }
 
-        if (getClass() != obj.getClass()) {
+        if (obj == null || !(obj instanceof Bigram)) {
             return false;
         }
 
         final Bigram other = (Bigram) obj;
-        if (!Objects.equals(this.w1, other.w1)) {
-            return false;
-        }
-
-        return Objects.equals(this.w2, other.w2);
+        return w1.equals(other.w1) && w2.equals(other.w2);
     }
 }

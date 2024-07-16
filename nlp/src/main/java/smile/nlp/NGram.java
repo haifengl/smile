@@ -49,16 +49,16 @@ public class NGram {
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(words);
+        return Arrays.hashCode(words);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
+        if (this == obj) {
+            return true;
         }
 
-        if (getClass() != obj.getClass()) {
+        if (obj == null || !(obj instanceof NGram)) {
             return false;
         }
 

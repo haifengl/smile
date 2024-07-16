@@ -19,6 +19,7 @@ package smile.nlp.tokenizer;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -52,7 +53,7 @@ public class BreakIteratorTokenizer implements Tokenizer {
     @Override
     public String[] split(String text) {
         boundary.setText(text);
-        ArrayList<String> words = new ArrayList<>();
+        List<String> words = new ArrayList<>();
         int start = boundary.first();
         int end = boundary.next();
 
@@ -65,11 +66,6 @@ public class BreakIteratorTokenizer implements Tokenizer {
             end = boundary.next();
         }
 
-        String[] array = new String[words.size()];
-        for (int i = 0; i < array.length; i++) {
-            array[i] = words.get(i);
-        }
-
-        return array;
+        return words.toArray(new String[0]);
     }
 }

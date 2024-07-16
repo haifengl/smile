@@ -17,8 +17,8 @@
 
 package smile.nlp.dictionary;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Punctuation marks in English.
@@ -33,34 +33,17 @@ public class EnglishPunctuations implements Punctuations {
     /**
      * A set of punctuation marks.
      */
-    private final HashSet<String> dict = new HashSet<>(50);
+    private final Set<String> dict;
 
     /**
      * Constructor.
      */
     private EnglishPunctuations() {
-        dict.add("[");
-        dict.add("]");
-        dict.add("(");
-        dict.add(")");
-        dict.add("{");
-        dict.add("}");
-        dict.add("<");
-        dict.add(">");
-        dict.add(":");
-        dict.add(",");
-        dict.add(";");
-        dict.add("-");
-        dict.add("--");
-        dict.add("---");
-        dict.add("!");
-        dict.add("?");
-        dict.add(".");
-        dict.add("...");
-        dict.add("`");
-        dict.add("'");
-        dict.add("\"");
-        dict.add("/");
+        dict = Set.of(
+            "[", "]", "(", ")", "{", "}", "<", ">", ":",
+            ",", ";", "-", "--", "---", "!", "?", ".",
+            "...", "`", "'", "\"", "/"
+        );
     }
 
     /**

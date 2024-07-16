@@ -60,11 +60,6 @@ public class BreakIteratorSentenceSplitter implements SentenceSplitter {
             sentences.add(text.substring(start, end).trim());
         }
 
-        String[] array = new String[sentences.size()];
-        for (int i = 0; i < array.length; i++) {
-            array[i] = sentences.get(i);
-        }
-
-        return array;
+        return sentences.toArray(new String[0]);
     }
 }
