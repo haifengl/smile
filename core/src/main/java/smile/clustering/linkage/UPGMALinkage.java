@@ -17,6 +17,7 @@
 
 package smile.clustering.linkage;
 
+import java.util.Arrays;
 import smile.math.distance.Distance;
 
 /**
@@ -65,9 +66,7 @@ public class UPGMALinkage extends Linkage {
     /** Initialize sample size. */
     private void init() {
         n = new int[size];
-        for (int i = 0; i < size; i++) {
-            n[i] = 1;
-        }
+        Arrays.fill(n, 1);
     }
 
     /**
