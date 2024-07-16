@@ -60,19 +60,19 @@ public class ScreePlot extends Plot {
 
         labels = new String[n];
         x = new double[n];
-        double[][] var = new double[n][2];
+        double[][] variance = new double[n][2];
         double[][] cumVar = new double[n][2];
         for (int i = 0; i < n; i++) {
             labels[i] = "PC" + (i + 1);
             x[i] = i + 1;
-            var[i][0] = x[i];
-            var[i][1] = varianceProportion[i];
+            variance[i][0] = x[i];
+            variance[i][1] = varianceProportion[i];
             cumVar[i][0] = x[i];
             cumVar[i][1] = i == 0 ? varianceProportion[0] : cumVar[i - 1][1] + varianceProportion[i];
         }
 
         lines = new Line[] {
-                new Line(var, Line.Style.SOLID, '@', Color.RED),
+                new Line(variance, Line.Style.SOLID, '@', Color.RED),
                 new Line(cumVar, Line.Style.SOLID, '@', Color.BLUE)
         };
     }
