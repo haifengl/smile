@@ -35,9 +35,7 @@ public class AvgPool2dLayer implements Layer {
      * @param kernel the window/kernel size.
      */
     public AvgPool2dLayer(int kernel) {
-        LongPointer kernelPointer = new LongPointer(kernel, kernel);
-        this.module = new AvgPool2dImpl(kernelPointer);
-        kernelPointer.close();
+        this(kernel, kernel);
     }
 
     /**
@@ -46,8 +44,9 @@ public class AvgPool2dLayer implements Layer {
      * @param width the window/kernel width.
      */
     public AvgPool2dLayer(int height, int width) {
-        LongPointer kernel = new LongPointer(height, width);
-        this.module = new AvgPool2dImpl(kernel);
+        try (var kernel = new LongPointer(height, width)) {
+            this.module = new AvgPool2dImpl(kernel);
+        }
     }
 
     @Override
