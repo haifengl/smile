@@ -19,7 +19,6 @@ package smile.validation.metric;
 
 import java.io.Serial;
 import java.util.Arrays;
-import static java.lang.Math.log;
 
 /**
  * Mutual Information for comparing clustering.
@@ -73,7 +72,7 @@ public class MutualInformation implements ClusteringMetric {
             for (int j = 0; j < n2; j++) {
                 if (count[i][j] > 0) {
                     double p = count[i][j] / n;
-                    I += p * log(p/(p1[i]*p2[j]));
+                    I += p * Math.log(p/(p1[i]*p2[j]));
                 }
             }
         }

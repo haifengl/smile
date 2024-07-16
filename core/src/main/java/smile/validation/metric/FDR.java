@@ -63,7 +63,6 @@ public class FDR implements ClassificationMetric {
 
             if (prediction[i] == 1) {
                 p++;
-
                 fp += 1 - truth[i];
             }
         }

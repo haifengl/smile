@@ -68,12 +68,9 @@ public class Specificity implements ClassificationMetric {
                 throw new IllegalArgumentException("Specificity can only be applied to binary classification: " + prediction[i]);
             }
 
-            if (truth[i] != 1) {
+            if (truth[i] == 0) {
                 n++;
-
-                if (prediction[i] == truth[i]) {
-                    tn++;
-                }
+                tn += 1 - prediction[i];
             }
         }
 
