@@ -121,19 +121,19 @@ $ bin/serve.sh --help
 SmileServe - Large Language Model (LLM) Inference Server
 Usage: smile-serve [options]
 
-  --model <value>          The model checkpoint directory path
-  --tokenizer <value>      The tokenizer model file path
-  --max-seq-len <value>    The maximum sequence length
-  --max-batch-size <value> The maximum batch size
-  --device <value>         The CUDA device ID
-  --help            Display the usage information
+  --model &lt;value&gt;          The model checkpoint directory path
+  --tokenizer &lt;value&gt;      The tokenizer model file path
+  --max-seq-len &lt;value&gt;    The maximum sequence length
+  --max-batch-size &lt;value&gt; The maximum batch size
+  --device &lt;value&gt;         The CUDA device ID
+  --help                   Display the usage information
           </code></pre>
             </div>
         </div>
     </div>
 
     <p>By default, SmileServe binds at localhost:3801. If you prefer a different port and/or
-        want to expose the server to other hosts, you may set the binding inference and port
+        want to expose the server to other hosts, you may set the binding interface and port
         with <code>-J-Dakka.http.server.interface=0.0.0.0</code> and
         <code>-J-Dakka.http.server.port=8000</code>, for example. The service exposes the API
         <code>/v1/chat/completions</code> that is compatible with OpenAI API.</p>
