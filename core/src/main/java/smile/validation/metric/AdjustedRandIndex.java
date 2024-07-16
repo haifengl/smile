@@ -43,7 +43,7 @@ public class AdjustedRandIndex implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static AdjustedRandIndex instance = new AdjustedRandIndex();
+    public static final AdjustedRandIndex instance = new AdjustedRandIndex();
 
     @Override
     public double score(int[] truth, int[] cluster) {

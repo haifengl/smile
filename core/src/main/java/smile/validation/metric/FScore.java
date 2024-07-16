@@ -39,11 +39,11 @@ public class FScore implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** The F_1 score, the harmonic mean of precision and recall. */
-    public final static FScore F1 = new FScore(1.0, null);
+    public static final FScore F1 = new FScore(1.0, null);
     /** The F_2 score, which weighs recall higher than precision. */
-    public final static FScore F2 = new FScore(2.0, null);
+    public static final FScore F2 = new FScore(2.0, null);
     /** The F_0.5 score, which weighs recall lower than precision. */
-    public final static FScore FHalf = new FScore(0.5, null);
+    public static final FScore FHalf = new FScore(0.5, null);
 
     /**
      * A positive value such that F-score measures the effectiveness of

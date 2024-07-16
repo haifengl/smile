@@ -43,22 +43,22 @@ package smile.math.random;
  */
 public class MersenneTwister implements RandomNumberGenerator {
     /** Mask: Most significant 17 bits */
-    private final static int UPPER_MASK = 0x80000000;
+    private static final int UPPER_MASK = 0x80000000;
     /** Mask: Least significant 15 bits */
-    private final static int LOWER_MASK = 0x7fffffff;
+    private static final int LOWER_MASK = 0x7fffffff;
     /** Size of the bytes pool. */
-    private final static int N = 624;
+    private static final int N = 624;
     /** Period second parameter. */
-    private final static int M = 397;
-    private final static int[] MAGIC = {0x0, 0x9908b0df};
+    private static final int M = 397;
+    private static final int[] MAGIC = {0x0, 0x9908b0df};
     /** The factors used in state initialization. */
-    private final static int MAGIC_FACTOR1 = 1812433253;
-    private final static int MAGIC_FACTOR2 = 1664525;
-    private final static int MAGIC_FACTOR3 = 1566083941;
-    private final static int MAGIC_MASK1 = 0x9d2c5680;
-    private final static int MAGIC_MASK2 = 0xefc60000;
+    private static final int MAGIC_FACTOR1 = 1812433253;
+    private static final int MAGIC_FACTOR2 = 1664525;
+    private static final int MAGIC_FACTOR3 = 1566083941;
+    private static final int MAGIC_MASK1 = 0x9d2c5680;
+    private static final int MAGIC_MASK2 = 0xefc60000;
     /** The default seed. */
-    private final static int MAGIC_SEED = 19650218;
+    private static final int MAGIC_SEED = 19650218;
     /** Internal state */
     private final int[] mt = new int[N];
     /** Current index in the internal state. */

@@ -28,7 +28,7 @@ public class MAD implements RegressionMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MAD instance = new MAD();
+    public static final MAD instance = new MAD();
 
     @Override
     public double score(double[] truth, double[] prediction) {

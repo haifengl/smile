@@ -30,7 +30,7 @@ public class MSE implements RegressionMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MSE instance = new MSE();
+    public static final MSE instance = new MSE();
 
     @Override
     public double score(double[] truth, double[] prediction) {

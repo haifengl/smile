@@ -33,7 +33,7 @@ public class MatthewsCorrelation implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MatthewsCorrelation instance = new MatthewsCorrelation();
+    public static final MatthewsCorrelation instance = new MatthewsCorrelation();
 
     @Override
     public double score(int[] truth, int[] prediction) {

@@ -47,13 +47,13 @@ public class AdjustedMutualInformation implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
-    public final static AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);
+    public static final AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);
     /** Default instance with min normalization. */
-    public final static AdjustedMutualInformation MIN = new AdjustedMutualInformation(Method.MIN);
+    public static final AdjustedMutualInformation MIN = new AdjustedMutualInformation(Method.MIN);
     /** Default instance with sum normalization. */
-    public final static AdjustedMutualInformation SUM = new AdjustedMutualInformation(Method.SUM);
+    public static final AdjustedMutualInformation SUM = new AdjustedMutualInformation(Method.SUM);
     /** Default instance with sqrt normalization. */
-    public final static AdjustedMutualInformation SQRT = new AdjustedMutualInformation(Method.SQRT);
+    public static final AdjustedMutualInformation SQRT = new AdjustedMutualInformation(Method.SQRT);
 
     /** The normalization method. */
     private final Method method;

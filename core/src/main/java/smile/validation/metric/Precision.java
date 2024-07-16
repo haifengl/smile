@@ -33,7 +33,7 @@ public class Precision implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Precision instance = new Precision();
+    public static final Precision instance = new Precision();
     /** The aggregating strategy for multi-classes. */
     private final Averaging strategy;
 

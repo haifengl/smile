@@ -31,7 +31,7 @@ public class Recall implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Recall instance = new Recall();
+    public static final Recall instance = new Recall();
     /** The aggregating strategy for multi-classes. */
     private final Averaging strategy;
 

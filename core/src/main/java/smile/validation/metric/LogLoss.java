@@ -34,7 +34,7 @@ public class LogLoss implements ProbabilisticClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static LogLoss instance = new LogLoss();
+    public static final LogLoss instance = new LogLoss();
 
     @Override
     public double score(int[] truth, double[] probability) {
