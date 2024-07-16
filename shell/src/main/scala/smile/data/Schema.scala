@@ -24,70 +24,64 @@ final class StructTypeOps(schema: StructType) {
   def json(value: JsValue): Option[Tuple] = {
     value match {
       case JsArray(elements) =>
-        if (elements.length < schema.length)
-          return None
+        if (elements.length < schema.length) return None
 
-        val row = new Array[AnyRef](schema.length)
-        for (i <- 0 until schema.length) {
-          try {
+        try {
+          val row = new Array[AnyRef](schema.length)
+          for (i <- 0 until schema.length) {
             row(i) = schema.field(i).valueOf(elements(i).compactPrint)
-          } catch {
-            case _ : Throwable => return None
           }
+          Some(Tuple.of(row, schema))
+        } catch {
+          case _: Throwable => None
         }
-        Some(Tuple.of(row, schema))
 
       case JsObject(fields) =>
-        val row = new Array[AnyRef](schema.length)
-        for (i <- 0 until schema.length) {
-          val value = fields.get(schema.field(i).name)
-          if (value.isDefined) {
-              try {
+        try {
+          val row = new Array[AnyRef](schema.length)
+          for (i <- 0 until schema.length) {
+            val value = fields.get(schema.field(i).name)
+            if (value.isDefined) {
                 row(i) = schema.field(i).valueOf(value.get.compactPrint)
-              } catch {
-                case _ : Throwable => return None
-              }
+            }
           }
+          Some(Tuple.of(row, schema))
+        } catch {
+          case _: Throwable => None
         }
-        Some(Tuple.of(row, schema))
 
       case _ => None
     }
   }
 
   def csv(line: List[String]): Option[Tuple] = {
-    if (line.length < schema.length)
-      return None
+    if (line.length < schema.length) return None
 
-    val row = new Array[AnyRef](schema.length)
-    for (i <- 0 until schema.length) {
-      try {
+    try {
+      val row = new Array[AnyRef](schema.length)
+      for (i <- 0 until schema.length) {
         row(i) = schema.field(i).valueOf(line(i))
-      } catch {
-        case _ : Throwable => return None
       }
+      Some(Tuple.of(row, schema))
+    } catch {
+      case _: Throwable => None
     }
-
-    Some(Tuple.of(row, schema))
   }
 
   def csv(line: Map[String, String]): Option[Tuple] = {
-    if (line.size < schema.length)
-      return None
+    if (line.size < schema.length) return None
 
-    val row = new Array[AnyRef](schema.length)
-    for (i <- 0 until schema.length) {
-      val field = schema.field(i)
-      val value = line.get(field.name)
-      if (value.isEmpty) return None
-
-      try {
+    try {
+      val row = new Array[AnyRef](schema.length)
+      for (i <- 0 until schema.length) {
+        val field = schema.field(i)
+        val value = line.get(field.name)
+        if (value.isEmpty) throw new RuntimeException("Missing field: " + field.name)
         row(i) = field.valueOf(value.get)
-      } catch {
-        case _ : Throwable => return None
       }
+      Some(Tuple.of(row, schema))
+    } catch {
+      case _: Throwable => None
     }
-
-    Some(Tuple.of(row, schema))
   }
 }
