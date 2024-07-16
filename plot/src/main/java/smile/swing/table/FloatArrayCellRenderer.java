@@ -17,6 +17,7 @@
 
 package smile.swing.table;
 
+import java.util.Arrays;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
@@ -35,22 +36,7 @@ public class FloatArrayCellRenderer extends DefaultTableCellRenderer {
     
     @Override
     public void setValue(Object value) {
-        if (value == null) {
-            setText("[]");
-            return;
-        }
-        
-        float[] data = (float[]) value;
-        
-        StringBuilder builder = new StringBuilder();
-        if (data.length > 0) {
-            builder.append("[").append(data[0]);
-        }
-        
-        for (int i = 1; i < data.length; i++) {
-            builder.append(", ").append(data[i]);
-        }
-        builder.append("]");
-        setText(builder.toString());
+        String text = value == null ? "[]" : Arrays.toString((float[]) value);
+        setText(text);
     }
 }
