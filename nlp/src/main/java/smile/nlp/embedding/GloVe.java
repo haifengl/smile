@@ -78,7 +78,7 @@ public class GloVe {
                 }
             }
 
-            return new Word2Vec(words.toArray(new String[n]), pivot);
+            return new Word2Vec(words.toArray(new String[0]), pivot);
         }
     }
 }
