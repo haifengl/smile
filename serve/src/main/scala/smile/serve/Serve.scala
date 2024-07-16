@@ -119,12 +119,12 @@ object Serve {
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[?]): Unit = {
     import system.executionContext
 
-    val interface = conf.getString("akka.http.server.interface")
+    val addr = conf.getString("akka.http.server.interface")
     val port = conf.getInt("akka.http.server.port")
-    val futureBinding = Http().newServerAt(interface, port).bind(routes)
-    futureBinding.onComplete {
+    val bindingFuture = Http().newServerAt(addr, port).bind(routes)
+    bindingFuture.onComplete {
       case Success(_) =>
-        system.log.info("SmileServe service online at http://{}:{}/", interface, port)
+        system.log.info("SmileServe service online at http://{}:{}/", addr, port)
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()

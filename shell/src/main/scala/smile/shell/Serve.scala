@@ -17,7 +17,7 @@
 
 package smile.shell
 
-import scala.io.StdIn
+import scala.util.{Failure, Success}
 import scopt.OParser
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
@@ -152,12 +152,13 @@ object Serve extends LazyLogging {
     val addr = conf.getString("akka.http.server.interface")
     val port = conf.getInt("akka.http.server.port")
     val bindingFuture = Http().newServerAt(addr, port).bind(route)
-
-    println(s"Smile online at http://$addr:$port/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    bindingFuture.onComplete {
+      case Success(_) =>
+        system.log.info("Smile online at http://{}:{}/v1/infer", addr, port)
+      case Failure(ex) =>
+        system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
+        system.terminate()
+    }
   }
 
   def processJSON[T](schema: StructType, stream: Source[JsValue, Any])
