@@ -17,7 +17,7 @@
 package smile.serve.chat
 
 import java.util.concurrent.SubmissionPublisher
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import spray.json.JsObject
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.actor.typed.scaladsl.AskPattern._
@@ -48,8 +48,8 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
             generator ! Generator.ChatStream(request, publisher)
             complete(source)
           } else {
-            val result = generator.askWithStatus(ref => Generator.Chat(request, ref))
-            complete(result)
+            val completion: Future[CompletionResponse] = generator.askWithStatus(ref => Generator.Chat(request, ref))
+            complete(completion)
           }
         }
       }
@@ -60,7 +60,8 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
           concat(
             get {
               parameters("limit".as[Int].withDefault(100), "cursor".?) { (limit, cursor) =>
-                complete(dao.getThreads(Math.min(500, limit), cursor.map(_.toLong)))
+                val threads = dao.getThreads(Math.min(500, limit), cursor.map(_.toLong))
+                complete(threads.map(ListThreadResponse(_)))
               }
             },
             post {
@@ -82,7 +83,8 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
                 pathEnd {
                   get {
                     parameters("limit".as[Int].withDefault(100), "cursor".?) { (limit, cursor) =>
-                      complete(dao.getMessages(threadId, Math.min(500, limit), cursor.map(_.toLong)))
+                      val messages = dao.getMessages(threadId, Math.min(500, limit), cursor.map(_.toLong))
+                      complete(messages.map(ListMessageResponse(_)))
                     }
                   }
                 },
