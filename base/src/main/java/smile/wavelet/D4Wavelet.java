@@ -43,7 +43,7 @@ public class D4Wavelet extends Wavelet {
      * Constructor.
      */
     public D4Wavelet() {
-        super(new double[]{0.4829629131445341, 0.8365163037378079, 0.2241438680420134, -0.1294095225512604});
+        super(new double[]{C0, C1, C2, C3});
     }
 
     @Override
