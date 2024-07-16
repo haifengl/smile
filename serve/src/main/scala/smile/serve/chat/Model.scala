@@ -71,6 +71,12 @@ object CompletionResponse {
   }
 }
 
+final case class ListThreadResponse(data: Seq[Thread],
+                                    `object`: String = "list")
+
+final case class ListMessageResponse(data: Seq[ThreadMessage],
+                                     `object`: String = "list")
+
 // collect json format instances into a support trait:
 object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val instantJsonFormat: JsonFormat[Instant] = new JsonFormat[Instant] {
@@ -135,7 +141,9 @@ object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val threadFormat: RootJsonFormat[Thread] = jsonFormat2(Thread.apply)
   implicit val threadMessageFormat: RootJsonFormat[ThreadMessage] = jsonFormat6(ThreadMessage.apply)
+  implicit val listThreadResponseFormat: RootJsonFormat[ListThreadResponse] = jsonFormat2(ListThreadResponse.apply)
+  implicit val listMessageResponseFormat: RootJsonFormat[ListMessageResponse] = jsonFormat2(ListMessageResponse.apply)
   implicit val choiceFormat: RootJsonFormat[CompletionChoice] = jsonFormat4(CompletionChoice.apply)
-  implicit val requestFormat: RootJsonFormat[CompletionRequest] = jsonFormat9(CompletionRequest.apply)
-  implicit val responseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
+  implicit val chatRequestFormat: RootJsonFormat[CompletionRequest] = jsonFormat9(CompletionRequest.apply)
+  implicit val chatResponseFormat: RootJsonFormat[CompletionResponse] = jsonFormat6(CompletionResponse.apply)
 }
