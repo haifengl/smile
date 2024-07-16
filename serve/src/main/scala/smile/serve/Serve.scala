@@ -122,6 +122,7 @@ object Serve {
     val addr = conf.getString("akka.http.server.interface")
     val port = conf.getInt("akka.http.server.port")
     val bindingFuture = Http().newServerAt(addr, port).bind(routes)
+      .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     bindingFuture.onComplete {
       case Success(_) =>
         system.log.info("SmileServe service online at http://{}:{}/", addr, port)
