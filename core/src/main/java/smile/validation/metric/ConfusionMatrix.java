@@ -84,7 +84,7 @@ public class ConfusionMatrix implements Serializable {
             for(int j = 0; j < matrix.length; j++){
                 sb.append(String.format("%8d |", matrix[i][j]));
             }
-            sb.append("\n");
+            sb.append('\n');
         }
 
         return sb.toString().trim();
