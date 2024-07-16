@@ -17,6 +17,7 @@
 
 package smile.shell
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import scopt.OParser
 import akka.actor.typed.ActorSystem
@@ -152,6 +153,7 @@ object Serve extends LazyLogging {
     val addr = conf.getString("akka.http.server.interface")
     val port = conf.getInt("akka.http.server.port")
     val bindingFuture = Http().newServerAt(addr, port).bind(route)
+      .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     bindingFuture.onComplete {
       case Success(_) =>
         system.log.info("Smile online at http://{}:{}/v1/infer", addr, port)
