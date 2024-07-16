@@ -57,7 +57,8 @@ public class LogLoss implements ProbabilisticClassificationMetric {
 
         for (int i = 0; i < n; i++) {
             if (truth[i] == 0) {
-                loss -= Math.log(1.0 - probability[i]);
+                // For the small values, log1p(x) is much closer to the true result than log(1+x)
+                loss -= Math.log1p(-probability[i]);
             } else if (truth[i] == 1) {
                 loss -= Math.log(probability[i]);
             } else {
