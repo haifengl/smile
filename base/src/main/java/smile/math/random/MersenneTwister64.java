@@ -44,11 +44,11 @@ public class MersenneTwister64 implements RandomNumberGenerator {
     /** X * MATRIX_A for X = {0, 1}. */
     private static final long[] MAGIC = {0L, 0xB5026F5AA96619E9L};
     /** The default seed. */
-    private final static long MAGIC_SEED = (180927757L << 32) | 976716835L;
+    private static final long MAGIC_SEED = (180927757L << 32) | 976716835L;
     /** The factors used in state initialization. */
-    private final static long MAGIC_FACTOR1 = 6364136223846793005L;
-    private final static long MAGIC_FACTOR2 = 3935559000370003845L;
-    private final static long MAGIC_FACTOR3 = 2862933555777941757L;
+    private static final long MAGIC_FACTOR1 = 6364136223846793005L;
+    private static final long MAGIC_FACTOR2 = 3935559000370003845L;
+    private static final long MAGIC_FACTOR3 = 2862933555777941757L;
     /** Internal state */
     private final long[] mt = new long[N];
     /** Current index in the bytes pool. */

@@ -32,7 +32,7 @@ public class R2 implements RegressionMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static R2 instance = new R2();
+    public static final R2 instance = new R2();
 
     @Override
     public double score(double[] truth, double[] prediction) {

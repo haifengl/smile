@@ -40,7 +40,7 @@ public class Sensitivity implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Sensitivity instance = new Sensitivity();
+    public static final Sensitivity instance = new Sensitivity();
 
     @Override
     public double score(int[] truth, int[] prediction) {

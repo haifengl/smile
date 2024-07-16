@@ -33,7 +33,7 @@ public class Fallout implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Fallout instance = new Fallout();
+    public static final Fallout instance = new Fallout();
 
     @Override
     public double score(int[] truth, int[] prediction) {

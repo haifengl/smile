@@ -28,7 +28,7 @@ public class Error implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Error instance = new Error();
+    public static final Error instance = new Error();
 
     @Override
     public double score(int[] truth, int[] prediction) {

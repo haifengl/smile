@@ -40,15 +40,15 @@ public class NormalizedMutualInformation implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
-    public final static NormalizedMutualInformation JOINT = new NormalizedMutualInformation(Method.JOINT);
+    public static final NormalizedMutualInformation JOINT = new NormalizedMutualInformation(Method.JOINT);
     /** Default instance with max normalization. */
-    public final static NormalizedMutualInformation MAX = new NormalizedMutualInformation(Method.MAX);
+    public static final NormalizedMutualInformation MAX = new NormalizedMutualInformation(Method.MAX);
     /** Default instance with min normalization. */
-    public final static NormalizedMutualInformation MIN = new NormalizedMutualInformation(Method.MIN);
+    public static final NormalizedMutualInformation MIN = new NormalizedMutualInformation(Method.MIN);
     /** Default instance with sum normalization. */
-    public final static NormalizedMutualInformation SUM = new NormalizedMutualInformation(Method.SUM);
+    public static final NormalizedMutualInformation SUM = new NormalizedMutualInformation(Method.SUM);
     /** Default instance with sqrt normalization. */
-    public final static NormalizedMutualInformation SQRT = new NormalizedMutualInformation(Method.SQRT);
+    public static final NormalizedMutualInformation SQRT = new NormalizedMutualInformation(Method.SQRT);
 
     /** The normalization method. */
     private final Method method;

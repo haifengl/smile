@@ -29,7 +29,7 @@ public class Accuracy implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Accuracy instance = new Accuracy();
+    public static final Accuracy instance = new Accuracy();
 
     @Override
     public double score(int[] truth, int[] prediction) {

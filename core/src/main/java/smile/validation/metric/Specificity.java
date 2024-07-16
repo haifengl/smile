@@ -39,7 +39,7 @@ public class Specificity implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static Specificity instance = new Specificity();
+    public static final Specificity instance = new Specificity();
 
     @Override
     public double score(int[] truth, int[] prediction) {

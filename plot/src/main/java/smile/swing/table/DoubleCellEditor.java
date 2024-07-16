@@ -43,7 +43,7 @@ import javax.swing.text.NumberFormatter;
 @SuppressWarnings("serial")
 public class DoubleCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleCellEditor.class);
-    private final static DoubleCellEditor instance = new DoubleCellEditor();
+    private static final DoubleCellEditor instance = new DoubleCellEditor();
 
     final JFormattedTextField textField;
     final NumberFormat doubleFormat;

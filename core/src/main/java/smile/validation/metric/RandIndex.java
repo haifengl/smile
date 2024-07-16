@@ -41,7 +41,7 @@ public class RandIndex implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static RandIndex instance = new RandIndex();
+    public static final RandIndex instance = new RandIndex();
 
     @Override
     public double score(int[] truth, int[] cluster) {

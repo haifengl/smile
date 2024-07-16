@@ -45,7 +45,7 @@ public class AUC implements ProbabilisticClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static AUC instance = new AUC();
+    public static final AUC instance = new AUC();
 
     @Override
     public double score(int[] truth, double[] probability) {

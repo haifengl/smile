@@ -35,7 +35,7 @@ public class MutualInformation implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MutualInformation instance = new MutualInformation();
+    public static final MutualInformation instance = new MutualInformation();
 
     @Override
     public double score(int[] truth, int[] cluster) {

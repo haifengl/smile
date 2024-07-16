@@ -32,7 +32,7 @@ public class FDR implements ClassificationMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static FDR instance = new FDR();
+    public static final FDR instance = new FDR();
 
     @Override
     public double score(int[] truth, int[] prediction) {

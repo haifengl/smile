@@ -30,7 +30,7 @@ public class RMSE implements RegressionMetric {
     @Serial
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static RMSE instance = new RMSE();
+    public static final RMSE instance = new RMSE();
 
     @Override
     public double score(double[] truth, double[] prediction) {
