@@ -72,7 +72,7 @@ object CompletionResponse {
 }
 
 // collect json format instances into a support trait:
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val instantJsonFormat: JsonFormat[Instant] = new JsonFormat[Instant] {
     override def write(ts: Instant): JsValue = JsString(ts.toString)
 

@@ -27,9 +27,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
+import smile.serve.chat.JsonSupport._
 
 class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
-                (implicit val system: ActorSystem[_], implicit val timeout: Timeout) extends JsonSupport {
+                (implicit val system: ActorSystem[_], val timeout: Timeout) {
   private implicit val ec: ExecutionContext = system.executionContext
   private val log = system.log
 
