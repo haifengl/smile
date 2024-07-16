@@ -71,13 +71,8 @@ public class MultiProbeHash extends Hash {
         for (int i = 0; i < k; i++) {
             double hi = (h[i] + b[i]) / w;
 
-            if (hi < umin[i]) {
-                umin[i] = hi;
-            }
-
-            if (hi > umax[i]) {
-                umax[i] = hi;
-            }
+            umin[i] = Math.min(umin[i], hi);
+            umax[i] = Math.max(umax[i], hi);
 
             g += c[i] * (long) Math.floor(hi);
         }
