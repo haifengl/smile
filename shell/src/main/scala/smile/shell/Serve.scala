@@ -129,8 +129,8 @@ object Serve extends LazyLogging {
     // Source rendering support trait
     implicit val jsonStreamingSupport = EntityStreamingSupport.json()
 
-    val route =
-      path("smile" / "stream") {
+    val route = path("v1" / "infer") {
+      post {
         parameters("format".?) { case format =>
           format.getOrElse("json") match {
             case "json" =>
@@ -146,6 +146,7 @@ object Serve extends LazyLogging {
           }
         }
       }
+    }
 
     val conf = ConfigFactory.load()
     val addr = conf.getString("akka.http.server.interface")
