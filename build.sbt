@@ -93,9 +93,9 @@ lazy val javaSettings = commonSettings ++ Seq(
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.14",
-    "org.slf4j" % "slf4j-simple" % "2.0.14" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "5.10.3" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.16",
+    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "5.11.0" % Test,
     "net.aichler"       % "jupiter-interface"    % "0.11.1" % Test
   )
 )
@@ -121,7 +121,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.14" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
     "org.specs2" %% "specs2-core" % "4.20.8" % Test
   ),
 )
@@ -129,7 +129,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
 lazy val javaCppSettings = Seq(
   libraryDependencies ++= Seq(
     "org.bytedeco" % "javacpp"   % "1.5.11-SNAPSHOT"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.27-1.5.11-SNAPSHOT" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.28-1.5.11-SNAPSHOT" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
     "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11-SNAPSHOT"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
 )
