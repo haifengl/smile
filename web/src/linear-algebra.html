@@ -348,7 +348,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; a + b
+    smile&gt; a + b // returns a lazy expression of a + b
     res27: smile.math.MatrixAddMatrix =
         1.4102    0.0000    1.4102
         0.1052    0.0000    0.1052
@@ -359,12 +359,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> var d = Matrix.zeros(3, 3)
-    d ==> 3 x 3
-      0.0000    0.0000    0.0000
-      0.0000     ... 000    0.0000    0.0000
-
-    smile> a.add(b, d) // result saved in d, a.add(b) update a directly
+    smile> a.add(b) // a = a + b
     $44 ==> 3 x 3
       1.4102    0.0000    1.4102
       0.1052    0.0000    0.1052
@@ -383,7 +378,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; a * b
+    smile&gt; a * b // returns a lazy expression of a * b
     res28: smile.math.MatrixMulMatrix =
         0.4969   -0.0051    0.4969
        -0.0980   -0.7929   -0.0980
@@ -394,7 +389,7 @@ title: Smile - Linear Algebra
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> a.mul(b, d)
+    smile> a.mul(b) // a *= b
     $45 ==> 3 x 3
       0.4969   -0.0051    0.4969
      -0.0980   -0.7929   -0.0980
@@ -435,7 +430,7 @@ title: Smile - Linear Algebra
         </div>
     </div>
 
-    <p>The method <code>DenseMatrix.transpose</code> returns the transpose of matrix,
+    <p>The method <code>Matrix.transpose</code> returns the transpose of matrix,
         which executes immediately. However, the method <code>t</code> is preferred
         on <code>MatrixExpression</code> as it is lazy.</p>
 
@@ -566,7 +561,7 @@ title: Smile - Linear Algebra
     res14: Array[Double] = Array(2.9290414582113184, -0.9356509345036078, 2.131964578605774)
 
     smile&gt; inv(a)
-    res19: smile.math.matrix.DenseMatrix =
+    res19: smile.math.matrix.Matrix =
       0.7220   -0.2649   -0.6392
       0.0712   -0.8904    0.4495
       0.6882    0.3700    0.6241
