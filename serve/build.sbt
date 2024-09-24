@@ -47,7 +47,7 @@ libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.1",
   "org.xerial"         % "sqlite-jdbc" % "3.46.1.0",
-  "ch.qos.logback"     %  "logback-classic" % "1.5.7"
+  "ch.qos.logback"     %  "logback-classic" % "1.5.8"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)

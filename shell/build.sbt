@@ -65,7 +65,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "4.1.0",
-  "org.scala-lang" % "scala-compiler" % "2.13.14",
+  "org.scala-lang" % "scala-compiler" % "2.13.15",
   "org.slf4j" % "slf4j-simple" % "2.0.16",
   "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "8.0.0"
 )
