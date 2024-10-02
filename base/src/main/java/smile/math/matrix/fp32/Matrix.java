@@ -1387,7 +1387,9 @@ public class Matrix extends IMatrix {
 
         for (int i = 0; i < m; i++) {
             float mu = x[i] / n;
-            x[i] = (float) Math.sqrt(x2[i] / n - mu * mu);
+            // safeguard of negative variance due to floating errors
+            float variance = Math.max(x2[i] / n - mu * mu, 0.0f);
+            x[i] = (float) Math.sqrt(variance);
         }
 
         return x;
@@ -1439,7 +1441,9 @@ public class Matrix extends IMatrix {
                 sumsq += a * a;
             }
             mu /= m;
-            x[j] = (float) Math.sqrt(sumsq / m - mu * mu);
+            // safeguard of negative variance due to floating errors
+            float variance = Math.max(sumsq / m - mu * mu, 0.0f);
+            x[j] = (float) Math.sqrt(variance);
         }
 
         return x;

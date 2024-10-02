@@ -1396,7 +1396,9 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
         for (int i = 0; i < m; i++) {
             double mu = x[i] / n;
-            x[i] = Math.sqrt(x2[i] / n - mu * mu);
+            // safeguard of negative variance due to floating errors
+            double variance = Math.max(x2[i] / n - mu * mu, 0.0);
+            x[i] = Math.sqrt(variance);
         }
 
         return x;
@@ -1451,7 +1453,9 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                 sumsq += a * a;
             }
             mu /= m;
-            x[j] = Math.sqrt(sumsq / m - mu * mu);
+            // safeguard of negative variance due to floating errors
+            double variance = Math.max(sumsq / m - mu * mu, 0.0);
+            x[j] = Math.sqrt(variance);
         }
 
         return x;
