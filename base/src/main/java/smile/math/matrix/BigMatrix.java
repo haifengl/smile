@@ -1812,7 +1812,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK POTRF error code: {}", info);
-            throw new ArithmeticException("LAPACK GETRF error code: " + info);
+            throw new ArithmeticException("LAPACK POTRF error code: " + info);
         }
 
         return new Cholesky(lu);
