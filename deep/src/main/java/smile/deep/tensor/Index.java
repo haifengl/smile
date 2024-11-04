@@ -53,7 +53,7 @@ public class Index {
      * The None is used to insert a singleton dimension ("unsqueeze"
      * a dimension).
      */
-    public static final Index None = new Index(new TensorIndex(torch.None()));
+    public static final Index None = new Index(new TensorIndex());
 
     /**
      * Returns the index of a single element in a dimension.
