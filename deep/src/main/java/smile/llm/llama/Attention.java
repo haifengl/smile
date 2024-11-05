@@ -18,12 +18,10 @@ package smile.llm.llama;
 
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LinearLayer;
-import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
-import smile.util.AutoScope;
 
 /**
  * Multi-head attention. It caches key and value information, applying rotary
