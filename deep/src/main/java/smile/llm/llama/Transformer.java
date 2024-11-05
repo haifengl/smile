@@ -82,7 +82,8 @@ public class Transformer extends LayerBlock {
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 params.dim() / params.numHeads(),
                 params.maxSeqLen() * 2,
-                params.ropeTheta()).to(device);
+                params.ropeTheta(),
+                params.scaledRope()).to(device);
 
         module.register_module("layers", moduleList);
         add("tok_embeddings", tokEmbeddings);
