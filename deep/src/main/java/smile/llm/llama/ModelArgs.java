@@ -46,6 +46,7 @@ public record ModelArgs(int dim,
                         Double ffnDimMultiplier,
                         double normEps,
                         double ropeTheta,
+                        boolean scaledRope,
                         int maxBatchSize,
                         int maxSeqLen) {
 
@@ -53,7 +54,7 @@ public record ModelArgs(int dim,
      * Constructor with default parameter values.
      */
     public ModelArgs() {
-        this(4096, 32, 32, null, -1, 356, null, 1E-5, 500000, 32, 2048);
+        this(4096, 32, 32, null, -1, 356, null, 1E-5, 500000, false, 32, 2048);
     }
 
     /**
@@ -76,6 +77,7 @@ public record ModelArgs(int dim,
                 node.get("ffn_dim_multiplier").asDouble(),
                 node.get("norm_eps").asDouble(),
                 node.get("rope_theta").asDouble(),
+                node.get("use_scaled_rope").asBoolean(),
                 maxBatchSize,
                 maxSeqLen
         );

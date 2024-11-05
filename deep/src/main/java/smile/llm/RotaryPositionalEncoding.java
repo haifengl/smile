@@ -17,7 +17,6 @@
 package smile.llm;
 
 import java.util.Arrays;
-
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.util.AutoScope;
@@ -69,7 +68,7 @@ public interface RotaryPositionalEncoding {
      * @return the precomputed frequency tensor for complex exponentials.
      */
     static Tensor computeFreqCis(int dim, int end) {
-        return  computeFreqCis(dim, end, 10000.0);
+        return  computeFreqCis(dim, end, 10000.0, false);
     }
 
     /**
@@ -77,13 +76,15 @@ public interface RotaryPositionalEncoding {
      * @param dim the dimension of the frequency tensor.
      * @param end the end index for precomputing frequencies.
      * @param theta the scaling factor for frequency computation.
+     * @param scaling if true, scale the frequency tensor.
      * @return the precomputed frequency tensor for complex exponentials.
      */
-    static Tensor computeFreqCis(int dim, int end, double theta) {
+    static Tensor computeFreqCis(int dim, int end, double theta, boolean scaling) {
         // Explicitly convert tensor to float32 as the default is bf16.
         // On the other hand, view_as_complex cannot apply on bf16.
         try (Tensor t = Tensor.arange(0, end, 1).to(ScalarType.Float32);
-             Tensor freqs = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
+             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
+             Tensor freqs = scaling ?  scale(f) : f;
              Tensor tfreqs = t.outer(freqs)) {
             var cis = Tensor.polar(freqs.newOnes(), tfreqs);  // complex64
             return cis;
@@ -106,5 +107,36 @@ public interface RotaryPositionalEncoding {
         shape[1] = xs[1];
         shape[dim-1] = xs[dim-1];
         return cis.view(shape);
+    }
+
+    /**
+     * Adapts RoPE to longer input lengths.
+     * @param freqs the frequency tensor.
+     * @return the scaled frequency tensor.
+     */
+    static Tensor scale(Tensor freqs) {
+        // Values obtained from grid search
+        int scale_factor = 8;
+        int low_freq_factor = 1;
+        int high_freq_factor = 4;
+        int old_context_len = 8192;  // original llama3 length
+
+        int low_freq_wavelen = old_context_len / low_freq_factor;
+        int high_freq_wavelen = old_context_len / high_freq_factor;
+        int n = (int) freqs.shape()[0];
+        for (int i = 0; i < n; i++) {
+            float freq = freqs.getFloat(i);
+            float wavelen = (float) (2 * Math.PI / freq);
+            if (wavelen < high_freq_wavelen) {
+                // freqs.put_(freq, i);
+            } else if (wavelen > low_freq_wavelen) {
+                freqs.put_(freq / scale_factor, i);
+            } else {
+                assert low_freq_wavelen != high_freq_wavelen;
+                float smooth = (old_context_len / wavelen - low_freq_factor) / (high_freq_factor - low_freq_factor);
+                freqs.put_((1 - smooth) * freq / scale_factor + smooth * freq, i);
+            }
+        }
+        return freqs;
     }
 }

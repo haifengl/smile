@@ -46,7 +46,7 @@ public class RotaryPositionalEncodingTest {
 
     @Test
     public void test() {
-        var cis = RotaryPositionalEncoding.computeFreqCis(128, 4096, 500000.0);
+        var cis = RotaryPositionalEncoding.computeFreqCis(128, 4096, 500000.0, false);
 
         long[] shape = { 4096, 64 };
         assertArrayEquals(shape, cis.shape());
@@ -64,5 +64,27 @@ public class RotaryPositionalEncodingTest {
 
         assertEquals(0.9999f, real.getFloat(4095, 63, 0), 1E-4);
         assertEquals(0.0101f, real.getFloat(4095, 63, 1), 1E-4);
+    }
+
+    @Test
+    public void testScaledRope() {
+        var cis = RotaryPositionalEncoding.computeFreqCis(128, 4096, 500000.0, true);
+
+        long[] shape = { 4096, 64 };
+        assertArrayEquals(shape, cis.shape());
+
+        var real = cis.viewAsReal();
+        // real has shape [4096, 64, 2]
+        assertEquals(1.0f, real.getFloat(0, 0, 0), 1E-4);
+        assertEquals(0.0f, real.getFloat(0, 0, 1), 1E-4);
+        assertEquals(1.0f, real.getFloat(0, 1, 0), 1E-4);
+        assertEquals(0.0f, real.getFloat(0, 1, 1), 1E-4);
+        assertEquals(0.5403f, real.getFloat(1, 0, 0), 1E-4);
+        assertEquals(0.8415f, real.getFloat(1, 0, 1), 1E-4);
+        assertEquals(0.6861f, real.getFloat(1, 1, 0), 1E-4);
+        assertEquals(0.7275f, real.getFloat(1, 1, 1), 1E-4);
+
+        assertEquals(0.9999f, real.getFloat(4095, 63, 0), 1E-4);
+        assertEquals(0.00126f, real.getFloat(4095, 63, 1), 1E-5);
     }
 }
