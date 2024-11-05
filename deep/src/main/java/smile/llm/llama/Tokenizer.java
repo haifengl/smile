@@ -90,18 +90,20 @@ public class Tokenizer extends Tiktoken {
                 "<|end_of_text|>",
                 "<|reserved_special_token_0|>",
                 "<|reserved_special_token_1|>",
-                "<|reserved_special_token_2|>",
-                "<|reserved_special_token_3|>",
+                "<|finetune_right_pad_id|>",
+                "<|step_id|>",
                 "<|start_header_id|>",
                 "<|end_header_id|>",
-                "<|reserved_special_token_4|>",
+                "<|eom_id|>",  // end of message
                 "<|eot_id|>",  // end of turn
+                "<|python_tag|>",
+                "<|image|>",
         };
 
         int base = specialTokens.length;
         specialTokens = Arrays.copyOf(specialTokens, numReservedSpecialTokens);
         for (int i = base; i < numReservedSpecialTokens; i++) {
-            specialTokens[i] = String.format("<|reserved_special_token_{%d}|>", i - base + 5);
+            specialTokens[i] = String.format("<|reserved_special_token_{%d}|>", i - base + 2);
         }
 
         return specialTokens;
