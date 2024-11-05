@@ -20,7 +20,6 @@ import org.bytedeco.pytorch.Module;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Tensor;
-import smile.util.AutoScope;
 
 /**
  * Feedforward layer in Transformer. It has two linear transformations and

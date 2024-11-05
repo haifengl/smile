@@ -19,7 +19,6 @@ package smile.llm.llama;
 import org.bytedeco.pytorch.Module;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Tensor;
-import smile.util.AutoScope;
 
 /**
  * A block in Transformer model. It consists of an attention mechanism

@@ -22,7 +22,6 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
-import org.bytedeco.pytorch.global.torch;
 
 /**
  * Positional encoding in original Transformer. Positional encoding injects

@@ -28,7 +28,6 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
-import smile.util.AutoScope;
 
 /**
  * The Transformer model. It consists of token embeddings, stacked
