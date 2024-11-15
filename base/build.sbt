@@ -8,7 +8,7 @@ libraryDependencies ++= {
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory-netty" % arrowV % Provided,
-    "org.apache.parquet" % "parquet-hadoop" % "1.14.3" % Provided exclude("org.slf4j", "slf4j-log4j12"),
+    "org.apache.parquet" % "parquet-hadoop" % "1.14.4" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.hadoop" % "hadoop-common" % "3.4.1" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "3.4.1" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "org.apache.avro" % "avro" % "1.12.0" % Provided exclude("org.slf4j", "slf4j-log4j12"),
