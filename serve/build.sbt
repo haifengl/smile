@@ -52,8 +52,8 @@ libraryDependencies ++= Seq(
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 val gpu = Seq(
-  "org.bytedeco"   % "pytorch" % "2.5.1-1.5.11-SNAPSHOT" classifier s"$os-x86_64-gpu",
-  "org.bytedeco"   % "cuda" % "12.6-9.5-1.5.11-SNAPSHOT" classifier s"$os-x86_64-redist"
+  "org.bytedeco" % "pytorch" % "2.5.1-1.5.11-SNAPSHOT" classifier s"$os-x86_64-gpu",
+  "org.bytedeco" % "cuda" % "12.6-9.5-1.5.11-SNAPSHOT" classifier s"$os-x86_64-redist"
 )
 
 libraryDependencies ++= (
