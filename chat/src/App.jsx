@@ -13,7 +13,7 @@ function App() {
 
   const bot = {
     id: 'meta/llama3',
-    name: 'Llama3',
+    name: 'Llama3.1',
     avatar: LlamaIcon,
   };
   

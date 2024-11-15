@@ -73,7 +73,7 @@ object Main {
       )
     }
 
-    val model = "./model/Llama-3-8B-Instruct"
+    val model = "./model/Llama3.1-8B-Instruct"
     OParser.parse(parser, args, ServeConfig(model, model + "/tokenizer.model"))
   }
 
