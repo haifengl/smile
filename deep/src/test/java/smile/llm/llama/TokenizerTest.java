@@ -49,7 +49,7 @@ public class TokenizerTest {
 
     @Test
     public void test() throws IOException {
-        var tokenizer = Tokenizer.of("model/Llama-3-8B-Instruct/tokenizer.model");
+        var tokenizer = Tokenizer.of("model/Llama3-8B-Instruct/tokenizer.model");
 
         tokenizer.allowSpecialTokens(true);
         String[] tokens = { "<|begin_of_text|>", "This", " is", " a", " test", " sentence", ".", "<|end_of_text|>" };
