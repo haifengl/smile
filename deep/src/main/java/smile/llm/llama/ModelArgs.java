@@ -77,7 +77,7 @@ public record ModelArgs(int dim,
                 node.get("ffn_dim_multiplier").asDouble(),
                 node.get("norm_eps").asDouble(),
                 node.get("rope_theta").asDouble(),
-                node.get("use_scaled_rope").asBoolean(),
+                node.has("use_scaled_rope") && node.get("use_scaled_rope").asBoolean(),
                 maxBatchSize,
                 maxSeqLen
         );
