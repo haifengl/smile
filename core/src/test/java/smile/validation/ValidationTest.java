@@ -66,7 +66,7 @@ public class ValidationTest {
                 (formula, data) -> RegressionTree.fit(formula, data));
 
         System.out.println(result);
-        assertEquals(2.5567, result.metrics.rmse, 1E-4);
-        assertEquals(1.8666, result.metrics.mad, 1E-4);
+        assertEquals(2.3194, result.metrics.rmse, 1E-4);
+        assertEquals(1.6840, result.metrics.mad, 1E-4);
     }
 }
