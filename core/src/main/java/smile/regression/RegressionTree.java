@@ -137,6 +137,8 @@ public class RegressionTree extends CART implements DataFrameRegression {
         double splitScore = 0.0;
         int splitTrueCount = 0;
         int splitFalseCount = 0;
+        int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "1"));
+        int step = bins > 10 ? Math.max(1, y.length / bins) : 1;
 
         Measure measure = schema.field(j).measure;
         if (measure instanceof NominalScale scale) {
@@ -200,7 +202,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
                 }
 
                 // If either side is empty, skip this value.
-                if (tc >= nodeSize && fc >= nodeSize) {
+                if (tc >= nodeSize && fc >= nodeSize && i % step == 0) {
                     double trueMean = trueSum / tc;
                     double falseMean = (sum - trueSum) / fc;
 

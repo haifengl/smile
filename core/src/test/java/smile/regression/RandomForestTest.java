@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class RandomForestTest {
     long[] seeds = {
             342317953, 521642753, 72070657, 577451521, 266953217, 179976193,
@@ -154,6 +155,13 @@ public class RandomForestTest {
     }
 
     @Test
+    public void test2DPlanesHist() {
+        System.setProperty("smile.regression_tree.bins", "200");
+        test("2dplanes - hist", Planes.formula, Planes.data, 4.3777);
+        System.setProperty("smile.regression_tree.bins", "1");
+    }
+
+    @Test
     public void testAbalone() {
         test("abalone", Abalone.formula, Abalone.train, 2.1889);
     }
@@ -166,6 +174,13 @@ public class RandomForestTest {
     @Test
     public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
+    }
+
+    @Test
+    public void testBank32nhHist() {
+        System.setProperty("smile.regression_tree.bins", "100");
+        test("bank32nh - hist", Bank32nh.formula, Bank32nh.data, 0.1018);
+        System.setProperty("smile.regression_tree.bins", "1");
     }
 
     @Test
