@@ -182,7 +182,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
             }
         } else {
             int[] orderj = order[j];
-            int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "1"));
+            int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "100"));
             int step = bins > 10 ? Math.max(1, y.length / bins) : 1;
             int k = 0;
             if ( step > 1) {
@@ -323,7 +323,8 @@ public class RegressionTree extends CART implements DataFrameRegression {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector<?, ?, ?> y = formula.y(data);
-        RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
+        int mtry = x.ncol();
+        RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, mtry, null, null);
         tree.formula = formula;
         return tree;
     }
