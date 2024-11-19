@@ -84,6 +84,7 @@ public class RandomForestTest {
     
     @BeforeEach
     public void setUp() {
+        System.setProperty("smile.regression_tree.bins", "1");
     }
     
     @AfterEach
@@ -156,9 +157,8 @@ public class RandomForestTest {
 
     @Test
     public void test2DPlanesHist() {
-        System.setProperty("smile.regression_tree.bins", "200");
-        test("2dplanes - hist", Planes.formula, Planes.data, 4.3777);
-        System.setProperty("smile.regression_tree.bins", "1");
+        System.setProperty("smile.regression_tree.bins", "100");
+        test("2dplanes - hist", Planes.formula, Planes.data, 1.2999);
     }
 
     @Test
@@ -179,8 +179,7 @@ public class RandomForestTest {
     @Test
     public void testBank32nhHist() {
         System.setProperty("smile.regression_tree.bins", "100");
-        test("bank32nh - hist", Bank32nh.formula, Bank32nh.data, 0.1018);
-        System.setProperty("smile.regression_tree.bins", "1");
+        test("bank32nh - hist", Bank32nh.formula, Bank32nh.data, 0.0996);
     }
 
     @Test

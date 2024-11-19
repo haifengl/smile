@@ -137,8 +137,6 @@ public class RegressionTree extends CART implements DataFrameRegression {
         double splitScore = 0.0;
         int splitTrueCount = 0;
         int splitFalseCount = 0;
-        int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "1"));
-        int step = bins > 10 ? Math.max(1, y.length / bins) : 1;
 
         Measure measure = schema.field(j).measure;
         if (measure instanceof NominalScale scale) {
@@ -183,43 +181,50 @@ public class RegressionTree extends CART implements DataFrameRegression {
                 split = new NominalSplit(leaf, j, splitValue, splitScore, lo, hi, splitTrueCount, splitFalseCount, (int o) -> xj.getInt(o) == value);
             }
         } else {
-            double splitValue = 0.0;
-            int tc = 0;
-            double trueSum = 0.0;
             int[] orderj = order[j];
+            int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "1"));
+            int step = bins > 10 ? Math.max(1, y.length / bins) : 1;
+            int k = 0;
+            if ( step > 1) {
+                for (int i = 0; i < lo; i++) {
+                    k += samples[orderj[i]];
+                }
+            }
+            int checkpoint = k / step;
 
-            int first = orderj[lo];
-            double prevx = xj.getDouble(first);
+            double splitValue = 0.0;
+            double trueSum = 0.0;
+            double prevx = xj.getDouble(orderj[lo]);
+            int tc = 0;
 
             for (int i = lo; i < hi; i++) {
-                int fc = 0;
-
                 int o = orderj[i];
                 double xij = xj.getDouble(o);
 
                 if (!MathEx.isZero(xij - prevx, 1E-7)) {
-                    fc = node.size() - tc;
-                }
+                    int fc = node.size() - tc;
+                    // If either side is empty, skip this value.
+                    if (tc >= nodeSize && fc >= nodeSize && k / step > checkpoint) {
+                        checkpoint = k / step;
+                        double trueMean = trueSum / tc;
+                        double falseMean = (sum - trueSum) / fc;
 
-                // If either side is empty, skip this value.
-                if (tc >= nodeSize && fc >= nodeSize && i % step == 0) {
-                    double trueMean = trueSum / tc;
-                    double falseMean = (sum - trueSum) / fc;
+                        double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
 
-                    double gain = (tc * trueMean * trueMean + fc * falseMean * falseMean) - nodeMeanSquared;
-
-                    // new best split
-                    if (gain > splitScore) {
-                        splitValue = (xij + prevx) / 2;
-                        splitTrueCount = tc;
-                        splitFalseCount = fc;
-                        splitScore = gain;
+                        // new best split
+                        if (gain > splitScore) {
+                            splitValue = (xij + prevx) / 2;
+                            splitTrueCount = tc;
+                            splitFalseCount = fc;
+                            splitScore = gain;
+                        }
                     }
                 }
 
                 prevx = xij;
                 trueSum += y[o] * samples[o];
                 tc += samples[o];
+                k += samples[o];
             }
 
             if (splitScore > 0.0) {
