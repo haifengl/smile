@@ -159,7 +159,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
         int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
         int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
         int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(data.size() / 5)));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(Math.max(2, data.size() / 5))));
         int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
         double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
