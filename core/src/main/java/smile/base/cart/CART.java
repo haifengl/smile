@@ -164,7 +164,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         int p = x.ncol();
 
         if (mtry < 1 || mtry > p) {
-            logger.debug("Invalid mtry. Use all features.");
+            logger.warn("Invalid mtry. Use all features.");
             this.mtry = p;
         }
 
