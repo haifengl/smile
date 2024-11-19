@@ -47,7 +47,7 @@ public class ObjectType implements DataType {
     /** Object Class. */
     private final Class<?> clazz;
     /** toString lambda. */
-    private final Function<Object, String> format;
+    private final transient Function<Object, String> format;
 
     /**
      * Constructor.
