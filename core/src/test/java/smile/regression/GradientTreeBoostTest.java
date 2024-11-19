@@ -51,6 +51,7 @@ public class GradientTreeBoostTest {
     
     @BeforeEach
     public void setUp() {
+        System.setProperty("smile.regression_tree.bins", "100");
     }
     
     @AfterEach
@@ -146,22 +147,22 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testAbaloneLS() {
-        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2159);
+        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.1994);
     }
 
     @Test
     public void testAbaloneLAD() {
-        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2958);
+        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2933);
     }
 
     @Test
     public void testAbaloneQuantile() {
-        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2958);
+        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2933);
     }
 
     @Test
     public void testAbaloneHuber() {
-        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2228);
+        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2184);
     }
 
     @Test
@@ -191,92 +192,92 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testBank32nhLAD() {
-        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
+        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0911);
     }
 
     @Test
     public void testBank32nhQuantile() {
-        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
+        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0911);
     }
 
     @Test
     public void testBank32nhHuber() {
-        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0853);
+        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0854);
     }
 
     @Test
     public void testAutoMPGLS() {
-        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0904);
+        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0801);
     }
 
     @Test
     public void testAutoMPGLAD() {
-        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1365);
     }
 
     @Test
     public void testAutoMPGQuantile() {
-        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1365);
     }
 
     @Test
     public void testAutoMPGHuber() {
-        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1155);
+        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0694);
     }
 
     @Test
     public void testCalHousingLS() {
-        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60581.4183);
+        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60870.2308);
     }
 
     @Test
     public void testCalHousingLAD() {
-        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66813.0877);
     }
 
     @Test
     public void testCalHousingQuantile() {
-        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66813.0877);
     }
 
     @Test
     public void testCalHousingHuber() {
-        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62090.2639);
+        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62348.1547);
     }
 
     @Test
     public void testPuma8nhLS() {
-        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2482);
+        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2372);
     }
 
     @Test
     public void testPuma8nhLAD() {
-        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2502);
     }
 
     @Test
     public void testPuma8nhQuantile() {
-        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2502);
     }
 
     @Test
     public void testPuma8nhHuber() {
-        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2429);
+        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2405);
     }
 
     @Test
     public void testKin8nmLS() {
-        test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
+        test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1803);
     }
 
     @Test
     public void testKin8nmLAD() {
-        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
+        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1822);
     }
 
     @Test
     public void testKin8nmQuantile() {
-        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
+        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1822);
     }
 
     @Test
@@ -287,6 +288,8 @@ public class GradientTreeBoostTest {
     @Test
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
+        System.setProperty("smile.regression_tree.bins", "1");
+
         GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
         double[] importance = model.importance();
         double[] shap = model.shap(BostonHousing.data);

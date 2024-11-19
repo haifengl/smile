@@ -84,7 +84,7 @@ public class RandomForestTest {
     
     @BeforeEach
     public void setUp() {
-        System.setProperty("smile.regression_tree.bins", "1");
+        System.setProperty("smile.regression_tree.bins", "100");
     }
     
     @AfterEach
@@ -152,18 +152,18 @@ public class RandomForestTest {
 
     @Test
     public void test2DPlanes() {
-        test("2dplanes", Planes.formula, Planes.data, 1.3581);
+        System.setProperty("smile.regression_tree.bins", "1");
+        test("2dplanes - exact", Planes.formula, Planes.data, 1.3581);
     }
 
     @Test
     public void test2DPlanesHist() {
-        System.setProperty("smile.regression_tree.bins", "100");
         test("2dplanes - hist", Planes.formula, Planes.data, 1.2999);
     }
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.formula, Abalone.train, 2.1889);
+        test("abalone", Abalone.formula, Abalone.train, 2.1931);
     }
 
     @Test
@@ -173,33 +173,34 @@ public class RandomForestTest {
 
     @Test
     public void testBank32nh() {
-        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
+        System.setProperty("smile.regression_tree.bins", "1");
+        test("bank32nh - exact", Bank32nh.formula, Bank32nh.data, 0.0978);
     }
 
     @Test
     public void testBank32nhHist() {
-        System.setProperty("smile.regression_tree.bins", "100");
         test("bank32nh - hist", Bank32nh.formula, Bank32nh.data, 0.0996);
     }
 
     @Test
     public void testAutoMPG() {
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5588);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5532);
     }
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.formula, CalHousing.data, 58605.0710);
+        System.setProperty("smile.regression_tree.bins", "300");
+        test("cal_housing", CalHousing.formula, CalHousing.data, 59481.6595);
     }
 
     @Test
     public void testPuma8nh() {
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3145);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3895);
     }
 
     @Test
     public void testKin8nm() {
-        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
+        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1774);
     }
 
     @Test
@@ -212,7 +213,7 @@ public class RandomForestTest {
 
         double rmse = RMSE.of(Abalone.testy, model.predict(Abalone.test));
         System.out.format("RMSE = %.4f%n", rmse);
-        assertEquals(2.0858, rmse, 1E-4);
+        assertEquals(2.0734, rmse, 1E-4);
 
         RandomForest trimmed = model.trim(40);
         assertEquals(50, model.size());
@@ -223,7 +224,7 @@ public class RandomForestTest {
         assertTrue(rmse1 > rmse2);
 
         rmse = RMSE.of(Abalone.testy, trimmed.predict(Abalone.test));
-        assertEquals(2.0897, rmse, 1E-4);
+        assertEquals(2.0748, rmse, 1E-4);
     }
 
     @Test
@@ -239,14 +240,15 @@ public class RandomForestTest {
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);
-        assertEquals(2.0858, rmse1, 1E-4);
-        assertEquals(2.0633, rmse2, 1E-4);
-        assertEquals(2.0693, rmse,  1E-4);
+        assertEquals(2.0734, rmse1, 1E-4);
+        assertEquals(2.0759, rmse2, 1E-4);
+        assertEquals(2.0715, rmse,  1E-4);
     }
 
     @Test
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
+        System.setProperty("smile.regression_tree.bins", "1");
         RandomForest model = RandomForest.fit(BostonHousing.formula, BostonHousing.data, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         double[] importance = model.importance();
         double[] shap = model.shap(BostonHousing.data);

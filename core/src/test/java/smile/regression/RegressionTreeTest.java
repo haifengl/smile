@@ -49,6 +49,7 @@ public class RegressionTreeTest {
     
     @BeforeEach
     public void setUp() {
+        System.setProperty("smile.regression_tree.bins", "100");
     }
     
     @AfterEach
@@ -106,42 +107,43 @@ public class RegressionTreeTest {
 
     @Test
     public void test2DPlanes() {
-        test("2dplanes", Planes.formula, Planes.data, 1.1164);
+        test("2dplanes", Planes.formula, Planes.data, 1.0025);
     }
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.formula, Abalone.train, 2.5834);
+        test("abalone", Abalone.formula, Abalone.train, 2.3670);
     }
 
     @Test
     public void testAilerons() {
-        test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
+        test("ailerons", Ailerons.formula, Ailerons.data, 1.9538E-4);
     }
 
     @Test
     public void testBank32nh() {
-        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.1093);
+        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.09187);
     }
 
     @Test
     public void testAutoMPG() {
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8138);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.84619);
     }
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.formula, CalHousing.data, 59944.8076);
+        System.setProperty("smile.regression_tree.bins", "300");
+        test("cal_housing", CalHousing.formula, CalHousing.data, 60563.2112);
     }
 
     @Test
     public void testPuma8nh() {
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9117);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.2726);
     }
 
     @Test
     public void testKin8nm() {
-        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);
+        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1967);
     }
 
     @Test

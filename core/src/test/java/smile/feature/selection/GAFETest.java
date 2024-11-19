@@ -98,6 +98,6 @@ public class GAFETest {
             System.out.format("%.4f %s%n", -bits.fitness(), bits);
         }
 
-        assertEquals(2.3840, -result[result.length-1].fitness(), 1E-4);
+        assertEquals(2.2278, -result[result.length-1].fitness(), 1E-4);
     }
 }
