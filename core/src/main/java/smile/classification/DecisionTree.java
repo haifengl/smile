@@ -340,7 +340,8 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         BaseVector<?, ?, ?> y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
-        DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
+        int mtry = x.ncol();
+        DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, mtry, null, null);
         tree.formula = formula;
         tree.classes = codec.classes;
         return tree;
