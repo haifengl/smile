@@ -95,7 +95,7 @@ public class Recall implements Metric {
 
         Tensor prediction = output.dim() == 2 ?
                 output.argmax(1, false) : // get the index of the max log-probability
-                output.where(output.lt(threshold), 0, 1);  // get class label by thresholding
+                Tensor.where(output.lt(threshold), 0, 1);  // get class label by thresholding
 
         Tensor tp;
         Tensor one = target.newOnes(target.size(0));

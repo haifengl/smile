@@ -61,7 +61,7 @@ public class Accuracy implements Metric {
     public void update(Tensor output, Tensor target) {
         Tensor prediction = output.dim() == 2 ?
                 output.argmax(1, false) : // get the index of the max log-probability
-                output.where(output.lt(threshold), 0, 1);  // get class label by thresholding
+                Tensor.where(output.lt(threshold), 0, 1);  // get class label by thresholding
         correct += prediction.eq(target).sum().intValue();
         size += target.size(0);
     }

@@ -62,7 +62,7 @@ public class Tiktoken implements Tokenizer {
      * The default Charset.decode() method doesn't throw exceptions.
      * Constructs a new decoder for tryDecode method.
      */
-    private CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
+    private final CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
 
     /**
      * Constructor.
