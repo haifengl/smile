@@ -67,11 +67,10 @@ public class Bigram {
             return true;
         }
 
-        if (obj == null || !(obj instanceof Bigram)) {
+        if (obj == null || !(obj instanceof Bigram other)) {
             return false;
         }
 
-        final Bigram other = (Bigram) obj;
         return w1.equals(other.w1) && w2.equals(other.w2);
     }
 }
