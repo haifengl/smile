@@ -354,11 +354,6 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
-    public void set(int i, int j, float x) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         int k = trans == Transpose.NO_TRANSPOSE ? m : n;
         float[] ax = y;
