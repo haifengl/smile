@@ -58,11 +58,10 @@ public class NGram {
             return true;
         }
 
-        if (obj == null || !(obj instanceof NGram)) {
+        if (obj == null || !(obj instanceof NGram other)) {
             return false;
         }
 
-        final NGram other = (NGram) obj;
         return Arrays.equals(words, other.words);
     }
 }
