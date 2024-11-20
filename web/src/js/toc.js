@@ -61,7 +61,7 @@
         if (header === 0 && toc.find(':last').length !== 0 && !toc.find(':last').is('ul')) {
             toc.find('li:last').append('<ul></ul>');
         }
-    };
+    }
 
     /*
      * Updates headers numeration.
@@ -74,14 +74,14 @@
                 headers[i] = 0;
             }
         });
-    };
+    }
 
     /*
      * Generate an anchor id from a string by replacing unwanted characters.
      */
     function generateId(text) {
         return text.replace(/[ <#\/\\?&]/g, '_');
-    };
+    }
 
     /*
      * Prepends the numeration to a heading.
@@ -96,7 +96,7 @@
         });
 
         return numeration + ' ' + text;
-    };
+    }
 
     /*
      * Appends a new node to the TOC.
@@ -116,7 +116,7 @@
         } else {
             parent.append('<li><a href="#' + id + '" class="scroll">' + text + '</a></li>');
         }
-    };
+    }
 
     $.fn.toc.defaults = {
         exclude: 'h1, h5, h6',
