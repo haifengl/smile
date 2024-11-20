@@ -110,9 +110,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                     }
                     builder.append("]");
 
-                } else if (value instanceof int[]) {
-                    int[] data = (int[]) value;
-
+                } else if (value instanceof int[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }
@@ -121,9 +119,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                         builder.append(", ").append(data[i]);
                     }
                     builder.append("]");
-                } else if (value instanceof long[]) {
-                    long[] data = (long[]) value;
-
+                } else if (value instanceof long[] data) {
                     if (data.length > 0) {
                         builder.append("[").append(data[0]);
                     }

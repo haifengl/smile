@@ -120,7 +120,7 @@ public class FontChooser extends JComponent {
     }
     private String[] fontStyleNames = null;
     private String[] fontFamilyNames = null;
-    private String[] fontSizeStrings;
+    private final String[] fontSizeStrings;
     private JTextField fontFamilyTextField = null;
     private JTextField fontStyleTextField = null;
     private JTextField fontSizeTextField = null;
@@ -271,8 +271,7 @@ public class FontChooser extends JComponent {
      * @see #setSelectedFontFamily
      **/
     public String getSelectedFontFamily() {
-        String fontName = (String) getFontFamilyList().getSelectedValue();
-        return fontName;
+        return getFontFamilyList().getSelectedValue();
     }
 
     /**
@@ -334,7 +333,7 @@ public class FontChooser extends JComponent {
     public FontChooser setSelectedFontFamily(String name) {
         String[] names = getFontFamilies();
         for (int i = 0; i < names.length; i++) {
-            if (names[i].toLowerCase().equals(name.toLowerCase())) {
+            if (names[i].equalsIgnoreCase(name)) {
                 getFontFamilyList().setSelectedIndex(i);
                 break;
             }
@@ -543,7 +542,7 @@ public class FontChooser extends JComponent {
                 }
                 targetList.ensureIndexIsVisible(index);
 
-                String matchedName = targetList.getModel().getElementAt(index).toString();
+                String matchedName = targetList.getModel().getElementAt(index);
                 if (newValue.equalsIgnoreCase(matchedName)) {
                     if (index != targetList.getSelectedIndex()) {
                         SwingUtilities.invokeLater(new ListSelector(index));
