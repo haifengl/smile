@@ -17,8 +17,6 @@
 
 package smile.nlp;
 
-import java.util.Objects;
-
 /**
  * Bigrams or digrams are groups of two words, and are very commonly used
  * as the basis for simple statistical analysis of text. They are a special

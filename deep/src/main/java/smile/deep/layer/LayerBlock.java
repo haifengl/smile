@@ -20,7 +20,6 @@ import org.bytedeco.pytorch.DeviceOptional;
 import org.bytedeco.pytorch.InputArchive;
 import org.bytedeco.pytorch.Module;
 import org.bytedeco.pytorch.OutputArchive;
-import smile.deep.Model;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 
