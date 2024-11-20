@@ -307,7 +307,7 @@ public class Model implements Function<Tensor, Tensor> {
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
         for (SampleBatch batch : dataset) {
-            Tensor data = device == null ? batch.data() : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));;
+            Tensor data   = device == null ? batch.data()   : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));
             Tensor target = device == null ? batch.target() : batch.target().to(device);
 
             if (transform != null) {

@@ -106,9 +106,9 @@ public interface Dataset extends Iterable<SampleBatch>, AutoCloseable {
      */
     static Dataset mnist(String path, boolean trainMode, int batch) {
         return new Dataset() {
-            int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
-            MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
-            MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
+            final int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
+            final MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
+            final MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
                     dataset, new RandomSampler(dataset.size().get()),
                     new DataLoaderOptions(batch));
 

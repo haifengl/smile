@@ -307,7 +307,7 @@ public class Llama {
                 // cut to max gen len
                 int start = prompts[i].length;
                 var completion = Arrays.stream(longArray)
-                        .skip(i * totalLen + start)
+                        .skip((long) i * totalLen + start)
                         .mapToInt(x -> (int) x)
                         .limit(prompts[i].length + maxGenLen - start)
                         .toArray();
