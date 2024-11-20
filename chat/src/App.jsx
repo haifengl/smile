@@ -114,7 +114,7 @@ function App() {
         ...requestOptions,
         async onopen(response) {
           if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
-            return; // everything's good
+            // everything's good
           } else {
             throw new Error(response.statusText);
           }

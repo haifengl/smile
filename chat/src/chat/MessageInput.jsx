@@ -62,7 +62,6 @@ export default function MessageInput({
                                 if (e.key === 'Enter') {
                                     e.preventDefault();  // Prevents adding a new line
                                     handleSubmit();
-                                    return;
                                 }
                             }}
                         />
