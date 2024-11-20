@@ -297,7 +297,7 @@ public class PlotPanel extends JPanel {
                         }
                     }
 
-                    if (tooltip.length() > 0) {
+                    if (!tooltip.isEmpty()) {
                         setToolTipText(String.format("<html>%s</html>", tooltip));
                     }
                 }
@@ -682,12 +682,6 @@ public class PlotPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             JDialog dialog = createPropertyDialog();
-            dialog.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                }
-            });
-
             dialog.setVisible(true);
             dialog.dispose();
         }
