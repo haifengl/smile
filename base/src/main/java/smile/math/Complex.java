@@ -87,8 +87,7 @@ public class Complex implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Complex) {
-            Complex c = (Complex) o;
+        if (o instanceof Complex c) {
             return re == c.re && im == c.im;
         }
         

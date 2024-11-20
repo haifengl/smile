@@ -134,8 +134,7 @@ public class Formula implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Formula)) return false;
-        Formula f = (Formula) o;
+        if (!(o instanceof Formula f)) return false;
         if (predictors.length != f.predictors.length) return false;
         if (!String.valueOf(response).equals(String.valueOf(f.response))) return false;
         for (int i = 0; i < predictors.length; i++) {

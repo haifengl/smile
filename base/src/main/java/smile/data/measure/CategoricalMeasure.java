@@ -232,8 +232,7 @@ public abstract class CategoricalMeasure implements Measure {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof CategoricalMeasure) {
-            CategoricalMeasure measure = (CategoricalMeasure) o;
+        if (o instanceof CategoricalMeasure measure) {
             return Arrays.equals(levels, measure.levels) && Arrays.equals(values, measure.values);
         }
 

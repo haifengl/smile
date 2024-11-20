@@ -113,8 +113,7 @@ public interface Tuple extends Serializable {
             StructField field = schema.field(column);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
 
                 if (encoder == CategoricalEncoder.DUMMY) {
                     n += cat.size() - 1;
@@ -138,8 +137,7 @@ public interface Tuple extends Serializable {
             StructField field = schema.field(i);
 
             Measure measure = field.measure;
-            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
-                CategoricalMeasure cat = (CategoricalMeasure) measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     int k = cat.factor(getInt(i));
                     if (k > 0) array[j + k - 1] = 1.0;
