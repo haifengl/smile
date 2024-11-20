@@ -77,8 +77,7 @@ public class NominalScale extends CategoricalMeasure {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof NominalScale) {
-            NominalScale scale = (NominalScale) o;
+        if (o instanceof NominalScale scale) {
             return Arrays.equals(levels, scale.levels);
         }
 

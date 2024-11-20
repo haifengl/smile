@@ -615,13 +615,11 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         LocalDate[] a = new LocalDate[count];
         ZoneOffset zone = OffsetDateTime.now().getOffset();
-        if (fieldVector instanceof DateDayVector) {
-            DateDayVector vector = (DateDayVector) fieldVector;
+        if (fieldVector instanceof DateDayVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
             }
-        } else if (fieldVector instanceof DateMilliVector) {
-            DateMilliVector vector = (DateMilliVector) fieldVector;
+        } else if (fieldVector instanceof DateMilliVector vector) {
             for (int i = 0; i < count; i++) {
                 a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone).toLocalDate();
             }
@@ -685,16 +683,14 @@ public class Arrow {
     private smile.data.vector.BaseVector readByteArrayField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         byte[][] a = new byte[count][];
-        if (fieldVector instanceof VarBinaryVector) {
-            VarBinaryVector vector = (VarBinaryVector) fieldVector;
+        if (fieldVector instanceof VarBinaryVector vector) {
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     a[i] = null;
                 else
                     a[i] = vector.get(i);
             }
-        } else if (fieldVector instanceof FixedSizeBinaryVector){
-            FixedSizeBinaryVector vector = (FixedSizeBinaryVector) fieldVector;
+        } else if (fieldVector instanceof FixedSizeBinaryVector vector){
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     a[i] = null;

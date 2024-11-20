@@ -109,8 +109,7 @@ public class StructField implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof StructField) {
-            StructField f = (StructField) o;
+        if (o instanceof StructField f) {
             return name.equals(f.name) && type.equals(f.type) && Objects.equals(measure, f.measure);
         }
 

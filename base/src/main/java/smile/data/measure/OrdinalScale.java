@@ -80,8 +80,7 @@ public class OrdinalScale extends CategoricalMeasure {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof OrdinalScale) {
-            OrdinalScale scale = (OrdinalScale) o;
+        if (o instanceof OrdinalScale scale) {
             return Arrays.equals(levels, scale.levels);
         }
 

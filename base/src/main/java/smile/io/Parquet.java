@@ -199,8 +199,7 @@ public class Parquet {
                                 a[j] = LocalDate.ofEpochDay(g.getInteger(i, j));
                             o[i] = a;
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-                        LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimeLogicalTypeAnnotation) logicalType;
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType) {
                         if (timeType.getUnit() != LogicalTypeAnnotation.TimeUnit.MILLIS) {
                             throw new IllegalStateException("Invalid TimeUnit for INT32: " + timeType.getUnit());
                         }
@@ -239,8 +238,7 @@ public class Parquet {
                                 a[j] = BigDecimal.valueOf(g.getLong(i, j), scale);
                             o[i] = a;
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-                        LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimeLogicalTypeAnnotation) logicalType;
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeType) {
                         switch (timeType.getUnit()) {
                             case MILLIS:
                                 throw new IllegalStateException("Invalid TimeUnit for INT64: " + timeType.getUnit());
@@ -264,8 +262,7 @@ public class Parquet {
                                     o[i] = a;
                                 }
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-                        LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timeType = (LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) logicalType;
+                    } else if (logicalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timeType) {
                         ZoneId zone = timeType.isAdjustedToUTC() ? ZoneOffset.UTC : ZoneId.systemDefault();
                         switch (timeType.getUnit()) {
                             case MILLIS:
