@@ -17,12 +17,8 @@
 package smile.deep.layer;
 
 import org.bytedeco.pytorch.Module;
-import smile.deep.layer.Layer;
-import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import static smile.deep.tensor.Index.*;
-import org.bytedeco.pytorch.global.torch;
 
 /**
  * Root Mean Square Layer Normalization. RMSNorm regularizes the summed inputs
