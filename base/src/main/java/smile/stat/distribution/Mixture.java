@@ -48,29 +48,10 @@ public class Mixture implements Distribution {
     /**
      * A component in the mixture distribution is defined by a distribution
      * and its weight in the mixture.
+     * @param priori the priori probability of component.
+     * @param distribution the distribution of component.
      */
-    public static class Component implements Serializable {
-        @Serial
-        private static final long serialVersionUID = 2L;
-        /**
-         * The priori probability of component.
-         */
-        public final double priori;
-
-        /**
-         * The distribution of component.
-         */
-        public final Distribution distribution;
-
-        /**
-         * Constructor.
-         * @param priori the priori probability of component.
-         * @param distribution the distribution of component.
-         */
-        public Component(double priori, Distribution distribution) {
-            this.priori = priori;
-            this.distribution = distribution;
-        }
+    public record Component(double priori, Distribution distribution) implements Serializable {
     }
 
     /** The components of finite mixture model. */
