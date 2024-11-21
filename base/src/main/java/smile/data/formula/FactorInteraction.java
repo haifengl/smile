@@ -80,7 +80,7 @@ public class FactorInteraction implements Term {
     public List<Feature> bind(StructType schema) {
         List<StructField> fields = factors.stream()
                 .map(schema::field)
-                .collect(Collectors.toList());
+                .toList();
 
         for (StructField field : fields) {
             if (!(field.measure instanceof CategoricalMeasure)) {
@@ -96,38 +96,46 @@ public class FactorInteraction implements Term {
                     .flatMap(l -> Arrays.stream(cat.levels()).map(level -> l.isEmpty() ? level : l + ":" + level))
                     .collect(Collectors.toList());
         }
-        NominalScale measure = new NominalScale(levels);
 
-        Feature feature = new Feature() {
-            final StructField field = new StructField(
+        return Collections.singletonList(new InteractionFeature(levels));
+    }
+
+    /**
+     * An interaction feature.
+     */
+    private class InteractionFeature implements Feature {
+        final NominalScale measure ;
+        final StructField field;
+
+        InteractionFeature(List<String> levels) {
+            measure = new NominalScale(levels);
+            field = new StructField(
                     String.join(":", factors),
                     DataTypes.IntegerType,
                     measure
             );
+        }
 
-            @Override
-            public String toString() {
-                return field.name;
-            }
+        @Override
+        public String toString() {
+            return field.name;
+        }
 
-            @Override
-            public StructField field() {
-                return field;
-            }
+        @Override
+        public StructField field() {
+            return field;
+        }
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
-                return measure.valueOf(level).intValue();
-            }
+        @Override
+        public int applyAsInt(Tuple o) {
+            String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
+            return measure.valueOf(level).intValue();
+        }
 
-            @Override
-            public Object apply(Tuple o) {
-                String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
-                return measure.valueOf(level);
-            }
-        };
-
-        return Collections.singletonList(feature);
+        @Override
+        public Object apply(Tuple o) {
+            String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
+            return measure.valueOf(level);
+        }
     }
 }

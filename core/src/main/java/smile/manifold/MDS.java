@@ -138,27 +138,7 @@ public class MDS {
             throw new IllegalArgumentException("Invalid k = " + k);
         }
 
-        Matrix A = new Matrix(n, n);
-        Matrix B = new Matrix(n, n);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double x = -0.5 * MathEx.pow2(proximity[i][j]);
-                A.set(i, j, x);
-                A.set(j, i, x);
-            }
-        }
-
-        double[] mean = A.rowMeans();
-        double mu = MathEx.mean(mean);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                double x = A.get(i, j) - mean[i] - mean[j] + mu;
-                B.set(i, j, x);
-                B.set(j, i, x);
-            }
-        }
+        Matrix B = getGram(proximity);
 
         if (positive) {
             Matrix Z = new Matrix(2 * n, 2 * n);
@@ -172,8 +152,8 @@ public class MDS {
                 Z.set(n + i, i, -1);
             }
 
-            mean = MathEx.rowMeans(proximity);
-            mu = MathEx.mean(mean);
+            double[] mean = MathEx.rowMeans(proximity);
+            double mu = MathEx.mean(mean);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(n + i, n + j, 2 * (proximity[i][j] - mean[i] - mean[j] + mu));
@@ -218,5 +198,37 @@ public class MDS {
         MathEx.unitize1(proportion);
 
         return new MDS(eigenvalues, proportion, coordinates);
+    }
+
+    /**
+     * Returns the Gram matrix X' * X.
+     * @param proximity the non-negative proximity matrix of dissimilarities.
+     * @return the Gram matrix.
+     */
+    private static Matrix getGram(double[][] proximity) {
+        int n = proximity[0].length;
+        Matrix A = new Matrix(n, n);
+        Matrix B = new Matrix(n, n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                double x = -0.5 * MathEx.pow2(proximity[i][j]);
+                A.set(i, j, x);
+                A.set(j, i, x);
+            }
+        }
+
+        double[] mean = A.rowMeans();
+        double mu = MathEx.mean(mean);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j <= i; j++) {
+                double x = A.get(i, j) - mean[i] - mean[j] + mu;
+                B.set(i, j, x);
+                B.set(j, i, x);
+            }
+        }
+
+        return B;
     }
 }
