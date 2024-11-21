@@ -73,10 +73,10 @@ public class Isoline extends Shape {
         double angle = 0.0;
         double horizontalReference = 0.0;
         double verticalReference = 0.0;
-        double[] coord = points.get(0);
+        double[] coord = points.getFirst();
 
         if (points.size() > 1) {
-            double[] x1 = points.get(0);
+            double[] x1 = points.getFirst();
             for (int i = 1; i < points.size(); i++) {
                 double[] x2 = points.get(i);
                 g.drawLine(x1, x2);
@@ -107,7 +107,7 @@ public class Isoline extends Shape {
                 }
             }
         } else {
-            double[] x1 = points.get(0);
+            double[] x1 = points.getFirst();
             g.drawPoint('@', x1);
             coord = x1;
             horizontalReference = 0.0;

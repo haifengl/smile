@@ -1721,7 +1721,7 @@ public interface DataFrame extends Iterable<Tuple> {
                             throw new IllegalArgumentException("Empty list of tuples");
                         }
                         int nrow = container.size();
-                        int ncol = container.get(0).length();
+                        int ncol = container.getFirst().length();
                         Matrix m = new Matrix(nrow, ncol);
                         for (int i = 0; i < nrow; i++) {
                             for (int j = 0; j < ncol; j++) {

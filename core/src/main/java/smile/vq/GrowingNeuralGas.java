@@ -195,7 +195,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
         // is an integer multiple of lambda.
         if (t % lambda == 0) {
             // Determine the neuron with the maximum accumulated error.
-            Neuron q = neurons.get(0);
+            Neuron q = neurons.getFirst();
             for (Neuron neuron : neurons) {
                 if (neuron.counter > q.counter) {
                     q = neuron;
@@ -203,7 +203,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
             }
 
             // Find the neighbor of q with the largest error variable.
-            Neuron f = q.edges.get(0).neighbor;
+            Neuron f = q.edges.getFirst().neighbor;
             for (Edge edge : q.edges) {
                 if (edge.neighbor.counter > f.counter) {
                     f = edge.neighbor;
@@ -250,7 +250,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
     public double[] quantize(double[] x) {
         neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
 
-        Neuron bmu = neurons.get(0);
+        Neuron bmu = neurons.getFirst();
         for (Neuron neuron : neurons) {
             if (neuron.distance < bmu.distance) {
                 bmu = neuron;

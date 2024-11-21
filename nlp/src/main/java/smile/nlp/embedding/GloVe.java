@@ -69,7 +69,7 @@ public class GloVe {
             });
 
             int n = vectors.size();
-            int d = vectors.get(0).length;
+            int d = vectors.getFirst().length;
             float[][] pivot = new float[d][n];
             for (int i = 0; i < n; i++) {
                 float[] vector = vectors.get(i);

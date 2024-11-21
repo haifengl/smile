@@ -260,9 +260,9 @@ public class Arrow {
             if (frames.isEmpty()) {
                 throw new IllegalStateException("No record batch");
             } else if (frames.size() == 1) {
-                return frames.get(0);
+                return frames.getFirst();
             } else {
-                DataFrame df = frames.get(0);
+                DataFrame df = frames.getFirst();
                 return df.union(frames.subList(1, frames.size()).toArray(new DataFrame[frames.size() - 1]));
             }
         }
@@ -1314,7 +1314,7 @@ public class Arrow {
                     throw new IllegalStateException(String.format("List type has %d child fields.", child.size()));
                 }
 
-                return new StructField(name, DataTypes.array(toSmileField(child.get(0)).type));
+                return new StructField(name, DataTypes.array(toSmileField(child.getFirst()).type));
 
             case Struct:
                 List<StructField> children = field.getChildren().stream().map(this::toSmileField).collect(Collectors.toList());

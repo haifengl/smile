@@ -319,7 +319,7 @@ public class Hyperparameters {
 
         // Extract each value of first parameter and add each to a new Properties.
         ArrayList<ArrayList<Pair>> combinations = new ArrayList<>();
-        for(Pair pair: values(lists.get(0))) {
+        for(Pair pair: values(lists.getFirst())) {
             ArrayList<Pair> newList = new ArrayList<>();
             newList.add(pair);
             combinations.add(newList);
