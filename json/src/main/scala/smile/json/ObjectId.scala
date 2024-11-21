@@ -111,7 +111,7 @@ object ObjectId {
     } else None
 
     mac.getOrElse {
-      val threadId = Thread.currentThread.getId.toInt
+      val threadId = Thread.currentThread.threadId().toInt
       Array(
         (threadId & 0xFF).toByte,
         (threadId >> 8 & 0xFF).toByte,
@@ -188,7 +188,7 @@ object ObjectId {
       id(6) = machineId(2)
 
       // 2 bytes of the pid or thread id. Thread id in our case. Low endian
-      val threadId = Thread.currentThread.getId.toInt
+      val threadId = Thread.currentThread.threadId().toInt
       id(7) = (threadId & 0xFF).toByte
       id(8) = (threadId >> 8 & 0xFF).toByte
 
