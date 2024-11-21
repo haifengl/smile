@@ -70,32 +70,22 @@ public class Hyperparameters {
     /** The set of parameters. */
     private final HashMap<String, Object> parameters = new HashMap<>();
 
-    static class Pair {
-        final String name;
-        final String value;
-
-        Pair(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
+    record KeyValue(String key, String value) {
     }
 
-    static class IntRange {
-        int start;
-        int end;
-        int step;
-
-        IntRange(int start, int end) {
-            this(start, end, Math.max(1, (end-start)/10));
-        }
-
-        IntRange(int start, int end, int step) {
+    record IntRange(int start, int end, int step) {
+        public IntRange {
             if (start >= end) {
                 throw new IllegalArgumentException(String.format("start = %d, end = %d", start, end));
             }
-            this.start = start;
-            this.end = end;
-            this.step = step;
+
+            if (step <= 0) {
+                throw new IllegalArgumentException("step = " + step);
+            }
+        }
+
+        public IntRange(int start, int end) {
+            this(start, end, Math.max(1, (end-start)/10));
         }
 
         int[] toArray() {
@@ -109,22 +99,19 @@ public class Hyperparameters {
         }
     }
 
-    static class DoubleRange {
-        double start;
-        double end;
-        double step;
-
-        DoubleRange(double start, double end) {
-            this(start, end, (end-start)/10);
-        }
-
-        DoubleRange(double start, double end, double step) {
+    record DoubleRange(double start, double end, double step) {
+        public DoubleRange {
             if (start >= end) {
                 throw new IllegalArgumentException(String.format("start = %f, end = %f", start, end));
             }
-            this.start = start;
-            this.end = end;
-            this.step = step;
+
+            if (step <= 0.0) {
+                throw new IllegalArgumentException("step = " + step);
+            }
+        }
+
+        public DoubleRange(double start, double end) {
+            this(start, end, (end-start)/10);
         }
 
         double[] toArray() {
@@ -318,19 +305,19 @@ public class Hyperparameters {
         ArrayList<Map.Entry<String, Object>> lists = new ArrayList<>(parameters.entrySet());
 
         // Extract each value of first parameter and add each to a new Properties.
-        ArrayList<ArrayList<Pair>> combinations = new ArrayList<>();
-        for(Pair pair: values(lists.getFirst())) {
-            ArrayList<Pair> newList = new ArrayList<>();
+        ArrayList<ArrayList<KeyValue>> combinations = new ArrayList<>();
+        for(var pair : values(lists.getFirst())) {
+            ArrayList<KeyValue> newList = new ArrayList<>();
             newList.add(pair);
             combinations.add(newList);
         }
 
         for(int i = 1; i < lists.size(); i++) {
-            ArrayList<Pair> nextList = values(lists.get(i));
-            ArrayList<ArrayList<Pair>> newCombinations = new ArrayList<>();
-            for(ArrayList<Pair> first: combinations) {
-                for(Pair second: nextList) {
-                    ArrayList<Pair> newList = new ArrayList<>(first);
+            ArrayList<KeyValue> nextList = values(lists.get(i));
+            ArrayList<ArrayList<KeyValue>> newCombinations = new ArrayList<>();
+            for(var first : combinations) {
+                for(var second: nextList) {
+                    ArrayList<KeyValue> newList = new ArrayList<>(first);
                     newList.add(second);
                     newCombinations.add(newList);
                 }
@@ -340,40 +327,40 @@ public class Hyperparameters {
 
         return combinations.stream().map(list -> {
             Properties params = new Properties();
-            list.forEach(p -> params.setProperty(p.name, p.value));
+            list.forEach(p -> params.setProperty(p.key(), p.value()));
             return params;
         });
     }
 
     /** Returns the list of parameter values. */
-    private ArrayList<Pair> values(Map.Entry<String, Object> parameter) {
-        ArrayList<Pair> list = new ArrayList<>();
+    private ArrayList<KeyValue> values(Map.Entry<String, Object> parameter) {
+        ArrayList<KeyValue> list = new ArrayList<>();
         String name = parameter.getKey();
         Object values = parameter.getValue();
         switch (values) {
             case int[] array -> {
                 for (int value : array) {
-                    list.add(new Pair(name, String.valueOf(value)));
+                    list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
             case double[] array -> {
                 for (double value : array) {
-                    list.add(new Pair(name, String.valueOf(value)));
+                    list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
             case String[] array -> {
                 for (String value : array) {
-                    list.add(new Pair(name, String.valueOf(value)));
+                    list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
             case IntRange range -> {
                 for (int value : range.toArray()) {
-                    list.add(new Pair(name, String.valueOf(value)));
+                    list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
             case DoubleRange range -> {
                 for (double value : range.toArray()) {
-                    list.add(new Pair(name, String.valueOf(value)));
+                    list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
             case null, default -> throw new IllegalStateException("Unknown parameter type: " + values);
