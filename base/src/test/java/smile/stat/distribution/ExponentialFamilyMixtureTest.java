@@ -77,8 +77,8 @@ public class ExponentialFamilyMixtureTest {
                 );
         System.out.println(mixture);
 
-        assertEquals(0.30, mixture.components[0].priori, 1E-2);
-        assertEquals(0.13, mixture.components[1].priori, 1E-2);
-        assertEquals(0.57, mixture.components[2].priori, 1E-2);
+        assertEquals(0.30, mixture.components[0].priori(), 1E-2);
+        assertEquals(0.13, mixture.components[1].priori(), 1E-2);
+        assertEquals(0.57, mixture.components[2].priori(), 1E-2);
     }
 }

@@ -51,7 +51,7 @@ public class GaussianMixture extends ExponentialFamilyMixture {
         super(L, n, components);
 
         for (Component component : components) {
-            if (!(component.distribution instanceof GaussianDistribution)) {
+            if (!(component.distribution() instanceof GaussianDistribution)) {
                 throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
             }
         }
@@ -118,17 +118,17 @@ public class GaussianMixture extends ExponentialFamilyMixture {
         double maxSigma = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
             Component c = components[i];
-            if (c.distribution.sd() > maxSigma) {
-                maxSigma = c.distribution.sd();
+            if (c.distribution().sd() > maxSigma) {
+                maxSigma = c.distribution().sd();
                 index = i;
             }
         }
 
         // Splits the component
         Component component = components[index];
-        double priori = component.priori / 2;
-        double delta = component.distribution.sd();
-        double mu = component.distribution.mean();
+        double priori = component.priori() / 2;
+        double delta = component.distribution().sd();
+        double mu = component.distribution().mean();
         
         Component[] mixture = new Component[k+1];
         System.arraycopy(components, 0, mixture, 0, k);

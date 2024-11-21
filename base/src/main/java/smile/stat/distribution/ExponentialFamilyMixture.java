@@ -59,7 +59,7 @@ public class ExponentialFamilyMixture extends Mixture {
         super(components);
 
         for (Component component : components) {
-            if (!(component.distribution instanceof ExponentialFamily)) {
+            if (!(component.distribution() instanceof ExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of exponential family.");
             }
         }
@@ -117,7 +117,7 @@ public class ExponentialFamilyMixture extends Mixture {
                 Component c = components[i];
 
                 for (int j = 0; j < n; j++) {
-                    posteriori[i][j] = c.priori * c.distribution.p(x[j]);
+                    posteriori[i][j] = c.priori() * c.distribution().p(x[j]);
                 }
             }
 
@@ -147,19 +147,19 @@ public class ExponentialFamilyMixture extends Mixture {
             // Maximization step
             double Z = 0.0;
             for (int i = 0; i < k; i++) {
-                components[i] = ((ExponentialFamily) components[i].distribution).M(x, posteriori[i]);
-                Z += components[i].priori;
+                components[i] = ((ExponentialFamily) components[i].distribution()).M(x, posteriori[i]);
+                Z += components[i].priori();
             }
 
             for (int i = 0; i < k; i++) {
-                components[i] = new Component(components[i].priori / Z, components[i].distribution);
+                components[i] = new Component(components[i].priori() / Z, components[i].distribution());
             }
 
             double loglikelihood = 0.0;
             for (double xi : x) {
                 double p = 0.0;
                 for (Component c : components) {
-                    p += c.priori * c.distribution.p(xi);
+                    p += c.priori() * c.distribution().p(xi);
                 }
                 if (p > 0) loglikelihood += Math.log(p);
             }
