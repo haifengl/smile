@@ -29,6 +29,7 @@ import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.text.ParseException;
+import java.util.Arrays;
 
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
@@ -89,50 +90,13 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                     return "";
                 }
                 
-                StringBuilder builder = new StringBuilder();
-
-                if (value instanceof byte[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-                } else if (value instanceof short[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-
-                } else if (value instanceof int[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-                } else if (value instanceof long[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-                } else {
-                    throw new ParseException("Unsupport data type: " + value.getClass(), 0);
-                }
-
-                return builder.toString();
+                return switch (value) {
+                    case byte[] data -> Arrays.toString(data);
+                    case short[] data -> Arrays.toString(data);
+                    case int[] data -> Arrays.toString(data);
+                    case long[] data -> Arrays.toString(data);
+                    default -> throw new ParseException("Unsupported data type: " + value.getClass(), 0);
+                };
             }
         };
                 
