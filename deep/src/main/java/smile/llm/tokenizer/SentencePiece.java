@@ -27,7 +27,7 @@ import ai.djl.sentencepiece.*;
  * @author Haifeng Li
  */
 public class SentencePiece implements Tokenizer {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tokenizer.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SentencePiece.class);
     /** SentencePiece tokenizer. */
     private final SpProcessor tokenizer;
     /** Unknown token (<unk>), default id 0. */

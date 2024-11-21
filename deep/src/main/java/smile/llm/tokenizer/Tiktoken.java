@@ -36,7 +36,7 @@ import smile.util.IntPair;
  * @author Haifeng Li
  */
 public class Tiktoken implements Tokenizer {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tokenizer.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tiktoken.class);
     private static final int MAX = Integer.MAX_VALUE;
 
     /** The regex pattern to split the input text into tokens. */
