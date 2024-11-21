@@ -52,7 +52,6 @@ public class AutoScope implements AutoCloseable {
     /**
      * Detaches resources from this scope.
      * @param resource the resources to be detached from this scope.
-     * @return this object.
      */
     public void remove(AutoCloseable resource) {
         this.resources.remove(resource);
