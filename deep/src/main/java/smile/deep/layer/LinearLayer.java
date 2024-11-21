@@ -27,7 +27,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class LinearLayer implements Layer {
-    private final int in;
     private final LinearImpl module;
 
     /**
@@ -46,7 +45,6 @@ public class LinearLayer implements Layer {
      * @param bias If false, the layer will not learn an additive bias.
      */
     public LinearLayer(int in, int out, boolean bias) {
-        this.in = in;
         var options = new LinearOptions(in, out);
         options.bias().put(bias);
         this.module = new LinearImpl(options);

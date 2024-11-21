@@ -47,7 +47,6 @@ public class DoubleCellEditor extends DefaultCellEditor {
 
     final JFormattedTextField textField;
     final NumberFormat doubleFormat;
-    private final Double minimum, maximum;
 
     /**
      * Constructor.
@@ -64,19 +63,17 @@ public class DoubleCellEditor extends DefaultCellEditor {
     public DoubleCellEditor(double min, double max) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
-        minimum = min;
-        maximum = max;
 
         // Set up the editor for the double cells.
         doubleFormat = NumberFormat.getNumberInstance();
         NumberFormatter doubleFormatter = new NumberFormatter(doubleFormat);
         doubleFormatter.setFormat(doubleFormat);
         doubleFormatter.setOverwriteMode(false);
-        doubleFormatter.setMinimum(minimum);
-        doubleFormatter.setMaximum(maximum);
+        doubleFormatter.setMinimum(min);
+        doubleFormatter.setMaximum(max);
 
         textField.setFormatterFactory(new DefaultFormatterFactory(doubleFormatter));
-        textField.setValue(minimum);
+        textField.setValue(min);
         textField.setHorizontalAlignment(JTextField.TRAILING);
         textField.setFocusLostBehavior(JFormattedTextField.PERSIST);
 

@@ -36,10 +36,6 @@ import smile.data.type.StructType;
  */
 public class BinaryEncoder implements Function<Tuple, int[]> {
     /**
-     * The variable attributes.
-     */
-    private final StructType schema;
-    /**
      * The columns of categorical variables.
      */
     private final String[] columns;
@@ -55,7 +51,6 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
      *                If empty, all categorical columns will be used.
      */
     public BinaryEncoder(StructType schema, String... columns) {
-        this.schema = schema;
         if (columns == null || columns.length == 0) {
             columns = Arrays.stream(schema.fields())
                     .filter(field -> field.measure instanceof CategoricalMeasure)

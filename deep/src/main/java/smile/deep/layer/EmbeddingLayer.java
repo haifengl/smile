@@ -32,10 +32,6 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class EmbeddingLayer implements Layer {
-    /** The size of the dictionary of embeddings. */
-    private final int numTokens;
-    /** The size of each embedding vector. */
-    private final int dim;
     /** The optional scaling factor. */
     private final double alpha;
     /** The wrapper of alpha. */
@@ -59,8 +55,6 @@ public class EmbeddingLayer implements Layer {
      * @param alpha optional scaling factor.
      */
     public EmbeddingLayer(int numTokens, int dim, double alpha) {
-        this.numTokens = numTokens;
-        this.dim = dim;
         this.alpha = alpha;
         this.scale = new Scalar(alpha);
         this.module = new EmbeddingImpl(numTokens, dim);
