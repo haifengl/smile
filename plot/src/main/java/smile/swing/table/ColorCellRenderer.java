@@ -45,7 +45,7 @@ public class ColorCellRenderer extends DefaultTableCellRenderer {
     /**
      * True if it has border.
      */
-    boolean isBordered;
+    final boolean isBordered;
 
     /**
      * Constructor.
