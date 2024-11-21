@@ -30,42 +30,13 @@ import smile.data.type.StructType;
  * identity function that always returns the same value that was
  * used as its argument.
  *
+ * @param name The variable name.
  * @author Haifeng Li
  */
-public final class Variable implements Term {
-    /** The variable name. */
-    private final String name;
-
-    /**
-     * Constructor.
-     *
-     * @param name the variable name.
-     */
-    public Variable(String name) {
-        this.name = name;
-    }
-
-    /** Returns the variable name. */
-    public String name() {
-        return name;
-    }
-
+public record Variable(String name) implements Term {
     @Override
     public String toString() {
         return name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-
-        if (o instanceof Variable) {
-            return name.equals(((Variable)o).name);
-        }
-
-        return false;
     }
 
     @Override
