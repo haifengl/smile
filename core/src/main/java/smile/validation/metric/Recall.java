@@ -67,15 +67,15 @@ public class Recall implements ClassificationMetric {
      * @return the metric.
      */
     public static double of(int[] truth, int[] prediction) {
-        for (int i = 0; i < truth.length; i++) {
-            if (truth[i] != 0 && truth[i] != 1) {
-                throw new IllegalArgumentException("Recall can only be applied to binary classification: " + truth[i]);
+        for (int t : truth) {
+            if (t != 0 && t != 1) {
+                throw new IllegalArgumentException("Recall can only be applied to binary classification: " + t);
             }
         }
 
-        for (int i = 0; i < prediction.length; i++) {
-            if (prediction[i] != 0 && prediction[i] != 1) {
-                throw new IllegalArgumentException("Recall can only be applied to binary classification: " + prediction[i]);
+        for (int p : prediction) {
+            if (p != 0 && p != 1) {
+                throw new IllegalArgumentException("Recall can only be applied to binary classification: " + p);
             }
         }
 

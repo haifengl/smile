@@ -298,9 +298,9 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);
         for (int i = p; i-- > 0;) {
-            for (int j = 0; j < p; j++) {
-                Canvas canvas = ScatterPlot.of(data, columns[j], columns[i], mark, color).canvas();
-                canvas.setAxisLabels(columns[j], columns[i]);
+            for (String column : columns) {
+                Canvas canvas = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
+                canvas.setAxisLabels(column, columns[i]);
                 grid.add(canvas.panel());
             }
         }
