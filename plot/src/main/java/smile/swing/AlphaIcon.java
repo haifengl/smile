@@ -29,47 +29,13 @@ import javax.swing.Icon;
  * <B>Note:</B> This class is not suitable for wrapping an
  * <CODE>ImageIcon</CODE> that holds an animated image.
  *
+ * @param icon  the Icon to wrap
+ * @param alpha the opacity should be in the range 0.0F (fully transparent)
+ *              to 1.0F (fully opaque).
+ *
  * @author Haifeng Li
  */
-public class AlphaIcon implements Icon {
-
-    private final Icon icon;
-    private final float alpha;
-
-    /**
-     * Creates an
-     * <CODE>AlphaIcon</CODE> with the specified icon and opacity. The opacity
-     * <CODE>alpha</CODE> should be in the range 0.0F (fully transparent) to
-     * 1.0F (fully opaque).
-     *
-     * @param icon the Icon to wrap
-     * @param alpha the opacity
-     */
-    public AlphaIcon(Icon icon, float alpha) {
-        this.icon = icon;
-        this.alpha = alpha;
-    }
-
-    /**
-     * Gets this
-     * <CODE>AlphaIcon</CODE>'s opacity
-     *
-     * @return the opacity, in the range 0.0 to 1.0
-     */
-    public float getAlpha() {
-        return alpha;
-    }
-
-    /**
-     * Gets the icon wrapped by this
-     * <CODE>AlphaIcon</CODE>
-     *
-     * @return the wrapped icon
-     */
-    public Icon getIcon() {
-        return icon;
-    }
-
+public record AlphaIcon(Icon icon, float alpha) implements Icon {
     /**
      * Paints the wrapped icon with this
      * <CODE>AlphaIcon</CODE>'s transparency.
