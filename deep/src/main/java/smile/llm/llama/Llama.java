@@ -110,9 +110,9 @@ public class Llama {
         }
 
         String worldSize = Objects.requireNonNullElse(System.getenv("WORLD_SIZE"), "1");
-        int modelParallelSize = Integer.valueOf(worldSize);
+        int modelParallelSize = Integer.parseInt(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
-        int rank = Integer.valueOf(localRank);
+        int rank = Integer.parseInt(localRank);
         if (deviceId == null) {
             deviceId = rank;
         }
@@ -133,14 +133,7 @@ public class Llama {
         logger.info("Initialized CUDA[{}]: {}.{} seconds", rank, time/1000, time%1000);
 
         startTime = System.currentTimeMillis();
-        List<String> checkpoints = new ArrayList<>();
-        for (var file : dir.listFiles()) {
-            var path = file.getPath();
-            if (path.endsWith(".pt")) {
-                checkpoints.add(path);
-            }
-        }
-
+        List<String> checkpoints = getCheckpoints(dir);
         if (checkpoints.isEmpty()) {
             throw new IllegalArgumentException("No checkpoint files found in " + checkpointDir);
         }
@@ -165,6 +158,22 @@ public class Llama {
         time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
         return new Llama(dir.getName(), model, tokenizer);
+    }
+
+    /**
+     * Returns the checkpoint file paths.
+     * @param dir the checkpoint directory.
+     * @return the checkpoint file paths.
+     */
+    private static List<String> getCheckpoints(File dir) {
+        List<String> checkpoints = new ArrayList<>();
+        for (var file : dir.listFiles()) {
+            var path = file.getPath();
+            if (path.endsWith(".pt")) {
+                checkpoints.add(path);
+            }
+        }
+        return checkpoints;
     }
 
     /**

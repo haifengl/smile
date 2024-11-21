@@ -366,6 +366,44 @@ public class LASVM<T> implements Serializable {
     }
 
     /**
+     * Calculates the maximal search step.
+     * @param v1 the first vector of working set.
+     * @param v2 the second vector of working set.
+     * @param k12 the kernel value k(v1, v2).
+     * @return the search step.
+     */
+    private double getStep(SupportVector<T> v1, SupportVector<T> v2, double k12) {
+        // Determine curvature
+        double curv = v1.k + v2.k - 2 * k12;
+        if (curv <= 0.0) curv = TAU;
+
+        double step = (v2.g - v1.g) / curv;
+
+        // Determine maximal step
+        if (step >= 0.0) {
+            double delta = v1.alpha - v1.cmin;
+            if (delta < step) {
+                step = delta;
+            }
+            delta = v2.cmax - v2.alpha;
+            if (delta < step) {
+                step = delta;
+            }
+        } else {
+            double delta = v2.cmin - v2.alpha;
+            if (delta > step) {
+                step = delta;
+            }
+            delta = v1.alpha - v1.cmax;
+            if (delta > step) {
+                step = delta;
+            }
+        }
+
+        return step;
+    }
+
+    /**
      * Process a new sample.
      * @return true if x is added to support vectors.
      */

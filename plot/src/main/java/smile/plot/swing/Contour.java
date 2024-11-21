@@ -226,21 +226,7 @@ public class Contour extends Plot {
             }
 
             if (levels == null) {
-                double digits = Math.log10(Math.abs(zMax - zMin));
-                double residual = digits - Math.floor(digits);
-                if (residual < 0.4) {
-                    // If the range is less than 20 units, we reduce one level.
-                    digits -= 1.0;
-                }
-
-                double precisionDigits = (int) Math.floor(digits);
-                double precisionUnit = Math.pow(10, precisionDigits);
-
-                if (residual >= 0.4 && residual <= 0.7) {
-                    // In case of too few grids, we use a half of precision unit.
-                    precisionUnit /= 2;
-                }
-
+                double precisionUnit = getPrecisionUnit(zMin, zMax);
                 double lowerBound = precisionUnit * (Math.ceil(zMin / precisionUnit));
                 double upperBound = precisionUnit * (Math.floor(zMax / precisionUnit));
 
@@ -542,6 +528,31 @@ public class Contour extends Plot {
                 }
             }
         }
+    }
+
+    /**
+     * Calculates the precision unit.
+     * @param zMin the minimum of data matrix.
+     * @param zMax the minimum of data matrix.
+     * @return the precision unit.
+     */
+    private double getPrecisionUnit(double zMin, double zMax) {
+        double digits = Math.log10(Math.abs(zMax - zMin));
+        double residual = digits - Math.floor(digits);
+        if (residual < 0.4) {
+            // If the range is less than 20 units, we reduce one level.
+            digits -= 1.0;
+        }
+
+        double precisionDigits = (int) Math.floor(digits);
+        double precisionUnit = Math.pow(10, precisionDigits);
+
+        if (residual >= 0.4 && residual <= 0.7) {
+            // In case of too few grids, we use a half of precision unit.
+            precisionUnit /= 2;
+        }
+
+        return precisionUnit;
     }
 
     /**
