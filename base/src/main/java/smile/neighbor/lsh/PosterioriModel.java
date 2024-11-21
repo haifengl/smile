@@ -86,7 +86,7 @@ public class PosterioriModel implements Serializable {
                 int h0 = (int) Math.floor(parzen.mean());
                 for (int h = h0;; h++) {
                     PrH prh = new PrH(h, gaussian.cdf(h + 1) - gaussian.cdf(h));
-                    if (prh.pr < 1E-7) {
+                    if (prh.pr() < 1E-7) {
                         break;
                     }
                     probs.add(prh);
@@ -94,7 +94,7 @@ public class PosterioriModel implements Serializable {
 
                 for (int h = h0 - 1;; h--) {
                     PrH prh = new PrH(h, gaussian.cdf(h + 1) - gaussian.cdf(h));
-                    if (prh.pr < 1E-7) {
+                    if (prh.pr() < 1E-7) {
                         break;
                     }
                     probs.add(prh);
@@ -143,7 +143,7 @@ public class PosterioriModel implements Serializable {
 
         int[] range = new int[k];
         for (int i = 0; i < k; i++) {
-            range[i] = pz[i].prh.length;
+            range[i] = pz[i].prh().length;
         }
 
         PriorityQueue<Probe> heap = new PriorityQueue<>();
