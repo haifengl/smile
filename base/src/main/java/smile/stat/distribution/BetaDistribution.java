@@ -234,7 +234,6 @@ public class BetaDistribution implements ExponentialFamily {
         private double alnam;
         private final double be;
         private double ga;
-        private double si;
         private double rk1;
         private double rk2;
 
@@ -256,7 +255,7 @@ public class BetaDistribution implements ExponentialFamily {
                 al = am + bm;
                 alnam = al * Math.log(al / am) - 1.386294361;
                 be = 1.0 / bm;
-                si = 1.0 + am - bm;
+                double si = 1.0 + am - bm;
                 rk1 = si * (0.013888889 + 0.041666667 * bm) / (am * be - 0.77777778);
                 rk2 = 0.25 + (0.5 + 0.25 / si) * bm;
             }

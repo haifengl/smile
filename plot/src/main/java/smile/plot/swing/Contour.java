@@ -44,14 +44,6 @@ public class Contour extends Plot {
      */
     private double[][] z;
     /**
-     * Minimum of data matrix.
-     */
-    private double zMin;
-    /**
-     * Maximum of data matrix.
-     */
-    private double zMax;
-    /**
      * Plot contours in logarithmic scale.
      */
     private boolean logScale = false;
@@ -207,15 +199,14 @@ public class Contour extends Plot {
             z = zz;
         }
 
-        zMin = MathEx.min(z);
-        zMax = MathEx.max(z);
-
-        contours = new ArrayList<>(numLevels);
+        double zMin = MathEx.min(z);
+        double zMax = MathEx.max(z);
 
         if (logScale && zMin <= 0.0) {
             throw new IllegalArgumentException("Log scale is not support for non-positive data");
         }
 
+        contours = new ArrayList<>(numLevels);
         if (levels == null) {
             if (logScale) {
                 double lowerBound = Math.ceil(Math.log10(zMin));

@@ -72,10 +72,6 @@ public class Histogram3D extends Plot {
      */
     private final int[] order;
     /**
-     * The maximum of the frequency.
-     */
-    private double max;
-    /**
      * The window width of values for each color.
      */
     private double width = 1.0;
@@ -158,7 +154,7 @@ public class Histogram3D extends Plot {
             }
         }
 
-        max = Double.NEGATIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
         for (var count : freq) {
             if (count[2] > max) {
                 max = count[2];

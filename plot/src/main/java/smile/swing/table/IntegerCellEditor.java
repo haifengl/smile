@@ -46,7 +46,6 @@ public class IntegerCellEditor extends DefaultCellEditor {
 
     final JFormattedTextField textField;
     final NumberFormat integerFormat;
-    private final Integer minimum, maximum;
 
     /**
      * Constructor.
@@ -63,19 +62,17 @@ public class IntegerCellEditor extends DefaultCellEditor {
     public IntegerCellEditor(int min, int max) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
-        minimum = min;
-        maximum = max;
 
         // Set up the editor for the integer cells.
         integerFormat = NumberFormat.getIntegerInstance();
         NumberFormatter intFormatter = new NumberFormatter(integerFormat);
         intFormatter.setFormat(integerFormat);
         intFormatter.setOverwriteMode(false);
-        intFormatter.setMinimum(minimum);
-        intFormatter.setMaximum(maximum);
+        intFormatter.setMinimum(min);
+        intFormatter.setMaximum(max);
 
         textField.setFormatterFactory(new DefaultFormatterFactory(intFormatter));
-        textField.setValue(minimum);
+        textField.setValue(min);
         textField.setHorizontalAlignment(JTextField.TRAILING);
         textField.setFocusLostBehavior(JFormattedTextField.PERSIST);
 
