@@ -503,14 +503,7 @@ public class FontChooser extends JComponent {
         }
     }
 
-    static class ListSearchTextFieldDocumentHandler implements DocumentListener {
-
-        final JList<String> targetList;
-
-        public ListSearchTextFieldDocumentHandler(JList<String> targetList) {
-            this.targetList = targetList;
-        }
-
+    record ListSearchTextFieldDocumentHandler(JList<String> targetList) implements DocumentListener {
         @Override
         public void insertUpdate(DocumentEvent e) {
             update(e);
