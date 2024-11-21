@@ -173,8 +173,8 @@ public class AssociationRule {
         int hash = 7;
         hash = 13 * hash + Arrays.hashCode(this.antecedent);
         hash = 13 * hash + Arrays.hashCode(this.consequent);
-        hash = 13 * hash + (int) (Double.doubleToLongBits(this.support) ^ (Double.doubleToLongBits(this.support) >>> 32));
-        hash = 13 * hash + (int) (Double.doubleToLongBits(this.confidence) ^ (Double.doubleToLongBits(this.confidence) >>> 32));
+        hash = 13 * hash + Long.hashCode(Double.doubleToLongBits(this.support));
+        hash = 13 * hash + Long.hashCode(Double.doubleToLongBits(this.confidence));
         return hash;
     }
     
