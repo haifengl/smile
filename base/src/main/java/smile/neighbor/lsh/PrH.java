@@ -23,30 +23,13 @@ import java.io.Serializable;
 /**
  * The probability for given query object and hash function.
  *
+ * @param u the index of bucket.
+ * @param pr the probability.
  * @author Haifeng Li
  */
-public class PrH implements Comparable<PrH>, Serializable {
+public record PrH(int u, double pr) implements Comparable<PrH>, Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The index of bucket.
-     */
-    public final int u;
-    /**
-     * The probability.
-     */
-    public final double pr;
-
-    /**
-     * Constructor.
-     * @param u the index of bucket.
-     * @param pr the probability.
-     */
-    public PrH(int u, double pr) {
-        this.u = u;
-        this.pr = pr;
-    }
+    private static final long serialVersionUID = 3L;
 
     @Override
     public int compareTo(PrH o) {

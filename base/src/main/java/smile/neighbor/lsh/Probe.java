@@ -132,7 +132,7 @@ public class Probe implements Comparable<Probe> {
     public void setProb(PrZ[] pz) {
         prob = 1.0;
         for (int i = 0; i < bucket.length; i++) {
-            prob *= pz[i].prh[bucket[i]].pr;
+            prob *= pz[i].prh()[bucket[i]].pr();
         }
     }
 
@@ -147,7 +147,7 @@ public class Probe implements Comparable<Probe> {
         int[] c = hash.c;
 
         for (int i = 0; i < hash.k; i++) {
-            r += (long) c[pz[i].m] * pz[i].prh[bucket[i]].u;
+            r += (long) c[pz[i].m()] * pz[i].prh()[bucket[i]].u();
         }
 
         int h = (int) (r % hash.P);
