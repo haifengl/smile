@@ -686,8 +686,8 @@ public class BFGS {
             double test = abs(sy);
             if (test > EPSILON * yy) {
                 if (yHistory.size() >= m) {
-                    yHistory.remove (0);
-                    sHistory.remove (0);
+                    yHistory.removeFirst();
+                    sHistory.removeFirst();
                 }
 
                 yHistory.add(y);

@@ -191,7 +191,7 @@ public class Avro {
         }
 
         if (union.size() == 1) {
-            return typeOf(union.get(0));
+            return typeOf(union.getFirst());
         }
 
         Schema a = union.get(0);

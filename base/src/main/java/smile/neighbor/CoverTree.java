@@ -329,7 +329,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
         ArrayList<DistanceSet> pointSet = new ArrayList<>();
         ArrayList<DistanceSet> consumedSet = new ArrayList<>();
 
-        K point = keys.get(0);
+        K point = keys.getFirst();
         int idx = 0;
         int n = keys.size();
         double maxDist = -1;
@@ -375,8 +375,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                 Node leaf = newLeaf(p);
                 children.add(leaf);
                 while (!pointSet.isEmpty()) {
-                    DistanceSet set = pointSet.get(pointSet.size() - 1);
-                    pointSet.remove(pointSet.size() - 1);
+                    DistanceSet set = pointSet.getLast();
+                    pointSet.removeLast();
                     leaf = newLeaf(set.idx);
                     children.add(leaf);
                     consumedSet.add(set);
@@ -403,8 +403,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                     ArrayList<DistanceSet> newConsumedSet = new ArrayList<>();
 
                     while (!pointSet.isEmpty()) { // O(|pointSet| * .size())
-                        DistanceSet set = pointSet.get(pointSet.size() - 1);
-                        pointSet.remove(pointSet.size() - 1);
+                        DistanceSet set = pointSet.getLast();
+                        pointSet.removeLast();
                         double newDist = set.dist.get(set.dist.size() - 1);
                         consumedSet.add(set);
 

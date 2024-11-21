@@ -135,8 +135,8 @@ public class IsolationTree implements Serializable {
             }
             return new Node(adjustedDepth);
         } else {
-            double[] min = data.get(0).clone();
-            double[] max = data.get(0).clone();
+            double[] min = data.getFirst().clone();
+            double[] max = data.getFirst().clone();
             int p = min.length;
             for (double[] x : data) {
                 for (int i = 0; i < p; i++) {

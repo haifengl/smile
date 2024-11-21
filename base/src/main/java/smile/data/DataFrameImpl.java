@@ -222,7 +222,7 @@ class DataFrameImpl implements DataFrame, Serializable {
      * @param data The data collection.
      */
     public DataFrameImpl(List<? extends Tuple> data) {
-        this(data, data.get(0).schema());
+        this(data, data.getFirst().schema());
     }
 
     /**

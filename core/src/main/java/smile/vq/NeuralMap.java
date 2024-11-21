@@ -219,7 +219,7 @@ public class NeuralMap implements VectorQuantizer {
     public double[] quantize(double[] x) {
         neurons.stream().parallel().forEach(node -> node.distance(x));
 
-        Neuron bmu = neurons.get(0);
+        Neuron bmu = neurons.getFirst();
         for (Neuron neuron : neurons) {
             if (neuron.distance < bmu.distance) {
                 bmu = neuron;
