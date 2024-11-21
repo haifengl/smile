@@ -97,8 +97,8 @@ public class Complex implements Serializable {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 47 * hash + (int) (Double.doubleToLongBits(re) ^ (Double.doubleToLongBits(re) >>> 32));
-        hash = 47 * hash + (int) (Double.doubleToLongBits(im) ^ (Double.doubleToLongBits(im) >>> 32));
+        hash = 47 * hash + Long.hashCode(Double.doubleToLongBits(re));
+        hash = 47 * hash + Long.hashCode(Double.doubleToLongBits(im));
         return hash;
     }
 
