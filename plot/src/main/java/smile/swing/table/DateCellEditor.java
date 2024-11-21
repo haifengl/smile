@@ -44,7 +44,7 @@ import javax.swing.text.DefaultFormatterFactory;
  */
 @SuppressWarnings("serial")
 public class DateCellEditor extends DefaultCellEditor {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleCellEditor.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DateCellEditor.class);
     
     public static final DateCellEditor YYYYMMDD        = new DateCellEditor("yyyy-MM-dd");
     public static final DateCellEditor MMDDYY          = new DateCellEditor("MM/dd/yy");
