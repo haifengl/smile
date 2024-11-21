@@ -200,32 +200,38 @@ public class BinomialDistribution extends DiscreteDistribution {
         double np = n * Math.min(p, 1.0 - p);
 
         // Poisson's approximation for extremely low np
-        int x;
-        if (np < 1E-6) {
-            x = PoissonDistribution.tinyLambdaRand(np);
-        } else {
-            RandomNumberGenerator rng;
-            if (np < 55) {
-                // inversion method, using chop-down search from 0
-                if (p <= 0.5) {
-                    rng = new ModeSearch(p);
-                } else {
-                    rng = new ModeSearch(1.0 - p); // faster calculation by inversion
-                }
-            } else {
-                // ratio of uniforms method
-                if (p <= 0.5) {
-                    rng = new Patchwork(p);
-                } else {
-                    rng = new Patchwork(1.0 - p); // faster calculation by inversion
-                }
-            }
-
-            x = rng.rand();
-        }
+        int x = np < 1E-6 ?
+            PoissonDistribution.tinyLambdaRand(np) :
+            getRandomNumberGenerator(p, np).rand();
 
         // undo inversion
         return inv ? n - x : x;
+    }
+
+    /**
+     * Returns a random number generator.
+     * @param p the probability of success.
+     * @param np n * p
+     * @return a random number generator.
+     */
+    private RandomNumberGenerator getRandomNumberGenerator(double p, double np) {
+        RandomNumberGenerator rng;
+        if (np < 55) {
+            // inversion method, using chop-down search from 0
+            if (p <= 0.5) {
+                rng = new ModeSearch(p);
+            } else {
+                rng = new ModeSearch(1.0 - p); // faster calculation by inversion
+            }
+        } else {
+            // ratio of uniforms method
+            if (p <= 0.5) {
+                rng = new Patchwork(p);
+            } else {
+                rng = new Patchwork(1.0 - p); // faster calculation by inversion
+            }
+        }
+        return rng;
     }
 
     interface RandomNumberGenerator {

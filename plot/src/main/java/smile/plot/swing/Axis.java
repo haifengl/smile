@@ -189,24 +189,7 @@ public class Axis {
                 }
             }
 
-            String label;
-            if (marks != null) {
-                label = marks[i % marks.length];
-            } else {
-                int decimal = base.getPrecisionDigits()[index];
-                if (ticks == null) {
-                    if ((i == 0 && tickLocation[0] != tickLocation[1]) ||
-                        (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2])) {
-                        decimal -= 1;
-                    }
-                }
-
-                String format = "%.0f";
-                if (decimal < 0) {
-                    format = String.format("%%.%df", -decimal);
-                }
-                label = String.format(format, tickLocation[i]);
-            }
+            String label = getTickLabel(i, marks, tickLocation);
 
             for (int j = 0; j < dim; j++) {
                 coord[j] += offset[j];
@@ -255,6 +238,33 @@ public class Axis {
                 }
             }
             i2++;
+        }
+    }
+
+    /**
+     * Returns the i-th tick label.
+     * @param i the index of tick.
+     * @param marks the marks of ticks.
+     * @param tickLocation the locations of ticks.
+     * @return the i-th tick label.
+     */
+    private String getTickLabel(int i, String[] marks, double[] tickLocation) {
+        if (marks != null) {
+            return marks[i % marks.length];
+        } else {
+            int decimal = base.getPrecisionDigits()[index];
+            if (ticks == null) {
+                if ((i == 0 && tickLocation[0] != tickLocation[1]) ||
+                    (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2])) {
+                    decimal -= 1;
+                }
+            }
+
+            String format = "%.0f";
+            if (decimal < 0) {
+                format = String.format("%%.%df", -decimal);
+            }
+            return String.format(format, tickLocation[i]);
         }
     }
 
