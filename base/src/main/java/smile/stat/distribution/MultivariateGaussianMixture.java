@@ -52,7 +52,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         super(L, n, components);
 
         for (Component component : components) {
-            if (!(component.distribution instanceof MultivariateGaussianDistribution)) {
+            if (!(component.distribution() instanceof MultivariateGaussianDistribution)) {
                 throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
             }
         }
@@ -194,7 +194,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         double maxSigma = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
             Component c = components[i];
-            double sigma = ((MultivariateGaussianDistribution) c.distribution).scatter();
+            double sigma = ((MultivariateGaussianDistribution) c.distribution()).scatter();
             if (sigma > maxSigma) {
                 maxSigma = sigma;
                 index = i;
@@ -203,9 +203,9 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
 
         // Splits the component
         Component component = components[index];
-        double priori = component.priori / 2;
-        Matrix delta = component.distribution.cov();
-        double[] mu = component.distribution.mean();
+        double priori = component.priori() / 2;
+        Matrix delta = component.distribution().cov();
+        double[] mu = component.distribution().mean();
 
         Component[] mixture = new Component[k+1];
         System.arraycopy(components, 0, mixture, 0, k);
