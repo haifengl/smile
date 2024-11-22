@@ -25,22 +25,12 @@ import java.util.Set;
 /**
  * The confusion matrix of truth and predictions.
  *
+ * @param matrix the confusion matrix.
  * @author owlmsj
  */
-public class ConfusionMatrix implements Serializable {
+public record ConfusionMatrix(int[][] matrix) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** Confusion matrix. */
-    public final int[][] matrix;
-
-    /**
-     * Constructor.
-     * @param matrix the confusion matrix.
-     */
-    public ConfusionMatrix(int[][] matrix) {
-        this.matrix = matrix;
-    }
+    private static final long serialVersionUID = 3L;
 
     /**
      * Creates the confusion matrix.
