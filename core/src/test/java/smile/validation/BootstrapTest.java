@@ -23,6 +23,9 @@ import smile.test.data.Iris;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
+
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -58,19 +61,17 @@ public class BootstrapTest {
         Bag[] bags = Bootstrap.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < n; j++) {
-                hit[j] = false;
+            Arrays.fill(hit, false);
+
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                hit[sample] = true;
             }
 
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                hit[train[j]] = true;
-            }
-
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
             for (int j = 0; j < n; j++) {
@@ -88,14 +89,14 @@ public class BootstrapTest {
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                trainhit[train[j]]++;
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                trainhit[sample]++;
             }
 
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                testhit[test[j]]++;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                testhit[sample]++;
             }
         }
 
@@ -123,19 +124,17 @@ public class BootstrapTest {
         Bag[] bags = Bootstrap.of(stratum, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < n; j++) {
-                hit[j] = false;
+            Arrays.fill(hit, false);
+
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                hit[sample] = true;
             }
 
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                hit[train[j]] = true;
-            }
-
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
             for (int j = 0; j < n; j++) {
@@ -159,14 +158,14 @@ public class BootstrapTest {
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                trainhit[train[j]]++;
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                trainhit[sample]++;
             }
 
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                testhit[test[j]]++;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                testhit[sample]++;
             }
         }
 
@@ -183,7 +182,7 @@ public class BootstrapTest {
     public void testIris() {
         System.out.println("Iris");
 
-        ClassificationValidations<DecisionTree> result = Bootstrap.classification(100, Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
+        ClassificationValidations<DecisionTree> result = Bootstrap.classification(100, Iris.formula, Iris.data, DecisionTree::fit);
 
         System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy);
         System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy);
@@ -193,7 +192,7 @@ public class BootstrapTest {
     public void testCPU() {
         System.out.println("CPU");
 
-        RegressionValidations<RegressionTree> result = Bootstrap.regression(100, CPU.formula, CPU.data, (f, x) -> RegressionTree.fit(f, x));
+        RegressionValidations<RegressionTree> result = Bootstrap.regression(100, CPU.formula, CPU.data, RegressionTree::fit);
 
         System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse);
         System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse);

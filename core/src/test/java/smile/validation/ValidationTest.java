@@ -52,8 +52,7 @@ public class ValidationTest {
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        ClassificationValidation<DecisionTree> result = ClassificationValidation.of(USPS.formula, USPS.train, USPS.test,
-                (formula, data) -> DecisionTree.fit(formula, data));
+        ClassificationValidation<DecisionTree> result = ClassificationValidation.of(USPS.formula, USPS.train, USPS.test, DecisionTree::fit);
 
         System.out.println(result);
         assertEquals(0.8340, result.metrics.accuracy, 1E-4);
@@ -62,8 +61,7 @@ public class ValidationTest {
     @Test
     public void testAbalone() {
         System.out.println("Abalone");
-        RegressionValidation<RegressionTree> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test,
-                (formula, data) -> RegressionTree.fit(formula, data));
+        RegressionValidation<RegressionTree> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test, RegressionTree::fit);
 
         System.out.println(result);
         assertEquals(2.3194, result.metrics.rmse, 1E-4);

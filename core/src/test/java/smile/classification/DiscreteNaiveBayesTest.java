@@ -103,9 +103,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -132,11 +132,11 @@ public class DiscreteNaiveBayesTest {
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, feature.length);
 
-            for (int i : bag.samples) {
+            for (int i : bag.samples()) {
                 bayes.update(x[i], y[i]);
             }
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -157,9 +157,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -181,11 +181,11 @@ public class DiscreteNaiveBayesTest {
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, feature.length);
 
-            for (int i : bag.samples) {
+            for (int i : bag.samples()) {
                 bayes.update(x[i], y[i]);
             }
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -206,9 +206,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -230,11 +230,11 @@ public class DiscreteNaiveBayesTest {
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, feature.length);
 
-            for (int i : bag.samples) {
+            for (int i : bag.samples()) {
                 bayes.update(x[i], y[i]);
             }
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -255,9 +255,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -279,11 +279,11 @@ public class DiscreteNaiveBayesTest {
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, feature.length);
 
-            for (int i : bag.samples) {
+            for (int i : bag.samples()) {
                 bayes.update(x[i], y[i]);
             }
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -304,9 +304,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -328,11 +328,11 @@ public class DiscreteNaiveBayesTest {
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, feature.length);
 
-            for (int i : bag.samples) {
+            for (int i : bag.samples()) {
                 bayes.update(x[i], y[i]);
             }
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }
@@ -353,9 +353,9 @@ public class DiscreteNaiveBayesTest {
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.TWCNB, 2, feature.length);
-            bayes.update(MathEx.slice(x, bag.samples), MathEx.slice(y, bag.samples));
+            bayes.update(MathEx.slice(x, bag.samples()), MathEx.slice(y, bag.samples()));
 
-            for (int i : bag.oob) {
+            for (int i : bag.oob()) {
                 prediction[i] = bayes.predict(x[i]);
             }
         }

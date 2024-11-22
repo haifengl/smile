@@ -105,10 +105,10 @@ public class RegressionValidation<M> implements Serializable {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            T[] trainx = MathEx.slice(x, bag.samples);
-            double[] trainy = MathEx.slice(y, bag.samples);
-            T[] testx = MathEx.slice(x, bag.oob);
-            double[] testy = MathEx.slice(y, bag.oob);
+            T[] trainx = MathEx.slice(x, bag.samples());
+            double[] trainy = MathEx.slice(y, bag.samples());
+            T[] testx = MathEx.slice(x, bag.oob());
+            double[] testy = MathEx.slice(y, bag.oob());
 
             rounds.add(of(trainx, trainy, testx, testy, trainer));
         }
@@ -157,7 +157,7 @@ public class RegressionValidation<M> implements Serializable {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            rounds.add(of(formula, data.of(bag.samples), data.of(bag.oob), trainer));
+            rounds.add(of(formula, data.of(bag.samples()), data.of(bag.oob()), trainer));
         }
 
         return new RegressionValidations<>(rounds);

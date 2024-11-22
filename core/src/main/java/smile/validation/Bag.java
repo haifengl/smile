@@ -23,28 +23,11 @@ import java.io.Serializable;
 /**
  * A bag of random selected samples.
  *
+ * @param samples the random samples.
+ * @param oob the out of bag samples.
  * @author Haifeng Li
  */
-public class Bag implements Serializable {
+public record Bag(int[] samples, int[] oob) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The random samples.
-     */
-    public final int[] samples;
-    /**
-     * The index of testing instances.
-     */
-    public final int[] oob;
-
-    /**
-     * Constructor.
-     * @param samples the random samples.
-     * @param oob the out of bag samples.
-     */
-    public Bag(int[] samples, int[] oob) {
-        this.samples = samples;
-        this.oob = oob;
-    }
+    private static final long serialVersionUID = 3L;
 }
