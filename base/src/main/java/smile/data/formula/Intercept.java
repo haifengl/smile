@@ -25,26 +25,10 @@ import smile.data.type.StructType;
 /**
  * The flag if intercept should be included in the model.
  *
+ * @param bias The flag if the model has the intercept.
  * @author Haifeng Li
  */
-public final class Intercept implements Term {
-    /** The flag if the model has the intercept. */
-    private final boolean bias;
-
-    /**
-     * Constructor.
-     *
-     * @param bias The flag if the model has the intercept.
-     */
-    public Intercept(boolean bias) {
-        this.bias = bias;
-    }
-
-    /** Returns the flag if the intercept is included in the model. */
-    public boolean bias() {
-        return bias;
-    }
-
+public record Intercept(boolean bias) implements Term {
     @Override
     public String toString() {
         return bias ? "1" : "0";
