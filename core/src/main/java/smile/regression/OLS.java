@@ -154,7 +154,7 @@ public class OLS {
 
         Matrix inv = null;
         if (stderr || recursive) {
-            Matrix.Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
+            Matrix.Cholesky cholesky = qr == null ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
             inv = cholesky.inverse();
             model.V = inv;
         }
