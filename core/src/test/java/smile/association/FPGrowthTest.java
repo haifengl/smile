@@ -70,24 +70,28 @@ public class FPGrowthTest {
         System.out.println("FP-Growth");
         FPTree tree = FPTree.of(3, itemsets);
         List<ItemSet> results = FPGrowth.apply(tree).collect(Collectors.toList());
+        for (var itemSet : results) {
+            System.out.println(itemSet);
+        }
+
         assertEquals(8, results.size());
 
-        assertEquals(3, results.get(0).support);
-        assertEquals(1, results.get(0).items.length);
-        assertEquals(4, results.get(0).items[0]);
+        assertEquals(3, results.get(0).support());
+        assertEquals(1, results.get(0).items().length);
+        assertEquals(4, results.get(0).items()[0]);
         
-        assertEquals(5, results.get(1).support);
-        assertEquals(1, results.get(1).items.length);
-        assertEquals(1, results.get(1).items[0]);
+        assertEquals(5, results.get(1).support());
+        assertEquals(1, results.get(1).items().length);
+        assertEquals(1, results.get(1).items()[0]);
         
-        assertEquals(6, results.get(6).support);
-        assertEquals(2, results.get(6).items.length);
-        assertEquals(3, results.get(6).items[0]);
-        assertEquals(2, results.get(6).items[1]);
+        assertEquals(6, results.get(6).support());
+        assertEquals(2, results.get(6).items().length);
+        assertEquals(3, results.get(6).items()[0]);
+        assertEquals(2, results.get(6).items()[1]);
         
-        assertEquals(8, results.get(7).support);
-        assertEquals(1, results.get(7).items.length);
-        assertEquals(3, results.get(7).items[0]);
+        assertEquals(8, results.get(7).support());
+        assertEquals(1, results.get(7).items().length);
+        assertEquals(3, results.get(7).items()[0]);
     }
 
     @Test

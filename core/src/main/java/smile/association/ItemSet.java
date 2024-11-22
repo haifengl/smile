@@ -25,47 +25,16 @@ import java.util.Arrays;
  * In this class, the support is actually the raw frequency rather than the
  * ratio.
  *
+ * @param items The set of items.
+ * @param support The associated support value.
  * @author Haifeng Li
  */
-public class ItemSet {
-
-    /**
-     * The set of items.
-     */
-    public final int[] items;
-    /**
-     * The associated support of item set.
-     */
-    public final int support;
-
-    /**
-     * Constructor.
-     * @param items The set of items.
-     * @param support The associated support value.
-     */
-    public ItemSet(int[] items, int support) {
-        this.items = items;
-        this.support = support;
-    }
+public record ItemSet(int[] items, int support) {
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof ItemSet a) {
-            if (support != a.support) {
-                return false;
-            }
-            
-            if (items.length != a.items.length) {
-                return false;
-            }
-            
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] != a.items[i]) {
-                    return false;
-                }
-            }
-            
-            return true;
+            return support == a.support && Arrays.equals(items, a.items);
         }
         
         return false;
@@ -83,12 +52,9 @@ public class ItemSet {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        for (int item : items) {
-            sb.append(item);
-            sb.append(' ');
-        }
-        
-        sb.append('(');
+        sb.append("ItemSet(");
+        sb.append(Arrays.toString(items));
+        sb.append(", support=");
         sb.append(support);
         sb.append(')');
         
