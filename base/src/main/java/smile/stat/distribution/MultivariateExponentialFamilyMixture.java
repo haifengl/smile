@@ -55,7 +55,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
         super(components);
 
         for (Component component : components) {
-            if (!(component.distribution instanceof MultivariateExponentialFamily)) {
+            if (!(component.distribution() instanceof MultivariateExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of multivariate exponential family.");
             }
         }
@@ -111,7 +111,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
                 Component c = components[i];
 
                 for (int j = 0; j < n; j++) {
-                    posteriori[i][j] = c.priori * c.distribution.p(x[j]);
+                    posteriori[i][j] = c.priori() * c.distribution().p(x[j]);
                 }
             }
 
@@ -141,19 +141,19 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
             // Maximization step
             double Z = 0.0;
             for (int i = 0; i < k; i++) {
-                components[i] = ((MultivariateExponentialFamily) components[i].distribution).M(x, posteriori[i]);
-                Z += components[i].priori;
+                components[i] = ((MultivariateExponentialFamily) components[i].distribution()).M(x, posteriori[i]);
+                Z += components[i].priori();
             }
 
             for (int i = 0; i < k; i++) {
-                components[i] = new Component(components[i].priori / Z, components[i].distribution);
+                components[i] = new Component(components[i].priori() / Z, components[i].distribution());
             }
 
             double loglikelihood = 0.0;
             for (double[] xi : x) {
                 double p = 0.0;
                 for (Component c : components) {
-                    p += c.priori * c.distribution.p(xi);
+                    p += c.priori() * c.distribution().p(xi);
                 }
                 if (p > 0) loglikelihood += Math.log(p);
             }
