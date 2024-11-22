@@ -317,7 +317,6 @@ public class BetaDistribution implements ExponentialFamily {
                                     continue;
                                 }
                                 X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
-                                break;
                             } else {
                                 w = am * Math.exp(v);
                                 if ((al * (Math.log(al / (bm + w)) + v) - 1.386294361) < Math.log(z)) {
@@ -326,8 +325,8 @@ public class BetaDistribution implements ExponentialFamily {
 
                                 /* Step 6_a */
                                 X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
-                                break;
                             }
+                            break;
                         } else {
                             /* Step 3 */
                             z = u1 * u1 * u2;
@@ -340,8 +339,6 @@ public class BetaDistribution implements ExponentialFamily {
                                 }
 
                                 w = am * Math.exp(v);
-                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
-                                break;
                             } else {
                                 if (z >= rk2) {
                                     continue;
@@ -359,11 +356,10 @@ public class BetaDistribution implements ExponentialFamily {
                                         Math.log(z)) {
                                     continue;  /* goto 1 */
                                 }
-
-                                /* Step 6_b */
-                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
-                                break;
                             }
+                            /* Step 6_b */
+                            X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                            break;
                         }
                     }
                     break;

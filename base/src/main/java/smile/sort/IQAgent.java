@@ -116,9 +116,6 @@ public class IQAgent {
                     if (jq < nq && (jd >= nd || qile[jq] < dbuf[jd])) {
                         qnew = qile[jq];
                         tnew = jd + nt * pval[jq++];
-                        if (tnew >= target) {
-                            break;
-                        }
                     } else {
                         qnew = dbuf[jd];
                         tnew = told;
@@ -131,10 +128,8 @@ public class IQAgent {
                         }
                         told = tnew++;
                         qold = qnew;
-                        if (tnew >= target) {
-                            break;
-                        }
                     }
+                    if (tnew >= target) break;
                     told = tnew;
                     qold = qnew;
                 }
