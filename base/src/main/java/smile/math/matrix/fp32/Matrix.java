@@ -2056,7 +2056,7 @@ public class Matrix extends IMatrix {
          * @return the diagonal matrix of singular values.
          */
         public Matrix diag() {
-            Matrix S = new Matrix(U.m, V.m);
+            Matrix S = new Matrix(m, n);
 
             for (int i = 0; i < s.length; i++) {
                 S.set(i, i, s[i]);
@@ -2201,6 +2201,10 @@ public class Matrix extends IMatrix {
          * @return the pseudo inverse.
          */
         public Matrix pinv() {
+            if (U == null || V == null) {
+                throw new IllegalStateException("The singular vectors are not available.");
+            }
+
             int k = s.length;
             float[] sigma = new float[k];
             int r = rank();
