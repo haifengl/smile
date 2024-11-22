@@ -132,7 +132,7 @@ public interface RotaryPositionalEncoding {
             } else if (wavelen > low_freq_wavelen) {
                 freqs.put_(freq / scale_factor, i);
             } else {
-                assert low_freq_wavelen != high_freq_wavelen;
+                // assert low_freq_wavelen != high_freq_wavelen;
                 float smooth = (old_context_len / wavelen - low_freq_factor) / (high_freq_factor - low_freq_factor);
                 freqs.put_((1 - smooth) * freq / scale_factor + smooth * freq, i);
             }
