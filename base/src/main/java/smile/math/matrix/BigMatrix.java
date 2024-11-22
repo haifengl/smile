@@ -2068,7 +2068,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
          * @return the diagonal matrix of singular values.
          */
         public BigMatrix diag() {
-            BigMatrix S = new BigMatrix(U.m, V.m);
+            BigMatrix S = new BigMatrix(m, n);
 
             long length = length(s);
             for (int i = 0; i < length; i++) {
@@ -2217,6 +2217,10 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
          * @return the pseudo inverse.
          */
         public BigMatrix pinv() {
+            if (U == null || V == null) {
+                throw new IllegalStateException("The singular vectors are not available.");
+            }
+
             int k = (int) length(s);
             double[] sigma = new double[k];
             int r = rank();
