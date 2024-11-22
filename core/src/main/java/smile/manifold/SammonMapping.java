@@ -189,7 +189,7 @@ public class SammonMapping {
         stress /= c;
         double epast = stress;
         double eprev = stress;
-        logger.info(String.format("Sammon's Mapping initial stress: %.5f", stress));
+        logger.info("Sammon's Mapping initial stress: {}", stress);
 
         double[] xv = new double[k];
         double[] e1 = new double[k];
@@ -250,7 +250,7 @@ public class SammonMapping {
                 stress = eprev;
                 lambda = lambda * 0.2;
                 if (lambda < stepTol) {
-                    logger.info(String.format("Sammon's Mapping stops early as stress = %.5f after %d iterations", stress, iter-1));
+                    logger.info("Sammon's Mapping stops early as stress = {} after {} iterations", stress, iter-1);
                     break;
                 }
                 iter--;
@@ -270,7 +270,7 @@ public class SammonMapping {
                 }
 
                 if (iter % 10 == 0) {
-                    logger.info(String.format("Sammon's Mapping stress after %3d iterations: %.5f, magic = %5.3f", iter, stress, lambda));
+                    logger.info("Sammon's Mapping stress after {} iterations: {}, magic = {}", iter, stress, lambda);
                     if (stress > epast - tol) {
                         break;
                     }

@@ -98,14 +98,14 @@ public class KModes extends CentroidClustering<int[], int[]> {
         int[][] centroids = new int[k][d];
 
         double distortion = MathEx.sum(seed(data, medoids, y, HammingDistance::d));
-        logger.info(String.format("Distortion after initialization: %d", (int) distortion));
+        logger.info("Distortion after initialization: {}", (int) distortion);
 
         double diff = Integer.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > 0; iter++) {
             updateCentroids(centroids, data, y, codec);
 
             double wcss = assign(y, data, centroids, HammingDistance::d);
-            logger.info(String.format("Distortion after %3d iterations: %d", iter, (int) wcss));
+            logger.info("Distortion after {} iterations: {}", iter, (int) wcss);
 
             diff = distortion - wcss;
             distortion = wcss;

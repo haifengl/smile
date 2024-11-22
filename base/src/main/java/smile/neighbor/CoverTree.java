@@ -638,7 +638,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
 
         Neighbor<K, V>[] neighbors = list.toArray(a1);
         if (neighbors.length < k) {
-            logger.warn(String.format("CoverTree.knn(%d) returns only %d neighbors", k, neighbors.length));
+            logger.warn("CoverTree.knn({}) returns only {} neighbors", k, neighbors.length);
         }
 
         Arrays.sort(neighbors);

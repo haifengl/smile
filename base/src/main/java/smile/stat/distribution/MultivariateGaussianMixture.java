@@ -169,11 +169,11 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
 
         MultivariateGaussianMixture mixture = new MultivariateGaussianMixture(new Component(1.0, MultivariateGaussianDistribution.fit(data, diagonal)));
         double bic = mixture.bic(data);
-        logger.info(String.format("The BIC of %s = %.4f", mixture, bic));
+        logger.info("The BIC of {} = {}", mixture, bic);
 
         for (int k = 2; k < data.length / 20; k++) {
             MultivariateExponentialFamilyMixture model = fit(k, data);
-            logger.info(String.format("The BIC of %s = %.4f", model, model.bic));
+            logger.info("The BIC of {} = {}", model, model.bic);
 
             if (model.bic <= bic) break;
 

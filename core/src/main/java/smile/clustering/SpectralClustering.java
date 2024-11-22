@@ -236,7 +236,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
         for (int i = 0; i < n; i++) {
             if (D[i] < 1E-4) {
-                logger.error(String.format("Small D[%d] = %f. The data may contain outliers.", i, D[i]));
+                logger.error("Small D[{}] = {}. The data may contain outliers.", i, D[i]);
             }
             
             D[i] = 1.0 / Math.sqrt(D[i]);

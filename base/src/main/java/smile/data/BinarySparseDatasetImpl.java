@@ -78,7 +78,7 @@ class BinarySparseDatasetImpl<T> implements BinarySparseDataset<T> {
                 }
 
                 if (xi == prev) {
-                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", xi, Arrays.toString(x)));
+                    logger.warn("Ignore duplicated indices: {} in {}", xi, Arrays.toString(x));
                 } else {
                     colSize[xi]++;
                     n++;

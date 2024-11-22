@@ -262,14 +262,14 @@ public class LASSO {
             // primal objective function value
             double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
             dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
-            if (ntiter % 10 == 0) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
-            }
 
             double gap = pobj - dobj;
+            if (ntiter % 10 == 0 || gap / dobj < tol) {
+                logger.info("LASSO: primal and dual objective function value after {} iterations: {}\t{}", ntiter, pobj, dobj);
+            }
+
             // STOPPING CRITERION
             if (gap / dobj < tol) {
-                logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
                 break;
             }
 

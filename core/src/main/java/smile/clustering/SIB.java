@@ -112,7 +112,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
         SparseArray[] medoids = new SparseArray[k];
 
         double distortion = MathEx.sum(seed(data, medoids, y, MathEx::JensenShannonDivergence));
-        logger.info(String.format("Distortion after initialization: %.4f", distortion));
+        logger.info("Distortion after initialization: {}", distortion);
 
         int[] size = new int[k];
         double[][] centroids = new double[k][d];
@@ -187,7 +187,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
                 .mapToDouble(i -> MathEx.JensenShannonDivergence(data[i], centroids[y[i]]))
                 .sum();
 
-        logger.info(String.format("Final distortion: %.4f", distortion));
+        logger.info("Final distortion: {}", distortion);
 
         return new SIB(distortion, centroids, y);
     }

@@ -203,9 +203,9 @@ public class LevenbergMarquardt {
                 }
             }
 
-            logger.info(String.format("SSE after %3d iterations: %.5f", iter, sbest));
+            logger.info("SSE after {} iterations: {}", iter, sbest);
             if (ss < MathEx.EPSILON || ss > sgoal) {
-                logger.info(String.format("converges on SSE after %d iterations", iter));
+                logger.info("converges on SSE after {} iterations", iter);
                 break;
             }
         }
@@ -365,9 +365,9 @@ public class LevenbergMarquardt {
                 }
             }
 
-            logger.info(String.format("SSE after %3d iterations: %.5f", iter, sbest));
+            logger.info("SSE after {} iterations: {}", iter, sbest);
             if (ss < MathEx.EPSILON || ss > sgoal) {
-                logger.info(String.format("converges on SSE after %d iterations", iter));
+                logger.info("converges on SSE after {} iterations", iter);
                 break;
             }
         }

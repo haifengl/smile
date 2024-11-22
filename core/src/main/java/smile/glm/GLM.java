@@ -393,7 +393,7 @@ public class GLM implements Serializable {
 
             double newDev = model.deviance(y, mu, residuals);
             if (iter > 0) {
-                logger.info(String.format("Deviance after %3d iterations: %.5f", iter, dev));
+                logger.info("Deviance after {} iterations: {}", iter, dev);
             }
 
             if (dev - newDev < tol) {

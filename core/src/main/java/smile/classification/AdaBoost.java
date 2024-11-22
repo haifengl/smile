@@ -223,7 +223,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 }
             }
 
-            logger.info(String.format("Training %s tree, weighted error = %.2f%%", Strings.ordinal(t+1), 100*e));
+            logger.info("Training {} tree, weighted error = {}%", Strings.ordinal(t+1), 100*e);
 
             if (1 - e > guess) {
                 failures = 0;

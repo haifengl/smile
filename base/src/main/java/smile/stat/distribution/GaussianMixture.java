@@ -93,11 +93,11 @@ public class GaussianMixture extends ExponentialFamilyMixture {
 
         GaussianMixture mixture = new GaussianMixture(new Component(1.0, GaussianDistribution.fit(x)));
         double bic = mixture.bic(x);
-        logger.info(String.format("The BIC of %s = %.4f", mixture, bic));
+        logger.info("The BIC of {} = {}", mixture, bic);
 
         for (int k = 2; k < x.length / 10; k++) {
             ExponentialFamilyMixture model = fit(k, x);
-            logger.info(String.format("The BIC of %s = %.4f", model, model.bic));
+            logger.info("The BIC of {} = {}", model, model.bic);
 
             if (model.bic <= bic) break;
 
