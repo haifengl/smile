@@ -146,17 +146,17 @@ public class PosterioriModel implements Serializable {
             range[i] = pz[i].prh().length;
         }
 
+        Probe probe = new Probe(range);
+        probe.setProb(pz);
+        double pr = probe.prob;
+        seq.add(probe.hash(hash, pz));
+
+        probe.bucket[0] = 0;
+        probe.last = 0;
+        probe.setProb(pz);
+
         PriorityQueue<Probe> heap = new PriorityQueue<>();
-        heap.add(new Probe(range));
-
-        heap.peek().setProb(pz);
-        double pr = heap.peek().prob;
-        seq.add(heap.peek().hash(hash, pz));
-
-        heap.peek().bucket[0] = 0;
-        heap.peek().last = 0;
-        heap.peek().setProb(pz);
-
+        heap.add(probe);
         while (!heap.isEmpty() && pr < recall && seq.size() < T) {
             Probe p = heap.poll();
 
