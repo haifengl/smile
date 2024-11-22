@@ -300,9 +300,6 @@ public class BFGS {
         double[] rho = new double[m];
         double[] a = new double[m];
 
-        // Diagonal of initial H0.
-        double diag = 1.0;
-
         // Current gradient.
         double[] g = new double[n];
         // Current function value.
@@ -365,8 +362,8 @@ public class BFGS {
 
             double ys = dot(y[k], s[k]);
             double yy = dot(y[k], y[k]);
-
-            diag = ys / yy;
+            // Diagonal of initial H0.
+            double diag = ys / yy;
 
             rho[k] = 1.0 / ys;
 
