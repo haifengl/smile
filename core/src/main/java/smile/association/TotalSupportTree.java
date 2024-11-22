@@ -94,7 +94,7 @@ class TotalSupportTree implements Iterable<ItemSet> {
         this.minSupport = tree.minSupport;
         this.order = tree.order;
         root.children = new Node[tree.numFreqItems];
-        FPGrowth.apply(tree).forEach(itemset -> add(itemset.items, itemset.support));
+        FPGrowth.apply(tree).forEach(itemset -> add(itemset.items(), itemset.support()));
     }
 
     /**
