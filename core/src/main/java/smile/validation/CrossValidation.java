@@ -100,7 +100,6 @@ public interface CrossValidation {
         }
 
         int[][] strata = Sampling.strata(category);
-
         int min = Arrays.stream(strata).mapToInt(stratum -> stratum.length).min().getAsInt();
         if (min < k) {
             org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CrossValidation.class);
