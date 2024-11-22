@@ -100,82 +100,82 @@ class DataFrameImpl implements DataFrame, Serializable {
 
             this.schema = DataTypes.struct(fields);
             for (PropertyDescriptor prop : props) {
-                if (!prop.getName().equals("class")) {
-                    String name = prop.getName();
-                    Class<?> type = prop.getPropertyType();
-                    Method read = prop.getReadMethod();
-                    StructField field = Arrays.stream(fields).filter(f -> f.name.equals(name)).findFirst().get();
+                if (prop.getName().equals("class")) continue;
 
-                    int i = 0;
-                    if (type == int.class) {
-                        int[] values = new int[size];
-                        for (T datum : data) values[i++] = (int) read.invoke(datum);
-                        IntVector vector = IntVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == double.class) {
-                        double[] values = new double[size];
-                        for (T datum : data) values[i++] = (double) read.invoke(datum);
-                        DoubleVector vector = DoubleVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == boolean.class) {
-                        boolean[] values = new boolean[size];
-                        for (T datum : data) values[i++] = (boolean) read.invoke(datum);
-                        BooleanVector vector = BooleanVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == short.class) {
-                        short[] values = new short[size];
-                        for (T datum : data) values[i++] = (short) read.invoke(datum);
-                        ShortVector vector = ShortVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == long.class) {
-                        long[] values = new long[size];
-                        for (T datum : data) values[i++] = (long) read.invoke(datum);
-                        LongVector vector = LongVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == float.class) {
-                        float[] values = new float[size];
-                        for (T datum : data) values[i++] = (float) read.invoke(datum);
-                        FloatVector vector = FloatVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type == byte.class) {
+                String name = prop.getName();
+                Class<?> type = prop.getPropertyType();
+                Method read = prop.getReadMethod();
+                StructField field = Arrays.stream(fields).filter(f -> f.name.equals(name)).findFirst().get();
+
+                int i = 0;
+                if (type == int.class) {
+                    int[] values = new int[size];
+                    for (T datum : data) values[i++] = (int) read.invoke(datum);
+                    IntVector vector = IntVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == double.class) {
+                    double[] values = new double[size];
+                    for (T datum : data) values[i++] = (double) read.invoke(datum);
+                    DoubleVector vector = DoubleVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == boolean.class) {
+                    boolean[] values = new boolean[size];
+                    for (T datum : data) values[i++] = (boolean) read.invoke(datum);
+                    BooleanVector vector = BooleanVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == short.class) {
+                    short[] values = new short[size];
+                    for (T datum : data) values[i++] = (short) read.invoke(datum);
+                    ShortVector vector = ShortVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == long.class) {
+                    long[] values = new long[size];
+                    for (T datum : data) values[i++] = (long) read.invoke(datum);
+                    LongVector vector = LongVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == float.class) {
+                    float[] values = new float[size];
+                    for (T datum : data) values[i++] = (float) read.invoke(datum);
+                    FloatVector vector = FloatVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == byte.class) {
+                    byte[] values = new byte[size];
+                    for (T datum : data) values[i++] = (byte) read.invoke(datum);
+                    ByteVector vector = ByteVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == char.class) {
+                    char[] values = new char[size];
+                    for (T datum : data) values[i++] = (char) read.invoke(datum);
+                    CharVector vector = CharVector.of(field, values);
+                    columns.add(vector);
+                } else if (type == String.class) {
+                    String[] values = new String[size];
+                    for (T datum : data) values[i++] = (String) read.invoke(datum);
+                    StringVector vector = StringVector.of(field, values);
+                    columns.add(vector);
+                } else if (type.isEnum()) {
+                    Object[] levels = type.getEnumConstants();
+                    if (levels.length < Byte.MAX_VALUE + 1) {
                         byte[] values = new byte[size];
-                        for (T datum : data) values[i++] = (byte) read.invoke(datum);
+                        for (T datum : data) values[i++] = (byte) ((Enum<?>) read.invoke(datum)).ordinal();
                         ByteVector vector = ByteVector.of(field, values);
                         columns.add(vector);
-                    } else if (type == char.class) {
-                        char[] values = new char[size];
-                        for (T datum : data) values[i++] = (char) read.invoke(datum);
-                        CharVector vector = CharVector.of(field, values);
+                    } else if (levels.length < Short.MAX_VALUE + 1) {
+                        short[] values = new short[size];
+                        for (T datum : data) values[i++] = (short) ((Enum<?>) read.invoke(datum)).ordinal();
+                        ShortVector vector = ShortVector.of(field, values);
                         columns.add(vector);
-                    } else if (type == String.class) {
-                        String[] values = new String[size];
-                        for (T datum : data) values[i++] = (String) read.invoke(datum);
-                        StringVector vector = StringVector.of(field, values);
-                        columns.add(vector);
-                    } else if (type.isEnum()) {
-                        Object[] levels = type.getEnumConstants();
-                        if (levels.length < Byte.MAX_VALUE + 1) {
-                            byte[] values = new byte[size];
-                            for (T datum : data) values[i++] = (byte) ((Enum<?>) read.invoke(datum)).ordinal();
-                            ByteVector vector = ByteVector.of(field, values);
-                            columns.add(vector);
-                        } else if (levels.length < Short.MAX_VALUE + 1) {
-                            short[] values = new short[size];
-                            for (T datum : data) values[i++] = (short) ((Enum<?>) read.invoke(datum)).ordinal();
-                            ShortVector vector = ShortVector.of(field, values);
-                            columns.add(vector);
-                        } else {
-                            int[] values = new int[size];
-                            for (T datum : data) values[i++] = ((Enum<?>) read.invoke(datum)).ordinal();
-                            IntVector vector = IntVector.of(field, values);
-                            columns.add(vector);
-                        }
                     } else {
-                        Object[] values = new Object[size];
-                        for (T datum : data) values[i++] = read.invoke(datum);
-                        Vector<?> vector = Vector.of(field, values);
+                        int[] values = new int[size];
+                        for (T datum : data) values[i++] = ((Enum<?>) read.invoke(datum)).ordinal();
+                        IntVector vector = IntVector.of(field, values);
                         columns.add(vector);
                     }
+                } else {
+                    Object[] values = new Object[size];
+                    for (T datum : data) values[i++] = read.invoke(datum);
+                    Vector<?> vector = Vector.of(field, values);
+                    columns.add(vector);
                 }
             }
         } catch (java.beans.IntrospectionException ex) {
