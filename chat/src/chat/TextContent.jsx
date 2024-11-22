@@ -25,7 +25,7 @@ export default function TextContent({
                     const {children, className, node, ...rest} = props
                     const language = /language-(\w+)/.exec(className || '');
                     const code = String(children)
-                    const multiline = /\r|\n/.exec(code);
+                    const multiline = /[\r\n]/.exec(code);
                     return multiline ?
                     (
                         <SyntaxHighlighter
