@@ -34,27 +34,10 @@ public class DiscreteMixture extends DiscreteDistribution {
     /**
      * A component in the mixture distribution is defined by a distribution
      * and its weight in the mixture.
+     * @param priori the priori probability of component.
+     * @param distribution the distribution of component.
      */
-    public static class Component {
-        /**
-         * The priori probability of component.
-         */
-        public final double priori;
-
-        /**
-         * The distribution of component.
-         */
-        public final DiscreteDistribution distribution;
-
-        /**
-         * Constructor.
-         * @param priori the priori probability of component.
-         * @param distribution the distribution of component.
-         */
-        public Component(double priori, DiscreteDistribution distribution) {
-            this.priori = priori;
-            this.distribution = distribution;
-        }
+    public record Component(double priori, DiscreteDistribution distribution) {
     }
 
     /** The components of finite mixture model. */
