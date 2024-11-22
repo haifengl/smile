@@ -85,8 +85,9 @@ public class MutableLSH<E> extends LSH<E> {
                     Bucket bucket = h.get(key);
                     if (bucket == null) {
                         logger.error("null bucket when removing an entry");
+                    } else {
+                        bucket.remove(i);
                     }
-                    bucket.remove(i);
                 }
                 return;
             }
