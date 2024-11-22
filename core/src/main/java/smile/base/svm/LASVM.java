@@ -272,6 +272,7 @@ public class LASVM<T> implements Serializable {
 
         if (v2 == null) {
             // determine imax
+            assert v1 != null;
             double km = v1.k;
             double gm = v1.g;
             double best = 0.0;
