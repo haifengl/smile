@@ -19,6 +19,9 @@ package smile.validation;
 
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
+
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -54,20 +57,18 @@ public class CrossValidationTest {
         Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < n; j++) {
-                hit[j] = false;
+            Arrays.fill(hit, false);
+
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                assertFalse(hit[train[j]]);
-                hit[train[j]] = true;
-            }
-
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
             for (int j = 0; j < n; j++) {
@@ -84,10 +85,10 @@ public class CrossValidationTest {
         Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
         }
 
@@ -110,20 +111,18 @@ public class CrossValidationTest {
         Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < n; j++) {
-                hit[j] = false;
+            Arrays.fill(hit, false);
+
+            int[] train = bags[i].samples();
+            for (int sample : train) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
-            int[] train = bags[i].samples;
-            for (int j = 0; j < train.length; j++) {
-                assertFalse(hit[train[j]]);
-                hit[train[j]] = true;
-            }
-
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
 
             for (int j = 0; j < n; j++) {
@@ -146,10 +145,10 @@ public class CrossValidationTest {
         Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = bags[i].oob;
-            for (int j = 0; j < test.length; j++) {
-                assertFalse(hit[test[j]]);
-                hit[test[j]] = true;
+            int[] test = bags[i].oob();
+            for (int sample : test) {
+                assertFalse(hit[sample]);
+                hit[sample] = true;
             }
         }
 

@@ -139,10 +139,10 @@ public class ClassificationValidation<M> implements Serializable {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            T[] trainx = MathEx.slice(x, bag.samples);
-            int[] trainy = MathEx.slice(y, bag.samples);
-            T[] testx = MathEx.slice(x, bag.oob);
-            int[] testy = MathEx.slice(y, bag.oob);
+            T[] trainx = MathEx.slice(x, bag.samples());
+            int[] trainy = MathEx.slice(y, bag.samples());
+            T[] testx = MathEx.slice(x, bag.oob());
+            int[] testy = MathEx.slice(y, bag.oob());
 
             rounds.add(of(trainx, trainy, testx, testy, trainer));
         }
@@ -203,7 +203,7 @@ public class ClassificationValidation<M> implements Serializable {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            rounds.add(of(formula, data.of(bag.samples), data.of(bag.oob), trainer));
+            rounds.add(of(formula, data.of(bag.samples()), data.of(bag.oob()), trainer));
         }
 
         return new ClassificationValidations<>(rounds);
