@@ -579,9 +579,8 @@ public class PorterStemmer implements Stemmer {
      */
     public String stripPluralParticiple(String word) {
         b = word.toCharArray();
-
         k = word.length() - 1;
-        if (k > 1 && !word.equalsIgnoreCase("is")
+        if (k > 1 // && !word.equalsIgnoreCase("is")
             && !word.equalsIgnoreCase("was")
             && !word.equalsIgnoreCase("has")
             && !word.equalsIgnoreCase("his")
