@@ -105,7 +105,7 @@ public class Llama {
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Integer deviceId) throws IOException {
         File dir = new File(checkpointDir);
-        if (!dir.exists()) {
+        if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
         }
 
