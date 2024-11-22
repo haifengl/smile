@@ -422,21 +422,13 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.classes);
     }
 
-    /** The result of pruning a subtree. */
-    private static class Prune {
-        /** The merged node if pruned. Otherwise, the original node. */
-        final Node node;
-        /** The test error on this node. */
-        final int error;
-        /** The training sample count of each class. */
-        final int[] count;
-
-        /** Constructor. */
-        Prune(Node node, int error, int[] count) {
-            this.node = node;
-            this.error = error;
-            this.count = count;
-        }
+    /**
+     * The result of pruning a subtree.
+     * @param node The merged node if pruned. Otherwise, the original node.
+     * @param error The test error on this node.
+     * @param count The training sample size of each class.
+     */
+    record Prune(Node node, int error, int[] count) {
     }
 
     /** Prunes a subtree. */

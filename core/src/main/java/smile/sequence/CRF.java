@@ -362,14 +362,11 @@ public class CRF implements Serializable {
         return new CRF(sequences[0][0].schema(), potentials, shrinkage);
     }
 
-    static class PotentialLoss implements Loss {
-        /** The response variable. */
-        final double[] response;
-
-        PotentialLoss(double[] response) {
-            this.response = response;
-        }
-
+    /**
+     * Potential loss function.
+     * @param response the response variable.
+     */
+    record PotentialLoss(double[] response) implements Loss {
         @Override
         public double output(int[] nodeSamples, int[] sampleCount) {
             int n = 0;
