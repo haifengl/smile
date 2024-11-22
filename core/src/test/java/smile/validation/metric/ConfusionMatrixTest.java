@@ -29,7 +29,7 @@ public class ConfusionMatrixTest {
         ConfusionMatrix confusion = ConfusionMatrix.of(truth, prediction);
         System.out.println(confusion);
 
-        int[][] matrix = confusion.matrix;
+        int[][] matrix = confusion.matrix();
         int[] expected = {1,1,1,0,1,0};
 
         for(int i = 0; i < expected.length; i++){
