@@ -204,7 +204,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         });
 
         double entropy = entropy(k, neighbors, size, px);
-        logger.info(String.format("Entropy after initialization: %.4f", entropy));
+        logger.info("Entropy after initialization: {}", entropy);
 
         double diff = Double.MAX_VALUE;
         for (int iter = 1; diff > tol; iter++) {
@@ -253,7 +253,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             double prevObj = entropy;
             entropy = entropy(k, neighbors, size, px);
             diff = prevObj - entropy;
-            logger.info(String.format("Entropy after %3d iterations: %.4f", iter, entropy));
+            logger.info("Entropy after {} iterations: {}", iter, entropy);
         }
 
         // Collapse clusters by removing clusters with no samples.

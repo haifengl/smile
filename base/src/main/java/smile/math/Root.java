@@ -84,11 +84,11 @@ public class Root {
             xm = 0.5 * (c - b);
 
             if (iter % 10 == 0) {
-                logger.info(String.format("Brent: the root after %3d iterations: %.5g, error = %.5g", iter, b, xm));
+                logger.info("Brent: the root after {} iterations: {}, error = {}", iter, b, xm);
             }
 
             if (Math.abs(xm) <= tol || fb == 0.0) {
-                logger.info(String.format("Brent finds the root after %d iterations: %.5g, error = %.5g", iter, b, xm));
+                logger.info("Brent finds the root after {} iterations: {}, error = {}", iter, b, xm);
                 return b;
             }
 
@@ -196,7 +196,7 @@ public class Root {
                 dx = 0.5 * (xh - xl);
                 rts = xl + dx;
                 if (xl == rts) {
-                    logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
+                    logger.info("Newton-Raphson finds the root after {} iterations: {}, error = {}", iter, rts, dx);
                     return rts;
                 }
             } else {
@@ -205,17 +205,17 @@ public class Root {
                 double temp = rts;
                 rts -= dx;
                 if (temp == rts) {
-                    logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
+                    logger.info("Newton-Raphson finds the root after {} iterations: {}, error = {}", iter, rts, dx);
                     return rts;
                 }
             }
 
             if (iter % 10 == 0) {
-                logger.info(String.format("Newton-Raphson: the root after %3d iterations: %.5g, error = %.5g", iter, rts, dx));
+                logger.info("Newton-Raphson: the root after {} iterations: {}, error = {}", iter, rts, dx);
             }
 
             if (Math.abs(dx) < tol) {
-                logger.info(String.format("Newton-Raphson finds the root after %d iterations: %.5g, error = %.5g", iter, rts, dx));
+                logger.info("Newton-Raphson finds the root after {} iterations: {}, error = {}", iter, rts, dx);
                 return rts;
             }
 

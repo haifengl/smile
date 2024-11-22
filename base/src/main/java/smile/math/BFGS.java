@@ -129,7 +129,7 @@ public class BFGS {
         // Calculate starting function value and gradient and initialize the
         // inverse Hessian to the unit matrix.
         double f = func.g(x, g);
-        logger.info(String.format("BFGS: initial function value: %.5f", f));
+        logger.info("BFGS: initial function value: {}", f);
 
         for (int i = 0; i < n; i++) {
             hessin[i][i] = 1.0;
@@ -144,7 +144,7 @@ public class BFGS {
             f = linesearch(func, x, f, g, xi, xnew, stpmax);
 
             if (iter % 100 == 0) {
-                logger.info(String.format("BFGS: the function value after %3d iterations: %.5f", iter, f));
+                logger.info("BFGS: the function value after {} iterations: {}", iter, f);
             }
 
             // update the line direction and current point.
@@ -163,7 +163,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("BFGS converges on x after %d iterations: %.5f", iter, f));
+                logger.info("BFGS converges on x after {} iterations: {}", iter, f);
                 return f;
             }
 
@@ -182,7 +182,7 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("BFGS converges on gradient after %d iterations: %.5f", iter, f));
+                logger.info("BFGS converges on gradient after {} iterations: {}", iter, f);
                 return f;
             }
 
@@ -233,7 +233,7 @@ public class BFGS {
             }
         }
 
-        logger.warn(String.format("BFGS reaches maximum %d iterations: %.5f", maxIter, f));
+        logger.warn("BFGS reaches maximum {} iterations: {}", maxIter, f);
         return f;
 
     }
@@ -305,7 +305,7 @@ public class BFGS {
         // Current function value.
         double f = func.g(x, g);
 
-        logger.info(String.format("L-BFGS: initial function value: %.5f", f));
+        logger.info("L-BFGS: initial function value: {}", f);
 
         // Initial line search direction.
         for (int i = 0; i < n; i++) {
@@ -336,7 +336,7 @@ public class BFGS {
             }
 
             if (test < TOLX) {
-                logger.info(String.format("L-BFGS converges on x after %d iterations: %.5f", iter, f));
+                logger.info("L-BFGS converges on x after {} iterations: {}", iter, f);
                 return f;
             }
 
@@ -352,12 +352,12 @@ public class BFGS {
             }
 
             if (test < gtol) {
-                logger.info(String.format("L-BFGS converges on gradient after %d iterations: %.5f", iter, f));
+                logger.info("L-BFGS converges on gradient after {} iterations: {}", iter, f);
                 return f;
             }
 
             if (iter % 100 == 0) {
-                logger.info(String.format("L-BFGS: the function value after %3d iterations: %.5f", iter, f));
+                logger.info("L-BFGS: the function value after {} iterations: {}", iter, f);
             }
 
             double ys = dot(y[k], s[k]);
@@ -398,7 +398,7 @@ public class BFGS {
             }
         }
 
-        logger.warn(String.format("L-BFGS reaches maximum %d iterations: %.5f", maxIter, f));
+        logger.warn("L-BFGS reaches maximum {} iterations: {}", maxIter, f);
         return f;
     }
 
@@ -663,12 +663,12 @@ public class BFGS {
             }
 
             if (gnorm(x, g, l, u) < gtol) {
-                logger.info(String.format("L-BFGS-B converges on gradient after %d iterations: %.5f", iter, f));
+                logger.info("L-BFGS-B converges on gradient after {} iterations: {}", iter, f);
                 return f;
             }
 
             if (iter % 100 == 0) {
-                logger.info(String.format("L-BFGS-B: the function value after %3d iterations: %.5f", iter, f));
+                logger.info("L-BFGS-B: the function value after {} iterations: {}", iter, f);
             }
 
             // prepare for next iteration
@@ -738,12 +738,12 @@ public class BFGS {
             logger.debug("L-BFGS-B iteration {} moves from {} to {} where f(x) = {}", iter, Arrays.toString(x_old), Arrays.toString(x), f);
 
             if (abs(f_old - f) < TOLF) {
-                logger.info(String.format("L-BFGS-B converges on f(x) after %d iterations: %.5f", iter, f));
+                logger.info("L-BFGS-B converges on f(x) after {} iterations: {}", iter, f);
                 return f;
             }
         }
 
-        logger.warn(String.format("L-BFGS-B reaches maximum %d iterations: %.5f", maxIter, f));
+        logger.warn("L-BFGS-B reaches maximum {} iterations: {}", maxIter, f);
         return f;
     }
 

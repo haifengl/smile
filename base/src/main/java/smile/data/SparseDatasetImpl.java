@@ -83,7 +83,7 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
                 }
 
                 if (e.i == i) {
-                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", e.i, x));
+                    logger.warn("Ignore duplicated indices: {} in {}", e.i, x);
                 } else {
                     if (ncol <= e.i) {
                         ncol = e.i + 1;

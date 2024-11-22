@@ -103,11 +103,11 @@ public class PageRank {
             }
 
             if (iter % 10 == 0) {
-                logger.info(String.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta));
+                logger.info("PageRank residual after {} power iterations: {}", iter, delta);
             }
 
             if (delta < tol) {
-                logger.info(String.format("PageRank residual after %3d power iterations: %.7f\n", iter, delta));
+                logger.info("PageRank residual after {} power iterations: {}", iter, delta);
                 return p;
             }
         }

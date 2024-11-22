@@ -137,7 +137,7 @@ public class XMeans extends CentroidClustering<double[], double[]> {
                 double newBIC = bic(2, ni, d, kmeans[i].distortion, kmeans[i].size);
                 double oldBIC = bic(ni, d, distortions[i]);
                 score[i] = newBIC - oldBIC;
-                logger.info(String.format("Cluster %3d BIC: %12.4f, BIC after split: %12.4f, improvement: %12.4f", i, oldBIC, newBIC, score[i]));
+                logger.info("Cluster {} BIC: {}, BIC after split: {}, improvement: {}", i, oldBIC, newBIC, score[i]);
             }
 
             int[] index = QuickSort.sort(score);
@@ -187,7 +187,7 @@ public class XMeans extends CentroidClustering<double[], double[]> {
                 }
             });
 
-            logger.info(String.format("Distortion with %d clusters: %.5f", k, distortion));
+            logger.info("Distortion with {} clusters: {}", k, distortion);
         }
 
         return new XMeans(distortion, centroids, y);

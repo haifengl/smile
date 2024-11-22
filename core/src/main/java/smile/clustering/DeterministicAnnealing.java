@@ -272,7 +272,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
             diff = distortion - DTH;
             distortion = DTH;
 
-            logger.info(String.format("Entropy after %3d iterations at temperature %.4f and k = %d: %.4f (soft distortion = %.4f)", iter, T, k / 2, H, D));
+            logger.info("Entropy after {} iterations at temperature {} and k = {}: {} (soft distortion = {})", iter, T, k / 2, H, D);
         }
 
         return distortion;

@@ -515,16 +515,16 @@ public abstract class IMatrix implements Serializable {
 
             double eps = Math.abs(lambda - l);
             if (iter % 10 == 0) {
-                logger.trace(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
+                logger.trace("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
             }
 
             if (eps < tol) {
-                logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", iter, lambda + p));
+                logger.info("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
                 return lambda + p;
             }
         }
 
-        logger.info(String.format("Largest eigenvalue after %3d power iterations: %.4f", maxIter, lambda + p));
+        logger.info("Largest eigenvalue after {} power iterations: {}", maxIter, lambda + p);
         logger.error("Power iteration exceeded the maximum number of iterations.");
         return lambda + p;
     }
@@ -1003,11 +1003,11 @@ public abstract class IMatrix implements Serializable {
             }
 
             if (iter % 10 == 0) {
-                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
+                logger.info("BCG: the error after {} iterations: {}", iter, err);
             }
 
             if (err <= tol) {
-                logger.info(String.format("BCG: the error after %3d iterations: %.5g", iter, err));
+                logger.info("BCG: the error after {} iterations: {}", iter, err);
                 break;
             }
         }

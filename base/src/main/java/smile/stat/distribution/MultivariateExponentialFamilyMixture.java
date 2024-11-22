@@ -163,7 +163,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
             L = loglikelihood;
 
             if (iter % 10 == 0) {
-                logger.info(String.format("The log-likelihood after %d iterations: %.4f", iter, L));
+                logger.info("The log-likelihood after {} iterations: {}", iter, L);
             }
         }
 

@@ -209,7 +209,7 @@ public class ICA implements Serializable {
             }
 
             if (diff > tol) {
-                logger.warn(String.format("Component %d did not converge in %d iterations.", i, maxIter));
+                logger.warn("Component {} did not converge in {} iterations.", i, maxIter);
             }
         }
 

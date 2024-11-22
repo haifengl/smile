@@ -159,15 +159,15 @@ public class IsotonicMDS {
         }
 
         if (stress == 0.0) {
-            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is perfect.", 100 * stress));
+            logger.info("Isotonic MDS: error = {}%. The fit is perfect.", 100 * stress);
         } else if (stress <= 0.025) {
-            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is excellent.", 100 * stress));
+            logger.info("Isotonic MDS: error = {}%. The fit is excellent.", 100 * stress);
         } else if (stress <= 0.05) {
-            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is good.", 100 * stress));
+            logger.info("Isotonic MDS: error = {}%. The fit is good.", 100 * stress);
         } else if (stress <= 0.10) {
-            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit is fair.", 100 * stress));
+            logger.info("Isotonic MDS: error = {}%. The fit is fair.", 100 * stress);
         } else {
-            logger.info(String.format("Isotonic MDS: error = %.1f%%. The fit may be poor.", 100 * stress));
+            logger.info("Isotonic MDS: error = {}%. The fit may be poor.", 100 * stress);
         }
 
         double[][] coordinates = new double[nr][nc];

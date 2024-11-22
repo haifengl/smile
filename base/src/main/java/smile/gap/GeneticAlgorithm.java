@@ -289,7 +289,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
             }
             avg /= size;
 
-            logger.info(String.format("Generation %d, best fitness %G, average fitness %G", g, best.fitness(), avg));
+            logger.info("Generation {}, best fitness {}, average fitness {}", g, best.fitness(), avg);
         }
 
         return best;
