@@ -114,11 +114,11 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     public static HMMPOSTagger getDefault() {
         if (DEFAULT_TAGGER == null) {
             try {
-                ObjectInputStream ois = new ObjectInputStream(HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmmpostagger.model"));
+                ObjectInputStream ois = new ObjectInputStream(HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.model"));
                 DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
                 ois.close();
             } catch (Exception ex) {
-                logger.error("Failed to load /smile/nlp/pos/hmmpostagger.model", ex);
+                logger.error("Failed to load /smile/nlp/pos/hmm-pos-tagger.model", ex);
             }
         }
         return DEFAULT_TAGGER;
@@ -159,7 +159,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         int[] s = new int[n];
         
         int numStates = pi.length;
-        // The porbability of the most probable path.
+        // The probability of the most probable path.
         double[][] delta = new double[n][numStates];
         // Backtrace.
         int[][] psy = new int[n][numStates];
@@ -412,7 +412,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         HMMPOSTagger tagger = HMMPOSTagger.fit(x, y);
 
         try {
-            FileOutputStream fos = new FileOutputStream("hmmpostagger.model");
+            FileOutputStream fos = new FileOutputStream("hmm-pos-tagger.model");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(tagger);
             oos.flush();
