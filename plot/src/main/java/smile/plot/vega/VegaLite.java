@@ -333,7 +333,7 @@ public class VegaLite {
     /**
      * Returns the HTML wrapped in an iframe to render in notebooks.
      */
-    public String iframe() throws JsonProcessingException {
+    public String iframe() {
         return iframe(UUID.randomUUID().toString());
     }
 
