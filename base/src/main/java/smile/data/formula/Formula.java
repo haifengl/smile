@@ -309,7 +309,7 @@ public class Formula implements Serializable {
         List<Variable> rest = Arrays.stream(inputSchema.fields())
                 .filter(field -> !columns.contains(field.name))
                 .map(field -> new Variable(field.name))
-                .collect(Collectors.toList());
+                .toList();
 
         List<Term> expanded = new ArrayList<>();
         for (Term predictor : predictors) {

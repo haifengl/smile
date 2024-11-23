@@ -85,7 +85,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
     /**
      * Formatter for array values.
      */
-    private class ArrayFormatter extends DefaultFormatter {
+    private static class ArrayFormatter extends DefaultFormatter {
         @Override
         public Object stringToValue(String string) throws ParseException {
             string = string.trim();

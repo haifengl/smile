@@ -1172,8 +1172,7 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor crossEntropy(Tensor input, Tensor target, String reduction, long ignoreIndex) {
         var kind = switch (reduction) {
-            case "none" -> new kMean();
-            case "mean" -> new kMean();
+            case "none", "mean" -> new kMean();
             case "sum" -> new kSum();
             default -> throw new IllegalArgumentException("Invalid reduction: " + reduction);
         };

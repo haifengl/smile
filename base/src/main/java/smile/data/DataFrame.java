@@ -1398,7 +1398,7 @@ public interface DataFrame extends Iterable<Tuple> {
                 cells[i] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
             }
             return cells;
-        }).collect(java.util.stream.Collectors.toList());
+        }).toList();
 
         // Compute the width of each column
         for (String[] row : rows) {

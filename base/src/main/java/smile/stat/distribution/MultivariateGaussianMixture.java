@@ -21,6 +21,7 @@ import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 import java.io.Serial;
+import java.util.Arrays;
 
 /**
  * Finite multivariate Gaussian mixture. The EM algorithm is provided to learn
@@ -112,9 +113,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         // We use the kmeans++ algorithm to find the initial centers.
         // Initially, all components have same covariance matrix.
         double[] D = new double[n];
-        for (int i = 0; i < n; i++) {
-            D[i] = Double.MAX_VALUE;
-        }
+        Arrays.fill(D, Double.MAX_VALUE);
 
         // pick the next center
         for (int i = 1; i < k; i++) {
