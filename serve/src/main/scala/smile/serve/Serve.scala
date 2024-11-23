@@ -113,7 +113,7 @@ object Serve {
     * (e.g. NullPointerException), the class name is returned.
     */
   private def exceptionMessage(ex: Throwable): String = {
-    Option(ex.getMessage()).getOrElse(s"${ex.getClass.getName}(null)")
+    Option(ex.getMessage).getOrElse(s"${ex.getClass.getName}(null)")
   }
 
   private def startHttpServer(routes: Route)(implicit system: ActorSystem[?]): Unit = {

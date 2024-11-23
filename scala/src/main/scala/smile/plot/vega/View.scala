@@ -834,7 +834,7 @@ object View {
     val json = this.field(field, `type`, bin, timeUnit, aggregate, title)
 
     if (scale != JsUndefined) json.scale = scale
-    if (!sort.isEmpty) json.sort = sort
+    if (sort.nonEmpty) json.sort = sort
     if (stack != JsUndefined) json.stack = stack
 
     json
