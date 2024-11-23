@@ -83,32 +83,13 @@ import smile.sort.QuickSort;
  * WoE is better than on-hot encoding as it does not increase the
  * complexity of the model.
  *
+ * @param feature The feature name.
+ * @param iv The information value.
+ * @param woe The weight of evidence.
+ * @param breaks The breakpoints of intervals for numerical variables.
  * @author Haifeng Li
  */
-public class InformationValue implements Comparable<InformationValue> {
-    /** The feature name. */
-    public final String feature;
-    /** Information value. */
-    public final double iv;
-    /** Weight of evidence. */
-    public final double[] woe;
-    /** Breakpoints of intervals for numerical variables. */
-    public final double[] breaks;
-
-    /**
-     * Constructor.
-     * @param feature The feature name.
-     * @param iv Information value.
-     * @param woe Weight of evidence.
-     * @param breaks Breakpoints of intervals for numerical variables.
-     */
-    public InformationValue(String feature, double iv, double[] woe, double[] breaks) {
-        this.feature = feature;
-        this.iv = iv;
-        this.woe = woe;
-        this.breaks = breaks;
-    }
-
+public record InformationValue(String feature, double iv, double[] woe, double[] breaks) implements Comparable<InformationValue> {
     @Override
     public int compareTo(InformationValue other) {
         return Double.compare(iv, other.iv);

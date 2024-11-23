@@ -39,33 +39,20 @@ import smile.math.MathEx;
  * <ol>
  * <li> M. Shipp, et al. Diffuse large B-cell lymphoma outcome prediction by gene-expression profiling and supervised machine learning. Nature Medicine, 2002.</li>
  * </ol>
- * 
+ *
+ * @param feature The feature name.
+ * @param ratio Signal noise ratio.
  * @author Haifeng Li
  */
-public class SignalNoiseRatio implements Comparable<SignalNoiseRatio> {
-    /** The feature name. */
-    public final String feature;
-    /** Signal noise ratio. */
-    public final double s2n;
-
-    /**
-     * Constructor.
-     * @param feature The feature name.
-     * @param s2n Signal noise ratio.
-     */
-    public SignalNoiseRatio(String feature, double s2n) {
-        this.feature = feature;
-        this.s2n = s2n;
-    }
-
+public record SignalNoiseRatio(String feature, double ratio) implements Comparable<SignalNoiseRatio> {
     @Override
     public int compareTo(SignalNoiseRatio other) {
-        return Double.compare(s2n, other.s2n);
+        return Double.compare(ratio, other.ratio);
     }
 
     @Override
     public String toString() {
-        return String.format("SignalNoiseRatio(%s, %.4f)", feature, s2n);
+        return String.format("SignalNoiseRatio(%s, %.4f)", feature, ratio);
     }
 
     /**

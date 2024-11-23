@@ -40,33 +40,20 @@ import smile.math.MathEx;
  * <ol>
  * <li> S. Dudoit, J. Fridlyand and T. Speed. Comparison of discrimination methods for the classification of tumors using gene expression data. J Am Stat Assoc, 97:77-87, 2002.</li>
  * </ol>
- * 
+ *
+ * @param feature The feature name.
+ * @param ratio Sum squares ratio.
  * @author Haifeng Li
  */
-public class SumSquaresRatio implements Comparable<SumSquaresRatio> {
-    /** The feature name. */
-    public final String feature;
-    /** Sum squares ratio. */
-    public final double ssr;
-
-    /**
-     * Constructor.
-     * @param feature The feature name.
-     * @param ssr Sum squares ratio.
-     */
-    public SumSquaresRatio(String feature, double ssr) {
-        this.feature = feature;
-        this.ssr = ssr;
-    }
-
+public record SumSquaresRatio(String feature, double ratio) implements Comparable<SumSquaresRatio> {
     @Override
     public int compareTo(SumSquaresRatio other) {
-        return Double.compare(ssr, other.ssr);
+        return Double.compare(ratio, other.ratio);
     }
 
     @Override
     public String toString() {
-        return String.format("SumSquaresRatio(%s, %.4f)", feature, ssr);
+        return String.format("SumSquaresRatio(%s, %.4f)", feature, ratio);
     }
 
     /**
