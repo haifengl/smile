@@ -53,10 +53,10 @@ public class ChiSqTestTest {
         System.out.println("one sample test");
         int[] bins = {20, 22, 13, 22, 10, 13};
         double[] prob = {1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6};
-        ChiSqTest result = ChiSqTest.test(bins, prob);
-        assertEquals(8.36, result.chisq, 1E-2);
-        assertEquals(5, result.df, 1E-10);
-        assertEquals(0.1375, result.pvalue, 1E-4);
+        ChiSqTest test = ChiSqTest.test(bins, prob);
+        assertEquals(8.36, test.chisq(), 1E-2);
+        assertEquals(5, test.df(), 1E-10);
+        assertEquals(0.1375, test.pvalue(), 1E-4);
     }
 
     /**
@@ -67,10 +67,10 @@ public class ChiSqTestTest {
         System.out.println("two sample test");
         int[] bins1 = {8, 13, 16, 10, 3};
         int[] bins2 = {4,  9, 14, 16, 7};
-        ChiSqTest result = ChiSqTest.test(bins1, bins2);
-        assertEquals(5.179, result.chisq, 1E-2);
-        assertEquals(4, result.df, 1E-10);
-        assertEquals(0.2695, result.pvalue, 1E-4);
+        ChiSqTest test = ChiSqTest.test(bins1, bins2);
+        assertEquals(5.179, test.chisq(), 1E-2);
+        assertEquals(4, test.df(), 1E-10);
+        assertEquals(0.2695, test.pvalue(), 1E-4);
     }
 
     /**
@@ -80,10 +80,10 @@ public class ChiSqTestTest {
     public void testPearsonChisqTest() {
         System.out.println("pearson");
         int[][] x = {{12, 7}, {5, 7}};
-        ChiSqTest result = ChiSqTest.test(x);
-        assertEquals(1, result.df, 1E-7);
-        assertEquals(0.6411, result.chisq, 1E-4);
-        assertEquals(0.4233, result.pvalue, 1E-4);
+        ChiSqTest test = ChiSqTest.test(x);
+        assertEquals(1, test.df(), 1E-7);
+        assertEquals(0.6411, test.chisq(), 1E-4);
+        assertEquals(0.4233, test.pvalue(), 1E-4);
     }
 
     /**
@@ -97,9 +97,9 @@ public class ChiSqTestTest {
                 {4, 9, 14, 16, 7}
         };
 
-        ChiSqTest result = ChiSqTest.test(y);
-        assertEquals(4, result.df, 1E-7);
-        assertEquals(5.179, result.chisq, 1E-3);
-        assertEquals(0.2695, result.pvalue, 1E-4);
+        ChiSqTest test = ChiSqTest.test(y);
+        assertEquals(4, test.df(), 1E-7);
+        assertEquals(5.179, test.chisq(), 1E-3);
+        assertEquals(0.2695, test.pvalue(), 1E-4);
     }
 }

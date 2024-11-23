@@ -57,15 +57,15 @@ public class TTestTest {
             2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
             1.28461394, -0.02906355};
         
-        TTest result = TTest.test(x, 1.0);
-        assertEquals(19, result.df, 1E-10);
-        assertEquals(-0.6641, result.t, 1E-4);
-        assertEquals(0.5146, result.pvalue, 1E-4);
+        TTest test = TTest.test(x, 1.0);
+        assertEquals(19, test.df(), 1E-10);
+        assertEquals(-0.6641, test.t(), 1E-4);
+        assertEquals(0.5146, test.pvalue(), 1E-4);
 
-        result = TTest.test(x, 1.1);
-        assertEquals(19, result.df, 1E-10);
-        assertEquals(-1.0648, result.t, 1E-4);
-        assertEquals(0.3003, result.pvalue, 1E-4);
+        test = TTest.test(x, 1.1);
+        assertEquals(19, test.df(), 1E-10);
+        assertEquals(-1.0648, test.t(), 1E-4);
+        assertEquals(0.3003, test.pvalue(), 1E-4);
     }
 
     /**
@@ -83,19 +83,19 @@ public class TTestTest {
             -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
             1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592};
 
-        TTest result = TTest.test(x, y);
-        assertEquals(35.167, result.df, 1E-3);
-        assertEquals(-1.1219, result.t, 1E-4);
-        assertEquals(0.2695, result.pvalue, 1E-4);
+        TTest test = TTest.test(x, y);
+        assertEquals(35.167, test.df(), 1E-3);
+        assertEquals(-1.1219, test.t(), 1E-4);
+        assertEquals(0.2695, test.pvalue(), 1E-4);
 
         double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        result = TTest.test(x, z);
-        assertEquals(34.025, result.df, 1E-3);
-        assertEquals(-1.518, result.t, 1E-3);
-        assertEquals(0.1382, result.pvalue, 1E-4);
+        test = TTest.test(x, z);
+        assertEquals(34.025, test.df(), 1E-3);
+        assertEquals(-1.518, test.t(), 1E-3);
+        assertEquals(0.1382, test.pvalue(), 1E-4);
     }
 
     /**
@@ -113,19 +113,19 @@ public class TTestTest {
             -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
             1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592};
 
-        TTest result = TTest.test(x, y, true);
-        assertEquals(36, result.df, 1E-10);
-        assertEquals(-1.1247, result.t, 1E-4);
-        assertEquals(0.2682, result.pvalue, 1E-4);
+        TTest test = TTest.test(x, y, true);
+        assertEquals(36, test.df(), 1E-10);
+        assertEquals(-1.1247, test.t(), 1E-4);
+        assertEquals(0.2682, test.pvalue(), 1E-4);
 
         double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        result = TTest.test(x, z, true);
-        assertEquals(36, result.df, 1E-10);
-        assertEquals(-1.4901, result.t, 1E-4);
-        assertEquals(0.1449, result.pvalue, 1E-4);
+        test = TTest.test(x, z, true);
+        assertEquals(36, test.df(), 1E-10);
+        assertEquals(-1.4901, test.t(), 1E-4);
+        assertEquals(0.1449, test.pvalue(), 1E-4);
     }
 
     /**
@@ -142,10 +142,10 @@ public class TTestTest {
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        TTest result = TTest.testPaired(y, z);
-        assertEquals(17, result.df, 1E-10);
-        assertEquals(-0.1502, result.t, 1E-4);
-        assertEquals(0.8824, result.pvalue, 1E-4);
+        TTest test = TTest.testPaired(y, z);
+        assertEquals(17, test.df(), 1E-10);
+        assertEquals(-0.1502, test.t(), 1E-4);
+        assertEquals(0.8824, test.pvalue(), 1E-4);
     }
 
     /**
@@ -158,10 +158,10 @@ public class TTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        TTest result = TTest.test(MathEx.cor(x,y), x.length-2);
-        assertEquals(7, result.df, 1E-10);
-        assertEquals(1.8411, result.t, 1E-4);
-        assertEquals(0.1082, result.pvalue, 1E-4);
+        TTest test = TTest.test(MathEx.cor(x,y), x.length-2);
+        assertEquals(7, test.df(), 1E-10);
+        assertEquals(1.8411, test.t(), 1E-4);
+        assertEquals(0.1082, test.pvalue(), 1E-4);
     }
 
 }

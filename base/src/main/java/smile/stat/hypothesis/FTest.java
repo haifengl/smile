@@ -30,38 +30,13 @@ import smile.util.IntSet;
  * only modest departures from the normal distribution, the test is unreliable
  * and should not be used.
  *
+ * @param f the F-statistic.
+ * @param df1 the first degree of freedom of F-statistic.
+ * @param df2 the second degree of freedom of F-statistic.
+ * @param pvalue the p-value.
  * @author Haifeng Li
  */
-public class FTest {
-    /**
-     * The degree of freedom of F-statistic.
-     */
-    public final int df1, df2;
-
-    /**
-     * F-statistic.
-     */
-    public final double f;
-
-    /**
-     * p-value.
-     */
-    public final double pvalue;
-
-    /**
-     * Constructor.
-     * @param f the F-statistic.
-     * @param df1 the first degree of freedom of F-statistic.
-     * @param df2 the second degree of freedom of F-statistic.
-     * @param pvalue the p-value.
-     */
-    public FTest(double f, int df1, int df2, double pvalue) {
-        this.f = f;
-        this.df1 = df1;
-        this.df2 = df2;
-        this.pvalue = pvalue;
-    }
-
+public record FTest(double f, int df1, int df2, double pvalue) {
     @Override
     public String toString() {
         return String.format("F-test(f = %.4f, df1 = %d, df2 = %d, p-value = %G)", f, df1, df2, pvalue);

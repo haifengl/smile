@@ -51,36 +51,12 @@ import smile.stat.distribution.Distribution;
  * is less powerful than the Shapiro-Wilk test or Anderson-Darling test for
  * testing normality.
  *
+ * @param method the type of test.
+ * @param d the Kolmogorov-Smirnov statistic.
+ * @param pvalue the p-value.
  * @author Haifeng Li
  */
-public class KSTest {
-    /**
-     * The type of test.
-     */
-    public final String method;
-
-    /**
-     * Kolmogorov-Smirnov statistic.
-     */
-    public final double d;
-
-    /**
-     * P-value.
-     */
-    public final double pvalue;
-
-    /**
-     * Constructor.
-     * @param method the type of test.
-     * @param d the Kolmogorov-Smirnov statistic.
-     * @param pvalue the p-value.
-     */
-    public KSTest(String method, double d, double pvalue) {
-        this.method = method;
-        this.d = d;
-        this.pvalue = pvalue;
-    }
-
+public record KSTest(String method, double d, double pvalue) {
     @Override
     public String toString() {
         return String.format("%s Kolmogorov-Smirnov Test(d = %.4f, p-value = %G)", method, d, pvalue);
