@@ -99,8 +99,8 @@ public class BoxPlot extends Plot {
             quantiles[i][5] = quantiles[i][3] - quantiles[i][1]; // interquartile range
             quantiles[i][6] = quantiles[i][1] - 1.5 * quantiles[i][5];
             quantiles[i][7] = quantiles[i][3] + 1.5 * quantiles[i][5];
-            quantiles[i][0] = quantiles[i][6] < data[i][0] ? data[i][0] : quantiles[i][6];
-            quantiles[i][4] = quantiles[i][7] > data[i][data[i].length - 1] ? data[i][data[i].length - 1] : quantiles[i][7];
+            quantiles[i][0] = Math.max(quantiles[i][6], data[i][0]);
+            quantiles[i][4] = Math.min(quantiles[i][7], data[i][data[i].length - 1]);
         }
     }
 

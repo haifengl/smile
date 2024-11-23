@@ -140,8 +140,8 @@ public class StructType implements DataType {
     public DataType[] types() {
         return Arrays.stream(fields)
                 .map(field -> field.type)
-                .collect(java.util.stream.Collectors.toList())
-                .toArray(new DataType[fields.length]);
+                .toList()
+                .toArray(new DataType[0]);
     }
 
     /**

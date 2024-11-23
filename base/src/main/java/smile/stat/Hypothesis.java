@@ -97,7 +97,7 @@ public interface Hypothesis {
                 case "unequal.var" -> TTest.test(x, y, false);
                 case "equal.var" -> TTest.test(x, y, true);
                 case "paired" -> TTest.testPaired(x, y);
-                default -> TTest.testPaired(x, y);
+                default -> throw new IllegalArgumentException("Invalid option: " + option);
             };
         }
 

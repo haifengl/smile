@@ -310,7 +310,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         Optional<Split> falseSplit = findBestSplit(falseChild, mid, split.hi, split.unsplittable); // reuse parent's array
 
         // Prune the branch if both children are leaf nodes and of same output value.
-        if (trueChild.equals(falseChild) && !trueSplit.isPresent() && !falseSplit.isPresent()) {
+        if (trueChild.equals(falseChild) && trueSplit.isEmpty() && falseSplit.isEmpty()) {
             return false;
         }
 
@@ -373,7 +373,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         Optional<Split> split = (mtry < p ? stream : stream.parallel()) // random forest is in parallel already
                 .mapToObj(j -> {
                     Optional<Split> s = findBestSplit(node, j, impurity, lo, hi);
-                    if (!s.isPresent()) unsplittable[j] = true;
+                    if (s.isEmpty()) unsplittable[j] = true;
                     return s;
                 })
                 .filter(Optional::isPresent)

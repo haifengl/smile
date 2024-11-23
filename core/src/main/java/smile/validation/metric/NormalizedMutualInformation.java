@@ -83,7 +83,6 @@ public class NormalizedMutualInformation implements ClusteringMetric {
             case MIN -> min(y1, y2);
             case SUM -> sum(y1, y2);
             case SQRT -> sqrt(y1, y2);
-            default -> throw new IllegalStateException("Unknown normalization method: " + method);
         };
     }
 
