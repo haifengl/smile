@@ -326,7 +326,6 @@ public class BetaDistribution implements ExponentialFamily {
                                 /* Step 6_a */
                                 X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                             }
-                            break;
                         } else {
                             /* Step 3 */
                             z = u1 * u1 * u2;
@@ -359,8 +358,8 @@ public class BetaDistribution implements ExponentialFamily {
                             }
                             /* Step 6_b */
                             X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
-                            break;
                         }
+                        break;
                     }
                     break;
                 default:
