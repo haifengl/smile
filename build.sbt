@@ -136,8 +136,8 @@ lazy val javaCppSettings = Seq(
 
 lazy val akkaSettings = Seq(
   libraryDependencies ++= {
-    val akkaVersion     = "2.10.0"
-    val akkaHttpVersion = "10.7.0"
+    val akkaVersion     = "2.9.3"
+    val akkaHttpVersion = "10.6.3"
     Seq(
       "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
       "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
