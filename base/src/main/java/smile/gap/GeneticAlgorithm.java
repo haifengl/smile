@@ -284,7 +284,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
             best = population[size - 1];
             
             double avg = 0.0;
-            for (Chromosome ch : population) {
+            for (Chromosome<T> ch : population) {
                 avg += ch.fitness();
             }
             avg /= size;

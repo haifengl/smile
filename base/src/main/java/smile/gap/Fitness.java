@@ -24,7 +24,7 @@ package smile.gap;
  *
  * @author Haifeng Li
  */
-public interface Fitness<T extends Chromosome> {
+public interface Fitness<T extends Chromosome<T>> {
     /**
      * Returns the non-negative fitness value of a chromosome. Large values
      * indicate better fitness.
