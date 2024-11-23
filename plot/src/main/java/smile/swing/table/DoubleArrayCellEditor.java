@@ -23,15 +23,14 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.text.ParseException;
-
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
+import smile.swing.text.FloatArrayFormatter;
+
 
 /**
  * Implements a cell editor that uses a formatted text field
@@ -52,72 +51,7 @@ public class DoubleArrayCellEditor extends DefaultCellEditor {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
         
-        DefaultFormatter formatter = new DefaultFormatter() {
-            @Override
-            public Object stringToValue(String string) throws ParseException {
-                string = string.trim();
-                if (string.isEmpty()) {
-                    throw new ParseException("Empty string", 0);
-                }
-
-                int begin = 0;
-                char ch = string.charAt(0);
-                if (ch == '[' || ch == '{' || ch == '<') {
-                    begin = 1;
-                }
-
-                int end = string.length();
-                ch = string.charAt(end - 1);
-                if (ch == ']' || ch == '}' || ch == '>') {
-                    end -= 1;
-                }
-
-                string = string.substring(begin, end);
-                String[] items = string.split("\\s*[ ,;:]\\s*");
-
-                double[] data = new double[items.length];
-                for (int i = 0; i < data.length; i++) {
-                    data[i] = Double.parseDouble(items[i].trim());
-                }
-
-                return data;
-            }
-
-            @Override
-            public String valueToString(Object value) throws ParseException {
-                if (value == null) {
-                    return "";
-                }
-                
-                StringBuilder builder = new StringBuilder();
-
-                if (value instanceof float[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-
-                } else if (value instanceof double[] data) {
-                    if (data.length > 0) {
-                        builder.append("[").append(data[0]);
-                    }
-
-                    for (int i = 1; i < data.length; i++) {
-                        builder.append(", ").append(data[i]);
-                    }
-                    builder.append("]");
-                } else {
-                    throw new ParseException("Unsupport data type: " + value.getClass(), 0);
-                }
-
-                return builder.toString();
-            }
-        };
-                
+        DefaultFormatter formatter = new FloatArrayFormatter();
         formatter.setOverwriteMode(false);
         textField.setFormatterFactory(new DefaultFormatterFactory(formatter));
         textField.setHorizontalAlignment(JTextField.TRAILING);
