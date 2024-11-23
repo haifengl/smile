@@ -27,7 +27,7 @@ package smile.gap;
  *
  * @author Haifeng Li
  */
-public interface LamarckianChromosome extends Chromosome {
+public interface LamarckianChromosome<T extends Chromosome<T>> extends Chromosome<T> {
     /**
      * Performs a step of (hill-climbing) local search to evolve this chromosome.
      */

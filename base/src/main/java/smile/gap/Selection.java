@@ -36,7 +36,7 @@ public interface Selection {
      * @param <T> the type of <code>Chromosome</code>.
      * @return the chromosomes as parents to crossover.
      */
-    <T extends Chromosome> T apply(T[] population);
+    <T extends Chromosome<T>> T apply(T[] population);
 
     /**
      * Roulette Wheel Selection, also called fitness proportionate selection.
@@ -48,7 +48,7 @@ public interface Selection {
     static Selection RouletteWheel() {
         return new Selection() {
             @Override
-            public <T extends Chromosome> T apply(T[] population) {
+            public <T extends Chromosome<T>> T apply(T[] population) {
                 int size = population.length;
 
                 double worst = population[0].fitness();
@@ -85,7 +85,7 @@ public interface Selection {
     static Selection ScaledRouletteWheel() {
         return new Selection() {
             @Override
-            public <T extends Chromosome> T apply(T[] population) {
+            public <T extends Chromosome<T>> T apply(T[] population) {
                 int size = population.length;
                 double worst = population[0].fitness();
 
@@ -117,7 +117,7 @@ public interface Selection {
     static Selection Rank() {
         return new Selection() {
             @Override
-            public <T extends Chromosome> T apply(T[] population) {
+            public <T extends Chromosome<T>> T apply(T[] population) {
                 int size = population.length;
 
                 double[] fitness = new double[size];
@@ -158,8 +158,8 @@ public interface Selection {
         return new Selection() {
             @Override
             @SuppressWarnings("unchecked")
-            public <T extends Chromosome> T apply(T[] population) {
-                Chromosome[] pool = new Chromosome[size];
+            public <T extends Chromosome<T>> T apply(T[] population) {
+                Chromosome<T>[] pool = new Chromosome[size];
                 for (int i = 0; i < size; i++) {
                     pool[i] = population[MathEx.randomInt(population.length)];
                 }
