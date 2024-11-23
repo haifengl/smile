@@ -23,39 +23,20 @@ import smile.math.special.Gamma;
  * Pearson's chi-square test, also known as the chi-square goodness-of-fit test
  * or chi-square test for independence. Note that the chi-square distribution
  * is only approximately valid for large sample size. If a significant fraction
- * of bins have small numbers of counts (say, {@code < 10}), then the statistic is
+ * of bins has small numbers of counts (say, {@code < 10}), then the statistic is
  * not well approximated by a chi-square probability function.
  *
+ * @param method the type of test.
+ * @param chisq the chi-square statistic.
+ * @param df the degree of freedom.
+ * @param pvalue the p-value.
+ * @param CramerV Cramer's V measure. Cramér's V is a measure of association
+ *                between two nominal variables, giving a value between 0 and 1
+ *                (inclusive). In the case of a 2 × 2 contingency table,
+ *                Cramér's V is equal to the Phi coefficient.
  * @author Haifeng Li
  */
-public class ChiSqTest {
-    /**
-     * The type of test.
-     */
-    public final String method;
-
-    /**
-     * The degree of freedom of chi-square statistic.
-     */
-    public final double df;
-
-    /**
-     * chi-square statistic
-     */
-    public final double chisq;
-
-    /**
-     * p-value
-     */
-    public final double pvalue;
-
-    /**
-     * Cramér's V is a measure of association between two nominal variables,
-     * giving a value between 0 and 1 (inclusive). In the case of a 2 × 2
-     * contingency table, Cramér's V is equal to the Phi coefficient.
-     */
-    public final double CramerV;
-
+public record ChiSqTest(String method, double chisq, double df, double pvalue, double CramerV) {
     /**
      * Constructor.
      * @param method the type of test.
@@ -65,22 +46,6 @@ public class ChiSqTest {
      */
     public ChiSqTest(String method, double chisq, double df, double pvalue) {
         this(method, chisq, df, pvalue, Double.NaN);
-    }
-
-    /**
-     * Constructor.
-     * @param method the type of test.
-     * @param chisq the chi-square statistic.
-     * @param df the degree of freedom.
-     * @param pvalue the p-value.
-     * @param CramerV Cramer's V measure.
-     */
-    public ChiSqTest(String method, double chisq, double df, double pvalue, double CramerV) {
-        this.method = method;
-        this.chisq = chisq;
-        this.df = df;
-        this.pvalue = pvalue;
-        this.CramerV = CramerV;
     }
 
     @Override

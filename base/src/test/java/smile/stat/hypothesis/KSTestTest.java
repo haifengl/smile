@@ -62,10 +62,9 @@ public class KSTestTest {
             -0.95699473, -0.71471097, -0.50443258, 0.31690224, 0.04325009, 0.85316056,
             0.83602606, 1.46678847, 0.46891827, 0.69968175, 0.97864326, 0.66985742,
             -0.20922486, -0.15265994};
-        KSTest result = KSTest.test(x, GaussianDistribution.getInstance());
-        assertEquals(0.093, result.d, 1E-3);
-        assertEquals(0.7598, result.pvalue, 1E-4);
-        //assertEquals(0.7449, result.pvalue, 1E-4);
+        KSTest test = KSTest.test(x, GaussianDistribution.getInstance());
+        assertEquals(0.093, test.d(), 1E-3);
+        assertEquals(0.7598, test.pvalue(), 1E-4);
     }
 
     /**
@@ -90,8 +89,8 @@ public class KSTestTest {
             0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
             0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
             0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694};
-        KSTest result = KSTest.test(x, y);
-        assertEquals(0.46, result.d, 1E-2);
-        assertEquals(0.00041647, result.pvalue, 1E-7);
+        KSTest test = KSTest.test(x, y);
+        assertEquals(0.46, test.d(), 1E-2);
+        assertEquals(0.00041647, test.pvalue(), 1E-7);
     }
 }

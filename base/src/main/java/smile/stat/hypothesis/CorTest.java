@@ -40,52 +40,16 @@ import smile.sort.QuickSort;
  * nominal variable, whose columns are labels by the values of the other nominal
  * variable, and whose entries are non-negative integers giving the number of
  * observed events for each combination of row and column.
- * 
+ *
+ * @param method the type of correlation.
+ * @param cor the correlation coefficient.
+ * @param t the t-statistic.
+ * @param df the degree of freedom. It is set to 0 in case of Kendall test
+ *           as the test is non-parametric.
+ * @param pvalue the two-sided p-value.
  * @author Haifeng Li
  */
-public class CorTest {
-    /**
-     * The type of test.
-     */
-    public final String method;
-
-    /**
-     * The correlation coefficient.
-     */
-    public final double cor;
-
-    /**
-     * The test statistic.
-     */
-    public final double t;
-
-    /**
-     * The degree of freedom of test statistic.
-     * It is set to 0 in case of Kendall test as the test is non-parametric.
-     */
-    public final double df;
-
-    /**
-     * Two-sided p-value.
-     */
-    public final double pvalue;
-
-    /**
-     * Constructor.
-     * @param method the type of correlation.
-     * @param cor the correlation coefficient.
-     * @param t the t-statistic.
-     * @param df the degree of freedom.
-     * @param pvalue the p-value.
-     */
-    public CorTest(String method, double cor, double t, double df, double pvalue) {
-        this.method = method;
-        this.cor = cor;
-        this.t = t;
-        this.df = df;
-        this.pvalue = pvalue;
-    }
-
+public record CorTest(String method, double cor, double t, double df, double pvalue) {
     @Override
     public String toString() {
         return String.format("%s Correlation Test(cor = %.2f, t = %.4f, df = %.3f, p-value = %G)", method, cor, t, df, pvalue);

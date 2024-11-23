@@ -54,11 +54,11 @@ public class CorTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        CorTest result = CorTest.pearson(x, y);
-        assertEquals(0.5711816, result.cor, 1E-7);
-        assertEquals(7, result.df, 1E-10);
-        assertEquals(1.8411, result.t, 1E-4);
-        assertEquals(0.1082, result.pvalue, 1E-4);
+        CorTest test = CorTest.pearson(x, y);
+        assertEquals(0.5711816, test.cor(), 1E-7);
+        assertEquals(7, test.df(), 1E-10);
+        assertEquals(1.8411, test.t(), 1E-4);
+        assertEquals(0.1082, test.pvalue(), 1E-4);
     }
 
     /**
@@ -70,9 +70,9 @@ public class CorTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        CorTest result = CorTest.spearman(x, y);
-        assertEquals(0.6, result.cor, 1E-7);
-        assertEquals(0.08762, result.pvalue, 1E-5);
+        CorTest test = CorTest.spearman(x, y);
+        assertEquals(0.6, test.cor(), 1E-7);
+        assertEquals(0.08762, test.pvalue(), 1E-5);
     }
 
     /**
@@ -84,8 +84,8 @@ public class CorTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        CorTest result = CorTest.kendall(x, y);
-        assertEquals(0.4444444, result.cor, 1E-7);
-        assertEquals(0.0953, result.pvalue, 1E-4);
+        CorTest test = CorTest.kendall(x, y);
+        assertEquals(0.4444444, test.cor(), 1E-7);
+        assertEquals(0.0953, test.pvalue(), 1E-4);
     }
 }

@@ -57,21 +57,21 @@ public class FTestTest {
             -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
             1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592};
 
-        FTest result = FTest.test(x, y);
-        assertEquals(17, result.df1, 1E-10);
-        assertEquals(19, result.df2, 1E-10);
-        assertEquals(1/0.9126, result.f, 1E-4);
-        assertEquals(0.8415, result.pvalue, 1E-4);
+        FTest test = FTest.test(x, y);
+        assertEquals(17, test.df1(), 1E-10);
+        assertEquals(19, test.df2(), 1E-10);
+        assertEquals(1/0.9126, test.f(), 1E-4);
+        assertEquals(0.8415, test.pvalue(), 1E-4);
 
         double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        result = FTest.test(x, z);
-        assertEquals(19, result.df1, 1E-10);
-        assertEquals(17, result.df2, 1E-10);
-        assertEquals(2.046, result.f, 1E-3);
-        assertEquals(0.1438, result.pvalue, 1E-4);
+        test = FTest.test(x, z);
+        assertEquals(19, test.df1(), 1E-10);
+        assertEquals(17, test.df2(), 1E-10);
+        assertEquals(2.046, test.f(), 1E-3);
+        assertEquals(0.1438, test.pvalue(), 1E-4);
     }
 
     @Test
@@ -81,10 +81,10 @@ public class FTestTest {
         int[] x = {1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3};
         double[] y = {6, 8, 4, 5, 3, 4, 8, 12, 9, 11, 6, 8, 13, 9, 11, 8, 7, 12};
 
-        FTest result = FTest.test(x, y);
-        assertEquals(2, result.df1, 1E-10);
-        assertEquals(15, result.df2, 1E-10);
-        assertEquals(9.2647, result.f, 1E-4);
-        assertEquals(0.002399, result.pvalue, 1E-6);
+        FTest test = FTest.test(x, y);
+        assertEquals(2, test.df1(), 1E-10);
+        assertEquals(15, test.df2(), 1E-10);
+        assertEquals(9.2647, test.f(), 1E-4);
+        assertEquals(0.002399, test.pvalue(), 1E-6);
     }
 }

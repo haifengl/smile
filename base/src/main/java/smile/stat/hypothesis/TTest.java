@@ -59,43 +59,13 @@ import smile.math.special.Beta;
  * from 0.
  * </ul>
  *
+ * @param method the type of test.
+ * @param t the t-statistic.
+ * @param df the degree of freedom.
+ * @param pvalue the p-value.
  * @author Haifeng Li
  */
-public class TTest {
-    /**
-     * The type of test.
-     */
-    public final String method;
-
-    /**
-     * The degree of freedom of t-statistic.
-     */
-    public final double df;
-
-    /**
-     * t-statistic.
-     */
-    public final double t;
-
-    /**
-     * p-value.
-     */
-    public final double pvalue;
-
-    /**
-     * Constructor.
-     * @param method the type of test.
-     * @param t the t-statistic.
-     * @param df the degree of freedom.
-     * @param pvalue the p-value.
-     */
-    public TTest(String method, double t, double df, double pvalue) {
-        this.method = method;
-        this.t = t;
-        this.df = df;
-        this.pvalue = pvalue;
-    }
-
+public record TTest(String method, double t, double df, double pvalue) {
     @Override
     public String toString() {
         return String.format("%s t-test(t = %.4f, df = %.3f, p-value = %G)", method, t, df, pvalue);
