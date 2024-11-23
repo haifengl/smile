@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.swing.table;
 
 import javax.swing.AbstractAction;
@@ -23,16 +22,14 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.text.ParseException;
-import java.util.Arrays;
-
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
+import smile.swing.text.IntegerArrayFormatter;
+
 
 /**
  * Implements a cell editor that uses a formatted text field
@@ -53,7 +50,7 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
 
-        ArrayFormatter formatter = new ArrayFormatter();
+        DefaultFormatter formatter = new IntegerArrayFormatter();
         formatter.setOverwriteMode(false);
         textField.setFormatterFactory(new DefaultFormatterFactory(formatter));
         textField.setHorizontalAlignment(JTextField.TRAILING);
@@ -80,56 +77,6 @@ public class IntegerArrayCellEditor extends DefaultCellEditor {
                 }
             }
         });
-    }
-
-    /**
-     * Formatter for array values.
-     */
-    private static class ArrayFormatter extends DefaultFormatter {
-        @Override
-        public Object stringToValue(String string) throws ParseException {
-            string = string.trim();
-            if (string.isEmpty()) {
-                throw new ParseException("Empty string", 0);
-            }
-
-            int begin = 0;
-            char ch = string.charAt(0);
-            if (ch == '[' || ch == '{' || ch == '<') {
-                begin = 1;
-            }
-
-            int end = string.length();
-            ch = string.charAt(end - 1);
-            if (ch == ']' || ch == '}' || ch == '>') {
-                end -= 1;
-            }
-
-            string = string.substring(begin, end);
-            String[] items = string.split("\\s*[ ,;:]\\s*");
-
-            int[] data = new int[items.length];
-            for (int i = 0; i < data.length; i++) {
-                data[i] = Integer.parseInt(items[i].trim());
-            }
-
-            return data;
-        }
-
-        @Override
-        public String valueToString(Object value) throws ParseException {
-            if (value == null) {
-                return "";
-            }
-
-            return switch (value) {
-                case byte[] data -> Arrays.toString(data);
-                case short[] data -> Arrays.toString(data);
-                case int[] data -> Arrays.toString(data);
-                case long[] data -> Arrays.toString(data);
-                default -> throw new ParseException("Unsupported data type: " + value.getClass(), 0);
-            };
-        }
     }
 
     @Override
