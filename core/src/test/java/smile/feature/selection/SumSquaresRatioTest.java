@@ -55,10 +55,10 @@ public class SumSquaresRatioTest {
         System.out.println("Iris");
         SumSquaresRatio[] ssr = SumSquaresRatio.fit(Iris.data, "class");
         assertEquals(4, ssr.length);
-        assertEquals( 1.6226463, ssr[0].ssr, 1E-6);
-        assertEquals( 0.6444144, ssr[1].ssr, 1E-6);
-        assertEquals(16.0412833, ssr[2].ssr, 1E-6);
-        assertEquals(13.0520327, ssr[3].ssr, 1E-6);
+        assertEquals( 1.6226463, ssr[0].ratio(), 1E-6);
+        assertEquals( 0.6444144, ssr[1].ratio(), 1E-6);
+        assertEquals(16.0412833, ssr[2].ratio(), 1E-6);
+        assertEquals(13.0520327, ssr[3].ratio(), 1E-6);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class SumSquaresRatioTest {
 
         SumSquaresRatio[] score = SumSquaresRatio.fit(USPS.train, "class");
         Arrays.sort(score);
-        String[] columns = Arrays.stream(score).limit(121).map(s -> s.feature).toArray(String[]::new);
+        String[] columns = Arrays.stream(score).limit(121).map(s -> s.feature()).toArray(String[]::new);
 
         double[][] train = USPS.formula.x(USPS.train.drop(columns)).toArray();
         LDA lda = LDA.fit(train, USPS.y);

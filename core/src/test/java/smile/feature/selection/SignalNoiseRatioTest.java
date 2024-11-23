@@ -63,10 +63,10 @@ public class SignalNoiseRatioTest {
         DataFrame data = Iris.data.drop("class").merge(IntVector.of("y", y));
         SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(data, "y");
         assertEquals(4, s2n.length);
-        assertEquals(0.8743107, s2n[0].s2n, 1E-7);
-        assertEquals(0.1502717, s2n[1].s2n, 1E-7);
-        assertEquals(1.3446912, s2n[2].s2n, 1E-7);
-        assertEquals(1.4757334, s2n[3].s2n, 1E-7);
+        assertEquals(0.8743107, s2n[0].ratio(), 1E-7);
+        assertEquals(0.1502717, s2n[1].ratio(), 1E-7);
+        assertEquals(1.3446912, s2n[2].ratio(), 1E-7);
+        assertEquals(1.4757334, s2n[3].ratio(), 1E-7);
     }
 
     @Test
@@ -75,8 +75,8 @@ public class SignalNoiseRatioTest {
 
         SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(Default.data, "default");
         assertEquals(2, s2n.length);
-        assertEquals(1.1832, s2n[0].s2n, 1E-4);
-        assertEquals(0.0545, s2n[1].s2n, 1E-4);
+        assertEquals(1.1832, s2n[0].ratio(), 1E-4);
+        assertEquals(0.0545, s2n[1].ratio(), 1E-4);
     }
 
     @Test
@@ -85,8 +85,8 @@ public class SignalNoiseRatioTest {
 
         SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(BreastCancer.data, "diagnosis");
         assertEquals(30, s2n.length);
-        assertEquals(1.0666, s2n[0].s2n, 1E-4);
-        assertEquals(0.4746, s2n[1].s2n, 1E-4);
-        assertEquals(1.1078, s2n[2].s2n, 1E-4);
+        assertEquals(1.0666, s2n[0].ratio(), 1E-4);
+        assertEquals(0.4746, s2n[1].ratio(), 1E-4);
+        assertEquals(1.1078, s2n[2].ratio(), 1E-4);
     }
 }

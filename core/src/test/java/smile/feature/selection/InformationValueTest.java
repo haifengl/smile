@@ -57,9 +57,9 @@ public class InformationValueTest {
         System.out.println(InformationValue.toString(iv));
 
         assertEquals(3, iv.length);
-        assertEquals(0.0364, iv[0].iv, 1E-4);
-        assertEquals(4.2638, iv[1].iv, 1E-4);
-        assertEquals(0.0664, iv[2].iv, 1E-4);
+        assertEquals(0.0364, iv[0].iv(), 1E-4);
+        assertEquals(4.2638, iv[1].iv(), 1E-4);
+        assertEquals(0.0664, iv[2].iv(), 1E-4);
 
         ColumnTransform transform = InformationValue.toTransform(iv);
         System.out.println(transform.apply(Default.data));
@@ -73,9 +73,9 @@ public class InformationValueTest {
         System.out.println(InformationValue.toString(iv));
 
         assertEquals(30, iv.length);
-        assertEquals(0.2425, iv[ 9].iv, 1E-4);
-        assertEquals(0.1002, iv[11].iv, 1E-4);
-        assertEquals(0.0817, iv[14].iv, 1E-4);
+        assertEquals(0.2425, iv[ 9].iv(), 1E-4);
+        assertEquals(0.1002, iv[11].iv(), 1E-4);
+        assertEquals(0.0817, iv[14].iv(), 1E-4);
     }
 
     @Test
@@ -86,10 +86,10 @@ public class InformationValueTest {
         System.out.println(InformationValue.toString(iv));
 
         assertEquals(4, iv.length);
-        assertEquals(0.9012, iv[0].iv, 1E-4);
-        assertEquals(0.6291, iv[1].iv, 1E-4);
-        assertEquals(0.6291, iv[2].iv, 1E-4);
-        assertEquals(0.2930, iv[3].iv, 1E-4);
+        assertEquals(0.9012, iv[0].iv(), 1E-4);
+        assertEquals(0.6291, iv[1].iv(), 1E-4);
+        assertEquals(0.6291, iv[2].iv(), 1E-4);
+        assertEquals(0.2930, iv[3].iv(), 1E-4);
 
         ColumnTransform transform = InformationValue.toTransform(iv);
         System.out.println(transform.apply(Weather.data));
