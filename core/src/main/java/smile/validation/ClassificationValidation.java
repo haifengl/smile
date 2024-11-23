@@ -34,7 +34,7 @@ import smile.validation.metric.ConfusionMatrix;
  *
  * @param <M> the model type.
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
 public class ClassificationValidation<M> implements Serializable {
     @Serial

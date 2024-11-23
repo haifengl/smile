@@ -90,7 +90,7 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(metrics);
-        assertEquals(1.4146, metrics.rmse, 1E-4);
+        assertEquals(1.4146, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -109,6 +109,6 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(51.0009, result.avg.rmse, 1E-4);
+        assertEquals(51.0009, result.avg.rmse(), 1E-4);
     }
 }

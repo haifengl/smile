@@ -33,7 +33,7 @@ import smile.regression.Regression;
  *
  * @param <M> the regression model type.
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
 public class RegressionValidation<M> implements Serializable {
     @Serial

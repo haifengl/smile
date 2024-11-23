@@ -25,49 +25,23 @@ import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 import smile.validation.metric.*;
 
-/** The regression validation metrics. */
-public class RegressionMetrics implements Serializable {
+/**
+ * The regression validation metrics.
+ *
+ * @param fitTime the time in milliseconds of fitting the model.
+ * @param scoreTime the time in milliseconds of scoring the validation data.
+ * @param size the validation data size.
+ * @param rss the residual sum of squares on validation data.
+ * @param mse the mean squared error on validation data.
+ * @param rmse the root mean squared error on validation data.
+ * @param mad the mean absolute deviation on validation data.
+ * @param r2 the R-squared score on validation data.
+ *
+ * @author Haifeng Li
+ */
+public record RegressionMetrics(double fitTime, double scoreTime, int size, double rss, double mse, double rmse, double mad, double r2) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The time in milliseconds of fitting the model. */
-    public final double fitTime;
-    /** The time in milliseconds of scoring the validation data. */
-    public final double scoreTime;
-    /** The validation data size. */
-    public final int size;
-    /** The residual sum of squares on validation data. */
-    public final double rss;
-    /** The mean squared error on validation data. */
-    public final double mse;
-    /** The root mean squared error on validation data. */
-    public final double rmse;
-    /** The mean absolute deviation on validation data. */
-    public final double mad;
-    /** The R-squared score on validation data. */
-    public final double r2;
-
-    /**
-     * Constructor.
-     * @param fitTime the time in milliseconds of fitting the model.
-     * @param scoreTime the time in milliseconds of scoring the validation data.
-     * @param size the validation data size.
-     * @param rss the residual sum of squares on validation data.
-     * @param mse the mean squared error on validation data.
-     * @param rmse the root mean squared error on validation data.
-     * @param mad the mean absolute deviation on validation data.
-     * @param r2 the R-squared score on validation data.
-     */
-    public RegressionMetrics(double fitTime, double scoreTime, int size, double rss, double mse, double rmse, double mad, double r2) {
-        this.fitTime = fitTime;
-        this.scoreTime = scoreTime;
-        this.size = size;
-        this.rss = rss;
-        this.mse = mse;
-        this.rmse = rmse;
-        this.mad = mad;
-        this.r2 = r2;
-    }
+    private static final long serialVersionUID = 3L;
 
     @Override
     public String toString() {

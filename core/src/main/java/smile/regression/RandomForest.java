@@ -293,7 +293,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             );
 
             if (noob != 0) {
-                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2));
+                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2()));
             } else {
                 logger.error("Regression tree trained without OOB samples.");
             }
@@ -303,8 +303,8 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
         double fitTime = 0.0, scoreTime = 0.0;
         for (Model model : models) {
-            fitTime += model.metrics.fitTime;
-            scoreTime += model.metrics.scoreTime;
+            fitTime += model.metrics.fitTime();
+            scoreTime += model.metrics.scoreTime();
         }
 
         for (int i = 0; i < n; i++) {
@@ -413,7 +413,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        Arrays.sort(models, Comparator.comparingDouble(model -> model.metrics.rmse));
+        Arrays.sort(models, Comparator.comparingDouble(model -> model.metrics.rmse()));
         return new RandomForest(formula, Arrays.copyOf(models, ntrees), metrics, importance);
     }
 
@@ -434,14 +434,14 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
         // rough estimation
         RegressionMetrics mergedMetrics = new RegressionMetrics(
-                metrics.fitTime * other.metrics.fitTime,
-                metrics.scoreTime * other.metrics.scoreTime,
-                metrics.size,
-                (metrics.rss * other.metrics.rss) / 2,
-                (metrics.mse * other.metrics.mse) / 2,
-                (metrics.rmse * other.metrics.rmse) / 2,
-                (metrics.mad * other.metrics.mad) / 2,
-                (metrics.r2 * other.metrics.r2) / 2
+                metrics.fitTime() + other.metrics.fitTime(),
+                metrics.scoreTime() + other.metrics.scoreTime(),
+                metrics.size(),
+                (metrics.rss() + other.metrics.rss()) / 2,
+                (metrics.mse() + other.metrics.mse()) / 2,
+                (metrics.rmse() + other.metrics.rmse()) / 2,
+                (metrics.mad() + other.metrics.mad()) / 2,
+                (metrics.r2() + other.metrics.r2()) / 2
         );
 
         double[] mergedImportance = importance.clone();

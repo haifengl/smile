@@ -61,7 +61,7 @@ public class QDATest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, QDA::fit);
 
         System.out.println(metrics);
-        assertEquals(0.9733, metrics.accuracy, 1E-4);
+        assertEquals(0.9733, metrics.accuracy(), 1E-4);
 
         QDA model = QDA.fit(Iris.x, Iris.y);
         java.nio.file.Path temp = Write.object(model);
@@ -76,6 +76,6 @@ public class QDATest {
         ClassificationValidations<QDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, QDA::fit);
 
         System.out.println(result);
-        assertEquals(0.9589, result.avg.accuracy, 1E-4);
+        assertEquals(0.9589, result.avg.accuracy(), 1E-4);
     }
 }

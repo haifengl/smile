@@ -28,37 +28,31 @@ import smile.math.MathEx;
 import smile.validation.metric.*;
 import smile.validation.metric.Error;
 
-/** The classification validation metrics. */
-public class ClassificationMetrics implements Serializable {
+/**
+ * The classification validation metrics.
+ *
+ * @param fitTime the time in milliseconds of fitting the model.
+ * @param scoreTime the time in milliseconds of scoring the validation data.
+ * @param size the validation data size.
+ * @param error the number of errors.
+ * @param accuracy the accuracy on validation data.
+ * @param sensitivity the sensitivity on validation data.
+ * @param specificity the specificity on validation data.
+ * @param precision the precision on validation data.
+ * @param f1 the F-1 score on validation data.
+ * @param mcc the Matthews correlation coefficient on validation data.
+ * @param auc the AUC on validation data.
+ * @param logloss the log loss on validation data.
+ * @param crossentropy the cross entropy on validation data.
+ *
+ * @author Haifeng Li
+ */
+public record ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
+                                    double accuracy, double sensitivity, double specificity,
+                                    double precision, double f1, double mcc, double auc,
+                                    double logloss, double crossentropy) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The time in milliseconds of fitting the model. */
-    public final double fitTime;
-    /** The time in milliseconds of scoring the validation data. */
-    public final double scoreTime;
-    /** The validation data size. */
-    public final int size;
-    /** The number of errors. */
-    public final int error;
-    /** The accuracy on validation data. */
-    public final double accuracy;
-    /** The sensitivity on validation data. */
-    public final double sensitivity;
-    /** The specificity on validation data. */
-    public final double specificity;
-    /** The precision on validation data. */
-    public final double precision;
-    /** The F-1 score on validation data. */
-    public final double f1;
-    /** The Matthews correlation coefficient on validation data. */
-    public final double mcc;
-    /** The AUC on validation data. */
-    public final double auc;
-    /** The log loss on validation data. */
-    public final double logloss;
-    /** The cross entropy on validation data. */
-    public final double crossentropy;
+    private static final long serialVersionUID = 3L;
 
     /**
      * Constructor.
@@ -82,19 +76,7 @@ public class ClassificationMetrics implements Serializable {
      * @param crossentropy the cross entropy on validation data.
      */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy, double crossentropy) {
-        this.fitTime = fitTime;
-        this.scoreTime = scoreTime;
-        this.size = size;
-        this.error = error;
-        this.accuracy = accuracy;
-        this.crossentropy = crossentropy;
-        this.sensitivity = Double.NaN;
-        this.specificity = Double.NaN;
-        this.precision = Double.NaN;
-        this.f1 = Double.NaN;
-        this.mcc = Double.NaN;
-        this.auc = Double.NaN;
-        this.logloss = Double.NaN;
+        this(fitTime, scoreTime, size, error, accuracy, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, crossentropy);
     }
 
     /**
@@ -135,54 +117,7 @@ public class ClassificationMetrics implements Serializable {
                                  double accuracy, double sensitivity, double specificity,
                                  double precision, double f1, double mcc, double auc,
                                  double logloss) {
-        this.fitTime = fitTime;
-        this.scoreTime = scoreTime;
-        this.size = size;
-        this.error = error;
-        this.accuracy = accuracy;
-        this.sensitivity = sensitivity;
-        this.specificity = specificity;
-        this.precision = precision;
-        this.f1 = f1;
-        this.mcc = mcc;
-        this.auc = auc;
-        this.logloss = logloss;
-        this.crossentropy = logloss;
-    }
-
-    /**
-     * Constructor.
-     * @param fitTime the time in milliseconds of fitting the model.
-     * @param scoreTime the time in milliseconds of scoring the validation data.
-     * @param size the validation data size.
-     * @param error the number of errors.
-     * @param accuracy the accuracy on validation data.
-     * @param sensitivity the sensitivity on validation data.
-     * @param specificity the specificity on validation data.
-     * @param precision the precision on validation data.
-     * @param f1 the F-1 score on validation data.
-     * @param mcc the Matthews correlation coefficient on validation data.
-     * @param auc the AUC on validation data.
-     * @param logloss the log loss on validation data.
-     * @param crossentropy the cross entropy on validation data.
-     */
-    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
-                                 double accuracy, double sensitivity, double specificity,
-                                 double precision, double f1, double mcc, double auc,
-                                 double logloss, double crossentropy) {
-        this.fitTime = fitTime;
-        this.scoreTime = scoreTime;
-        this.size = size;
-        this.error = error;
-        this.accuracy = accuracy;
-        this.sensitivity = sensitivity;
-        this.specificity = specificity;
-        this.precision = precision;
-        this.f1 = f1;
-        this.mcc = mcc;
-        this.auc = auc;
-        this.logloss = logloss;
-        this.crossentropy = crossentropy;
+        this(fitTime, scoreTime, size, error, accuracy, sensitivity, specificity, precision, f1, mcc, auc, logloss, logloss);
     }
 
     @Override

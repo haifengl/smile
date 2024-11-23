@@ -57,8 +57,8 @@ public class SVMTest {
 
         RegressionMetrics metrics = LOOCV.regression(Longley.x, Longley.y, (x, y) -> SVM.fit(x, y, 2.0, 10.0, 1E-3));
 
-        System.out.println("LOOCV RMSE = " + metrics.rmse);
-        assertEquals(1.6140, metrics.rmse, 1E-4);
+        System.out.println("LOOCV RMSE = " + metrics.rmse());
+        assertEquals(1.6140, metrics.rmse(), 1E-4);
 
         Regression<double[]> model = SVM.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
         java.nio.file.Path temp = Write.object(model);
@@ -77,7 +77,7 @@ public class SVMTest {
                 (xi, yi) -> SVM.fit(xi, yi,40.0, 10.0, 1E-3));
 
         System.out.println(result);
-        assertEquals(47.1872, result.avg.rmse, 1E-4);
+        assertEquals(47.1872, result.avg.rmse(), 1E-4);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class SVMTest {
                 Prostate.testx, Prostate.testy, (x, y) -> SVM.fit(x, y, kernel, 0.5, 5, 1E-3));
 
         System.out.println(result);
-        assertEquals(0.9112183360712871, result.metrics.rmse, 1E-4);
+        assertEquals(0.9112183360712871, result.metrics.rmse(), 1E-4);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class SVMTest {
                 (x, y) -> SVM.fit(x, y, kernel, 1.5, 100, 1E-3));
 
         System.out.println(result);
-        assertEquals(2.1092, result.metrics.rmse, 1E-4);
+        assertEquals(2.1092, result.metrics.rmse(), 1E-4);
     }
 
     @Test
@@ -114,6 +114,6 @@ public class SVMTest {
                 (x, y) -> SVM.fit(x, y, kernel, 50, 1000, 1E-3));
 
         System.out.println(result);
-        assertEquals(61.5148, result.avg.rmse, 1E-4);
+        assertEquals(61.5148, result.avg.rmse(), 1E-4);
     }
 }
