@@ -214,7 +214,7 @@ public class MPLSH <E> extends LSH<E> {
         Set<Integer> candidates = getCandidates(q, recall, T);
         k = Math.min(k, candidates.size());
 
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(new Neighbor[k]);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<Neighbor<double[], E>>(new Neighbor[k]);
 
         for (int index : candidates) {
             double[] key = keys.get(index);
