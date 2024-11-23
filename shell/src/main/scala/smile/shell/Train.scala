@@ -67,7 +67,7 @@ object Train {
         val data = Read.data(config.train, config.format)
         val test = config.test.map(Read.data(_, config.format))
 
-        val formula: Formula = config.formula.map(Formula.of(_)).getOrElse({
+        val formula: Formula = config.formula.map(Formula.of).getOrElse({
           // Uses 'class' or 'y' or the first column as the target
           // and the rest as the predictors.
           val columns = data.names()
@@ -77,18 +77,18 @@ object Train {
           Formula.lhs(target)
         })
 
-        config.seed.map(MathEx.setSeed(_))
+        config.seed.foreach(MathEx.setSeed)
         if (config.classification) {
           val model = ClassificationModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.map(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
+          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
           smile.write(model, config.model)
         } else {
           val model = RegressionModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.map(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
+          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
           smile.write(model, config.model)
           if (test.isDefined) {
             val metrics = RegressionMetrics.of(model.regression, formula, test.get)
