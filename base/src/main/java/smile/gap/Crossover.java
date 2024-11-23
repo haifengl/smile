@@ -51,8 +51,7 @@ public enum Crossover {
             System.arraycopy(mom, 0, daughter, 0, point);
             System.arraycopy(dad, point, daughter, point, length - point);
 
-            BitString[] offsprings = {father.newInstance(son), mother.newInstance(daughter)};
-            return offsprings;
+            return new BitString[]{father.newInstance(son), mother.newInstance(daughter)};
         }
     },
 
@@ -96,8 +95,7 @@ public enum Crossover {
             System.arraycopy(dad, point1, daughter, point1, point2 - point1);
             System.arraycopy(mom, point2, daughter, point2, length - point2);
 
-            BitString[] offsprings = {father.newInstance(son), mother.newInstance(daughter)};
-            return offsprings;
+            return new BitString[]{father.newInstance(son), mother.newInstance(daughter)};
         }
     },
 
@@ -124,8 +122,7 @@ public enum Crossover {
                 }
             }
 
-            BitString[] offsprings = {father.newInstance(son), mother.newInstance(daughter)};
-            return offsprings;
+            return new BitString[]{father.newInstance(son), mother.newInstance(daughter)};
         }
     };
 

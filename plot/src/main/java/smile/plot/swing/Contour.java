@@ -680,14 +680,12 @@ public class Contour extends Plot {
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {MathEx.min(x), MathEx.min(y)};
-        return bound;
+        return new double[]{MathEx.min(x), MathEx.min(y)};
     }
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {MathEx.max(x), MathEx.max(y)};
-        return bound;
+        return new double[]{MathEx.max(x), MathEx.max(y)};
     }
 
     @Override

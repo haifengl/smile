@@ -149,15 +149,13 @@ public class Dendrogram extends Plot {
     @Override
     public double[] getLowerBound() {
         int n = p1.length / 3 + 1;
-        double[] bound = {-n / 100., 0};
-        return bound;
+        return new double[]{-n / 100., 0};
     }
 
     @Override
     public double[] getUpperBound() {
         int n = p1.length / 3 + 1;
-        double[] bound = {n + n / 100., 1.01 * height};
-        return bound;
+        return new double[]{n + n / 100., 1.01 * height};
     }
 
     @Override

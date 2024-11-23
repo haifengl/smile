@@ -320,8 +320,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font
      **/
     public Font getSelectedFont() {
-        Font font = new Font(getSelectedFontFamily(), getSelectedFontStyle(), getSelectedFontSize());
-        return font;
+        return new Font(getSelectedFontFamily(), getSelectedFontStyle(), getSelectedFontSize());
     }
 
     /**

@@ -223,8 +223,7 @@ public class Histogram3D extends Plot {
     @Override
     public double[] getLowerBound() {
         double[] min = MathEx.colMin(data);
-        double[] bound = {min[0], min[1], 0};
-        return bound;
+        return new double[]{min[0], min[1], 0};
     }
 
     @Override

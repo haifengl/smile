@@ -193,8 +193,7 @@ public class BitString implements Chromosome<BitString> {
         if (MathEx.random() < crossoverRate) {
             return crossover.apply(this, mother);
         } else {
-            BitString[] offsprings = {this, mother};
-            return offsprings;
+            return new BitString[]{this, mother};
         }
     }
 
