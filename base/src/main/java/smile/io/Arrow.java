@@ -653,9 +653,7 @@ public class Arrow {
                     a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
                 }
             }
-            default -> {
-                throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
-            }
+            default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.TimeType, a);
     }
@@ -687,9 +685,7 @@ public class Arrow {
                     a[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
                 }
             }
-            default -> {
-                throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
-            }
+            default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
 
         return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DateTimeType, a);
