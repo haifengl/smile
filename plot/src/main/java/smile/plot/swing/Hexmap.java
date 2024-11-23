@@ -135,14 +135,12 @@ public class Hexmap extends Plot {
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {-0.5, 0.36};
-        return bound;
+        return new double[]{-0.5, 0.36};
     }
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {z[0].length, z.length * 0.87 + 0.5};
-        return bound;
+        return new double[]{z[0].length, z.length * 0.87 + 0.5};
     }
 
     @Override

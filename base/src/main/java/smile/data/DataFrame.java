@@ -1377,13 +1377,11 @@ public interface DataFrame extends Iterable<Tuple> {
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;
-        int maxColWidth = switch (numCols) {
+        final int maxColWidth = switch (numCols) {
             case 1 -> 78;
             case 2 -> 38;
             default -> 20;
         };
-        // To be used in lambda.
-        final int maxColumnWidth = maxColWidth;
 
         // Initialize the width of each column to a minimum value of '3'
         int[] colWidths = new int[numCols];
@@ -1397,7 +1395,7 @@ public interface DataFrame extends Iterable<Tuple> {
             String[] cells = new String[numCols];
             for (int i = 0; i < numCols; i++) {
                 String str = row.toString(i);
-                cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
+                cells[i] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
             }
             return cells;
         }).collect(java.util.stream.Collectors.toList());

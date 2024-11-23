@@ -86,8 +86,7 @@ public interface RotaryPositionalEncoding {
              Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
              Tensor freqs = scaling ?  scale(f) : f;
              Tensor tfreqs = t.outer(freqs)) {
-            var cis = Tensor.polar(freqs.newOnes(), tfreqs);  // complex64
-            return cis;
+            return Tensor.polar(freqs.newOnes(), tfreqs); // complex64
         }
     }
 

@@ -119,14 +119,12 @@ public class BoxPlot extends Plot {
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {0, MathEx.min(data)};
-        return bound;
+        return new double[]{0, MathEx.min(data)};
     }
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {data.length, MathEx.max(data)};
-        return bound;
+        return new double[]{data.length, MathEx.max(data)};
     }
 
     @Override

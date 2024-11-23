@@ -115,14 +115,12 @@ public class SparseMatrixPlot extends Plot {
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {0, 0};
-        return bound;
+        return new double[]{0, 0};
     }
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {sparse.ncol(), sparse.nrow()};
-        return bound;
+        return new double[]{sparse.ncol(), sparse.nrow()};
     }
 
     @Override
