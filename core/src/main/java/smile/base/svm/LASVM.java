@@ -324,34 +324,8 @@ public class LASVM<T> implements Serializable {
             k12 = kernel.k(v1.x, v2.x);
         }
 
-        // Determine curvature
-        double curv = v1.k + v2.k - 2 * k12;
-        if (curv <= 0.0) curv = TAU;
-
-        double step = (v2.g - v1.g) / curv;
-
-        // Determine maximal step
-        if (step >= 0.0) {
-            double delta = v1.alpha - v1.cmin;
-            if (delta < step) {
-                step = delta;
-            }
-            delta = v2.cmax - v2.alpha;
-            if (delta < step) {
-                step = delta;
-            }
-        } else {
-            double delta = v2.cmin - v2.alpha;
-            if (delta > step) {
-                step = delta;
-            }
-            delta = v1.alpha - v1.cmax;
-            if (delta > step) {
-                step = delta;
-            }
-        }
-
         // Perform update
+        double step = getStep(v1, v2, k12);
         v1.alpha -= step;
         v2.alpha += step;
         for (SupportVector<T> v : vectors) {
