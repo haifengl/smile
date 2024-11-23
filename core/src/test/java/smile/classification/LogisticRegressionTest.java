@@ -58,7 +58,7 @@ public class LogisticRegressionTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, LogisticRegression::fit);
 
         System.out.println(metrics);
-        assertEquals(0.9667, metrics.accuracy, 1E-4);
+        assertEquals(0.9667, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class LogisticRegressionTest {
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y, LogisticRegression::fit);
 
         System.out.println(metrics);
-        assertEquals(0.7143, metrics.accuracy, 1E-4);
+        assertEquals(0.7143, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class LogisticRegressionTest {
         ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9548, result.avg.accuracy, 0.001);
+        assertEquals(0.9548, result.avg.accuracy(), 0.001);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class LogisticRegressionTest {
         ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, LibrasMovement.x, LibrasMovement.y, LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.7361, result.avg.accuracy, 1E-4);
+        assertEquals(0.7361, result.avg.accuracy(), 1E-4);
     }
 
     @Test
@@ -102,7 +102,7 @@ public class LogisticRegressionTest {
                 LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9495, result.avg.accuracy, 0.01);
+        assertEquals(0.9495, result.avg.accuracy(), 0.01);
     }
 
     @Test

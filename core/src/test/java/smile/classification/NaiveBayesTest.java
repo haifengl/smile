@@ -82,7 +82,7 @@ public class NaiveBayesTest {
         });
 
         System.out.println(metrics);
-        assertEquals(0.9533, metrics.accuracy, 1E-4);
+        assertEquals(0.9533, metrics.accuracy(), 1E-4);
 
         double[] priori = new double[k];
         Distribution[][] condprob = new Distribution[k][p];
@@ -127,6 +127,6 @@ public class NaiveBayesTest {
         });
 
         System.out.println(metrics);
-        assertEquals(0.7857, metrics.accuracy, 1E-4);
+        assertEquals(0.7857, metrics.accuracy(), 1E-4);
     }
 }

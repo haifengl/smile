@@ -68,7 +68,7 @@ public class RidgeRegressionTest {
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(metrics);
-        assertEquals(1.7288188, metrics.rmse, 1E-7);
+        assertEquals(1.7288188, metrics.rmse(), 1E-7);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -87,6 +87,6 @@ public class RidgeRegressionTest {
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(50.9911, result.avg.rmse, 1E-4);
+        assertEquals(50.9911, result.avg.rmse(), 1E-4);
     }
 }

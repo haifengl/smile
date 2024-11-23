@@ -58,7 +58,7 @@ public class FLDTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, FLD::fit);
 
         System.out.println(metrics);
-        assertEquals(0.98, metrics.accuracy, 1E-4);
+        assertEquals(0.98, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class FLDTest {
                 FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8771, result.avg.accuracy, 1E-4);
+        assertEquals(0.8771, result.avg.accuracy(), 1E-4);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class FLDTest {
         ClassificationValidations<FLD> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.9655, result.avg.accuracy, 1E-4);
+        assertEquals(0.9655, result.avg.accuracy(), 1E-4);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class FLDTest {
         ClassificationValidation<FLD> result = ClassificationValidation.of(USPS.x, USPS.y, USPS.testx, USPS.testy, FLD::fit);
 
         System.out.println(result);
-        assertEquals(262, result.metrics.error);
+        assertEquals(262, result.metrics.error());
 
         java.nio.file.Path temp = Write.object(result.model);
         FLD model = (FLD) Read.object(temp);
@@ -108,6 +108,6 @@ public class FLDTest {
         ClassificationValidations<FLD> result = CrossValidation.classification(5, Colon.x, Colon.y, FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8524, result.avg.accuracy, 1E-4);
+        assertEquals(0.8524, result.avg.accuracy(), 1E-4);
     }
 }

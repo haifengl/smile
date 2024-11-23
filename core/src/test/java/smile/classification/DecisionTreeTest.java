@@ -78,7 +78,7 @@ public class DecisionTreeTest {
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
 
         System.out.println(metrics);
-        assertEquals(0.5, metrics.accuracy, 1E-4);
+        assertEquals(0.5, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class DecisionTreeTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, DecisionTree::fit);
 
         System.out.println(metrics);
-        assertEquals(0.94, metrics.accuracy, 1E-4);
+        assertEquals(0.94, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(0.9532, result.avg.accuracy, 1E-4);
+        assertEquals(0.9532, result.avg.accuracy(), 1E-4);
     }
 
     @Test
@@ -120,7 +120,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(0.9275, result.avg.accuracy, 1E-4);
+        assertEquals(0.9275, result.avg.accuracy(), 1E-4);
     }
 
     @Test

@@ -73,7 +73,7 @@ public class RegressionTreeTest {
         RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
 
         System.out.println(metrics);
-        assertEquals(3.0848729264302333, metrics.rmse, 1E-4);
+        assertEquals(3.0848729264302333, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -97,7 +97,7 @@ public class RegressionTreeTest {
         RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, RegressionTree::fit);
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse, 1E-4);
+        assertEquals(expected, result.avg.rmse(), 1E-4);
     }
 
     @Test

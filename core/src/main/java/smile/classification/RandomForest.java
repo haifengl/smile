@@ -96,7 +96,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
         Model(DecisionTree tree, ClassificationMetrics metrics) {
             this.tree = tree;
             this.metrics = metrics;
-            this.weight = metrics.accuracy;
+            this.weight = metrics.accuracy();
         }
     }
 
@@ -420,7 +420,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             }
 
             if (noob != 0) {
-                logger.info("Decision tree OOB accuracy: {}", String.format("%.2f%%", 100*metrics.accuracy));
+                logger.info("Decision tree OOB accuracy: {}", String.format("%.2f%%", 100*metrics.accuracy()));
             } else {
                 logger.error("Decision tree trained without OOB samples.");
             }
@@ -430,8 +430,8 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
         double fitTime = 0.0, scoreTime = 0.0;
         for (Model model : models) {
-            fitTime += model.metrics.fitTime;
-            scoreTime += model.metrics.scoreTime;
+            fitTime += model.metrics.fitTime();
+            scoreTime += model.metrics.scoreTime();
         }
 
         int[] vote = new int[n];
@@ -558,19 +558,19 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
         // rough estimation
         ClassificationMetrics mergedMetrics = new ClassificationMetrics(
-                metrics.fitTime * other.metrics.fitTime,
-                metrics.scoreTime * other.metrics.scoreTime,
-                metrics.size,
-                (metrics.error * other.metrics.error) / 2,
-                (metrics.accuracy * other.metrics.accuracy) / 2,
-                (metrics.sensitivity * other.metrics.sensitivity) / 2,
-                (metrics.specificity * other.metrics.specificity) / 2,
-                (metrics.precision * other.metrics.precision) / 2,
-                (metrics.f1 * other.metrics.f1) / 2,
-                (metrics.mcc * other.metrics.mcc) / 2,
-                (metrics.auc * other.metrics.auc) / 2,
-                (metrics.logloss * other.metrics.logloss) / 2,
-                (metrics.crossentropy * other.metrics.crossentropy) / 2
+                metrics.fitTime() + other.metrics.fitTime(),
+                metrics.scoreTime() + other.metrics.scoreTime(),
+                metrics.size(),
+                (metrics.error() + other.metrics.error()) / 2,
+                (metrics.accuracy() + other.metrics.accuracy()) / 2,
+                (metrics.sensitivity() + other.metrics.sensitivity()) / 2,
+                (metrics.specificity() + other.metrics.specificity()) / 2,
+                (metrics.precision() + other.metrics.precision()) / 2,
+                (metrics.f1() + other.metrics.f1()) / 2,
+                (metrics.mcc() + other.metrics.mcc()) / 2,
+                (metrics.auc() + other.metrics.auc()) / 2,
+                (metrics.logloss() + other.metrics.logloss()) / 2,
+                (metrics.crossentropy() + other.metrics.crossentropy()) / 2
         );
 
         double[] mergedImportance = importance.clone();

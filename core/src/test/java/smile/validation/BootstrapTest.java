@@ -184,8 +184,8 @@ public class BootstrapTest {
 
         ClassificationValidations<DecisionTree> result = Bootstrap.classification(100, Iris.formula, Iris.data, DecisionTree::fit);
 
-        System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy);
-        System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy);
+        System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy());
+        System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy());
     }
 
     @Test
@@ -194,7 +194,7 @@ public class BootstrapTest {
 
         RegressionValidations<RegressionTree> result = Bootstrap.regression(100, CPU.formula, CPU.data, RegressionTree::fit);
 
-        System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse);
-        System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse);
+        System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse());
+        System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse());
     }
 }

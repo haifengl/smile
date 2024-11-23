@@ -77,7 +77,7 @@ public class AdaBoostTest {
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
                 (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));
         System.out.println(metrics);
-        assertEquals(0.6429, metrics.accuracy, 1E-4);
+        assertEquals(0.6429, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class AdaBoostTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data,
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
         System.out.println(metrics);
-        assertEquals(0.9533, metrics.accuracy, 1E-4);
+        assertEquals(0.9533, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class AdaBoostTest {
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
         System.out.println(result);
-        assertEquals(0.9525, result.avg.accuracy, 1E-4);
+        assertEquals(0.9525, result.avg.accuracy(), 1E-4);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class AdaBoostTest {
                 (f, x) -> AdaBoost.fit(f, x, 100, 20, 4, 1));
 
         System.out.println(result);
-        int error = result.rounds.stream().mapToInt(round -> round.metrics.error).sum();
+        int error = result.rounds.stream().mapToInt(round -> round.metrics.error()).sum();
         assertEquals(15, error);
     }
 

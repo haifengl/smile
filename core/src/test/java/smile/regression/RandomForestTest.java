@@ -121,7 +121,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(2.7062, metrics.rmse, 1E-4);
+        assertEquals(2.7062, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -135,7 +135,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse, 1E-4);
+        assertEquals(expected, result.avg.rmse(), 1E-4);
 
         RandomForest model = RandomForest.fit(formula, data);
         double[] importance = model.importance();
@@ -219,8 +219,8 @@ public class RandomForestTest {
         assertEquals(50, model.size());
         assertEquals(40, trimmed.size());
 
-        double rmse1 = Arrays.stream(model.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
-        double rmse2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
+        double rmse1 = Arrays.stream(model.models()).mapToDouble(m -> m.metrics.rmse()).max().getAsDouble();
+        double rmse2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.metrics.rmse()).max().getAsDouble();
         assertTrue(rmse1 > rmse2);
 
         rmse = RMSE.of(Abalone.testy, trimmed.predict(Abalone.test));

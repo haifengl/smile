@@ -66,7 +66,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 10, 5.0)));
 
         System.out.println(metrics);
-        assertEquals(4.922188709128203, metrics.rmse, 1E-4);
+        assertEquals(4.922188709128203, metrics.rmse(), 1E-4);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(Longley.x, Longley.y, RBF.fit(Longley.x, 10, 5.0));
         java.nio.file.Path temp = Write.object(model);
@@ -85,7 +85,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(18.0997, result.avg.rmse, 1E-4);
+        assertEquals(18.0997, result.avg.rmse(), 1E-4);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(1.7087, result.avg.rmse, 1E-4);
+        assertEquals(1.7087, result.avg.rmse(), 1E-4);
     }
 
     @Test
@@ -113,7 +113,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.00025, result.avg.rmse, 1E-5);
+        assertEquals(0.00025, result.avg.rmse(), 1E-5);
     }
 
     @Test
@@ -128,6 +128,6 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.0869, result.avg.rmse, 1E-4);
+        assertEquals(0.0869, result.avg.rmse(), 1E-4);
     }
 }
