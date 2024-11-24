@@ -209,7 +209,7 @@ package object swing {
     * quartile from the third quartile. (q<sub>3</sub> ? q<sub>1</sub>)
     *  - Construct a box above the number line bounded on the bottom by the first
     * quartile (q<sub>1</sub>) and on the top by the third quartile (q<sub>3</sub>).
-    *  - Indicate where the median lies inside of the box with the presence of
+    *  - Indicate where the median lies inside the box with the presence of
     * a line dividing the box at the median value.
     *  - Any data observation which lies more than 1.5*IQR lower than the first
     * quartile or 1.5IQR higher than the third quartile is considered an outlier.

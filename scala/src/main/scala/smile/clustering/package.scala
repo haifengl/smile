@@ -148,7 +148,7 @@ package object clustering {
 
   /**
     * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
-    * The mean update for centroids is replace by the mode one which is
+    * The mean update for centroids is replaced by the mode one which is
     * a majority vote among element of each cluster.
     */
   def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): KModes = time("K-Modes") {
@@ -188,7 +188,7 @@ package object clustering {
     *  - D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.
     *  - Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.
     *
-    * This method runs the algorithm for given times and return the best one with smallest distortion.
+    * This method runs the algorithm for given times and return the best one with the smallest distortion.
     *
     * @param data    the data set.
     * @param k       the number of clusters.

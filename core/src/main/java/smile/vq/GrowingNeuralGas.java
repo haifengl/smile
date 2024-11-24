@@ -34,7 +34,7 @@ import smile.vq.hebb.Neuron;
  * <li> Local Error measurements are noted at each step helping it to locally
  * insert/delete nodes.</li>
  * <li> Edges are connected between nodes, so a sufficiently old edges is
- * deleted. Such edges are intended place holders for localized data distribution.</li>
+ * deleted. Such edges are intended placeholders for localized data distribution.</li>
  * <li> Such edges also help to locate distinct clusters (those clusters are
  * not connected by edges).</li>
  * </ul>

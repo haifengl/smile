@@ -29,7 +29,7 @@ import scala.jdk.CollectionConverters._
  * a 2-byte process id, and
  * a 3-byte counter, starting with a random value.
  *
- * The implementation is adopt from ReactiveMongo.
+ * The implementation is adopted from ReactiveMongo.
  */
 case class ObjectId(id: Array[Byte]) {
   require(id.length == ObjectId.size)
@@ -163,7 +163,7 @@ object ObjectId {
    * a precision up to the second. To get a reasonably unique ID, you _must_ set `onlyTimestamp` to false.
    *
    * Crafting a BSONObjectID from a timestamp with `fillOnlyTimestamp` set to true is helpful for range queries,
-   * eg if you want of find documents an _id field which timestamp part is greater than or lesser than
+   * e.g. if you want of find documents an _id field which timestamp part is greater than or lesser than
    * the one of another id.
    *
    * If you do not intend to use the produced BSONObjectID for range queries, then you'd rather use

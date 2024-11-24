@@ -57,7 +57,7 @@ object Serve {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       implicit val system = context.system
       implicit val ec = context.executionContext
-      // context cannot be used inside Future.onComplete, which is outside of an actor.
+      // context cannot be used inside Future.onComplete, which is outside an actor.
       val log = context.log
 
       implicit val exceptionHandler: ExceptionHandler = ExceptionHandler {

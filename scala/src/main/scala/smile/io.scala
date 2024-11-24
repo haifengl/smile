@@ -69,7 +69,7 @@ object write {
   /** Writes a data frame to an ARFF file. */
   def arff(data: DataFrame, file: Path, relation: String): Unit = Write.arff(data, file, relation)
 
-  /** Writes a DataFrame to a comma delimited text file.
+  /** Writes a DataFrame to a comma-delimited text file.
     *
     * @param data an attribute dataset.
     * @param file the file path.
@@ -89,7 +89,7 @@ object write {
     Write.csv(data, file, format.build())
   }
 
-  /** Writes a two-dimensional array to a comma delimited text file.
+  /** Writes a two-dimensional array to a comma-delimited text file.
     *
     * @param data a two-dimensional array.
     * @param file the file path.
@@ -237,7 +237,7 @@ object read {
     * vertex normals, and the faces that make each polygon defined as a list of vertices,
     * and texture vertices. Vertices are stored in a counter-clockwise order by default,
     * making explicit declaration of face normals unnecessary. OBJ coordinates have no units,
-    * but OBJ files can contain scale information in a human readable comment line.
+    * but OBJ files can contain scale information in a human-readable comment line.
     *
     * Note that we parse only vertex and face elements. All other information ignored.
     *

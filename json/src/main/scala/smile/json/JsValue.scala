@@ -243,7 +243,7 @@ object JsLong {
   val one: JsLong = JsLong(1L)
 }
 
-/** A counter is a 64 bit integer. The difference from JsLong
+/** A counter is a 64-bit integer. The difference from JsLong
   * is mostly for internal representation in database. For encoding
   * reason, the effective number of bits are 56, which should be
   * big enough in practice.

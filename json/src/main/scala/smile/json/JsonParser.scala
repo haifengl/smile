@@ -73,7 +73,7 @@ class JsonParser(input: ParserInput) {
   private def `null`() = advance() && ch('u') && ch('l') && ws('l')
   private def `true`() = advance() && ch('r') && ch('u') && ws('e')
   private def parseString(s: String): JsValue = {
-    // Don't try to parse date/time/datetime/timestamp any more. The user can
+    // Don't try to parse date/time/datetime/timestamp anymore. The user can
     // use asDate/asTime/asDateTime/asTimestamp on demand.
     if (s.length == JsObjectId.formatLength && JsObjectId.regex.pattern.matcher(s).matches) {
       JsObjectId(s.substring(9, 33))
@@ -265,7 +265,7 @@ trait ParserInput {
 
   /**
    * Advance the cursor and get the next char, which could potentially be outside
-   * of the 7-Bit ASCII range. Therefore decoding might be required.
+   * the 7-Bit ASCII range. Therefore, decoding might be required.
    */
   def nextUtf8Char(): Char
 

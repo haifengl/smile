@@ -36,6 +36,6 @@ trait Tensor {
   /** The rank of tensor, i.e. the number of dimensions. */
   def rank: Option[Int]
 
-  /** The shape of tensor, i.e the size of each dimension. */
+  /** The shape of tensor, i.e. the size of each dimension. */
   def shape: Option[Array[IntScalar]]
 }

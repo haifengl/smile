@@ -115,7 +115,7 @@ public class ARMA implements Serializable {
     private final double R2;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
-     * explanation as R<sup>2</sup> but it penalizes the statistic as
+     * explanation as R<sup>2</sup>, but it penalizes the statistic as
      * extra variables are included in the model.
      */
     private final double adjustedR2;
@@ -293,7 +293,7 @@ public class ARMA implements Serializable {
 
     /**
      * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
-     * has almost same explanation as R<sup>2</sup> but it penalizes the
+     * has almost same explanation as R<sup>2</sup>, but it penalizes the
      * statistic as extra variables are included in the model.
      *
      * @return Adjusted R<sup>2</sup> statistic.
