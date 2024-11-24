@@ -36,7 +36,7 @@ import smile.clustering.linkage.Linkage;
  * Total space: 20n bytes. (Could be reduced to 4n at some cost in update time.)
  * Time per insertion or single distance update: O(n)
  * Time per deletion or point update: O(n) expected, O(n<sup>2</sup>) worst case
- * Time per closest pair: O(n)
+ * Time per the closest pair: O(n)
  *
  * <h2>References</h2>
  * <ol>

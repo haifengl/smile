@@ -543,7 +543,7 @@ trait View extends VegaLite {
     *
     * A cartographic projection maps longitude and latitude pairs to x, y
     * coordinates. As with Vega, one can use projections in Vega-Lite to
-    * layout both geographic points (such as locations on a map) represented
+    * lay out both geographic points (such as locations on a map) represented
     * by longitude and latitude coordinates, or to project geographic regions
     * (such as countries and states) represented using the GeoJSON format.
     * Projections are specified at the unit specification level, alongside
@@ -589,7 +589,7 @@ object View {
     *                  - If "binned", this indicates that the data for the x
     *                    (or y) channel are already binned.
     * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
-    *                  temporal field, or a temporal field that gets casted
+    *                  temporal field, or a temporal field that gets cast
     *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
@@ -650,7 +650,7 @@ object View {
     *                  - If "binned", this indicates that the data for the x
     *                    (or y) channel are already binned.
     * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
-    *                  temporal field, or a temporal field that gets casted
+    *                  temporal field, or a temporal field that gets cast
     *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
@@ -660,7 +660,7 @@ object View {
     *                  bin and timeUnit).
     * @param scale An object defining properties of the channel's scale,
     *              which is the function that transforms values in the data
-    *              domain (numbers, dates, strings, etc) to visual values
+    *              domain (numbers, dates, strings, etc.) to visual values
     *              (pixels, colors, sizes) of the encoding channels.
     *
     *              If null, the scale will be disabled and the data value
@@ -773,7 +773,7 @@ object View {
     *                  - If "binned", this indicates that the data for the x
     *                    (or y) channel are already binned.
     * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
-    *                  temporal field, or a temporal field that gets casted
+    *                  temporal field, or a temporal field that gets cast
     *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
@@ -783,7 +783,7 @@ object View {
     *                  bin and timeUnit).
     * @param scale An object defining properties of the channel's scale,
     *              which is the function that transforms values in the data
-    *              domain (numbers, dates, strings, etc) to visual values
+    *              domain (numbers, dates, strings, etc.) to visual values
     *              (pixels, colors, sizes) of the encoding channels.
     *
     *              If null, the scale will be disabled and the data value
@@ -869,13 +869,13 @@ object View {
     *                  - If "binned", this indicates that the data for the x
     *                    (or y) channel are already binned.
     * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
-    *                  temporal field, or a temporal field that gets casted
+    *                  temporal field, or a temporal field that gets cast
     *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
     * @param scale     An object defining properties of the channel's scale,
     *                  which is the function that transforms values in the data
-    *                  domain (numbers, dates, strings, etc) to visual values
+    *                  domain (numbers, dates, strings, etc.) to visual values
     *                  (pixels, colors, sizes) of the encoding channels.
     *
     *                  If null, the scale will be disabled and the data value

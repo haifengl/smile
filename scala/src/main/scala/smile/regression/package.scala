@@ -98,7 +98,7 @@ package object regression {
     * Ridge regression is such a technique which shrinks the regression
     * coefficients by imposing a penalty on their size. Ridge regression was
     * originally developed to overcome the singularity of the X'X matrix.
-    * This matrix is perturbed so as to make its determinant appreciably
+    * This matrix is perturbed to make its determinant appreciably
     * different from 0.
     *
     * Ridge regression is a kind of Tikhonov regularization, which is the most
@@ -130,7 +130,7 @@ package object regression {
     *
     * For over-determined systems (more instances than variables, commonly in
     * machine learning), we normalize variables with mean 0 and standard deviation
-    * 1. For under-determined systems (less instances than variables, e.g.
+    * 1. For under-determined systems (fewer instances than variables, e.g.
     * compressed sensing), we assume white noise (i.e. no intercept in the linear
     * model) and do not perform normalization. Note that the solution
     * is not unique in this case.
@@ -497,10 +497,10 @@ package object regression {
     * with weight parameters undergo a supervised learning processing
     * (e.g. error-correction learning).
     *
-    * The popular choices for &phi; comprise the Gaussian function and the so
-    * called thin plate splines. The advantage of the thin plate splines is that
-    * their conditioning is invariant under scalings. Gaussian, multi-quadric
-    * and inverse multi-quadric are infinitely smooth and and involve a scale
+    * The popular choices for &phi; comprise the Gaussian function and the
+    * so-called thin plate splines. The advantage of the thin plate splines is
+    * that their conditioning is invariant under scalings. Gaussian, multi-quadric
+    * and inverse multi-quadric are infinitely smooth and involve a scale
     * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
     * r<sub><small>0</small></sub> tends to flatten the basis function. For a
     * given function, the quality of approximation may strongly depend on this

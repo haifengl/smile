@@ -25,7 +25,7 @@ import java.io.Serial;
  * It is considered as a balanced measure for binary classification,
  * even in unbalanced data sets. It  varies between -1 (perfect
  * disagreement) and +1 (perfect agreement). When it is 0,
- * the model is not better then random.
+ * the model is not better than random.
  *
  * @author digital-thinking
  */

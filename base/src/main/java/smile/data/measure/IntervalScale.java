@@ -25,7 +25,7 @@ import java.text.NumberFormat;
  * the Celsius scale, which has two defined points (the freezing and
  * boiling point of water at specific conditions) and then separated
  * into 100 intervals. Ratios are not meaningful since 20 °C
- * cannot be said to be "twice as hot" as 10 °C. Other examples include
+ * cannot be said to be "twice hot" as 10 °C. Other examples include
  * date when measured from an arbitrary epoch (such as AD) since
  * multiplication/division cannot be carried out between any two dates
  * directly. However, ratios of differences can be expressed; for example,

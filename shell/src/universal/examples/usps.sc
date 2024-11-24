@@ -1,4 +1,4 @@
-// Benchmark on USPS zip code hand writing data
+// Benchmark on USPS zip code handwriting data
 import smile._
 import smile.util._
 import smile.base.rbf.RBF;

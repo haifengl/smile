@@ -347,7 +347,7 @@ package object classification {
     * at large &eta;, is to make the change in weight dependent on the past weight
     * change by adding a momentum term.
     *
-    * Although the back-propagation algorithm may performs gradient
+    * Although the back-propagation algorithm may perform gradient
     * descent on the total error of all instances in a batch way,
     * the learning rule is often applied to each instance separately in an online
     * way or stochastic way. There exists empirical indication that the stochastic
@@ -431,7 +431,7 @@ package object classification {
     * The popular choices for &phi; comprise the Gaussian function and the so
     * called thin plate splines. The advantage of the thin plate splines is that
     * their conditioning is invariant under scalings. Gaussian, multi-quadric
-    * and inverse multi-quadric are infinitely smooth and and involve a scale
+    * and inverse multi-quadric are infinitely smooth and involve a scale
     * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
     * r<sub><small>0</small></sub> tends to flatten the basis function. For a
     * given function, the quality of approximation may strongly depend on this
@@ -495,7 +495,7 @@ package object classification {
     * transformed feature space. The transformation may be nonlinear and
     * the transformed space be high dimensional. For example, the feature space
     * corresponding Gaussian kernel is a Hilbert space of infinite dimension.
-    * Thus though the classifier is a hyperplane in the high-dimensional feature
+    * Thus, though the classifier is a hyperplane in the high-dimensional feature
     * space, it may be nonlinear in the original input space. Maximum margin
     * classifiers are well regularized, so the infinite dimension does not spoil
     * the results.
@@ -748,7 +748,7 @@ package object classification {
     * decision trees is probably the most popular combination. AdaBoost is adaptive
     * in the sense that subsequent classifiers built are tweaked in favor of those
     * instances misclassified by previous classifiers. AdaBoost is sensitive to
-    * noisy data and outliers. However in some problems it can be less susceptible
+    * noisy data and outliers. However, in some problems it can be less susceptible
     * to the over-fitting problem than most learning algorithms.
     *
     * AdaBoost calls a weak classifier repeatedly in a series of rounds from
@@ -917,7 +917,7 @@ package object classification {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param model the generation model of naive Bayes classifier.
-    * @param priori the priori probability of each class. If null, equal probability is assume for each class.
+    * @param priori the priori probability of each class. If null, equal probability is assumed for each class.
     * @param sigma the prior count of add-k smoothing of evidence.
     */
   def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {

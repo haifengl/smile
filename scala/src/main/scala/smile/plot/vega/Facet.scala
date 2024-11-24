@@ -53,7 +53,7 @@ trait Facet extends View {
     *                 - If "binned", this indicates that the data for the x
     *                    (or y) channel are already binned.
     * @param timeUnit Time unit (e.g., year, yearmonth, month, hours) for a
-    *                 temporal field, or a temporal field that gets casted
+    *                 temporal field, or a temporal field that gets cast
     *                 as ordinal.
     * @param align    The alignment to apply to row/column facet's subplot.
     *                 The supported string values are "all", "each", and "none".
@@ -161,7 +161,7 @@ object Facet {
     *                 - If "binned", this indicates that the data for the x
     *                   (or y) channel are already binned.
     * @param timeUnit Time unit (e.g., year, yearmonth, month, hours) for a
-    *                 temporal field, or a temporal field that gets casted
+    *                 temporal field, or a temporal field that gets cast
     *                 as ordinal.
     * @param align    The alignment to apply to row/column facet's subplot.
     *                 The supported string values are "all", "each", and "none".

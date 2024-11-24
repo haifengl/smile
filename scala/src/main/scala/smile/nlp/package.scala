@@ -71,7 +71,7 @@ package object nlp {
     *
     * Finding collocations requires first calculating the frequencies of words
     * and their appearance in the context of other words. Often the collection
-    * of words will then requiring filtering to only retain useful content terms.
+    * of words will then require filtering to only retain useful content terms.
     * Each n-gram of words may then be scored according to some association measure,
     * in order to determine the relative likelihood of each n-gram being a
     * collocation.
@@ -257,7 +257,7 @@ package nlp {
       * Recognizing the end of a sentence is not an easy task for a computer.
       * In English, punctuation marks that usually appear at the end of a sentence
       * may not indicate the end of a sentence. The period is the worst offender.
-      * A period can end a sentence but it can also be part of an abbreviation
+      * A period can end a sentence, but it can also be part of an abbreviation
       * or acronym, an ellipsis, a decimal number, or part of a bracket of periods
       * surrounding a Roman numeral. A period can even act both as the end of an
       * abbreviation and the end of a sentence at the same time. Other the other
@@ -291,7 +291,7 @@ package nlp {
       * This tokenizer assumes that the text has already been segmented into
       * sentences. Any periods -- apart from those at the end of a string or before
       * newline -- are assumed to be part of the word they are attached to (e.g. for
-      * abbreviations, etc), and are not separately tokenized.
+      * abbreviations, etc.), and are not separately tokenized.
       *
       * If the parameter filter is not "none", the method will also filter
       * out stop words and punctuations. There is no definite list of stop

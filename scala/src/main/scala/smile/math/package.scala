@@ -186,7 +186,7 @@ package object math {
 
   /** Spearman rank correlation coefficient test. The Spearman Rank Correlation
     * Coefficient is a form of the Pearson coefficient with the data converted
-    * to rankings (ie. when variables are ordinal). It can be used when there
+    * to rankings (i.e. when variables are ordinal). It can be used when there
     * is non-parametric data and hence Pearson cannot be used.
     *
     * The raw scores are converted to ranks and the differences between

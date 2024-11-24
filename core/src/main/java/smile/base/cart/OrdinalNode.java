@@ -24,7 +24,7 @@ import smile.data.type.StructType;
 import java.io.Serial;
 
 /**
- * A node with a ordinal split variable (real-valued or ordinal categorical value).
+ * A node with an ordinal split variable (real-valued or ordinal categorical value).
  *
  * @author Haifeng Li
  */

@@ -21,7 +21,7 @@ import smile.math.MathEx;
 /**
  * The Lanczos algorithm is a direct algorithm devised by Cornelius Lanczos
  * that is an adaptation of power methods to find the most useful eigenvalues
- * and eigenvectors of an n<sup>th</sup> order linear system with a limited
+ * and eigenvectors of a n<sup>th</sup> order linear system with a limited
  * number of operations, m, where m is much smaller than n.
  * <p>
  * Although computationally efficient in principle, the method as initially

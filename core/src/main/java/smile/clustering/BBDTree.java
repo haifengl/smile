@@ -28,8 +28,8 @@ import smile.math.MathEx;
  * The structure works as follows:
  * <ul>
  * <li> All data are placed into a tree where we choose child nodes by
- *      partitioning all data data along a plane parallel to the axis.
- * <li> We maintain for each node, the bounding box of all data data stored
+ *      partitioning all data along a plane parallel to the axis.
+ * <li> We maintain for each node, the bounding box of all data stored
  *      at that node.
  * <li> To do a k-means iteration, we need to assign data to clusters and
  *      calculate the sum and the number of data assigned to each cluster.

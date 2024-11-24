@@ -141,7 +141,7 @@ public class FileChooser extends JFileChooser {
                             if (buf[i] != 0x09 && // tab
                                 buf[i] != 0x0A && // line feed
                                 buf[i] != 0x0C && // form feed
-                                buf[i] != 0x0D) { // carriage return)
+                                buf[i] != 0x0D) { // carriage return
                                 binary = true;
                                 break;
                             }
