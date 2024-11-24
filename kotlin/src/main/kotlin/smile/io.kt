@@ -23,8 +23,7 @@ import java.nio.file.Paths
 import java.sql.ResultSet
 import org.apache.commons.csv.CSVFormat
 import smile.data.DataFrame
-import smile.data.Dataset
-import smile.data.Instance
+import smile.data.SparseDataset
 import smile.data.`type`.StructType
 import smile.io.Read
 import smile.io.Write
@@ -185,12 +184,12 @@ object read {
     }
 
     /** Reads a LivSVM file. */
-    fun libsvm(file: String): Dataset<Instance<SparseArray>> {
+    fun libsvm(file: String): SparseDataset<Int> {
         return Read.libsvm(file)
     }
 
     /** Reads a LivSVM file. */
-    fun libsvm(file: Path): Dataset<Instance<SparseArray>> {
+    fun libsvm(file: Path): SparseDataset<Int> {
         return Read.libsvm(file)
     }
 }
