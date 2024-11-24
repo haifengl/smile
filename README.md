@@ -79,12 +79,12 @@ For Scala API, please use
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:3.1.1")
+    implementation("com.github.haifengl:smile-kotlin:4.0.0")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "3.1.1"]
+    [org.clojars.haifengl/smile "4.0.0"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
