@@ -179,7 +179,6 @@ lazy val core = project.in(file("core"))
 
 lazy val deep = project.in(file("deep"))
   .settings(javaSettings: _*)
-  .settings(publish / skip := true)
   .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
