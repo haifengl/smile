@@ -51,7 +51,7 @@ check_error "!!"
 
 # build shell's smile.zip
 cd ..
-sbt shell/universal:packageBin
+sbt shell/Universal/packageBin
 check_error "!!"
 
 while true; do
