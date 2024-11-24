@@ -30,7 +30,8 @@ Universal / mappings := {
                          !name.startsWith("data/sparse") &&
                          !name.startsWith("data/sqlite") &&
                          !name.startsWith("data/transaction") &&
-                         !name.startsWith("data/wavefront")
+                         !name.startsWith("data/wavefront") &&
+                         !name.endsWith("-ubyte")
   }
 }
 
