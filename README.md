@@ -65,7 +65,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>3.1.1</version>
+      <version>4.0.0</version>
     </dependency>
 ```
 
@@ -73,7 +73,7 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.1"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.0.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
@@ -93,9 +93,9 @@ To use these algorithms, you should include OpenBLAS for optimized matrix
 computation:
 ```
     libraryDependencies ++= Seq(
-      "org.bytedeco" % "javacpp"   % "1.5.8"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
-      "org.bytedeco" % "openblas"  % "0.3.21-1.5.8" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
-      "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.8"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le"
+      "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
     )
 ```
 In this example, we include all supported 64-bit platforms and filter out
@@ -113,7 +113,7 @@ modules that include the full version of MKL binaries, Smile will automatically
 switch to MKL.
 ```
 libraryDependencies ++= {
-  val version = "2024.0-1.5.10"
+  val version = "2025.0-1.5.11"
   Seq(
     "org.bytedeco" % "mkl-platform"        % version,
     "org.bytedeco" % "mkl-platform-redist" % version
@@ -170,7 +170,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>3.1.1</version>
+      <version>4.0.0</version>
     </dependency>
 ```
 
