@@ -40,6 +40,7 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
   ),
 
+  versionScheme := Some("early-semver"),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
@@ -115,7 +116,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-groups",
     "-dynamic-side-menu",
     "-project-version", "4.0.0",
-    "-project-logo", "web/images/smile.jpg",
+    "-project-logo", "web/src/images/smile.jpg",
     "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
   ),
