@@ -30,17 +30,17 @@ check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 cd kotlin
-gradle dokkaHtml
+./gradlew dokkaHtml
 check_error "!!"
 find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 # build smile-kotlin.jar and copy it to shell
-rm shell/src/universal/bin/smile-kotlin-*.jar
-gradle build
+rm ../shell/src/universal/bin/smile-kotlin-*.jar
+./gradlew build
 check_error "!!"
 
 cd ../clojure
-lein codox
+./lein codox
 check_error "!!"
 find doc/api/clojure -name '*.html' -exec tidy -m {} \;
 find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
@@ -86,7 +86,7 @@ while true; do
     case $ans in
         [Yy]* )
             cd kotlin
-            gradle publishMavenJavaPublicationToMavenRepository
+            ./gradlew publishMavenJavaPublicationToMavenRepository
             check_error "gradle publish"
             cd ..
             break;;
@@ -100,7 +100,7 @@ while true; do
     case $ans in
         [Yy]* )
             cd ../clojure
-            lein deploy clojars
+            ./lein deploy clojars
             check_error "lein deploy clojars"
             cd ..
             break;;
