@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "3.1.0",
+  version := "4.0.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -114,7 +114,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-dynamic-side-menu",
-    "-project-version", "3.1.0",
+    "-project-version", "4.0.0",
     "-project-logo", "web/images/smile.jpg",
     "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
