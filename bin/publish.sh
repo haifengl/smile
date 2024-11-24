@@ -21,11 +21,11 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.3 json/doc
+sbt ++3.3.4 json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.3 scala/doc
+sbt ++3.3.4 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
@@ -67,11 +67,11 @@ while true; do
             check_error "!!"
             git merge master
             check_error "!!"
-            sbt ++3.3.3 scala/publishSigned
+            sbt ++3.3.4 scala/publishSigned
             check_error "!!"
-            sbt ++3.3.3 json/publishSigned
+            sbt ++3.3.4 json/publishSigned
             check_error "!!"
-            # sbt ++3.3.3 spark/publishSigned
+            # sbt ++3.3.4 spark/publishSigned
             # check_error "!!"
 
             # git checkout master
