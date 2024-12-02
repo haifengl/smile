@@ -83,13 +83,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
 
-        for (SparseArray.Entry e : get(i).x()) {
-            if (e.i == j) {
-                return e.x;
-            }
-        }
-
-        return 0.0;
+        return get(i).x().get(j);
     }
 
     /**
@@ -97,17 +91,8 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      */
     default void unitize() {
         stream().forEach(instance -> {
-            double sum = 0.0;
-
-            for (SparseArray.Entry e : instance.x()) {
-                sum += MathEx.pow2(e.x);
-            }
-
-            sum = Math.sqrt(sum);
-
-            for (SparseArray.Entry e : instance.x()) {
-                e.update(e.x / sum);
-            }
+            double sum = Math.sqrt(instance.x().valueStream().map(x -> x*x).sum());
+            instance.x().update((i, x) -> x / sum);
         });
     }
 
@@ -116,15 +101,8 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      */
     default void unitize1() {
         stream().forEach(instance -> {
-            double sum = 0.0;
-
-            for (SparseArray.Entry e : instance.x()) {
-                sum += Math.abs(e.x);
-            }
-
-            for (SparseArray.Entry e : instance.x()) {
-                e.update(e.x / sum);
-            }
+            double sum = instance.x().valueStream().map(Math::abs).sum();
+            instance.x().update((i, x) -> x / sum);
         });
     }
 
@@ -147,14 +125,13 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
         double[] x = new double[nz];
 
         for (int i = 0; i < nrow; i++) {
-            for (SparseArray.Entry e : get(i).x()) {
-                int j = e.i;
+            final int row = i;
+            get(i).x().forEach((j, value) -> {
                 int k = colIndex[j] + pos[j];
-
-                rowIndex[k] = i;
-                x[k] = e.x;
+                rowIndex[k] = row;
+                x[k] = value;
                 pos[j]++;
-            }
+            });
         }
 
         return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);

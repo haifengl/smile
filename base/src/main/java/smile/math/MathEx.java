@@ -2775,26 +2775,26 @@ public class MathEx {
 
         double sum = 0.0;
         while (e1 != null && e2 != null) {
-            if (e1.i == e2.i) {
-                sum += pow2(e1.x - e2.x);
+            if (e1.index() == e2.index()) {
+                sum += pow2(e1.value() - e2.value());
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
-            } else if (e1.i > e2.i) {
-                sum += pow2(e2.x);
+            } else if (e1.index() > e2.index()) {
+                sum += pow2(e2.value());
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
-                sum += pow2(e1.x);
+                sum += pow2(e1.value());
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
         
         while (it1.hasNext()) {
-            double d = it1.next().x;
+            double d = it1.next().value();
             sum += d * d;
         }
 
         while (it2.hasNext()) {
-            double d = it2.next().x;
+            double d = it2.next().value();
             sum += d * d;
         }
         
@@ -3047,13 +3047,13 @@ public class MathEx {
         double kl = 0.0;
 
         while (a != null && b != null) {
-            if (a.i < b.i) {
+            if (a.index() < b.index()) {
                 a = pIter.hasNext() ? pIter.next() : null;
-            } else if (a.i > b.i) {
+            } else if (a.index() > b.index()) {
                 b = qIter.hasNext() ? qIter.next() : null;
             } else {
                 intersection = true;
-                kl += a.x * Math.log(a.x / b.x);
+                kl += a.value() * Math.log(a.value() / b.value());
 
                 a = pIter.hasNext() ? pIter.next() : null;
                 b = qIter.hasNext() ? qIter.next() : null;
@@ -3120,10 +3120,10 @@ public class MathEx {
         double kl = 0.0;
         while (iter.hasNext()) {
             SparseArray.Entry b = iter.next();
-            int i = b.i;
+            int i = b.index();
             if (q[i] > 0) {
                 intersection = true;
-                kl += b.x * Math.log(b.x / q[i]);
+                kl += b.value() * Math.log(b.value() / q[i]);
             }
         }
 
@@ -3187,17 +3187,17 @@ public class MathEx {
         double js = 0.0;
 
         while (a != null && b != null) {
-            if (a.i < b.i) {
-                double mi = a.x / 2;
-                js += a.x * Math.log(a.x / mi);
+            if (a.index() < b.index()) {
+                double mi = a.value() / 2;
+                js += a.value() * Math.log(a.value() / mi);
                 a = pIter.hasNext() ? pIter.next() : null;
-            } else if (a.i > b.i) {
-                double mi = b.x / 2;
-                js += b.x * Math.log(b.x / mi);
+            } else if (a.index() > b.index()) {
+                double mi = b.value() / 2;
+                js += b.value() * Math.log(b.value() / mi);
                 b = qIter.hasNext() ? qIter.next() : null;
             } else {
-                double mi = (a.x + b.x) / 2;
-                js += a.x * Math.log(a.x / mi) + b.x * Math.log(b.x / mi);
+                double mi = (a.value() + b.value()) / 2;
+                js += a.value() * Math.log(a.value() / mi) + b.value() * Math.log(b.value() / mi);
 
                 a = pIter.hasNext() ? pIter.next() : null;
                 b = qIter.hasNext() ? qIter.next() : null;
@@ -3247,9 +3247,9 @@ public class MathEx {
         double js = 0.0;
         while (iter.hasNext()) {
             SparseArray.Entry b = iter.next();
-            int i = b.i;
-            double mi = (b.x + q[i]) / 2;
-            js += b.x * Math.log(b.x / mi);
+            int i = b.index();
+            double mi = (b.value() + q[i]) / 2;
+            js += b.value() * Math.log(b.value() / mi);
             if (q[i] > 0) {
                 js += q[i] * Math.log(q[i] / mi);
             }
@@ -3337,11 +3337,11 @@ public class MathEx {
 
         double sum = 0.0;
         while (e1 != null && e2 != null) {
-            if (e1.i == e2.i) {
-                sum += e1.x * e2.x;
+            if (e1.index() == e2.index()) {
+                sum += e1.value() * e2.value();
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
-            } else if (e1.i > e2.i) {
+            } else if (e1.index() > e2.index()) {
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
                 e1 = it1.hasNext() ? it1.next() : null;

@@ -20,16 +20,18 @@ package smile.util;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import smile.sort.QuickSort;
 
 /**
  * Sparse array of double values.
+ * 
  * @author Haifeng Li
- *
  */
 public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     @Serial
@@ -43,43 +45,39 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     private final DoubleArrayList value;
 
     /**
-     * The entry in a sparse array of double values.
+     * Represents an operation that accepts an entry and returns no result.
      */
-    public class Entry {
+    public interface Consumer {
         /**
-         * The index of entry.
+         * Performs this operation on the given entry.
+         * @param i the entry index.
+         * @param x the entry value.
          */
-        public final int i;
-        /**
-         * The value of entry.
-         */
-        public final double x;
-        /**
-         * The index to internal storage.
-         */
-        private final int index;
+        void apply(int i, double x);
+    }
 
+    /**
+     * Represents a function that accepts an entry and produces a result.
+     */
+    public interface Function {
         /**
-         * Constructor.
+         * Performs this operation on the given entry.
+         * @param i the entry index.
+         * @param x the entry value.
+         * @return the function result.
          */
-        private Entry(int index) {
-            this.i = SparseArray.this.index.get(index);
-            this.x = value.get(index);
-            this.index = index;
-        }
+        double apply(int i, double x);
+    }
 
-        /**
-         * Update the value of entry in the array.
-         * Note that the field <code>x</code> is final and thus not updated.
-         * @param x the new entry value.
-         */
-        public void update(double x) {
-            value.set(index, x);
-        }
-
+    /**
+     * The entry in a sparse array of double values.
+     * @param index The index of entry.
+     * @param value The value of entry.
+     */
+    public record Entry(int index, double value) {
         @Override
         public String toString() {
-            return String.format("%d:%s", i, Strings.format(x));
+            return String.format("%d:%s", index, Strings.format(value));
         }
     }
 
@@ -103,13 +101,13 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * Constructor.
      * @param entries the nonzero entries.
      */
-    public SparseArray(List<Entry> entries) {
+    public SparseArray(Collection<Entry> entries) {
         index = new IntArrayList(entries.size());
         value = new DoubleArrayList(entries.size());
 
         for (Entry e : entries) {
-            index.add(e.i);
-            value.add(e.x);
+            index.add(e.index);
+            value.add(e.value);
         }
     }
 
@@ -141,7 +139,38 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     public boolean isEmpty() {
         return index.isEmpty();
     }
-    
+
+    /**
+     * Performs an action for each nonzero entry.
+     * @param action a non-interfering action to perform on the nonzero entries.
+     */
+    public void forEach(Consumer action) {
+        int n = size();
+        for (int i = 0; i < n; i++) {
+            action.apply(index.get(i), value.get(i));
+        }
+    }
+
+    /**
+     * Returns a stream consisting of the results of applying the given function to the nonzero entries.
+     * @param mapper a non-interfering, stateless function to map each nonzero entry to new value.
+     * @return the stream of the new values of nonzero entries.
+     */
+    public DoubleStream map(Function mapper) {
+        return IntStream.range(0, size()).mapToDouble(i -> mapper.apply(index.get(i), value.get(i)));
+    }
+
+    /**
+     * Updates each nonzero entry.
+     * @param mapper a function to map each nonzero entry to new value.
+     */
+    public void update(Function mapper) {
+        int n = size();
+        for (int i = 0; i < n; i++) {
+            value.set(i, mapper.apply(index.get(i), value.get(i)));
+        }
+    }
+
     @Override
     public Iterator<Entry> iterator() {
         return new Iterator<>() {
@@ -154,7 +183,9 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
             @Override
             public Entry next() {
-                return new Entry(i++);
+                Entry e = new Entry(index.get(i), value.get(i));
+                i++;
+                return e;
             }
         };
     }
@@ -164,7 +195,23 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @return the stream of nonzero entries.
      */
     public Stream<Entry> stream() {
-        return IntStream.range(0, size()).mapToObj(Entry::new);
+        return IntStream.range(0, size()).mapToObj(i -> new Entry(index.get(i), value.get(i)));
+    }
+
+    /**
+     * Returns the stream of the indices of nonzero entries.
+     * @return the stream of the indices of nonzero entries.
+     */
+    public IntStream indexStream() {
+        return index.stream();
+    }
+
+    /**
+     * Returns the stream of the values of nonzero entries.
+     * @return the stream of the values of nonzero entries.
+     */
+    public DoubleStream valueStream() {
+        return value.stream();
     }
 
     /**

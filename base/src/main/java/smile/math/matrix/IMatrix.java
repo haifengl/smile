@@ -720,12 +720,12 @@ public abstract class IMatrix implements Serializable {
                 double[] x = new double[nz];
 
                 for (int i = 0; i < nrow; i++) {
-                    for (SparseArray.Entry e :rows.get(i)) {
-                        int j = e.i;
+                    for (SparseArray.Entry e : rows.get(i)) {
+                        int j = e.index();
                         int k = colIndex[j] + pos[j];
 
                         rowIndex[k] = i;
-                        x[k] = e.x;
+                        x[k] = e.value();
                         pos[j]++;
                     }
                 }
