@@ -106,7 +106,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
         }
 
         int n = data.length;
-        int d = 1 + Arrays.stream(data).flatMap(SparseArray::stream).mapToInt(e -> e.i).max().orElse(0);
+        int d = 1 + Arrays.stream(data).flatMapToInt(SparseArray::indexStream).max().orElse(0);
 
         int[] y = new int[n];
         SparseArray[] medoids = new SparseArray[k];
@@ -122,7 +122,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
                 if (y[i] == cluster) {
                     size[cluster]++;
                     for (SparseArray.Entry e : data[i]) {
-                        centroids[cluster][e.i] += e.x;
+                        centroids[cluster][e.index()] += e.value();
                     }
                 }
             }
@@ -154,8 +154,8 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
                     }
 
                     for (SparseArray.Entry e : data[i]) {
-                        int j = e.i;
-                        double p = e.x;
+                        int j = e.index();
+                        double p = e.value();
                         centroids[c][j] += p;
                         centroids[o][j] -= p;
                         if (centroids[o][j] < 0) {

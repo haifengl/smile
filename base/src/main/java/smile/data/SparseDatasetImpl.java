@@ -59,7 +59,7 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
      * @param data The sample instances.
      */
     public SparseDatasetImpl(Collection<SampleInstance<SparseArray, T>> data) {
-        this(data, 1 + data.stream().flatMap(instance -> instance.x().stream()).mapToInt(e -> e.i).max().orElse(0));
+        this(data, 1 + data.stream().flatMapToInt(instance -> instance.x().indexStream()).max().orElse(0));
     }
 
     /**
@@ -78,23 +78,23 @@ class SparseDatasetImpl<T> implements SparseDataset<T> {
 
             int i = -1; // index of previous element
             for (SparseArray.Entry e : x) {
-                if (e.i < 0) {
-                    throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", e.i));
+                if (e.index() < 0) {
+                    throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", e.index()));
                 }
 
-                if (e.i == i) {
-                    logger.warn("Ignore duplicated indices: {} in {}", e.i, x);
+                if (e.index() == i) {
+                    logger.warn("Ignore duplicated indices: {} in {}", e.index(), x);
                 } else {
-                    if (ncol <= e.i) {
-                        ncol = e.i + 1;
+                    if (ncol <= e.index()) {
+                        ncol = e.index() + 1;
                         int[] newColSize = new int[3 * ncol / 2];
                         System.arraycopy(colSize, 0, newColSize, 0, colSize.length);
                         colSize = newColSize;
                     }
 
-                    colSize[e.i]++;
+                    colSize[e.index()]++;
                     n++;
-                    i = e.i;
+                    i = e.index();
                 }
             }
         }

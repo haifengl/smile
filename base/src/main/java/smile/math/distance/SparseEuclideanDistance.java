@@ -69,11 +69,11 @@ public class SparseEuclideanDistance implements Metric<SparseArray> {
     @Override
     public double d(SparseArray x, SparseArray y) {
         if (x.isEmpty()) {
-            throw new IllegalArgumentException("List x is empty.");
+            throw new IllegalArgumentException("SparseArray x is empty.");
         }
 
         if (y.isEmpty()) {
-            throw new IllegalArgumentException("List y is empty.");
+            throw new IllegalArgumentException("SparseArray y is empty.");
         }
 
         Iterator<SparseArray.Entry> iterX = x.iterator();
@@ -86,18 +86,18 @@ public class SparseEuclideanDistance implements Metric<SparseArray> {
 
         if (weight == null) {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    double d = a.x;
+                if (a.index() < b.index()) {
+                    double d = a.value();
                     dist += d * d;
 
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    double d = b.x;
+                } else if (a.index() > b.index()) {
+                    double d = b.value();
                     dist += d * d;
 
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    double d = a.x - b.x;
+                    double d = a.value() - b.value();
                     dist += d * d;
 
                     a = iterX.hasNext() ? iterX.next() : null;
@@ -106,33 +106,33 @@ public class SparseEuclideanDistance implements Metric<SparseArray> {
             }
 
             while (a != null) {
-                double d = a.x;
+                double d = a.value();
                 dist += d * d;
 
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                double d = b.x;
+                double d = b.value();
                 dist += d * d;
 
                 b = iterY.hasNext() ? iterY.next() : null;
             }
         } else {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    double d = a.x;
-                    dist += weight[a.i] * d * d;
+                if (a.index() < b.index()) {
+                    double d = a.value();
+                    dist += weight[a.index()] * d * d;
 
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    double d = b.x;
-                    dist += weight[b.i] * d * d;
+                } else if (a.index() > b.index()) {
+                    double d = b.value();
+                    dist += weight[b.index()] * d * d;
 
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    double d = a.x - b.x;
-                    dist += weight[a.i] * d * d;
+                    double d = a.value() - b.value();
+                    dist += weight[a.index()] * d * d;
 
                     a = iterX.hasNext() ? iterX.next() : null;
                     b = iterY.hasNext() ? iterY.next() : null;
@@ -140,15 +140,15 @@ public class SparseEuclideanDistance implements Metric<SparseArray> {
             }
 
             while (a != null) {
-                double d = a.x;
-                dist += weight[a.i] * d * d;
+                double d = a.value();
+                dist += weight[a.index()] * d * d;
 
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                double d = b.x;
-                dist += weight[b.i] * d * d;
+                double d = b.value();
+                dist += weight[b.index()] * d * d;
 
                 b = iterY.hasNext() ? iterY.next() : null;
             }

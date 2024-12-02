@@ -102,18 +102,18 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
         if (weight == null) {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    double d = a.x;
+                if (a.index() < b.index()) {
+                    double d = a.value();
                     dist += Math.pow(d, p);
 
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    double d = b.x;
+                } else if (a.index() > b.index()) {
+                    double d = b.value();
                     dist += Math.pow(d, p);
 
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    double d = a.x - b.x;
+                    double d = a.value() - b.value();
                     dist += Math.pow(d, p);
 
                     a = iterX.hasNext() ? iterX.next() : null;
@@ -122,33 +122,33 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
             }
 
             while (a != null) {
-                double d = a.x;
+                double d = a.value();
                 dist += Math.pow(d, p);
 
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                double d = b.x;
+                double d = b.value();
                 dist += Math.pow(d, p);
 
                 b = iterY.hasNext() ? iterY.next() : null;
             }
         } else {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    double d = a.x;
-                    dist += weight[a.i] * Math.pow(d, p);
+                if (a.index() < b.index()) {
+                    double d = a.value();
+                    dist += weight[a.index()] * Math.pow(d, p);
 
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    double d = b.x;
-                    dist += weight[b.i] * Math.pow(d, p);
+                } else if (a.index() > b.index()) {
+                    double d = b.value();
+                    dist += weight[b.index()] * Math.pow(d, p);
 
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    double d = a.x - b.x;
-                    dist += weight[a.i] * Math.pow(d, p);
+                    double d = a.value() - b.value();
+                    dist += weight[a.index()] * Math.pow(d, p);
 
                     a = iterX.hasNext() ? iterX.next() : null;
                     b = iterY.hasNext() ? iterY.next() : null;
@@ -156,15 +156,15 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
             }
 
             while (a != null) {
-                double d = a.x;
-                dist += weight[a.i] * Math.pow(d, p);
+                double d = a.value();
+                dist += weight[a.index()] * Math.pow(d, p);
 
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                double d = b.x;
-                dist += weight[b.i] * Math.pow(d, p);
+                double d = b.value();
+                dist += weight[b.index()] * Math.pow(d, p);
 
                 b = iterY.hasNext() ? iterY.next() : null;
             }
