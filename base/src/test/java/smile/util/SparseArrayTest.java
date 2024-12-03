@@ -73,19 +73,19 @@ public class SparseArrayTest {
 
         SparseArray.Entry e = a.stream().findFirst().get();
         assertEquals(1, a.stream().count());
-        assertEquals(2, e.i);
-        assertEquals(1.0, e.x, 1E-15);
+        assertEquals(2, e.index());
+        assertEquals(1.0, e.value(), 1E-15);
 
         a.set(0, 4);
         e = a.stream().findFirst().get();
         assertEquals(2, a.stream().count());
-        assertEquals(2, e.i);
-        assertEquals(1.0, e.x, 1E-15);
+        assertEquals(2, e.index());
+        assertEquals(1.0, e.value(), 1E-15);
 
         a.sort();
         e = a.stream().findFirst().get();
         assertEquals(2, a.stream().count());
-        assertEquals(0, e.i);
-        assertEquals(4.0, e.x, 1E-15);
+        assertEquals(0, e.index());
+        assertEquals(4.0, e.value(), 1E-15);
     }
 }

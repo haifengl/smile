@@ -410,24 +410,24 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             case CNB:
             case WCNB:
                 for (SparseArray.Entry e : x) {
-                    int ex = (int) e.x;
-                    ntc[y][e.i] += ex;
+                    int ex = (int) e.value();
+                    ntc[y][e.index()] += ex;
                     nt[y] += ex;
                 }
                 break;
 
             case POLYAURN:
                 for (SparseArray.Entry e : x) {
-                    int ex = (int) e.x;
-                    ntc[y][e.i] += ex * 2;
+                    int ex = (int) e.value();
+                    ntc[y][e.index()] += ex * 2;
                     nt[y] += ex * 2;
                 }
                 break;
 
             case BERNOULLI:
                 for (SparseArray.Entry e : x) {
-                    if (e.x > 0) {
-                        ntc[y][e.i]++;
+                    if (e.value() > 0) {
+                        ntc[y][e.index()]++;
                     }
                 }
                 break;
@@ -588,8 +588,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        int ex = (int) e.x;
-                        ntc[yi][e.i] += ex;
+                        int ex = (int) e.value();
+                        ntc[yi][e.index()] += ex;
                         nt[yi] += ex;
                     }
 
@@ -606,7 +606,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                 for (SparseArray doc : x) {
                     for (SparseArray.Entry e : doc) {
-                        if (e.x > 0) ni[e.i]++;
+                        if (e.value() > 0) ni[e.index()]++;
                     }
                 }
 
@@ -622,8 +622,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     Arrays.fill(d, 0.0);
                     for (SparseArray.Entry e : xi) {
-                        if (e.x > 0) {
-                            d[e.i] = Math.log(1 + e.x) * Math.log(N / ni[e.i]);
+                        if (e.value() > 0) {
+                            d[e.index()] = Math.log(1 + e.value()) * Math.log(N / ni[e.index()]);
                         }
                     }
 
@@ -658,8 +658,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        int ex = (int) e.x;
-                        ntc[yi][e.i] += ex * 2;
+                        int ex = (int) e.value();
+                        ntc[yi][e.index()] += ex * 2;
                         nt[yi] += ex * 2;
                     }
 
@@ -676,8 +676,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
-                        if (e.x > 0) {
-                            ntc[yi][e.i]++;
+                        if (e.value() > 0) {
+                            ntc[yi][e.index()]++;
                         }
                     }
 
@@ -892,8 +892,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                 case POLYAURN:
                     logprob = Math.log(priori[i]);
                     for (SparseArray.Entry e : x) {
-                        if (e.x > 0) {
-                            logprob += e.x * logcondprob[i][e.i];
+                        if (e.value() > 0) {
+                            logprob += e.value() * logcondprob[i][e.index()];
                         }
                     }
                     break;
@@ -901,10 +901,10 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                 case BERNOULLI:
                     logprob = Math.log(priori[i]);
                     for (SparseArray.Entry e : x) {
-                        if (e.x > 0) {
-                            logprob += logcondprob[i][e.i];
+                        if (e.value() > 0) {
+                            logprob += logcondprob[i][e.index()];
                         } else {
-                            logprob += Math.log(1.0 - Math.exp(logcondprob[i][e.i]));
+                            logprob += Math.log(1.0 - Math.exp(logcondprob[i][e.index()]));
                         }
                     }
                     break;
@@ -914,8 +914,8 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                 case TWCNB:
                     logprob = 0.0;
                     for (SparseArray.Entry e : x) {
-                        if (e.x > 0) {
-                            logprob -= e.x * logcondprob[i][e.i];
+                        if (e.value() > 0) {
+                            logprob -= e.value() * logcondprob[i][e.index()];
                         }
                     }
                     break;

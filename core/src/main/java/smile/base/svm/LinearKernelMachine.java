@@ -118,7 +118,7 @@ public class LinearKernelMachine implements Serializable {
 
         for (SparseArray x : kernelMachine.vectors) {
             for (SparseArray.Entry e : x) {
-                w[e.i] += alpha[e.i] * e.x;
+                w[e.index()] += alpha[e.index()] * e.value();
             }
         }
 
@@ -156,7 +156,7 @@ public class LinearKernelMachine implements Serializable {
     public double f(SparseArray x) {
         double f = b;
         for (SparseArray.Entry e : x) {
-            f += w[e.i] * e.x;
+            f += w[e.index()] * e.value();
         }
 
         return f;

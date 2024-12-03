@@ -62,18 +62,18 @@ public class SparseChebyshevDistance implements Metric<SparseArray> {
         double dist = 0.0;
 
         while (a != null && b != null) {
-            if (a.i < b.i) {
-                double d = Math.abs(a.x);
+            if (a.index() < b.index()) {
+                double d = Math.abs(a.value());
                 if (dist < d) dist = d;
 
                 a = iterX.hasNext() ? iterX.next() : null;
-            } else if (a.i > b.i) {
-                double d = Math.abs(b.x);
+            } else if (a.index() > b.index()) {
+                double d = Math.abs(b.value());
                 if (dist < d) dist = d;
 
                 b = iterY.hasNext() ? iterY.next() : null;
             } else {
-                double d = Math.abs(a.x - b.x);
+                double d = Math.abs(a.value() - b.value());
                 if (dist < d) dist = d;
 
                 a = iterX.hasNext() ? iterX.next() : null;
@@ -82,14 +82,14 @@ public class SparseChebyshevDistance implements Metric<SparseArray> {
         }
 
         while (a != null) {
-            double d = Math.abs(a.x);
+            double d = Math.abs(a.value());
             if (dist < d) dist = d;
 
             a = iterX.hasNext() ? iterX.next() : null;
         }
 
         while (b != null) {
-            double d = Math.abs(b.x);
+            double d = Math.abs(b.value());
             if (dist < d) dist = d;
 
             b = iterY.hasNext() ? iterY.next() : null;

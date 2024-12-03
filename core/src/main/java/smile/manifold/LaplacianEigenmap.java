@@ -174,9 +174,8 @@ public class LaplacianEigenmap implements Serializable {
 
         for (int i = 0; i < n; i++) {
             SparseArray row = W[i];
-            for (SparseArray.Entry e : row) {
-                e.update(-D[i] * e.x * D[e.i]);
-            }
+            double Di = D[i];
+            row.update((j, value) -> -Di * value * D[j]);
             row.set(i, 1.0);
         }
 
