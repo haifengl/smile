@@ -28,7 +28,6 @@ import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.math.kernel.BinarySparseGaussianKernel;
 import smile.util.SparseArray;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -73,7 +72,7 @@ public class SVMTest {
         for (int i = 0; i < n; i++) {
             SampleInstance<SparseArray, Integer> sample = train.get(i);
             for (SparseArray.Entry e : sample.x()) {
-                x[i][e.i] = e.x;
+                x[i][e.index()] = e.value();
             }
             y[i] = sample.y() > 0 ? +1 : -1;
         }
@@ -84,7 +83,7 @@ public class SVMTest {
         for (int i = 0; i < n; i++) {
             SampleInstance<SparseArray, Integer> sample = test.get(i);
             for (SparseArray.Entry e : sample.x()) {
-                testx[i][e.i] = e.x;
+                testx[i][e.index()] = e.value();
             }
             testy[i] = sample.y() > 0 ? +1 : -1;
         }

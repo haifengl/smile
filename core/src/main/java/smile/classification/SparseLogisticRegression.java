@@ -150,7 +150,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             // update the weights
             w[p] += eta * err;
             for (SparseArray.Entry e : x) {
-                w[e.i] += eta * err * e.x;
+                w[e.index()] += eta * err * e.value();
             }
 
             // add regularization part
@@ -231,7 +231,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
                 double err = (y == i ? 1.0 : 0.0) - prob[i];
                 wi[p] += eta * err;
                 for (SparseArray.Entry e : x) {
-                    wi[e.i] += eta * err * e.x;
+                    wi[e.index()] += eta * err * e.value();
                 }
 
                 // add regularization part
@@ -511,7 +511,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
                     double wx = dot(xi, w);
                     double err = y[i] - MathEx.sigmoid(wx);
                     for (SparseArray.Entry e : xi) {
-                        gradient[e.i] -= err * e.x;
+                        gradient[e.index()] -= err * e.value();
                     }
                     gradient[p] -= err;
 
@@ -657,7 +657,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
 
                         int pos = j * (p + 1);
                         for (SparseArray.Entry e : xi) {
-                            gradient[pos + e.i] -= err * e.x;
+                            gradient[pos + e.index()] -= err * e.value();
                         }
                         gradient[pos + p] -= err;
                     }
@@ -696,7 +696,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         double dot = w[w.length-1];
 
         for (SparseArray.Entry e : x) {
-            dot += e.x * w[e.i];
+            dot += e.value() * w[e.index()];
         }
 
         return dot;
@@ -710,7 +710,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         double dot = w[pos + p];
 
         for (SparseArray.Entry e : x) {
-            dot += e.x * w[pos+e.i];
+            dot += e.value() * w[pos + e.index()];
         }
 
         return dot;

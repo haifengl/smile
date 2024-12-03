@@ -87,50 +87,50 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
 
         if (weight == null) {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    dist += Math.abs(a.x);
+                if (a.index() < b.index()) {
+                    dist += Math.abs(a.value());
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    dist += Math.abs(b.x);
+                } else if (a.index() > b.index()) {
+                    dist += Math.abs(b.value());
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    dist += Math.abs(a.x - b.x);
+                    dist += Math.abs(a.value() - b.value());
                     a = iterX.hasNext() ? iterX.next() : null;
                     b = iterY.hasNext() ? iterY.next() : null;
                 }
             }
 
             while (a != null) {
-                dist += Math.abs(a.x);
+                dist += Math.abs(a.value());
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                dist += Math.abs(b.x);
+                dist += Math.abs(b.value());
                 b = iterY.hasNext() ? iterY.next() : null;
             }
         } else {
             while (a != null && b != null) {
-                if (a.i < b.i) {
-                    dist += weight[a.i] * Math.abs(a.x);
+                if (a.index() < b.index()) {
+                    dist += weight[a.index()] * Math.abs(a.value());
                     a = iterX.hasNext() ? iterX.next() : null;
-                } else if (a.i > b.i) {
-                    dist += weight[b.i] * Math.abs(b.x);
+                } else if (a.index() > b.index()) {
+                    dist += weight[b.index()] * Math.abs(b.value());
                     b = iterY.hasNext() ? iterY.next() : null;
                 } else {
-                    dist += weight[a.i] * Math.abs(a.x - b.x);
+                    dist += weight[a.index()] * Math.abs(a.value() - b.value());
                     a = iterX.hasNext() ? iterX.next() : null;
                     b = iterY.hasNext() ? iterY.next() : null;
                 }
             }
 
             while (a != null) {
-                dist += weight[a.i] * Math.abs(a.x);
+                dist += weight[a.index()] * Math.abs(a.value());
                 a = iterX.hasNext() ? iterX.next() : null;
             }
 
             while (b != null) {
-                dist += weight[b.i] * Math.abs(b.x);
+                dist += weight[b.index()] * Math.abs(b.value());
                 b = iterY.hasNext() ? iterY.next() : null;
             }
         }
