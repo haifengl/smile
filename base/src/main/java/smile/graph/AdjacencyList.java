@@ -28,6 +28,7 @@ import java.util.Queue;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
 import smile.util.PriorityQueue;
+import smile.util.SparseArray;
 
 /**
  * An adjacency list representation of a graph. Multigraph is supported.
@@ -36,7 +37,7 @@ import smile.util.PriorityQueue;
  */
 public class AdjacencyList implements Graph, Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     /**
      * Is the graph directed?
      */
@@ -44,7 +45,7 @@ public class AdjacencyList implements Graph, Serializable {
     /**
      * Adjacency list. Non-zero values are the weights of edges.
      */
-    private final LinkedList<Edge>[] graph;
+    private final SparseArray[] graph;
 
     /**
      * Constructor.
@@ -64,10 +65,7 @@ public class AdjacencyList implements Graph, Serializable {
     @SuppressWarnings("unchecked")
     public AdjacencyList(int n, boolean digraph) {
         this.digraph = digraph;
-        graph = new LinkedList[n];
-        for (int i = 0; i < n; i++) {
-            graph[i] = new LinkedList<>();
-        }
+        graph = new SparseArray[n];
     }
 
     @Override
@@ -77,191 +75,27 @@ public class AdjacencyList implements Graph, Serializable {
 
     @Override
     public boolean hasEdge(int source, int target) {
-        if (digraph) {
-            for (Edge edge : graph[source]) {
-                if (edge.v2 == target) {
-                    return true;
-                }
-            }
-        } else {
-            for (Edge edge : graph[source]) {
-                if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return graph[source].get(target) != 0.0;
     }
 
     @Override
     public double getWeight(int source, int target) {
-        if (digraph) {
-            for (Edge edge : graph[source]) {
-                if (edge.v2 == target) {
-                    return edge.weight;
-                }
-            }
-        } else {
-            for (Edge edge : graph[source]) {
-                if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
-                    return edge.weight;
-                }
-            }
-        }
-
-        return 0.0;
+        return graph[source].get(target);
     }
 
     @Override
     public AdjacencyList setWeight(int source, int target, double weight) {
-        if (digraph) {
-            for (Edge edge : graph[source]) {
-                if (edge.v2 == target) {
-                    edge.weight = weight;
-                    return this;
-                }
-            }
-        } else {
-            for (Edge edge : graph[source]) {
-                if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
-                    edge.weight = weight;
-                    return this;
-                }
-            }
+        graph[source].set(target, weight);
+        if (!digraph) {
+            graph[target].set(source, weight);
         }
 
-        addEdge(source, target, weight);
         return this;
     }
 
     @Override
-    public Collection<Edge> getEdges() {
-        Collection<Edge> set = new HashSet<>();
-
-        for (LinkedList<Edge> edges : graph) {
-            set.addAll(edges);
-        }
-
-        return set;
-    }
-
-    @Override
     public Collection<Edge> getEdges(int vertex) {
-        return graph[vertex];
-    }
-
-    @Override
-    public Collection<Edge> getEdges(int source, int target) {
-        Collection<Edge> set = new LinkedList<>();
-
-        if (digraph) {
-            for (Edge edge : graph[source]) {
-                if (edge.v2 == target) {
-                    set.add(edge);
-                }
-            }
-        } else {
-            for (Edge edge : graph[source]) {
-                if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
-                    set.add(edge);
-                }
-            }
-        }
-
-        return set;
-    }
-
-    @Override
-    public Edge getEdge(int source, int target) {
-        if (digraph) {
-            for (Edge edge : graph[source]) {
-                if (edge.v2 == target) {
-                    return edge;
-                }
-            }
-        } else {
-            for (Edge edge : graph[source]) {
-                if ((edge.v1 == source && edge.v2 == target) || (edge.v2 == source && edge.v1 == target)) {
-                    return edge;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public void addEdge(int source, int target) {
-        addEdge(source, target, 1.0);
-    }
-
-    @Override
-    public void addEdge(int source, int target, double weight) {
-        Edge edge = new Edge(source, target, weight);
-        graph[source].add(edge);
-        if (!digraph && source != target) {
-            graph[target].add(edge);
-        }
-    }
-
-    @Override
-    public void removeEdges(Collection<Edge> edges) {
-        for (Edge edge : edges) {
-            removeEdge(edge);
-        }
-    }
-
-    @Override
-    public void removeEdge(int source, int target) {
-        Iterator<Edge> iter = graph[source].iterator();
-
-        if (digraph) {
-            while (iter.hasNext()) {
-                Edge e = iter.next();
-                if (e.v2 == target) {
-                    iter.remove();
-                }
-            }
-        } else {
-            while (iter.hasNext()) {
-                Edge e = iter.next();
-                if ((e.v1 == source && e.v2 == target) || (e.v2 == source && e.v1 == target)) {
-                    iter.remove();
-                }
-            }
-
-            iter = graph[target].iterator();
-            while (iter.hasNext()) {
-                Edge e = iter.next();
-                if ((e.v1 == source && e.v2 == target) || (e.v2 == source && e.v1 == target)) {
-                    iter.remove();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void removeEdge(Edge edge) {
-        Iterator<Edge> iter = graph[edge.v1].iterator();
-
-        while (iter.hasNext()) {
-            if (iter.next() == edge) {
-                iter.remove();
-                break;
-            }
-        }
-
-        if (!digraph) {
-            iter = graph[edge.v2].iterator();
-
-            while (iter.hasNext()) {
-                if (iter.next() == edge) {
-                    iter.remove();
-                    break;
-                }
-            }
-        }
+        return graph[vertex].stream().map(e -> new Edge(vertex, e.i, e.x)).toList();
     }
 
     @Override
@@ -304,7 +138,7 @@ public class AdjacencyList implements Graph, Serializable {
         pre[v] = 0;
 
         for (Edge edge : graph[v]) {
-            int t = edge.v2;
+            int t = edge.v2();
             if (pre[t] == -1) {
                 count = dfsearch(t, pre, ts, count);
             }
@@ -349,9 +183,9 @@ public class AdjacencyList implements Graph, Serializable {
     private void dfs(int v, int[] cc, int id) {
         cc[v] = id;
         for (Edge edge : graph[v]) {
-            int t = edge.v2;
+            int t = edge.v2();
             if (!digraph && t == v) {
-                t = edge.v1;
+                t = edge.v1();
             }
 
             if (cc[t] == -1) {
@@ -416,9 +250,9 @@ public class AdjacencyList implements Graph, Serializable {
         visitor.visit(v);
         cc[v] = id;
         for (Edge edge : graph[v]) {
-            int t = edge.v2;
+            int t = edge.v2();
             if (!digraph && t == v) {
-                t = edge.v1;
+                t = edge.v1();
             }
 
             if (cc[t] == -1) {
@@ -439,7 +273,7 @@ public class AdjacencyList implements Graph, Serializable {
         for (int i = 0; i < n; i++) {
             ts[i] = -1;
             for (Edge edge : graph[i]) {
-                in[edge.v2]++;
+                in[edge.v2()]++;
             }
         }
 
@@ -454,7 +288,7 @@ public class AdjacencyList implements Graph, Serializable {
             int t = queue.poll();
             ts[i] = t;
             for (Edge edge : graph[t]) {
-                int v = edge.v2;
+                int v = edge.v2();
                 if (--in[v] == 0) {
                     queue.offer(v);
                 }
@@ -477,9 +311,9 @@ public class AdjacencyList implements Graph, Serializable {
         while (!queue.isEmpty()) {
             int t = queue.poll();
             for (Edge edge : graph[t]) {
-                int i = edge.v2;
+                int i = edge.v2();
                 if (!digraph && i == t) {
-                    i = edge.v1;
+                    i = edge.v1();
                 }
 
                 if (cc[i] == -1) {
@@ -536,9 +370,9 @@ public class AdjacencyList implements Graph, Serializable {
         while (!queue.isEmpty()) {
             int t = queue.poll();
             for (Edge edge : graph[t]) {
-                int i = edge.v2;
+                int i = edge.v2();
                 if (!digraph && i == t) {
-                    i = edge.v1;
+                    i = edge.v1();
                 }
 
                 if (cc[i] == -1) {
@@ -582,12 +416,12 @@ public class AdjacencyList implements Graph, Serializable {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
                 for (Edge edge : graph[v]) {
-                    int w = edge.v2;
+                    int w = edge.v2();
                     if (!digraph && w == v) {
-                        w = edge.v1;
+                        w = edge.v1();
                     }
                     
-                    double p = wt[v] + edge.weight;
+                    double p = wt[v] + edge.weight();
                     if (p < wt[w]) {
                         wt[w] = p;
                         queue.lower(w);
@@ -608,10 +442,10 @@ public class AdjacencyList implements Graph, Serializable {
         for (int i = 0; i < v.length; i++) {
             Collection<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
-                int j = edge.v1 == v[i] ? edge.v2 : edge.v1;
+                int j = edge.v1() == v[i] ? edge.v2() : edge.v1();
                 j = Arrays.binarySearch(v, j);
                 if (j >= 0) {
-                    g.addEdge(i, j, edge.weight);
+                    g.addEdge(i, j, edge.weight());
                 }
             }
         }
@@ -646,8 +480,8 @@ public class AdjacencyList implements Graph, Serializable {
 
             int j = 0;
             for (Edge edge : edges) {
-                index[j] = edge.v1 == i ? edge.v2 : edge.v1;
-                w[j++] = edge.weight;
+                index[j] = edge.v1() == i ? edge.v2() : edge.v1();
+                w[j++] = edge.weight();
             }
 
             QuickSort.sort(index, w);

@@ -90,40 +90,13 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public Collection<Edge> getEdges() {
-        Collection<Edge> set = new LinkedList<>();
-        int n = graph.length;
-
-        if (digraph) {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    if (graph[i][j] != 0.0) {
-                        Edge edge = new Edge(i, j, graph[i][j]);
-                        set.add(edge);
-                    }
-                }
-            }
-        } else {
-            for (int i = 0; i < n; i++) {
-                for (int j = i; j < n; j++) {
-                    if (graph[i][j] != 0.0) {
-                        Edge edge = new Edge(i, j, graph[i][j]);
-                        set.add(edge);
-                    }
-                }
-            }
-        }
-
-        return set;
-    }
-
-    @Override
     public Collection<Edge> getEdges(int vertex) {
         Collection<Edge> set = new LinkedList<>();
         int n = graph.length;
+        double[] row = graph[vertex];
         for (int j = 0; j < n; j++) {
-            if (graph[vertex][j] != 0.0) {
-                Edge edge = new Edge(vertex, j, graph[vertex][j]);
+            if (row[j] != 0.0) {
+                Edge edge = new Edge(vertex, j, row[j]);
                 set.add(edge);
             }
         }
@@ -131,36 +104,8 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public Collection<Edge> getEdges(int source, int target) {
-        Collection<Edge> set = new LinkedList<>();
-        Edge edge = getEdge(source, target);
-        if (edge != null) {
-            set.add(edge);
-        }
-        return set;
-    }
-
-    @Override
-    public Edge getEdge(int source, int target) {
-        if (graph[source][target] == 0.0) {
-            return null;
-        }
-
-        return new Edge(source, target, graph[source][target]);
-    }
-
-    @Override
     public void addEdge(int source, int target) {
-        if (digraph) {
-            if (graph[source][target] == 0.0) {
-                graph[source][target] = 1.0;
-            }
-        } else {
-            if (graph[source][target] == 0.0) {
-                graph[source][target] = 1.0;
-                graph[target][source] = 1.0;
-            }
-        }
+        addEdge(source, target, 1.0);
     }
 
     @Override
@@ -174,13 +119,6 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public void removeEdges(Collection<Edge> edges) {
-        for (Edge edge : edges) {
-            removeEdge(edge);
-        }
-    }
-
-    @Override
     public void removeEdge(int source, int target) {
         if (digraph) {
             graph[source][target] = 0.0;
@@ -188,11 +126,6 @@ public class AdjacencyMatrix implements Graph, Serializable {
             graph[source][target] = 0.0;
             graph[target][source] = 0.0;
         }
-    }
-
-    @Override
-    public void removeEdge(Edge edge) {
-        removeEdge(edge.v1, edge.v2);
     }
 
     @Override

@@ -160,7 +160,7 @@ public class IsoMap implements Serializable {
             }
 
             for (Edge edge : graph.getEdges()) {
-                edge.weight /= (M[edge.v1] * M[edge.v2]);
+                edge.weight /= (M[edge.v1()] * M[edge.v2()]);
             }
         }
 

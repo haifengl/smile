@@ -346,7 +346,7 @@ public class UMAP implements Serializable {
         double[] rho = new double[n];
 
         double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
-                .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
+                .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight()))
                 .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
 
@@ -357,7 +357,7 @@ public class UMAP implements Serializable {
 
             Collection<Edge> knn = nng.getEdges(i);
             rho[i] = knn.stream()
-                    .mapToDouble(edge -> edge.weight)
+                    .mapToDouble(edge -> edge.weight())
                     .filter(w -> !MathEx.isZero(w, EPSILON))
                     .min().orElse(0.0);
 
@@ -366,8 +366,8 @@ public class UMAP implements Serializable {
             for (int iter = 0; iter < iterations; iter++) {
                 double psum = 0.0;
                 for (Edge edge : knn) {
-                    if (!MathEx.isZero(edge.weight, EPSILON)) {
-                        double d = edge.weight - rho[i];
+                    if (!MathEx.isZero(edge.weight(), EPSILON)) {
+                        double d = edge.weight() - rho[i];
                         psum += d > 0.0 ? Math.exp(-d / mid) : 1.0;
                     }
                 }
@@ -395,7 +395,7 @@ public class UMAP implements Serializable {
 
             if (rho[i] > 0.0) {
                 double avgi = knn.stream()
-                        .mapToDouble(edge -> edge.weight)
+                        .mapToDouble(edge -> edge.weight())
                         .filter(w -> !MathEx.isZero(w, EPSILON))
                         .average().orElse(0.0);
                 sigma[i] = Math.max(sigma[i], MIN_SCALE * avgi);
@@ -410,7 +410,7 @@ public class UMAP implements Serializable {
         // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
-                edge.weight = Math.exp(-Math.max(0.0, (edge.weight - rho[i])) / sigma[i]);
+                edge.weight() = Math.exp(-Math.max(0.0, (edge.weight() - rho[i])) / sigma[i]);
             }
         }
 
@@ -418,9 +418,9 @@ public class UMAP implements Serializable {
         AdjacencyList G = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
-                double w = edge.weight;
-                double w2 = nng.getWeight(edge.v2, edge.v1); // weight of reverse arc.
-                G.setWeight(edge.v1, edge.v2, w + w2 - w * w2);
+                double w = edge.weight();
+                double w2 = nng.getWeight(edge.v2(), edge.v1()); // weight of reverse arc.
+                G.setWeight(edge.v1(), edge.v2(), w + w2 - w * w2);
             }
         }
 
@@ -440,7 +440,7 @@ public class UMAP implements Serializable {
         double[] D = new double[n];
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
-                D[i] += edge.weight;
+                D[i] += edge.weight();
             }
 
             D[i] = 1.0 / Math.sqrt(D[i]);
@@ -451,8 +451,8 @@ public class UMAP implements Serializable {
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
             for (Edge edge : nng.getEdges(i)) {
-                double w = -D[edge.v1] * edge.weight * D[edge.v2];
-                laplacian.setWeight(edge.v1, edge.v2, w);
+                double w = -D[edge.v1()] * edge.weight() * D[edge.v2()];
+                laplacian.setWeight(edge.v1(), edge.v2(), w);
             }
         }
 
