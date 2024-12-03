@@ -27,40 +27,28 @@ import smile.math.matrix.IMatrix;
  * that connect some pairs of vertices are called edges. The edges may be
  * directed (asymmetric) or undirected (symmetric). A graph is a weighted graph
  * if a number (weight) is assigned to each edge. Such weights might represent,
- * for example, costs, lengths or capacities, etc. depending on the problem.
+ * for example, costs, lengths or capacities, etc., depending on the problem.
  *
  * @author Haifeng Li
  */
 public interface Graph {
     /**
      * Graph edge.
+     * @param v1 the vertex id. For directed graph,
+     *           this is the tail of arc.
+     * @param v2 the other vertex id. For directed graph,
+     *           this is the head of arc.
+     * @param weight the weight of edge. or unweighted graph,
+     *               this is always 1.
      */
-    class Edge {
+    record Edge(int v1, int v2, double weight) {
         /**
-         * The id of one vertex connected by this edge. For directed graph,
-         * this is the tail of arc.
-         */
-        public final int v1;
-        /**
-         * The id of the other vertex connected by this edge. For directed graph,
-         * this is the head of arc.
-         */
-        public final int v2;
-        /**
-         * The weight of edge. For unweighted graph, this is always 1.
-         */
-        public double weight;
-
-        /**
-         * Constructor.
+         * Constructor of unweighted edge.
          * @param v1 the vertex id.
          * @param v2 the other vertex id.
-         * @param weight the weight of edge.
          */
-        public Edge(int v1, int v2, double weight) {
-            this.v1 = v1;
-            this.v2 = v2;
-            this.weight = weight;
+        public Edge(int v1, int v2) {
+            this(v1, v2, 1.0);
         }
     }
 
@@ -83,7 +71,7 @@ public interface Graph {
 
     /**
      * Returns the weight assigned to a given edge. Unweighted graphs always
-     * return 1.0. For multi-graph, the return value is ill-defined.
+     * return 1.0.
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
@@ -92,8 +80,7 @@ public interface Graph {
     double getWeight(int source, int target);
 
     /**
-     * Sets the weight assigned to a given edge. For multi-graph, the operation
-     * is ill-defined.
+     * Sets the weight assigned to a given edge.
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
@@ -101,12 +88,6 @@ public interface Graph {
      * @return this graph.
      */
     Graph setWeight(int source, int target, double weight);
-
-    /**
-     * Returns the edges in this graph.
-     * @return the edges.
-     */
-    Collection<Edge> getEdges();
 
     /**
      * Returns the edges from the specified vertex. If no edges are
@@ -119,43 +100,15 @@ public interface Graph {
     Collection<Edge> getEdges(int vertex);
 
     /**
-     * Returns the edges connecting source vertex to target vertex if
-     * such vertices exist in this graph. If both vertices
-     * exist but no edges found, returns an empty set.
-     * <p>
-     * In undirected graphs, some of the returned edges may have their source
-     * and target vertices in the opposite order.
-     *
-     * @param source the id of source vertex of the edge.
-     * @param target the id of target vertex of the edge.
-     * @return the edges connecting source vertex to target vertex.
-     */
-    Collection<Edge> getEdges(int source, int target);
-
-    /**
-     * Returns an edge connecting source vertex to target vertex if such edge
-     * exist in this graph. Otherwise, returns <code> null</code>.
-     * <p>
-     * In undirected graphs, the returned edge may have its source and target
-     * vertices in the opposite order.
-     * <p>
-     * For multi-graph, the return value is ill-defined.
-     *
-     * @param source the id of source vertex of the edge.
-     * @param target the id of target vertex of the edge.
-     * @return an edge connecting source vertex to target vertex if there are
-     * connected. Otherwise, null.
-     */
-    Edge getEdge(int source, int target);
-
-    /**
      * Creates a new edge in this graph, going from the source vertex to the
      * target vertex, and returns the created edge.
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    void addEdge(int source, int target);
+    default void addEdge(int source, int target) {
+        addEdge(source, target, 1.0);
+    }
 
     /**
      * Creates a new edge in this graph, going from the source vertex to the
@@ -165,14 +118,31 @@ public interface Graph {
      * @param target the id of target vertex of the edge.
      * @param weight the weight of edge.
      */
-    void addEdge(int source, int target, double weight);
+    default void addEdge(int source, int target, double weight) {
+        setWeight(source, target, weight);
+    }
+
+    /**
+     * Adds a set of edges to the graph.
+     *
+     * @param edges edges to be added to this graph.
+     */
+    default void addEdges(Collection<Edge> edges) {
+        for (Edge edge : edges) {
+            setWeight(edge.v1, edge.v2, edge.weight);
+        }
+    }
 
     /**
      * Removes a set of edges from the graph.
      *
      * @param edges edges to be removed from this graph.
      */
-    void removeEdges(Collection<Edge> edges);
+    default void removeEdges(Collection<Edge> edges) {
+        for (Edge edge : edges) {
+            removeEdge(edge.v1, edge.v2);
+        }
+    }
 
     /**
      * In a simple graph, removes and returns the edge going from the specified source
@@ -181,15 +151,9 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    void removeEdge(int source, int target);
-
-    /**
-     * Removes the specified edge from the graph.
-     * Returns true if the graph contained the specified edge.
-     *
-     * @param edge edge to be removed from this graph, if present.
-     */
-    void removeEdge(Edge edge);
+    default void removeEdge(int source, int target) {
+        setWeight(source, target, 0.0);
+    }
 
     /**
      * Returns the degree of the specified vertex. A degree of a vertex in an
@@ -274,14 +238,14 @@ public interface Graph {
      * graph by Dijkstra algorithm.
      *
      * @param s the source vertex.
-     * @return the length of shortest path to other vertices.
+     * @return the length of the shortest path to other vertices.
      */
     double[] dijkstra(int s);
 
     /**
-     * Calculates the all pair shortest path by Dijkstra algorithm.
+     * Calculates the all pair shortest-path by Dijkstra algorithm.
      *
-     * @return the length of shortest path between vertices.
+     * @return the length of shortest-path between vertices.
      */
     default double[][] dijkstra() {
         int n = getNumVertices();

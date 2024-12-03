@@ -208,11 +208,11 @@ public class AdjacencyListTest {
     public void testRemoveEdge_GraphEdge() {
         System.out.println("removeEdge");
         g4.addEdge(1, 4);
-        g4.removeEdge(g4.getEdge(4, 1));
+        g4.removeEdge(4, 1);
         assertEquals(1.0, g8.getWeight(1, 4), 1E-10);
         assertEquals(0.0, g4.getWeight(4, 1), 1E-10);
 
-        g8.removeEdge(g8.getEdge(1, 4));
+        g8.removeEdge(1, 4);
         assertEquals(0, g8.getWeight(1, 4), 1E-10);
         assertEquals(0, g8.getWeight(4, 1), 1E-10);
     }
