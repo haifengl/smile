@@ -44,31 +44,6 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     private final DoubleArrayList value;
 
     /**
-     * Represents an operation that accepts an entry and returns no result.
-     */
-    public interface Consumer {
-        /**
-         * Performs this operation on the given entry.
-         * @param i the entry index.
-         * @param x the entry value.
-         */
-        void apply(int i, double x);
-    }
-
-    /**
-     * Represents a function that accepts an entry and produces a result.
-     */
-    public interface Function {
-        /**
-         * Performs this operation on the given entry.
-         * @param i the entry index.
-         * @param x the entry value.
-         * @return the function result.
-         */
-        double apply(int i, double x);
-    }
-
-    /**
      * The entry in a sparse array of double values.
      * @param index The index of entry.
      * @param value The value of entry.
@@ -143,7 +118,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * Performs an action for each nonzero entry.
      * @param action a non-interfering action to perform on the nonzero entries.
      */
-    public void forEach(Consumer action) {
+    public void forEach(ArrayElementConsumer action) {
         int n = size();
         for (int i = 0; i < n; i++) {
             action.apply(index.get(i), value.get(i));
@@ -151,11 +126,13 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     }
 
     /**
-     * Returns a stream consisting of the results of applying the given function to the nonzero entries.
-     * @param mapper a non-interfering, stateless function to map each nonzero entry to new value.
+     * Returns a stream consisting of the results of applying the given
+     * function to the nonzero entries.
+     * @param mapper a non-interfering, stateless function to map each
+     *               nonzero entry to new value.
      * @return the stream of the new values of nonzero entries.
      */
-    public DoubleStream map(Function mapper) {
+    public DoubleStream map(ArrayElementFunction mapper) {
         return IntStream.range(0, size()).mapToDouble(i -> mapper.apply(index.get(i), value.get(i)));
     }
 
@@ -163,7 +140,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * Updates each nonzero entry.
      * @param mapper a function to map each nonzero entry to new value.
      */
-    public void update(Function mapper) {
+    public void update(ArrayElementFunction mapper) {
         int n = size();
         for (int i = 0; i < n; i++) {
             value.set(i, mapper.apply(index.get(i), value.get(i)));
