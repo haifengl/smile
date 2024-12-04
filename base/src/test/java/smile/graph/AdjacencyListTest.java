@@ -707,6 +707,16 @@ public class AdjacencyListTest {
         assertEquals(1, tour[4]);
         assertEquals(4, tour[5]);
         assertEquals(0, tour[6]);
+
+        double cost = graph.opt2(tour, 3);
+        assertEquals(0.65, cost, 1E-4);
+        assertEquals(0, tour[0]);
+        assertEquals(2, tour[1]);
+        assertEquals(5, tour[2]);
+        assertEquals(1, tour[3]);
+        assertEquals(3, tour[4]);
+        assertEquals(4, tour[5]);
+        assertEquals(0, tour[6]);
     }
 
     @Test

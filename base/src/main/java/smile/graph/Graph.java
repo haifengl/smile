@@ -880,6 +880,61 @@ public abstract class Graph {
     }
 
     /**
+     * The 2-opt heuristic improves an existing TSP tour. The method reconnects
+     * pairs of non-adjacent edges until no more pairs can be swapped to
+     * further improve the solution.
+     * @param tour an existing TSP tour. It may be revised with a better tour
+     *             of lower cost.
+     * @param maxIter the maximum number of iterations of the outer loop.
+     * @return the improved tour cost.
+     */
+    public double opt2(int[] tour, int maxIter) {
+        int n = getNumVertices();
+        if (tour.length != n+1) {
+            throw new IllegalArgumentException("Invalid tour length: " + tour.length);
+        }
+
+        double cost = getTourDistance(tour);
+        boolean improved = true;
+        for (int iter = 0; improved && iter < maxIter; iter++) {
+            improved = false;
+            for (int i = 0; i < n - 2; i++) {
+                for (int j = i + 2; j < n; j++) {
+                    double d1 = getWeight(tour[i], tour[j]);
+                    double d2 = getWeight(tour[i+1], tour[(j+1)%n]);
+                    if (d1 != 0 && d2 != 0) {
+                        double delta = d1 + d2 - getWeight(tour[i], tour[i+1]) - getWeight(tour[j], tour[(j+1)%n]);
+
+                        // If the length of the path is reduced, do a 2-opt swap
+                        if (delta < 0) {
+                            swapEdges(tour, i, j);
+                            cost += delta;
+                            improved = true;
+                            j = i + 1; // restart the inner loop
+                        }
+                    }
+                }
+            }
+        }
+        return cost;
+    }
+
+    /**
+     * Replace edges path[i]->path[i+1] and path[j]->path[j+1]
+     * with path[i]->path[j] and path[i+1]->path[j+1]
+     */
+    private void swapEdges(int[] path, int i, int j) {
+        i += 1;
+        while (i < j) {
+          int temp = path[i];
+          path[i] = path[j];
+          path[j] = temp;
+          i++;
+          j--;
+        }
+    }
+
+    /**
      * A search node in TSP branch and bound algorithm.
      */
     private record TspNode(int[] path, int level, double lowerBound, double cost) implements Comparable<TspNode> {
