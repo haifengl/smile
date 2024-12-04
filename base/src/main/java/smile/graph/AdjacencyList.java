@@ -21,14 +21,11 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
 import smile.util.ArrayElementConsumer;
 import smile.util.ArrayElementFunction;
-import smile.util.PriorityQueue;
 import smile.util.SparseArray;
 
 /**
@@ -140,225 +137,6 @@ public class AdjacencyList implements Graph, Serializable {
         return graph[vertex].size();
     }
 
-    /**
-     * Depth-first search of graph.
-     * @param v the start vertex.
-     * @param pre the array to store the mask if vertex has been visited.
-     * @param ts the array to store the reverse topological order.
-     * @param count the number of vertices have been visited before this search.
-     * @return the number of vertices that have been visited after this search.
-     */
-    private int dfsearch(int v, int[] pre, int[] ts, int count) {
-        pre[v] = 0;
-
-        for (var edge : graph[v]) {
-            int t = edge.index();
-            if (pre[t] == -1) {
-                count = dfsearch(t, pre, ts, count);
-            }
-        }
-
-        ts[count++] = v;
-
-        return count;
-    }
-
-    @Override
-    public int[] sortdfs() {
-        if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
-        }
-
-        int count = 0;
-        int n = graph.length;
-
-        int[] pre = new int[n];
-        int[] ts = new int[n];
-        for (int i = 0; i < n; i++) {
-            pre[i] = -1;
-            ts[i] = -1;
-        }
-
-        for (int i = 0; i < n; i++) {
-            if (pre[i] == -1) {
-                count = dfsearch(i, pre, ts, count);
-            }
-        }
-
-        return ts;
-    }
-
-    /**
-     * Depth-first search connected components of graph.
-     * @param v the start vertex.
-     * @param cc the array to store the connected component id of vertices.
-     * @param id the current component id.
-     */
-    private void dfs(int v, int[] cc, int id) {
-        cc[v] = id;
-        for (var edge : graph[v]) {
-            int t = edge.index();
-            if (cc[t] == -1) {
-                dfs(t, cc, id);
-            }
-        }
-    }
-
-    @Override
-    public int[][] dfs() {
-        int n = graph.length;
-        int[] cc = new int[n];
-        Arrays.fill(cc, -1);
-
-        int id = 0;
-        for (int i = 0; i < n; i++) {
-            if (cc[i] == -1) {
-                dfs(i, cc, id++);
-            }
-        }
-
-        int[] size = new int[id];
-        for (int i = 0; i < n; i++) {
-            size[cc[i]]++;
-        }
-        
-        int[][] components = new int[id][];
-        for (int i = 0; i < id; i++) {
-            components[i] = new int[size[i]];
-            for (int j = 0, k = 0; j < n; j++) {
-                if (cc[j] == i) {
-                    components[i][k++] = j;
-                }
-            }
-            Arrays.sort(components[i]);
-        }
-
-        return components;
-    }
-
-    @Override
-    public void dfs(Visitor visitor) {
-        int n = graph.length;
-        int[] cc = new int[n];
-        Arrays.fill(cc, -1);
-
-        int id = 0;
-        for (int i = 0; i < n; i++) {
-            if (cc[i] == -1) {
-                dfs(visitor, i, cc, id++);
-            }
-        }
-    }
-
-    /**
-     * Depth-first search of graph.
-     * @param v the start vertex.
-     * @param cc the array to store the connected component id of vertices.
-     * @param id the current component id.
-     */
-    private void dfs(Visitor visitor, int v, int[] cc, int id) {
-        visitor.visit(v);
-        cc[v] = id;
-        for (var edge : graph[v]) {
-            int t = edge.index();
-            if (cc[t] == -1) {
-                dfs(visitor, t, cc, id);
-            }
-        }
-    }
-
-    /**
-     * Breadth-first search connected components of graph.
-     * @param v the start vertex.
-     * @param cc the array to store the connected component id of vertices.
-     * @param id the current component id.
-     */
-    private void bfs(int v, int[] cc, int id) {
-        cc[v] = id;
-        Queue<Integer> queue = new LinkedList<>();
-        queue.offer(v);
-        while (!queue.isEmpty()) {
-            int t = queue.poll();
-            for (var edge : graph[t]) {
-                int i = edge.index();
-                if (cc[i] == -1) {
-                    queue.offer(i);
-                    cc[i] = id;
-                }
-            }
-        }
-    }
-
-    @Override
-    public int[][] bfs() {
-        int n = graph.length;
-        int[] cc = new int[n];
-        Arrays.fill(cc, -1);
-
-        int id = 0;
-        for (int i = 0; i < n; i++) {
-            if (cc[i] == -1) {
-                bfs(i, cc, id++);
-            }
-        }
-
-        int[] size = new int[id];
-        for (int i = 0; i < n; i++) {
-            size[cc[i]]++;
-        }
-        
-        int[][] components = new int[id][];
-        for (int i = 0; i < id; i++) {
-            components[i] = new int[size[i]];
-            for (int j = 0, k = 0; j < n; j++) {
-                if (cc[j] == i) {
-                    components[i][k++] = j;
-                }
-            }
-            Arrays.sort(components[i]);
-        }
-
-        return components;
-    }
-
-    /**
-     * Breadth-first search of graph.
-     * @param v the start vertex.
-     * @param cc the array to store the connected component id of vertices.
-     * @param id the current component id.
-     */
-    private void bfs(Visitor visitor, int v, int[] cc, int id) {
-        visitor.visit(v);
-        cc[v] = id;
-        Queue<Integer> queue = new LinkedList<>();
-        queue.offer(v);
-        while (!queue.isEmpty()) {
-            int t = queue.poll();
-            for (var edge : graph[t]) {
-                int i = edge.index();
-                if (cc[i] == -1) {
-                    visitor.visit(i);
-                    queue.offer(i);
-                    cc[i] = id;
-                }
-            }
-        }
-    }
-
-    @Override
-    public void bfs(Visitor visitor) {
-        int n = graph.length;
-        int[] cc = new int[n];
-        Arrays.fill(cc, -1);
-
-        int id = 0;
-        for (int i = 0; i < n; i++) {
-            if (cc[i] == -1) {
-                bfs(visitor, i, cc, id++);
-            }
-        }
-    }
-
     @Override
     public AdjacencyList subgraph(int[] vertices) {
         int[] v = vertices.clone();
@@ -399,15 +177,15 @@ public class AdjacencyList implements Graph, Serializable {
         double[] x = new double[size];
 
         for (int i = 0; i < n; i++) {
-            var edges = graph[i];
+            var edges = getEdges(i);
             int ni = edges.size();
             int[] index = new int[ni];
             double[] w = new double[ni];
 
             int j = 0;
             for (var edge : edges) {
-                index[j] = edge.index();
-                w[j++] = edge.value();
+                index[j] = edge.v();
+                w[j++] = edge.weight();
             }
 
             QuickSort.sort(index, w);

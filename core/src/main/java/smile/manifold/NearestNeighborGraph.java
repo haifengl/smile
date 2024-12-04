@@ -124,7 +124,7 @@ class NearestNeighborGraph {
         int n = graph.getNumVertices();
 
         // Use largest connected component.
-        int[][] cc = graph.bfs();
+        int[][] cc = graph.bfcc();
         int[] index;
         if (cc.length == 1) {
             index = new int[n];

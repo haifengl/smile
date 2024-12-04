@@ -222,33 +222,148 @@ public interface Graph {
      * @return the degree of the specified vertex.
      */
     int getOutDegree(int vertex);
-    
+
+    /**
+     * Depth-first search of graph.
+     * @param v the start vertex.
+     * @param visited the flag if vertex has been visited.
+     * @param order the array to store the reverse topological order.
+     * @param count the number of vertices have been visited before this search.
+     *              It will be updated after this search.
+     */
+    private void dfsearch(int v, boolean[] visited, int[] order, int[] count) {
+        visited[v] = true;
+
+        forEachEdge(v, (u, w) -> {
+            if (!visited[u]) {
+                dfsearch(u, visited, order, count);
+            }
+        });
+
+        order[count[0]++] = v;
+    }
+
     /**
      * Reverse topological sort digraph by depth-first search of graph.
      *
-     * @return an array of vertex IDs in the reverse topological order.
+     * @return the vertices in the reverse topological order.
      */
-    int[] sortdfs();
+    default int[] dfsort() {
+        if (!isDigraph()) {
+            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+        }
+
+        int n = getNumVertices();
+        boolean[] visited = new boolean[n];
+        int[] order = new int[n];
+        Arrays.fill(order, -1);
+
+        int[] count = new int[1];
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                dfsearch(i, visited, order, count);
+            }
+        }
+
+        return order;
+    }
 
     /**
      * Depth-first search connected components of graph.
-     *
-     * @return a two-dimensional array of which each row is the vertices in the
-     * same connected component.
+     * @param v the start vertex.
+     * @param cc the array to store the connected component id of each vertex.
+     * @param id the current component id.
      */
-    int[][] dfs();
+    private void dfcc(int v, int[] cc, int id) {
+        cc[v] = id;
+        forEachEdge(v, (u, w) -> {
+            if (cc[u] == -1) {
+                dfcc(u, cc, id);
+            }
+        });
+    }
+
+    /**
+     * Returns the connected components by depth-first search.
+     *
+     * @return a two-dimensional array of which each row is the vertices
+     *         in the same connected component.
+     */
+    default int[][] dfcc() {
+        int n = getNumVertices();
+        int[] cc = new int[n];
+        Arrays.fill(cc, -1);
+
+        int id = 0;
+        for (int i = 0; i < n; i++) {
+            if (cc[i] == -1) {
+                dfcc(i, cc, id++);
+            }
+        }
+
+        return connectedComponents(id, cc);
+    }
+
+    /**
+     * Return the connected components.
+     * @param numComponents the number of connected components.
+     * @param cc the component id of each vertex.
+     * @return the connected components.
+     */
+    private int[][] connectedComponents(int numComponents, int[] cc) {
+        int n = cc.length;
+        int[] size = new int[numComponents];
+        for (int c : cc) {
+            size[c]++;
+        }
+
+        int[][] components = new int[numComponents][];
+        for (int i = 0; i < numComponents; i++) {
+            components[i] = new int[size[i]];
+            for (int j = 0, k = 0; j < n; j++) {
+                if (cc[j] == i) {
+                    components[i][k++] = j;
+                }
+            }
+            Arrays.sort(components[i]);
+        }
+
+        return components;
+    }
+
+    /**
+     * Depth-first search of graph.
+     * @param v the start vertex.
+     * @param visited the flag if vertex has been visited.
+     */
+    private void dfs(Visitor visitor, int v, boolean[] visited) {
+        visitor.visit(v);
+        visited[v] = true;
+        forEachEdge(v, (u, w) -> {
+            if (!visited[u]) dfs(visitor, u, visited);
+        });
+    }
 
     /**
      * DFS search on graph and performs some operation defined in visitor
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    void dfs(Visitor visitor);
+    default void dfs(Visitor visitor) {
+        int n = getNumVertices();
+        boolean[] visited = new boolean[n];
+
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                dfs(visitor, i, visited);
+            }
+        }
+    }
 
     /**
      * Topological sort digraph by breadth-first search of graph.
      *
-     * @return an array of vertex IDs in the topological order.
+     * @return the vertices in the topological order.
      */
     default int[] bfsort() {
         if (!isDigraph()) {
@@ -283,18 +398,85 @@ public interface Graph {
 
     /**
      * Breadth-first search connected components of graph.
-     *
-     * @return a two-dimensional array of which each row is the vertices in the
-     * same connected component.
+     * @param v the start vertex.
+     * @param cc the array to store the connected component id of each vertex.
+     * @param id the current component id.
      */
-    int[][] bfs();
+    private void bfcc(int v, int[] cc, int id) {
+        cc[v] = id;
+        Queue<Integer> queue = new LinkedList<>();
+        queue.offer(v);
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            forEachEdge(u, (i, w) -> {
+                if (cc[i] == -1) {
+                    queue.offer(i);
+                    cc[i] = id;
+                }
+            });
+        }
+    }
+
+    /**
+     * Returns the connected components by breadth-first search.
+     *
+     * @return a two-dimensional array of which each row is the vertices
+     *         in the same connected component.
+     */
+    default int[][] bfcc() {
+        int n = getNumVertices();
+        int[] cc = new int[n];
+        Arrays.fill(cc, -1);
+
+        int id = 0;
+        for (int i = 0; i < n; i++) {
+            if (cc[i] == -1) {
+                bfcc(i, cc, id++);
+            }
+        }
+
+        return connectedComponents(id, cc);
+    }
+
+    /**
+     * Breadth-first search of graph.
+     * @param visitor the visitor functor.
+     * @param v the start vertex.
+     * @param visited the flag if vertex has been visited.
+     * @param queue a queue of vertices to visit.
+     */
+    private void bfs(Visitor visitor, int v, boolean[] visited, Queue<Integer> queue) {
+        visitor.visit(v);
+        visited[v] = true;
+        queue.offer(v);
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            forEachEdge(u, (i, w) -> {
+                if (!visited[i]) {
+                    visitor.visit(i);
+                    queue.offer(i);
+                    visited[i] = true;
+                }
+            });
+        }
+    }
 
     /**
      * BFS search on graph and performs some operation defined in visitor
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    void bfs(Visitor visitor);
+    default void bfs(Visitor visitor) {
+        int n = getNumVertices();
+        boolean[] visited = new boolean[n];
+
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                bfs(visitor, i, visited, queue);
+            }
+        }
+    }
 
     /**
      * Returns a subgraph containing all given vertices.

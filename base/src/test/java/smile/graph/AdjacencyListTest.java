@@ -314,7 +314,7 @@ public class AdjacencyListTest {
      * Test of dfs method, of class AdjacencyList.
      */
     @Test
-    public void testDfs() {
+    public void testDfsort() {
         System.out.println("dfs sort");
         int[] ts = {1,10,12,11,9,4,5,3,2,6,0,7,8};
 
@@ -337,14 +337,14 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertArrayEquals(ts, graph.sortdfs());
+        assertArrayEquals(ts, graph.dfsort());
     }
 
     /**
      * Test of dfs method, of class AdjacencyList.
      */
     @Test
-    public void testDfs2() {
+    public void testDfcc() {
         System.out.println("dfs connected component");
         int[] size = {3, 5};
         int[] id = {0, 1, 0, 1, 1, 1, 0, 1};
@@ -359,7 +359,7 @@ public class AdjacencyListTest {
         graph.addEdge(3, 5);
         graph.addEdge(5, 4);
 
-        int[][] cc2 = graph.dfs();
+        int[][] cc2 = graph.dfcc();
         assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
@@ -542,7 +542,7 @@ public class AdjacencyListTest {
      * Test of bfs method, of class AdjacencyList.
      */
     @Test
-    public void testBfs() {
+    public void testBfcc() {
         System.out.println("bfs connected component");
         int[] size = {3, 5};
         int[] id = {0, 1, 0, 1, 1, 1, 0, 1};
@@ -557,7 +557,7 @@ public class AdjacencyListTest {
         graph.addEdge(3, 5);
         graph.addEdge(5, 4);
 
-        int[][] cc2 = graph.bfs();
+        int[][] cc2 = graph.bfcc();
         assertTrue(Arrays.deepEquals(cc, cc2));
     }
 
