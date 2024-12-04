@@ -71,6 +71,11 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
+    public boolean isDigraph() {
+        return digraph;
+    }
+
+    @Override
     public boolean hasEdge(int source, int target) {
         return graph[source][target] != 0.0;
     }
@@ -104,41 +109,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public void addEdge(int source, int target) {
-        addEdge(source, target, 1.0);
-    }
-
-    @Override
-    public void addEdge(int source, int target, double weight) {
-        if (digraph) {
-            graph[source][target] = weight;
-        } else {
-            graph[source][target] = weight;
-            graph[target][source] = weight;
-        }
-    }
-
-    @Override
-    public void removeEdge(int source, int target) {
-        if (digraph) {
-            graph[source][target] = 0.0;
-        } else {
-            graph[source][target] = 0.0;
-            graph[target][source] = 0.0;
-        }
-    }
-
-    @Override
-    public int getDegree(int vertex) {
-        if (digraph) {
-            return getIndegree(vertex) + getOutdegree(vertex);
-        } else {
-            return getOutdegree(vertex);
-        }
-    }
-
-    @Override
-    public int getIndegree(int vertex) {
+    public int getInDegree(int vertex) {
         int degree = 0;
 
         for (double[] edges : graph) {
@@ -151,7 +122,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public int getOutdegree(int vertex) {
+    public int getOutDegree(int vertex) {
         int degree = 0;
         int n = graph.length;
 

@@ -161,8 +161,8 @@ public class LaplacianEigenmap implements Serializable {
             SparseArray row = new SparseArray();
             Collection<Edge> edges = graph.getEdges(i);
             for (Edge edge : edges) {
-                int j = edge.v2();
-                if (i == j) j = edge.v1();
+                int j = edge.v();
+                if (i == j) j = edge.u();
 
                 double w = t <= 0 ? 1.0 : Math.exp(gamma * edge.weight() * edge.weight());
                 row.set(j, w);

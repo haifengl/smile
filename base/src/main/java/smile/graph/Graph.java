@@ -34,21 +34,21 @@ import smile.math.matrix.IMatrix;
 public interface Graph {
     /**
      * Graph edge.
-     * @param v1 the vertex id. For directed graph,
-     *           this is the tail of arc.
-     * @param v2 the other vertex id. For directed graph,
-     *           this is the head of arc.
-     * @param weight the weight of edge. or unweighted graph,
+     * @param u the vertex id. For directed graph,
+     *          this is the tail of arc.
+     * @param v the other vertex id. For directed graph,
+     *          this is the head of arc.
+     * @param weight the weight of edge. For unweighted graph,
      *               this is always 1.
      */
-    record Edge(int v1, int v2, double weight) {
+    record Edge(int u, int v, double weight) {
         /**
          * Constructor of unweighted edge.
-         * @param v1 the vertex id.
-         * @param v2 the other vertex id.
+         * @param u the vertex id.
+         * @param v the other vertex id.
          */
-        public Edge(int v1, int v2) {
-            this(v1, v2, 1.0);
+        public Edge(int u, int v) {
+            this(u, v, 1.0);
         }
     }
 
@@ -57,6 +57,12 @@ public interface Graph {
      * @return the number of vertices.
      */
     int getNumVertices();
+
+    /**
+     * Return true if the graph is directed.
+     * @return true if the graph is directed.
+     */
+    boolean isDigraph();
 
     /**
      * Returns true if and only if this graph contains an edge going
@@ -106,8 +112,8 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    default void addEdge(int source, int target) {
-        addEdge(source, target, 1.0);
+    default Graph addEdge(int source, int target) {
+        return addEdge(source, target, 1.0);
     }
 
     /**
@@ -118,8 +124,8 @@ public interface Graph {
      * @param target the id of target vertex of the edge.
      * @param weight the weight of edge.
      */
-    default void addEdge(int source, int target, double weight) {
-        setWeight(source, target, weight);
+    default Graph addEdge(int source, int target, double weight) {
+        return setWeight(source, target, weight);
     }
 
     /**
@@ -127,10 +133,11 @@ public interface Graph {
      *
      * @param edges edges to be added to this graph.
      */
-    default void addEdges(Collection<Edge> edges) {
+    default Graph addEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
-            setWeight(edge.v1, edge.v2, edge.weight);
+            setWeight(edge.u, edge.v, edge.weight);
         }
+        return this;
     }
 
     /**
@@ -138,10 +145,11 @@ public interface Graph {
      *
      * @param edges edges to be removed from this graph.
      */
-    default void removeEdges(Collection<Edge> edges) {
+    default Graph removeEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
-            removeEdge(edge.v1, edge.v2);
+            removeEdge(edge.u, edge.v);
         }
+        return this;
     }
 
     /**
@@ -151,8 +159,8 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    default void removeEdge(int source, int target) {
-        setWeight(source, target, 0.0);
+    default Graph removeEdge(int source, int target) {
+        return setWeight(source, target, 0.0);
     }
 
     /**
@@ -162,7 +170,9 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    int getDegree(int vertex);
+    default int getDegree(int vertex) {
+        return isDigraph() ? getInDegree(vertex) + getOutDegree(vertex) : getOutDegree(vertex);
+    }
 
     /**
      * Returns the in-degree of the specified vertex. An in-degree of a vertex in a
@@ -171,7 +181,7 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    int getIndegree(int vertex);
+    int getInDegree(int vertex);
 
     /**
      * Returns the out-degree of the specified vertex. An out-degree of a vertex in a
@@ -180,7 +190,7 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    int getOutdegree(int vertex);
+    int getOutDegree(int vertex);
     
     /**
      * Reverse topological sort digraph by depth-first search of graph.
@@ -200,9 +210,9 @@ public interface Graph {
     /**
      * DFS search on graph and performs some operation defined in visitor
      * on each vertex during traveling.
-     * @param vistor the visitor functor.
+     * @param visitor the visitor functor.
      */
-    void dfs(Visitor vistor);
+    void dfs(Visitor visitor);
 
     /**
      * Topological sort digraph by breadth-first search of graph.
@@ -222,9 +232,9 @@ public interface Graph {
     /**
      * BFS search on graph and performs some operation defined in visitor
      * on each vertex during traveling.
-     * @param vistor the visitor functor.
+     * @param visitor the visitor functor.
      */
-    void bfs(Visitor vistor);
+    void bfs(Visitor visitor);
 
     /**
      * Returns a subgraph containing all given vertices.

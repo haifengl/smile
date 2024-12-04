@@ -21,8 +21,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.math.matrix.SparseMatrix;
@@ -62,15 +60,22 @@ public class AdjacencyList implements Graph, Serializable {
      * @param n the number of vertices.
      * @param digraph true if this is a directed graph.
      */
-    @SuppressWarnings("unchecked")
     public AdjacencyList(int n, boolean digraph) {
         this.digraph = digraph;
         graph = new SparseArray[n];
+        for (int i = 0; i < n; i++) {
+            graph[i] = new SparseArray();
+        }
     }
 
     @Override
     public int getNumVertices() {
         return graph.length;
+    }
+
+    @Override
+    public boolean isDigraph() {
+        return digraph;
     }
 
     @Override
@@ -95,20 +100,11 @@ public class AdjacencyList implements Graph, Serializable {
 
     @Override
     public Collection<Edge> getEdges(int vertex) {
-        return graph[vertex].stream().map(e -> new Edge(vertex, e.i, e.x)).toList();
+        return graph[vertex].stream().map(e -> new Edge(vertex, e.index(), e.value())).toList();
     }
 
     @Override
-    public int getDegree(int vertex) {
-        if (digraph) {
-            return getIndegree(vertex) + getOutdegree(vertex);
-        } else {
-            return getOutdegree(vertex);
-        }
-    }
-
-    @Override
-    public int getIndegree(int vertex) {
+    public int getInDegree(int vertex) {
         int degree = 0;
         int n = graph.length;
 
@@ -122,7 +118,7 @@ public class AdjacencyList implements Graph, Serializable {
     }
 
     @Override
-    public int getOutdegree(int vertex) {
+    public int getOutDegree(int vertex) {
         return graph[vertex].size();
     }
 
@@ -137,8 +133,8 @@ public class AdjacencyList implements Graph, Serializable {
     private int dfsearch(int v, int[] pre, int[] ts, int count) {
         pre[v] = 0;
 
-        for (Edge edge : graph[v]) {
-            int t = edge.v2();
+        for (var edge : graph[v]) {
+            int t = edge.index();
             if (pre[t] == -1) {
                 count = dfsearch(t, pre, ts, count);
             }
@@ -182,12 +178,8 @@ public class AdjacencyList implements Graph, Serializable {
      */
     private void dfs(int v, int[] cc, int id) {
         cc[v] = id;
-        for (Edge edge : graph[v]) {
-            int t = edge.v2();
-            if (!digraph && t == v) {
-                t = edge.v1();
-            }
-
+        for (var edge : graph[v]) {
+            int t = edge.index();
             if (cc[t] == -1) {
                 dfs(t, cc, id);
             }
@@ -249,12 +241,8 @@ public class AdjacencyList implements Graph, Serializable {
     private void dfs(Visitor visitor, int v, int[] cc, int id) {
         visitor.visit(v);
         cc[v] = id;
-        for (Edge edge : graph[v]) {
-            int t = edge.v2();
-            if (!digraph && t == v) {
-                t = edge.v1();
-            }
-
+        for (var edge : graph[v]) {
+            int t = edge.index();
             if (cc[t] == -1) {
                 dfs(visitor, t, cc, id);
             }
@@ -272,8 +260,8 @@ public class AdjacencyList implements Graph, Serializable {
         int[] ts = new int[n];
         for (int i = 0; i < n; i++) {
             ts[i] = -1;
-            for (Edge edge : graph[i]) {
-                in[edge.v2()]++;
+            for (var edge : graph[i]) {
+                in[edge.index()]++;
             }
         }
 
@@ -287,8 +275,8 @@ public class AdjacencyList implements Graph, Serializable {
         for (int i = 0; !queue.isEmpty(); i++) {
             int t = queue.poll();
             ts[i] = t;
-            for (Edge edge : graph[t]) {
-                int v = edge.v2();
+            for (var edge : graph[t]) {
+                int v = edge.index();
                 if (--in[v] == 0) {
                     queue.offer(v);
                 }
@@ -310,12 +298,8 @@ public class AdjacencyList implements Graph, Serializable {
         queue.offer(v);
         while (!queue.isEmpty()) {
             int t = queue.poll();
-            for (Edge edge : graph[t]) {
-                int i = edge.v2();
-                if (!digraph && i == t) {
-                    i = edge.v1();
-                }
-
+            for (var edge : graph[t]) {
+                int i = edge.index();
                 if (cc[i] == -1) {
                     queue.offer(i);
                     cc[i] = id;
@@ -369,12 +353,8 @@ public class AdjacencyList implements Graph, Serializable {
         queue.offer(v);
         while (!queue.isEmpty()) {
             int t = queue.poll();
-            for (Edge edge : graph[t]) {
-                int i = edge.v2();
-                if (!digraph && i == t) {
-                    i = edge.v1();
-                }
-
+            for (var edge : graph[t]) {
+                int i = edge.index();
                 if (cc[i] == -1) {
                     visitor.visit(i);
                     queue.offer(i);
@@ -415,13 +395,9 @@ public class AdjacencyList implements Graph, Serializable {
         while (!queue.isEmpty()) {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
-                for (Edge edge : graph[v]) {
-                    int w = edge.v2();
-                    if (!digraph && w == v) {
-                        w = edge.v1();
-                    }
-                    
-                    double p = wt[v] + edge.weight();
+                for (var edge : graph[v]) {
+                    int w = edge.index();
+                    double p = wt[v] + edge.value();
                     if (p < wt[w]) {
                         wt[w] = p;
                         queue.lower(w);
@@ -442,7 +418,7 @@ public class AdjacencyList implements Graph, Serializable {
         for (int i = 0; i < v.length; i++) {
             Collection<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
-                int j = edge.v1() == v[i] ? edge.v2() : edge.v1();
+                int j = edge.u() == v[i] ? edge.v() : edge.u();
                 j = Arrays.binarySearch(v, j);
                 if (j >= 0) {
                     g.addEdge(i, j, edge.weight());
@@ -460,7 +436,7 @@ public class AdjacencyList implements Graph, Serializable {
         int[] colSize = new int[n];
         int[] colIndex = new int[n + 1];
         for (int i = 0; i < n; i++) {
-            LinkedList<Edge> edges = graph[i];
+            var edges = graph[i];
             size += edges.size();
             colSize[i] = edges.size();
         }
@@ -473,15 +449,15 @@ public class AdjacencyList implements Graph, Serializable {
         double[] x = new double[size];
 
         for (int i = 0; i < n; i++) {
-            LinkedList<Edge> edges = graph[i];
+            var edges = graph[i];
             int ni = edges.size();
             int[] index = new int[ni];
             double[] w = new double[ni];
 
             int j = 0;
-            for (Edge edge : edges) {
-                index[j] = edge.v1() == i ? edge.v2() : edge.v1();
-                w[j++] = edge.weight();
+            for (var edge : edges) {
+                index[j] = edge.index();
+                w[j++] = edge.value();
             }
 
             QuickSort.sort(index, w);

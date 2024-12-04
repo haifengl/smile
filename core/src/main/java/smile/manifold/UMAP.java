@@ -419,8 +419,8 @@ public class UMAP implements Serializable {
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
                 double w = edge.weight();
-                double w2 = nng.getWeight(edge.v2(), edge.v1()); // weight of reverse arc.
-                G.setWeight(edge.v1(), edge.v2(), w + w2 - w * w2);
+                double w2 = nng.getWeight(edge.v(), edge.u()); // weight of reverse arc.
+                G.setWeight(edge.u(), edge.v(), w + w2 - w * w2);
             }
         }
 
@@ -451,8 +451,8 @@ public class UMAP implements Serializable {
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
             for (Edge edge : nng.getEdges(i)) {
-                double w = -D[edge.v1()] * edge.weight() * D[edge.v2()];
-                laplacian.setWeight(edge.v1(), edge.v2(), w);
+                double w = -D[edge.u()] * edge.weight() * D[edge.v()];
+                laplacian.setWeight(edge.u(), edge.v(), w);
             }
         }
 
