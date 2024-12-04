@@ -23,8 +23,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
+import smile.util.ArrayElementConsumer;
+import smile.util.ArrayElementFunction;
 import smile.util.PriorityQueue;
 
 /**
@@ -106,6 +111,34 @@ public class AdjacencyMatrix implements Graph, Serializable {
             }
         }
         return set;
+    }
+
+    /**
+     * Returns the stream of vertex neighbors.
+     *
+     * @param weights the edge weights.
+     * @return the stream of vertex neighbors.
+     */
+    private IntStream edges(double[] weights) {
+        return IntStream.range(0, weights.length).filter(i -> weights[i] != 0);
+    }
+
+    @Override
+    public void forEachEdge(int vertex, ArrayElementConsumer action) {
+        double[] weights = graph[vertex];
+        edges(weights).forEach(i -> action.apply(i, weights[i]));
+    }
+
+    @Override
+    public DoubleStream mapEdges(int vertex, ArrayElementFunction mapper) {
+        double[] weights = graph[vertex];
+        return edges(weights).mapToDouble(i -> mapper.apply(i, weights[i]));
+    }
+
+    @Override
+    public void updateEdges(int vertex, ArrayElementFunction mapper) {
+        double[] weights = graph[vertex];
+        edges(weights).forEach(i -> weights[i] = mapper.apply(i, weights[i]));
     }
 
     @Override
