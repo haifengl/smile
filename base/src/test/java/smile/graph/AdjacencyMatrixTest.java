@@ -253,30 +253,30 @@ public class AdjacencyMatrixTest {
      */
     @Test
     public void testGetIndegree() {
-        System.out.println("getIndegree");
-        assertEquals(0, g1.getIndegree(1));
+        System.out.println("getInDegree");
+        assertEquals(0, g1.getInDegree(1));
 
-        assertEquals(1, g2.getIndegree(1));
+        assertEquals(1, g2.getInDegree(1));
         g2.addEdge(1, 1);
-        assertEquals(2, g2.getIndegree(1));
+        assertEquals(2, g2.getInDegree(1));
 
-        assertEquals(2, g3.getIndegree(1));
-        assertEquals(2, g3.getIndegree(2));
-        assertEquals(2, g3.getIndegree(3));
+        assertEquals(2, g3.getInDegree(1));
+        assertEquals(2, g3.getInDegree(2));
+        assertEquals(2, g3.getInDegree(3));
 
-        assertEquals(1, g4.getIndegree(4));
+        assertEquals(1, g4.getInDegree(4));
 
-        assertEquals(0, g5.getIndegree(1));
+        assertEquals(0, g5.getInDegree(1));
 
-        assertEquals(1, g6.getIndegree(1));
+        assertEquals(1, g6.getInDegree(1));
         g6.addEdge(1, 1);
-        assertEquals(2, g6.getIndegree(1));
+        assertEquals(2, g6.getInDegree(1));
 
-        assertEquals(2, g7.getIndegree(1));
-        assertEquals(2, g7.getIndegree(2));
-        assertEquals(2, g7.getIndegree(3));
+        assertEquals(2, g7.getInDegree(1));
+        assertEquals(2, g7.getInDegree(2));
+        assertEquals(2, g7.getInDegree(3));
 
-        assertEquals(2, g8.getIndegree(4));
+        assertEquals(2, g8.getInDegree(4));
     }
 
     /**
@@ -284,30 +284,30 @@ public class AdjacencyMatrixTest {
      */
     @Test
     public void testGetOutdegree() {
-        System.out.println("getOutdegree");
-        assertEquals(0, g1.getOutdegree(1));
+        System.out.println("getOutDegree");
+        assertEquals(0, g1.getOutDegree(1));
 
-        assertEquals(1, g2.getOutdegree(1));
+        assertEquals(1, g2.getOutDegree(1));
         g2.addEdge(1, 1);
-        assertEquals(2, g2.getOutdegree(1));
+        assertEquals(2, g2.getOutDegree(1));
 
-        assertEquals(2, g3.getOutdegree(1));
-        assertEquals(2, g3.getOutdegree(2));
-        assertEquals(2, g3.getOutdegree(3));
+        assertEquals(2, g3.getOutDegree(1));
+        assertEquals(2, g3.getOutDegree(2));
+        assertEquals(2, g3.getOutDegree(3));
 
-        assertEquals(1, g4.getOutdegree(4));
+        assertEquals(1, g4.getOutDegree(4));
 
-        assertEquals(0, g5.getOutdegree(1));
+        assertEquals(0, g5.getOutDegree(1));
 
-        assertEquals(1, g6.getOutdegree(1));
+        assertEquals(1, g6.getOutDegree(1));
         g6.addEdge(1, 1);
-        assertEquals(2, g6.getOutdegree(1));
+        assertEquals(2, g6.getOutDegree(1));
 
-        assertEquals(2, g7.getOutdegree(1));
-        assertEquals(2, g7.getOutdegree(2));
-        assertEquals(2, g7.getOutdegree(3));
+        assertEquals(2, g7.getOutDegree(1));
+        assertEquals(2, g7.getOutDegree(2));
+        assertEquals(2, g7.getOutDegree(3));
 
-        assertEquals(2, g8.getOutdegree(4));
+        assertEquals(2, g8.getOutDegree(4));
     }
 
     @Test

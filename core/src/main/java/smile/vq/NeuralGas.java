@@ -173,7 +173,7 @@ public class NeuralGas implements VectorQuantizer {
         for (int i = 0; i < neurons.length; i++) {
             for (Edge e : graph.getEdges(i)) {
                 if (t - e.weight() > lifetime) {
-                    graph.setWeight(e.v1(), e.v2(), 0);
+                    graph.setWeight(e.u(), e.v(), 0);
                 }
             }
         }
