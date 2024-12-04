@@ -18,7 +18,10 @@
 package smile.graph;
 
 import java.util.Collection;
+import java.util.stream.DoubleStream;
 import smile.math.matrix.IMatrix;
+import smile.util.ArrayElementConsumer;
+import smile.util.ArrayElementFunction;
 
 /**
  * A graph is an abstract representation of a set of objects where some pairs
@@ -104,6 +107,30 @@ public interface Graph {
      * @return the edges touching the specified vertex.
      */
     Collection<Edge> getEdges(int vertex);
+
+    /**
+     * Performs an action for each edge of a vertex.
+     * @param vertex the vertex id.
+     * @param action a non-interfering action to perform on the edges.
+     */
+    void forEachEdge(int vertex, ArrayElementConsumer action);
+
+    /**
+     * Returns a stream consisting of the results of applying the given
+     * function to the edge weights of a vertex.
+     * @param vertex the vertex id.
+     * @param mapper a non-interfering, stateless function to map each
+     *               edge weight of a vertex.
+     * @return the stream of the new values of edge weights.
+     */
+    DoubleStream mapEdges(int vertex, ArrayElementFunction mapper);
+
+    /**
+     * Updates the edge weights of a vertex.
+     * @param vertex the vertex id.
+     * @param mapper a function to map each edge weight to new value.
+     */
+    void updateEdges(int vertex, ArrayElementFunction mapper);
 
     /**
      * Creates a new edge in this graph, going from the source vertex to the

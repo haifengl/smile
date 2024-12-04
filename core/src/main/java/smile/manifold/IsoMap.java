@@ -159,8 +159,9 @@ public class IsoMap implements Serializable {
                 M[i] = Math.sqrt(M[i] / k);
             }
 
-            for (Edge edge : graph.getEdges()) {
-                edge.weight /= (M[edge.u()] * M[edge.v()]);
+            for (int i = 0; i < n; i++) {
+                double Mi = M[i];
+                graph.updateEdges(i, (j, w) -> w / (Mi * M[j]));
             }
         }
 

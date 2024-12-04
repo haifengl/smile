@@ -23,8 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.stream.DoubleStream;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
+import smile.util.ArrayElementConsumer;
+import smile.util.ArrayElementFunction;
 import smile.util.PriorityQueue;
 import smile.util.SparseArray;
 
@@ -101,6 +104,21 @@ public class AdjacencyList implements Graph, Serializable {
     @Override
     public Collection<Edge> getEdges(int vertex) {
         return graph[vertex].stream().map(e -> new Edge(vertex, e.index(), e.value())).toList();
+    }
+
+    @Override
+    public void forEachEdge(int vertex, ArrayElementConsumer action) {
+        graph[vertex].forEach(action);
+    }
+
+    @Override
+    public DoubleStream mapEdges(int vertex, ArrayElementFunction mapper) {
+        return graph[vertex].map(mapper);
+    }
+
+    @Override
+    public void updateEdges(int vertex, ArrayElementFunction mapper) {
+        graph[vertex].update(mapper);
     }
 
     @Override

@@ -409,9 +409,9 @@ public class UMAP implements Serializable {
         // rather than requiring an integral k. In essence, we are simply computing
         // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
-            for (Edge edge : nng.getEdges(i)) {
-                edge.weight() = Math.exp(-Math.max(0.0, (edge.weight() - rho[i])) / sigma[i]);
-            }
+            double ri = rho[i];
+            double si = sigma[i];
+            nng.updateEdges(i, (j, w) -> Math.exp(-Math.max(0.0, (w - ri)) / si));
         }
 
         // probabilistic t-conorm: (a + a' - a .* a')
