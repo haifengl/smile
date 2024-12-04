@@ -646,6 +646,19 @@ public abstract class Graph {
     }
 
     /**
+     * Returns the distance of tour path.
+     * @param tour the tour path.
+     * @return the tour distance.
+     */
+    public double getTourDistance(int[] tour) {
+        double distance = 0.0;
+        for (int i = 0; i < tour.length; i++) {
+            distance += getWeight(tour[i], tour[(i+1) % tour.length]);
+        }
+        return distance;
+    }
+
+    /**
      * Returns the TSP tour with Held-Karp algorithm.
      * @return the TSP tour.
      */
@@ -702,7 +715,6 @@ public abstract class Graph {
         int index = 1; // The tour always starts with node 0.
         int[] tour = new int[n+1];
         while (mask != 0) {
-            System.out.println(index + " " + lastNode + " " + mask);
             tour[index++] = lastNode;
             int prevMask = mask ^ (1 << lastNode);
             for (int u = 0; u < n; u++) {
@@ -715,6 +727,73 @@ public abstract class Graph {
         }
 
         MathEx.reverse(tour);
+        return tour;
+    }
+
+    /**
+     * Returns the insertion position that causes minimum increase of TSP tour distance.
+     * @param node the node to insert.
+     * @param tour the tour path.
+     * @param length the length of tour path.
+     * @return the insertion position.
+     */
+    private int getInsertPosition(int node, int[] tour, int length) {
+        int insertIndex = 1;
+        double minIncrease = Double.MAX_VALUE;
+        for (int i = 0; i < length; i++) {
+            int node1 = tour[i];
+            int node2 = tour[(i+1) % length];
+            double increase = getWeight(node1, node) + getWeight(node, node2) - getWeight(node1, node2);
+            if (increase < minIncrease) {
+                minIncrease = increase;
+                insertIndex = i + 1;
+            }
+        }
+        return insertIndex;
+    }
+
+    /**
+     * Returns the TSP tour with farthest insertion heuristic.
+     * @return the TSP tour.
+     */
+    public int[] farthestInsertion() {
+        int n = getNumVertices();
+        if (n < 2) {
+            throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
+        }
+
+        int[] tour = new int[n+1];
+        double[] dist = new double[n];
+        boolean[] visited = new boolean[n];
+        visited[0] = true;
+
+        forEachEdge(0, (i, weight) -> dist[i] = weight);
+
+        for (int length = 1; length < n; length++) {
+            int farthestNode = -1;
+            double maxDistance = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < n; i++) {
+                if (!visited[i]) {
+                    if (dist[i] > maxDistance) {
+                        maxDistance = dist[i];
+                        farthestNode = i;
+                    }
+                }
+            }
+
+            // insert at the position that minimizes the increase in tour length
+            int insertIndex = getInsertPosition(farthestNode, tour, length);
+            System.arraycopy(tour, insertIndex, tour, insertIndex+1, length-insertIndex);
+            tour[insertIndex] = farthestNode;
+            visited[farthestNode] = true;
+
+            forEachEdge(farthestNode, (i, weight) -> {
+                if (!visited[i]) {
+                    dist[i] = Math.max(dist[i], weight);
+                }
+            });
+        }
+
         return tour;
     }
 }
