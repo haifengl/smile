@@ -19,6 +19,7 @@ package smile.graph;
 
 import java.util.*;
 import java.util.stream.DoubleStream;
+import smile.math.MathEx;
 import smile.math.matrix.IMatrix;
 import smile.util.ArrayElementConsumer;
 import smile.util.ArrayElementFunction;
@@ -642,5 +643,78 @@ public abstract class Graph {
             }
         }
         return mst;
+    }
+
+    /**
+     * Returns the TSP tour with Held-Karp algorithm.
+     * @return the TSP tour.
+     */
+    public int[] heldKarp() {
+        int n = getNumVertices();
+        if (n < 2) {
+            throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
+        }
+
+        if (n > 31) {
+            throw new UnsupportedOperationException("Held-Karp cannot run with more than 31 vertices.");
+        }
+
+        // DP table: dp[mask][i] stores the shortest path to visit all nodes in mask
+        // ending at node i
+        int p = 1 << n;
+        double[][] dp = new double[p][n];
+        for (var row : dp) {
+            Arrays.fill(row, Double.POSITIVE_INFINITY);
+        }
+
+        // Base case: cost of starting at node 0 and visiting only node 0 is 0
+        dp[1][0] = 0.0;
+
+        // Iterate through all possible subsets of nodes (represented by bitmasks)
+        for (int mask = 1; mask < p; mask++) {
+            for (int u = 0; u < n; u++) {
+                if ((mask & (1 << u)) == 0) continue; // u is not in the subset represented by mask
+                for (int v = 0; v < n; v++) {
+                    if ((mask & (1 << v)) != 0) continue; // v is already in the subset
+                    int nextMask = mask | (1 << v); // Add v to the subset
+                    dp[nextMask][v] = Math.min(dp[nextMask][v], dp[mask][u] + getWeight(u, v));
+                }
+            }
+        }
+
+        // Reconstruct the optimal tour by backtracking
+        int endMask = p - 1;
+        int lastNode = 0;
+        double bestCost = Double.POSITIVE_INFINITY;
+        // Find the last node of the optimal tour (minimum cost returning to node 0)
+        for (int u = 1; u < n; u++) {
+            double cost = dp[endMask][u] + getWeight(u, 0);
+            if (cost < bestCost) {
+                bestCost = cost;
+                lastNode = u;
+            }
+        }
+
+        logger.info("Held-Karp TSP cost = {}", bestCost);
+
+        // Backtracking to find the tour
+        int mask = endMask;
+        int index = 1; // The tour always starts with node 0.
+        int[] tour = new int[n+1];
+        while (mask != 0) {
+            System.out.println(index + " " + lastNode + " " + mask);
+            tour[index++] = lastNode;
+            int prevMask = mask ^ (1 << lastNode);
+            for (int u = 0; u < n; u++) {
+                if (dp[mask][lastNode] == dp[prevMask][u] + getWeight(u, lastNode)) {
+                    lastNode = u;
+                    break;
+                }
+            }
+            mask = prevMask;
+        }
+
+        MathEx.reverse(tour);
+        return tour;
     }
 }
