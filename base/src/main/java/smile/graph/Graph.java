@@ -224,19 +224,19 @@ public interface Graph {
     int getOutDegree(int vertex);
 
     /**
-     * Depth-first search of graph.
+     * Reverse topological sort digraph by depth-first search of graph.
      * @param v the start vertex.
      * @param visited the flag if vertex has been visited.
      * @param order the array to store the reverse topological order.
      * @param count the number of vertices have been visited before this search.
      *              It will be updated after this search.
      */
-    private void dfsearch(int v, boolean[] visited, int[] order, int[] count) {
+    private void dfsort(int v, boolean[] visited, int[] order, int[] count) {
         visited[v] = true;
 
         forEachEdge(v, (u, w) -> {
             if (!visited[u]) {
-                dfsearch(u, visited, order, count);
+                dfsort(u, visited, order, count);
             }
         });
 
@@ -261,7 +261,7 @@ public interface Graph {
         int[] count = new int[1];
         for (int i = 0; i < n; i++) {
             if (!visited[i]) {
-                dfsearch(i, visited, order, count);
+                dfsort(i, visited, order, count);
             }
         }
 
