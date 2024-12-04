@@ -17,10 +17,7 @@
 
 package smile.graph;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.IMatrix;
 import smile.util.ArrayElementConsumer;
@@ -39,6 +36,8 @@ import smile.util.PriorityQueue;
  * @author Haifeng Li
  */
 public interface Graph {
+    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Graph.class);
+
     /**
      * Graph edge.
      * @param u the vertex id. For directed graph,
@@ -58,6 +57,12 @@ public interface Graph {
             this(u, v, 1.0);
         }
     }
+
+    /**
+     * Returns the (dense or sparse) matrix representation of the graph.
+     * @return the matrix representation of the graph.
+     */
+    IMatrix toMatrix();
 
     /**
      * Returns the number of vertices.
@@ -548,10 +553,80 @@ public interface Graph {
     }
 
     /**
-     * Returns the (dense or sparse) matrix representation of the graph.
-     * @return the matrix representation of the graph.
+     * Returns the minimum spanning tree (MST) for a weighted undirected
+     * graph by Prim's algorithm. MST is a subset of the edges that forms
+     * a tree that includes every vertex, where the total weight of all
+     * the edges in the tree is minimized. 
+     * @return the minimum spanning tree.
      */
-    IMatrix toMatrix();
+    default List<Edge> prim() {
+        if (isDigraph()) {
+            throw new UnsupportedOperationException("Call Prim's algorithm on a digraph.");
+        }
+
+        int n = getNumVertices();
+        if (n < 2) {
+            throw new UnsupportedOperationException("Cannot construct MST with fewer than 2 vertices.");
+        }
+
+        // Tracks whether a node is included in the MST
+        boolean[] inMST = new boolean[n];
+
+        // Stores the minimum edge weight to add a node to the MST
+        double[] minEdgeWeight = new double[n];
+        Arrays.fill(minEdgeWeight, Double.MAX_VALUE);
+
+        // Stores the parent of each node in the MST
+        int[] parent = new int[n];
+        Arrays.fill(parent, -1);
+
+        // Total weight of the MST
+        double totalWeight = 0.0;
+
+        // Start the MST from node 0
+        minEdgeWeight[0] = 0.0;
+
+        // Iterate to include all nodes in the MST
+        for (int i = 0; i < n; i++) {
+            // Find the vertex with the smallest edge weight not yet included in the MST
+            int u = -1;
+            double minWeight = Double.MAX_VALUE;
+
+            for (int v = 0; v < n; v++) {
+                if (!inMST[v] && minEdgeWeight[v] < minWeight) {
+                    minWeight = minEdgeWeight[v];
+                    u = v;
+                }
+            }
+
+            if (u == -1) {
+                throw new RuntimeException("Failed to construct MST");
+            }
+
+            // Include this vertex in the MST
+            inMST[u] = true;
+            totalWeight += minWeight;
+
+            // Update the edge weights for the remaining vertices
+            final int p = u;
+            forEachEdge(u, (v, weight) -> {
+                if (!inMST[v]) {
+                    if (weight < minEdgeWeight[v]) {
+                        minEdgeWeight[v] = weight;
+                        parent[v] = p; // Update the parent for this vertex
+                    }
+                }
+            });
+        }
+
+        logger.info("MST weight = {}", totalWeight);
+        List<Edge> mst = new ArrayList<>();
+        for (int v = 1; v < n; v++) {
+            if (parent[v] != -1) {
+                int u = parent[v];
+                mst.add(new Edge(v, u, minEdgeWeight[v]));
+            }
+        }
+        return mst;
+    }
 }
-
-
