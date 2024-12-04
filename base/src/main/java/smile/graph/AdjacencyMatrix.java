@@ -432,48 +432,6 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
 
     @Override
-    public double[] dijkstra(int s) {
-        return dijkstra(s, true);
-    }
-    
-    /**
-     * Calculates the shortest path by Dijkstra algorithm.
-     * @param s The source vertex.
-     * @param weighted True to calculate weighted path. Otherwise, the edge weights will be ignored.
-     * @return The distance to all vertices from the source.
-     */
-    public double[] dijkstra(int s, boolean weighted) {
-        int n = graph.length;
-        double[] wt = new double[n];
-        Arrays.fill(wt, Double.POSITIVE_INFINITY);
-
-        PriorityQueue queue = new PriorityQueue(wt);
-        for (int v = 0; v < n; v++) {
-            queue.insert(v);
-        }
-
-        wt[s] = 0.0;
-        queue.lower(s);
-
-        while (!queue.isEmpty()) {
-            int v = queue.poll();
-            if (!Double.isInfinite(wt[v])) {
-                for (int w = 0; w < n; w++) {
-                    if (graph[v][w] != 0.0) {
-                        double p = weighted ? wt[v] + graph[v][w] : wt[v] + 1;
-                        if (p < wt[w]) {
-                            wt[w] = p;
-                            queue.lower(w);
-                        }
-                    }
-                }
-            }
-        }
-        
-        return wt;
-    }
-
-    @Override
     public AdjacencyMatrix subgraph(int[] vertices) {
         int[] v = vertices.clone();
         Arrays.sort(v);
