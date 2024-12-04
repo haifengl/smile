@@ -179,7 +179,12 @@ public class AdjacencyMatrix implements Graph, Serializable {
         
         return g;
     }
-    
+
+    @Override
+    public Matrix toMatrix() {
+        return Matrix.of(graph);
+    }
+
     /**
      * Returns the adjacency matrix.
      * @return the adjacency matrix
@@ -281,10 +286,5 @@ public class AdjacencyMatrix implements Graph, Serializable {
         }
 
         return maxflow;
-    }
-
-    @Override
-    public Matrix toMatrix() {
-        return Matrix.of(graph);
     }
 }

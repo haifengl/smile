@@ -29,7 +29,7 @@ import smile.util.ArrayElementFunction;
 import smile.util.SparseArray;
 
 /**
- * An adjacency list representation of a graph. Multigraph is supported.
+ * An adjacency list representation of a graph.
  *
  * @author Haifeng Li
  */
@@ -228,10 +228,9 @@ public class AdjacencyList implements Graph, Serializable {
                 }
             }
         }
-        
+
+        AdjacencyList graph = new AdjacencyList(symmetric ? matrix.nrow() : matrix.nrow() + matrix.ncol());
         if (symmetric) {
-            AdjacencyList graph = new AdjacencyList(matrix.nrow());
-            
             for (int i = 0; i < matrix.nrow(); i++) {
                 for (int j = 0; j < i; j++) {
                     double z = matrix.get(i, j);
@@ -240,11 +239,7 @@ public class AdjacencyList implements Graph, Serializable {
                     }
                 }
             }
-            
-            return graph;
         } else {
-            AdjacencyList graph = new AdjacencyList(matrix.nrow() + matrix.ncol());
-            
             for (int i = 0; i < matrix.nrow(); i++) {
                 for (int j = 0; j < matrix.ncol(); j++) {
                     double z = matrix.get(i, j);
@@ -253,8 +248,8 @@ public class AdjacencyList implements Graph, Serializable {
                     }
                 }
             }
-            
-            return graph;            
+
         }
+        return graph;
     }
 }

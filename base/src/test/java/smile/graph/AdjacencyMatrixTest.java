@@ -588,7 +588,7 @@ public class AdjacencyMatrixTest {
         assertTrue(MathEx.equals(wt, wt2));
     }
     /**
-     * Test of dijkstra method, of class AdjacencyMatrix.
+     * Test of pushRelabel method, of class AdjacencyMatrix.
      */
     @Test
     public void testPushRelabel() {
