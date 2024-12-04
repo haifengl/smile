@@ -35,8 +35,12 @@ import smile.util.PriorityQueue;
  *
  * @author Haifeng Li
  */
-public interface Graph {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Graph.class);
+public abstract class Graph {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Graph.class);
+    /**
+     * Is the graph directed?
+     */
+    private final boolean digraph;
 
     /**
      * Graph edge.
@@ -47,7 +51,7 @@ public interface Graph {
      * @param weight the weight of edge. For unweighted graph,
      *               this is always 1.
      */
-    record Edge(int u, int v, double weight) {
+    public record Edge(int u, int v, double weight) {
         /**
          * Constructor of unweighted edge.
          * @param u the vertex id.
@@ -59,22 +63,39 @@ public interface Graph {
     }
 
     /**
-     * Returns the (dense or sparse) matrix representation of the graph.
-     * @return the matrix representation of the graph.
+     * Constructor.
+     * @param digraph true if this is a directed graph.
      */
-    IMatrix toMatrix();
-
-    /**
-     * Returns the number of vertices.
-     * @return the number of vertices.
-     */
-    int getNumVertices();
+    public Graph(boolean digraph) {
+        this.digraph = digraph;
+    }
 
     /**
      * Return true if the graph is directed.
      * @return true if the graph is directed.
      */
-    boolean isDigraph();
+    public boolean isDigraph() {
+        return digraph;
+    }
+
+    /**
+     * Returns the (dense or sparse) matrix representation of the graph.
+     * @return the matrix representation of the graph.
+     */
+    public abstract IMatrix toMatrix();
+
+    /**
+     * Returns a subgraph containing all given vertices.
+     * @param vertices the vertices to be included in subgraph.
+     * @return a subgraph containing all given vertices
+     */
+    public abstract Graph subgraph(int[] vertices);
+    
+    /**
+     * Returns the number of vertices.
+     * @return the number of vertices.
+     */
+    public abstract int getNumVertices();
 
     /**
      * Returns true if and only if this graph contains an edge going
@@ -85,7 +106,7 @@ public interface Graph {
      * @param target the id of target vertex of the edge.
      * @return true if this graph contains the specified edge.
      */
-    boolean hasEdge(int source, int target);
+    public abstract boolean hasEdge(int source, int target);
 
     /**
      * Returns the weight assigned to a given edge. Unweighted graphs always
@@ -95,7 +116,7 @@ public interface Graph {
      * @param target the id of target vertex of the edge.
      * @return the edge weight
      */
-    double getWeight(int source, int target);
+    public abstract double getWeight(int source, int target);
 
     /**
      * Sets the weight assigned to a given edge.
@@ -105,7 +126,7 @@ public interface Graph {
      * @param weight the edge weight
      * @return this graph.
      */
-    Graph setWeight(int source, int target, double weight);
+    public abstract Graph setWeight(int source, int target, double weight);
 
     /**
      * Returns the edges from the specified vertex. If no edges are
@@ -115,14 +136,14 @@ public interface Graph {
      * returned.
      * @return the edges touching the specified vertex.
      */
-    Collection<Edge> getEdges(int vertex);
+    public abstract Collection<Edge> getEdges(int vertex);
 
     /**
      * Performs an action for each edge of a vertex.
      * @param vertex the vertex id.
      * @param action a non-interfering action to perform on the edges.
      */
-    void forEachEdge(int vertex, ArrayElementConsumer action);
+    public abstract void forEachEdge(int vertex, ArrayElementConsumer action);
 
     /**
      * Returns a stream consisting of the results of applying the given
@@ -132,14 +153,14 @@ public interface Graph {
      *               edge weight of a vertex.
      * @return the stream of the new values of edge weights.
      */
-    DoubleStream mapEdges(int vertex, ArrayElementFunction mapper);
+    public abstract DoubleStream mapEdges(int vertex, ArrayElementFunction mapper);
 
     /**
      * Updates the edge weights of a vertex.
      * @param vertex the vertex id.
      * @param mapper a function to map each edge weight to new value.
      */
-    void updateEdges(int vertex, ArrayElementFunction mapper);
+    public abstract void updateEdges(int vertex, ArrayElementFunction mapper);
 
     /**
      * Creates a new edge in this graph, going from the source vertex to the
@@ -148,7 +169,7 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    default Graph addEdge(int source, int target) {
+    public Graph addEdge(int source, int target) {
         return addEdge(source, target, 1.0);
     }
 
@@ -160,7 +181,7 @@ public interface Graph {
      * @param target the id of target vertex of the edge.
      * @param weight the weight of edge.
      */
-    default Graph addEdge(int source, int target, double weight) {
+    public Graph addEdge(int source, int target, double weight) {
         return setWeight(source, target, weight);
     }
 
@@ -169,7 +190,7 @@ public interface Graph {
      *
      * @param edges edges to be added to this graph.
      */
-    default Graph addEdges(Collection<Edge> edges) {
+    public Graph addEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
             setWeight(edge.u, edge.v, edge.weight);
         }
@@ -181,7 +202,7 @@ public interface Graph {
      *
      * @param edges edges to be removed from this graph.
      */
-    default Graph removeEdges(Collection<Edge> edges) {
+    public Graph removeEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
             removeEdge(edge.u, edge.v);
         }
@@ -195,7 +216,7 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      */
-    default Graph removeEdge(int source, int target) {
+    public Graph removeEdge(int source, int target) {
         return setWeight(source, target, 0.0);
     }
 
@@ -206,8 +227,8 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    default int getDegree(int vertex) {
-        return isDigraph() ? getInDegree(vertex) + getOutDegree(vertex) : getOutDegree(vertex);
+    public int getDegree(int vertex) {
+        return digraph ? getInDegree(vertex) + getOutDegree(vertex) : getOutDegree(vertex);
     }
 
     /**
@@ -217,7 +238,7 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    int getInDegree(int vertex);
+    public abstract int getInDegree(int vertex);
 
     /**
      * Returns the out-degree of the specified vertex. An out-degree of a vertex in a
@@ -226,7 +247,7 @@ public interface Graph {
      * @param vertex the id of vertex.
      * @return the degree of the specified vertex.
      */
-    int getOutDegree(int vertex);
+    public abstract int getOutDegree(int vertex);
 
     /**
      * Reverse topological sort digraph by depth-first search of graph.
@@ -253,8 +274,8 @@ public interface Graph {
      *
      * @return the vertices in the reverse topological order.
      */
-    default int[] dfsort() {
-        if (!isDigraph()) {
+    public int[] dfsort() {
+        if (!digraph) {
             throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
         }
 
@@ -294,7 +315,7 @@ public interface Graph {
      * @return a two-dimensional array of which each row is the vertices
      *         in the same connected component.
      */
-    default int[][] dfcc() {
+    public int[][] dfcc() {
         int n = getNumVertices();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
@@ -354,7 +375,7 @@ public interface Graph {
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    default void dfs(Visitor visitor) {
+    public void dfs(Visitor visitor) {
         int n = getNumVertices();
         boolean[] visited = new boolean[n];
 
@@ -370,8 +391,8 @@ public interface Graph {
      *
      * @return the vertices in the topological order.
      */
-    default int[] bfsort() {
-        if (!isDigraph()) {
+    public int[] bfsort() {
+        if (!digraph) {
             throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
         }
 
@@ -428,7 +449,7 @@ public interface Graph {
      * @return a two-dimensional array of which each row is the vertices
      *         in the same connected component.
      */
-    default int[][] bfcc() {
+    public int[][] bfcc() {
         int n = getNumVertices();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
@@ -471,7 +492,7 @@ public interface Graph {
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    default void bfs(Visitor visitor) {
+    public void bfs(Visitor visitor) {
         int n = getNumVertices();
         boolean[] visited = new boolean[n];
 
@@ -484,20 +505,13 @@ public interface Graph {
     }
 
     /**
-     * Returns a subgraph containing all given vertices.
-     * @param vertices the vertices to be included in subgraph.
-     * @return a subgraph containing all given vertices
-     */
-    Graph subgraph(int[] vertices);
-    
-    /**
      * Calculate the shortest path from a source to all other vertices in the
      * graph by Dijkstra algorithm.
      *
      * @param s the source vertex.
      * @return The distance to all vertices from the source.
      */
-    default double[] dijkstra(int s) {
+    public double[] dijkstra(int s) {
         return dijkstra(s, true);
     }
     
@@ -509,7 +523,7 @@ public interface Graph {
      * @return The distance to all vertices from the source. If weighted is false,
      *         it is the length of the shortest path to other vertices.
      */
-    default double[] dijkstra(int s, boolean weighted) {
+    public double[] dijkstra(int s, boolean weighted) {
         int n = getNumVertices();
         double[] wt = new double[n];
         Arrays.fill(wt, Double.POSITIVE_INFINITY);
@@ -543,7 +557,7 @@ public interface Graph {
      *
      * @return the length of shortest-path between vertices.
      */
-    default double[][] dijkstra() {
+    public double[][] dijkstra() {
         int n = getNumVertices();
         double[][] wt = new double[n][];
         for (int i = 0; i < n; i++) {
@@ -559,8 +573,8 @@ public interface Graph {
      * the edges in the tree is minimized. 
      * @return the minimum spanning tree.
      */
-    default List<Edge> prim() {
-        if (isDigraph()) {
+    public List<Edge> prim() {
+        if (digraph) {
             throw new UnsupportedOperationException("Call Prim's algorithm on a digraph.");
         }
 

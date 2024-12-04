@@ -34,14 +34,10 @@ import smile.util.ArrayElementFunction;
  *
  * @author Haifeng Li
  */
-public class AdjacencyMatrix implements Graph, Serializable {
+public class AdjacencyMatrix extends Graph implements Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
 
-    /**
-     * Is the graph directed?
-     */
-    private final boolean digraph;
     /**
      * Adjacency matrix. Non-zero values are the weights of edges.
      */
@@ -63,18 +59,13 @@ public class AdjacencyMatrix implements Graph, Serializable {
      * @param digraph true if this is a directed graph.
      */
     public AdjacencyMatrix(int n, boolean digraph) {
-        this.digraph = digraph;
+        super(digraph);
         graph = new double[n][n];
     }
 
     @Override
     public int getNumVertices() {
         return graph.length;
-    }
-
-    @Override
-    public boolean isDigraph() {
-        return digraph;
     }
 
     @Override
@@ -90,7 +81,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
     @Override
     public AdjacencyMatrix setWeight(int source, int target, double weight) {
         graph[source][target] = weight;
-        if (!digraph) {
+        if (!isDigraph()) {
             graph[target][source] = weight;
         }
         return this;
@@ -170,7 +161,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
         int[] v = vertices.clone();
         Arrays.sort(v);
         
-        AdjacencyMatrix g = new AdjacencyMatrix(v.length, digraph);
+        AdjacencyMatrix g = new AdjacencyMatrix(v.length, isDigraph());
         for (int i = 0; i < v.length; i++) {
             for (int j = 0; j < v.length; j++) {
                 g.graph[i][j] = graph[v[i]][v[j]];
