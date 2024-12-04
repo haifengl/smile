@@ -679,4 +679,33 @@ public class AdjacencyListTest {
         assertEquals(4, tour[5]);
         assertEquals(0, tour[6]);
     }
+
+    @Test
+    public void testNearestInsertion() {
+        System.out.println("Nearest Insertion");
+
+        Graph graph = new AdjacencyList(6);
+        graph.addEdge(0, 1, 0.41);
+        graph.addEdge(1, 2, 0.51);
+        graph.addEdge(2, 3, 0.50);
+        graph.addEdge(4, 3, 0.36);
+        graph.addEdge(3, 5, 0.38);
+        graph.addEdge(3, 0, 0.45);
+        graph.addEdge(0, 5, 0.29);
+        graph.addEdge(5, 4, 0.21);
+        graph.addEdge(1, 4, 0.32);
+        graph.addEdge(4, 2, 0.32);
+        graph.addEdge(5, 1, 0.29);
+
+        int[] tour = graph.nearestInsertion();
+        assertEquals(7, tour.length);
+        assertEquals(0.65, graph.getTourDistance(tour), 1E-4);
+        assertEquals(0, tour[0]);
+        assertEquals(4, tour[1]);
+        assertEquals(3, tour[2]);
+        assertEquals(1, tour[3]);
+        assertEquals(5, tour[4]);
+        assertEquals(2, tour[5]);
+        assertEquals(0, tour[6]);
+    }
 }
