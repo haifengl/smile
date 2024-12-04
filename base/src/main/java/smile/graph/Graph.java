@@ -19,6 +19,8 @@ package smile.graph;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.IMatrix;
 import smile.util.ArrayElementConsumer;
@@ -248,7 +250,36 @@ public interface Graph {
      *
      * @return an array of vertex IDs in the topological order.
      */
-    int[] sortbfs();
+    default int[] bfsort() {
+        if (!isDigraph()) {
+            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+        }
+
+        int n = getNumVertices();
+        int[] in = new int[n];
+        int[] ts = new int[n];
+        for (int i = 0; i < n; i++) {
+            ts[i] = -1;
+            forEachEdge(i, (j, w) -> in[j]++);
+        }
+
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < n; i++) {
+            if (in[i] == 0) {
+                queue.offer(i);
+            }
+        }
+
+        for (int i = 0; !queue.isEmpty(); i++) {
+            int u = queue.poll();
+            ts[i] = u;
+            forEachEdge(u, (v, w) -> {
+                if (--in[v] == 0) queue.offer(v);
+            });
+        }
+
+        return ts;
+    }
 
     /**
      * Breadth-first search connected components of graph.

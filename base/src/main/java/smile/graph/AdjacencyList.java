@@ -267,43 +267,6 @@ public class AdjacencyList implements Graph, Serializable {
         }
     }
 
-    @Override
-    public int[] sortbfs() {
-        if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
-        }
-
-        int n = graph.length;
-        int[] in = new int[n];
-        int[] ts = new int[n];
-        for (int i = 0; i < n; i++) {
-            ts[i] = -1;
-            for (var edge : graph[i]) {
-                in[edge.index()]++;
-            }
-        }
-
-        Queue<Integer> queue = new LinkedList<>();
-        for (int i = 0; i < n; i++) {
-            if (in[i] == 0) {
-                queue.offer(i);
-            }
-        }
-
-        for (int i = 0; !queue.isEmpty(); i++) {
-            int t = queue.poll();
-            ts[i] = t;
-            for (var edge : graph[t]) {
-                int v = edge.index();
-                if (--in[v] == 0) {
-                    queue.offer(v);
-                }
-            }
-        }
-
-        return ts;
-    }
-
     /**
      * Breadth-first search connected components of graph.
      * @param v the start vertex.

@@ -512,7 +512,7 @@ public class AdjacencyListTest {
      * Test of bfs method, of class AdjacencyList.
      */
     @Test
-    public void testBfs() {
+    public void testBfsort() {
         System.out.println("bfs sort");
         int[] ts = {0, 8, 1, 2, 7, 3, 6, 5, 4, 9, 10, 11, 12};
 
@@ -535,14 +535,14 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertArrayEquals(ts, graph.sortbfs());
+        assertArrayEquals(ts, graph.bfsort());
     }
 
     /**
      * Test of bfs method, of class AdjacencyList.
      */
     @Test
-    public void testBfs2() {
+    public void testBfs() {
         System.out.println("bfs connected component");
         int[] size = {3, 5};
         int[] id = {0, 1, 0, 1, 1, 1, 0, 1};
