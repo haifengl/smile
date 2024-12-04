@@ -33,13 +33,9 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class AdjacencyList implements Graph, Serializable {
+public class AdjacencyList extends Graph implements Serializable {
     @Serial
     private static final long serialVersionUID = 3L;
-    /**
-     * Is the graph directed?
-     */
-    private final boolean digraph;
     /**
      * Adjacency list. Non-zero values are the weights of edges.
      */
@@ -61,7 +57,7 @@ public class AdjacencyList implements Graph, Serializable {
      * @param digraph true if this is a directed graph.
      */
     public AdjacencyList(int n, boolean digraph) {
-        this.digraph = digraph;
+        super(digraph);
         graph = new SparseArray[n];
         for (int i = 0; i < n; i++) {
             graph[i] = new SparseArray();
@@ -71,11 +67,6 @@ public class AdjacencyList implements Graph, Serializable {
     @Override
     public int getNumVertices() {
         return graph.length;
-    }
-
-    @Override
-    public boolean isDigraph() {
-        return digraph;
     }
 
     @Override
@@ -91,7 +82,7 @@ public class AdjacencyList implements Graph, Serializable {
     @Override
     public AdjacencyList setWeight(int source, int target, double weight) {
         graph[source].set(target, weight);
-        if (!digraph) {
+        if (!isDigraph()) {
             graph[target].set(source, weight);
         }
 
@@ -142,7 +133,7 @@ public class AdjacencyList implements Graph, Serializable {
         int[] v = vertices.clone();
         Arrays.sort(v);
         
-        AdjacencyList g = new AdjacencyList(v.length, digraph);
+        AdjacencyList g = new AdjacencyList(v.length, isDigraph());
         for (int i = 0; i < v.length; i++) {
             Collection<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
