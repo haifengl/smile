@@ -17,9 +17,10 @@
 
 package smile.graph;
 
+import java.util.Arrays;
+import java.util.List;
 import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
-import java.util.Arrays;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -592,5 +593,32 @@ public class AdjacencyListTest {
         double[][] wt2 = graph.dijkstra();
         
         assertTrue(MathEx.equals(wt, wt2));
+    }
+
+    @Test
+    public void testPrim() {
+        System.out.println("Prim's algorithm");
+
+        Graph graph = new AdjacencyList(6);
+        graph.addEdge(0, 1, 0.41);
+        graph.addEdge(1, 2, 0.51);
+        graph.addEdge(2, 3, 0.50);
+        graph.addEdge(4, 3, 0.36);
+        graph.addEdge(3, 5, 0.38);
+        graph.addEdge(3, 0, 0.45);
+        graph.addEdge(0, 5, 0.29);
+        graph.addEdge(5, 4, 0.21);
+        graph.addEdge(1, 4, 0.32);
+        graph.addEdge(4, 2, 0.32);
+        graph.addEdge(5, 1, 0.29);
+
+        List<Graph.Edge> mst = graph.prim();
+        assertEquals(5, mst.size());
+        assertEquals(1, mst.get(0).u());
+        assertEquals(5, mst.get(0).v());
+        assertEquals(0.29, mst.get(0).weight(), 1E-5);
+        assertEquals(5, mst.get(4).u());
+        assertEquals(0, mst.get(4).v());
+        assertEquals(0.29, mst.get(4).weight(), 1E-5);
     }
 }
