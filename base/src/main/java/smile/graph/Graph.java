@@ -796,4 +796,50 @@ public abstract class Graph {
 
         return tour;
     }
+
+    /**
+     * Returns the TSP tour with nearest insertion heuristic.
+     * @return the TSP tour.
+     */
+    public int[] nearestInsertion() {
+        int n = getNumVertices();
+        if (n < 2) {
+            throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
+        }
+
+        int[] tour = new int[n+1];
+        double[] dist = new double[n];
+        boolean[] visited = new boolean[n];
+        visited[0] = true;
+        Arrays.fill(dist, Double.POSITIVE_INFINITY);
+
+        forEachEdge(0, (i, weight) -> dist[i] = weight);
+
+        for (int length = 1; length < n; length++) {
+            int nearestNode = -1;
+            double minDistance = Double.POSITIVE_INFINITY;
+            for (int i = 0; i < n; i++) {
+                if (!visited[i]) {
+                    if (dist[i] < minDistance) {
+                        minDistance = dist[i];
+                        nearestNode = i;
+                    }
+                }
+            }
+
+            // insert at the position that minimizes the increase in tour length
+            int insertIndex = getInsertPosition(nearestNode, tour, length);
+            System.arraycopy(tour, insertIndex, tour, insertIndex+1, length-insertIndex);
+            tour[insertIndex] = nearestNode;
+            visited[nearestNode] = true;
+
+            forEachEdge(nearestNode, (i, weight) -> {
+                if (!visited[i]) {
+                    dist[i] = Math.min(dist[i], weight);
+                }
+            });
+        }
+
+        return tour;
+    }
 }
