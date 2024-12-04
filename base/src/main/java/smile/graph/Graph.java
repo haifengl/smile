@@ -17,11 +17,13 @@
 
 package smile.graph;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.IMatrix;
 import smile.util.ArrayElementConsumer;
 import smile.util.ArrayElementFunction;
+import smile.util.PriorityQueue;
 
 /**
  * A graph is an abstract representation of a set of objects where some pairs
@@ -275,9 +277,48 @@ public interface Graph {
      * graph by Dijkstra algorithm.
      *
      * @param s the source vertex.
-     * @return the length of the shortest path to other vertices.
+     * @return The distance to all vertices from the source.
      */
-    double[] dijkstra(int s);
+    default double[] dijkstra(int s) {
+        return dijkstra(s, true);
+    }
+    
+    /**
+     * Calculate the shortest path from a source to all other vertices in the
+     * graph by Dijkstra algorithm.
+     * @param s The source vertex.
+     * @param weighted Ignore edge weights if false.
+     * @return The distance to all vertices from the source. If weighted is false,
+     *         it is the length of the shortest path to other vertices.
+     */
+    default double[] dijkstra(int s, boolean weighted) {
+        int n = getNumVertices();
+        double[] wt = new double[n];
+        Arrays.fill(wt, Double.POSITIVE_INFINITY);
+
+        PriorityQueue queue = new PriorityQueue(wt);
+        for (int v = 0; v < n; v++) {
+            queue.insert(v);
+        }
+
+        wt[s] = 0.0;
+        queue.lower(s);
+
+        while (!queue.isEmpty()) {
+            int v = queue.poll();
+            if (!Double.isInfinite(wt[v])) {
+                forEachEdge(v, (u, weight) -> {
+                    double p = wt[v] + (weighted ? weight : 1);
+                    if (p < wt[u]) {
+                        wt[u] = p;
+                        queue.lower(u);
+                    }
+                });
+            }
+        }
+        
+        return wt;
+    }
 
     /**
      * Calculates the all pair shortest-path by Dijkstra algorithm.

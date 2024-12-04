@@ -397,37 +397,6 @@ public class AdjacencyList implements Graph, Serializable {
     }
 
     @Override
-    public double[] dijkstra(int s) {
-        int n = graph.length;
-        double[] wt = new double[n];
-        Arrays.fill(wt, Double.POSITIVE_INFINITY);
-
-        PriorityQueue queue = new PriorityQueue(wt);
-        for (int v = 0; v < n; v++) {
-            queue.insert(v);
-        }
-
-        wt[s] = 0.0;
-        queue.lower(s);
-
-        while (!queue.isEmpty()) {
-            int v = queue.poll();
-            if (!Double.isInfinite(wt[v])) {
-                for (var edge : graph[v]) {
-                    int w = edge.index();
-                    double p = wt[v] + edge.value();
-                    if (p < wt[w]) {
-                        wt[w] = p;
-                        queue.lower(w);
-                    }
-                }
-            }
-        }
-        
-        return wt;
-    }
-
-    @Override
     public AdjacencyList subgraph(int[] vertices) {
         int[] v = vertices.clone();
         Arrays.sort(v);
