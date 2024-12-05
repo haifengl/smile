@@ -945,36 +945,98 @@ public abstract class Graph {
     }
 
     /**
+     * Returns the MST cost of vertices not in the path.
+     * @param path the partial path of TSP tour.
+     * @return the MST cost.
+     */
+    private double mst(int[] path) {
+        int n = getNumVertices();
+
+        // Tracks whether a node is included in the MST
+        boolean[] inMST = new boolean[n];
+        boolean[] visited = new boolean[n];
+        for (var node : path) {
+            visited[node] = true;
+        }
+
+        // Stores the minimum edge weight to add a node to the MST
+        double[] minEdgeWeight = new double[n];
+        Arrays.fill(minEdgeWeight, Double.MAX_VALUE);
+
+        // Total weight of the MST
+        double totalWeight = 0.0;
+
+        // Find the start node
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                minEdgeWeight[i] = 0.0;
+                break;
+            }
+        }
+
+        // Iterate to include all nodes in the MST
+        for (int i = 0; i < n; i++) {
+            // Find the vertex with the smallest edge weight not yet included in the MST
+            int u = -1;
+            double minWeight = Double.MAX_VALUE;
+        
+            for (int v = 0; v < n; v++) {
+                if (!inMST[v] && !visited[v] && minEdgeWeight[v] < minWeight) {
+                    minWeight = minEdgeWeight[v];
+                    u = v;
+                }
+            }
+
+            if (u == -1) {
+                throw new RuntimeException("Failed to construct MST");
+            }
+
+            // Include this vertex in the MST
+            inMST[u] = true;
+            totalWeight += minWeight;
+
+            // Update the edge weights for the remaining vertices
+            final int p = u;
+            forEachEdge(u, (v, weight) -> {
+                if (!inMST[v] && !visited[v]) {
+                    if (weight < minEdgeWeight[v]) {
+                        minEdgeWeight[v] = weight;
+                    }
+                }
+            });
+        }
+
+        return totalWeight;
+    }
+
+    /**
      * Returns the TSP tour with branch and bound algorithm.
      * @return the TSP tour.
      */
-    /* 
     public int[] tsp() {
         int n = getNumVertices();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
 
-        // Variables for tracking the best solution
-        boolean[] visited = new boolean[n];
-        int[] tour = new int[n+1];
-        Arrays.fill(tour, -1);
-        double totalCost = Double.POSITIVE_INFINITY;
+        // Initialize the best cost with nearest insertion
+        int[] tour = nearestInsertion();
+        double bestCost = getTourDistance(tour);
 
-        // Initialize lower bound using MST and edge weights
-        double initLowerBound = 0.0;
-        for (int i = 0; i < n; i++) {
-            double first = Double.POSITIVE_INFINITY;
-            double second = Double.POSITIVE_INFINITY;
-            for (size_t j = 0; j < n; ++j) {
-                if (i == j) continue;
-                float dist = dmat[i][j];
-                if (dist < first) {
-                    second = first;
-                    first = dist;
-                }
-                else if (dist < second) {
-                    second = dist;
+        // Initialize lower bound with nearest insertion
+        double initLowerBound = 0;
+        for (int i = 0; i < n; ++i) {
+            double first = Double.MAX_VALUE;
+            double second = Double.MAX_VALUE;
+            for (int j = 0; j < n; ++j) {
+                double dist = getWeight(i, j);
+                if (dist != 0) {
+                    if (dist < first) {
+                        second = first;
+                        first = dist;
+                    } else if (dist < second) {
+                        second = dist;
+                    }
                 }
             }
             initLowerBound += (first + second);
@@ -982,44 +1044,60 @@ public abstract class Graph {
         initLowerBound /= 2.0f;
 
         // Push the initial node into the priority queue
-        PriorityQueue<Node> pq = new PriorityQueue<>();
-        pq.push(new TspNode(new int[]{0}, 1, initLowerBound, 0.0));
+        java.util.PriorityQueue<TspNode> pq = new java.util.PriorityQueue<>();
+        pq.offer(new TspNode(new int[1], 1, initLowerBound, 0.0));
 
         // Perform Branch and Bound with Best-First Search
         while (!pq.isEmpty()) {
-            Node current = pq.top();
-            pq.pop();
+            var current = pq.poll();
 
             // Skip nodes with bounds worse than the current best solution
-            if (current.lowerBound >= finalRes) continue;
+            if (current.lowerBound >= bestCost) continue;
 
             // If we reach the last level, check the complete path
             if (current.level == n) {
-                float cost = current.cost + getWeight(current.path[level-1], 0); // Return to start
-                if (cost < totalCost) {
-                    totalCost = cost;
-                    finalPath = current.path;
-                    finalPath.push_back(0); // Close the tour
+                double cost = current.cost + getWeight(current.path[n-1], 0); // Return to start
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    System.arraycopy(current.path, 0, tour, 0, n);
                 }
                 continue;
             }
 
             // Explore all possible next nodes
             for (int i = 0; i < n; i++) {
-                if (find(current.path.begin(), current.path.end(), i) == current.path.end()) {
-                    double nextCost = current.cCost + dmat[current.path.back()][i];
-                    double nextLowerBound = nextCost + calcMSTLowerBound(dmat, current.path);
+                boolean inPath = false;
+                for (var node : current.path) {
+                    if (node == i) {
+                        inPath = true;
+                        break;
+                    }
+                }
 
-                    // Prune branches with higher bounds
-                    if (nextLowerBound < finalRes) {
-                        vector<size_t> nextPath = current.path;
-                        nextPath.push_back(i);
-                        pq.push({ nextPath, nextLowerBound, nextCost, current.level + 1 });
+                if (!inPath) {
+                    double dist = getWeight(current.path[current.path.length - 1], i);
+                    if (dist != 0) {
+                        double nextCost = current.cost + dist;
+                        double nextLowerBound = nextCost;
+
+                        // The cost of checking all remaining branches is less
+                        // if there are fewer than 5 nodes.
+                        if (n - current.path.length >= 5) {
+                            nextLowerBound += mst(current.path);
+                        }
+
+                        // Prune branches with higher bounds
+                        if (nextLowerBound < bestCost) {
+                            int[] nextPath = new int[current.level + 1];
+                            System.arraycopy(current.path, 0, nextPath, 0, current.level);
+                            nextPath[current.level + 1] = i;
+                            pq.offer(new TspNode(nextPath, current.level + 1, nextLowerBound, nextCost));
+                        }
                     }
                 }
             }
         }
 
         return tour;
-    }*/
+    }
 }
