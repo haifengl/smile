@@ -781,12 +781,9 @@ public abstract class Graph {
         int[] tour = nearestInsertion();
         double bestCost = getPathDistance(tour);
 
-        // Initialize lower bound with MST
-        double initLowerBound = mstLowerBound(new boolean[n]);
-
         // Push the initial node into the priority queue
         java.util.PriorityQueue<TspNode> pq = new java.util.PriorityQueue<>();
-        pq.offer(new TspNode(new int[1], initLowerBound, 0.0));
+        pq.offer(new TspNode(new int[1], 0.0, 0.0));
 
         // Perform Branch and Bound with Best-First Search
         while (!pq.isEmpty()) {
