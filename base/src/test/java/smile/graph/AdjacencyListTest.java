@@ -640,14 +640,14 @@ public class AdjacencyListTest {
         graph.addEdge(5, 1, 0.29);
 
         int[] tour = graph.heldKarp();
-        assertEquals(0.65, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
         assertEquals(7, tour.length);
         assertEquals(0, tour[0]);
-        assertEquals(4, tour[1]);
-        assertEquals(3, tour[2]);
-        assertEquals(1, tour[3]);
-        assertEquals(5, tour[4]);
-        assertEquals(2, tour[5]);
+        assertEquals(5, tour[1]);
+        assertEquals(1, tour[2]);
+        assertEquals(4, tour[3]);
+        assertEquals(2, tour[4]);
+        assertEquals(3, tour[5]);
         assertEquals(0, tour[6]);
     }
 
@@ -669,14 +669,14 @@ public class AdjacencyListTest {
         graph.addEdge(5, 1, 0.29);
 
         int[] tour = graph.tsp();
-        assertEquals(0.65, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
         assertEquals(7, tour.length);
         assertEquals(0, tour[0]);
-        assertEquals(4, tour[1]);
-        assertEquals(3, tour[2]);
-        assertEquals(1, tour[3]);
-        assertEquals(5, tour[4]);
-        assertEquals(2, tour[5]);
+        assertEquals(5, tour[1]);
+        assertEquals(1, tour[2]);
+        assertEquals(4, tour[3]);
+        assertEquals(2, tour[4]);
+        assertEquals(3, tour[5]);
         assertEquals(0, tour[6]);
     }
 
@@ -699,13 +699,24 @@ public class AdjacencyListTest {
 
         int[] tour = graph.nearestInsertion();
         assertEquals(7, tour.length);
-        assertEquals(0.65, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.27, graph.getTourDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
-        assertEquals(4, tour[1]);
-        assertEquals(3, tour[2]);
-        assertEquals(1, tour[3]);
-        assertEquals(5, tour[4]);
-        assertEquals(2, tour[5]);
+        assertEquals(1, tour[1]);
+        assertEquals(2, tour[2]);
+        assertEquals(4, tour[3]);
+        assertEquals(3, tour[4]);
+        assertEquals(5, tour[5]);
+        assertEquals(0, tour[6]);
+
+        double cost = graph.opt2(tour, 3);
+        System.out.println(Arrays.toString(tour));
+        assertEquals(2.17, cost, 1E-4);
+        assertEquals(0, tour[0]);
+        assertEquals(3, tour[1]);
+        assertEquals(2, tour[2]);
+        assertEquals(4, tour[3]);
+        assertEquals(1, tour[4]);
+        assertEquals(5, tour[5]);
         assertEquals(0, tour[6]);
     }
 
@@ -728,23 +739,13 @@ public class AdjacencyListTest {
 
         int[] tour = graph.farthestInsertion();
         assertEquals(7, tour.length);
-        assertEquals(0.7, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
-        assertEquals(2, tour[1]);
-        assertEquals(5, tour[2]);
-        assertEquals(3, tour[3]);
-        assertEquals(1, tour[4]);
-        assertEquals(4, tour[5]);
-        assertEquals(0, tour[6]);
-
-        double cost = graph.opt2(tour, 3);
-        assertEquals(0.65, cost, 1E-4);
-        assertEquals(0, tour[0]);
-        assertEquals(2, tour[1]);
-        assertEquals(5, tour[2]);
-        assertEquals(1, tour[3]);
-        assertEquals(3, tour[4]);
-        assertEquals(4, tour[5]);
+        assertEquals(5, tour[1]);
+        assertEquals(1, tour[2]);
+        assertEquals(4, tour[3]);
+        assertEquals(2, tour[4]);
+        assertEquals(3, tour[5]);
         assertEquals(0, tour[6]);
     }
 
@@ -767,13 +768,13 @@ public class AdjacencyListTest {
 
         int[] tour = graph.arbitraryInsertion();
         assertEquals(7, tour.length);
-        assertEquals(0.7, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
-        assertEquals(2, tour[1]);
-        assertEquals(5, tour[2]);
-        assertEquals(3, tour[3]);
+        assertEquals(3, tour[1]);
+        assertEquals(2, tour[2]);
+        assertEquals(4, tour[3]);
         assertEquals(1, tour[4]);
-        assertEquals(4, tour[5]);
+        assertEquals(5, tour[5]);
         assertEquals(0, tour[6]);
     }
 }

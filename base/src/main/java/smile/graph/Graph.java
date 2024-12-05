@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.DoubleStream;
 import smile.math.MathEx;
 import smile.math.matrix.IMatrix;
+import smile.sort.Sort;
 import smile.util.ArrayElementConsumer;
 import smile.util.ArrayElementFunction;
 import smile.util.PriorityQueue;
@@ -111,13 +112,25 @@ public abstract class Graph {
 
     /**
      * Returns the weight assigned to a given edge. Unweighted graphs always
-     * return 1.0.
+     * return 1.0. If the edge doesn't exist, it returns zero. For minimization
+     * problems such as TSP, use getDistance as it will return infinity instead.
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      * @return the edge weight
      */
     public abstract double getWeight(int source, int target);
+
+    /**
+     * Returns the distance between two vertices.
+     * @param source the id of source vertex of the edge.
+     * @param target the id of target vertex of the edge.
+     * @return the distance between two vertices.
+     */
+    public double getDistance(int source, int target) {
+        double weight = getWeight(source, target);
+        return weight == 0 ? Double.POSITIVE_INFINITY : weight;
+    }
 
     /**
      * Sets the weight assigned to a given edge.
@@ -690,7 +703,7 @@ public abstract class Graph {
                 for (int v = 0; v < n; v++) {
                     if ((mask & (1 << v)) != 0) continue; // v is already in the subset
                     int nextMask = mask | (1 << v); // Add v to the subset
-                    dp[nextMask][v] = Math.min(dp[nextMask][v], dp[mask][u] + getWeight(u, v));
+                    dp[nextMask][v] = Math.min(dp[nextMask][v], dp[mask][u] + getDistance(u, v));
                 }
             }
         }
@@ -701,7 +714,7 @@ public abstract class Graph {
         double bestCost = Double.POSITIVE_INFINITY;
         // Find the last node of the optimal tour (minimum cost returning to node 0)
         for (int u = 1; u < n; u++) {
-            double cost = dp[endMask][u] + getWeight(u, 0);
+            double cost = dp[endMask][u] + getDistance(u, 0);
             if (cost < bestCost) {
                 bestCost = cost;
                 lastNode = u;
@@ -718,7 +731,7 @@ public abstract class Graph {
             tour[index++] = lastNode;
             int prevMask = mask ^ (1 << lastNode);
             for (int u = 0; u < n; u++) {
-                if (dp[mask][lastNode] == dp[prevMask][u] + getWeight(u, lastNode)) {
+                if (dp[mask][lastNode] == dp[prevMask][u] + getDistance(u, lastNode)) {
                     lastNode = u;
                     break;
                 }
@@ -743,7 +756,7 @@ public abstract class Graph {
         for (int i = 0; i < length; i++) {
             int node1 = tour[i];
             int node2 = tour[(i+1) % length];
-            double increase = getWeight(node1, node) + getWeight(node, node2) - getWeight(node1, node2);
+            double increase = getDistance(node1, node) + getDistance(node, node2) - getDistance(node1, node2);
             if (increase < minIncrease) {
                 minIncrease = increase;
                 insertIndex = i + 1;
@@ -753,7 +766,7 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with nearest insertion heuristic.
+     * Returns the TSP tour with the nearest insertion heuristic.
      * @return the TSP tour.
      */
     public int[] nearestInsertion() {
@@ -803,7 +816,7 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with farthest insertion heuristic.
+     * Returns the TSP tour with the farthest insertion heuristic.
      * @return the TSP tour.
      */
     public int[] farthestInsertion() {
@@ -852,7 +865,7 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with arbitrary insertion heuristic.
+     * Returns the TSP tour with the arbitrary insertion heuristic.
      * @return the TSP tour.
      */
     public int[] arbitraryInsertion() {
@@ -862,18 +875,13 @@ public abstract class Graph {
         }
 
         int[] tour = new int[n+1];
-        boolean[] visited = new boolean[n];
         tour[1] = 1;
-        visited[0] = true;
-        visited[1] = true;
 
-        for (int length = 2; length < n; length++) {
+        for (int v = 2; v < n; v++) {
             // insert at the position that minimizes the increase in tour length
-            int node = length;
-            int insertIndex = getInsertPosition(node, tour, length);
-            System.arraycopy(tour, insertIndex, tour, insertIndex+1, length-insertIndex);
-            tour[insertIndex] = node;
-            visited[node] = true;
+            int insertIndex = getInsertPosition(v, tour, v);
+            System.arraycopy(tour, insertIndex, tour, insertIndex+1, v-insertIndex);
+            tour[insertIndex] = v;
         }
 
         return tour;
@@ -926,18 +934,24 @@ public abstract class Graph {
     private void swapEdges(int[] path, int i, int j) {
         i += 1;
         while (i < j) {
-          int temp = path[i];
-          path[i] = path[j];
-          path[j] = temp;
-          i++;
-          j--;
+            Sort.swap(path, i, j);
+            i++;
+            j--;
         }
     }
 
     /**
      * A search node in TSP branch and bound algorithm.
      */
-    private record TspNode(int[] path, int level, double lowerBound, double cost) implements Comparable<TspNode> {
+    private record TspNode(int[] path, double lowerBound, double cost) implements Comparable<TspNode> {
+        /**
+         * Returns the level of search tree, i.e. the length of partial path.
+         * @return the level of search tree.
+         */
+        public int level() {
+            return path.length;
+        }
+
         @Override
         public int compareTo(TspNode o) {
             return Double.compare(lowerBound, o.lowerBound);
@@ -946,19 +960,14 @@ public abstract class Graph {
 
     /**
      * Returns the MST cost of vertices not in the path.
-     * @param path the partial path of TSP tour.
+     * @param inPath the flag if a node is in the partial path.
      * @return the MST cost.
      */
-    private double mst(int[] path) {
+    private double mstLowerBound(boolean[] inPath) {
         int n = getNumVertices();
 
         // Tracks whether a node is included in the MST
         boolean[] inMST = new boolean[n];
-        boolean[] visited = new boolean[n];
-        for (var node : path) {
-            visited[node] = true;
-        }
-
         // Stores the minimum edge weight to add a node to the MST
         double[] minEdgeWeight = new double[n];
         Arrays.fill(minEdgeWeight, Double.MAX_VALUE);
@@ -968,7 +977,7 @@ public abstract class Graph {
 
         // Find the start node
         for (int i = 0; i < n; i++) {
-            if (!visited[i]) {
+            if (!inPath[i]) {
                 minEdgeWeight[i] = 0.0;
                 break;
             }
@@ -981,15 +990,13 @@ public abstract class Graph {
             double minWeight = Double.MAX_VALUE;
         
             for (int v = 0; v < n; v++) {
-                if (!inMST[v] && !visited[v] && minEdgeWeight[v] < minWeight) {
+                if (!inMST[v] && !inPath[v] && minEdgeWeight[v] < minWeight) {
                     minWeight = minEdgeWeight[v];
                     u = v;
                 }
             }
 
-            if (u == -1) {
-                throw new RuntimeException("Failed to construct MST");
-            }
+            if (u == -1) break; // All reachable nodes are visited
 
             // Include this vertex in the MST
             inMST[u] = true;
@@ -998,15 +1005,20 @@ public abstract class Graph {
             // Update the edge weights for the remaining vertices
             final int p = u;
             forEachEdge(u, (v, weight) -> {
-                if (!inMST[v] && !visited[v]) {
-                    if (weight < minEdgeWeight[v]) {
-                        minEdgeWeight[v] = weight;
-                    }
+                if (!inMST[v] && !inPath[v]) {
+                    minEdgeWeight[v] = Math.min(minEdgeWeight[v], weight);
                 }
             });
         }
 
-        return totalWeight;
+        // add the edge back to node 0
+        forEachEdge(0, (v, weight) -> {
+            if (inMST[v]) {
+                minEdgeWeight[0] = Math.min(minEdgeWeight[0], weight);
+            }
+        });
+
+        return totalWeight + minEdgeWeight[0];
     }
 
     /**
@@ -1023,29 +1035,12 @@ public abstract class Graph {
         int[] tour = nearestInsertion();
         double bestCost = getTourDistance(tour);
 
-        // Initialize lower bound with nearest insertion
-        double initLowerBound = 0;
-        for (int i = 0; i < n; ++i) {
-            double first = Double.MAX_VALUE;
-            double second = Double.MAX_VALUE;
-            for (int j = 0; j < n; ++j) {
-                double dist = getWeight(i, j);
-                if (dist != 0) {
-                    if (dist < first) {
-                        second = first;
-                        first = dist;
-                    } else if (dist < second) {
-                        second = dist;
-                    }
-                }
-            }
-            initLowerBound += (first + second);
-        }
-        initLowerBound /= 2.0f;
+        // Initialize lower bound with MST
+        double initLowerBound = mstLowerBound(new boolean[n]);
 
         // Push the initial node into the priority queue
         java.util.PriorityQueue<TspNode> pq = new java.util.PriorityQueue<>();
-        pq.offer(new TspNode(new int[1], 1, initLowerBound, 0.0));
+        pq.offer(new TspNode(new int[1], initLowerBound, 0.0));
 
         // Perform Branch and Bound with Best-First Search
         while (!pq.isEmpty()) {
@@ -1055,8 +1050,8 @@ public abstract class Graph {
             if (current.lowerBound >= bestCost) continue;
 
             // If we reach the last level, check the complete path
-            if (current.level == n) {
-                double cost = current.cost + getWeight(current.path[n-1], 0); // Return to start
+            if (current.level() == n) {
+                double cost = current.cost + getDistance(current.path[n-1], 0); // Return to start
                 if (cost < bestCost) {
                     bestCost = cost;
                     System.arraycopy(current.path, 0, tour, 0, n);
@@ -1064,38 +1059,30 @@ public abstract class Graph {
                 continue;
             }
 
-            // Explore all possible next nodes
-            for (int i = 0; i < n; i++) {
-                boolean inPath = false;
-                for (var node : current.path) {
-                    if (node == i) {
-                        inPath = true;
-                        break;
-                    }
-                }
-
-                if (!inPath) {
-                    double dist = getWeight(current.path[current.path.length - 1], i);
-                    if (dist != 0) {
-                        double nextCost = current.cost + dist;
-                        double nextLowerBound = nextCost;
-
-                        // The cost of checking all remaining branches is less
-                        // if there are fewer than 5 nodes.
-                        if (n - current.path.length >= 5) {
-                            nextLowerBound += mst(current.path);
-                        }
-
-                        // Prune branches with higher bounds
-                        if (nextLowerBound < bestCost) {
-                            int[] nextPath = new int[current.level + 1];
-                            System.arraycopy(current.path, 0, nextPath, 0, current.level);
-                            nextPath[current.level + 1] = i;
-                            pq.offer(new TspNode(nextPath, current.level + 1, nextLowerBound, nextCost));
-                        }
-                    }
-                }
+            boolean[] inPath = new boolean[n];
+            for (var node : current.path) {
+                inPath[node] = true;
             }
+            // The cost of checking all remaining branches is less
+            // if there are fewer than 5 nodes.
+            // double mst = n - current.level() < 5 ? 0 : mstLowerBound(inPath);
+            double mst = mstLowerBound(inPath);
+
+            // Explore all possible next nodes
+            final double currentBest = bestCost;
+            forEachEdge(current.path[current.level() - 1], (i, weight) -> {
+                if (inPath[i]) return;
+
+                double nextCost = current.cost + weight;
+                double nextLowerBound = nextCost + mst;
+
+                // Prune branches with higher bounds
+                if (nextLowerBound < currentBest) {
+                    int[] nextPath = Arrays.copyOfRange(current.path, 0, current.level() + 1);
+                    nextPath[current.level()] = i;
+                    pq.offer(new TspNode(nextPath, nextLowerBound, nextCost));
+                }
+            });
         }
 
         return tour;
