@@ -17,6 +17,7 @@
 
 package smile.graph;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import smile.math.MathEx;
@@ -638,7 +639,9 @@ public class AdjacencyMatrixTest {
         graph.addEdge(4, 2, 0.32);
         graph.addEdge(5, 1, 0.29);
 
-        List<Graph.Edge> mst = graph.prim();
+        List<Graph.Edge> mst = new ArrayList<>();
+        double cost = graph.prim(mst);
+        assertEquals(1.47, cost, 1E-5);
         assertEquals(5, mst.size());
         assertEquals(1, mst.get(0).u());
         assertEquals(5, mst.get(0).v());
