@@ -53,7 +53,7 @@ public abstract class Graph {
      * @param weight the weight of edge. For unweighted graph,
      *               this is always 1.
      */
-    public record Edge(int u, int v, double weight) {
+    public record Edge(int u, int v, double weight) implements Comparable<Edge> {
         /**
          * Constructor of unweighted edge.
          * @param u the vertex id.
@@ -61,6 +61,11 @@ public abstract class Graph {
          */
         public Edge(int u, int v) {
             this(u, v, 1.0);
+        }
+
+        @Override
+        public int compareTo(Edge o) {
+            return Double.compare(weight, o.weight);
         }
     }
 
