@@ -643,12 +643,12 @@ public class AdjacencyMatrixTest {
         double cost = graph.prim(mst);
         assertEquals(1.47, cost, 1E-5);
         assertEquals(5, mst.size());
-        assertEquals(1, mst.get(0).u());
-        assertEquals(5, mst.get(0).v());
-        assertEquals(0.29, mst.get(0).weight(), 1E-5);
-        assertEquals(5, mst.get(4).u());
-        assertEquals(0, mst.get(4).v());
-        assertEquals(0.29, mst.get(4).weight(), 1E-5);
+        assertEquals(1, mst.getFirst().u());
+        assertEquals(5, mst.getFirst().v());
+        assertEquals(0.29, mst.getFirst().weight(), 1E-5);
+        assertEquals(5, mst.getLast().u());
+        assertEquals(0, mst.getLast().v());
+        assertEquals(0.29, mst.getLast().weight(), 1E-5);
     }
 
     @Test
@@ -669,7 +669,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 1, 0.29);
 
         int[] tour = graph.heldKarp();
-        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getPathDistance(tour), 1E-4);
         assertEquals(7, tour.length);
         assertEquals(0, tour[0]);
         assertEquals(5, tour[1]);
@@ -698,7 +698,7 @@ public class AdjacencyMatrixTest {
         graph.addEdge(5, 1, 0.29);
 
         int[] tour = graph.tsp();
-        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getPathDistance(tour), 1E-4);
         assertEquals(7, tour.length);
         assertEquals(0, tour[0]);
         assertEquals(5, tour[1]);
@@ -728,7 +728,7 @@ public class AdjacencyMatrixTest {
 
         int[] tour = graph.nearestInsertion();
         assertEquals(7, tour.length);
-        assertEquals(2.27, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.27, graph.getPathDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
         assertEquals(1, tour[1]);
         assertEquals(2, tour[2]);
@@ -768,7 +768,7 @@ public class AdjacencyMatrixTest {
 
         int[] tour = graph.farthestInsertion();
         assertEquals(7, tour.length);
-        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getPathDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
         assertEquals(5, tour[1]);
         assertEquals(1, tour[2]);
@@ -797,13 +797,42 @@ public class AdjacencyMatrixTest {
 
         int[] tour = graph.arbitraryInsertion();
         assertEquals(7, tour.length);
-        assertEquals(2.17, graph.getTourDistance(tour), 1E-4);
+        assertEquals(2.17, graph.getPathDistance(tour), 1E-4);
         assertEquals(0, tour[0]);
         assertEquals(3, tour[1]);
         assertEquals(2, tour[2]);
         assertEquals(4, tour[3]);
         assertEquals(1, tour[4]);
         assertEquals(5, tour[5]);
+        assertEquals(0, tour[6]);
+    }
+
+    @Test
+    public void testChristofides() {
+        System.out.println("Christofides algorithm");
+
+        Graph graph = new AdjacencyList(6);
+        graph.addEdge(0, 1, 0.41);
+        graph.addEdge(1, 2, 0.51);
+        graph.addEdge(2, 3, 0.50);
+        graph.addEdge(4, 3, 0.36);
+        graph.addEdge(3, 5, 0.38);
+        graph.addEdge(3, 0, 0.45);
+        graph.addEdge(0, 5, 0.29);
+        graph.addEdge(5, 4, 0.21);
+        graph.addEdge(1, 4, 0.32);
+        graph.addEdge(4, 2, 0.32);
+        graph.addEdge(5, 1, 0.29);
+
+        int[] tour = graph.christofides();
+        assertEquals(7, tour.length);
+        assertEquals(2.28, graph.getPathDistance(tour), 1E-4);
+        assertEquals(0, tour[0]);
+        assertEquals(5, tour[1]);
+        assertEquals(4, tour[2]);
+        assertEquals(3, tour[3]);
+        assertEquals(2, tour[4]);
+        assertEquals(1, tour[5]);
         assertEquals(0, tour[6]);
     }
 }

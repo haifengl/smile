@@ -660,21 +660,184 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the distance of tour path.
-     * @param tour the tour path.
-     * @return the tour distance.
+     * Returns the distance of path.
+     * @param path the path.
+     * @return the distance.
      */
-    public double getTourDistance(int[] tour) {
+    public double getPathDistance(int[] path) {
         double distance = 0.0;
-        for (int i = 0; i < tour.length; i++) {
-            distance += getWeight(tour[i], tour[(i+1) % tour.length]);
+        for (int i = 0; i < path.length-1; i++) {
+            distance += getDistance(path[i], path[i+1]);
         }
         return distance;
     }
 
     /**
-     * Returns the TSP tour with Held-Karp algorithm.
-     * @return the TSP tour.
+     * Replace edges path[i]->path[i+1] and path[j]->path[j+1]
+     * with path[i]->path[j] and path[i+1]->path[j+1]
+     */
+    private void swapEdges(int[] path, int i, int j) {
+        i += 1;
+        while (i < j) {
+            Sort.swap(path, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    /**
+     * A search node in TSP branch and bound algorithm.
+     */
+    private record TspNode(int[] path, double lowerBound, double cost) implements Comparable<TspNode> {
+        /**
+         * Returns the level of search tree, i.e. the length of partial path.
+         * @return the level of search tree.
+         */
+        public int level() {
+            return path.length;
+        }
+
+        @Override
+        public int compareTo(TspNode o) {
+            return Double.compare(lowerBound, o.lowerBound);
+        }
+    }
+
+    /**
+     * Returns the MST cost of vertices not in the path.
+     * @param inPath the flag if a node is in the partial path.
+     * @return the MST cost.
+     */
+    private double mstLowerBound(boolean[] inPath) {
+        int n = getNumVertices();
+
+        // Tracks whether a node is included in the MST
+        boolean[] inMST = new boolean[n];
+        // Stores the minimum edge weight to add a node to the MST
+        double[] minEdgeWeight = new double[n];
+        Arrays.fill(minEdgeWeight, Double.MAX_VALUE);
+
+        // Total weight of the MST
+        double totalWeight = 0.0;
+
+        // Find the start node
+        for (int i = 0; i < n; i++) {
+            if (!inPath[i]) {
+                minEdgeWeight[i] = 0.0;
+                break;
+            }
+        }
+
+        // Iterate to include all nodes in the MST
+        for (int i = 0; i < n; i++) {
+            // Find the vertex with the smallest edge weight not yet included in the MST
+            int u = -1;
+            double minWeight = Double.MAX_VALUE;
+
+            for (int v = 0; v < n; v++) {
+                if (!inMST[v] && !inPath[v] && minEdgeWeight[v] < minWeight) {
+                    minWeight = minEdgeWeight[v];
+                    u = v;
+                }
+            }
+
+            if (u == -1) break; // All reachable nodes are visited
+
+            // Include this vertex in the MST
+            inMST[u] = true;
+            totalWeight += minWeight;
+
+            // Update the edge weights for the remaining vertices
+            final int p = u;
+            forEachEdge(u, (v, weight) -> {
+                if (!inMST[v] && !inPath[v]) {
+                    minEdgeWeight[v] = Math.min(minEdgeWeight[v], weight);
+                }
+            });
+        }
+
+        // add the edge back to node 0
+        forEachEdge(0, (v, weight) -> {
+            if (inMST[v]) {
+                minEdgeWeight[0] = Math.min(minEdgeWeight[0], weight);
+            }
+        });
+
+        return totalWeight + minEdgeWeight[0];
+    }
+
+    /**
+     * Returns the optimal travelling salesman problem (TSP) tour with
+     * branch and bound algorithm.
+     * @return the optimal TSP tour.
+     */
+    public int[] tsp() {
+        int n = getNumVertices();
+        if (n < 2) {
+            throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
+        }
+
+        // Initialize the best cost with nearest insertion
+        int[] tour = nearestInsertion();
+        double bestCost = getPathDistance(tour);
+
+        // Initialize lower bound with MST
+        double initLowerBound = mstLowerBound(new boolean[n]);
+
+        // Push the initial node into the priority queue
+        java.util.PriorityQueue<TspNode> pq = new java.util.PriorityQueue<>();
+        pq.offer(new TspNode(new int[1], initLowerBound, 0.0));
+
+        // Perform Branch and Bound with Best-First Search
+        while (!pq.isEmpty()) {
+            var current = pq.poll();
+
+            // Skip nodes with bounds worse than the current best solution
+            if (current.lowerBound >= bestCost) continue;
+
+            // If we reach the last level, check the complete path
+            if (current.level() == n) {
+                double cost = current.cost + getDistance(current.path[n-1], 0); // Return to start
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    System.arraycopy(current.path, 0, tour, 0, n);
+                }
+                continue;
+            }
+
+            boolean[] inPath = new boolean[n];
+            for (var node : current.path) {
+                inPath[node] = true;
+            }
+            // The cost of checking all remaining branches is cheaper compared
+            // estimating MST lower bound if there are fewer than 5 nodes.
+            double mst = (n - current.level() < 5) ? 0 : mstLowerBound(inPath);
+
+            // Explore all possible next nodes
+            final double currentBest = bestCost;
+            forEachEdge(current.path[current.level() - 1], (v, weight) -> {
+                if (inPath[v]) return;
+
+                double nextCost = current.cost + weight;
+                double nextLowerBound = nextCost + mst;
+
+                // Prune branches with higher bounds
+                if (nextLowerBound < currentBest) {
+                    int[] nextPath = Arrays.copyOfRange(current.path, 0, current.level() + 1);
+                    nextPath[current.level()] = v;
+                    pq.offer(new TspNode(nextPath, nextLowerBound, nextCost));
+                }
+            });
+        }
+
+        logger.info("Branch and bound TSP cost = {}", bestCost);
+        return tour;
+    }
+
+    /**
+     * Returns the optimal TSP tour with Held-Karp algorithm.
+     * It works on graph up to 31 vertices.
+     * @return the optimal TSP tour.
      */
     public int[] heldKarp() {
         int n = getNumVertices();
@@ -766,8 +929,9 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with the nearest insertion heuristic.
-     * @return the TSP tour.
+     * Returns the approximate solution to TSP with the
+     * nearest insertion heuristic.
+     * @return the approximate solution to TSP.
      */
     public int[] nearestInsertion() {
         int n = getNumVertices();
@@ -816,8 +980,9 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with the farthest insertion heuristic.
-     * @return the TSP tour.
+     * Returns the approximate solution to TSP with the
+     * farthest insertion heuristic.
+     * @return the approximate solution to TSP.
      */
     public int[] farthestInsertion() {
         int n = getNumVertices();
@@ -865,8 +1030,9 @@ public abstract class Graph {
     }
 
     /**
-     * Returns the TSP tour with the arbitrary insertion heuristic.
-     * @return the TSP tour.
+     * Returns the approximate solution to TSP with the
+     * arbitrary insertion heuristic.
+     * @return the approximate solution to TSP.
      */
     public int[] arbitraryInsertion() {
         int n = getNumVertices();
@@ -888,9 +1054,9 @@ public abstract class Graph {
     }
 
     /**
-     * The 2-opt heuristic improves an existing TSP tour. The method reconnects
-     * pairs of non-adjacent edges until no more pairs can be swapped to
-     * further improve the solution.
+     * Improves an existing TSP tour with the 2-opt heuristic. The method
+     * reconnects pairs of non-adjacent edges until no more pairs can be
+     * swapped to further improve the solution.
      * @param tour an existing TSP tour. It may be revised with a better tour
      *             of lower cost.
      * @param maxIter the maximum number of iterations of the outer loop.
@@ -902,7 +1068,7 @@ public abstract class Graph {
             throw new IllegalArgumentException("Invalid tour length: " + tour.length);
         }
 
-        double cost = getTourDistance(tour);
+        double cost = getPathDistance(tour);
         boolean improved = true;
         for (int iter = 0; improved && iter < maxIter; iter++) {
             improved = false;
@@ -928,163 +1094,113 @@ public abstract class Graph {
     }
 
     /**
-     * Replace edges path[i]->path[i+1] and path[j]->path[j+1]
-     * with path[i]->path[j] and path[i+1]->path[j+1]
+     * Returns the approximate solution to TSP with Christofides algorithm.
+     * @return the approximate solution to TSP.
      */
-    private void swapEdges(int[] path, int i, int j) {
-        i += 1;
-        while (i < j) {
-            Sort.swap(path, i, j);
-            i++;
-            j--;
-        }
-    }
-
-    /**
-     * A search node in TSP branch and bound algorithm.
-     */
-    private record TspNode(int[] path, double lowerBound, double cost) implements Comparable<TspNode> {
-        /**
-         * Returns the level of search tree, i.e. the length of partial path.
-         * @return the level of search tree.
-         */
-        public int level() {
-            return path.length;
-        }
-
-        @Override
-        public int compareTo(TspNode o) {
-            return Double.compare(lowerBound, o.lowerBound);
-        }
-    }
-
-    /**
-     * Returns the MST cost of vertices not in the path.
-     * @param inPath the flag if a node is in the partial path.
-     * @return the MST cost.
-     */
-    private double mstLowerBound(boolean[] inPath) {
-        int n = getNumVertices();
-
-        // Tracks whether a node is included in the MST
-        boolean[] inMST = new boolean[n];
-        // Stores the minimum edge weight to add a node to the MST
-        double[] minEdgeWeight = new double[n];
-        Arrays.fill(minEdgeWeight, Double.MAX_VALUE);
-
-        // Total weight of the MST
-        double totalWeight = 0.0;
-
-        // Find the start node
-        for (int i = 0; i < n; i++) {
-            if (!inPath[i]) {
-                minEdgeWeight[i] = 0.0;
-                break;
-            }
-        }
-
-        // Iterate to include all nodes in the MST
-        for (int i = 0; i < n; i++) {
-            // Find the vertex with the smallest edge weight not yet included in the MST
-            int u = -1;
-            double minWeight = Double.MAX_VALUE;
-        
-            for (int v = 0; v < n; v++) {
-                if (!inMST[v] && !inPath[v] && minEdgeWeight[v] < minWeight) {
-                    minWeight = minEdgeWeight[v];
-                    u = v;
-                }
-            }
-
-            if (u == -1) break; // All reachable nodes are visited
-
-            // Include this vertex in the MST
-            inMST[u] = true;
-            totalWeight += minWeight;
-
-            // Update the edge weights for the remaining vertices
-            final int p = u;
-            forEachEdge(u, (v, weight) -> {
-                if (!inMST[v] && !inPath[v]) {
-                    minEdgeWeight[v] = Math.min(minEdgeWeight[v], weight);
-                }
-            });
-        }
-
-        // add the edge back to node 0
-        forEachEdge(0, (v, weight) -> {
-            if (inMST[v]) {
-                minEdgeWeight[0] = Math.min(minEdgeWeight[0], weight);
-            }
-        });
-
-        return totalWeight + minEdgeWeight[0];
-    }
-
-    /**
-     * Returns the TSP tour with branch and bound algorithm.
-     * @return the TSP tour.
-     */
-    public int[] tsp() {
+    public int[] christofides() {
         int n = getNumVertices();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
 
-        // Initialize the best cost with nearest insertion
-        int[] tour = nearestInsertion();
-        double bestCost = getTourDistance(tour);
+        // Step 1: Find a Minimum Spanning Tree (MST)
+        List<Edge> mst = new ArrayList<>();
+        prim(mst);
 
-        // Initialize lower bound with MST
-        double initLowerBound = mstLowerBound(new boolean[n]);
-
-        // Push the initial node into the priority queue
-        java.util.PriorityQueue<TspNode> pq = new java.util.PriorityQueue<>();
-        pq.offer(new TspNode(new int[1], initLowerBound, 0.0));
-
-        // Perform Branch and Bound with Best-First Search
-        while (!pq.isEmpty()) {
-            var current = pq.poll();
-
-            // Skip nodes with bounds worse than the current best solution
-            if (current.lowerBound >= bestCost) continue;
-
-            // If we reach the last level, check the complete path
-            if (current.level() == n) {
-                double cost = current.cost + getDistance(current.path[n-1], 0); // Return to start
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    System.arraycopy(current.path, 0, tour, 0, n);
-                }
-                continue;
-            }
-
-            boolean[] inPath = new boolean[n];
-            for (var node : current.path) {
-                inPath[node] = true;
-            }
-            // The cost of checking all remaining branches is cheaper compared
-            // estimating MST lower bound if there are fewer than 5 nodes.
-            double mst = (n - current.level()) < 5 ? 0 : mstLowerBound(inPath);
-
-            // Explore all possible next nodes
-            final double currentBest = bestCost;
-            forEachEdge(current.path[current.level() - 1], (v, weight) -> {
-                if (inPath[v]) return;
-
-                double nextCost = current.cost + weight;
-                double nextLowerBound = nextCost + mst;
-
-                // Prune branches with higher bounds
-                if (nextLowerBound < currentBest) {
-                    int[] nextPath = Arrays.copyOfRange(current.path, 0, current.level() + 1);
-                    nextPath[current.level()] = v;
-                    pq.offer(new TspNode(nextPath, nextLowerBound, nextCost));
-                }
-            });
+        // Step 2: Find vertices with odd degree in MST
+        int[] degree = new int[n];
+        for (var edge : mst) {
+            degree[edge.u()]++;
+            degree[edge.v()]++;
         }
 
-        logger.info("Branch and bound TSP cost = {}", bestCost);
+        List<Integer> oddDegreeVertices = new ArrayList<>();
+        for (int i = 0; i < n; ++i) {
+            if (degree[i] % 2 != 0) {
+                oddDegreeVertices.add(i);
+            }
+        }
+
+        // Step 3: Perform Minimum Weight Perfect Matching on odd-degree vertices
+        int m = oddDegreeVertices.size();
+        List<Edge> matching = new ArrayList<>();
+        boolean[] matched = new boolean[m];
+
+        for (int i = 0; i < m; i++) {
+            if (matched[i]) continue;
+
+            int bestPartner = -1;
+            double minWeight = Double.POSITIVE_INFINITY;
+
+            for (int j = i + 1; j < m; j++) {
+                if (matched[j]) continue;
+
+                double weight = getDistance(oddDegreeVertices.get(i), oddDegreeVertices.get(j));
+                if (weight < minWeight) {
+                    minWeight = weight;
+                    bestPartner = j;
+                }
+            }
+
+            if (bestPartner != -1) {
+                matching.add(new Edge(oddDegreeVertices.get(i), oddDegreeVertices.get(bestPartner)));
+                matched[i] = true;
+                matched[bestPartner] = true;
+            }
+        }
+
+        // Step 4: Combine MST edges and matching edges to form a multigraph
+        int[][] multigraph = new int[n][matching.size() + n - 1];
+        int index = 0;
+        for (var edge : mst) {
+            multigraph[edge.u()][index] = edge.v();
+            multigraph[edge.v()][index++] = edge.u();
+        }
+        for (var edge : matching) {
+            multigraph[edge.u()][index] = edge.v();
+            multigraph[edge.v()][index++] = edge.u();
+        }
+        assert index == matching.size() + n - 1;
+
+        // Step 5: Find an Eulerian Circuit
+        List<Integer> circuit = new ArrayList<>();
+        Stack<Integer> stack = new Stack<>();
+        boolean[][] visited = new boolean[n][n];
+
+        stack.push(0);
+        while (!stack.isEmpty()) {
+            int u = stack.peek();
+
+            boolean found = false;
+            for (var v : multigraph[u]) {
+                if (!visited[u][v]) {
+                    stack.push(v);
+                    visited[u][v] = true;
+                    visited[v][u] = true;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                circuit.add(u);
+                stack.pop();
+            }
+        }
+
+        // Step 6: Shortcut the Eulerian Circuit to form a Hamiltonian Path
+        boolean[] inPath = new boolean[n];
+        int[] tour = new int[n+1];
+
+        index = 0;
+        for (var v : circuit) {
+            if (!inPath[v]) {
+                tour[index++] = v;
+                inPath[v] = true;
+            }
+        }
+        assert index == n;
+
         return tour;
     }
 }
