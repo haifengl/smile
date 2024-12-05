@@ -584,10 +584,11 @@ public abstract class Graph {
      * Returns the minimum spanning tree (MST) for a weighted undirected
      * graph by Prim's algorithm. MST is a subset of the edges that forms
      * a tree that includes every vertex, where the total weight of all
-     * the edges in the tree is minimized. 
-     * @return the minimum spanning tree.
+     * the edges in the tree is minimized.
+     * @param mst an output container to hold edges in the MST.
+     * @return the cost of minimum spanning tree.
      */
-    public List<Edge> prim() {
+    public double prim(List<Edge> mst) {
         if (digraph) {
             throw new UnsupportedOperationException("Call Prim's algorithm on a digraph.");
         }
@@ -647,15 +648,15 @@ public abstract class Graph {
             });
         }
 
-        logger.info("MST weight = {}", totalWeight);
-        List<Edge> mst = new ArrayList<>();
-        for (int v = 1; v < n; v++) {
-            if (parent[v] != -1) {
-                int u = parent[v];
-                mst.add(new Edge(v, u, minEdgeWeight[v]));
+        if (mst != null) {
+            for (int v = 1; v < n; v++) {
+                if (parent[v] != -1) {
+                    int u = parent[v];
+                    mst.add(new Edge(v, u, minEdgeWeight[v]));
+                }
             }
         }
-        return mst;
+        return totalWeight;
     }
 
     /**
@@ -721,8 +722,6 @@ public abstract class Graph {
             }
         }
 
-        logger.info("Held-Karp TSP cost = {}", bestCost);
-
         // Backtracking to find the tour
         int mask = endMask;
         int index = 1; // The tour always starts with node 0.
@@ -739,6 +738,7 @@ public abstract class Graph {
             mask = prevMask;
         }
 
+        logger.info("Held-Karp TSP cost = {}", bestCost);
         MathEx.reverse(tour);
         return tour;
     }
@@ -1063,15 +1063,14 @@ public abstract class Graph {
             for (var node : current.path) {
                 inPath[node] = true;
             }
-            // The cost of checking all remaining branches is less
-            // if there are fewer than 5 nodes.
-            // double mst = n - current.level() < 5 ? 0 : mstLowerBound(inPath);
-            double mst = mstLowerBound(inPath);
+            // The cost of checking all remaining branches is cheaper compared
+            // estimating MST lower bound if there are fewer than 5 nodes.
+            double mst = (n - current.level()) < 5 ? 0 : mstLowerBound(inPath);
 
             // Explore all possible next nodes
             final double currentBest = bestCost;
-            forEachEdge(current.path[current.level() - 1], (i, weight) -> {
-                if (inPath[i]) return;
+            forEachEdge(current.path[current.level() - 1], (v, weight) -> {
+                if (inPath[v]) return;
 
                 double nextCost = current.cost + weight;
                 double nextLowerBound = nextCost + mst;
@@ -1079,12 +1078,13 @@ public abstract class Graph {
                 // Prune branches with higher bounds
                 if (nextLowerBound < currentBest) {
                     int[] nextPath = Arrays.copyOfRange(current.path, 0, current.level() + 1);
-                    nextPath[current.level()] = i;
+                    nextPath[current.level()] = v;
                     pq.offer(new TspNode(nextPath, nextLowerBound, nextCost));
                 }
             });
         }
 
+        logger.info("Branch and bound TSP cost = {}", bestCost);
         return tour;
     }
 }
