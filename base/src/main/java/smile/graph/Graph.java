@@ -1086,7 +1086,6 @@ public abstract class Graph {
                             swapEdges(tour, i, j);
                             cost += delta;
                             improved = true;
-                            j = i + 1; // restart the inner loop
                         }
                     }
                 }

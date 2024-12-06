@@ -55,9 +55,7 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
             }
 
             value = newValue;
-            if (this != root) {
-                cutMeld(this);
-            }
+            cutMeld(this);
         }
 
         /**
@@ -238,7 +236,7 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
 
         Node a = start;
         Node b = start.sibling;
-        start = b == null ? null : b.sibling;
+        start = b.sibling;
 
         a.sibling = null;
         b.sibling = null;

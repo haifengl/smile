@@ -103,7 +103,7 @@ public class PairingHeapTest {
         assertEquals(0, heap.peek());
     }
 
-    class MutableInt implements Comparable<MutableInt> {
+    static class MutableInt implements Comparable<MutableInt> {
         int value;
 
         MutableInt(int value) {
