@@ -17,13 +17,12 @@
 
 package smile.util;
 
-
 /**
  * A mutable int wrapper. It is efficient as counter in HashMap.
  *
  * @author Haifeng Li
  */
-public class MutableInt {
+public class MutableInt implements Comparable<MutableInt> {
 
     /** The integer value. */
     public int value;
@@ -42,6 +41,11 @@ public class MutableInt {
      */
     public MutableInt(int value) {
         this.value = value;
+    }
+
+    @Override
+    public int compareTo(MutableInt o) {
+        return Integer.compare(value, o.value);
     }
 
     /**
