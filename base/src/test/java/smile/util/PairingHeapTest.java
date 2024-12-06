@@ -103,19 +103,6 @@ public class PairingHeapTest {
         assertEquals(0, heap.peek());
     }
 
-    static class MutableInt implements Comparable<MutableInt> {
-        int value;
-
-        MutableInt(int value) {
-            this.value = value;
-        }
-
-        @Override
-        public int compareTo(MutableInt o) {
-            return Integer.compare(value, o.value);
-        }
-    }
-
     @Test
     public void testRebuild() {
         System.out.println("decrease");
