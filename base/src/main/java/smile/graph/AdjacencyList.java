@@ -206,16 +206,13 @@ public class AdjacencyList extends Graph implements Serializable {
         
         if (matrix.nrow() == matrix.ncol()) {
             symmetric = true;
+            LOOP:
             for (int i = 0; i < matrix.nrow(); i++) {
                 for (int j = 0; j < i; j++) {
                     if (matrix.get(i, j) != matrix.get(j, i)) {
                         symmetric = false;
-                        break;
+                        break LOOP;
                     }
-                }
-
-                if (!symmetric) {
-                    break;
                 }
             }
         }
