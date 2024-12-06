@@ -14,69 +14,133 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
- package smile.util;
+package smile.util;
 
- import org.junit.jupiter.api.*;
- import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
  
- /**
-  *
-  * @author Karl Li
-  */
- public class PairingHeapTest {
-     public PairingHeapTest() {
-     }
- 
-     @BeforeAll
-     public static void setUpClass() throws Exception {
-     }
- 
-     @AfterAll
-     public static void tearDownClass() throws Exception {
-     }
- 
-     @BeforeEach
-     public void setUp() {
-     }
- 
-     @AfterEach
-     public void tearDown() {
-     }
- 
-     @Test
-     public void test() {
-         System.out.println("PairingHeap");
+/**
+ *
+ * @author Karl Li
+ */
+public class PairingHeapTest {
+    public PairingHeapTest() {
+    }
 
-         PairingHeap<Integer> heap = new PairingHeap<>();
-         heap.add(Integer.MAX_VALUE);
-         heap.add(10);
-         heap.add(7);
-         heap.add(5);
-         heap.add(4);
-         heap.add(9);
-         heap.add(2);
-         heap.add(3);
-         heap.add(2); // add 2 again
-         heap.add(1);
-         heap.add(0);
-         heap.add(-191);
-         heap.add(Integer.MIN_VALUE);
-         heap.add(6);
-         heap.add(Integer.MAX_VALUE);
+    @BeforeAll
+    public static void setUpClass() throws Exception {
+    }
 
-         assertEquals(Integer.MIN_VALUE, heap.poll());
-         assertEquals(-191, heap.poll());
-         assertEquals(0, heap.poll());
-         assertEquals(1, heap.poll());
+    @AfterAll
+    public static void tearDownClass() throws Exception {
+    }
 
-         heap.updatePriorities();
-         assertEquals(2, heap.poll());
-         assertEquals(2, heap.poll());
-         assertEquals(3, heap.poll());
+    @BeforeEach
+    public void setUp() {
+    }
 
-         var node = heap.addNode(12);
-         node.decrease(0);
-         assertEquals(0, heap.peek());
-     }
- }
- 
+    @AfterEach
+    public void tearDown() {
+    }
+
+    @Test
+    public void test() {
+        System.out.println("PairingHeap");
+
+        PairingHeap<Integer> heap = new PairingHeap<>();
+        heap.add(Integer.MAX_VALUE);
+        heap.add(10);
+        heap.add(7);
+        heap.add(5);
+        heap.add(4);
+        heap.add(9);
+        heap.add(2);
+        heap.add(3);
+        heap.add(2); // add 2 again
+        heap.add(1);
+        heap.add(0);
+        heap.add(-191);
+        heap.add(Integer.MIN_VALUE);
+        heap.add(6);
+        heap.add(Integer.MAX_VALUE);
+
+        assertEquals(15, heap.size());
+        assertFalse(heap.isEmpty());
+        assertEquals(Integer.MIN_VALUE, heap.poll());
+        assertEquals(-191, heap.poll());
+        assertEquals(0, heap.poll());
+        assertEquals(1, heap.poll());
+        assertEquals(2, heap.peek());
+        assertEquals(11, heap.size());
+        assertEquals(2, heap.remove());
+        assertEquals(10, heap.size());
+        assertEquals(2, heap.poll());
+        assertEquals(3, heap.poll());
+    }
+
+    @Test
+    public void testDecrease() {
+        System.out.println("decrease");
+
+        PairingHeap<Integer> heap = new PairingHeap<>();
+        heap.add(1);
+        heap.add(0);
+        heap.add(3);
+        heap.add(6);
+        heap.add(7);
+        heap.add(10);
+        heap.add(4);
+
+        assertEquals(0, heap.peek());
+        heap.remove();
+        assertEquals(1, heap.poll());
+        var node = heap.addNode(5);
+        assertEquals(6, heap.size());
+        assertEquals(3, heap.peek());
+
+        node.decrease(0);
+        assertEquals(6, heap.size());
+        assertEquals(0, heap.peek());
+    }
+
+    class MutableInt implements Comparable<MutableInt> {
+        int value;
+
+        MutableInt(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int compareTo(MutableInt o) {
+            return Integer.compare(value, o.value);
+        }
+    }
+
+    @Test
+    public void testRebuild() {
+        System.out.println("decrease");
+
+        MutableInt i0 = new MutableInt(0);
+        MutableInt i1 = new MutableInt(1);
+        MutableInt i3 = new MutableInt(3);
+        MutableInt i7 = new MutableInt(7);
+
+        PairingHeap<MutableInt> heap = new PairingHeap<>();
+        heap.add(i1);
+        heap.add(i0);
+        heap.add(i3);
+        heap.add(i7);
+
+        assertEquals(0, heap.peek().value);
+        i0.value = 12;
+        i1.value = -1;
+        i3.value = -10;
+        i7.value = 17;
+        heap.rebuild();
+        assertEquals(-10, heap.poll().value);
+        assertEquals(-1, heap.poll().value);
+        assertEquals(12, heap.poll().value);
+        assertEquals(17, heap.poll().value);
+        assertTrue(heap.isEmpty());
+    }
+}
