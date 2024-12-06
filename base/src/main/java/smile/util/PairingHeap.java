@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
+package smile.util;
 
 import java.util.*;
 
@@ -27,24 +28,52 @@ import java.util.*;
   * @author Karl Li
   */
 public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
-    private class Node {
+    /**
+     * A multiway tree node in the pairing heap.
+     */
+    public class Node {
         E value;
         Node child = null;
         Node sibling = null;
         Node parent = null;
 
+        /**
+         * Constructor.
+         * @param value the element value.
+         */
         public Node(E value) {
             this.value = value;
         }
 
-        public void addChild(Node node) {
+        /**
+         * Decreases the value of an element.
+         * @param newValue the new value.
+         */
+        public void decrease(E newValue) {
+            if (newValue.compareTo(value) >= 0) {
+                throw new IllegalArgumentException("New value is not more extreme");
+            }
+
+            value = newValue;
+            if (this != root) {
+                cutMeld(this);
+            }
+        }
+
+        /**
+         * Add a child node.
+         * @param node the child node.
+         */
+        void addChild(Node node) {
             node.parent = this;
             node.sibling = child;
             child = node;
         }
     }
 
+    /** The root of multiway tree. */
     private Node root = null;
+    /** The number of elements. */
     private int size = 0;
 
     @Override
@@ -55,6 +84,52 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     @Override
     public boolean isEmpty() {
         return size == 0;
+    }
+
+    /**
+     * Adds a new element to the pairing heap.
+     * @param value a new element.
+     * @return a Node corresponding to the newly added element.
+     */
+    public Node addNode(E value) {
+        ++size;
+        Node node = new Node(value);
+        if (root == null) {
+            root = node;
+        } else {
+            root = meld(root, node);
+        }
+        return node;
+    }
+
+    /**
+     * Rebuilds the pairing heap. Assumes that all elements inside the pairing
+     * heap are out of order.
+     */
+    public void updatePriorities() {
+        if (root == null) return;
+
+        Node node = root;
+        Deque<Node> queue = new LinkedList<>();
+        queue.offer(node.child);
+        node.child = null;
+
+        while (!queue.isEmpty()) {
+            node = queue.poll();
+
+            if (node.sibling != null) {
+                queue.offer(node.sibling);
+            }
+
+            if (node.child != null) {
+                queue.offer(node.child);
+            }
+
+            node.child = null;
+            node.sibling = null;
+            node.parent = null;
+            root = meld(root, node);
+        }
     }
 
     @Override
@@ -151,75 +226,11 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Rebuilds the pairing heap. Assumes that all elements inside the pairing
-     * heap are out of order.
-     */
-    public void updatePriorities() {
-        if (root == null) return;
-
-        Node node = root;
-        Deque<Node> queue = new LinkedList<>();
-        queue.offer(node.child);
-        node.child = null;
-
-        while (!queue.isEmpty()) {
-            node = queue.poll();
-
-            if (node.sibling != null) {
-                queue.offer(node.sibling);
-            }
-
-            if (node.child != null) {
-                queue.offer(node.child);
-            }
-
-            node.child = null;
-            node.sibling = null;
-            node.parent = null;
-            root = meld(root, node);
-        }
-    }
-
-    /**
-     * Updates the priority of an element already in the pairing
-     * heap by replacing the element refered to by the Node with
-     * newValue, which must be more extreme than the old value.
-     * @param node an existing node in the heap.
-     * @param newValue the new value with more extreme priority.
-     */
-    public void update(Node node, E newValue) {
-        if (newValue.compareTo(node.value) >= 0) {
-            throw new IllegalArgumentException("New value is not more extreme");
-        }
-
-        node.value = newValue;
-        if (node != root) {
-            cutMeld(node);
-        }
-    }
-
-    /**
-     * Adds a new element to the pairing heap.
-     * @param value a new element.
-     * @return a Node corresponding to the newly added element.
-     */
-    private Node addNode(E value) {
-        ++size;
-        Node node = new Node(value);
-        if (root == null) {
-            root = node;
-        } else {
-            root = meld(root, node);
-        }
-        return node;
-    }
-
     /** Meld two nodes. */
     private Node meld(Node a, Node b) {
         if (a == null) return b;
         if (b == null) return a;
-        if (b.value.compareTo(a.value) < 0) {
+        if (a.value.compareTo(b.value) < 0) {
             a.addChild(b);
             return a;
         }
@@ -243,8 +254,9 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
 
         return meld(meld(a, b), twoPassMeld(start));
     }
+
     /** Cut and meld a node. */
-    void cutMeld(Node node) {
+    private void cutMeld(Node node) {
         if (node.parent != null) {
             if (node.parent.child == node) {
                 node.parent.child = node.sibling;
