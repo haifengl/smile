@@ -94,19 +94,15 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     public Node addNode(E value) {
         ++size;
         Node node = new Node(value);
-        if (root == null) {
-            root = node;
-        } else {
-            root = meld(root, node);
-        }
+        root = root == null ? node : meld(root, node);
         return node;
     }
 
     /**
      * Rebuilds the pairing heap. Assumes that all elements inside the pairing
-     * heap are out of order.
+     * heap are out of order due to side-channel updates.
      */
-    public void updatePriorities() {
+    public void rebuild() {
         if (root == null) return;
 
         Node node = root;
@@ -163,11 +159,7 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     public E remove() {
         if (isEmpty()) throw new NoSuchElementException();
         E value = root.value;
-        if (root.child == null) {
-            root = null;  // No children, so the heap is now empty
-        } else {
-            root = twoPassMeld(root.child);  // Perform two-pass melding on children
-        }
+        root = root.child == null ? null : twoPassMeld(root.child);
         --size;
         return value;
     }
@@ -233,8 +225,7 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
         if (a.value.compareTo(b.value) < 0) {
             a.addChild(b);
             return a;
-        }
-        else {
+        } else {
             b.addChild(a);
             return b;
         }
@@ -255,21 +246,24 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
         return meld(meld(a, b), twoPassMeld(start));
     }
 
-    /** Cut and meld a node. */
+    /** Cut and meld a node, used by Node.decrease(). */
     private void cutMeld(Node node) {
         if (node.parent != null) {
-            if (node.parent.child == node) {
-                node.parent.child = node.sibling;
-            } else {
-                Node sibling = node.parent.child;
-                while (sibling.sibling != node) {
-                    sibling = sibling.sibling;
+            if (node.value.compareTo(node.parent.value) < 0) {
+                Node left = node.parent.child;
+                if (left == node) {
+                    node.parent.child = node.sibling;
+                } else {
+                    while (left.sibling != node) {
+                        left = left.sibling;
+                    }
+                    left.sibling = node.sibling;
                 }
-                sibling.sibling = node.sibling;
+
+                node.parent = null;
+                node.sibling = null;
+                root = meld(root, node);
             }
-            node.parent = null;
-            node.sibling = null;
-            root = meld(root, node);
         }
     }
 }
