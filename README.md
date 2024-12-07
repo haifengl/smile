@@ -124,7 +124,7 @@ libraryDependencies ++= {
 SMILE employs a dual license model designed to meet the development
 and distribution needs of both commercial distributors (such as OEMs,
 ISVs and VARs) and open source projects. For details, please see
-[License](https://github.com/haifengl/smile/blob/master/LICENSE).
+[LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
 
 ## Shell
 Smile comes with interactive shells for Java, Scala and Kotlin.
@@ -189,88 +189,88 @@ including axes, legends, and scales. It then determines properties
 of these components based on a set of carefully designed rules.
 
 ## Gallery
-<table class="center" width="100%">
+<table class="center" style="width:100%;">
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-kpca.png"><img src="https://haifengl.github.io/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
-                <figcaption><h2>Kernel PCA</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-isomap.png"><img src="https://haifengl.github.io/gallery/smile-demo-isomap-small.png" alt="IsoMap"></a>
-                <figcaption><h2>IsoMap</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>IsoMap</h3></figcaption>
             </figure>
         </td>
     </tr>
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-mds.png"><img src="https://haifengl.github.io/gallery/smile-demo-mds-small.png" alt="MDS"></a>
-                <figcaption><h2>Multi-Dimensional Scaling</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Multi-Dimensional Scaling</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-som.png"><img src="https://haifengl.github.io/gallery/smile-demo-som-small.png" alt="SOM"></a>
-                <figcaption><h2>SOM</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>SOM</h3></figcaption>
             </figure>
         </td>
     </tr>
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-ann.png"><img src="https://haifengl.github.io/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
-                <figcaption><h2>Neural Network</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Neural Network</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-svm.png"><img src="https://haifengl.github.io/gallery/smile-demo-svm-small.png" alt="SVM"></a>
-                <figcaption><h2>SVM</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>SVM</h3></figcaption>
             </figure>
         </td>
     </tr>
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
-                <a href="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering.png"><img src="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering-small.png" alt="Agglomerative Clustering"></a>
-                <figcaption><h2>Agglomerative Clustering</h2></figcaption>
+                <a href="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering.png"><img src="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
+                <figcaption style="text-align: center;"><h3>Hierarchical Clustering</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-xmeans.png"><img src="https://haifengl.github.io/gallery/smile-demo-xmeans-small.png" alt="X-Means"></a>
-                <figcaption><h2>X-Means</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>X-Means</h3></figcaption>
             </figure>
         </td>
     </tr>
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-dbscan.png"><img src="https://haifengl.github.io/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
-                <figcaption><h2>DBSCAN</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>DBSCAN</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-neural-gas.png"><img src="https://haifengl.github.io/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
-                <figcaption><h2>Neural Gas</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Neural Gas</h3></figcaption>
             </figure>
         </td>
     </tr>
     <tr>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-wavelet.png"><img src="https://haifengl.github.io/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
-                <figcaption><h2>Wavelet</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Wavelet</h3></figcaption>
             </figure>
         </td>
-        <td width="50%">
+        <td style="width:50%;">
             <figure>
                 <a href="https://haifengl.github.io/gallery/smile-demo-mixture.png"><img src="https://haifengl.github.io/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
-                <figcaption><h2>Exponential Family Mixture</h2></figcaption>
+                <figcaption style="text-align: center;"><h3>Exponential Family Mixture</h3></figcaption>
             </figure>
         </td>
     </tr>
