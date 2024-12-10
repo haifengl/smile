@@ -21,6 +21,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.IntStream;
+import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.DifferentiableMultivariateFunction;
@@ -243,14 +244,28 @@ public class UMAP implements Serializable {
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
         AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, true,null);
-        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
+        int[] index = IntStream.range(0, data.length).toArray();;
+        int[][] cc = graph.bfcc();
+        boolean spectral = true;
+        if (cc.length > 1) {
+            logger.info("The nearest neighbor graph has {} connected components.", cc.length);
+            if (data instanceof double[][]) {
+                spectral = false;
+                logger.info("PCA-based initialization will be attempted.");
+            } else {
+                NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
+                graph = nng.graph;
+                index = nng.index;
+                logger.info("The largest connected component is used to compute the embedding.");
+            }
+        }
 
-        graph = computeFuzzySimplicialSet(nng.graph, k, 64);
+        graph = computeFuzzySimplicialSet(graph, k, 64);
         SparseMatrix conorm = graph.toMatrix();
 
         // Spectral embedding initialization
-        double[][] coordinates = spectralLayout(graph, d);
-        logger.info("Finish initialization with spectral layout");
+        double[][] coordinates = spectral ? spectralLayout(graph, d) : pcaLayout((double[][]) data, d);
+        logger.info("Finish initialization with {} layout", spectral ? "spectral" : "PCA");
 
         // parameters for the differentiable curve used in lower
         // dimensional fuzzy simplicial complex construction.
@@ -261,7 +276,7 @@ public class UMAP implements Serializable {
         SparseMatrix epochs = computeEpochPerSample(conorm, iterations);
         logger.info("Start optimizing the layout");
         optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
-        return new UMAP(nng.index, coordinates, graph);
+        return new UMAP(index, coordinates, graph);
     }
 
     /**
@@ -425,6 +440,16 @@ public class UMAP implements Serializable {
         }
 
         return G;
+    }
+
+    /**
+     * Computes the PCA initialization.
+     *
+     * @param data The input data.
+     * @param d The dimension of the embedding space.
+     */
+    private static double[][] pcaLayout(double[][] data, int d) {
+        return PCA.fit(data).getProjection(d).apply(data);
     }
 
     /**
