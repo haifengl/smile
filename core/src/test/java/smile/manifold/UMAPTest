@@ -1,0 +1,135 @@
+package org.mastodon.mamut.feature.dimensionalityreduction.umap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
+import java.util.Random;
+
+import org.junit.jupiter.api.Test;
+
+import smile.manifold.TSNE;
+import smile.manifold.UMAP;
+
+class UMAPTest
+{
+	@Test
+	void test()
+	{
+		int numCluster1 = 50;
+		int numCluster2 = 100;
+		// create two distinct clusters of points in 3D space, one having 50 points and the other 100 points
+		double[][] sampleData = generateSampleData( numCluster1, numCluster2 );
+
+		// Recommendations for t-SNE defaults: https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
+		double perplexity = 30d; // recommended value is between 5 and 50
+		int maxIterations = 1000; // should be at least 250
+
+		TSNE tsne = new TSNE( sampleData, 2, perplexity, 200, maxIterations );
+		double[][] tsneResult = tsne.coordinates;
+
+		assertEquals( tsneResult.length, sampleData.length ); // passes
+		assertEquals( 2, tsneResult[ 0 ].length ); // passes
+
+		double[][] tsneResult1 = Arrays.copyOfRange( tsneResult, 0, numCluster1 );
+		double[][] tsneResult2 = Arrays.copyOfRange( tsneResult, numCluster1, numCluster1 + numCluster2 );
+
+		testNonOverlappingClusters( tsneResult1, tsneResult2 ); // passes
+
+		// Recommendations for UMAP defaults: https://github.com/lmcinnes/umap/blob/a012b9d8751d98b94935ca21f278a54b3c3e1b7f/umap/umap_.py#L1073
+		int iterations = sampleData.length < 10_000 ? 500 : 200;
+		double minDist = 0.1;
+		int nNeighbors = 15;
+		UMAP umap = UMAP.of( sampleData, nNeighbors, 2, iterations, 1, minDist, 1.0, 5, 1 );
+		double[][] umapResult = umap.coordinates;
+
+		assertEquals( 2, umapResult[ 0 ].length );
+		assertEquals( umapResult.length, sampleData.length ); // fails, because only the largest connected component is used inside the algorithm
+
+		double[][] umapResult1 = Arrays.copyOfRange( umapResult, 0, numCluster1 );
+		double[][] umapResult2 = Arrays.copyOfRange( umapResult, numCluster1, numCluster1 + numCluster2 );
+
+		testNonOverlappingClusters( umapResult1, umapResult2 ); // should pass
+	}
+
+	private static double[][] generateSampleData( int numCluster1, int numCluster2 )
+	{
+		double[][] firstPointCloud = generateRandomPointsInSphere( 100, 100, -10, 20, numCluster1 );
+		double[][] secondPointCloud = generateRandomPointsInSphere( 250, 250, 10, 50, numCluster2 );
+
+		return concatenateArrays( firstPointCloud, secondPointCloud );
+	}
+
+	private static double[][] concatenateArrays( final double[][] firstPointCloud, final double[][] secondPointCloud )
+	{
+		double[][] concatenated = new double[ firstPointCloud.length + secondPointCloud.length ][ 2 ];
+		System.arraycopy( firstPointCloud, 0, concatenated, 0, firstPointCloud.length );
+		System.arraycopy( secondPointCloud, 0, concatenated, firstPointCloud.length, secondPointCloud.length );
+		return concatenated;
+	}
+
+	private static double[][] generateRandomPointsInSphere( double centerX, double centerY, double centerZ, double radius,
+			int numberOfPoints )
+	{
+		double[][] points = new double[ numberOfPoints ][ 3 ];
+
+		final Random random = new Random( 42 );
+
+		for ( int i = 0; i < numberOfPoints; i++ )
+		{
+			double r = radius * Math.cbrt( random.nextDouble() );
+			double theta = 2 * Math.PI * random.nextDouble();
+			double phi = Math.acos( 2 * random.nextDouble() - 1 );
+
+			double x = centerX + r * Math.sin( phi ) * Math.cos( theta );
+			double y = centerY + r * Math.sin( phi ) * Math.sin( theta );
+			double z = centerZ + r * Math.cos( phi );
+
+			points[ i ][ 0 ] = x;
+			points[ i ][ 1 ] = y;
+			points[ i ][ 2 ] = z;
+		}
+
+		return points;
+	}
+
+	private static void testNonOverlappingClusters( final double[][] cluster1, final double[][] cluster2 )
+	{
+		Rectangle2D.Double boundingBox1 = findBoundingBox( cluster1 );
+		Rectangle2D.Double boundingBox2 = findBoundingBox( cluster2 );
+		testNoPointInsideBoundingBox( cluster1, boundingBox2 );
+		testNoPointInsideBoundingBox( cluster2, boundingBox1 );
+	}
+
+	private static void testNoPointInsideBoundingBox( final double[][] points, final Rectangle2D.Double boundingBox )
+	{
+		for ( double[] point : points )
+		{
+			double x = point[ 0 ];
+			double y = point[ 1 ];
+			assertFalse( boundingBox.contains( x, y ) );
+		}
+	}
+
+	private static Rectangle2D.Double findBoundingBox( double[][] points )
+	{
+		double minX = Double.MAX_VALUE;
+		double minY = Double.MAX_VALUE;
+		double maxX = Double.MIN_VALUE;
+		double maxY = Double.MIN_VALUE;
+
+		for ( double[] point : points )
+		{
+			double x = point[ 0 ];
+			double y = point[ 1 ];
+
+			minX = Math.min( x, minX );
+			maxX = Math.max( x, maxX );
+			minY = Math.min( y, minY );
+			maxY = Math.max( y, maxY );
+		}
+
+		return new Rectangle2D.Double( minX, minY, maxX - minX, maxY - minY );
+	}
+}
