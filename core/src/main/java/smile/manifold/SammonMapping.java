@@ -19,7 +19,6 @@ package smile.manifold;
 
 import java.util.Arrays;
 import java.util.Properties;
-
 import smile.math.MathEx;
 
 /**

@@ -245,17 +245,16 @@ public class UMAP implements Serializable {
         // fuzzy simplicial sets into a global one via a fuzzy union.
         AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, true,null);
         int[] index = IntStream.range(0, data.length).toArray();;
-        int[][] cc = graph.bfcc();
+        NearestNeighborGraph cc = NearestNeighborGraph.largest(graph);
         boolean spectral = true;
-        if (cc.length > 1) {
-            logger.info("The nearest neighbor graph has {} connected components.", cc.length);
+        if (cc.graph.getNumVertices() != data.length) {
+            logger.info("The nearest neighbor graph has mulitple connected components.");
             if (data instanceof double[][]) {
                 spectral = false;
                 logger.info("PCA-based initialization will be attempted.");
             } else {
-                NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
-                graph = nng.graph;
-                index = nng.index;
+                graph = cc.graph;
+                index = cc.index;
                 logger.info("The largest connected component is used to compute the embedding.");
             }
         }
