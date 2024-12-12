@@ -14,15 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.test.data;
 
+import org.apache.commons.csv.CSVFormat;
 import java.util.Arrays;
 import smile.data.CategoricalEncoder;
 import smile.io.CSV;
 import smile.math.MathEx;
 import smile.util.Paths;
-import org.apache.commons.csv.CSVFormat;
 
 /**
  *

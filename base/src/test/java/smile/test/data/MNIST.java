@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.test.data;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
@@ -25,9 +26,6 @@ import smile.data.type.StructType;
 import smile.io.CSV;
 import smile.io.Read;
 import smile.util.Paths;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 
 /**
  *

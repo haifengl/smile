@@ -14,20 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.test.data;
-
-import smile.data.Tuple;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import smile.data.Tuple;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 
 /**
  *
