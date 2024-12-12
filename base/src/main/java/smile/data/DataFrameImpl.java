@@ -105,7 +105,9 @@ class DataFrameImpl implements DataFrame, Serializable {
                 String name = prop.getName();
                 Class<?> type = prop.getPropertyType();
                 Method read = prop.getReadMethod();
-                StructField field = Arrays.stream(fields).filter(f -> f.name.equals(name)).findFirst().get();
+                StructField field = Arrays.stream(fields)
+                        .filter(f -> f.name.equals(name))
+                        .findFirst().orElseThrow(NoSuchElementException::new);
 
                 int i = 0;
                 if (type == int.class) {

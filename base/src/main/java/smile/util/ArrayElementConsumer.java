@@ -16,16 +16,6 @@
  */
 
  package smile.util;
-
- import java.io.Serial;
- import java.io.Serializable;
- import java.util.Iterator;
- import java.util.Collection;
- import java.util.stream.Collectors;
- import java.util.stream.IntStream;
- import java.util.stream.DoubleStream;
- import java.util.stream.Stream;
- import smile.sort.QuickSort;
  
  /**
   * Represents an operation that accepts an array element of double value
