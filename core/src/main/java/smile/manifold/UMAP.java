@@ -244,17 +244,16 @@ public class UMAP implements Serializable {
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
         AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, true,null);
-        int[] index = IntStream.range(0, data.length).toArray();;
         NearestNeighborGraph cc = NearestNeighborGraph.largest(graph);
+        int[] index = cc.index;
         boolean spectral = true;
         if (cc.graph.getNumVertices() != data.length) {
-            logger.info("The nearest neighbor graph has mulitple connected components.");
+            logger.info("The nearest neighbor graph has multiple connected components.");
             if (data instanceof double[][]) {
                 spectral = false;
                 logger.info("PCA-based initialization will be attempted.");
             } else {
                 graph = cc.graph;
-                index = cc.index;
                 logger.info("The largest connected component is used to compute the embedding.");
             }
         }
@@ -360,7 +359,7 @@ public class UMAP implements Serializable {
         double[] rho = new double[n];
 
         double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
-                .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight()))
+                .flatMapToDouble(edges -> edges.stream().mapToDouble(Edge::weight))
                 .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
 
@@ -371,7 +370,7 @@ public class UMAP implements Serializable {
 
             Collection<Edge> knn = nng.getEdges(i);
             rho[i] = knn.stream()
-                    .mapToDouble(edge -> edge.weight())
+                    .mapToDouble(Edge::weight)
                     .filter(w -> !MathEx.isZero(w, EPSILON))
                     .min().orElse(0.0);
 
@@ -409,7 +408,7 @@ public class UMAP implements Serializable {
 
             if (rho[i] > 0.0) {
                 double avgi = knn.stream()
-                        .mapToDouble(edge -> edge.weight())
+                        .mapToDouble(Edge::weight)
                         .filter(w -> !MathEx.isZero(w, EPSILON))
                         .average().orElse(0.0);
                 sigma[i] = Math.max(sigma[i], MIN_SCALE * avgi);

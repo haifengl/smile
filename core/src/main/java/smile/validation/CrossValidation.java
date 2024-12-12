@@ -18,6 +18,7 @@
 package smile.validation;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import smile.classification.Classifier;
@@ -100,7 +101,8 @@ public interface CrossValidation {
         }
 
         int[][] strata = Sampling.strata(category);
-        int min = Arrays.stream(strata).mapToInt(stratum -> stratum.length).min().getAsInt();
+        int min = Arrays.stream(strata).mapToInt(stratum -> stratum.length)
+                .min().orElseThrow(NoSuchElementException::new);
         if (min < k) {
             org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CrossValidation.class);
             logger.warn("The least populated class has only {} members, which is less than k={}.", min, k);

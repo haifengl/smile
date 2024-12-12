@@ -20,7 +20,6 @@ package smile.manifold;
 import java.io.Serial;
 import java.io.Serializable;
 import smile.graph.AdjacencyList;
-import smile.graph.Graph.Edge;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.distance.Distance;

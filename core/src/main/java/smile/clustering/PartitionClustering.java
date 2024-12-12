@@ -20,6 +20,7 @@ package smile.clustering;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
@@ -179,6 +180,6 @@ public abstract class PartitionClustering implements Serializable {
         return IntStream.range(0, runs)
                 .mapToObj(run -> clustering.get())
                 .min(Comparator.naturalOrder())
-                .get();
+                .orElseThrow(NoSuchElementException::new);
     }
 }
