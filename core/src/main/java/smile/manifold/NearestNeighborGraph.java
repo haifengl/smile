@@ -17,6 +17,10 @@
 
 package smile.manifold;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+import java.util.stream.IntStream;
 import smile.graph.AdjacencyList;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
@@ -127,23 +131,13 @@ class NearestNeighborGraph {
         int[][] cc = graph.bfcc();
         int[] index;
         if (cc.length == 1) {
-            index = new int[n];
-            for (int i = 0; i < n; i++) {
-                index[i] = i;
-            }
+            index = IntStream.range(0, n).toArray();
         } else {
-            n = 0;
-            int largest = 0;
-            for (int i = 0; i < cc.length; i++) {
-                if (cc[i].length > n) {
-                    largest = i;
-                    n = cc[i].length;
-                }
-            }
-
+            index = Arrays.stream(cc)
+                .max(Comparator.comparing(a -> a.length))
+                .orElseThrow(NoSuchElementException::new);
             logger.info("{} connected components, largest one has {} samples.", cc.length, n);
 
-            index = cc[largest];
             graph = graph.subgraph(index);
         }
 
