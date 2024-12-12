@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.test.data;
 
+import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
-import org.apache.commons.csv.CSVFormat;
 import smile.data.formula.Formula;
 import smile.io.Read;
 import smile.util.Paths;
