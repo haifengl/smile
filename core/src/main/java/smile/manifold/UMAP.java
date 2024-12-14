@@ -28,7 +28,6 @@ import smile.math.DifferentiableMultivariateFunction;
 import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
@@ -121,7 +120,7 @@ public class UMAP implements Serializable {
      * @return the model.
      */
     public static UMAP of(double[][] data, int k) {
-        return of(data, new EuclideanDistance(), k);
+        return of(data, MathEx::distance, k);
     }
 
     /**
@@ -176,7 +175,7 @@ public class UMAP implements Serializable {
      * @return the model.
      */
     public static UMAP of(double[][] data, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
-        return of(data, new EuclideanDistance(), k, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
+        return of(data, MathEx::distance, k, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
     /**

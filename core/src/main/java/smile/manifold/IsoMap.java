@@ -23,7 +23,6 @@ import smile.graph.AdjacencyList;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 
@@ -120,7 +119,7 @@ public class IsoMap implements Serializable {
      * @return the model.
      */
     public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
-        return of(data, new EuclideanDistance(), k, d, conformal);
+        return of(data, MathEx::distance, k, d, conformal);
     }
 
     /**

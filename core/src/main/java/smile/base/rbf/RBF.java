@@ -24,7 +24,6 @@ import smile.clustering.CLARANS;
 import smile.clustering.KMeans;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
-import smile.math.distance.EuclideanDistance;
 import smile.math.rbf.RadialBasisFunction;
 import smile.math.rbf.GaussianRadialBasis;
 
@@ -237,10 +236,8 @@ public class RBF<T> implements Serializable {
     public static RBF<double[]>[] fit(double[][] x, int k) {
         KMeans kmeans = KMeans.fit(x, k, 10, 1E-4);
         double[][] centers = kmeans.centroids;
-
-        EuclideanDistance distance = new EuclideanDistance();
-        GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, distance));
-        return of(centers, basis, distance);
+        GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, MathEx::distance));
+        return of(centers, basis, MathEx::distance);
     }
 
     /**
@@ -262,11 +259,9 @@ public class RBF<T> implements Serializable {
 
         KMeans kmeans = KMeans.fit(x, k, 10, 1E-4);
         double[][] centers = kmeans.centroids;
-
-        EuclideanDistance distance = new EuclideanDistance();
-        double[] width = estimateWidth(centers, distance, p);
+        double[] width = estimateWidth(centers, MathEx::distance, p);
         GaussianRadialBasis[] basis = gaussian(width);
-        return of(centers, basis, distance);
+        return of(centers, basis, MathEx::distance);
     }
 
     /**
@@ -286,12 +281,10 @@ public class RBF<T> implements Serializable {
 
         KMeans kmeans = KMeans.fit(x, k, 10, 1E-4);
         double[][] centers = kmeans.centroids;
-
-        EuclideanDistance distance = new EuclideanDistance();
-        double[] width = estimateWidth(x, kmeans.y, centers, kmeans.size, distance, r);
+        double[] width = estimateWidth(x, kmeans.y, centers, kmeans.size, MathEx::distance, r);
         GaussianRadialBasis[] basis = gaussian(width);
 
-        return of(centers, basis, distance);
+        return of(centers, basis, MathEx::distance);
     }
 
     /**

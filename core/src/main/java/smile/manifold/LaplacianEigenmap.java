@@ -23,8 +23,8 @@ import java.util.Collection;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
@@ -118,7 +118,7 @@ public class LaplacianEigenmap implements Serializable {
      * @return the model.
      */
     public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
-        return of(data, new EuclideanDistance(), k, d, t);
+        return of(data, MathEx::distance, k, d, t);
     }
 
     /**
