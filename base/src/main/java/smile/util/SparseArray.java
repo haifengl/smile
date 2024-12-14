@@ -48,10 +48,15 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @param index The index of entry.
      * @param value The value of entry.
      */
-    public record Entry(int index, double value) {
+    public record Entry(int index, double value) implements Comparable<Entry> {
         @Override
         public String toString() {
             return String.format("%d:%s", index, Strings.format(value));
+        }
+
+        @Override
+        public int compareTo(Entry o) {
+            return Double.compare(value, o.value);
         }
     }
 
