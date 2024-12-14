@@ -153,7 +153,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
     @Override
     public Neighbor<K, V> nearest(K q) {
         // avoid Stream.reduce as we will create a lot of temporary Neighbor objects.
-        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
+        double[] dist = keys.parallelStream().mapToDouble(x -> distance.d(x, q)).toArray();
 
         int index = -1;
         double nearest = Double.MAX_VALUE;
@@ -178,7 +178,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
             throw new IllegalArgumentException("Neighbor array length is larger than the data size");
         }
 
-        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
+        double[] dist = keys.parallelStream().mapToDouble(x -> distance.d(x, q)).toArray();
         HeapSelect<NeighborBuilder<K, V>> heap = new HeapSelect<>(NeighborBuilder.class, k);
         for (int i = 0; i < k; i++) {
             heap.add(new NeighborBuilder<>());
@@ -205,7 +205,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        double[] dist = keys.stream().parallel().mapToDouble(x -> distance.d(x, q)).toArray();
+        double[] dist = keys.parallelStream().mapToDouble(x -> distance.d(x, q)).toArray();
         for (int i = 0; i < dist.length; i++) {
             if (dist[i] <= radius && q != keys.get(i)) {
                 neighbors.add(neighbor(i, dist[i]));

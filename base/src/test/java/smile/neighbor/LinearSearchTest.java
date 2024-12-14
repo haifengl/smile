@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.test.data.GaussianMixture;
 import smile.test.data.IndexNoun;
@@ -66,14 +65,13 @@ public class LinearSearchTest {
 
         double[][] data = Matrix.randn(2, 10).toArray();
         double[][] data1 = {data[0]};
-        EuclideanDistance d = new EuclideanDistance();
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data1, d);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data1, MathEx::distance);
 
         Neighbor[] n1 = naive.search(data[1], 1);
         assertEquals(1, n1.length);
         assertEquals(0, n1[0].index);
         assertEquals(data[0], n1[0].value);
-        assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
+        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance, 1E-7);
     }
 
     @Test
@@ -85,7 +83,7 @@ public class LinearSearchTest {
         System.arraycopy(SwissRoll.data, 0, x, 0, x.length);
         System.arraycopy(SwissRoll.data, x.length, testx, 0, testx.length);
 
-        LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
 
         long start = System.currentTimeMillis();
         for (double[] xi : testx) {
@@ -118,7 +116,7 @@ public class LinearSearchTest {
         double[][] x = USPS.x;
         double[][] testx = USPS.testx;
 
-        LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
 
         long start = System.currentTimeMillis();
         for (double[] xi : testx) {
@@ -166,7 +164,7 @@ public class LinearSearchTest {
         System.out.println("----- Gaussian Mixture -----");
 
         double[][] data = GaussianMixture.x;
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         long start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {

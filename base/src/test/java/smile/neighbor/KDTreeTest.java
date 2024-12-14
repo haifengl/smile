@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.test.data.GaussianMixture;
 import smile.test.data.USPS;
@@ -60,7 +59,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> n1 = naive.nearest(data[i]);
@@ -77,7 +76,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         for (int i = 0; i < data.length; i++) {
             Neighbor<double[], double[]> [] n1 = naive.search(data[i], 10);
@@ -96,7 +95,7 @@ public class KDTreeTest {
 
         double[][] data = Matrix.randn(1000, 10).toArray();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();

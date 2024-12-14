@@ -20,7 +20,6 @@ package smile.neighbor;
 import java.util.ArrayList;
 import java.util.List;
 import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
 import smile.test.data.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,7 +33,7 @@ public class MPLSHTest {
     double[][] x = USPS.x;
     double[][] testx = USPS.testx;
     MPLSH<double[]> lsh;
-    LinearSearch<double[], double[]> naive = LinearSearch.of(x, new EuclideanDistance());
+    LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
 
     public MPLSHTest() {
         MathEx.setSeed(19650218); // to get repeatable results.

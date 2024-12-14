@@ -53,13 +53,14 @@ public class EuclideanDistanceTest {
     public void testDistance() {
         System.out.println("distance");
 
+        EuclideanDistance distance = new EuclideanDistance();
         double[] x = {1.0, 2.0, 3.0, 4.0};
         double[] y = {4.0, 3.0, 2.0, 1.0};
-        assertEquals(4.472136, new EuclideanDistance().d(x, y), 1E-6);
+        assertEquals(4.472136, distance.d(x, y), 1E-6);
 
         double[] w = {-2.1968219, -0.9559913, -0.0431738,  1.0567679,  0.3853515};
         double[] v = {-1.7781325, -0.6659839,  0.9526148, -0.9460919, -0.3925300};
-        assertEquals(2.422302, new EuclideanDistance().d(w, v), 1E-6);
+        assertEquals(2.422302, distance.d(w, v), 1E-6);
 
         SparseArray s = new SparseArray();
         s.append(1, 1.0);
