@@ -381,8 +381,8 @@ public abstract class Graph {
      * @param v the start vertex.
      * @param visited the flag if vertex has been visited.
      */
-    private void dfs(Visitor visitor, int v, boolean[] visited) {
-        visitor.visit(v);
+    private void dfs(VertexVisitor visitor, int v, boolean[] visited) {
+        visitor.accept(v);
         visited[v] = true;
         forEachEdge(v, (u, w) -> {
             if (!visited[u]) dfs(visitor, u, visited);
@@ -394,7 +394,7 @@ public abstract class Graph {
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    public void dfs(Visitor visitor) {
+    public void dfs(VertexVisitor visitor) {
         int n = getNumVertices();
         boolean[] visited = new boolean[n];
 
@@ -490,15 +490,15 @@ public abstract class Graph {
      * @param visited the flag if vertex has been visited.
      * @param queue a queue of vertices to visit.
      */
-    private void bfs(Visitor visitor, int v, boolean[] visited, Queue<Integer> queue) {
-        visitor.visit(v);
+    private void bfs(VertexVisitor visitor, int v, boolean[] visited, Queue<Integer> queue) {
+        visitor.accept(v);
         visited[v] = true;
         queue.offer(v);
         while (!queue.isEmpty()) {
             int u = queue.poll();
             forEachEdge(u, (i, w) -> {
                 if (!visited[i]) {
-                    visitor.visit(i);
+                    visitor.accept(i);
                     queue.offer(i);
                     visited[i] = true;
                 }
@@ -511,7 +511,7 @@ public abstract class Graph {
      * on each vertex during traveling.
      * @param visitor the visitor functor.
      */
-    public void bfs(Visitor visitor) {
+    public void bfs(VertexVisitor visitor) {
         int n = getNumVertices();
         boolean[] visited = new boolean[n];
 

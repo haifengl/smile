@@ -23,10 +23,10 @@ package smile.graph;
  *
  * @author Haifeng Li
  */
-public interface Visitor {
+public interface VertexVisitor {
     /**
      * Performs some operations on the currently-visiting vertex during DFS or BFS.
      * @param vertex the index of vertex.
      */
-    void visit(int vertex);
+    void accept(int vertex);
 }
