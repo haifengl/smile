@@ -21,7 +21,6 @@ import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.distance.Metric;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -171,7 +170,7 @@ public class KNN<T> extends AbstractClassifier<T> {
         if (x[0].length < 10) {
             knn = KDTree.of(x);
         } else {
-            knn = CoverTree.of(x, new EuclideanDistance());
+            knn = CoverTree.of(x, MathEx::distance);
         }
         
         return new KNN<>(knn, y, k);

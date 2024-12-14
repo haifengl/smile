@@ -21,7 +21,6 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.USPS;
 import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +60,7 @@ public class MECTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        MEC<double[]> model = MEC.fit(x, new EuclideanDistance(), 10, 8.0);
+        MEC<double[]> model = MEC.fit(x, MathEx::distance, 10, 8.0);
         System.out.println(model);
 
         double r = RandIndex.of(y, model.y);

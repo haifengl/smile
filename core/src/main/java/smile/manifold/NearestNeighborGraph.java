@@ -22,8 +22,8 @@ import java.util.Comparator;
 import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 import smile.graph.AdjacencyList;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 
@@ -75,7 +75,7 @@ class NearestNeighborGraph {
      * @param consumer an optional lambda to perform some side effect operations.
      */
     public static AdjacencyList of(double[][] data, int k, boolean digraph, EdgeConsumer consumer) {
-        return of(data, new EuclideanDistance(), k, digraph ,consumer);
+        return of(data, MathEx::distance, k, digraph ,consumer);
     }
 
     /**
