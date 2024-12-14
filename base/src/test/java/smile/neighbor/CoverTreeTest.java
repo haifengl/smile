@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import smile.math.MathEx;
 import smile.math.distance.EditDistance;
-import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.test.data.IndexNoun;
 import smile.test.data.SwissRoll;
@@ -62,8 +62,8 @@ public class CoverTreeTest {
         System.out.println("nearest");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(data, new EuclideanDistance());
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         for (double[] datum : data) {
             Neighbor n1 = coverTree.nearest(datum);
@@ -79,8 +79,8 @@ public class CoverTreeTest {
         System.out.println("knn");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(data, new EuclideanDistance());
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         for (double[] datum : data) {
             Neighbor[] n1 = coverTree.search(datum, 10);
@@ -103,14 +103,13 @@ public class CoverTreeTest {
 
         double[][] data = Matrix.randn(2, 10).toArray();
         double[][] data1 = {data[0]};
-        EuclideanDistance d = new EuclideanDistance();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(data1, d);
+        CoverTree<double[], double[]> coverTree = CoverTree.of(data1, MathEx::distance);
 
         Neighbor[] n1 = coverTree.search(data[1], 1);
         assertEquals(1, n1.length);
         assertEquals(0, n1[0].index);
         assertEquals(data[0], n1[0].value);
-        assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
+        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance, 1E-7);
     }
 
     @Test
@@ -118,8 +117,8 @@ public class CoverTreeTest {
         System.out.println("range");
 
         double[][] data = Matrix.randn(1000, 10).toArray();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(data, new EuclideanDistance());
-        LinearSearch<double[], double[]> naive = LinearSearch.of(data, new EuclideanDistance());
+        CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
@@ -149,7 +148,7 @@ public class CoverTreeTest {
         System.arraycopy(SwissRoll.data, x.length, testx, 0, testx.length);
 
         long start = System.currentTimeMillis();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(x, new EuclideanDistance());
+        CoverTree<double[], double[]> coverTree = CoverTree.of(x, MathEx::distance);
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building cover tree: %.2fs%n", time);
 
@@ -185,7 +184,7 @@ public class CoverTreeTest {
         double[][] testx = USPS.testx;
 
         long start = System.currentTimeMillis();
-        CoverTree<double[], double[]> coverTree = CoverTree.of(x, new EuclideanDistance());
+        CoverTree<double[], double[]> coverTree = CoverTree.of(x, MathEx::distance);
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Building cover tree: %.2fs%n", time);
 

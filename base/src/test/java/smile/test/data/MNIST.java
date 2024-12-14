@@ -16,14 +16,7 @@
  */
 package smile.test.data;
 
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
 import smile.io.Read;
 import smile.util.Paths;
 
