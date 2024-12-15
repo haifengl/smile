@@ -108,10 +108,9 @@ public class LaplacianEigenmap {
      * @param d the dimension of the manifold.
      * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
      *          Non-positive value means discrete weights.
-     * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, int d, double t) {
+    public static double[][] of(NearestNeighborGraph nng, int d, double t) {
         AdjacencyList graph = nng.graph(false);
         int n = graph.getNumVertices();
 

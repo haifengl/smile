@@ -77,10 +77,10 @@ public class UMAPTest {
         double[][] x = Read.csv("./mnist_70000.csv").toArray();
         MathEx.setSeed(19650218); // to get repeatable results.
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(x, 15);
+        double[][] coordinates = UMAP.of(x, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
-        assertEquals(MNIST.x.length, umap.coordinates.length);
+        assertEquals(MNIST.x.length, coordinates.length);
     }
 
     @Test
@@ -89,10 +89,10 @@ public class UMAPTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(MNIST.x, 15);
+        double[][] coordinates = UMAP.of(MNIST.x, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
-        assertEquals(MNIST.x.length, umap.coordinates.length);
+        assertEquals(MNIST.x.length, coordinates.length);
     }
 
     @Test
@@ -102,9 +102,9 @@ public class UMAPTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(data, 15);
+        double[][] coordinates = UMAP.of(data, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0); 
-        assertEquals(data.length, umap.coordinates.length);
+        assertEquals(data.length, coordinates.length);
     }
 }

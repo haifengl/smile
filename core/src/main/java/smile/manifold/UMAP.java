@@ -17,8 +17,6 @@
 
 package smile.manifold;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import smile.feature.extraction.PCA;
@@ -59,68 +57,19 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author rayeaster
  */
-public class UMAP implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class UMAP {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UMAP.class);
 
     /**
-     * The coordinate matrix in embedding space.
-     */
-    public final double[][] coordinates;
-    /**
-     * The original sample index.
-     */
-    public final int[] index;
-    /**
-     * The nearest neighbor graph.
-     */
-    public final AdjacencyList graph;
-
-    /**
-     * Constructor.
-     * @param index the original sample index.
-     * @param coordinates the coordinates.
-     * @param graph the nearest neighbor graph.
-     */
-    public UMAP(int[] index, double[][] coordinates, AdjacencyList graph) {
-        this.index = index;
-        this.coordinates = coordinates;
-        this.graph = graph;
-    }
-
-    /**
-     * Runs the UMAP algorithm.
-     *
-     * @param data the input data.
-     * @return the model.
-     */
-    public static UMAP of(double[][] data) {
-        return of(data, 15);
-    }
-
-    /**
-     * Runs the UMAP algorithm.
-     *
-     * @param data     the input data.
-     * @param distance the distance function.
-     * @param <T> the data type of points.
-     * @return the model.
-     */
-    public static <T> UMAP of(T[] data, Distance<T> distance) {
-        return of(data, distance, 15);
-    }
-
-    /**
-     * Runs the UMAP algorithm.
+     * Runs the UMAP algorithm with Euclidean distance.
      *
      * @param data    the input data.
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static UMAP of(double[][] data, int k) {
+    public static double[][] of(double[][] data, int k) {
         return of(data, MathEx::distance, k);
     }
 
@@ -133,9 +82,9 @@ public class UMAP implements Serializable {
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> UMAP of(T[] data, Distance<T> distance, int k) {
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
     }
 
@@ -143,6 +92,7 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data               the input data.
+     * @param distance           the distance function.
      * @param k                  k-nearest neighbors. Larger values result in more global views
      *                           of the manifold, while smaller values result in more local data
      *                           being preserved. Generally in the range 2 to 100.
@@ -173,20 +123,18 @@ public class UMAP implements Serializable {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static UMAP of(double[][] data, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
-        return of(data, MathEx::distance, k, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+        return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
+     * @param nng                the k-nearest neighbor graph.
      * @param data               the input data.
-     * @param distance           the distance function.
-     * @param k                  k-nearest neighbor. Larger values result in more global views
-     *                           of the manifold, while smaller values result in more local data
-     *                           being preserved. Generally in the range 2 to 100.
      * @param d                  The target embedding dimensions. defaults to 2 to provide easy
      *                           visualization, but can reasonably be set to any integer value
      *                           in the range 2 to 100.
@@ -215,14 +163,11 @@ public class UMAP implements Serializable {
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> UMAP of(T[] data, Distance<T> distance, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
+    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
         if (d < 2) {
             throw new IllegalArgumentException("d must be greater than 1: " + d);
-        }
-        if (k < 2) {
-            throw new IllegalArgumentException("k must be greater than 1: " + k);
         }
         if (minDist <= 0) {
             throw new IllegalArgumentException("minDist must greater than 0: " + minDist);
@@ -243,7 +188,8 @@ public class UMAP implements Serializable {
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+        int n = nng.neighbors().length;
+        int k = nng.neighbors()[0].length;
         NearestNeighborGraph cc = nng.largest(true);
         int[] index = cc.index();
         AdjacencyList graph = null;
@@ -279,7 +225,7 @@ public class UMAP implements Serializable {
         SparseMatrix epochs = computeEpochPerSample(conorm, iterations);
         logger.info("Start optimizing the layout");
         optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
-        return new UMAP(index, coordinates, graph);
+        return coordinates;
     }
 
     /**

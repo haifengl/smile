@@ -17,6 +17,7 @@
 
 package smile
 
+import smile.graph.NearestNeighborGraph
 import smile.util.time
 
 /** Manifold learning finds a low-dimensional basis for describing
@@ -94,7 +95,7 @@ package object manifold {
     * @param k k-nearest neighbor.
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
-  def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap = time("IsoMap") {
+  def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]] = time("IsoMap") {
     IsoMap.of(data, k, d, CIsomap)
   }
 
@@ -117,8 +118,9 @@ package object manifold {
     * @param d the dimension of the manifold.
     * @param k k-nearest neighbor.
     */
-  def lle(data: Array[Array[Double]], k: Int, d: Int = 2): LLE = time("LLE") {
-    LLE.of(data, k, d)
+  def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]] = time("LLE") {
+    val nng = NearestNeighborGraph.of(data, k)
+    LLE.of(nng, data, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -141,7 +143,7 @@ package object manifold {
     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
     *          Non-positive value means discrete weights.
     */
-  def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap = time("Laplacian Eigen Map") {
+  def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]] = time("Laplacian Eigen Map") {
     LaplacianEigenmap.of(data, k, d, t)
   }
 
@@ -217,8 +219,10 @@ package object manifold {
     *                           embedding optimization. Values higher than one will result in
     *                           greater weight being given to negative samples, default 1.0.
     */
-  def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, iterations: Int = 0, learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0): UMAP = time("UMAP") {
-    UMAP.of(data, k, d,
+  def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, iterations: Int = 0, learningRate: Double = 1.0,
+           minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0): Array[Array[Double]] = time("UMAP") {
+    val nng = NearestNeighborGraph.of(data, k)
+    UMAP.of(nng, data, d,
       if (iterations >= 10) iterations else if (data.length > 10000) 200 else 500,
       learningRate, minDist, spread, negativeSamples, repulsionStrength)
   }
