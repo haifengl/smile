@@ -73,6 +73,21 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         return of(data, MathEx::distance, k);
     }
 
+    private static class Neighbor implements Comparable<Neighbor> {
+        public int index;
+        public double distance;
+
+        public Neighbor(int index, double distance) {
+            this.index = index;
+            this.distance = distance;
+        }
+
+        @Override
+        public int compareTo(Neighbor o) {
+            return Double.compare(o.distance, distance);
+        }
+    }
+
     /**
      * Creates a nearest neighbor graph.
      *
@@ -86,22 +101,26 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         int[][] neighbors = new int[n][k];
         double[][] distances = new double[n][k];
 
-        IntStream.range(0, n).forEach(i -> {
+        IntStream.range(0, n).parallel().forEach(i -> {
             T xi = data[i];
-            PairingHeap<SparseArray.Entry> pq = new PairingHeap<>();
+            PriorityQueue<Neighbor> pq = new PriorityQueue<>();
             for (int j = 0; j < n; j++) {
                 if (j == i) continue;
                 double d = distance.d(xi, data[j]);
-                if (pq.size() < k || d < -pq.peek().value()) {
-                    pq.offer(new SparseArray.Entry(j, -d));
-                    if (pq.size() > k) pq.poll();
+                if (pq.size() < k) {
+                    pq.offer(new Neighbor(j, d));
+                } else if (d < pq.peek().distance) {
+                    Neighbor neighbor = pq.poll();
+                    neighbor.index = j;
+                    neighbor.distance = d;
+                    pq.offer(neighbor);
                 }
             }
 
             for (int j = pq.size()-1; !pq.isEmpty(); j--) {
-                SparseArray.Entry e = pq.poll();
-                neighbors[i][j] = e.index();
-                distances[i][j] = -e.value();
+                Neighbor neighbor = pq.poll();
+                neighbors[i][j] = neighbor.index;
+                distances[i][j] = neighbor.distance;
             }
         });
 
@@ -128,9 +147,9 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
             int n = index.length;
             int k = neighbors[0].length;
 
-            Map<Integer, Integer> map = new HashMap<>();
+            Map<Integer, Integer> reverseIndex = new HashMap<>();
             for (int i = 0; i < n; i++) {
-                map.put(i, index[i]);
+                reverseIndex.put(index[i], i);
             }
 
             int[][] nearest = new int[n][k];
@@ -139,7 +158,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
                 dist[i] = distances[index[i]];
                 int[] ni = neighbors[index[i]];
                 for (int j = 0; j < k; j++) {
-                    nearest[i][j] = map.get(ni[j]);
+                    nearest[i][j] = reverseIndex.get(ni[j]);
                 }
             }
             return new NearestNeighborGraph(nearest, dist, index);

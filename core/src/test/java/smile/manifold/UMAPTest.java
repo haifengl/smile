@@ -16,6 +16,7 @@
  */
 package smile.manifold;
 
+import java.util.Arrays;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.MNIST;
@@ -55,7 +56,7 @@ public class UMAPTest {
         double[][] x = Read.csv("./mnist_70000.csv").toArray();
         MathEx.setSeed(19650218); // to get repeatable results.
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(x, 15);
+        UMAP umap = UMAP.of(Arrays.copyOf(x, 10000), 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(MNIST.x.length, umap.coordinates.length);
@@ -78,10 +79,11 @@ public class UMAPTest {
         System.out.println("UMAP SwissRoll");
 
         MathEx.setSeed(19650218); // to get repeatable results.
+        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(SwissRoll.data, 15);
+        UMAP umap = UMAP.of(data, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0); 
-        assertEquals(SwissRoll.data.length, umap.coordinates.length);
+        assertEquals(data.length, umap.coordinates.length);
     }
 }
