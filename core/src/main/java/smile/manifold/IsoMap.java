@@ -127,10 +127,9 @@ public class IsoMap {
      * @param nng the k-nearest neighbor graph.
      * @param d the dimension of the manifold.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
-     * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, int d, boolean conformal) {
+    public static double[][] of(NearestNeighborGraph nng, int d, boolean conformal) {
         AdjacencyList graph = nng.graph(false);
         if (conformal) {
             double[] M = MathEx.rowMeans(nng.distances());

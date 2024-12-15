@@ -95,6 +95,9 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @return k-nearest neighbor graph.
      */
     public static <T> NearestNeighborGraph of(T[] data, Distance<T> distance, int k) {
+        if (k < 2) {
+            throw new IllegalArgumentException("k must be greater than 1: " + k);
+        }
         int n = data.length;
         int[][] neighbors = new int[n][k];
         double[][] distances = new double[n][k];
