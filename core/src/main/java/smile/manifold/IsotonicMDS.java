@@ -32,30 +32,12 @@ import smile.sort.QuickSort;
  * distances is usually not possible. The relationship is typically found
  * using isotonic regression.
  *
+ * @param stress the objective function value.
+ * @param coordinates the principal coordinates
  * @author Haifeng Li
  */
-public class IsotonicMDS {
+public record IsotonicMDS(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);
-
-    /**
-     * The final stress achieved.
-     */
-    public final double stress;
-    /**
-     * The coordinates.
-     */
-    public final double[][] coordinates;
-
-    /**
-     * Constructor.
-     *
-     * @param stress the objective function value.
-     * @param coordinates the principal coordinates
-     */
-    public IsotonicMDS(double stress, double[][] coordinates) {
-        this.stress = stress;
-        this.coordinates = coordinates;
-    }
 
     /**
      * Fits Kruskal's non-metric MDS with default k = 2, tolerance = 1E-4 and maxIter = 200.
@@ -105,7 +87,8 @@ public class IsotonicMDS {
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
-        return of(proximity, MDS.of(proximity, k).coordinates, tol, maxIter);
+        MDS mds = MDS.of(proximity, k);
+        return of(proximity, mds.coordinates(), tol, maxIter);
     }
 
     /**

@@ -195,7 +195,7 @@ public class SOM implements VectorQuantizer {
         double[][] pdist = new double[k][k];
         MathEx.pdist(medoids, pdist, MathEx::distance);
         MDS mds = MDS.of(pdist);
-        double[][] coordinates = mds.coordinates;
+        double[][] coordinates = mds.coordinates();
 
         double[] x = Arrays.stream(coordinates).mapToDouble(point -> point[0]).toArray();
         double[] y = new double[ncol];
