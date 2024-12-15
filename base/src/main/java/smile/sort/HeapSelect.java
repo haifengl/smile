@@ -20,9 +20,9 @@ package smile.sort;
 /**
  * This class tracks the smallest values seen thus far in a stream of values.
  * This implements a single-pass selection for large data sets. That is,
- * we have a stream of input values, each of which we get to see only once. We
- * want to be able to report at any time, say after n values, the i-<i>th</i> smallest
- * value see so far.
+ * we have a stream of input values, each of which we get to see only once.
+ * We want to be able to report at any time, say after n values, the
+ * i-<i>th</i> smallest value see so far.
  *
  * @param <T> the data type of stream elements.
  *

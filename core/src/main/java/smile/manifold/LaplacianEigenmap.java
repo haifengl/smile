@@ -17,12 +17,11 @@
 
 package smile.manifold;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Collection;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
+import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.matrix.ARPACK;
@@ -53,58 +52,14 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class LaplacianEigenmap implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The width of heat kernel.
-     */
-    public final double width;
-    /**
-     * The original sample index.
-     */
-    public final int[] index;
-    /**
-     * The coordinate matrix in embedding space.
-     */
-    public final double[][] coordinates;
-    /**
-     * Nearest neighbor graph.
-     */
-    public final AdjacencyList graph;
-
-    /**
-     * Constructor with discrete weights.
-     * @param index the original sample index.
-     * @param coordinates the coordinates.
-     * @param graph the nearest neighbor graph.
-     */
-    public LaplacianEigenmap(int[] index, double[][] coordinates, AdjacencyList graph) {
-        this(-1, index, coordinates, graph);
-    }
-
-    /**
-     * Constructor with Gaussian kernel.
-     * @param width the width of heat kernel.
-     * @param index the original sample index.
-     * @param coordinates the coordinates.
-     * @param graph the nearest neighbor graph.
-     */
-    public LaplacianEigenmap(double width, int[] index, double[][] coordinates, AdjacencyList graph) {
-        this.width = width;
-        this.index = index;
-        this.coordinates = coordinates;
-        this.graph = graph;
-    }
-
+public class LaplacianEigenmap {
     /**
      * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
      * @param k k-nearest neighbor.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static LaplacianEigenmap of(double[][] data, int k) {
+    public static double[][] of(double[][] data, int k) {
         return of(data, k, 2, -1);
     }
 
@@ -115,9 +70,9 @@ public class LaplacianEigenmap implements Serializable {
      * @param k k-nearest neighbor.
      * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
      *          Non-positive value means discrete weights.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
+    public static double[][] of(double[][] data, int k, int d, double t) {
         return of(data, MathEx::distance, k, d, t);
     }
 
@@ -127,56 +82,59 @@ public class LaplacianEigenmap implements Serializable {
      * @param distance the distance function.
      * @param k k-nearest neighbor.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k) {
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, -1);
     }
 
     /**
-     * Laplacian Eigenmap with Gaussian kernel.
+     * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
      * @param distance the distance function.
      * @param k k-nearest neighbor.
+     * @param <T> the data type of points.
+     * @return the embedding coordinates.
+     */
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, double t) {
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+        return of(nng.largest(false), d, t);
+    }
+
+    /**
+     * Laplacian Eigenmap with Gaussian kernel.
+     * @param nng the k-nearest neighbor graph.
      * @param d the dimension of the manifold.
      * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
      *          Non-positive value means discrete weights.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
-        // Use the largest connected component of nearest neighbor graph.
-        AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, false, null);
-        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
-
-        int[] index = nng.index;
-        int n = index.length;
-        graph = nng.graph;
+    public static <T> double[][] of(NearestNeighborGraph nng, int d, double t) {
+        AdjacencyList graph = nng.graph(false);
+        int n = graph.getNumVertices();
 
         double[] D = new double[n];
         double gamma = -1.0 / t;
 
         SparseArray[] W = new SparseArray[n];
         for (int i = 0; i < n; i++) {
-            SparseArray row = new SparseArray();
+            SparseArray Wi = new SparseArray();
             Collection<Edge> edges = graph.getEdges(i);
             for (Edge edge : edges) {
-                int j = edge.v();
-                if (i == j) j = edge.u();
-
                 double w = t <= 0 ? 1.0 : Math.exp(gamma * edge.weight() * edge.weight());
-                row.set(j, w);
+                Wi.set(edge.v(), w);
                 D[i] += w;
             }
             D[i] = 1 / Math.sqrt(D[i]);
-            W[i] = row;
+            W[i] = Wi;
         }
 
         for (int i = 0; i < n; i++) {
-            SparseArray row = W[i];
             double Di = D[i];
-            row.update((j, value) -> -Di * value * D[j]);
-            row.set(i, 1.0);
+            SparseArray Wi = W[i];
+            Wi.update((j, value) -> -Di * value * D[j]);
+            Wi.set(i, 1.0);
         }
 
         // Here L is actually I - D^(-1/2) * W * D^(-1/2)
@@ -203,6 +161,6 @@ public class LaplacianEigenmap implements Serializable {
             }
         }
 
-        return new LaplacianEigenmap(t, index, coordinates, graph);
+        return coordinates;
     }
 }

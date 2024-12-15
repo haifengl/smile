@@ -21,7 +21,6 @@ import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
 import smile.io.Read;
 import smile.io.Write;
-import smile.math.distance.EuclideanDistance;
 import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.test.data.*;
@@ -142,8 +141,7 @@ public class RBFNetworkTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         KMeans kmeans = KMeans.fit(USPS.x, 200);
-        EuclideanDistance distance = new EuclideanDistance();
-        RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
+        RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), MathEx::distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(USPS.x, USPS.y, neurons);
         int[] prediction = model.predict(USPS.testx);

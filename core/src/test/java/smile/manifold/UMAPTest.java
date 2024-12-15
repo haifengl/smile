@@ -16,10 +16,10 @@
  */
 package smile.manifold;
 
+import smile.io.Read;
+import smile.math.MathEx;
 import smile.test.data.MNIST;
 import smile.test.data.SwissRoll;
-import smile.math.MathEx;
-import smile.feature.extraction.PCA;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,12 +49,25 @@ public class UMAPTest {
     }
 
     @Test
+    public void testMnist70000() throws Exception {
+        System.out.println("UMAP MNIST 70000");
+
+        double[][] x = Read.csv("./mnist_70000.csv").toArray();
+        MathEx.setSeed(19650218); // to get repeatable results.
+        long start = System.currentTimeMillis();
+        UMAP umap = UMAP.of(x, 15);
+        long end = System.currentTimeMillis();
+        System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
+        assertEquals(MNIST.x.length, umap.coordinates.length);
+    }
+
+    @Test
     public void testMnist() throws Exception {
         System.out.println("UMAP MNIST");
 
         MathEx.setSeed(19650218); // to get repeatable results.
         long start = System.currentTimeMillis();
-        UMAP umap = UMAP.of(MNIST.x, 7);
+        UMAP umap = UMAP.of(MNIST.x, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(MNIST.x.length, umap.coordinates.length);

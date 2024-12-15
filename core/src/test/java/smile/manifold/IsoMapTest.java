@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.util.Arrays;
 import smile.test.data.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1053,14 +1054,12 @@ public class IsoMapTest {
             {48.55222793362178, -20.44857359581157}
         };
 
-        double[][] data = new double[1000][];
-        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
-        
-        IsoMap isomap = IsoMap.of(data, 7, 2, false);
+        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        double[][] coordinates = IsoMap.of(data, 7, 2, false);
 
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(isomap.coordinates[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coordinates[i][j]), 1E-4);
             }
         }
     }

@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.util.Arrays;
 import smile.test.data.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1053,14 +1054,12 @@ public class LLETest {
                 {-0.0504,  0.0330}
         };
 
-        double[][] data = new double[1000][];
-        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
-        
-        LLE lle = LLE.of(data, 7);
+        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        double[][] coordinates = LLE.of(data, 7);
 
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(lle.coordinates[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coordinates[i][j]), 1E-4);
             }
         }
     }

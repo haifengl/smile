@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.util.Arrays;
 import smile.test.data.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1053,14 +1054,12 @@ public class LaplacianEigenmapTest {
                 {-0.0432, -0.0103}
         };
 
-        double[][] data = new double[1000][];
-        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
-
-        LaplacianEigenmap laplacianEigenmap = LaplacianEigenmap.of(data, 7);
+        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        double[][] coordinates = LaplacianEigenmap.of(data, 7);
 
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(laplacianEigenmap.coordinates[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(coordinates[i][j]), 1E-4);
             }
         }
     }

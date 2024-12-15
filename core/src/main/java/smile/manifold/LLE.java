@@ -17,10 +17,9 @@
 
 package smile.manifold;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Arrays;
 import smile.graph.AdjacencyList;
+import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.math.matrix.ARPACK;
@@ -52,43 +51,16 @@ import smile.math.matrix.SparseMatrix;
  * 
  * @author Haifeng Li
  */
-public class LLE implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class LLE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
-
-    /**
-     * The original sample index.
-     */
-    public final int[] index;
-    /**
-     * The coordinate matrix in embedding space.
-     */
-    public final double[][] coordinates;
-    /**
-     * Nearest neighbor graph.
-     */
-    public final AdjacencyList graph;
-
-    /**
-     * Constructor.
-     * @param index the original sample index.
-     * @param coordinates the coordinates.
-     * @param graph the nearest neighbor graph.
-     */
-    public LLE(int[] index, double[][] coordinates, AdjacencyList graph) {
-        this.index = index;
-        this.coordinates = coordinates;
-        this.graph = graph;
-    }
 
     /**
      * Runs the LLE algorithm.
      * @param data the input data.
      * @param k k-nearest neighbor.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static LLE of(double[][] data, int k) {
+    public static double[][] of(double[][] data, int k) {
         return of(data, k, 2);
     }
 
@@ -97,9 +69,9 @@ public class LLE implements Serializable {
      * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static LLE of(double[][] data, int k, int d) {
+    public static double[][] of(double[][] data, int k, int d) {
         int D = data[0].length;
 
         double tol = 0.0;
@@ -109,26 +81,18 @@ public class LLE implements Serializable {
         }
 
         // Use the largest connected component of nearest neighbor graph.
-        int[][] N = new int[data.length][k];
-        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> N[v1][j] = v2);
-        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, k).largest(false);
 
-        int[] index = nng.index;
-        int n = data.length;
-        graph = nng.graph;
+        AdjacencyList graph = nng.graph(false);
+        int[][] N = nng.neighbors();
+        int[] index = nng.index();
 
         // The reverse index maps the original data to the largest connected component
         // in case that the graph is disconnected.
-        int[] reverseIndex = new int[n];
-        if (index.length == n) {
-            for (int i = 0; i < n; i++) {
-                reverseIndex[i] = i;
-            }
-        } else {
-            n = index.length;
-            for (int i = 0; i < index.length; i++) {
-                reverseIndex[index[i]] = i;
-            }
+        int n = index.length;
+        int[] reverseIndex = new int[data.length];
+        for (int i = 0; i < index.length; i++) {
+            reverseIndex[index[i]] = i;
         }
 
         int len = n * k;
@@ -198,7 +162,7 @@ public class LLE implements Serializable {
             }
         }
 
-        return new LLE(index, coordinates, graph);
+        return coordinates;
     }
 
     /**
