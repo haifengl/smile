@@ -117,6 +117,7 @@ public class IsoMap {
      * @return the embedding coordinates.
      */
     public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
+        // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
         return of(nng.largest(false), d, conformal);
     }

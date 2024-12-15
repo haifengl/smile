@@ -61,17 +61,20 @@ public class LLE {
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, int k) {
-        return of(data, k, 2);
+        // Use the largest connected component of nearest neighbor graph.
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, k);
+        return of(nng.largest(false), data, 2);
     }
 
     /**
      * Runs the LLE algorithm.
+     * @param nng the k-nearest neighbor graph.
      * @param data the input data.
      * @param d the dimension of the manifold.
-     * @param k k-nearest neighbor.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d) {
+    public static double[][] of(NearestNeighborGraph nng, double[][] data, int d) {
+        int k = nng.neighbors()[0].length;
         int D = data[0].length;
 
         double tol = 0.0;
@@ -79,9 +82,6 @@ public class LLE {
             logger.info("LLE: regularization will be used since K > D.");
             tol = 1E-3;
         }
-
-        // Use the largest connected component of nearest neighbor graph.
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, k).largest(false);
 
         AdjacencyList graph = nng.graph(false);
         int[][] N = nng.neighbors();
