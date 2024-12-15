@@ -33,37 +33,14 @@ import smile.math.matrix.Matrix;
  *
  * @see smile.feature.extraction.PCA
  * @see SammonMapping
- * 
+ *
+ * @param scores the component scores.
+ * @param proportion the proportion of variance contained in each principal component.
+ * @param coordinates the principal coordinates
  * @author Haifeng Li
  */
-public class MDS {
+public record MDS(double[] scores, double[] proportion, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MDS.class);
-
-    /**
-     * The component scores.
-     */
-    public final double[] scores;
-    /**
-     * The principal coordinates.
-     */
-    public final double[][] coordinates;
-    /**
-     * The proportion of variance contained in each principal component.
-     */
-    public final double[] proportion;
-
-    /**
-     * Constructor.
-     *
-     * @param scores the component scores.
-     * @param proportion the proportion of variance contained in each principal component.
-     * @param coordinates the principal coordinates
-     */
-    public MDS(double[] scores, double[] proportion, double[][] coordinates) {
-        this.scores = scores;
-        this.proportion = proportion;
-        this.coordinates = coordinates;
-    }
 
     /**
      * Fits the classical multidimensional scaling.

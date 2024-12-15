@@ -130,7 +130,8 @@ public class SammonMapping {
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity, int k, double lambda, double tol, double stepTol, int maxIter) {
-        return of(proximity, MDS.of(proximity, k).coordinates, lambda, tol, stepTol, maxIter);
+        MDS mds = MDS.of(proximity, k);
+        return of(proximity, mds.coordinates(), lambda, tol, stepTol, maxIter);
     }
 
     /**

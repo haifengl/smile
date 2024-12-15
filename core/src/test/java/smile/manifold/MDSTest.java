@@ -76,14 +76,15 @@ public class MDSTest {
         };
 
         MDS mds = MDS.of(Eurodist.x);
-        assertArrayEquals(eig, mds.scores, 1E-4);
+        assertArrayEquals(eig, mds.scores(), 1E-4);
 
-        double sign0 = Math.signum(points[0][0] * mds.coordinates[0][0]);
-        double sign1 = Math.signum(points[0][1] * mds.coordinates[0][1]);
+        double[][] coordinates = mds.coordinates();
+        double sign0 = Math.signum(points[0][0] * coordinates[0][0]);
+        double sign1 = Math.signum(points[0][1] * coordinates[0][1]);
         for (int i = 0; i < points.length; i++) {
             points[i][0] *= sign0;
             points[i][1] *= sign1;
-            assertArrayEquals(points[i], mds.coordinates[i], 1E-4);
+            assertArrayEquals(points[i], coordinates[i], 1E-4);
         }
     }
 
@@ -117,14 +118,15 @@ public class MDSTest {
         };
 
         MDS mds = MDS.of(Eurodist.x, 2, true);
-        assertArrayEquals(eigs, mds.scores, 1E-2);
+        assertArrayEquals(eigs, mds.scores(), 1E-2);
 
-        double sign0 = Math.signum(points[0][0] * mds.coordinates[0][0]);
-        double sign1 = Math.signum(points[0][1] * mds.coordinates[0][1]);
+        double[][] coordinates = mds.coordinates();
+        double sign0 = Math.signum(points[0][0] * coordinates[0][0]);
+        double sign1 = Math.signum(points[0][1] * coordinates[0][1]);
         for (int i = 0; i < points.length; i++) {
             points[i][0] *= sign0;
             points[i][1] *= sign1;
-            assertArrayEquals(points[i], mds.coordinates[i], 1E-2);
+            assertArrayEquals(points[i], coordinates[i], 1E-2);
         }
     }
 }
