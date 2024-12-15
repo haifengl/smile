@@ -21,8 +21,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.util.PairingHeap;
-import smile.util.SparseArray;
 
 /**
  * The k-nearest neighbor graph builder.
@@ -147,9 +145,9 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
             int n = index.length;
             int k = neighbors[0].length;
 
-            Map<Integer, Integer> reverseIndex = new HashMap<>();
+            int[] reverseIndex = new int[neighbors.length];
             for (int i = 0; i < n; i++) {
-                reverseIndex.put(index[i], i);
+                reverseIndex[index[i]] = i;
             }
 
             int[][] nearest = new int[n][k];
@@ -158,7 +156,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
                 dist[i] = distances[index[i]];
                 int[] ni = neighbors[index[i]];
                 for (int j = 0; j < k; j++) {
-                    nearest[i][j] = reverseIndex.get(ni[j]);
+                    nearest[i][j] = reverseIndex[ni[j]];
                 }
             }
             return new NearestNeighborGraph(nearest, dist, index);
