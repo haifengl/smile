@@ -17,9 +17,8 @@
 
 package smile.manifold;
 
-import java.io.Serial;
-import java.io.Serializable;
 import smile.graph.AdjacencyList;
+import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.distance.Distance;
@@ -32,7 +31,7 @@ import smile.math.matrix.Matrix;
  * classical multidimensional scaling. Isomap is used for computing a
  * quasi-isometric, low-dimensional embedding of a set of high-dimensional
  * data points. Isomap is highly efficient and generally applicable to a broad
- * range of data sources and dimensionalities.
+ * range of data sources and dimensionality.
  * <p>
  * To be specific, the classical MDS performs low-dimensional embedding based
  * on the pairwise distance between data points, which is generally measured
@@ -70,43 +69,16 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public class IsoMap implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class IsoMap {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
-
-    /**
-     * The original sample index.
-     */
-    public final int[] index;
-    /**
-     * The coordinate matrix in embedding space.
-     */
-    public final double[][] coordinates;
-    /**
-     * The nearest neighbor graph.
-     */
-    public final AdjacencyList graph;
-
-    /**
-     * Constructor.
-     * @param index the original sample index.
-     * @param coordinates the coordinates.
-     * @param graph the nearest neighbor graph.
-     */
-    public IsoMap(int[] index, double[][] coordinates, AdjacencyList graph) {
-        this.index = index;
-        this.coordinates = coordinates;
-        this.graph = graph;
-    }
 
     /**
      * Runs the C-Isomap algorithm with Euclidean distance.
      * @param data the input data.
      * @param k k-nearest neighbor.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static IsoMap of(double[][] data, int k) {
+    public static double[][] of(double[][] data, int k) {
         return of(data, k, 2, true);
     }
 
@@ -116,9 +88,9 @@ public class IsoMap implements Serializable {
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
+    public static double[][] of(double[][] data, int k, int d, boolean conformal) {
         return of(data, MathEx::distance, k, d, conformal);
     }
 
@@ -128,12 +100,12 @@ public class IsoMap implements Serializable {
      * @param k k-nearest neighbor.
      * @param distance the distance function.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> IsoMap of(T[] data, Distance<T> distance, int k) {
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, true);
     }
-    
+
     /**
      * Runs the Isomap algorithm.
      * @param data the input data.
@@ -142,19 +114,28 @@ public class IsoMap implements Serializable {
      * @param d the dimension of the manifold.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      * @param <T> the data type of points.
-     * @return the model.
+     * @return the embedding coordinates.
      */
-    public static <T> IsoMap of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
-        AdjacencyList graph;
-        if (!conformal) {
-            graph = NearestNeighborGraph.of(data, distance, k, false, null);
-        } else {
-            int n = data.length;
-            double[] M = new double[n];
-            graph = NearestNeighborGraph.of(data, distance, k, false, (v1, v2, weight, j) -> M[v1] += weight);
+    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+        return of(nng.largest(false), d, conformal);
+    }
 
+    /**
+     * Runs the Isomap algorithm.
+     * @param nng the k-nearest neighbor graph.
+     * @param d the dimension of the manifold.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param <T> the data type of points.
+     * @return the embedding coordinates.
+     */
+    public static <T> double[][] of(NearestNeighborGraph nng, int d, boolean conformal) {
+        AdjacencyList graph = nng.graph(false);
+        if (conformal) {
+            double[] M = MathEx.rowMeans(nng.distances());
+            int n = M.length;
             for (int i = 0; i < n; i++) {
-                M[i] = Math.sqrt(M[i] / k);
+                M[i] = Math.sqrt(M[i]);
             }
 
             for (int i = 0; i < n; i++) {
@@ -163,13 +144,7 @@ public class IsoMap implements Serializable {
             }
         }
 
-        // Use the largest connected component of nearest neighbor graph.
-        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
-
-        int[] index = nng.index;
-        int n = index.length;
-        graph = nng.graph;
-
+        int n = graph.getNumVertices();
         double[][] D = graph.dijkstra();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -211,6 +186,6 @@ public class IsoMap implements Serializable {
             }
         }
 
-        return new IsoMap(index, coordinates, graph);
+        return coordinates;
     }
 }

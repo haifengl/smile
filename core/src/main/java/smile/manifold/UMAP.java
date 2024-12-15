@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
+import smile.graph.NearestNeighborGraph;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
@@ -242,19 +243,24 @@ public class UMAP implements Serializable {
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, true,null);
-        NearestNeighborGraph cc = NearestNeighborGraph.largest(graph);
-        int[] index = cc.index;
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+        NearestNeighborGraph cc = nng.largest(true);
+        int[] index = cc.index();
+        AdjacencyList graph = null;
         boolean spectral = true;
-        if (cc.graph.getNumVertices() != data.length) {
+        if (index.length != data.length) {
             logger.info("The nearest neighbor graph has multiple connected components.");
             if (data instanceof double[][]) {
                 spectral = false;
+                graph = nng.graph(true);
                 logger.info("PCA-based initialization will be attempted.");
             } else {
-                graph = cc.graph;
                 logger.info("The largest connected component is used to compute the embedding.");
             }
+        }
+
+        if (graph == null) {
+            graph = cc.graph(true);
         }
 
         graph = computeFuzzySimplicialSet(graph, k, 64);
