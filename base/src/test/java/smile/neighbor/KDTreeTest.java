@@ -61,12 +61,12 @@ public class KDTreeTest {
         KDTree<double[]> kdtree = new KDTree<>(data, data);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
-        for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> n1 = naive.nearest(data[i]);
-            Neighbor<double[], double[]> n2 = kdtree.nearest(data[i]);
-            assertEquals(n1.index, n2.index);
-            assertEquals(n1.value, n2.value);
-            assertEquals(n1.distance, n2.distance, 1E-7);
+        for (double[] xi : data) {
+            Neighbor<double[], double[]> n1 = naive.nearest(xi);
+            Neighbor<double[], double[]> n2 = kdtree.nearest(xi);
+            assertEquals(n1.index(), n2.index());
+            assertEquals(n1.value(), n2.value());
+            assertEquals(n1.distance(), n2.distance(), 1E-7);
         }
     }
 
@@ -78,13 +78,13 @@ public class KDTreeTest {
         KDTree<double[]> kdtree = new KDTree<>(data, data);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
-        for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> [] n1 = naive.search(data[i], 10);
-            Neighbor<double[], double[]> [] n2 = kdtree.search(data[i], 10);
+        for (double[] xi : data) {
+            Neighbor<double[], double[]> [] n1 = naive.search(xi, 10);
+            Neighbor<double[], double[]> [] n2 = kdtree.search(xi, 10);
             for (int j = 0; j < n1.length; j++) {
-                assertEquals(n1[j].index, n2[j].index);
-                assertEquals(n1[j].value, n2[j].value);
-                assertEquals(n1[j].distance, n2[j].distance, 1E-7);
+                assertEquals(n1[j].index(), n2[j].index());
+                assertEquals(n1[j].value(), n2[j].value());
+                assertEquals(n1[j].distance(), n2[j].distance(), 1E-7);
             }
         }
     }
@@ -99,32 +99,32 @@ public class KDTreeTest {
 
         List<Neighbor<double[], double[]>> n1 = new ArrayList<>();
         List<Neighbor<double[], double[]>> n2 = new ArrayList<>();
-        for (int i = 0; i < data.length; i++) {
-            kdtree.search(data[i], 0.5, n1);
-            naive.search(data[i], 0.5, n2);
+        for (double[] xi : data) {
+            kdtree.search(xi, 0.5, n1);
+            naive.search(xi, 0.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
             for (int j = 0; j < n1.size(); j++) {
-                assertEquals(n1.get(j).index, n2.get(j).index);
-                assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
+                assertEquals(n1.get(j).index(), n2.get(j).index());
+                assertEquals(n1.get(j).value(), n2.get(j).value());
+                assertEquals(n1.get(j).distance(), n2.get(j).distance(), 1E-7);
             }
             n1.clear();
             n2.clear();
         }
 
         System.out.println("range 1.5");
-        for (int i = 0; i < data.length; i++) {
-            naive.search(data[i], 1.5, n1);
-            kdtree.search(data[i], 1.5, n2);
+        for (double[] xi : data) {
+            naive.search(xi, 1.5, n1);
+            kdtree.search(xi, 1.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
             for (int j = 0; j < n1.size(); j++) {
-                assertEquals(n1.get(j).index, n2.get(j).index);
-                assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
+                assertEquals(n1.get(j).index(), n2.get(j).index());
+                assertEquals(n1.get(j).value(), n2.get(j).value());
+                assertEquals(n1.get(j).distance(), n2.get(j).distance(), 1E-7);
             }
             n1.clear();
             n2.clear();
@@ -209,23 +209,23 @@ public class KDTreeTest {
         System.out.format("Building KD-tree: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.nearest(testx[i]);
+        for (double[] xi : testx) {
+            kdtree.nearest(xi);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.search(testx[i], 10);
+        for (double[] xi : testx) {
+            kdtree.search(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < testx.length; i++) {
-            kdtree.search(testx[i], 8.0, n);
+        for (double[] xi : testx) {
+            kdtree.search(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

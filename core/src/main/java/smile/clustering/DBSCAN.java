@@ -193,14 +193,14 @@ public class DBSCAN<T> extends PartitionClustering {
                     core[i] = true;
 
                     for (Neighbor<T, T> neighbor : neighbors) {
-                        if (y[neighbor.index] == UNDEFINED) {
-                            y[neighbor.index] = QUEUED;
+                        if (y[neighbor.index()] == UNDEFINED) {
+                            y[neighbor.index()] = QUEUED;
                         }
                     }
 
                     for (int j = 0; j < neighbors.size(); j++) {
                         Neighbor<T,T> neighbor = neighbors.get(j);
-                        int index = neighbor.index;
+                        int index = neighbor.index();
 
                         if (y[index] == OUTLIER) {
                             y[index] = k;
@@ -210,18 +210,18 @@ public class DBSCAN<T> extends PartitionClustering {
                             y[index] = k;
 
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
-                            nns.search(neighbor.key, radius, secondaryNeighbors);
+                            nns.search(neighbor.key(), radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
-                                core[neighbor.index] = true;
-                                for (Neighbor<T, T> sn : secondaryNeighbors) {
-                                    int label = y[sn.index];
+                                core[neighbor.index()] = true;
+                                for (var secondaryNeighbor : secondaryNeighbors) {
+                                    int label = y[secondaryNeighbor.index()];
                                     if (label == UNDEFINED) {
-                                        y[sn.index] = QUEUED;
+                                        y[secondaryNeighbor.index()] = QUEUED;
                                     }
 
                                     if (label == UNDEFINED || label == OUTLIER) {
-                                        neighbors.add(sn);
+                                        neighbors.add(secondaryNeighbor);
                                     }
                                 }
                             }
@@ -247,8 +247,8 @@ public class DBSCAN<T> extends PartitionClustering {
 
         Collections.sort(neighbors);
         for (Neighbor<T, T> neighbor : neighbors) {
-            if (core[neighbor.index]) {
-                return y[neighbor.index];
+            if (core[neighbor.index()]) {
+                return y[neighbor.index()];
             }
         }
 

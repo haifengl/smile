@@ -27,43 +27,16 @@ import smile.util.Strings;
  * object in the dataset, which is often useful, and the distance between
  * the query key to the object key.
  *
+ * @param key the key of neighbor.
+ * @param value the value of neighbor.
+ * @param index the index of neighbor object in the dataset.
+ * @param distance the distance between the query and the neighbor.
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
  * 
  * @author Haifeng Li
  */
-public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
-    /**
-     * The key of neighbor.
-     */
-    public final K key;
-    /**
-     * The data object of neighbor. It may be same as the key object.
-     */
-    public final V value;
-    /**
-     * The index of neighbor object in the dataset.
-     */
-    public final int index;
-    /**
-     * The distance between the query and the neighbor.
-     */
-    public final double distance;
-
-    /**
-     * Constructor.
-     * @param key the key of neighbor.
-     * @param object the value of neighbor.
-     * @param index the index of neighbor object in the dataset.
-     * @param distance the distance between the query and the neighbor.
-     */
-    public Neighbor(K key, V object, int index, double distance) {
-        this.key = key;
-        this.value = object;
-        this.index = index;
-        this.distance = distance;
-    }
-
+public record Neighbor<K, V>(K key, V value, int index, double distance) implements Comparable<Neighbor<K,V>> {
     @Override
     public int compareTo(Neighbor<K,V> o) {
         int d = Double.compare(distance, o.distance);
@@ -74,15 +47,16 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
 
     @Override
     public String toString() {
-        return String.format("%s(%d):%s", key, index, Strings.format(distance));
+        return String.format("Neighbor(%s[%d]: %s)", key, index, Strings.format(distance));
     }
 
     /**
      * Creates a neighbor object, of which key and object are the same.
-     * @param key the query key.
-     * @param index the index of object.
+     *
+     * @param key      the query key.
+     * @param index    the index of object.
      * @param distance the distance between query key and neighbor.
-     * @param <T> the data type of key and object.
+     * @param <T>      the data type of key and object.
      * @return the neighbor object.
      */
     public static <T> Neighbor<T, T> of(T key, int index, double distance) {

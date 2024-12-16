@@ -175,7 +175,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             neighbors[i] = neighborhood;
 
             for (int j = 0; j < list.size(); j++) {
-                neighborhood[j] = list.get(j).index;
+                neighborhood[j] = list.get(j).index();
             }
             px[i] = (double) list.size() / n;
         });
@@ -293,7 +293,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         int[] label = new int[k];
         for (Neighbor<T,T> neighbor : neighbors) {
-            int yi = y[neighbor.index];
+            int yi = y[neighbor.index()];
             label[yi]++;
         }
 

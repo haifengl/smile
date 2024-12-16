@@ -183,13 +183,13 @@ public class KNN<T> extends AbstractClassifier<T> {
             if (neighbors[0] == null) {
                 throw new IllegalStateException("No neighbor found.");
             }
-            return y[neighbors[0].index];
+            return y[neighbors[0].index()];
         }
 
         int[] count = new int[classes.size()];
         for (Neighbor<T,T> neighbor : neighbors) {
             if (neighbor != null) {
-                count[classes.indexOf(y[neighbor.index])]++;
+                count[classes.indexOf(y[neighbor.index()])]++;
             }
         }
 
@@ -215,13 +215,13 @@ public class KNN<T> extends AbstractClassifier<T> {
             }
 
             Arrays.fill(posteriori, 0.0);
-            posteriori[classes.indexOf(y[neighbors[0].index])] = 1.0;
-            return y[neighbors[0].index];
+            posteriori[classes.indexOf(y[neighbors[0].index()])] = 1.0;
+            return y[neighbors[0].index()];
         }
 
         int[] count = new int[classes.size()];
         for (int i = 0; i < k; i++) {
-            count[classes.indexOf(y[neighbors[i].index])]++;
+            count[classes.indexOf(y[neighbors[i].index()])]++;
         }
 
         int y = MathEx.whichMax(count);

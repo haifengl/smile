@@ -79,8 +79,8 @@ public class BKTreeTest {
             String[] s1 = new String[n1.size()];
             String[] s2 = new String[n2.size()];
             for (int j = 0; j < s1.length; j++) {
-                s1[j] = n1.get(j).value;
-                s2[j] = n2.get(j).value;
+                s1[j] = n1.get(j).value();
+                s2[j] = n2.get(j).value();
             }
             Arrays.sort(s1);
             Arrays.sort(s2);

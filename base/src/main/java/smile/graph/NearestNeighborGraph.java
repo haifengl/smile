@@ -71,6 +71,44 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         return of(data, MathEx::distance, k);
     }
 
+    /**
+     * Returns the largest connected component of a nearest neighbor graph.
+     *
+     * @param digraph create a directed graph if true.
+     * @return the largest connected component.
+     */
+    public NearestNeighborGraph largest(boolean digraph) {
+        AdjacencyList graph = graph(digraph);
+        int[][] cc = graph.bfcc();
+        if (cc.length == 1) {
+            return this;
+        } else {
+            int[] index = Arrays.stream(cc)
+                    .max(Comparator.comparing(a -> a.length))
+                    .orElseThrow(NoSuchElementException::new);
+            logger.info("{} connected components, largest one has {} samples.", cc.length, index.length);
+
+            int n = index.length;
+            int k = neighbors[0].length;
+
+            int[] reverseIndex = new int[neighbors.length];
+            for (int i = 0; i < n; i++) {
+                reverseIndex[index[i]] = i;
+            }
+
+            int[][] nearest = new int[n][k];
+            double[][] dist = new double[n][k];
+            for (int i = 0; i < n; i++) {
+                dist[i] = distances[index[i]];
+                int[] ni = neighbors[index[i]];
+                for (int j = 0; j < k; j++) {
+                    nearest[i][j] = reverseIndex[ni[j]];
+                }
+            }
+            return new NearestNeighborGraph(nearest, dist, index);
+        }
+    }
+
     private static class Neighbor implements Comparable<Neighbor> {
         public int index;
         public double distance;
@@ -98,6 +136,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         if (k < 2) {
             throw new IllegalArgumentException("k must be greater than 1: " + k);
         }
+
         int n = data.length;
         int[][] neighbors = new int[n][k];
         double[][] distances = new double[n][k];
@@ -129,40 +168,104 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
     }
 
     /**
-     * Returns the largest connected component of a nearest neighbor graph.
+     * Creates an approximate nearest neighbor graph with Euclidean distance.
      *
-     * @param digraph create a directed graph if true.
-     * @return the largest connected component.
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     * @return approximate k-nearest neighbor graph.
      */
-    public NearestNeighborGraph largest(boolean digraph) {
-        AdjacencyList graph = graph(digraph);
-        int[][] cc = graph.bfcc();
-        if (cc.length == 1) {
-            return this;
-        } else {
-            int[] index = Arrays.stream(cc)
-                .max(Comparator.comparing(a -> a.length))
-                .orElseThrow(NoSuchElementException::new);
-            logger.info("{} connected components, largest one has {} samples.", cc.length, index.length);
+    /*public static NearestNeighborGraph descent(double[][] data, int k) {
+        return descent(data, MathEx::distance, k);
+    }*/
 
-            int n = index.length;
-            int k = neighbors[0].length;
+    /**
+     * Creates an approximate nearest neighbor graph with the NN-Descent algorithm.
+     *
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     * @param distance the distance function.
+     * @param maxCandidates the maximum number of candidates in nearest neighbor search.
+     * @param maxIter the maximum number of iterations.
+     * @return approximate k-nearest neighbor graph.
+     */
+    /*public static <T> NearestNeighborGraph descent(T[] data, Distance<T> distance, int k, int maxCandidates, int maxIter, double delta, double rho) {
+        if (k < 2) {
+            throw new IllegalArgumentException("k must be greater than 1: " + k);
+        }
 
-            int[] reverseIndex = new int[neighbors.length];
-            for (int i = 0; i < n; i++) {
-                reverseIndex[index[i]] = i;
+        int n = data.length;
+        int[][] neighbors = new int[n][k];
+        double[][] distances = new double[n][k];
+        boolean[][] isNew = new boolean[n][k];
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(neighbors[i], -1);
+            Arrays.fill(distances[i], Double.POSITIVE_INFINITY);
+        }
+
+        for (int i = 0; i < n; i++) {
+            final float[] iRow = data.row(i);
+            for (final int index : Utils.rejectionSample(nNeighbors, data.rows(), random)) {
+                final float d = mMetric.distance(iRow, data.row(index));
+                currentGraph.push(i, d, index, true);
+                currentGraph.push(index, d, i, true);
             }
+        }
 
-            int[][] nearest = new int[n][k];
-            double[][] dist = new double[n][k];
-            for (int i = 0; i < n; i++) {
-                dist[i] = distances[index[i]];
-                int[] ni = neighbors[index[i]];
-                for (int j = 0; j < k; j++) {
-                    nearest[i][j] = reverseIndex[ni[j]];
+        if (rpTreeInit) {
+            for (final FlatTree tree : forest) {
+                for (final int[] leaf : tree.getIndices()) {
+                    for (int i = 0; i < leaf.length; ++i) {
+                        final float[] iRow = data.row(leaf[i]);
+                        for (int j = i + 1; j < leaf.length; ++j) {
+                            final float d = mMetric.distance(iRow, data.row(leaf[j]));
+                            currentGraph.push(leaf[i], d, leaf[j], true);
+                            currentGraph.push(leaf[j], d, leaf[i], true);
+                        }
+                    }
                 }
             }
-            return new NearestNeighborGraph(nearest, dist, index);
         }
-    }
+
+        boolean[] rejectStatus = new boolean[maxCandidates];
+        for (int iter = 0; iter < maxIter; iter++) {
+            logger.info("NearestNeighborDescent: {} / {}", (n + 1), maxIter);
+
+            final Heap candidateNeighbors = currentGraph.buildCandidates(n, k, maxCandidates);
+
+            int count = 0;
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < maxCandidates; ++j) {
+                    rejectStatus[j] = MathEx.random() < rho;
+                }
+
+                for (int j = 0; j < maxCandidates; ++j) {
+                    final int p = candidateNeighbors.index(i, j);
+                    if (p < 0) {
+                        continue;
+                    }
+                    for (int l = 0; l <= j; l++) {
+                        final int q = candidateNeighbors.index(i, l);
+                        if (q < 0 || (rejectStatus[j] && rejectStatus[l]) || (!candidateNeighbors.isNew(i, j) && !candidateNeighbors.isNew(i, l))) {
+                            continue;
+                        }
+
+                        final float d = mMetric.distance(data.row(p), data.row(q));
+                        if (currentGraph.push(p, d, q, true)) {
+                            ++count;
+                        }
+                        if (currentGraph.push(q, d, p, true)) {
+                            ++count;
+                        }
+                    }
+                }
+            }
+
+            if (count <= delta * k * n) {
+                break;
+            }
+        }
+
+        return currentGraph.deheapSort();
+        return new NearestNeighborGraph(neighbors, distances);
+    }*/
 }

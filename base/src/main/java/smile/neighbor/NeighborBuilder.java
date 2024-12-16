@@ -19,6 +19,8 @@ package smile.neighbor;
 
 /**
  * The mutable object as a template to create a Neighbor object.
+ * This helps reduce the creation of a lot of temporary objects
+ * as we can update this object's values in the heap.
  *
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.

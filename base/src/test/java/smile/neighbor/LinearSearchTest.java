@@ -69,9 +69,9 @@ public class LinearSearchTest {
 
         Neighbor[] n1 = naive.search(data[1], 1);
         assertEquals(1, n1.length);
-        assertEquals(0, n1[0].index);
-        assertEquals(data[0], n1[0].value);
-        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance, 1E-7);
+        assertEquals(0, n1[0].index());
+        assertEquals(data[0], n1[0].value());
+        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance(), 1E-7);
     }
 
     @Test

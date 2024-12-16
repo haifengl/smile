@@ -136,8 +136,8 @@ public class MPLSH <E> extends LSH<E> {
             training[i] = new MultiProbeSample(samples[i], new LinkedList<>());
             ArrayList<Neighbor<double[], double[]>> neighbors = new ArrayList<>();
             range.search(samples[i], radius, neighbors);
-            for (Neighbor<double[], double[]> n : neighbors) {
-                training[i].neighbors.add(keys.get(n.index));
+            for (var neighbor : neighbors) {
+                training[i].neighbors.add(keys.get(neighbor.index()));
             }
         }
 

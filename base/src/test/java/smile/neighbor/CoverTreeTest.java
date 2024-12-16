@@ -68,9 +68,9 @@ public class CoverTreeTest {
         for (double[] datum : data) {
             Neighbor n1 = coverTree.nearest(datum);
             Neighbor n2 = naive.nearest(datum);
-            assertEquals(n1.index, n2.index);
-            assertEquals(n1.value, n2.value);
-            assertEquals(n1.distance, n2.distance, 1E-7);
+            assertEquals(n1.index(), n2.index());
+            assertEquals(n1.value(), n2.value());
+            assertEquals(n1.distance(), n2.distance(), 1E-7);
         }
     }
 
@@ -87,9 +87,9 @@ public class CoverTreeTest {
             Neighbor[] n2 = naive.search(datum, 10);
             assertEquals(n1.length, n2.length);
             for (int j = 0; j < n1.length; j++) {
-                assertEquals(n1[j].index, n2[j].index);
-                assertEquals(n1[j].value, n2[j].value);
-                assertEquals(n1[j].distance, n2[j].distance, 1E-7);
+                assertEquals(n1[j].index(), n2[j].index());
+                assertEquals(n1[j].value(), n2[j].value());
+                assertEquals(n1[j].distance(), n2[j].distance(), 1E-7);
             }
         }
     }
@@ -107,9 +107,9 @@ public class CoverTreeTest {
 
         Neighbor[] n1 = coverTree.search(data[1], 1);
         assertEquals(1, n1.length);
-        assertEquals(0, n1[0].index);
-        assertEquals(data[0], n1[0].value);
-        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance, 1E-7);
+        assertEquals(0, n1[0].index());
+        assertEquals(data[0], n1[0].value());
+        assertEquals(MathEx.distance(data[0], data[1]), n1[0].distance(), 1E-7);
     }
 
     @Test
@@ -129,9 +129,9 @@ public class CoverTreeTest {
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
             for (int j = 0; j < n1.size(); j++) {
-                assertEquals(n1.get(j).index, n2.get(j).index);
-                assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
+                assertEquals(n1.get(j).index(), n2.get(j).index());
+                assertEquals(n1.get(j).value(), n2.get(j).value());
+                assertEquals(n1.get(j).distance(), n2.get(j).distance(), 1E-7);
             }
             n1.clear();
             n2.clear();

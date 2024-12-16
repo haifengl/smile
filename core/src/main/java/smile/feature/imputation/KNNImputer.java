@@ -73,25 +73,25 @@ import smile.neighbor.Neighbor;
                     if (field.type.isBoolean()) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
-                                        .mapToInt(neighbor -> neighbor.key.getInt(i)).toArray(),
+                                        .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mode(vector) != 0;
                     } else if (field.type.isChar()) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
-                                        .mapToInt(neighbor -> neighbor.key.getInt(i)).toArray(),
+                                        .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : (char) MathEx.mode(vector);
                     } else if (field.measure instanceof NominalScale) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
-                                        .mapToInt(neighbor -> neighbor.key.getInt(i)).toArray(),
+                                        .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mode(vector);
                     } else if (field.type.isNumeric()) {
                         double[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
-                                        .mapToDouble(neighbor -> neighbor.key.getDouble(i)).toArray(),
+                                        .mapToDouble(neighbor -> neighbor.key().getDouble(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mean(vector);
                     } else {
