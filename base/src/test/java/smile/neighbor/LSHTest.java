@@ -69,10 +69,10 @@ public class LSHTest {
                 hit++;
 
                 Neighbor truth = naive.nearest(xi);
-                if (neighbor.index == truth.index) {
+                if (neighbor.index() == truth.index()) {
                     recall++;
                 } else {
-                    error += Math.abs(neighbor.distance - truth.distance) / truth.distance;
+                    error += Math.abs(neighbor.distance() - truth.distance()) / truth.distance();
                 }
             }
         }
@@ -98,7 +98,7 @@ public class LSHTest {
             Neighbor[] n2 = naive.search(testx[i], k);
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
-                    if (m1.index == m2.index) {
+                    if (m1.index() == m2.index()) {
                         recall[i]++;
                         break;
                     }
@@ -124,7 +124,7 @@ public class LSHTest {
 
             for (Neighbor m2 : n2) {
                 for (Neighbor m1 : n1) {
-                    if (m1.index == m2.index) {
+                    if (m1.index() == m2.index()) {
                         recall[i]++;
                         break;
                     }
