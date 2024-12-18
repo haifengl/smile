@@ -4035,7 +4035,7 @@ public class MathEx {
      * @param b a vector.
      * @return the cosine similarity.
      */
-    public static float cos(float[] a, float[] b) {
+    public static float cosine(float[] a, float[] b) {
         return dot(a, b) / (norm2(a) * norm2(b));
     }
 
@@ -4045,8 +4045,25 @@ public class MathEx {
      * @param b a vector.
      * @return the cosine similarity.
      */
-    public static double cos(double[] a, double[] b) {
+    public static double cosine(double[] a, double[] b) {
         return dot(a, b) / (norm2(a) * norm2(b));
+    }
+
+    /**
+     * Normalizes an array to norm 1.
+     * @param array the array.
+     */
+    public static void normalize(double[] array) {
+        double norm = norm(array);
+
+        if (isZero(norm)) {
+            logger.warn("array has norm of 0.");
+            norm = 1;
+        }
+
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= norm;
+        }
     }
 
     /**
@@ -4059,7 +4076,7 @@ public class MathEx {
 
         if (isZero(sigma)) {
             logger.warn("array has variance of 0.");
-            return;
+            sigma = 1;
         }
 
         for (int i = 0; i < array.length; i++) {
