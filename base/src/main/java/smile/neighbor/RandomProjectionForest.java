@@ -16,9 +16,7 @@
  */
 package smile.neighbor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import smile.math.MathEx;
 import smile.sort.HeapSelect;
 
@@ -49,16 +47,23 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
             heap.add(new NeighborBuilder<>());
         }
 
+        Set<Integer> uniqueSamples = new HashSet<>();
         for (var tree : trees) {
             int[] samples = tree.search(q);
             for (var index : samples) {
-                double[] x = data[index];
-                double dist = angular ? 1 - MathEx.cosine(q, x) : MathEx.distance(q, x);
+                uniqueSamples.add(index);
+            }
+        }
 
-                if (heap.size() < k) {
-                    heap.add(new NeighborBuilder<>(x, x, index, dist));
-                } else if (dist < heap.peek().distance) {
-                    var top = heap.peek();
+        for (var index : uniqueSamples) {
+            double[] x = data[index];
+            double dist = angular ? MathEx.angular(q, x) : MathEx.distance(q, x);
+
+            if (heap.size() < k) {
+                heap.add(new NeighborBuilder<>(x, x, index, dist));
+            } else {
+                var top = heap.peek();
+                if (dist < top.distance) {
                     top.distance = dist;
                     top.index = index;
                     top.key = x;
