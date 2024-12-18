@@ -56,7 +56,7 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
         for (int i = 0; i < samples.length; i++) {
             int index = samples[i];
             double[] x = data[index];
-            double dist = angular ? 1 - MathEx.cosine(q, x) : MathEx.distance(q, x);
+            double dist = angular ? MathEx.angular(q, x) : MathEx.distance(q, x);
             neighbors[i] = Neighbor.of(x, index, dist);
         }
         Arrays.sort(neighbors);
