@@ -3957,9 +3957,7 @@ public class MathEx {
             norm += n * n;
         }
 
-        norm = (float) sqrt(norm);
-
-        return norm;
+        return (float) sqrt(norm);
     }
 
     /**
@@ -3974,9 +3972,7 @@ public class MathEx {
             norm += n * n;
         }
 
-        norm = sqrt(norm);
-
-        return norm;
+        return sqrt(norm);
     }
 
     /**
@@ -4047,6 +4043,26 @@ public class MathEx {
      */
     public static double cosine(double[] a, double[] b) {
         return dot(a, b) / (norm2(a) * norm2(b));
+    }
+
+    /**
+     * Returns the angular distance.
+     * @param a a vector.
+     * @param b a vector.
+     * @return the angular distance.
+     */
+    public static float angular(float[] a, float[] b) {
+        return (float) (Math.acos(cosine(a, b)) / Math.PI);
+    }
+
+    /**
+     * Returns the angular distance.
+     * @param a a vector.
+     * @param b a vector.
+     * @return the angular distance.
+     */
+    public static double angular(double[] a, double[] b) {
+        return Math.acos(cosine(a, b)) / Math.PI;
     }
 
     /**
