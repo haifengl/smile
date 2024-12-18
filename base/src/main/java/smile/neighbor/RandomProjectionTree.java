@@ -16,6 +16,8 @@
  */
 package smile.neighbor;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 
@@ -26,14 +28,39 @@ import smile.math.MathEx;
  *
  * @author Karl Li
  */
-public class RandomProjectionTree {
-
+public class RandomProjectionTree implements KNNSearch<double[], double[]> {
     // Used for a floating point "nearly zero" comparison
     private static final float EPS = 1e-8F;
+    private final double[][] data;
     private final Node root;
+    private final int leafSize;
+    private final boolean angular;
 
-    private RandomProjectionTree(Node root) {
+    private RandomProjectionTree(double[][] data, Node root, int leafSize, boolean angular) {
+        this.data = data;
         this.root = root;
+        this.leafSize = leafSize;
+        this.angular = angular;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Neighbor<double[], double[]>[] search(double[] q, int k) {
+        if (k > leafSize) {
+            throw new IllegalArgumentException("k must be <= leafSize");
+        }
+
+        Node leaf = root.search(q);
+        int[] samples = leaf.samples();
+        Neighbor<double[], double[]>[] neighbors = (Neighbor<double[], double[]>[]) Array.newInstance(double[].class, samples.length);
+        for (int i = 0; i < samples.length; i++) {
+            int index = samples[i];
+            double[] x = data[index];
+            double dist = angular ? 1 - MathEx.cosine(q, x) : MathEx.distance(q, x);
+            neighbors[i] = Neighbor.of(x, index, dist);
+        }
+        Arrays.sort(neighbors);
+        return samples.length <= k ? neighbors : Arrays.copyOf(neighbors, k);
     }
 
     record Node(int[] samples, double[] hyperplane, double offset, Node leftChild, Node rightChild) {
@@ -49,6 +76,13 @@ public class RandomProjectionTree {
         /** Returns the number of leaf nodes in this subtree. */
         int numLeaves() {
             return isLeaf() ? 1 : (leftChild != null ? leftChild.numLeaves() : 0) + (rightChild != null ? rightChild.numLeaves() : 0);
+        }
+
+        Node search(double[] point) {
+            if (isLeaf()) return this;
+            int node = 0;
+            boolean rightSide = isRightSide(point, hyperplane, offset);
+            return rightSide ? rightChild.search(point) : leftChild.search(point);
         }
 
         int[] recursiveFlatten(double[][] hyperplanes, double[] offsets, int[][] children, int[][] indices, int nodeNum, int leafNum) {
@@ -249,21 +283,15 @@ public class RandomProjectionTree {
     }
 
     /**
-     * Construct a random projection tree based on <code>data</code> with leaves
-     * of size at most <code>leafSize</code>.
-     * @param data array of shape <code>(nSamples, nFeatures)</code>
-     * The original data to be split
-     * @param leafSize The maximum size of any leaf node in the tree. Any node in the tree
-     * with more than <code>leafSize</code> will be split further to create child
-     * nodes.
-     * @param angular Whether to use cosine/angular distance to create splits in the tree,
-     * or Euclidean distance
-     * @return A random projection tree node which links to its child nodes. This
-     * provides the full tree below the returned node.
+     * Builds a random projection tree.
+     * @param data the data set.
+     * @param leafSize The maximum size of leaf node.
+     * @param angular true for cosine metric, otherwise Euclidean.
+     * @return A random projection tree.
      */
     public static RandomProjectionTree of(double[][] data, int leafSize, boolean angular) {
         int[] samples = IntStream.range(0, data.length).toArray();
         Node root = angular ? makeAngularTree(data, samples, leafSize) : makeEuclideanTree(data, samples, leafSize);
-        return new RandomProjectionTree(root);
+        return new RandomProjectionTree(data, root, leafSize, angular);
     }
 }
