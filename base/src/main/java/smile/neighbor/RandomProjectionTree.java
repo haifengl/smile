@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * @author Karl Li
  */
 public class RandomProjectionTree implements KNNSearch<double[], double[]> {
-    // Used for a floating point "nearly zero" comparison
+    /** Threshold for nearly zero comparison. */
     private static final float EPS = 1e-8F;
     private final double[][] data;
     private final Node root;
@@ -80,7 +80,6 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
 
         Node search(double[] point) {
             if (isLeaf()) return this;
-            int node = 0;
             boolean rightSide = isRightSide(point, hyperplane, offset);
             return rightSide ? rightChild.search(point) : leftChild.search(point);
         }
@@ -142,7 +141,7 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
 
     /**
      * Given a set of sample indices for data points, create a random
-     * hyperplane to split the data. This particular split uses cosine
+     * hyperplane to split the data. This particular split uses angular
      * distance to determine the hyperplane.
      *
      * @param data the data points.
@@ -288,7 +287,7 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      * Builds a random projection tree.
      * @param data the data set.
      * @param leafSize The maximum size of leaf node.
-     * @param angular true for cosine metric, otherwise Euclidean.
+     * @param angular true for angular metric, otherwise Euclidean.
      * @return A random projection tree.
      */
     public static RandomProjectionTree of(double[][] data, int leafSize, boolean angular) {

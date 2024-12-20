@@ -93,7 +93,7 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
      * @param data the data set.
      * @param numTrees the number of trees.
      * @param leafSize The maximum size of leaf node.
-     * @param angular true for cosine metric, otherwise Euclidean.
+     * @param angular true for angular metric, otherwise Euclidean.
      * @return random projection forest
      */
     public static RandomProjectionForest of(double[][] data, int numTrees, int leafSize, boolean angular) {

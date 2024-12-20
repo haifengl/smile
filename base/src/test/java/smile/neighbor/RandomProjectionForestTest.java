@@ -81,7 +81,7 @@ public class RandomProjectionForestTest {
         System.out.println("angular");
 
         RandomProjectionForest forest = RandomProjectionForest.of(x, 5, 10, true);
-        LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::cosine);
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::angular);
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
