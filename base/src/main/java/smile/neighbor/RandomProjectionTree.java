@@ -64,6 +64,16 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
     }
 
     record Node(int[] samples, double[] hyperplane, double offset, Node leftChild, Node rightChild) {
+        /** Leaf node constructor. */
+        Node(int[] samples) {
+            this(samples, null, 0, null, null);
+        }
+
+        /** Split node constructor. */
+        Node(double[] hyperplane, double offset, Node leftChild, Node rightChild) {
+            this(null, hyperplane, offset, leftChild, rightChild);
+        }
+
         boolean isLeaf() {
             return leftChild == null && rightChild == null;
         }
@@ -136,7 +146,22 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
             margin += hyperplane[i] * point[i];
         }
 
-        return Math.abs(margin) < EPS ? MathEx.random() < 0.5 : margin < 0;
+        return Math.abs(margin) < EPS ? (MathEx.random() < 0.5) : (margin < 0);
+    }
+
+    /**
+     * Return two random points to calculate the hyperplane between them.
+     */
+    private static double[][] randomPoints(double[][] data, int[] samples) {
+        int leftIndex = MathEx.randomInt(samples.length);
+        int rightIndex = MathEx.randomInt(samples.length);
+        if (leftIndex == rightIndex && ++rightIndex == samples.length) {
+            rightIndex = 0;
+        }
+
+        double[] left = normalize(data[samples[leftIndex]]);
+        double[] right = normalize(data[samples[rightIndex]]);
+        return new double[][]{left, right};
     }
 
     /**
@@ -151,16 +176,9 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      */
     private static Split angularSplit(double[][] data, int[] samples) {
         int dim = data[0].length;
-
-        // Select two random points, set the hyperplane between them
-        int leftIndex = MathEx.randomInt(samples.length);
-        int rightIndex = MathEx.randomInt(samples.length);
-        if (leftIndex == rightIndex && ++rightIndex == samples.length) {
-            rightIndex = 0;
-        }
-
-        double[] left = normalize(data[samples[leftIndex]]);
-        double[] right = normalize(data[samples[rightIndex]]);
+        double[][] points = randomPoints(data, samples);
+        double[] left = points[0];
+        double[] right = points[1];
 
         for (int d = 0; d < dim; ++d) {
             left[d] -= right[d];
@@ -196,16 +214,9 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      */
     private static Split euclideanSplit(double[][] data, int[] samples) {
         int dim = data[0].length;
-
-        // Select two random points, set the hyperplane between them
-        int leftIndex = MathEx.randomInt(samples.length);
-        int rightIndex = MathEx.randomInt(samples.length);
-        if (leftIndex == rightIndex && ++rightIndex == samples.length) {
-            rightIndex = 0;
-        }
-
-        double[] left = normalize(data[samples[leftIndex]]);
-        double[] right = normalize(data[samples[rightIndex]]);
+        double[][] points = randomPoints(data, samples);
+        double[] left = points[0];
+        double[] right = points[1];
 
         for (int d = 0; d < dim; ++d) {
             left[d] -= right[d];
@@ -255,32 +266,32 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
 
     private static Node makeEuclideanTree(double[][] data, int[] samples, int leafSize) {
         if (samples.length <= leafSize) {
-            return new Node(samples, null, 0, null, null);
+            return new Node(samples);
         }
 
         Split split = euclideanSplit(data, samples);
         if (split == null) {
-            return new Node(samples, null, 0, null, null);
+            return new Node(samples);
         }
 
         Node leftNode = makeEuclideanTree(data, split.leftSamples, leafSize);
         Node rightNode = makeEuclideanTree(data, split.rightSamples, leafSize);
-        return new Node(null, split.hyperplane, split.offset, leftNode, rightNode);
+        return new Node(split.hyperplane, split.offset, leftNode, rightNode);
     }
 
     private static Node makeAngularTree(double[][] data, int[] samples, int leafSize) {
         if (samples.length <= leafSize) {
-            return new Node(samples, null, 0, null, null);
+            return new Node(samples);
         }
 
         Split split = angularSplit(data, samples);
         if (split == null) {
-            return new Node(samples, null, 0, null, null);
+            return new Node(samples);
         }
 
         Node leftNode = makeAngularTree(data, split.leftSamples, leafSize);
         Node rightNode = makeAngularTree(data, split.rightSamples, leafSize);
-        return new Node(null, split.hyperplane, split.offset, leftNode, rightNode);
+        return new Node(split.hyperplane, split.offset, leftNode, rightNode);
     }
 
     /**
