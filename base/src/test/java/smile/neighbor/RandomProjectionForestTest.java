@@ -81,7 +81,7 @@ public class RandomProjectionForestTest {
     public void testAngular() {
         System.out.println("angular");
 
-        RandomProjectionForest forest = RandomProjectionForest.of(x, 5, 10, true);
+        RandomProjectionForest forest = RandomProjectionForest.of(x, 15, 10, true);
         LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::angular);
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -101,6 +101,7 @@ public class RandomProjectionForestTest {
         System.out.format("q1     of recall is %d%n", MathEx.q1(recall));
         System.out.format("median of recall is %d%n", MathEx.median(recall));
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
+        assertEquals(7, MathEx.q3(recall));
     }
 
     @Test

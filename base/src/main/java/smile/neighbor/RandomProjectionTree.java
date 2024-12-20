@@ -185,20 +185,7 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
         }
 
         double[] hyperplane = normalize(left);
-
-        int numLeft = 0;
-        int numRight = 0;
-        boolean[] rightSide = new boolean[samples.length];
-        for (int i = 0; i < samples.length; ++i) {
-            rightSide[i] = isRightSide(data[samples[i]], hyperplane, 0);
-            if (rightSide[i]) {
-                ++numRight;
-            } else {
-                ++numLeft;
-            }
-        }
-
-        return split(numLeft, numRight, samples, rightSide, hyperplane, 0);
+        return split(data, samples, hyperplane, 0);
     }
 
 
@@ -234,6 +221,10 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
         }
         offset /= 2;
 
+        return split(data, samples, hyperplane, offset);
+    }
+
+    private static Split split(double[][] data, int[] samples, double[] hyperplane, double offset) {
         int numLeft = 0;
         int numRight = 0;
         boolean[] rightSide = new boolean[samples.length];
@@ -246,10 +237,8 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
             }
         }
 
-        return split(numLeft, numRight, samples, rightSide, hyperplane, offset);
-    }
-
-    private static Split split(int numLeft, int numRight, int[] samples, boolean[] rightSide, double[] hyperplane, double offset) {
+        // If all points end up on one side, something went wrong numerically.
+        // In this case, don't split as they are likely very close anyway.
         if (numLeft == 0 || numRight == 0) return null;
 
         int[] leftSamples = new int[numLeft];
