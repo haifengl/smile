@@ -121,6 +121,22 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
     }
 
     /**
+     * Returns the number of nodes in the tree.
+     * @return the number of nodes in the tree.
+     */
+    public int numNodes() {
+        return root.numNodes();
+    }
+
+    /**
+     * Returns the number of leaf nodes in the tree.
+     * @return the number of leaf nodes in the tree.
+     */
+    public int numLeaves() {
+        return root.numLeaves();
+    }
+
+    /**
      * Returns the list of samples in each leaf node.
      *
      * @return the list of samples in each leaf node.
@@ -174,15 +190,25 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
     /**
      * Return two random points to calculate the hyperplane between them.
      */
-    private static double[][] randomPoints(double[][] data, int[] samples) {
-        int leftIndex = MathEx.randomInt(samples.length);
-        int rightIndex = MathEx.randomInt(samples.length);
-        if (leftIndex == rightIndex && ++rightIndex == samples.length) {
-            rightIndex = 0;
+    private static double[][] randomPoints(double[][] data, int[] samples, boolean angular) {
+        int i = samples[MathEx.randomInt(samples.length)];
+        double[] xi = data[i];
+
+        int other = -1;
+        double farthest = Double.NEGATIVE_INFINITY;
+
+        for (int j : samples) {
+            if (j == i) continue;
+            double[] xj = data[j];
+            double dist = angular ? MathEx.angular(xi, xj) : MathEx.distance(xi, xj);
+            if (dist > farthest) {
+                other = j;
+                farthest = dist;
+            }
         }
 
-        double[] left = normalize(data[samples[leftIndex]]);
-        double[] right = normalize(data[samples[rightIndex]]);
+        double[] left = normalize(data[i]);
+        double[] right = normalize(data[other]);
         return new double[][]{left, right};
     }
 
@@ -198,16 +224,22 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      */
     private static Split angularSplit(double[][] data, int[] samples) {
         int dim = data[0].length;
-        double[][] points = randomPoints(data, samples);
-        double[] left = points[0];
-        double[] right = points[1];
+        // Sometimes, all points are on the same side.
+        // Retry several times if this happens.
+        for (int iter = 0; iter < 5; iter++) {
+            double[][] points = randomPoints(data, samples, true);
+            double[] left = points[0];
+            double[] right = points[1];
 
-        for (int d = 0; d < dim; ++d) {
-            left[d] -= right[d];
+            for (int d = 0; d < dim; ++d) {
+                left[d] -= right[d];
+            }
+
+            double[] hyperplane = normalize(left);
+            Split split = split(data, samples, hyperplane, 0);
+            if (split != null) return split;
         }
-
-        double[] hyperplane = normalize(left);
-        return split(data, samples, hyperplane, 0);
+        return null;
     }
 
 
@@ -223,27 +255,33 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      */
     private static Split euclideanSplit(double[][] data, int[] samples) {
         int dim = data[0].length;
-        double[][] points = randomPoints(data, samples);
-        double[] left = points[0];
-        double[] right = points[1];
+        // Sometimes, all points are on the same side.
+        // Retry several times if this happens.
+        for (int iter = 0; iter < 5; iter++) {
+            double[][] points = randomPoints(data, samples, false);
+            double[] left = points[0];
+            double[] right = points[1];
 
-        for (int d = 0; d < dim; ++d) {
-            left[d] -= right[d];
+            for (int d = 0; d < dim; ++d) {
+                left[d] -= right[d];
+            }
+
+            double offset = 0;
+            double[] hyperplane = new double[dim];
+
+            for (int d = 0; d < dim; ++d) {
+                double ld = left[d];
+                double rd = right[d];
+                double delta = ld - rd;
+                hyperplane[d] = delta;
+                offset -= delta * (ld + rd);
+            }
+            offset /= 2;
+
+            Split split = split(data, samples, hyperplane, offset);
+            if (split != null) return split;
         }
-
-        double offset = 0;
-        double[] hyperplane = new double[dim];
-
-        for (int d = 0; d < dim; ++d) {
-            double ld = left[d];
-            double rd = right[d];
-            double delta = ld - rd;
-            hyperplane[d] = delta;
-            offset -= delta * (ld + rd);
-        }
-        offset /= 2;
-
-        return split(data, samples, hyperplane, offset);
+        return null;
     }
 
     private static Split split(double[][] data, int[] samples, double[] hyperplane, double offset) {
@@ -259,8 +297,7 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
             }
         }
 
-        // If all points end up on one side, something went wrong numerically.
-        // In this case, don't split as they are likely very close anyway.
+        // If all points end up on one side, don't split.
         if (numLeft == 0 || numRight == 0) return null;
 
         int[] leftSamples = new int[numLeft];
