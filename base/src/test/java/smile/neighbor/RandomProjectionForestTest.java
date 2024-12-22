@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("rawtypes")
 public class RandomProjectionForestTest {
     double[][] x = USPS.x;
     double[][] testx = USPS.testx;
@@ -59,10 +58,10 @@ public class RandomProjectionForestTest {
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
-            Neighbor[] n1 = forest.search(testx[i], k);
-            Neighbor[] n2 = naive.search(testx[i], k);
-            for (Neighbor m2 : n2) {
-                for (Neighbor m1 : n1) {
+            var n1 = forest.search(testx[i], k);
+            var n2 = naive.search(testx[i], k);
+            for (var m2 : n2) {
+                for (var m1 : n1) {
                     if (m1.index() == m2.index()) {
                         recall[i]++;
                         break;
@@ -86,10 +85,10 @@ public class RandomProjectionForestTest {
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
-            Neighbor[] n1 = forest.search(testx[i], k);
-            Neighbor[] n2 = naive.search(testx[i], k);
-            for (Neighbor m2 : n2) {
-                for (Neighbor m1 : n1) {
+            var n1 = forest.search(testx[i], k);
+            var n2 = naive.search(testx[i], k);
+            for (var m2 : n2) {
+                for (var m1 : n1) {
                     if (m1.index() == m2.index()) {
                         recall[i]++;
                         break;

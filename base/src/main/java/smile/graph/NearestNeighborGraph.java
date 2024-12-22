@@ -262,12 +262,24 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
+     * @return approximate k-nearest neighbor graph.
+     */
+    public static NearestNeighborGraph descent(double[][] data, int k) {
+        return descent(data, k, k, 2*k, 50, 50, 0.001);
+    }
+
+    /**
+     * Creates an approximate nearest neighbor graph with random projection
+     * forest and Euclidean distance.
+     *
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
      * @param numTrees the number of trees.
      * @param leafSize The maximum size of leaf node.
      * @return approximate k-nearest neighbor graph.
      */
     public static NearestNeighborGraph descent(double[][] data, int k, int numTrees, int leafSize,
-                                               int maxCandidates, int maxIter, double delta, double rho) {
+                                               int maxCandidates, int maxIter, double delta) {
         int n = data.length;
         List<PriorityQueue<Neighbor>> heapList = new ArrayList<>(data.length);
         List<Set<Integer>> neighborSetList = new ArrayList<>(data.length);
@@ -294,7 +306,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
             }
         }
 
-        return descent(data, MathEx::distance, heapList, k, maxCandidates, maxIter, delta, rho);
+        return descent(data, MathEx::distance, heapList, k, maxCandidates, maxIter, delta);
     }
 
     private static boolean updateHeap(PriorityQueue<Neighbor> pq, Set<Integer> set, int k, int index, double dist) {
@@ -324,17 +336,32 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param data the dataset.
      * @param k k-nearest neighbor.
      * @param distance the distance function.
-     * @param maxCandidates the maximum number of candidates in nearest neighbor search.
-     * @param maxIter the maximum number of iterations.
      * @return approximate k-nearest neighbor graph.
      */
-    public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k, int maxCandidates, int maxIter, double delta, double rho) {
+    public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k) {
+        return descent(data, distance, k, 50, 10, 0.001);
+    }
+
+    /**
+     * Creates an approximate nearest neighbor graph with the NN-Descent algorithm.
+     *
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     * @param distance the distance function.
+     * @param maxCandidates the maximum number of candidates in nearest neighbor search.
+     * @param maxIter the maximum number of iterations.
+     * @param delta Controls the early stop due to limited progress. Larger values
+     *         will result in earlier aborts, providing less accurate indexes,
+     *         and less accurate searching.
+     * @return approximate k-nearest neighbor graph.
+     */
+    public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k, int maxCandidates, int maxIter, double delta) {
         if (k < 2) {
             throw new IllegalArgumentException("k must be greater than 1: " + k);
         }
         var heap = build(data, distance, k, NearestNeighborGraph::rejectionSample);
         extend(heap);
-        return descent(data, distance, heap, k, maxCandidates, maxIter, delta, rho);
+        return descent(data, distance, heap, k, maxCandidates, maxIter, delta);
     }
 
     static class Candidate implements Comparable<Candidate> {
@@ -355,7 +382,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
     }
 
     private static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, List<PriorityQueue<Neighbor>> heapList,
-                                                    int k, int maxCandidates, int maxIter, double delta, double rho) {
+                                                    int k, int maxCandidates, int maxIter, double delta) {
         int n = data.length;
         List<Set<Integer>> neighborSetList = new ArrayList<>(data.length);
         for (int i = 0; i < data.length; i++) {
