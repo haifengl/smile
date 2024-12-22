@@ -288,15 +288,15 @@ public class UMAP {
      * set for each such point, and then combining all the local
      * fuzzy simplicial sets into a global one via a fuzzy union.
      *
-     * @param nng        The nearest neighbor graph.
-     * @param k          k-nearest neighbor.
-     * @param iterations The max number of iterations of the binary search
-     *                   for the correct distance value. default 64
+     * @param nng     The nearest neighbor graph.
+     * @param k       k-nearest neighbor.
+     * @param maxIter The max number of iterations of the binary search
+     *                for the correct distance value. default 64
      * @return A fuzzy simplicial set represented as a sparse matrix. The (i, j)
      * entry of the matrix represents the membership strength of the
      * 1-simplex between the ith and jth sample points.
      */
-    private static AdjacencyList computeFuzzySimplicialSet(AdjacencyList nng, int k, int iterations) {
+    private static AdjacencyList computeFuzzySimplicialSet(AdjacencyList nng, int k, int maxIter) {
         // Algorithm 2 Constructing a local fuzzy simplicial set
         final double LogK = MathEx.log2(k);
         final double EPSILON = 1E-8;
@@ -327,7 +327,7 @@ public class UMAP {
 
             // Algorithm 3 Compute the normalizing factor for distances
             // function SmoothKNNDist() by binary search
-            for (int iter = 0; iter < iterations; iter++) {
+            for (int iter = 0; iter < maxIter; iter++) {
                 double psum = 0.0;
                 for (Edge edge : knn) {
                     if (!MathEx.isZero(edge.weight(), EPSILON)) {
