@@ -20,7 +20,8 @@ package smile.graph;
 import java.util.*;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
-import smile.math.distance.Distance;
+import smile.math.distance.Metric;
+import smile.neighbor.RandomProjectionTree;
 
 /**
  * The k-nearest neighbor graph builder.
@@ -109,6 +110,33 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         }
     }
 
+    /**
+     * Creates a nearest neighbor graph.
+     *
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     * @param distance the distance function.
+     * @return k-nearest neighbor graph.
+     */
+    public static <T> NearestNeighborGraph of(T[] data, Metric<T> distance, int k) {
+        var heap = build(data, distance, k, (int n, int k_, int i) -> IntStream.range(0, n).toArray());
+        return toGraph(heap, k);
+    }
+
+    /**
+     * Creates a random neighbor graph.
+     *
+     * @param data the dataset.
+     * @param k k-random neighbor.
+     * @param distance the distance function.
+     * @return k-random neighbor graph.
+     */
+    public static <T> NearestNeighborGraph random(T[] data, Metric<T> distance, int k) {
+        var heap = build(data, distance, k, NearestNeighborGraph::rejectionSample);
+        extend(heap);
+        return toGraph(heap, k);
+    }
+
     private static class Neighbor implements Comparable<Neighbor> {
         public int index;
         public double distance;
@@ -116,6 +144,11 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         public Neighbor(int index, double distance) {
             this.index = index;
             this.distance = distance;
+        }
+
+        @Override
+        public int hashCode() {
+            return index;
         }
 
         @Override
@@ -130,53 +163,160 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param data the dataset.
      * @param k k-nearest neighbor.
      * @param distance the distance function.
-     * @return k-nearest neighbor graph.
+     * @param candidates neighbor candidate generator.
+     * @return a list of k-nearest neighbor heaps for each data point.
      */
-    public static <T> NearestNeighborGraph of(T[] data, Distance<T> distance, int k) {
+    private static <T> List<PriorityQueue<Neighbor>> build(T[] data, Metric<T> distance, int k, CandidateGenerator candidates) {
         if (k < 2) {
             throw new IllegalArgumentException("k must be greater than 1: " + k);
         }
 
         int n = data.length;
-        int[][] neighbors = new int[n][k];
-        double[][] distances = new double[n][k];
+        List<PriorityQueue<Neighbor>> heap = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            heap.add(new PriorityQueue<>());
+        }
 
         IntStream.range(0, n).parallel().forEach(i -> {
             T xi = data[i];
-            PriorityQueue<Neighbor> pq = new PriorityQueue<>();
-            for (int j = 0; j < n; j++) {
+            PriorityQueue<Neighbor> pq = heap.get(i);
+            for (int j : candidates.generate(n, k, i)) {
                 if (j == i) continue;
-                double d = distance.d(xi, data[j]);
+                double dist = distance.d(xi, data[j]);
                 if (pq.size() < k) {
-                    pq.offer(new Neighbor(j, d));
-                } else if (d < pq.peek().distance) {
+                    pq.offer(new Neighbor(j, dist));
+                } else if (dist < pq.peek().distance) {
                     Neighbor neighbor = pq.poll();
                     neighbor.index = j;
-                    neighbor.distance = d;
+                    neighbor.distance = dist;
                     pq.offer(neighbor);
                 }
             }
-
-            for (int j = pq.size()-1; !pq.isEmpty(); j--) {
-                Neighbor neighbor = pq.poll();
-                neighbors[i][j] = neighbor.index;
-                distances[i][j] = neighbor.distance;
-            }
         });
+
+        return heap;
+    }
+
+    /** Extends nearest neighbor heap with reverse nearest neighbors. */
+    private static void extend(List<PriorityQueue<Neighbor>> heap) {
+        int n = heap.size();
+        List<Set<Integer>> neighbors = new ArrayList<>(n);
+        List<Set<Neighbor>> reverseNeighbors = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            neighbors.add(new HashSet<>());
+            reverseNeighbors.add(new HashSet<>());
+        }
+
+        for (int i = 0; i < n; i++) {
+            Set<Integer> set = neighbors.get(i);
+            PriorityQueue<Neighbor> pq = heap.get(i);
+            for (var neighbor : pq) {
+                set.add(neighbor.index);
+                reverseNeighbors.get(neighbor.index).add(new Neighbor(i, neighbor.distance));
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            Set<Integer> set = neighbors.get(i);
+            PriorityQueue<Neighbor> pq = heap.get(i);
+            for (var neighbor : reverseNeighbors.get(i)) {
+                if (!set.contains(neighbor.index)) {
+                    if (neighbor.distance < pq.peek().distance) {
+                        Neighbor top = pq.poll();
+                        top.index = neighbor.index;
+                        top.distance = neighbor.distance;
+                        pq.offer(top);
+                    }
+                }
+            }
+        }
+    }
+
+    /** Returns a near neighbor graph with heaps. */
+    private static NearestNeighborGraph toGraph(List<PriorityQueue<Neighbor>> heap, int k) {
+        int n = heap.size();
+        int[][] neighbors = new int[n][k];
+        double[][] distances = new double[n][k];
+        for (int i = 0; i < n; i++) {
+            PriorityQueue<Neighbor> pq = heap.get(i);
+            int j = pq.size();
+            while (!pq.isEmpty()) {
+                Neighbor neighbor = pq.poll();
+                if (--j < k) {
+                    neighbors[i][j] = neighbor.index;
+                    distances[i][j] = neighbor.distance;
+                }
+            }
+        }
 
         return new NearestNeighborGraph(neighbors, distances);
     }
 
+    private interface CandidateGenerator {
+        int[] generate(int n, int k, int i);
+    }
+
     /**
-     * Creates an approximate nearest neighbor graph with Euclidean distance.
+     * Creates an approximate nearest neighbor graph with random projection
+     * forest and Euclidean distance.
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
+     * @param numTrees the number of trees.
+     * @param leafSize The maximum size of leaf node.
      * @return approximate k-nearest neighbor graph.
      */
-    /*public static NearestNeighborGraph descent(double[][] data, int k) {
-        return descent(data, MathEx::distance, k);
-    }*/
+    public static NearestNeighborGraph descent(double[][] data, int k, int numTrees, int leafSize,
+                                               int maxCandidates, int maxIter, double delta, double rho) {
+        int n = data.length;
+        List<PriorityQueue<Neighbor>> heapList = new ArrayList<>(data.length);
+        List<Set<Integer>> neighborSetList = new ArrayList<>(data.length);
+        for (int i = 0; i < data.length; i++) {
+            heapList.add(new PriorityQueue<>());
+            neighborSetList.add(new HashSet<>());
+        }
+
+        for (int ti = 0; ti < numTrees; ti++) {
+            RandomProjectionTree tree = RandomProjectionTree.of(data, leafSize, false);
+            for (int[] leaf : tree.leafSamples()) {
+                for (int li = 0; li < leaf.length; li++) {
+                    int i = leaf[li];
+                    double[] xi = data[i];
+                    for (int lj = li + 1; lj < leaf.length; lj++) {
+                        int j = leaf[lj];
+                        double[] xj = data[j];
+                        double dist = MathEx.distance(xi, xj);
+
+                        updateHeap(heapList.get(i), neighborSetList.get(i), k, j, dist);
+                        updateHeap(heapList.get(j), neighborSetList.get(j), k, i, dist);
+                    }
+                }
+            }
+        }
+
+        return descent(data, MathEx::distance, heapList, k, maxCandidates, maxIter, delta, rho);
+    }
+
+    private static boolean updateHeap(PriorityQueue<Neighbor> pq, Set<Integer> set, int k, int index, double dist) {
+        if (!set.contains(index)) {
+            if (pq.size() < k) {
+                pq.add(new Neighbor(index, dist));
+                set.add(index);
+                return true;
+            } else {
+                if (dist < pq.peek().distance) {
+                    var top = pq.poll();
+                    set.remove(top.index);
+                    set.add(index);
+                    top.distance = dist;
+                    top.index = index;
+                    pq.offer(top);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * Creates an approximate nearest neighbor graph with the NN-Descent algorithm.
@@ -188,84 +328,134 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param maxIter the maximum number of iterations.
      * @return approximate k-nearest neighbor graph.
      */
-    /*public static <T> NearestNeighborGraph descent(T[] data, Distance<T> distance, int k, int maxCandidates, int maxIter, double delta, double rho) {
+    public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k, int maxCandidates, int maxIter, double delta, double rho) {
         if (k < 2) {
             throw new IllegalArgumentException("k must be greater than 1: " + k);
         }
+        var heap = build(data, distance, k, NearestNeighborGraph::rejectionSample);
+        extend(heap);
+        return descent(data, distance, heap, k, maxCandidates, maxIter, delta, rho);
+    }
 
+    static class Candidate implements Comparable<Candidate> {
+        public int index;
+        public double distance;
+        public boolean isNew;
+
+        public Candidate(int index, double distance, boolean isNew) {
+            this.index = index;
+            this.distance = distance;
+            this.isNew = isNew;
+        }
+
+        @Override
+        public int compareTo(Candidate o) {
+            return Double.compare(o.distance, distance);
+        }
+    }
+
+    private static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, List<PriorityQueue<Neighbor>> heapList,
+                                                    int k, int maxCandidates, int maxIter, double delta, double rho) {
         int n = data.length;
-        int[][] neighbors = new int[n][k];
-        double[][] distances = new double[n][k];
-        boolean[][] isNew = new boolean[n][k];
-        for (int i = 0; i < n; i++) {
-            Arrays.fill(neighbors[i], -1);
-            Arrays.fill(distances[i], Double.POSITIVE_INFINITY);
+        List<Set<Integer>> neighborSetList = new ArrayList<>(data.length);
+        for (int i = 0; i < data.length; i++) {
+            neighborSetList.add(new HashSet<>());
         }
-
         for (int i = 0; i < n; i++) {
-            final float[] iRow = data.row(i);
-            for (final int index : Utils.rejectionSample(nNeighbors, data.rows(), random)) {
-                final float d = mMetric.distance(iRow, data.row(index));
-                currentGraph.push(i, d, index, true);
-                currentGraph.push(index, d, i, true);
+            var set = neighborSetList.get(i);
+            for (var neighbor : heapList.get(i)) {
+                set.add(neighbor.index);
             }
         }
 
-        if (rpTreeInit) {
-            for (final FlatTree tree : forest) {
-                for (final int[] leaf : tree.getIndices()) {
-                    for (int i = 0; i < leaf.length; ++i) {
-                        final float[] iRow = data.row(leaf[i]);
-                        for (int j = i + 1; j < leaf.length; ++j) {
-                            final float d = mMetric.distance(iRow, data.row(leaf[j]));
-                            currentGraph.push(leaf[i], d, leaf[j], true);
-                            currentGraph.push(leaf[j], d, leaf[i], true);
-                        }
-                    }
-                }
-            }
-        }
-
-        boolean[] rejectStatus = new boolean[maxCandidates];
-        for (int iter = 0; iter < maxIter; iter++) {
-            logger.info("NearestNeighborDescent: {} / {}", (n + 1), maxIter);
-
-            final Heap candidateNeighbors = currentGraph.buildCandidates(n, k, maxCandidates);
-
+        for (int iter = 1; iter <= maxIter; iter++) {
             int count = 0;
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < maxCandidates; ++j) {
-                    rejectStatus[j] = MathEx.random() < rho;
-                }
-
-                for (int j = 0; j < maxCandidates; ++j) {
-                    final int p = candidateNeighbors.index(i, j);
-                    if (p < 0) {
-                        continue;
+            var candidates = generateCandidates(heapList, maxCandidates);
+            for (int i = 0; i < n; i++) {
+                for (var j : candidates[i]) {
+                    double dist = distance.d(data[i], data[j]);
+                    if (updateHeap(heapList.get(i), neighborSetList.get(i), k, j, dist)) {
+                        ++count;
                     }
-                    for (int l = 0; l <= j; l++) {
-                        final int q = candidateNeighbors.index(i, l);
-                        if (q < 0 || (rejectStatus[j] && rejectStatus[l]) || (!candidateNeighbors.isNew(i, j) && !candidateNeighbors.isNew(i, l))) {
-                            continue;
-                        }
 
-                        final float d = mMetric.distance(data.row(p), data.row(q));
-                        if (currentGraph.push(p, d, q, true)) {
-                            ++count;
-                        }
-                        if (currentGraph.push(q, d, p, true)) {
-                            ++count;
-                        }
+                    if (updateHeap(heapList.get(j), neighborSetList.get(j), k, i, dist)) {
+                        ++count;
                     }
                 }
             }
 
+            logger.info("NearestNeighborDescent iteration {}: {}", iter, count);
             if (count <= delta * k * n) {
                 break;
             }
         }
 
-        return currentGraph.deheapSort();
-        return new NearestNeighborGraph(neighbors, distances);
-    }*/
+        return toGraph(heapList, k);
+    }
+
+    private static int[][] generateCandidates(List<PriorityQueue<Neighbor>> heapList, int maxCandidates) {
+        int n = heapList.size();
+        List<Set<Neighbor>> candidates = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            candidates.add(new HashSet<>());
+        }
+
+        for (int i = 0; i < n; i++) {
+            var pqi = heapList.get(i);
+            for (var ni : pqi) {
+                int j = ni.index;
+                double dij = ni.distance;
+
+                var pqj = heapList.get(j);
+                for (var nj : pqj) {
+                    int k = nj.index;
+                    double djk = nj.distance;
+                    candidates.get(i).add(new Neighbor(k, dij + djk));
+                    candidates.get(k).add(new Neighbor(i, dij + djk));
+                }
+            }
+        }
+
+        int[][] result = new int[n][];
+        for (int i = 0; i < n; i++) {
+            List<Neighbor> list = new ArrayList<>(candidates.get(i));
+            list.sort((o1, o2) -> Double.compare(o1.distance, o2.distance));
+            result[i] = list.stream().limit(maxCandidates).mapToInt(neighbor -> neighbor.index).toArray();
+        }
+        return result;
+    }
+
+    /**
+     * Generate k integers from 0 to n such that no integer is selected twice.
+     * @param n The upper bound of samples.
+     * @param k The number of random samples.
+     * @param i samples should not equal i.
+     * @return random samples.
+     */
+    private static int[] rejectionSample(int n, int k, int i) {
+        if (k > n) {
+            throw new IllegalArgumentException();
+        }
+
+        int[] samples = new int[k];
+        for (int j = 0; j < k; j++) {
+            boolean loop = true;
+            while (loop) {
+                loop = false;
+                samples[j] = MathEx.randomInt(n);
+                if (samples[j] == i) {
+                    loop = true;
+                } else {
+                    for (int l = 0; l < j; l++) {
+                        if (samples[j] == samples[l]) {
+                            loop = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return samples;
+    }
 }
