@@ -109,15 +109,19 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
             }
         }
 
-        int[][] neighbors = new int[n][k];
-        double[][] distances = new double[n][k];
+        int[][] neighbors = new int[n][];
+        double[][] distances = new double[n][];
         for (int i = 0; i < n; i++) {
             var pq = heapList.get(i);
+            int m = Math.min(k, pq.size());
+            neighbors[i] = new int[m];
+            distances[i] = new double[m];
+
             pq.sort();
             var a = pq.toArray();
-            for (int j = 0; j < k; j++) {
-                neighbors[i][j] = a[j].index;
-                distances[i][j] = a[j].distance;
+            for (int j = 0, l = m-1; j < m; j++, l--) {
+                neighbors[i][j] = a[l].index;
+                distances[i][j] = a[l].distance;
             }
         }
         return new NearestNeighborGraph(neighbors, distances);
