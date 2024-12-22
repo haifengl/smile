@@ -297,8 +297,8 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
             }
         }
 
-        // If all points end up on one side, don't split.
-        if (numLeft == 0 || numRight == 0) return null;
+        // If almost points end up on one side, don't split.
+        if (numLeft < 2 || numRight < 2) return null;
 
         int[] leftSamples = new int[numLeft];
         int[] rightSamples = new int[numRight];
@@ -350,6 +350,10 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
      * @return A random projection tree.
      */
     public static RandomProjectionTree of(double[][] data, int leafSize, boolean angular) {
+        if (leafSize < 3) {
+            throw new IllegalArgumentException("leafSize must be at least 3");
+        }
+
         int[] samples = IntStream.range(0, data.length).toArray();
         Node root = angular ? makeAngularTree(data, samples, leafSize) : makeEuclideanTree(data, samples, leafSize);
         return new RandomProjectionTree(data, root, leafSize, angular);
