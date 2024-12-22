@@ -81,7 +81,7 @@ public class RandomProjectionForestTest {
     public void testAngular() {
         System.out.println("angular");
 
-        RandomProjectionForest forest = RandomProjectionForest.of(x, 15, 10, true);
+        RandomProjectionForest forest = RandomProjectionForest.of(x, 10, 10, true);
         LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::angular);
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -115,5 +115,23 @@ public class RandomProjectionForestTest {
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
+    }
+
+    @Test
+    public void testGraph() {
+        System.out.println("Graph");
+
+        RandomProjectionForest forest = RandomProjectionForest.of(x, 5, 10, false);
+        var graph = forest.toGraph(7);
+        int[][] neighbors = graph.neighbors();
+        double[][] distances = graph.distances();
+        assertEquals(x.length, neighbors.length);
+        assertEquals(x.length, distances.length);
+        assertEquals(distances[0][0], MathEx.distance(x[0], x[neighbors[0][0]]), 1E-7);
+        assertEquals(distances[100][2], MathEx.distance(x[100], x[neighbors[100][2]]), 1E-7);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(7, neighbors[i].length);
+            assertEquals(7, distances[i].length);
+        }
     }
 }
