@@ -20,6 +20,7 @@ package smile.graph;
 import java.util.*;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
 import smile.math.distance.Metric;
 import smile.neighbor.RandomProjectionTree;
 
@@ -118,7 +119,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param distance the distance function.
      * @return k-nearest neighbor graph.
      */
-    public static <T> NearestNeighborGraph of(T[] data, Metric<T> distance, int k) {
+    public static <T> NearestNeighborGraph of(T[] data, Distance<T> distance, int k) {
         var heap = build(data, distance, k, (int n, int k_, int i) -> IntStream.range(0, n).toArray());
         return toGraph(heap, k);
     }
@@ -131,7 +132,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param distance the distance function.
      * @return k-random neighbor graph.
      */
-    public static <T> NearestNeighborGraph random(T[] data, Metric<T> distance, int k) {
+    public static <T> NearestNeighborGraph random(T[] data, Distance<T> distance, int k) {
         var heap = build(data, distance, k, NearestNeighborGraph::rejectionSample);
         extend(heap);
         return toGraph(heap, k);
@@ -166,7 +167,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @param candidates neighbor candidate generator.
      * @return a list of k-nearest neighbor heaps for each data point.
      */
-    private static <T> List<PriorityQueue<Neighbor>> build(T[] data, Metric<T> distance, int k, CandidateGenerator candidates) {
+    private static <T> List<PriorityQueue<Neighbor>> build(T[] data, Distance<T> distance, int k, CandidateGenerator candidates) {
         if (k < 2) {
             throw new IllegalArgumentException("k must be greater than 1: " + k);
         }

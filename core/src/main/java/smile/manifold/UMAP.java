@@ -26,7 +26,7 @@ import smile.graph.NearestNeighborGraph;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
-import smile.math.distance.Distance;
+import smile.math.distance.Metric;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
@@ -70,7 +70,49 @@ public class UMAP {
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, int k) {
-        return of(data, MathEx::distance, k);
+        return of(data, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
+    }
+
+    /**
+     * Runs the UMAP algorithm with Euclidean distance.
+     *
+     * @param data    the input data.
+     * @param k       k-nearest neighbors. Larger values result in more global views
+     *                of the manifold, while smaller values result in more local data
+     *                being preserved. Generally in the range 2 to 100.
+     * @param d                  The target embedding dimensions. defaults to 2 to provide easy
+     *                           visualization, but can reasonably be set to any integer value
+     *                           in the range 2 to 100.
+     * @param iterations         The number of iterations to optimize the
+     *                           low-dimensional representation. Larger values result in more
+     *                           accurate embedding. Muse be at least 10. Choose wise value
+     *                           based on the size of the input data, e.g, 200 for large
+     *                           data (1000+ samples), 500 for small.
+     * @param learningRate       The initial learning rate for the embedding optimization,
+     *                           default 1.
+     * @param minDist            The desired separation between close points in the embedding
+     *                           space. Smaller values will result in a more clustered/clumped
+     *                           embedding where nearby points on the manifold are drawn closer
+     *                           together, while larger values will result on a more even
+     *                           disperse of points. The value should be set no-greater than
+     *                           and relative to the spread value, which determines the scale
+     *                           at which embedded points will be spread out. default 0.1.
+     * @param spread             The effective scale of embedded points. In combination with
+     *                           minDist, this determines how clustered/clumped the embedded
+     *                           points are. default 1.0.
+     * @param negativeSamples    The number of negative samples to select per positive sample
+     *                           in the optimization process. Increasing this value will result
+     *                           in greater repulsive force being applied, greater optimization
+     *                           cost, but slightly more accuracy, default 5.
+     * @param repulsionStrength  Weighting applied to negative samples in low dimensional
+     *                           embedding optimization. Values higher than one will result in
+     *                           greater weight being given to negative samples, default 1.0.
+     * @return the embedding coordinates.
+     */
+    public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate, double minDist,
+                                double spread, int negativeSamples, double repulsionStrength) {
+        NearestNeighborGraph nng = NearestNeighborGraph.descent(data, k);
+        return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
     /**
@@ -84,7 +126,7 @@ public class UMAP {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
+    public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
         return of(data, distance, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
     }
 
@@ -125,8 +167,9 @@ public class UMAP {
      *                           greater weight being given to negative samples, default 1.0.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
+    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations, double learningRate,
+                                    double minDist, double spread, int negativeSamples, double repulsionStrength) {
+        NearestNeighborGraph nng = NearestNeighborGraph.descent(data, distance, k);
         return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
@@ -165,7 +208,8 @@ public class UMAP {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
+    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int d, int iterations, double learningRate,
+                                    double minDist, double spread, int negativeSamples, double repulsionStrength) {
         if (d < 2) {
             throw new IllegalArgumentException("d must be greater than 1: " + d);
         }

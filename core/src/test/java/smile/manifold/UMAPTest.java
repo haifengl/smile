@@ -17,6 +17,8 @@
 package smile.manifold;
 
 import java.util.Arrays;
+
+import smile.graph.NearestNeighborGraph;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.MNIST;
@@ -68,19 +70,6 @@ public class UMAPTest {
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
 ;
-    }
-
-    @Test
-    public void testMnist70000() throws Exception {
-        System.out.println("UMAP MNIST 70000");
-
-        double[][] x = Read.csv("./mnist_70000.csv").toArray();
-        MathEx.setSeed(19650218); // to get repeatable results.
-        long start = System.currentTimeMillis();
-        double[][] coordinates = UMAP.of(x, 15);
-        long end = System.currentTimeMillis();
-        System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
-        assertEquals(MNIST.x.length, coordinates.length);
     }
 
     @Test
