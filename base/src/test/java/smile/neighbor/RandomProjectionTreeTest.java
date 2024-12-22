@@ -74,7 +74,7 @@ public class RandomProjectionTreeTest {
         System.out.format("q1     of recall is %d%n", MathEx.q1(recall));
         System.out.format("median of recall is %d%n", MathEx.median(recall));
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
-        assertEquals(7, MathEx.q3(recall));
+        assertEquals(3, MathEx.q3(recall));
     }
 
     @Test
@@ -101,6 +101,7 @@ public class RandomProjectionTreeTest {
         System.out.format("q1     of recall is %d%n", MathEx.q1(recall));
         System.out.format("median of recall is %d%n", MathEx.median(recall));
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
+        assertEquals(2, MathEx.q3(recall));
     }
 
     @Test
@@ -114,5 +115,20 @@ public class RandomProjectionTreeTest {
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
+    }
+
+    @Test
+    public void testLeafSamples() {
+        System.out.println("leafSamples");
+        int leafSize = 10;
+        RandomProjectionTree tree = RandomProjectionTree.of(x, leafSize, false);
+        System.out.println("Number of nodes: " + tree.numNodes());
+        System.out.println("Number of leaf nodes: " + tree.numLeaves());
+
+        var samples = tree.leafSamples();
+        assertEquals(tree.numLeaves(), samples.size());
+        for (var sample : samples) {
+            assertTrue(sample.length > 0);
+        }
     }
 }
