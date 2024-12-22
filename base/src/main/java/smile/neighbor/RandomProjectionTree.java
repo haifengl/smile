@@ -17,7 +17,9 @@
 package smile.neighbor;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 
@@ -107,6 +109,26 @@ public class RandomProjectionTree implements KNNSearch<double[], double[]> {
                 return rightChild.recursiveFlatten(hyperplanes, offsets, children, indices, flattenInfo[0] + 1, flattenInfo[1]);
             }
         }
+
+        void recursiveLeafSamples(List<int[]> sampleList) {
+            if (isLeaf()) {
+                sampleList.add(samples);
+            } else {
+                leftChild.recursiveLeafSamples(sampleList);
+                rightChild.recursiveLeafSamples(sampleList);
+            }
+        }
+    }
+
+    /**
+     * Returns the list of samples in each leaf node.
+     *
+     * @return the list of samples in each leaf node.
+     */
+    public List<int[]> leafSamples() {
+        List<int[]> samples = new ArrayList<>();
+        root.recursiveLeafSamples(samples);
+        return samples;
     }
 
     RandomProjectionForest.FlatTree flatten() {
