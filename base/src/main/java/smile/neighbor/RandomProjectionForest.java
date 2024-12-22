@@ -17,6 +17,7 @@
 package smile.neighbor;
 
 import java.util.*;
+import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.sort.HeapSelect;
 
@@ -75,6 +76,71 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
 
         heap.sort();
         return Arrays.stream(heap.toArray()).map(NeighborBuilder::toNeighbor).toArray(Neighbor[]::new);
+    }
+
+    /**
+     * Returns a k-nearest neighbor graph.
+     * @param k k-nearest neighbors.
+     * @return k-nearest neighbor graph.
+     */
+    public NearestNeighborGraph toGraph(int k) {
+        int n = data.length;
+        List<HeapSelect<NeighborBuilder<double[], double[]>>> heapList = new ArrayList<>(n);
+        List<Set<Integer>> neighborSetList = new ArrayList<>(n);
+        for (int i = 0; i < data.length; i++) {
+            heapList.add(new HeapSelect<>(NeighborBuilder.class, k));
+            neighborSetList.add(new HashSet<>());
+        }
+
+        for (var tree : trees) {
+            for (int[] leaf : tree.indices) {
+                for (int li = 0; li < leaf.length; li++) {
+                    int i = leaf[li];
+                    double[] xi = data[i];
+                    for (int lj = li + 1; lj < leaf.length; lj++) {
+                        int j = leaf[lj];
+                        double[] xj = data[j];
+                        double dist = angular ? MathEx.angular(xi, xj) : MathEx.distance(xi, xj);
+
+                        update(neighborSetList.get(i), heapList.get(i), k, xj, j, dist);
+                        update(neighborSetList.get(j), heapList.get(j), k, xi, i, dist);
+                    }
+                }
+            }
+        }
+
+        int[][] neighbors = new int[n][k];
+        double[][] distances = new double[n][k];
+        for (int i = 0; i < n; i++) {
+            var pq = heapList.get(i);
+            pq.sort();
+            var a = pq.toArray();
+            for (int j = 0; j < k; j++) {
+                neighbors[i][j] = a[j].index;
+                distances[i][j] = a[j].distance;
+            }
+        }
+        return new NearestNeighborGraph(neighbors, distances);
+    }
+
+    private static void update(Set<Integer> set, HeapSelect<NeighborBuilder<double[], double[]>> pq, int k, double[] x, int index, double dist) {
+        if (!set.contains(index)) {
+            if (pq.size() < k) {
+                pq.add(new NeighborBuilder<>(x, x, index, dist));
+                set.add(index);
+            } else {
+                var top = pq.peek();
+                if (dist < top.distance) {
+                    set.remove(top.index);
+                    set.add(index);
+                    top.distance = dist;
+                    top.index = index;
+                    top.key = x;
+                    top.value = x;
+                    pq.heapify();
+                }
+            }
+        }
     }
 
     record FlatTree(double[][] hyperplanes, double[] offsets, int[][] children, int[][] indices) {
