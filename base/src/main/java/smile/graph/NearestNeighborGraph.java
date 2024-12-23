@@ -266,7 +266,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
      * @return approximate k-nearest neighbor graph.
      */
     public static NearestNeighborGraph descent(double[][] data, int k) {
-        return descent(data, k, k, 2*k, 50, 50, 0.001);
+        return descent(data, k, 5, k, 50, 50, 0.001);
     }
 
     /**
@@ -363,23 +363,6 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         var heap = build(data, distance, k, NearestNeighborGraph::rejectionSample);
         extend(heap);
         return descent(data, distance, heap, k, maxCandidates, maxIter, delta);
-    }
-
-    static class Candidate implements Comparable<Candidate> {
-        public int index;
-        public double distance;
-        public boolean isNew;
-
-        public Candidate(int index, double distance, boolean isNew) {
-            this.index = index;
-            this.distance = distance;
-            this.isNew = isNew;
-        }
-
-        @Override
-        public int compareTo(Candidate o) {
-            return Double.compare(o.distance, distance);
-        }
     }
 
     private static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, List<PriorityQueue<Neighbor>> heapList,
