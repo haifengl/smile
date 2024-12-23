@@ -59,6 +59,8 @@ import smile.stat.distribution.GaussianDistribution;
  */
 public class UMAP {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UMAP.class);
+    /** Large data size threshold. */
+    private static final int LARGE_DATA_SIZE = 10000;
 
     /**
      * Runs the UMAP algorithm with Euclidean distance.
@@ -70,7 +72,8 @@ public class UMAP {
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, int k) {
-        return of(data, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
+        int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
+        return of(data, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0);
     }
 
     /**
@@ -111,7 +114,9 @@ public class UMAP {
      */
     public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate, double minDist,
                                 double spread, int negativeSamples, double repulsionStrength) {
-        NearestNeighborGraph nng = data.length <= 2500 ? NearestNeighborGraph.of(data, k) : NearestNeighborGraph.descent(data, k);
+        NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
+                NearestNeighborGraph.of(data, k) :
+                NearestNeighborGraph.descent(data, k);
         return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
@@ -127,7 +132,8 @@ public class UMAP {
      * @return the embedding coordinates.
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
-        return of(data, distance, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
+        int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
+        return of(data, distance, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0);
     }
 
     /**
@@ -169,7 +175,9 @@ public class UMAP {
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations, double learningRate,
                                     double minDist, double spread, int negativeSamples, double repulsionStrength) {
-        NearestNeighborGraph nng = data.length <= 2500 ? NearestNeighborGraph.of(data, distance, k) : NearestNeighborGraph.descent(data, distance, k);
+        NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
+                NearestNeighborGraph.of(data, distance, k) :
+                NearestNeighborGraph.descent(data, distance, k);
         return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
