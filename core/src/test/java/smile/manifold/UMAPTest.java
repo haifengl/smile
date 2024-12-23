@@ -52,27 +52,6 @@ public class UMAPTest {
     }
 
     @Test
-    public void testDist() throws Exception {
-        System.out.println("UMAP MNIST 70000");
-
-        double[][] x = Read.csv("./mnist_70000.csv").toArray();
-        System.out.println(x.length);
-        System.out.println(x[0].length);
-        long start = System.currentTimeMillis();
-        int n = x.length;
-        Arrays.stream(x).parallel().forEach(xi -> {
-            double[] y = new double[n];
-            for (int j = 0; j < n; j++) {
-                y[j] = MathEx.distance(xi, x[j]);
-            }
-        });
-
-        long end = System.currentTimeMillis();
-        System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
-;
-    }
-
-    @Test
     public void testMnist() throws Exception {
         System.out.println("UMAP MNIST");
 

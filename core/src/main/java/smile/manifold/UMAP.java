@@ -111,7 +111,7 @@ public class UMAP {
      */
     public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate, double minDist,
                                 double spread, int negativeSamples, double repulsionStrength) {
-        NearestNeighborGraph nng = NearestNeighborGraph.descent(data, k);
+        NearestNeighborGraph nng = data.length <= 2500 ? NearestNeighborGraph.of(data, k) : NearestNeighborGraph.descent(data, k);
         return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
@@ -169,7 +169,7 @@ public class UMAP {
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations, double learningRate,
                                     double minDist, double spread, int negativeSamples, double repulsionStrength) {
-        NearestNeighborGraph nng = NearestNeighborGraph.descent(data, distance, k);
+        NearestNeighborGraph nng = data.length <= 2500 ? NearestNeighborGraph.of(data, distance, k) : NearestNeighborGraph.descent(data, distance, k);
         return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
     }
 
