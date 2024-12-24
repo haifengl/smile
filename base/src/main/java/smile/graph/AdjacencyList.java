@@ -20,7 +20,7 @@ package smile.graph;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
@@ -90,7 +90,7 @@ public class AdjacencyList extends Graph implements Serializable {
     }
 
     @Override
-    public Collection<Edge> getEdges(int vertex) {
+    public List<Edge> getEdges(int vertex) {
         return graph[vertex].stream().map(e -> new Edge(vertex, e.index(), e.value())).toList();
     }
 
@@ -135,7 +135,7 @@ public class AdjacencyList extends Graph implements Serializable {
         
         AdjacencyList g = new AdjacencyList(v.length, isDigraph());
         for (int i = 0; i < v.length; i++) {
-            Collection<Edge> edges = getEdges(v[i]);
+            List<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
                 int j = edge.u() == v[i] ? edge.v() : edge.u();
                 j = Arrays.binarySearch(v, j);

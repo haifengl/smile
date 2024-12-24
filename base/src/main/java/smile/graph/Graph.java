@@ -155,7 +155,7 @@ public abstract class Graph {
      * returned.
      * @return the edges touching the specified vertex.
      */
-    public abstract Collection<Edge> getEdges(int vertex);
+    public abstract List<Edge> getEdges(int vertex);
 
     /**
      * Performs an action for each edge of a vertex.

@@ -19,9 +19,9 @@ package smile.graph;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -88,8 +88,8 @@ public class AdjacencyMatrix extends Graph implements Serializable {
     }
 
     @Override
-    public Collection<Edge> getEdges(int vertex) {
-        Collection<Edge> set = new LinkedList<>();
+    public List<Edge> getEdges(int vertex) {
+        List<Edge> set = new ArrayList<>();
         int n = graph.length;
         double[] row = graph[vertex];
         for (int j = 0; j < n; j++) {
