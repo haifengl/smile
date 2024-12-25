@@ -89,7 +89,7 @@ lazy val javaSettings = commonSettings ++ Seq(
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
-    "-bottom", """Copyright &copy; 2010-2024 Haifeng Li. All rights reserved.
+    "-bottom", """Copyright &copy; 2010-2025 Haifeng Li. All rights reserved.
                  |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
@@ -115,9 +115,9 @@ lazy val scalaSettings = commonSettings ++ Seq(
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-dynamic-side-menu",
-    "-project-version", "${version}",
+    "-project-version", "4.1.0",
     "-project-logo", "web/src/images/smile.jpg",
-    "-project-footer", """Copyright © 2010-2024 Haifeng Li. All rights reserved.
+    "-project-footer", """Copyright © 2010-2025 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
