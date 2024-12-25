@@ -1244,7 +1244,7 @@ public class Tensor implements AutoCloseable {
 
     /**
      * Computes element-wise equality.
-     * @param other the sclar to compare.
+     * @param other the scalar to compare.
      * @return the output tensor.
      */
     public Tensor eq(int other) {
@@ -1271,7 +1271,7 @@ public class Tensor implements AutoCloseable {
 
     /**
      * Computes element-wise inequality.
-     * @param other the sclar to compare.
+     * @param other the scalar to compare.
      * @return the output tensor.
      */
     public Tensor ne(int other) {
