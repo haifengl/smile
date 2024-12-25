@@ -6,7 +6,7 @@ import org.jetbrains.dokka.base.DokkaBase
 import org.jetbrains.dokka.base.DokkaBaseConfiguration
 
 
-// compile bytecode to Java 8 (default is Java 6)
+// compile bytecode to Java 21 (default is Java 6)
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "21"
 }
@@ -25,7 +25,7 @@ buildscript {
 }
 
 group = "com.github.haifengl"
-version = "4.0.0"
+version = "4.1.0"
 
 repositories {
     mavenCentral()
@@ -34,8 +34,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:4.0.0")
-    api("com.github.haifengl:smile-nlp:4.0.0")
+    api("com.github.haifengl:smile-core:4.1.0")
+    api("com.github.haifengl:smile-nlp:4.1.0")
 }
 
 // Copy jar to shell lib

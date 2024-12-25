@@ -17,7 +17,8 @@
 
 package smile.manifold
 
-import smile.math.distance.Distance
+import smile.graph.NearestNeighborGraph
+import smile.math.distance.Metric
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -60,7 +61,7 @@ import smile.math.distance.Distance
  * @param k k-nearest neighbor.
  * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
  */
-fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap {
+fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true): Array<DoubleArray> {
     return IsoMap.of(data, k, d, CIsomap)
 }
 
@@ -84,8 +85,9 @@ fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true
  * @param d the dimension of the manifold.
  * @param k k-nearest neighbor.
  */
-fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): LLE {
-    return LLE.of(data, k, d)
+fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): Array<DoubleArray> {
+    val nng = NearestNeighborGraph.of(data, k);
+    return LLE.of(nng.largest(false), data, d)
 }
 
 /**
@@ -109,7 +111,7 @@ fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): LLE {
  * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
  *          Non-positive value means discrete weights.
  */
-fun laplacian(data: Array<DoubleArray>, k: Int, d: Int = 2, t: Double = -1.0): LaplacianEigenmap {
+fun laplacian(data: Array<DoubleArray>, k: Int, d: Int = 2, t: Double = -1.0): Array<DoubleArray> {
     return LaplacianEigenmap.of(data, k, d, t)
 }
 
@@ -161,7 +163,7 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
  * @param d                  The target embedding dimensions. defaults to 2 to provide easy
  *                           visualization, but can reasonably be set to any integer value
  *                           in the range 2 to 100.
- * @param iterations         The number of iterations to optimize the
+ * @param epochs             The number of iterations to optimize the
  *                           low-dimensional representation. Larger values result in more
  *                           accurate embedding. Muse be at least 10. Choose wise value
  *                           based on the size of the input data, e.g, 200 for large
@@ -186,11 +188,11 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
  *                           embedding optimization. Values higher than one will result in
  *                           greater weight being given to negative samples, default 1.0.
  */
-fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, iterations: Int = 0,
+fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
          learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
-         repulsionStrength: Double = 1.0): UMAP {
-    return UMAP.of(data, k, d, if (iterations >= 10) iterations else if (data.size > 10000) 200 else 500,
-            learningRate, minDist, spread, negativeSamples, repulsionStrength)
+         repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
+    return UMAP.of(data, k, d, if (epochs >= 10) epochs else if (data.size > 10000) 200 else 500,
+            learningRate, minDist, spread, negativeSamples, repulsionStrength, localConnectivity)
 }
 
 /**
@@ -217,7 +219,7 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, iterations: Int = 0,
  * @param d                  The target embedding dimensions. defaults to 2 to provide easy
  *                           visualization, but can reasonably be set to any integer value
  *                           in the range 2 to 100.
- * @param iterations         The number of iterations to optimize the
+ * @param epochs             The number of iterations to optimize the
  *                           low-dimensional representation. Larger values result in more
  *                           accurate embedding. Muse be at least 10. Choose wise value
  *                           based on the size of the input data, e.g, 200 for large
@@ -242,11 +244,11 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, iterations: Int = 0,
  *                           embedding optimization. Values higher than one will result in
  *                           greater weight being given to negative samples, default 1.0.
  */
-fun <T> umap(data: Array<T>, distance: Distance<T>, k: Int = 15, d: Int = 2, iterations: Int = 0,
+fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epochs: Int = 0,
              learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
-             repulsionStrength: Double = 1.0): UMAP {
-    return UMAP.of(data, distance, k, d, if (iterations >= 10) iterations else if (data.size > 10000) 200 else 500,
-            learningRate, minDist, spread, negativeSamples, repulsionStrength)
+             repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
+    return UMAP.of(data, distance, k, d, if (epochs >= 10) epochs else if (data.size > 10000) 200 else 500,
+            learningRate, minDist, spread, negativeSamples, repulsionStrength, localConnectivity)
 }
 
 /**
