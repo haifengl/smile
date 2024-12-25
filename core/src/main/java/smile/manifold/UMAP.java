@@ -714,7 +714,7 @@ public class UMAP {
             }
 
             logger.info("The learning rate at {} iterations: {}", iter, alpha);
-            alpha = initialAlpha * (1.0 - (double) iter / iterations);
+            alpha = initialAlpha * (1.0 - (double) iter / epochs);
         }
     }
 
