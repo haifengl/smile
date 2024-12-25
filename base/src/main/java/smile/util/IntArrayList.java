@@ -72,7 +72,10 @@ public final class IntArrayList implements Serializable {
 
     @Override
     public String toString() {
-        return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+        String suffix = size() > 10 ?  ", ...]" : "]";
+        return stream().limit(10)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**
