@@ -18,8 +18,6 @@ package smile.manifold;
 
 import java.util.Arrays;
 
-import smile.graph.NearestNeighborGraph;
-import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.MNIST;
 import smile.test.data.SwissRoll;
@@ -72,7 +70,7 @@ public class UMAPTest {
         long start = System.currentTimeMillis();
         double[][] coordinates = UMAP.of(data, 15);
         long end = System.currentTimeMillis();
-        System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0); 
+        System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(data.length, coordinates.length);
     }
 }

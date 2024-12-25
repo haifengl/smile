@@ -71,8 +71,8 @@ public class UMAP {
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, int k) {
-        int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
+        int epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
+        return of(data, k, 2, epochs, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
@@ -82,14 +82,14 @@ public class UMAP {
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
-     * @param d                  The target embedding dimensions. defaults to 2 to provide easy
-     *                           visualization, but can reasonably be set to any integer value
-     *                           in the range 2 to 100.
-     * @param iterations         The number of iterations to optimize the
-     *                           low-dimensional representation. Larger values result in more
-     *                           accurate embedding. Muse be at least 10. Choose wise value
-     *                           based on the size of the input data, e.g, 200 for large
-     *                           data (1000+ samples), 500 for small.
+     * @param d       The target embedding dimensions. defaults to 2 to provide easy
+     *                visualization, but can reasonably be set to any integer value
+     *                in the range 2 to 100.
+     * @param epochs  The number of iterations to optimize the
+     *                low-dimensional representation. Larger values result in more
+     *                accurate embedding. Muse be at least 10. Choose wise value
+     *                based on the size of the input data, e.g, 200 for large
+     *                data (1000+ samples), 500 for small.
      * @param learningRate       The initial learning rate for the embedding optimization,
      *                           default 1.
      * @param minDist            The desired separation between close points in the embedding
@@ -111,13 +111,13 @@ public class UMAP {
      *                           greater weight being given to negative samples, default 1.0.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate,
+    public static double[][] of(double[][] data, int k, int d, int epochs, double learningRate,
                                 double minDist, double spread, int negativeSamples,
                                 double repulsionStrength, double localConnectivity) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, k) :
                 NearestNeighborGraph.descent(data, k);
-        return of(nng, data, k, d, iterations, learningRate, minDist, spread,
+        return of(nng, data, k, d, epochs, learningRate, minDist, spread,
                   negativeSamples, repulsionStrength, localConnectivity);
     }
 
@@ -133,8 +133,8 @@ public class UMAP {
      * @return the embedding coordinates.
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
-        int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, distance, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
+        int epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
+        return of(data, distance, k, 2, epochs, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
@@ -148,7 +148,7 @@ public class UMAP {
      * @param d                  The target embedding dimensions. defaults to 2 to provide easy
      *                           visualization, but can reasonably be set to any integer value
      *                           in the range 2 to 100.
-     * @param iterations         The number of iterations to optimize the
+     * @param epochs             The number of epochs to optimize the
      *                           low-dimensional representation. Larger values result in more
      *                           accurate embedding. Muse be at least 10. Choose wise value
      *                           based on the size of the input data, e.g, 200 for large
@@ -174,13 +174,13 @@ public class UMAP {
      *                           greater weight being given to negative samples, default 1.0.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations,
+    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int epochs,
                                     double learningRate, double minDist, double spread, int negativeSamples,
                                     double repulsionStrength, double localConnectivity) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, distance, k) :
                 NearestNeighborGraph.descent(data, distance, k);
-        return of(nng, data, k, d, iterations, learningRate, minDist, spread,
+        return of(nng, data, k, d, epochs, learningRate, minDist, spread,
                   negativeSamples, repulsionStrength, localConnectivity);
     }
 
@@ -195,7 +195,7 @@ public class UMAP {
      * @param d                  The target embedding dimensions. defaults to 2 to provide easy
      *                           visualization, but can reasonably be set to any integer value
      *                           in the range 2 to 100.
-     * @param iterations         The number of iterations to optimize the
+     * @param epochs             The number of iterations to optimize the
      *                           low-dimensional representation. Larger values result in more
      *                           accurate embedding. Muse be at least 10. Choose wise value
      *                           based on the size of the input data, e.g, 200 for large
@@ -228,7 +228,7 @@ public class UMAP {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int k, int d, int iterations,
+    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int k, int d, int epochs,
                                     double learningRate, double minDist, double spread, int negativeSamples,
                                     double repulsionStrength, double localConnectivity) {
         if (d < 2) {
@@ -240,8 +240,8 @@ public class UMAP {
         if (minDist > spread) {
             throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ", spread=" + spread);
         }
-        if (iterations < 10) {
-            throw new IllegalArgumentException("epochs must be a positive integer of at least 10: " + iterations);
+        if (epochs < 10) {
+            throw new IllegalArgumentException("epochs must be a positive integer of at least 10: " + epochs);
         }
         if (learningRate <= 0) {
             throw new IllegalArgumentException("learningRate must greater than 0: " + learningRate);
@@ -268,6 +268,7 @@ public class UMAP {
             if (data instanceof double[][]) {
                 logger.info("PCA-based initialization will be attempted.");
                 coordinates = pcaLayout((double[][]) data, d);
+                noisyScale(coordinates,10, 0.0001);
             } else {
                 logger.info("Random initialization will be attempted.");
                 coordinates = randomLayout(n, d);
@@ -275,18 +276,20 @@ public class UMAP {
         } else {
             logger.info("Spectral initialization will be attempted.");
             coordinates = spectralLayout(nng, d);
+            noisyScale(coordinates,10, 0.0001);
         }
+        normalize(coordinates, 10);
         logger.info("Finish embedding initialization");
 
         // parameters for the differentiable curve used in lower
         // dimensional fuzzy simplicial complex construction.
         double[] curve = fitCurve(spread, minDist);
-        logger.info("Finish fitting the curve parameters");
+        logger.info("Finish fitting the curve parameters: {}", Arrays.toString(curve));
 
         // Optimizing the embedding
-        SparseMatrix epochs = computeEpochPerSample(conorm, iterations);
+        SparseMatrix epochsPerSample = computeEpochPerSample(conorm, epochs);
         logger.info("Start optimizing the layout");
-        optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
+        optimizeLayout(coordinates, curve, epochsPerSample, epochs, learningRate, negativeSamples, repulsionStrength);
         return coordinates;
     }
 
@@ -297,8 +300,7 @@ public class UMAP {
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>
      */
-    private static final DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
-
+    private static class Curve implements DifferentiableMultivariateFunction {
         @Override
         public double f(double[] x) {
             return 1 / (1 + x[0] * Math.pow(x[2], x[1]));
@@ -334,13 +336,15 @@ public class UMAP {
         double[] y = new double[size];
         double end = 3 * spread;
         double interval = end / size;
-        for (int i = 0; i < x.length; i++) {
+        for (int i = 0; i < size; i++) {
             x[i] = (i + 1) * interval;
             y[i] = x[i] < minDist ? 1 : Math.exp(-(x[i] - minDist) / spread);
         }
         double[] p = {0.5, 0.0};
-        LevenbergMarquardt curveFit = LevenbergMarquardt.fit(func, x, y, p);
-        return curveFit.parameters;
+        LevenbergMarquardt curveFit = LevenbergMarquardt.fit(new Curve(), x, y, p);
+        var result = curveFit.parameters;
+        result[1] /= 2; // We fit 2*b in Curve function definition.
+        return result;
     }
 
     /**
@@ -571,46 +575,60 @@ public class UMAP {
         SparseMatrix L = laplacian.toMatrix();
         Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
 
-        double absMax = 0;
         Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
-                double x = V.get(i, c);
-                coordinates[i][j] = x;
-
-                double abs = Math.abs(x);
-                if (abs > absMax) {
-                    absMax = abs;
-                }
-            }
-        }
-
-        // We add a little noise to avoid local minima for optimization to come
-        double expansion = 10.0 / absMax;
-        GaussianDistribution gaussian = new GaussianDistribution(0.0, 0.0001);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                coordinates[i][j] = coordinates[i][j] * expansion + gaussian.rand();
-            }
-        }
-
-        // normalization
-        double[] colMax = MathEx.colMax(coordinates);
-        double[] colMin = MathEx.colMin(coordinates);
-        double[] de = new double[d];
-        for (int j = 0; j < d; j++) {
-            de[j] = (colMax[j] - colMin[j]);
-        }
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                coordinates[i][j] = 10 * (coordinates[i][j] - colMin[j]) / de[j];
+                coordinates[i][j] = V.get(i, c);
             }
         }
 
         return coordinates;
+    }
+
+    /**
+     * Scale coordinates so that the largest coordinate is scale,
+     * then add normal-distributed noise with standard deviation noise.
+     * @param coordinates coordinates to scale.
+     * @param scale max value after scaling.
+     * @param noise the standard deviation of noise.
+     */
+    private static void noisyScale(double[][] coordinates, double scale, double noise) {
+        int n = coordinates.length;
+        int d = coordinates[0].length;
+        double max = Double.NEGATIVE_INFINITY;
+        for (double[] coordinate : coordinates) {
+            for (int j = 0; j < d; j++) {
+                max = Math.max(max, Math.abs(coordinate[j]));
+            }
+        }
+
+        double expansion = scale / max;
+        GaussianDistribution gaussian = new GaussianDistribution(0.0, noise);
+        for (double[] coordinate : coordinates) {
+            for (int j = 0; j < d; j++) {
+                coordinate[j] = scale * coordinate[j] + gaussian.rand();
+            }
+        }
+    }
+
+    /**  Normalize coordinates. */
+    private static void normalize(double[][] coordinates, double scale) {
+        int n = coordinates.length;
+        int d = coordinates[0].length;
+        double[] colMax = MathEx.colMax(coordinates);
+        double[] colMin = MathEx.colMin(coordinates);
+        double[] length = new double[d];
+        for (int j = 0; j < d; j++) {
+            length[j] = colMax[j] - colMin[j];
+        }
+
+        for (double[] coordinate : coordinates) {
+            for (int j = 0; j < d; j++) {
+                coordinate[j] = scale * (coordinate[j] - colMin[j]) / length[j];
+            }
+        }
     }
 
     /**
@@ -628,10 +646,10 @@ public class UMAP {
      * @param negativeSamples    The number of negative samples (with membership strength 0).
      * @param initialAlpha       The initial learning rate for the SGD
      * @param gamma              The weight of negative samples
-     * @param iterations         The number of iterations.
+     * @param epochs             The number of iterations.
      */
     private static void optimizeLayout(double[][] embedding, double[] curve, SparseMatrix epochsPerSample,
-                                       int iterations, double initialAlpha, int negativeSamples, double gamma) {
+                                       int epochs, double initialAlpha, int negativeSamples, double gamma) {
         int n = embedding.length;
         int d = embedding[0].length;
         double a = curve[0];
@@ -643,7 +661,7 @@ public class UMAP {
         SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.copy();
         SparseMatrix epochNextSample = epochsPerSample.copy();
 
-        for (int iter = 1; iter <= iterations; iter++) {
+        for (int iter = 1; iter <= epochs; iter++) {
             for (SparseMatrix.Entry edge : epochNextSample) {
                 if (edge.x > 0 && edge.x <= iter) {
                     int j = edge.i;
@@ -703,14 +721,14 @@ public class UMAP {
     /**
      * Computes the number of epochs per sample, one for each 1-simplex.
      *
-     * @param strength   The strength matrix.
-     * @param iterations The number of iterations.
+     * @param strength The strength matrix.
+     * @param epochs   The number of iterations.
      * @return An array of number of epochs per sample, one for each 1-simplex
-     * between (ith, jth) sample point.
+     *         between (ith, jth) sample point.
      */
-    private static SparseMatrix computeEpochPerSample(SparseMatrix strength, int iterations) {
+    private static SparseMatrix computeEpochPerSample(SparseMatrix strength, int epochs) {
         double max = strength.nonzeros().mapToDouble(w -> w.x).max().orElse(0.0);
-        double min = max / iterations;
+        double min = max / epochs;
         strength.nonzeros().forEach(w -> {
             if (w.x < min) w.update(0.0);
             else w.update(max / w.x);
