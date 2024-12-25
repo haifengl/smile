@@ -149,7 +149,7 @@
   `d` is the target embedding dimensions. defaults to 2 to provide easy
   visualization, but can reasonably be set to any integer value
   in the range 2 to 100.
-  `iterations` is the number of iterations to optimize the
+  `epochs` is the number of iterations to optimize the
   low-dimensional representation. Larger values result in more
   accurate embedding. Muse be at least 10. Choose wise value
   based on the size of the input data, e.g, 200 for large
@@ -175,8 +175,8 @@
   greater weight being given to negative samples, default 1.0."
   ([data] (UMAP/of data))
   ([data distance] (UMAP/of data distance))
-  ([data k d iterations learningRate minDist spread negativeSamples repulsionStrength] (UMAP/of data k d iterations learningRate minDist spread negativeSamples repulsionStrength))
-  ([data distance k d iterations learningRate minDist spread negativeSamples repulsionStrength] (UMAP/of data distance k d iterations learningRate minDist spread negativeSamples repulsionStrength)))
+  ([data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity))
+  ([data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity)))
 
 (defn mds
   "Classical multidimensional scaling, also known as principal coordinates analysis.
