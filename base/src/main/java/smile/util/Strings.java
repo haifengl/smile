@@ -207,59 +207,23 @@ public interface Strings {
     }
 
     /**
-     * Returns the string representation of a floating number without trailing zeros.
+     * Returns the string representation of a floating number with the
+     * minimum necessary precision.
      * @param x a real number.
      * @return the string representation.
      */
     static String format(float x) {
-        return format(x, false);
+        return x == (long) x ? String.format("%d", (long) x) : String.format("%s", x);
     }
 
     /**
-     * Returns the string representation of a floating number.
-     * @param x a real number.
-     * @param trailingZeros the flag if removes the trailing zeros.
-     * @return the string representation.
-     */
-    static String format(float x, boolean trailingZeros) {
-        if (MathEx.isZero(x, 1E-7f)) {
-            return trailingZeros ? "0.0000" : "0";
-        }
-
-        float ax = Math.abs(x);
-        if (ax >= 1E-3f && ax < 1E7f) {
-            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
-        }
-
-        return String.format("%.4e", x);
-    }
-
-    /**
-     * Returns the string representation of a floating number without trailing zeros.
+     * Returns the string representation of a floating number with the
+     * minimum necessary precision.
      * @param x a real number.
      * @return the string representation.
      */
     static String format(double x) {
-        return format(x, false);
-    }
-
-    /**
-     * Returns the string representation of a floating number.
-     * @param x a real number.
-     * @param trailingZeros the flag if removes the trailing zeros.
-     * @return the string representation.
-     */
-    static String format(double x, boolean trailingZeros) {
-        if (MathEx.isZero(x, 1E-14)) {
-            return trailingZeros ? "0.0000" : "0";
-        }
-
-        double ax = Math.abs(x);
-        if (ax >= 1E-3 && ax < 1E7) {
-            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
-        }
-
-        return String.format("%.4e", x);
+        return x == (long) x ? String.format("%d", (long) x) : String.format("%s", x);
     }
 
     /**
