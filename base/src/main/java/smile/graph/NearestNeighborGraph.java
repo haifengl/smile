@@ -45,6 +45,14 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
     }
 
     /**
+     * Returns the number of vertices.
+     * @return the number of vertices.
+     */
+    public int size() {
+        return neighbors.length;
+    }
+
+    /**
      * Returns the nearest neighbor graph.
      * @param digraph create a directed graph if true.
      * @return the nearest neighbor graph.
