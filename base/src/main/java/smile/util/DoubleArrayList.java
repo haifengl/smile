@@ -75,7 +75,10 @@ public final class DoubleArrayList implements Serializable {
 
     @Override
     public String toString() {
-        return Arrays.stream(data).limit(size).mapToObj(format::format).collect(Collectors.joining(", ", "[", "]"));
+        String suffix = size() > 10 ?  ", ...]" : "]";
+        return stream().limit(10)
+                .mapToObj(format::format)
+                .collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**

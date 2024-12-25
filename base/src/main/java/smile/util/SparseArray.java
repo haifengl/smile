@@ -100,7 +100,10 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
     @Override
     public String toString() {
-        return stream().map(Entry::toString).collect(Collectors.joining(", ", "[", "]"));
+        String suffix = size() > 10 ?  ", ...]" : "]";
+        return stream().limit(10)
+                .map(Entry::toString)
+                .collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**
