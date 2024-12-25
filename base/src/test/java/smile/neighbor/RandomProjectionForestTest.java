@@ -120,7 +120,7 @@ public class RandomProjectionForestTest {
     public void testGraph() {
         System.out.println("Graph");
 
-        RandomProjectionForest forest = RandomProjectionForest.of(x, 5, 10, false);
+        RandomProjectionForest forest = RandomProjectionForest.of(x, 7, 10, false);
         var graph = forest.toGraph(7);
         int[][] neighbors = graph.neighbors();
         double[][] distances = graph.distances();

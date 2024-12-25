@@ -17,6 +17,7 @@
 package smile.neighbor;
 
 import java.util.*;
+import java.util.stream.IntStream;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.sort.HeapSelect;
@@ -167,11 +168,10 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
      * @return random projection forest
      */
     public static RandomProjectionForest of(double[][] data, int numTrees, int leafSize, boolean angular) {
-        ArrayList<FlatTree> trees = new ArrayList<>();
-        for (int i = 0; i < numTrees; i++) {
-            RandomProjectionTree tree = RandomProjectionTree.of(data, leafSize, angular);
-            trees.add(tree.flatten());
-        }
+        var trees = IntStream.range(0, numTrees).parallel()
+                .mapToObj(i -> RandomProjectionTree.of(data, leafSize, angular).flatten())
+                .toList();
+
         return new RandomProjectionForest(trees, data, angular);
     }
 }
