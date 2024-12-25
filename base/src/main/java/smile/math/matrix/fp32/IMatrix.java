@@ -239,7 +239,17 @@ public abstract class IMatrix implements Serializable {
      * @return the string representation of <code>A[i,j]</code>.
      */
     private String str(int i, int j) {
-        return smile.util.Strings.format(get(i, j), true);
+        float x = get(i, j);
+        if (MathEx.isZero(x, 1E-7f)) {
+            return "0.0000";
+        }
+
+        float ax = Math.abs(x);
+        if (ax >= 1E-3F && ax < 1E7F) {
+            return String.format("%.4f", x);
+        }
+
+        return String.format("%.4e", x);
     }
 
     /**
