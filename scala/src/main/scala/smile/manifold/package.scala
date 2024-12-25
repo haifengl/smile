@@ -220,11 +220,17 @@ package object manifold {
     *                           greater weight being given to negative samples, default 1.0.
     */
   def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, iterations: Int = 0, learningRate: Double = 1.0,
-           minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0): Array[Array[Double]] = time("UMAP") {
-    val nng = NearestNeighborGraph.of(data, k)
-    UMAP.of(nng, data, d,
-      if (iterations >= 10) iterations else if (data.length > 10000) 200 else 500,
-      learningRate, minDist, spread, negativeSamples, repulsionStrength)
+           minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0,
+           localConnectivity: Double = 1.0): Array[Array[Double]] = time("UMAP") {
+    val nng = if (data.length <= 10000) NearestNeighborGraph.of(data, k)
+                                   else NearestNeighborGraph.descent(data, k)
+
+    val iter = if (iterations >= 10) iterations else {
+      if (data.length > 10000) 200 else 500
+    }
+
+    UMAP.of(nng, data, k, d, iter, learningRate, minDist, spread,
+      negativeSamples, repulsionStrength, localConnectivity)
   }
 
   /** Classical multidimensional scaling, also known as principal coordinates

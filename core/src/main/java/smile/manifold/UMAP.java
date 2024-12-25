@@ -17,11 +17,10 @@
 
 package smile.manifold;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
-import smile.graph.Graph.Edge;
 import smile.graph.NearestNeighborGraph;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.LevenbergMarquardt;
@@ -55,7 +54,7 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @see TSNE
  *
- * @author rayeaster
+ * @author Karl Li
  */
 public class UMAP {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UMAP.class);
@@ -73,7 +72,7 @@ public class UMAP {
      */
     public static double[][] of(double[][] data, int k) {
         int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0);
+        return of(data, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
@@ -112,12 +111,14 @@ public class UMAP {
      *                           greater weight being given to negative samples, default 1.0.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate, double minDist,
-                                double spread, int negativeSamples, double repulsionStrength) {
+    public static double[][] of(double[][] data, int k, int d, int iterations, double learningRate,
+                                double minDist, double spread, int negativeSamples,
+                                double repulsionStrength, double localConnectivity) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, k) :
                 NearestNeighborGraph.descent(data, k);
-        return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
+        return of(nng, data, k, d, iterations, learningRate, minDist, spread,
+                  negativeSamples, repulsionStrength, localConnectivity);
     }
 
     /**
@@ -133,7 +134,7 @@ public class UMAP {
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
         int iterations = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, distance, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0);
+        return of(data, distance, k, 2, iterations, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
@@ -173,12 +174,14 @@ public class UMAP {
      *                           greater weight being given to negative samples, default 1.0.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations, double learningRate,
-                                    double minDist, double spread, int negativeSamples, double repulsionStrength) {
+    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int iterations,
+                                    double learningRate, double minDist, double spread, int negativeSamples,
+                                    double repulsionStrength, double localConnectivity) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, distance, k) :
                 NearestNeighborGraph.descent(data, distance, k);
-        return of(nng, data, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
+        return of(nng, data, k, d, iterations, learningRate, minDist, spread,
+                  negativeSamples, repulsionStrength, localConnectivity);
     }
 
     /**
@@ -186,6 +189,9 @@ public class UMAP {
      *
      * @param nng                the k-nearest neighbor graph.
      * @param data               the input data.
+     * @param k                  k-nearest neighbors. Larger values result in more global views
+     *                           of the manifold, while smaller values result in more local data
+     *                           being preserved. Generally in the range 2 to 100.
      * @param d                  The target embedding dimensions. defaults to 2 to provide easy
      *                           visualization, but can reasonably be set to any integer value
      *                           in the range 2 to 100.
@@ -213,11 +219,18 @@ public class UMAP {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     * @param localConnectivity The local connectivity required. That is, the
+     *                          number of nearest neighbors that should be assumed
+     *                          to be connected at a local level. The higher this
+     *                          value the more connected the manifold becomes locally.
+     *                          In practice this should be not more than the local
+     *                          intrinsic dimension of the manifold.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int d, int iterations, double learningRate,
-                                    double minDist, double spread, int negativeSamples, double repulsionStrength) {
+    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int k, int d, int iterations,
+                                    double learningRate, double minDist, double spread, int negativeSamples,
+                                    double repulsionStrength, double localConnectivity) {
         if (d < 2) {
             throw new IllegalArgumentException("d must be greater than 1: " + d);
         }
@@ -225,7 +238,7 @@ public class UMAP {
             throw new IllegalArgumentException("minDist must greater than 0: " + minDist);
         }
         if (minDist > spread) {
-            throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ",spread=" + spread);
+            throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ", spread=" + spread);
         }
         if (iterations < 10) {
             throw new IllegalArgumentException("epochs must be a positive integer of at least 10: " + iterations);
@@ -236,37 +249,34 @@ public class UMAP {
         if (negativeSamples <= 0) {
             throw new IllegalArgumentException("negativeSamples must greater than 0: " + negativeSamples);
         }
+        if (localConnectivity < 1) {
+            throw new IllegalArgumentException("localConnectivity must be at least 1.0: " + localConnectivity);
+        }
 
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        int n = nng.neighbors().length;
-        int k = nng.neighbors()[0].length;
-        NearestNeighborGraph cc = nng.largest(true);
-        int[] index = cc.index();
-        AdjacencyList graph = null;
-        boolean spectral = true;
-        if (index.length != data.length) {
-            logger.info("The nearest neighbor graph has multiple connected components.");
+        SparseMatrix conorm = computeFuzzySimplicialSet(nng, k, localConnectivity);
+
+        int n = nng.size();
+        int[][] cc = nng.graph(true).bfcc();
+        logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
+
+        // Initialize embedding
+        double[][] coordinates;
+        if (cc.length > 1) {
             if (data instanceof double[][]) {
-                spectral = false;
-                graph = nng.graph(true);
                 logger.info("PCA-based initialization will be attempted.");
+                coordinates = pcaLayout((double[][]) data, d);
             } else {
-                logger.info("The largest connected component is used to compute the embedding.");
+                logger.info("Random initialization will be attempted.");
+                coordinates = randomLayout(n, d);
             }
+        } else {
+            logger.info("Spectral initialization will be attempted.");
+            coordinates = spectralLayout(nng, d);
         }
-
-        if (graph == null) {
-            graph = cc.graph(true);
-        }
-
-        graph = computeFuzzySimplicialSet(graph, k, 64);
-        SparseMatrix conorm = graph.toMatrix();
-
-        // Spectral embedding initialization
-        double[][] coordinates = spectral ? spectralLayout(graph, d) : pcaLayout((double[][]) data, d);
-        logger.info("Finish initialization with {} layout", spectral ? "spectral" : "PCA");
+        logger.info("Finish embedding initialization");
 
         // parameters for the differentiable curve used in lower
         // dimensional fuzzy simplicial complex construction.
@@ -342,59 +352,115 @@ public class UMAP {
      *
      * @param nng     The nearest neighbor graph.
      * @param k       k-nearest neighbor.
-     * @param maxIter The max number of iterations of the binary search
-     *                for the correct distance value. default 64
+     * @param localConnectivity The local connectivity required. That is, the
+     *                          number of nearest neighbors that should be assumed
+     *                          to be connected at a local level. The higher this
+     *                          value the more connected the manifold becomes locally.
+     *                          In practice this should be not more than the local
+     *                          intrinsic dimension of the manifold.
      * @return A fuzzy simplicial set represented as a sparse matrix. The (i, j)
      * entry of the matrix represents the membership strength of the
      * 1-simplex between the ith and jth sample points.
      */
-    private static AdjacencyList computeFuzzySimplicialSet(AdjacencyList nng, int k, int maxIter) {
-        // Algorithm 2 Constructing a local fuzzy simplicial set
-        final double LogK = MathEx.log2(k);
-        final double EPSILON = 1E-8;
-        final double TOLERANCE = 1E-5;
-        final double MIN_SCALE = 1E-3;
-
-        int n = nng.getNumVertices();
+    private static SparseMatrix computeFuzzySimplicialSet(NearestNeighborGraph nng, int k, double localConnectivity) {
+        // Computes a continuous version of the distance to the kth nearest neighbor.
+        // That is, this is similar to knn-distance but allows continuous k values
+        // rather than requiring an integral k. In essence, we are simply computing
+        // the distance such that the cardinality of fuzzy set we generate is k.
+        double[][] result = smoothKnnDist(nng.distances(), k, 64, localConnectivity, 1.0);
         // The smooth approximator to knn-distance
-        double[] sigma = new double[n];
+        double[] sigma = result[0];
         // The distance to nearest neighbor
+        double[] rho = result[1];
+
+        int n = nng.size();
+        AdjacencyList strength = computeMembershipStrengths(nng, sigma, rho);
+        // probabilistic t-conorm: (a + a' - a .* a')
+        AdjacencyList conorm = new AdjacencyList(n, false);
+        for (int vertex = 0; vertex < n; vertex++) {
+            int i = vertex;
+            strength.forEachEdge(i, (j, a) -> {
+                double b = strength.getWeight(j, i);
+                double w = a + b - a * b;
+                conorm.setWeight(i, j, w);
+            });
+        }
+        return conorm.toMatrix();
+    }
+
+    /**
+     * Computes a continuous version of the distance to the kth nearest
+     * neighbor. That is, this is similar to knn-distance but allows continuous
+     * k values rather than requiring an integral k. Essentially we are simply
+     * computing the distance such that the cardinality of fuzzy set we generate
+     * is k.
+     * @param distances Distances to nearest neighbors for each sample. Each row
+     *                  should be a sorted list of distances to nearest neighbors.
+     * @param k The number of nearest neighbors to approximate for.
+     * @param maxIter The max number of iterations for the binary search of
+     *                the correct distance value.
+     * @param localConnectivity The local connectivity required. That is, the
+     *                          number of nearest neighbors that should be assumed
+     *                          to be connected at a local level. The higher this
+     *                          value the more connected the manifold becomes locally.
+     *                          In practice this should be not more than the local
+     *                          intrinsic dimension of the manifold.
+     * @param bandwidth The bandwidth of the kernel. Larger bandwidth will produce
+     *                  larger return values.
+     * @return knn: the distance to kth nearest neighbor, as suitably approximated.
+     *         rho: the distance to the first nearest neighbor for each point.
+     */
+    private static double[][] smoothKnnDist(double[][] distances, double k, int maxIter,
+                                            double localConnectivity, double bandwidth) {
+        final double SMOOTH_K_TOLERANCE = 1E-5;
+        final double MIN_K_DIST_SCALE = 1E-3;
+        int n = distances.length;
+        double target = MathEx.log2(k) * bandwidth;
         double[] rho = new double[n];
+        double[] knn = new double[n];
 
-        double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
-                .flatMapToDouble(edges -> edges.stream().mapToDouble(Edge::weight))
-                .filter(w -> !MathEx.isZero(w, EPSILON))
-                .average().orElse(0.0);
+        int length = 0;
+        double mean = 0;
+        for (var row : distances) {
+            mean += MathEx.sum(row);
+            length += row.length;
+        }
+        mean /= length;
 
-        for (int i = 0; i < n; i++) {
-            double lo = 0.0;
+        final double mu = mean;
+        IntStream.range(0, n).parallel().forEach(i -> {
+            double lo = 0;
             double hi = Double.POSITIVE_INFINITY;
-            double mid = 1.0;
+            double mid = 1;
 
-            Collection<Edge> knn = nng.getEdges(i);
-            rho[i] = knn.stream()
-                    .mapToDouble(Edge::weight)
-                    .filter(w -> !MathEx.isZero(w, EPSILON))
-                    .min().orElse(0.0);
-
-            // Algorithm 3 Compute the normalizing factor for distances
-            // function SmoothKNNDist() by binary search
-            for (int iter = 0; iter < maxIter; iter++) {
-                double psum = 0.0;
-                for (Edge edge : knn) {
-                    if (!MathEx.isZero(edge.weight(), EPSILON)) {
-                        double d = edge.weight() - rho[i];
-                        psum += d > 0.0 ? Math.exp(-d / mid) : 1.0;
+            double[] nonZeroDists = Arrays.stream(distances[i]).filter(x -> x > 0).toArray();
+            if (nonZeroDists.length >= localConnectivity) {
+                int index = (int) Math.floor(localConnectivity);
+                double interpolation = localConnectivity - index;
+                if (index > 0) {
+                    rho[i] = nonZeroDists[index - 1];
+                    if (interpolation > SMOOTH_K_TOLERANCE) {
+                        rho[i] += interpolation * (nonZeroDists[index] - nonZeroDists[index - 1]);
                     }
+                } else {
+                    rho[i] = interpolation * nonZeroDists[0];
+                }
+            } else if (nonZeroDists.length > 0) {
+                rho[i] = MathEx.max(nonZeroDists);
+            }
+
+            for (int iter = 0; iter < maxIter; iter++) {
+                double psum  = 0.0;
+                for (int j = 1; j < distances[j].length; j++) {
+                    double d = distances[i][j] - rho[i];
+                    psum  += d > 0 ? Math.exp(-d/mid) : 1;
                 }
 
-                if (Math.abs(psum - LogK) < TOLERANCE) {
+                if (Math.abs(psum - target) < SMOOTH_K_TOLERANCE) {
                     break;
                 }
-                // Given that it is a parameterized function
-                // and the whole thing is monotonic
-                // a simply binary search is actually quite efficient.
-                if (psum > LogK) {
+
+                if (psum  > target) {
                     hi = mid;
                     mid = (lo + hi) / 2.0;
                 } else {
@@ -407,40 +473,57 @@ public class UMAP {
                 }
             }
 
-            sigma[i] = mid;
-
-            if (rho[i] > 0.0) {
-                double avgi = knn.stream()
-                        .mapToDouble(Edge::weight)
-                        .filter(w -> !MathEx.isZero(w, EPSILON))
-                        .average().orElse(0.0);
-                sigma[i] = Math.max(sigma[i], MIN_SCALE * avgi);
+            knn[i] = mid;
+            if (rho[i] > 0) {
+                double mui = MathEx.mean(distances[i]);
+                if (knn[i] < MIN_K_DIST_SCALE * mui) {
+                    knn[i] = MIN_K_DIST_SCALE * mui;
+                }
             } else {
-                sigma[i] = Math.max(sigma[i], MIN_SCALE * avg);
+                if (knn[i] < MIN_K_DIST_SCALE * mu) {
+                    knn[i] = MIN_K_DIST_SCALE * mu;
+                }
+            }
+        });
+        return new double[][]{knn, rho};
+    }
+
+    /**
+     * Computes the membership strength for the 1-skeleton of each local
+     * fuzzy simplicial set. This is formed as a sparse matrix where each row is
+     * a local fuzzy simplicial set, with a membership strength for the
+     * 1-simplex to each other data point.
+     */
+    private static AdjacencyList computeMembershipStrengths(NearestNeighborGraph nng, double[] sigma, double[] rho) {
+        int n = nng.size();
+        int[][] neighbors = nng.neighbors();
+        double[][] distances = nng.distances();
+
+        AdjacencyList G = new AdjacencyList(n, true);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < neighbors[i].length; j++) {
+                double d = distances[i][j] - rho[i];
+                double w = d <= 0 ? 1 : Math.exp(-d / sigma[i]);
+                G.setWeight(i, neighbors[i][j], w);
             }
         }
-
-        // Computes a continuous version of the distance to the kth nearest neighbor.
-        // That is, this is similar to knn-distance but allows continuous k values
-        // rather than requiring an integral k. In essence, we are simply computing
-        // the distance such that the cardinality of fuzzy set we generate is k.
-        for (int i = 0; i < n; i++) {
-            double ri = rho[i];
-            double si = sigma[i];
-            nng.updateEdges(i, (j, w) -> Math.exp(-Math.max(0.0, (w - ri)) / si));
-        }
-
-        // probabilistic t-conorm: (a + a' - a .* a')
-        AdjacencyList G = new AdjacencyList(n, false);
-        for (int i = 0; i < n; i++) {
-            for (Edge edge : nng.getEdges(i)) {
-                double w = edge.weight();
-                double w2 = nng.getWeight(edge.v(), edge.u()); // weight of reverse arc.
-                G.setWeight(edge.u(), edge.v(), w + w2 - w * w2);
-            }
-        }
-
         return G;
+    }
+
+    /**
+     * Computes the random initialization.
+     *
+     * @param n The number of data points.
+     * @param d The dimension of the embedding space.
+     */
+    private static double[][] randomLayout(int n, int d) {
+        double[][] embedding = new double[n][d];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                embedding[i][j] = MathEx.random(-10, 10);
+            }
+        }
+        return embedding;
     }
 
     /**
@@ -460,33 +543,33 @@ public class UMAP {
      * @param nng The nearest neighbor graph.
      * @param d The dimension of the embedding space.
      */
-    private static double[][] spectralLayout(AdjacencyList nng, int d) {
+    private static double[][] spectralLayout(NearestNeighborGraph nng, int d) {
         // Algorithm 4 Spectral embedding for initialization
-        int n = nng.getNumVertices();
+        int[][] neighbors = nng.neighbors();
+        double[][] distances = nng.distances();
+        int n = nng.size();
         double[] D = new double[n];
-        for (int i = 0; i < n; i++) {
-            for (Edge edge : nng.getEdges(i)) {
-                D[i] += edge.weight();
-            }
-
-            D[i] = 1.0 / Math.sqrt(D[i]);
-        }
+        IntStream.range(0, n).parallel()
+                .forEach(i -> D[i] = 1.0 / Math.sqrt(MathEx.sum(distances[i])));
 
         // Laplacian of graph.
         AdjacencyList laplacian = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
-            for (Edge edge : nng.getEdges(i)) {
-                double w = -D[edge.u()] * edge.weight() * D[edge.v()];
-                laplacian.setWeight(edge.u(), edge.v(), w);
+            int[] vertex = neighbors[i];
+            double[] dist = distances[i];
+            int k = vertex.length;
+            for (int j = 0; j < k; j++) {
+                double w = -D[i] * dist[j] * D[vertex[j]];
+                laplacian.setWeight(i, vertex[j], w);
             }
         }
 
-        SparseMatrix L = laplacian.toMatrix();
-
         // ARPACK may not find all needed eigenvalues for k = d + 1.
-        // Hack it with 10 * (d + 1).
-        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
+        // Hack it with heuristic min(2*k+1, sqrt(n)).
+        int numEigen = Math.max(2*(d+1)+1, (int) Math.sqrt(n));
+        SparseMatrix L = laplacian.toMatrix();
+        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
 
         double absMax = 0;
         Matrix V = eigen.Vr;
