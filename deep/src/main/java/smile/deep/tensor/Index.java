@@ -129,7 +129,7 @@ public class Index {
     }
 
     /**
-     * Returns the slice index for [start, end) with step 1.
+     * Returns the slice index for [start, end) with the given step.
      *
      * @param start the start index.
      * @param end the end index.
