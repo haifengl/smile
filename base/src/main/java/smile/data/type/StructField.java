@@ -31,49 +31,38 @@ import smile.data.measure.NominalScale;
  *
  * @author Haifeng Li
  */
-public class StructField implements Serializable {
+public record StructField(String name, DataType dtype, Measure measure) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** Field name. */
-    public final String name;
-    /** Field data type. */
-    public final DataType type;
-    /** Optional levels of measurements. */
-    public final Measure measure;
+    private static final long serialVersionUID = 3L;
 
     /**
      * Constructor.
      * @param name the field name.
-     * @param type the field data type.
+     * @param dtype the field data type.
+     * @param measure the level of measurement.
      */
-    public StructField(String name, DataType type) {
-        this(name, type, null);
+    public StructField {
+        if (measure instanceof NumericalMeasure && !dtype.isFloating()) {
+            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", dtype, measure));
+        }
+
+        if (measure instanceof CategoricalMeasure && !dtype.isIntegral()) {
+            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", dtype, measure));
+        }
     }
 
     /**
      * Constructor.
      * @param name the field name.
-     * @param type the field data type.
-     * @param measure the level of measurement.
+     * @param dtype the field data type.
      */
-    public StructField(String name, DataType type, Measure measure) {
-        if (measure instanceof NumericalMeasure && !type.isFloating()) {
-            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
-        }
-
-        if (measure instanceof CategoricalMeasure && !type.isIntegral()) {
-            throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", type, measure));
-        }
-
-        this.name = name;
-        this.type = type;
-        this.measure = measure;
+    public StructField(String name, DataType dtype) {
+        this(name, dtype, null);
     }
 
     @Override
     public String toString() {
-        return measure != null ? String.format("%s: %s %s", name, type, measure) : String.format("%s: %s", name, type);
+        return measure != null ? String.format("%s: %s %s", name, dtype, measure) : String.format("%s: %s", name, dtype);
     }
 
     /**
@@ -83,7 +72,7 @@ public class StructField implements Serializable {
      */
     public String toString(Object o) {
         if (o == null) return "null";
-        return measure != null ? measure.toString(o) : type.toString(o);
+        return measure != null ? measure.toString(o) : dtype.toString(o);
     }
 
     /**
@@ -92,7 +81,7 @@ public class StructField implements Serializable {
      * @return the object value.
      */
     public Object valueOf(String s) {
-        return measure != null ? measure.valueOf(s) : type.valueOf(s);
+        return measure != null ? measure.valueOf(s) : dtype.valueOf(s);
     }
 
     /**
@@ -104,13 +93,13 @@ public class StructField implements Serializable {
             return false;
         }
 
-        return type.isFloating() || type.isIntegral();
+        return dtype.isFloating() || dtype.isIntegral();
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof StructField f) {
-            return name.equals(f.name) && type.equals(f.type) && Objects.equals(measure, f.measure);
+            return name.equals(f.name) && dtype.equals(f.dtype) && Objects.equals(measure, f.measure);
         }
 
         return false;

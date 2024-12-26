@@ -45,12 +45,12 @@ class LongVectorImpl implements LongVector {
 
     /** Constructor. */
     public LongVectorImpl(StructField field, long[] vector) {
-        if (field.measure instanceof NumericalMeasure) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
+        if (field.measure() instanceof NumericalMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure(), dtype()));
         }
 
-        this.name = field.name;
-        this.measure = field.measure;
+        this.name = field.name();
+        this.measure = field.measure();
         this.vector = vector;
     }
 

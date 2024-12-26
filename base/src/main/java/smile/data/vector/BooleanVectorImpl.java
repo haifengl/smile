@@ -39,11 +39,11 @@ class BooleanVectorImpl implements BooleanVector {
 
     /** Constructor. */
     public BooleanVectorImpl(StructField field, boolean[] vector) {
-        if (field.measure != null) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
+        if (field.measure() != null) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure(), dtype()));
         }
 
-        this.name = field.name;
+        this.name = field.name();
         this.vector = vector;
     }
 

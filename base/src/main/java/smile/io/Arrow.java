@@ -306,7 +306,7 @@ public class Arrow {
 
                 for (Field field : root.getSchema().getFields()) {
                     FieldVector vector = root.getVector(field.getName());
-                    DataType type = data.schema().field(field.getName()).type;
+                    DataType type = data.schema().field(field.getName()).dtype();
                     switch (type.id()) {
                         case Integer:
                             writeIntField(data, vector, from, count);
@@ -1145,103 +1145,103 @@ public class Arrow {
 
     /** Converts a smile struct field to arrow field. */
     private Field toArrowField(StructField field) {
-        switch (field.type.id()) {
+        switch (field.dtype().id()) {
             case Integer:
-                return new Field(field.name, new FieldType(false, new ArrowType.Int(32, true), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Int(32, true), null), null);
             case Long:
-                return new Field(field.name, new FieldType(false, new ArrowType.Int(64, true), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Int(64, true), null), null);
             case Double:
-                return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
             case Float:
-                return new Field(field.name, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
             case Boolean:
-                return new Field(field.name, new FieldType(false, new ArrowType.Bool(), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Bool(), null), null);
             case Byte:
-                return new Field(field.name, new FieldType(false, new ArrowType.Int(8, true), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Int(8, true), null), null);
             case Short:
-                return new Field(field.name, new FieldType(false, new ArrowType.Int(16, true), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Int(16, true), null), null);
             case Char:
-                return new Field(field.name, new FieldType(false, new ArrowType.Int(16, false), null), null);
+                return new Field(field.name(), new FieldType(false, new ArrowType.Int(16, false), null), null);
             case Decimal:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Decimal(28, 10, 128)), null);
+                return new Field(field.name(), FieldType.nullable(new ArrowType.Decimal(28, 10, 128)), null);
             case String:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
+                return new Field(field.name(), FieldType.nullable(new ArrowType.Utf8()), null);
             case Date:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);
+                return new Field(field.name(), FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);
             case Time:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Time(TimeUnit.MILLISECOND, 32)), null);
+                return new Field(field.name(), FieldType.nullable(new ArrowType.Time(TimeUnit.MILLISECOND, 32)), null);
             case DateTime:
-                return new Field(field.name, FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
+                return new Field(field.name(), FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
             case Object: {
-                Class<?> clazz = ((ObjectType) field.type).getObjectClass();
+                Class<?> clazz = ((ObjectType) field.dtype()).getObjectClass();
                 if (clazz == Integer.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(32, true)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(32, true)), null);
                 } else if (clazz == Long.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(64, true)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(64, true)), null);
                 } else if (clazz == Double.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(DOUBLE)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.FloatingPoint(DOUBLE)), null);
                 } else if (clazz == Float.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null);
                 } else if (clazz == Boolean.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Bool()), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Bool()), null);
                 } else if (clazz == Byte.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(8, true)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(8, true)), null);
                 } else if (clazz == Short.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, true)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(16, true)), null);
                 } else if (clazz == Character.class) {
-                    return new Field(field.name, FieldType.nullable(new ArrowType.Int(16, false)), null);
+                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(16, false)), null);
                 }
                 break;
             }
             case Array: {
-                DataType etype = ((ArrayType) field.type).getComponentType();
+                DataType etype = ((ArrayType) field.dtype()).getComponentType();
                 switch (etype.id()) {
                     case Integer:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
                         );
                     case Long:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
                         );
                     case Double:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
                         );
                     case Float:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
                         );
                     case Boolean:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
                         );
                     case Byte:
-                        return new Field(field.name, FieldType.nullable(new ArrowType.Binary()), null);
+                        return new Field(field.name(), FieldType.nullable(new ArrowType.Binary()), null);
                     case Short:
-                        return new Field(field.name,
+                        return new Field(field.name(),
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
                         );
                     case Char:
-                        return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
+                        return new Field(field.name(), FieldType.nullable(new ArrowType.Utf8()), null);
                 }
                 break;
             }
             case Struct: {
-                StructType children = (StructType) field.type;
-                return new Field(field.name,
+                StructType children = (StructType) field.dtype();
+                return new Field(field.name(),
                         new FieldType(false, new ArrowType.Struct(), null),
                         // children type
                         Arrays.stream(children.fields()).map(this::toArrowField).collect(Collectors.toList())
@@ -1249,7 +1249,7 @@ public class Arrow {
             }
         }
 
-        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.type);
+        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.dtype());
     }
 
     /** Converts an arrow field to smile struct field. */
@@ -1310,7 +1310,7 @@ public class Arrow {
                     throw new IllegalStateException(String.format("List type has %d child fields.", child.size()));
                 }
 
-                return new StructField(name, DataTypes.array(toSmileField(child.getFirst()).type));
+                return new StructField(name, DataTypes.array(toSmileField(child.getFirst()).dtype()));
 
             case Struct:
                 List<StructField> children = field.getChildren().stream().map(this::toSmileField).collect(Collectors.toList());

@@ -20,6 +20,7 @@ package smile.regression;
 import java.util.Arrays;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructField;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -254,14 +255,14 @@ public class RandomForestTest {
         double[] shap = model.shap(BostonHousing.data);
 
         System.out.println("----- importance -----");
-        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);
         smile.sort.QuickSort.sort(importance, fields);
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
         }
 
         System.out.println("----- SHAP -----");
-        fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);
         smile.sort.QuickSort.sort(shap, fields);
         for (int i = 0; i < shap.length; i++) {
             System.out.format("%-15s %12.4f%n", fields[i], shap[i]);

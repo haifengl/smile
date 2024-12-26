@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.data.type.StructField;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -174,7 +175,7 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
-        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);
         double[] importance = model.importance();
         double[] shap = model.shap(Iris.data);
 

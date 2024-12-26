@@ -30,7 +30,7 @@ import smile.data.type.StructField;
  */
 public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override
-    default DataType type() {
+    default DataType dtype() {
         return DataTypes.BooleanType;
     }
 

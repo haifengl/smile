@@ -131,11 +131,11 @@ public interface Feature {
         StructField field = field();
 
         if (isVariable()) {
-            return data.column(field.name);
+            return data.column(field.name());
         }
 
         int size = data.size();
-        switch (field.type.id()) {
+        switch (field.dtype().id()) {
             case Integer: {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));

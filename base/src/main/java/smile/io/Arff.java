@@ -495,13 +495,13 @@ public class Arff implements AutoCloseable {
         for (int i = 0; i < x.length; i++) {
             if (x[i] == null) {
                 StructField field = schema.field(i);
-                if (field.type.isByte()) {
+                if (field.dtype().isByte()) {
                     x[i] = (byte) 0;
-                } else if (field.type.isShort()) {
+                } else if (field.dtype().isShort()) {
                     x[i] = (short) 0;
-                } else if (field.type.isInt()) {
+                } else if (field.dtype().isInt()) {
                     x[i] = 0;
-                } else if (field.type.isFloat()) {
+                } else if (field.dtype().isFloat()) {
                     x[i] = 0.0f;
                 } else {
                     x[i] = 0.0;
@@ -543,12 +543,12 @@ public class Arff implements AutoCloseable {
     /** Write the meta of field to ARFF file. */
     private static void writeField(PrintWriter writer, StructField field) {
         writer.print("@ATTRIBUTE ");
-        writer.print(field.name);
-        if (field.type.isFloating()) writer.println(" REAL");
-        else if (field.type.isString()) writer.println(" STRING");
-        else if (field.type.id() == DataType.ID.DateTime) writer.println(" DATE \"yyyy-MM-dd HH:mm:ss\"");
-        else if (field.type.isIntegral()) {
-            if (field.measure instanceof NominalScale scale) {
+        writer.print(field.name());
+        if (field.dtype().isFloating()) writer.println(" REAL");
+        else if (field.dtype().isString()) writer.println(" STRING");
+        else if (field.dtype().id() == DataType.ID.DateTime) writer.println(" DATE \"yyyy-MM-dd HH:mm:ss\"");
+        else if (field.dtype().isIntegral()) {
+            if (field.measure() instanceof NominalScale scale) {
                 String levels = Arrays.stream(scale.levels()).collect(Collectors.joining(",", " {", "}"));
                 writer.println(levels);
             } else {

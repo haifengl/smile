@@ -31,7 +31,7 @@ import smile.math.MathEx;
  */
 public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     @Override
-    default DataType type() {
+    default DataType dtype() {
         return DataTypes.FloatType;
     }
 

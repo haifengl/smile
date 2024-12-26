@@ -31,7 +31,7 @@ import smile.math.MathEx;
  */
 public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     @Override
-    default DataType type() {
+    default DataType dtype() {
         return DataTypes.DoubleType;
     }
 

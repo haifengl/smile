@@ -57,7 +57,7 @@ public class Scaler {
         if (columns.length == 0) {
             columns = Arrays.stream(schema.fields())
                     .filter(StructField::isNumeric)
-                    .map(field -> field.name)
+                    .map(field -> field.name())
                     .toArray(String[]::new);
         }
 
@@ -66,7 +66,7 @@ public class Scaler {
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {
-                throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
+                throw new IllegalArgumentException(String.format("%s is not numeric", field.name()));
             }
 
             double[] vector = data.column(column).toDoubleArray();
@@ -87,14 +87,14 @@ public class Scaler {
                 @Override
                 public String toString() {
                     return (lo >= 0.0) ?
-                            String.format("(%s - %.4f) / %.4f", field.name,  lo, scale)
-                          : String.format("(%s + %.4f) / %.4f", field.name, -lo, scale);
+                            String.format("(%s - %.4f) / %.4f", field.name(),  lo, scale)
+                          : String.format("(%s + %.4f) / %.4f", field.name(), -lo, scale);
                 }
             };
 
             Function inverse = (double x) -> x * scale + lo;
-            transforms.put(field.name, transform);
-            inverses.put(field.name, inverse);
+            transforms.put(field.name(), transform);
+            inverses.put(field.name(), inverse);
         }
 
         return new InvertibleColumnTransform("Scaler", transforms, inverses);

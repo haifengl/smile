@@ -105,7 +105,7 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
                 double sd2 = MathEx.sd(x2);
 
                 double s2n = Math.abs(mu1 - mu2) / (sd1 + sd2);
-                return new SignalNoiseRatio(field.name, s2n);
+                return new SignalNoiseRatio(field.name(), s2n);
             } else {
                 return null;
             }

@@ -132,10 +132,10 @@ public class Avro {
                 record = dataFileReader.next(record);
                 Object[] row = new Object[struct.length()];
                 for (int i = 0; i < row.length; i++) {
-                    row[i] = record.get(struct.field(i).name);
+                    row[i] = record.get(struct.field(i).name());
                     if (row[i] instanceof Utf8) {
                         String str = row[i].toString();
-                        Measure measure = struct.field(i).measure;
+                        Measure measure = struct.field(i).measure();
                         row[i] = measure != null ? measure.valueOf(str) : str;
                     }
                 }

@@ -199,7 +199,7 @@ public class JSON {
     private Tuple toTuple(Map<String, String> map, List<Function<String, Object>> parser) {
         Object[] row = new Object[schema.length()];
         for (int i = 0; i < row.length; i++) {
-            String s = map.get(schema.field(i).name);
+            String s = map.get(schema.field(i).name());
             if (!Strings.isNullOrEmpty(s)) {
                 row[i] = parser.get(i).apply(s);
             }

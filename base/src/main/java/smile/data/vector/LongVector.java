@@ -30,7 +30,7 @@ import smile.data.type.StructField;
  */
 public interface LongVector extends BaseVector<Long, Long, LongStream> {
     @Override
-    default DataType type() {
+    default DataType dtype() {
         return DataTypes.LongType;
     }
 

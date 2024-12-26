@@ -92,7 +92,7 @@ public class RegressionNode extends LeafNode {
 
     @Override
     public String dot(StructType schema, StructField response, int id) {
-        return String.format(" %d [label=<%s = %.4f<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, output, size, rss);
+        return String.format(" %d [label=<%s = %.4f<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name(), output, size, rss);
     }
 
     @Override

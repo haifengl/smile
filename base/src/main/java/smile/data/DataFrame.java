@@ -604,7 +604,7 @@ public interface DataFrame extends Iterable<Tuple> {
      */
     default String getScale(int i, int j) {
         int x = getInt(i, j);
-        Measure measure = schema().field(j).measure;
+        Measure measure = schema().field(j).measure();
         if (measure instanceof CategoricalMeasure cat) {
             return cat.toString(x);
         } else {
@@ -1045,8 +1045,8 @@ public interface DataFrame extends Iterable<Tuple> {
     default DataFrame factorize(String... columns) {
         if (columns.length == 0) {
             columns = Arrays.stream(schema().fields())
-                    .filter(field -> field.type.isObject())
-                    .map(field -> field.name)
+                    .filter(field -> field.dtype().isObject())
+                    .map(StructField::name)
                     .toArray(String[]::new);
         }
 
@@ -1110,21 +1110,21 @@ public interface DataFrame extends Iterable<Tuple> {
             int j = schema.indexOf(column);
             StructField field = schema.field(j);
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int k = 1; k < n; k++) {
-                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                        colNames.add(String.format("%s_%s", field.name(), cat.level(k)));
                     }
                 } else if (encoder == CategoricalEncoder.ONE_HOT) {
                     for (int k = 0; k < n; k++) {
-                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                        colNames.add(String.format("%s_%s", field.name(), cat.level(k)));
                     }
                 }
             } else {
-                colNames.add(field.name);
+                colNames.add(field.name());
             }
         }
 
@@ -1142,7 +1142,7 @@ public interface DataFrame extends Iterable<Tuple> {
             int col = schema.indexOf(column);
             StructField field = schema.field(col);
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {
@@ -1200,23 +1200,23 @@ public interface DataFrame extends Iterable<Tuple> {
         if (bias) colNames.add("Intercept");
         for (int j = 0; j < ncol; j++) {
             StructField field = schema.field(j);
-            if (field.name.equals(rowNames)) continue;
+            if (field.name().equals(rowNames)) continue;
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 int n = cat.size();
 
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int k = 1; k < n; k++) {
-                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                        colNames.add(String.format("%s_%s", field.name(), cat.level(k)));
                     }
                 } else if (encoder == CategoricalEncoder.ONE_HOT) {
                     for (int k = 0; k < n; k++) {
-                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                        colNames.add(String.format("%s_%s", field.name(), cat.level(k)));
                     }
                 }
             } else {
-                colNames.add(field.name);
+                colNames.add(field.name());
             }
         }
 
@@ -1241,9 +1241,9 @@ public interface DataFrame extends Iterable<Tuple> {
 
         for (int col = 0; col < ncol; col++) {
             StructField field = schema.field(col);
-            if (field.name.equals(rowNames)) continue;
+            if (field.name().equals(rowNames)) continue;
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrow; i++) {

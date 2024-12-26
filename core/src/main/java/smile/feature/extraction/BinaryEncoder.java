@@ -53,8 +53,8 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
     public BinaryEncoder(StructType schema, String... columns) {
         if (columns == null || columns.length == 0) {
             columns = Arrays.stream(schema.fields())
-                    .filter(field -> field.measure instanceof CategoricalMeasure)
-                    .map(field -> field.name)
+                    .filter(field -> field.measure() instanceof CategoricalMeasure)
+                    .map(field -> field.name())
                     .toArray(String[]::new);
         }
 
@@ -62,12 +62,12 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
         base = new int[columns.length];
         for (int i = 0; i < columns.length; i++) {
             StructField field = schema.field(columns[i]);
-            if (!(field.measure instanceof CategoricalMeasure)) {
+            if (!(field.measure() instanceof CategoricalMeasure)) {
                 throw new IllegalArgumentException("Non-categorical attribute: " + field);
             }
 
             if (i < base.length-1) {
-                base[i+1] = base[i] + ((CategoricalMeasure) field.measure).size();
+                base[i+1] = base[i] + ((CategoricalMeasure) field.measure()).size();
             }
         }
     }

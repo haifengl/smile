@@ -52,7 +52,7 @@ public class RobustStandardizer {
         if (columns.length == 0) {
             columns = Arrays.stream(schema.fields())
                     .filter(StructField::isNumeric)
-                    .map(field -> field.name)
+                    .map(field -> field.name())
                     .toArray(String[]::new);
         }
 
@@ -61,7 +61,7 @@ public class RobustStandardizer {
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {
-                throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
+                throw new IllegalArgumentException(String.format("%s is not numeric", field.name()));
             }
 
             IQAgent agent = new IQAgent();
@@ -83,14 +83,14 @@ public class RobustStandardizer {
                 @Override
                 public String toString() {
                     return (median >= 0.0) ?
-                            String.format("(%s - %.4f) / %.4f", field.name,  median, scale)
-                          : String.format("(%s + %.4f) / %.4f", field.name, -median, scale);
+                            String.format("(%s - %.4f) / %.4f", field.name(),  median, scale)
+                          : String.format("(%s + %.4f) / %.4f", field.name(), -median, scale);
                 }
             };
 
             Function inverse = (double x) -> x * scale + median;
-            transforms.put(field.name, transform);
-            inverses.put(field.name, inverse);
+            transforms.put(field.name(), transform);
+            inverses.put(field.name(), inverse);
         }
 
         return new InvertibleColumnTransform("RobustStandardizer", transforms, inverses);

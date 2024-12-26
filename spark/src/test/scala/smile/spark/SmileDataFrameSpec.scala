@@ -35,7 +35,7 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   "Smile DataFrame" should {
     "conversions should be idempotent but lose smile measures" in {
-      val schema = new StructType(smileMushrooms.schema().fields().map(field => new StructField(field.name,field.`type`)):_*)
+      val schema = new StructType(smileMushrooms.schema().fields().map(field => new StructField(field.name,field.dtype)):_*)
       schema mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms)).schema()
     }
 

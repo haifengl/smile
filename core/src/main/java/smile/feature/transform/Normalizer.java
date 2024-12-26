@@ -91,7 +91,7 @@ public class Normalizer implements Transform {
         return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
-                if (columns.contains(schema.field(i).name)) {
+                if (columns.contains(schema.field(i).name())) {
                     return x.getDouble(i) / scale;
                 } else {
                     return x.get(i);

@@ -44,7 +44,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * Returns the data type of elements.
      * @return the data type of elements.
      */
-    DataType type();
+    DataType dtype();
 
     /**
      * Returns the (optional) level of measurements. Only valid for number types.
@@ -59,7 +59,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * @return the struct field.
      */
     default StructField field() {
-        return new StructField(name(), type(), measure());
+        return new StructField(name(), dtype(), measure());
     }
 
     /**
@@ -90,7 +90,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      * @return the input array <code>a</code>.
      */
     default double[] toDoubleArray(double[] a) {
-        throw new UnsupportedOperationException(name() + ":" + type());
+        throw new UnsupportedOperationException(name() + ":" + dtype());
     }
 
     /**

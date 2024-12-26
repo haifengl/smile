@@ -83,15 +83,15 @@ public class FactorInteraction implements Term {
                 .toList();
 
         for (StructField field : fields) {
-            if (!(field.measure instanceof CategoricalMeasure)) {
-                throw new IllegalStateException(String.format("%s is not a categorical variable: %s", field.name, field.measure));
+            if (!(field.measure() instanceof CategoricalMeasure)) {
+                throw new IllegalStateException(String.format("%s is not a categorical variable: %s", field.name(), field.measure()));
             }
         }
 
         List<String> levels = new ArrayList<>();
         levels.add("");
         for (StructField field : fields) {
-            CategoricalMeasure cat = (CategoricalMeasure) field.measure;
+            CategoricalMeasure cat = (CategoricalMeasure) field.measure();
             levels = levels.stream()
                     .flatMap(l -> Arrays.stream(cat.levels()).map(level -> l.isEmpty() ? level : l + ":" + level))
                     .collect(Collectors.toList());
@@ -118,7 +118,7 @@ public class FactorInteraction implements Term {
 
         @Override
         public String toString() {
-            return field.name;
+            return field.name();
         }
 
         @Override
