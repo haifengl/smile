@@ -138,7 +138,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         int splitTrueCount = 0;
         int splitFalseCount = 0;
 
-        Measure measure = schema.field(j).measure;
+        Measure measure = schema.field(j).measure();
         if (measure instanceof NominalScale scale) {
             int splitValue = -1;
             int m = scale.size();

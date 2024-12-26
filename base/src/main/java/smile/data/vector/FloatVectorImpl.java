@@ -45,12 +45,12 @@ class FloatVectorImpl implements FloatVector {
 
     /** Constructor. */
     public FloatVectorImpl(StructField field, float[] vector) {
-        if (field.measure instanceof CategoricalMeasure) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
+        if (field.measure() instanceof CategoricalMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure(), dtype()));
         }
 
-        this.name = field.name;
-        this.measure = field.measure;
+        this.name = field.name();
+        this.measure = field.measure();
         this.vector = vector;
     }
 

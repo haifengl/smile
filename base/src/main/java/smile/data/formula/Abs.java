@@ -45,13 +45,13 @@ public class Abs extends AbstractFunction {
 
         for (Feature feature : x.bind(schema)) {
             StructField xfield = feature.field();
-            DataType type = xfield.type;
+            DataType type = xfield.dtype();
             if (!(type.isInt() ||  type.isLong() ||  type.isDouble() || type.isFloat())) {
                 throw new IllegalStateException(String.format("Invalid expression: abs(%s)", type));
             }
 
             features.add(new Feature() {
-                final StructField field = new StructField(String.format("abs(%s)", xfield.name), xfield.type, xfield.measure);
+                final StructField field = new StructField(String.format("abs(%s)", xfield.name()), xfield.dtype(), xfield.measure());
 
                 @Override
                 public StructField field() {

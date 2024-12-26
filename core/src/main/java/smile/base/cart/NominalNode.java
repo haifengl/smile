@@ -72,7 +72,7 @@ public class NominalNode extends InternalNode {
     @Override
     public String dot(StructType schema, StructField response, int id) {
         StructField field = schema.field(feature);
-        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name(), field.toString(value), size(), score);
     }
 
     @Override
@@ -82,13 +82,13 @@ public class NominalNode extends InternalNode {
         if (trueBranch) {
             values = field.toString(value);
         } else {
-            if (field.measure instanceof NominalScale scale) {
+            if (field.measure() instanceof NominalScale scale) {
                 values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(scale::level).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;
             }
         }
 
-        return String.format("%s=%s", field.name, values);
+        return String.format("%s=%s", field.name(), values);
     }
 }

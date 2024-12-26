@@ -1570,7 +1570,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name(), yfield.name()),
                                 DataTypes.IntegerType,
                                 null);
 
@@ -1642,7 +1642,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name(), yfield.name()),
                                 DataTypes.LongType,
                                 null);
 
@@ -1714,7 +1714,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name(), yfield.name()),
                                 DataTypes.DoubleType,
                                 null);
 
@@ -1790,7 +1790,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name(), yfield.name()),
                                 DataTypes.object(clazz),
                                 null);
 

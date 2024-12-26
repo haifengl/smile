@@ -52,10 +52,10 @@ public class Add extends Operator {
         for (int i = 0; i < xfeatures.size(); i++) {
             Feature a = xfeatures.get(i);
             StructField xfield = a.field();
-            DataType xtype = xfield.type;
+            DataType xtype = xfield.dtype();
             Feature b = yfeatures.get(i);
             StructField yfield = b.field();
-            DataType ytype = yfield.type;
+            DataType ytype = yfield.dtype();
 
             if (!(xtype.isInt() ||  xtype.isLong() ||  xtype.isDouble() || xtype.isFloat() ||
                   ytype.isInt() ||  ytype.isLong() ||  ytype.isDouble() || ytype.isFloat() )) {
@@ -63,15 +63,15 @@ public class Add extends Operator {
             }
 
             features.add(new Feature() {
-                final StructField field = new StructField(String.format("%s + %s", xfield.name, yfield.name),
-                        DataType.prompt(xfield.type, yfield.type),
+                final StructField field = new StructField(String.format("%s + %s", xfield.name(), yfield.name()),
+                        DataType.prompt(xfield.dtype(), yfield.dtype()),
                         null);
 
                 final java.util.function.Function<Tuple, Object> lambda =
-                        field.type.isInt()    ? (Tuple o) -> a.applyAsInt(o)    + b.applyAsInt(o) :
-                        field.type.isLong()   ? (Tuple o) -> a.applyAsLong(o)   + b.applyAsLong(o) :
-                        field.type.isFloat()  ? (Tuple o) -> a.applyAsFloat(o)  + b.applyAsFloat(o) :
-                        field.type.isDouble() ? (Tuple o) -> a.applyAsDouble(o) + b.applyAsDouble(o) :
+                        field.dtype().isInt()    ? (Tuple o) -> a.applyAsInt(o)    + b.applyAsInt(o) :
+                        field.dtype().isLong()   ? (Tuple o) -> a.applyAsLong(o)   + b.applyAsLong(o) :
+                        field.dtype().isFloat()  ? (Tuple o) -> a.applyAsFloat(o)  + b.applyAsFloat(o) :
+                        field.dtype().isDouble() ? (Tuple o) -> a.applyAsDouble(o) + b.applyAsDouble(o) :
                         null;
 
                 @Override

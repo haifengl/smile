@@ -241,7 +241,7 @@ public class CSV {
         int p = data.schema().length();
         String[] header = new String[p];
         for (int i = 0; i < p; i++) {
-            header[i] = data.schema().field(i).name;
+            header[i] = data.schema().field(i).name();
         }
 
         List<String> record = new ArrayList<>(p);

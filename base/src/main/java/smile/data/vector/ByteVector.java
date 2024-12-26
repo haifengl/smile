@@ -30,7 +30,7 @@ import smile.data.type.StructField;
  */
 public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
     @Override
-    default DataType type() {
+    default DataType dtype() {
         return DataTypes.ByteType;
     }
 

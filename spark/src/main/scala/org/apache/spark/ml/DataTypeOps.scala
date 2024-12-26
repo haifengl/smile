@@ -97,8 +97,8 @@ object DataTypeOps {
     * @return Spark field
     */
   def toSparkField(field: StructField): org.apache.spark.sql.types.StructField = {
-    val sparkType = toSparkType(field.`type`)
-    val nullable = !field.`type`.isPrimitive
+    val sparkType = toSparkType(field.dtype)
+    val nullable = !field.dtype.isPrimitive
     val builder = new MetadataBuilder
     if (field.measure != null) {
       builder.putString("measure", field.measure.toString)
@@ -139,7 +139,7 @@ object DataTypeOps {
         org.apache.spark.sql.types.StructType(
           `type`.asInstanceOf[smile.data.`type`.StructType]
             .fields()
-            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.`type`)))
+            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype)))
             .toSeq)
     }
   }

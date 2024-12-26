@@ -55,7 +55,7 @@ public class StructType implements DataType {
         this.fields = fields;
         index = new HashMap<>(fields.length * 4 / 3);
         for (int i = 0; i < fields.length; i++) {
-            index.put(fields[i].name, i);
+            index.put(fields[i].name(), i);
         }
     }
 
@@ -111,7 +111,7 @@ public class StructType implements DataType {
      * @return the field name.
      */
     public String name(int i) {
-        return fields[i].name;
+        return fields[i].name();
     }
 
     /**
@@ -120,7 +120,7 @@ public class StructType implements DataType {
      */
     public String[] names() {
         return Arrays.stream(fields)
-                .map(field -> field.name)
+                .map(StructField::name)
                 .toArray(String[]::new);
     }
 
@@ -130,7 +130,7 @@ public class StructType implements DataType {
      * @return the field data type.
      */
     public DataType type(int i) {
-        return fields[i].type;
+        return fields[i].dtype();
     }
 
     /**
@@ -139,7 +139,7 @@ public class StructType implements DataType {
      */
     public DataType[] types() {
         return Arrays.stream(fields)
-                .map(field -> field.type)
+                .map(StructField::dtype)
                 .toList()
                 .toArray(new DataType[0]);
     }
@@ -150,7 +150,7 @@ public class StructType implements DataType {
      * @return the field's level of measurements.
      */
     public Measure measure(int i) {
-        return fields[i].measure;
+        return fields[i].measure();
     }
 
     /**
@@ -159,7 +159,7 @@ public class StructType implements DataType {
      */
     public Measure[] measures() {
         return Arrays.stream(fields)
-                .map(field -> field.measure)
+                .map(StructField::measure)
                 .toArray(Measure[]::new);
     }
 
@@ -185,11 +185,11 @@ public class StructType implements DataType {
     public StructType boxed(Collection<Tuple> rows) {
         return new StructType(IntStream.range(0, length()).mapToObj(i -> {
             StructField field = fields[i];
-            if (field.type.isPrimitive()) {
+            if (field.dtype().isPrimitive()) {
                 final int idx = i;
                 boolean missing = rows.stream().anyMatch(t -> t.isNullAt(idx));
                 if (missing) {
-                    field = new StructField(field.name, field.type.boxed(), field.measure);
+                    field = new StructField(field.name(), field.dtype().boxed(), field.measure());
                 }
             }
             return field;
@@ -203,8 +203,8 @@ public class StructType implements DataType {
     public StructType unboxed() {
         return new StructType(IntStream.range(0, length()).mapToObj(i -> {
             StructField field = fields[i];
-            if (field.type.isObject()) {
-                field = new StructField(field.name, field.type.unboxed(), field.measure);
+            if (field.dtype().isObject()) {
+                field = new StructField(field.name(), field.dtype().unboxed(), field.measure());
             }
             return field;
         }).toArray(StructField[]::new));
@@ -213,7 +213,7 @@ public class StructType implements DataType {
     @Override
     public String name() {
         return Arrays.stream(fields)
-                .map(field -> String.format("%s: %s", field.name, field.type.name()))
+                .map(field -> String.format("%s: %s", field.name(), field.dtype().name()))
                 .collect(Collectors.joining(", ", "Struct[", "]"));
     }
 
@@ -232,9 +232,9 @@ public class StructType implements DataType {
         Tuple t = (Tuple) o;
         return Arrays.stream(fields)
                 .map(field -> {
-                    Object v = t.get(field.name);
+                    Object v = t.get(field.name());
                     String value = v == null ? "null" : field.toString(v);
-                    return String.format("  %s: %s", field.name, value);
+                    return String.format("  %s: %s", field.name(), value);
                 })
                 .collect(Collectors.joining(",\n", "{\n", "\n}"));
     }

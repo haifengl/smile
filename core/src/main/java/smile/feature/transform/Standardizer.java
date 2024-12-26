@@ -54,7 +54,7 @@ public class Standardizer {
         if (columns.length == 0) {
             columns = Arrays.stream(schema.fields())
                     .filter(StructField::isNumeric)
-                    .map(field -> field.name)
+                    .map(field -> field.name())
                     .toArray(String[]::new);
         }
 
@@ -63,7 +63,7 @@ public class Standardizer {
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {
-                throw new IllegalArgumentException(String.format("%s is not numeric", field.name));
+                throw new IllegalArgumentException(String.format("%s is not numeric", field.name()));
             }
 
             double[] vector = data.column(column).toDoubleArray();
@@ -80,14 +80,14 @@ public class Standardizer {
                 @Override
                 public String toString() {
                     return (mu >= 0.0) ?
-                            String.format("(%s - %.4f) / %.4f", field.name,  mu, scale)
-                          : String.format("(%s + %.4f) / %.4f", field.name, -mu, scale);
+                            String.format("(%s - %.4f) / %.4f", field.name(),  mu, scale)
+                          : String.format("(%s + %.4f) / %.4f", field.name(), -mu, scale);
                 }
             };
 
             Function inverse = (double x) -> x * scale + mu;
-            transforms.put(field.name, transform);
-            inverses.put(field.name, inverse);
+            transforms.put(field.name(), transform);
+            inverses.put(field.name(), inverse);
         }
 
         return new InvertibleColumnTransform("Standardizer", transforms, inverses);

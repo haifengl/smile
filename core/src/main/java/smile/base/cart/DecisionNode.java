@@ -76,7 +76,7 @@ public class DecisionNode extends LeafNode {
 
     @Override
     public String dot(StructType schema, StructField response, int id) {
-        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name, response.toString(output), size, deviance());
+        return String.format(" %d [label=<%s = %s<br/>size = %d<br/>deviance = %.4f>, fillcolor=\"#00000000\", shape=ellipse];\n", id, response.name(), response.toString(output), size, deviance());
     }
 
     @Override

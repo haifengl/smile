@@ -119,7 +119,7 @@ public class PlotTest {
     public void testBox() throws Exception {
         System.out.println("Box");
 
-        String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure).levels();
+        String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure()).levels();
         double[][] data = new double[labels.length][];
         for (int i = 0; i < data.length; i++) {
             var label = labels[i];

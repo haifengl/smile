@@ -43,7 +43,7 @@ class VectorImpl<T> implements Vector<T> {
     /** The name of vector. */
     private final String name;
     /** The data type of vector. */
-    private final DataType type;
+    private final DataType dtype;
     /** Optional measure. */
     private final Measure measure;
     /** The vector data. */
@@ -52,32 +52,32 @@ class VectorImpl<T> implements Vector<T> {
     /** Constructor. */
     public VectorImpl(String name, Class<?> clazz, T[] vector) {
         this.name = name;
-        this.type = DataTypes.object(clazz);
+        this.dtype = DataTypes.object(clazz);
         this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
-    public VectorImpl(String name, DataType type, T[] vector) {
+    public VectorImpl(String name, DataType dtype, T[] vector) {
         this.name = name;
-        this.type = type;
+        this.dtype = dtype;
         this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
     public VectorImpl(StructField field, T[] vector) {
-        if (field.measure != null) {
-            if ((field.type.isIntegral() && field.measure instanceof NumericalMeasure) ||
-                (field.type.isFloating() && field.measure instanceof CategoricalMeasure) ||
-                (!field.type.isIntegral() && !field.type.isFloating())) {
-                throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
+        if (field.measure() != null) {
+            if ((field.dtype().isIntegral() && field.measure() instanceof NumericalMeasure) ||
+                (field.dtype().isFloating() && field.measure() instanceof CategoricalMeasure) ||
+                (!field.dtype().isIntegral() && !field.dtype().isFloating())) {
+                throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure(), dtype()));
             }
         }
 
-        this.name = field.name;
-        this.type = field.type;
-        this.measure = field.measure;
+        this.name = field.name();
+        this.dtype = field.dtype();
+        this.measure = field.measure();
         this.vector = vector;
     }
 
@@ -87,8 +87,8 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
-    public DataType type() {
-        return type;
+    public DataType dtype() {
+        return dtype;
     }
 
     @Override
@@ -136,36 +136,36 @@ class VectorImpl<T> implements Vector<T> {
 
     @Override
     public double[] toDoubleArray() {
-        if (type.isBoolean()) {
+        if (dtype.isBoolean()) {
             return stream().mapToDouble(d -> d == null ? Double.NaN : ((Boolean) d ? 1.0 : 0.0)).toArray();
-        } else if (type.isChar()) {
+        } else if (dtype.isChar()) {
             return stream().mapToDouble(d -> d == null ? Double.NaN : (Character) d).toArray();
-        } else if (type.isNumeric()) {
+        } else if (dtype.isNumeric()) {
             return stream().mapToDouble(d -> d == null ? Double.NaN : ((Number) d).doubleValue()).toArray();
         } else {
-            throw new UnsupportedOperationException(name() + ":" + type());
+            throw new UnsupportedOperationException(name() + ":" + dtype);
         }
     }
 
     @Override
     public double[] toDoubleArray(double[] a) {
-        if (type.isBoolean()) {
+        if (dtype.isBoolean()) {
             for (int i = 0; i < vector.length; i++) {
                 Boolean b = (Boolean) vector[i];
                 a[i] = b == null ? Double.NaN : (b ? 1.0 : 0.0);
             }
-        } else if (type.isChar()) {
+        } else if (dtype.isChar()) {
             for (int i = 0; i < vector.length; i++) {
                 Character n = (Character) vector[i];
                 a[i] = n == null ? Double.NaN : n;
             }
-        } else if (type.isNumeric()) {
+        } else if (dtype.isNumeric()) {
             for (int i = 0; i < vector.length; i++) {
                 Number n = (Number) vector[i];
                 a[i] = n == null ? Double.NaN : n.doubleValue();
             }
         } else {
-            throw new UnsupportedOperationException(name() + ":" + type());
+            throw new UnsupportedOperationException(name() + ":" + dtype());
         }
 
         return a;
@@ -173,36 +173,36 @@ class VectorImpl<T> implements Vector<T> {
 
     @Override
     public int[] toIntArray() {
-        if (type.isBoolean()) {
+        if (dtype.isBoolean()) {
             return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Boolean) d ? 1 : 0)).toArray();
-        } else if (type.isChar()) {
+        } else if (dtype.isChar()) {
             return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : (Character) d).toArray();
-        } else if (type.isIntegral()) {
+        } else if (dtype.isIntegral()) {
             return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Number) d).intValue()).toArray();
         } else {
-            throw new UnsupportedOperationException(name() + ":" + type());
+            throw new UnsupportedOperationException(name() + ":" + dtype);
         }
     }
 
     @Override
     public int[] toIntArray(int[] a) {
-        if (type.isBoolean()) {
+        if (dtype.isBoolean()) {
             for (int i = 0; i < vector.length; i++) {
                 Boolean b = (Boolean) vector[i];
                 a[i] = b == null ? Integer.MIN_VALUE : (b ? 1 : 0);
             }
-        } else if (type.isChar()) {
+        } else if (dtype.isChar()) {
             for (int i = 0; i < vector.length; i++) {
                 Character n = (Character) vector[i];
                 a[i] = n == null ? Integer.MIN_VALUE : n;
             }
-        } else if (type.isIntegral()) {
+        } else if (dtype.isIntegral()) {
             for (int i = 0; i < vector.length; i++) {
                 Number n = (Number) vector[i];
                 a[i] = n == null ? Integer.MIN_VALUE : n.intValue();
             }
         } else {
-            throw new UnsupportedOperationException(name() + ":" + type());
+            throw new UnsupportedOperationException(name() + ":" + dtype);
         }
 
         return a;
@@ -211,10 +211,10 @@ class VectorImpl<T> implements Vector<T> {
     @Override
     public Vector<LocalDate> toDate() {
         LocalDate[] dates = null;
-        if (type.id() == DataType.ID.DateTime) {
+        if (dtype.id() == DataType.ID.DateTime) {
             dates = stream().map(d -> ((LocalDateTime) d).toLocalDate()).toArray(LocalDate[]::new);
-        } else if (type.id() == DataType.ID.Object) {
-            Class<?> clazz = ((ObjectType) type).getObjectClass();
+        } else if (dtype.id() == DataType.ID.Object) {
+            Class<?> clazz = ((ObjectType) dtype).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()).toArray(LocalDate[]::new);
@@ -224,7 +224,7 @@ class VectorImpl<T> implements Vector<T> {
         }
 
         if (dates == null) {
-            throw new UnsupportedOperationException("Unsupported data type for toDate(): " + type);
+            throw new UnsupportedOperationException("Unsupported data type for toDate(): " + dtype);
         }
 
         return new VectorImpl<>(name, DataTypes.DateType, dates);
@@ -233,10 +233,10 @@ class VectorImpl<T> implements Vector<T> {
     @Override
     public Vector<LocalTime> toTime() {
         LocalTime[] dates = null;
-        if (type.id() == DataType.ID.DateTime) {
+        if (dtype.id() == DataType.ID.DateTime) {
             dates = stream().map(d -> ((LocalDateTime) d).toLocalTime()).toArray(LocalTime[]::new);
-        } else if (type.id() == DataType.ID.Object) {
-            Class<?> clazz = ((ObjectType) type).getObjectClass();
+        } else if (dtype.id() == DataType.ID.Object) {
+            Class<?> clazz = ((ObjectType) dtype).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalTime()).toArray(LocalTime[]::new);
@@ -246,7 +246,7 @@ class VectorImpl<T> implements Vector<T> {
         }
 
         if (dates == null) {
-            throw new UnsupportedOperationException("Unsupported data type for toTime(): " + type);
+            throw new UnsupportedOperationException("Unsupported data type for toTime(): " + dtype);
         }
 
         return new VectorImpl<>(name, DataTypes.TimeType, dates);
@@ -255,8 +255,8 @@ class VectorImpl<T> implements Vector<T> {
     @Override
     public Vector<LocalDateTime> toDateTime() {
         LocalDateTime[] dates = null;
-        if (type.id() == DataType.ID.Object) {
-            Class<?> clazz = ((ObjectType) type).getObjectClass();
+        if (dtype.id() == DataType.ID.Object) {
+            Class<?> clazz = ((ObjectType) dtype).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()).toArray(LocalDateTime[]::new);
@@ -266,7 +266,7 @@ class VectorImpl<T> implements Vector<T> {
         }
 
         if (dates == null) {
-            throw new UnsupportedOperationException("Unsupported data type for toDateTime(): " + type);
+            throw new UnsupportedOperationException("Unsupported data type for toDateTime(): " + dtype);
         }
 
         return new VectorImpl<>(name, DataTypes.DateTimeType, dates);

@@ -69,13 +69,13 @@ public class OrdinalNode extends InternalNode {
     @Override
     public String dot(StructType schema, StructField response, int id) {
         StructField field = schema.field(feature);
-        return String.format(" %d [label=<%s &le; %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name, field.toString(value), size(), score);
+        return String.format(" %d [label=<%s &le; %s<br/>size = %d<br/>impurity reduction = %.4f>, fillcolor=\"#00000000\"];\n", id, field.name(), field.toString(value), size(), score);
     }
 
     @Override
     public String toString(StructType schema, boolean trueBranch) {
         StructField field = schema.field(feature);
         String condition = trueBranch ? "<=" : ">";
-        return String.format("%s%s%g", field.name, condition, value);
+        return String.format("%s%s%g", field.name(), condition, value);
     }
 }

@@ -87,7 +87,7 @@ public interface Dataset extends Iterable<SampleBatch>, AutoCloseable {
     static Dataset of(Formula formula, DataFrame df, int batch) {
         final double[][] x = formula.x(df).toArray();
         final var y = formula.y(df);
-        if (y.field().type.isIntegral()) {
+        if (y.field().dtype().isIntegral()) {
             return of(x, y.toIntArray(), batch);
         } else {
             return of(x, y.toDoubleArray(), batch);

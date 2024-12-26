@@ -80,7 +80,7 @@ public class SimpleImputer implements Transform {
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
-                return isMissing(xi) ? values.get(schema.field(i).name) : xi;
+                return isMissing(xi) ? values.get(schema.field(i).name()) : xi;
             }
 
             @Override
@@ -97,9 +97,9 @@ public class SimpleImputer implements Transform {
         BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(j -> {
             StructField field = schema.field(j);
-            Object value = values.get(field.name);
+            Object value = values.get(field.name());
             if (value != null) {
-                if (field.type.id() == DataType.ID.Double) {
+                if (field.dtype().id() == DataType.ID.Double) {
                     double x = ((Number) value).doubleValue();
                     double[] column = data.doubleVector(j).array();
                     double[] vector = new double[n];
@@ -107,7 +107,7 @@ public class SimpleImputer implements Transform {
                         vector[i] = Double.isNaN(column[i]) ? x : column[i];
                     }
                     vectors[j] = DoubleVector.of(field, vector);
-                } else if (field.type.id() == DataType.ID.Float) {
+                } else if (field.dtype().id() == DataType.ID.Float) {
                     float x = ((Number) value).floatValue();
                     float[] column = data.floatVector(j).array();
                     float[] vector = new float[n];
@@ -115,8 +115,8 @@ public class SimpleImputer implements Transform {
                         vector[i] = Float.isNaN(column[i]) ? x : column[i];
                     }
                     vectors[j] = FloatVector.of(field, vector);
-                } else if (field.type.isObject()) {
-                    if (field.type == DataTypes.BooleanObjectType) {
+                } else if (field.dtype().isObject()) {
+                    if (field.dtype() == DataTypes.BooleanObjectType) {
                         boolean x = (Boolean) value;
                         boolean[] vector = new boolean[n];
                         for (int i = 0; i < n; i++) {
@@ -124,7 +124,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = BooleanVector.of(field, vector);
-                    } else if (field.type == DataTypes.ByteObjectType) {
+                    } else if (field.dtype() == DataTypes.ByteObjectType) {
                         byte x = ((Number) value).byteValue();
                         byte[] vector = new byte[n];
                         for (int i = 0; i < n; i++) {
@@ -132,7 +132,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = ByteVector.of(field, vector);
-                    } else if (field.type == DataTypes.CharObjectType) {
+                    } else if (field.dtype() == DataTypes.CharObjectType) {
                         char x = (Character) value;
                         char[] vector = new char[n];
                         for (int i = 0; i < n; i++) {
@@ -140,7 +140,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = CharVector.of(field, vector);
-                    } else if (field.type == DataTypes.DoubleObjectType) {
+                    } else if (field.dtype() == DataTypes.DoubleObjectType) {
                         double x = ((Number) value).doubleValue();
                         double[] vector = new double[n];
                         for (int i = 0; i < n; i++) {
@@ -148,7 +148,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
                         vectors[j] = DoubleVector.of(field, vector);
-                    } else if (field.type == DataTypes.FloatObjectType) {
+                    } else if (field.dtype() == DataTypes.FloatObjectType) {
                         float x = ((Number) value).floatValue();
                         float[] vector = new float[n];
                         for (int i = 0; i < n; i++) {
@@ -156,7 +156,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
                         vectors[j] = FloatVector.of(field, vector);
-                    } else if (field.type == DataTypes.IntegerObjectType) {
+                    } else if (field.dtype() == DataTypes.IntegerObjectType) {
                         int x = ((Number) value).intValue();
                         int[] vector = new int[n];
                         for (int i = 0; i < n; i++) {
@@ -164,7 +164,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = IntVector.of(field, vector);
-                    } else if (field.type == DataTypes.LongObjectType) {
+                    } else if (field.dtype() == DataTypes.LongObjectType) {
                         long x = ((Number) value).longValue();
                         long[] vector = new long[n];
                         for (int i = 0; i < n; i++) {
@@ -172,7 +172,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = LongVector.of(field, vector);
-                    } else if (field.type == DataTypes.ShortObjectType) {
+                    } else if (field.dtype() == DataTypes.ShortObjectType) {
                         short x = ((Number) value).shortValue();
                         short[] vector = new short[n];
                         for (int i = 0; i < n; i++) {
@@ -257,21 +257,21 @@ public class SimpleImputer implements Transform {
         for (String column : columns) {
             StructField field = schema.field(column);
 
-            if (field.type.isString()) {
-                values.put(field.name, "");
-            } else if (field.type.isBoolean()) {
+            if (field.dtype().isString()) {
+                values.put(field.name(), "");
+            } else if (field.dtype().isBoolean()) {
                 int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
                 int mode = MathEx.mode(vector);
-                values.put(field.name, mode != 0);
-            } else if (field.type.isChar()) {
+                values.put(field.name(), mode != 0);
+            } else if (field.dtype().isChar()) {
                 int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
                 int mode = MathEx.mode(vector);
-                values.put(field.name, (char) mode);
-            } else if (field.measure instanceof NominalScale) {
+                values.put(field.name(), (char) mode);
+            } else if (field.measure() instanceof NominalScale) {
                 int[] vector = MathEx.omit(data.column(column).toIntArray(), Integer.MIN_VALUE);
                 int mode = MathEx.mode(vector);
-                values.put(field.name, mode);
-            } else if (field.type.isNumeric()) {
+                values.put(field.name(), mode);
+            } else if (field.dtype().isNumeric()) {
                 double[] vector = MathEx.omitNaN(data.column(column).toDoubleArray());
                 IQAgent agent = new IQAgent();
                 for (double xi : vector) {
@@ -279,7 +279,7 @@ public class SimpleImputer implements Transform {
                 }
 
                 if (lower == upper) {
-                    values.put(field.name, agent.quantile(lower));
+                    values.put(field.name(), agent.quantile(lower));
                 } else {
                     double lo = agent.quantile(lower);
                     double hi = agent.quantile(upper);
@@ -293,7 +293,7 @@ public class SimpleImputer implements Transform {
                         }
                     }
 
-                    values.put(field.name, sum/n);
+                    values.put(field.name(), sum/n);
                 }
             }
         }

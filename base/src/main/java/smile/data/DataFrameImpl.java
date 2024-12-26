@@ -106,7 +106,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 Class<?> type = prop.getPropertyType();
                 Method read = prop.getReadMethod();
                 StructField field = Arrays.stream(fields)
-                        .filter(f -> f.name.equals(name))
+                        .filter(f -> f.name().equals(name))
                         .findFirst().orElseThrow(NoSuchElementException::new);
 
                 int i = 0;
@@ -244,7 +244,7 @@ class DataFrameImpl implements DataFrame, Serializable {
         for (int j = 0; j < fields.length; j++) {
             int i = 0;
             StructField field = fields[j];
-            switch (field.type.id()) {
+            switch (field.dtype().id()) {
                 case Integer: {
                     int[] values = new int[size];
                     for (Tuple datum : data) values[i++] = datum.getInt(j);
@@ -504,7 +504,7 @@ class DataFrameImpl implements DataFrame, Serializable {
         Object[] vectors = new Object[ncol()];
         for (int i = 0; i < vectors.length; i++) {
             BaseVector column = columns.get(i);
-            switch (column.type().id()) {
+            switch (column.dtype().id()) {
                 case Boolean:
                     vectors[i] = new boolean[nrow];
                     break;
@@ -546,7 +546,7 @@ class DataFrameImpl implements DataFrame, Serializable {
         List<BaseVector> data = new ArrayList<>();
         for (int i = 0; i < vectors.length; i++) {
             BaseVector column = columns.get(i);
-            switch (column.type().id()) {
+            switch (column.dtype().id()) {
                 case Boolean:
                     data.add(BooleanVector.of(column.name(), (boolean[]) vectors[i]));
                     break;
@@ -572,7 +572,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                     data.add(DoubleVector.of(column.name(), (double[]) vectors[i]));
                     break;
                 default:
-                    data.add(Vector.of(column.name(), column.type(), (Object[]) vectors[i]));
+                    data.add(Vector.of(column.name(), column.dtype(), (Object[]) vectors[i]));
             }
         }
 

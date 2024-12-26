@@ -32,9 +32,9 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
- * A tuple is an immutable finite ordered list (sequence) of elements.
- * Allows both generic access by ordinal, which will incur boxing overhead
- * for primitives, as well as native primitive access.
+ * A tuple is an immutable ordered finite list (sequence) of elements.
+ * Allows both native primitive access and generic access by ordinal,
+ * which will incur boxing overhead for primitives.
  * <p>
  * It is invalid to use the native primitive interface to retrieve a value
  * that is null, instead a user must check `isNullAt` before attempting
@@ -112,7 +112,7 @@ public interface Tuple extends Serializable {
         for (String column : fields) {
             StructField field = schema.field(column);
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
 
                 if (encoder == CategoricalEncoder.DUMMY) {
@@ -136,7 +136,7 @@ public interface Tuple extends Serializable {
             int i = schema.indexOf(column);
             StructField field = schema.field(i);
 
-            Measure measure = field.measure;
+            Measure measure = field.measure();
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure cat) {
                 if (encoder == CategoricalEncoder.DUMMY) {
                     int k = cat.factor(getInt(i));
@@ -190,7 +190,7 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Checks whether the value at position i is null.
+     * Checks whether the value at the given position is null.
      * @param i the index of field.
      * @return true if the field value is null.
      */
@@ -552,7 +552,7 @@ public interface Tuple extends Serializable {
      */
     default String getScale(int i) {
         int x = getInt(i);
-        Measure measure = schema().field(i).measure;
+        Measure measure = schema().field(i).measure();
         return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
     }
 

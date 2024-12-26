@@ -56,8 +56,8 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
         this.schema = schema;
         if (columns == null || columns.length == 0) {
             columns = Arrays.stream(schema.fields())
-                    .filter(field -> field.isNumeric() || field.measure instanceof CategoricalMeasure)
-                    .map(field -> field.name)
+                    .filter(field -> field.isNumeric() || field.measure() instanceof CategoricalMeasure)
+                    .map(field -> field.name())
                     .toArray(String[]::new);
         }
 
@@ -69,12 +69,12 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
                 if (i < base.length-1) {
                     base[i+1] = base[i] + 1;
                 }
-            } else if (field.measure instanceof CategoricalMeasure cat) {
+            } else if (field.measure() instanceof CategoricalMeasure cat) {
                 if (i < base.length-1) {
                     base[i+1] = base[i] + cat.size();
                 }
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name()));
             }
         }
     }
@@ -91,10 +91,10 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
             StructField field = schema.field(columns[i]);
             if (field.isNumeric()) {
                 features.append(base[i], x.getDouble(columns[i]));
-            } else if (field.measure instanceof CategoricalMeasure) {
+            } else if (field.measure() instanceof CategoricalMeasure) {
                 features.append(x.getInt(columns[i]) + base[i], 1);
             } else {
-                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name));
+                throw new IllegalArgumentException(String.format("Column '%s' is neither numeric or categorical", field.name()));
             }
         }
 

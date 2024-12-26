@@ -207,7 +207,7 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
             double[] breaks = null;
 
             StructField field = schema.field(i);
-            if (field.measure instanceof NominalScale scale) {
+            if (field.measure() instanceof NominalScale scale) {
                 int k = scale.size();
                 events = new int[k];
                 nonevents = new int[k];
@@ -256,7 +256,7 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
                 iv += (pnonevents - pevents) * woe[j];
             }
 
-            return new InformationValue(field.name, iv, woe, breaks);
+            return new InformationValue(field.name(), iv, woe, breaks);
         }).filter(iv -> iv != null && !iv.feature.equals(clazz)).toArray(InformationValue[]::new);
     }
 }

@@ -111,7 +111,7 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
                     wss += MathEx.pow2(xij - condmu[yi]);
                 }
 
-                return new SumSquaresRatio(field.name, bss / wss);
+                return new SumSquaresRatio(field.name(), bss / wss);
             } else {
                 return null;
             }

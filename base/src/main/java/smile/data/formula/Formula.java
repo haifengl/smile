@@ -307,8 +307,8 @@ public class Formula implements Serializable {
                 .forEach(term -> columns.addAll(term.variables()));
 
         List<Variable> rest = Arrays.stream(inputSchema.fields())
-                .filter(field -> !columns.contains(field.name))
-                .map(field -> new Variable(field.name))
+                .filter(field -> !columns.contains(field.name()))
+                .map(field -> new Variable(field.name()))
                 .toList();
 
         List<Term> expanded = new ArrayList<>();

@@ -75,11 +75,11 @@ public class DateFeatureTest {
         System.out.println(output);
 
         for (int i = 0; i < output.ncol(); i++) {
-            assertEquals(DataTypes.IntegerType, schema.field(i).type);
+            assertEquals(DataTypes.IntegerType, schema.field(i).dtype());
             if (i == 1 || i == 3) {
-                assertTrue(schema.field(i).measure instanceof NominalScale);
+                assertTrue(schema.field(i).measure() instanceof NominalScale);
             } else {
-                assertNull(schema.field(i).measure);
+                assertNull(schema.field(i).measure());
             }
         }
 

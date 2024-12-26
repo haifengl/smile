@@ -58,7 +58,7 @@ public class ColumnTransform implements Transform {
         return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
-                Function transform = transforms.get(schema.field(i).name);
+                Function transform = transforms.get(schema.field(i).name());
                 if (transform != null) {
                     return transform.apply(x.getDouble(i));
                 } else {
@@ -79,13 +79,13 @@ public class ColumnTransform implements Transform {
         BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
-            Function transform = transforms.get(field.name);
+            Function transform = transforms.get(field.name());
             if (transform != null) {
                 DoubleStream stream = data.stream().mapToDouble(t -> transform.apply(t.getDouble(i)));
-                if (field.measure == null || field.measure instanceof NumericalMeasure) {
+                if (field.measure() == null || field.measure() instanceof NumericalMeasure) {
                     vectors[i] = DoubleVector.of(field, stream);
                 } else {
-                    vectors[i] = DoubleVector.of(field.name, stream);
+                    vectors[i] = DoubleVector.of(field.name(), stream);
                 }
             } else {
                 vectors[i] = data.column(i);

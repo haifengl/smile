@@ -52,16 +52,16 @@ public class DoubleFunction extends AbstractFunction {
 
         for (Feature feature : x.bind(schema)) {
             StructField xfield = feature.field();
-            DataType type = xfield.type;
+            DataType type = xfield.dtype();
             if (!(type.isDouble() || type.isFloat() || type.isInt() || type.isLong() || type.isShort() || type.isByte())) {
                 throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, type));
             }
 
             features.add(new Feature() {
                 final StructField field = new StructField(
-                        String.format("%s(%s)", name, xfield.name),
+                        String.format("%s(%s)", name, xfield.name()),
                         type.id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType,
-                        xfield.measure);
+                        xfield.measure());
 
                 @Override
                 public StructField field() {

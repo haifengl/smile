@@ -55,7 +55,7 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
         return new smile.data.AbstractTuple() {
             @Override
             public Object get(int i) {
-                Function inverse = inverses.get(schema.field(i).name);
+                Function inverse = inverses.get(schema.field(i).name());
                 if (inverse != null) {
                     return inverse.apply(x.getDouble(i));
                 } else {
@@ -76,7 +76,7 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
         BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
         IntStream.range(0, schema.length()).forEach(i -> {
             StructField field = schema.field(i);
-            Function inverse = inverses.get(field.name);
+            Function inverse = inverses.get(field.name());
             if (inverse != null) {
                 DoubleStream stream = data.stream().parallel().mapToDouble(t -> inverse.apply(t.getDouble(i)));
                 vectors[i] = DoubleVector.of(field, stream);

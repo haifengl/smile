@@ -65,7 +65,7 @@ public class Date implements Term {
     @Override
     public List<Feature> bind(StructType schema) {
         int index = schema.indexOf(name);
-        DataType type = schema.field(name).type;
+        DataType type = schema.field(name).dtype();
         switch (type.id()) {
             case Date:
                 if (hasTimeFeatures(features)) {
@@ -103,7 +103,7 @@ public class Date implements Term {
 
                 @Override
                 public String toString() {
-                    return field.name;
+                    return field.name();
                 }
 
                 @Override

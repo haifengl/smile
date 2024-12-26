@@ -70,25 +70,25 @@ import smile.neighbor.Neighbor;
                     return xi;
                 } else {
                     StructField field = schema.field(i);
-                    if (field.type.isBoolean()) {
+                    if (field.dtype().isBoolean()) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
                                         .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mode(vector) != 0;
-                    } else if (field.type.isChar()) {
+                    } else if (field.dtype().isChar()) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
                                         .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : (char) MathEx.mode(vector);
-                    } else if (field.measure instanceof NominalScale) {
+                    } else if (field.measure() instanceof NominalScale) {
                         int[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
                                         .mapToInt(neighbor -> neighbor.key().getInt(i)).toArray(),
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mode(vector);
-                    } else if (field.type.isNumeric()) {
+                    } else if (field.dtype().isNumeric()) {
                         double[] vector = MathEx.omit(
                                 Arrays.stream(neighbors)
                                         .mapToDouble(neighbor -> neighbor.key().getDouble(i)).toArray(),
