@@ -88,6 +88,43 @@ public class AdjacencyListTest {
     public void tearDown() {
     }
 
+    @Test
+    public void testDot() {
+        System.out.println("dot");
+        assertEquals("""
+digraph  {
+  node [shape=box, style="rounded", color="black", fontname=helvetica];
+  edge [fontname=helvetica];
+}""", g1.dot());
+
+        assertEquals("""
+digraph  {
+  node [shape=box, style="rounded", color="black", fontname=helvetica];
+  edge [fontname=helvetica];
+  1 -> 2 [label="1"];
+  1 -> 3 [label="1"];
+  2 -> 1 [label="1"];
+  2 -> 3 [label="1"];
+  3 -> 2 [label="1"];
+  3 -> 1 [label="1"];
+}""", g3.dot());
+
+        String[] label = {"a", "b", "c", "d"};
+        assertEquals("""
+graph G8 {
+  node [shape=box, style="rounded", color="black", fontname=helvetica];
+  edge [fontname=helvetica];
+  0 [label="a"];
+  1 [label="b"];
+  2 [label="c"];
+  3 [label="d"];
+  1 -- 2 [label="1"];
+  1 -- 4 [label="1"];
+  2 -- 3 [label="1"];
+  3 -- 4 [label="1"];
+}""", g8.dot("G8", label));
+    }
+
     /**
      * Test of isConnected method, of class AdjacencyList.
      */
