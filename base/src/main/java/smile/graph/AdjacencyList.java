@@ -65,6 +65,11 @@ public class AdjacencyList extends Graph implements Serializable {
     }
 
     @Override
+    public String toString() {
+        return String.format("AdjacencyList(%d nodes, digraph=%b)", graph.length, isDigraph());
+    }
+
+    @Override
     public int getNumVertices() {
         return graph.length;
     }

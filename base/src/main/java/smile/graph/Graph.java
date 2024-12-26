@@ -25,6 +25,7 @@ import smile.sort.Sort;
 import smile.util.ArrayElementConsumer;
 import smile.util.ArrayElementFunction;
 import smile.util.PriorityQueue;
+import smile.util.Strings;
 
 /**
  * A graph is an abstract representation of a set of objects where some pairs
@@ -83,6 +84,53 @@ public abstract class Graph {
      */
     public boolean isDigraph() {
         return digraph;
+    }
+
+    /**
+     * Returns the graphic representation in Graphviz dot format.
+     * Try <a href="http://viz-js.com/">http://viz-js.com/</a>
+     * to visualize the returned string.
+     * @return the graphic representation in Graphviz dot format.
+     */
+    public String dot() {
+        return dot(null, null);
+    }
+
+    /**
+     * Returns the graphic representation in Graphviz dot format.
+     * Try <a href="http://viz-js.com/">http://viz-js.com/</a>
+     * to visualize the returned string.
+     * @param name the graph name.
+     * @param label the label of nodes.
+     * @return the graphic representation in Graphviz dot format.
+     */
+    public String dot(String name, String[] label) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(digraph ? "digraph " : "graph ");
+        if (name != null) builder.append(name);
+        builder.append(" {\n");
+        builder.append("  node [shape=box, style=\"rounded\", color=\"black\", fontname=helvetica];\n");
+        builder.append("  edge [fontname=helvetica];\n");
+
+        if (label != null) {
+            for (int i = 0; i < label.length; i++) {
+                builder.append(String.format("  %d [label=\"%s\"];\n", i, label[i]));
+            }
+        }
+
+        int n = getNumVertices();
+        String edge = digraph ? "->" : "--";
+        for (int i = 0; i < n; i++) {
+            int u = i;
+            forEachEdge(i, (v, w) -> {
+                if (digraph || v >= u) {
+                    builder.append(String.format("  %d %s %d [label=\"%s\"];\n", u, edge, v, Strings.format(w)));
+                }
+            });
+        }
+
+        builder.append("}");
+        return builder.toString();
     }
 
     /**
