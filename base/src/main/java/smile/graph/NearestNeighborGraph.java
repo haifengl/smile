@@ -438,7 +438,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
         int[][] result = new int[n][];
         for (int i = 0; i < n; i++) {
             List<Neighbor> list = new ArrayList<>(candidates.get(i));
-            list.sort((o1, o2) -> Double.compare(o1.distance, o2.distance));
+            list.sort(Comparator.comparingDouble(o -> o.distance));
             result[i] = list.stream().limit(maxCandidates).mapToInt(neighbor -> neighbor.index).toArray();
         }
         return result;
