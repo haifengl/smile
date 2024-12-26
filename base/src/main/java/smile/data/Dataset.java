@@ -56,7 +56,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
     SampleInstance<D, T> get(int i);
 
     /**
-     * Returns the index at the specified index.  For Scala's convenience.
+     * Returns the index at the specified index. For Scala's convenience.
      * @param i the index of the instance to be returned.
      * @return the i-th instance.
      */

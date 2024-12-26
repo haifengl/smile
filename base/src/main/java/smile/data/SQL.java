@@ -269,7 +269,9 @@ public class SQL implements AutoCloseable {
      * @return the string representation.
      */
     private String fileList(String... path) {
-        return Arrays.stream(path).map(s -> "'" + s + "'").collect(Collectors.joining(", ", "[", "]"));
+        return Arrays.stream(path)
+                .map(s -> "'" + s + "'")
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
