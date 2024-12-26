@@ -381,12 +381,12 @@ public class UMAP {
         AdjacencyList strength = computeMembershipStrengths(nng, sigma, rho);
         // probabilistic t-conorm: (a + a' - a .* a')
         AdjacencyList conorm = new AdjacencyList(n, false);
-        for (int vertex = 0; vertex < n; vertex++) {
-            int i = vertex;
-            strength.forEachEdge(i, (j, a) -> {
-                double b = strength.getWeight(j, i);
+        for (int i = 0; i < n; i++) {
+            int u = i;
+            strength.forEachEdge(u, (v, a) -> {
+                double b = strength.getWeight(v, u);
                 double w = a + b - a * b;
-                conorm.setWeight(i, j, w);
+                conorm.setWeight(u, v, w);
             });
         }
         return conorm.toMatrix();
@@ -560,12 +560,11 @@ public class UMAP {
         AdjacencyList laplacian = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
-            int[] vertex = neighbors[i];
+            int[] v = neighbors[i];
             double[] dist = distances[i];
-            int k = vertex.length;
-            for (int j = 0; j < k; j++) {
-                double w = -D[i] * dist[j] * D[vertex[j]];
-                laplacian.setWeight(i, vertex[j], w);
+            for (int j = 0; j < v.length; j++) {
+                double w = -D[i] * dist[j] * D[v[j]];
+                laplacian.setWeight(i, v[j], w);
             }
         }
 
