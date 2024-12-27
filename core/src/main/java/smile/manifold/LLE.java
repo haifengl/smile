@@ -74,7 +74,7 @@ public class LLE {
      * @return the embedding coordinates.
      */
     public static double[][] of(NearestNeighborGraph nng, double[][] data, int d) {
-        int k = nng.neighbors()[0].length;
+        int k = nng.k();
         int D = data[0].length;
 
         double tol = 0.0;
