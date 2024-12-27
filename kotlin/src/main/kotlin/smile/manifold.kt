@@ -191,8 +191,8 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
 fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
          learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
          repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, k, d, if (epochs >= 10) epochs else if (data.size > 10000) 200 else 500,
-            learningRate, minDist, spread, negativeSamples, repulsionStrength, localConnectivity)
+    return UMAP.of(data, k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                   repulsionStrength, localConnectivity)
 }
 
 /**
@@ -247,8 +247,8 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
 fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epochs: Int = 0,
              learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
              repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, distance, k, d, if (epochs >= 10) epochs else if (data.size > 10000) 200 else 500,
-            learningRate, minDist, spread, negativeSamples, repulsionStrength, localConnectivity)
+    return UMAP.of(data, distance, k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                   repulsionStrength, localConnectivity)
 }
 
 /**
