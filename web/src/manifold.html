@@ -145,13 +145,13 @@ title: Smile - Manifold Learning
     ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
 
     var data = Arrays.copyOf(swissroll, 2000);
-    var nng = NearestNeighborGraph.of(data, MathEx::distance, 7).largest(false);
+    var nng = NearestNeighborGraph.descent(data, MathEx::distance, 7).largest(false);
     var map = IsoMap.of(nng, 2, false);
     var graph = nng.graph(false);
     var edges = IntStream.range(0, data.length)
             .mapToObj(graph::getEdges)
             .flatMap(List::stream)
-            .map(edge -> new int[]{edge.u(), edge.v()})
+            .map(edge -&gt; new int[]{edge.u(), edge.v()})
             .toArray(int[][]::new);
     Wireframe.of(map, edges).canvas().window();
           </code></pre>
