@@ -27,21 +27,23 @@ import smile.neighbor.RandomProjectionTree;
 /**
  * The k-nearest neighbor graph builder.
  *
+ * @param k k-nearest neighbor.
  * @param neighbors The indices of k-nearest neighbors.
  * @param distances The distances to k-nearest neighbors.
  * @param index The sample index of each vertex in original dataset.
  * @author Haifeng Li
  */
-public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[] index) {
+public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distances, int[] index) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NearestNeighborGraph.class);
 
     /**
      * Constructor.
+     * @param k k-nearest neighbor.
      * @param neighbors The indices of k-nearest neighbors.
      * @param distances The distances to k-nearest neighbors.
      */
-    public NearestNeighborGraph(int[][] neighbors, double[][] distances) {
-        this(neighbors, distances, IntStream.range(0, neighbors.length).toArray());
+    public NearestNeighborGraph(int k, int[][] neighbors, double[][] distances) {
+        this(k, neighbors, distances, IntStream.range(0, neighbors.length).toArray());
     }
 
     /**
@@ -98,10 +100,8 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
                     .orElseThrow(NoSuchElementException::new);
             logger.info("{} connected components, largest one has {} samples.", cc.length, index.length);
 
-            int n = index.length;
-            int k = neighbors[0].length;
-
-            int[] reverseIndex = new int[neighbors.length];
+            int n = neighbors.length;
+            int[] reverseIndex = new int[n];
             for (int i = 0; i < n; i++) {
                 reverseIndex[index[i]] = i;
             }
@@ -115,7 +115,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
                     nearest[i][j] = reverseIndex[ni[j]];
                 }
             }
-            return new NearestNeighborGraph(nearest, dist, index);
+            return new NearestNeighborGraph(k, nearest, dist, index);
         }
     }
 
@@ -258,7 +258,7 @@ public record NearestNeighborGraph(int[][] neighbors, double[][] distances, int[
             }
         }
 
-        return new NearestNeighborGraph(neighbors, distances);
+        return new NearestNeighborGraph(k, neighbors, distances);
     }
 
     private interface CandidateGenerator {

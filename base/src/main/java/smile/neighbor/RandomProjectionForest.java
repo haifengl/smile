@@ -125,7 +125,7 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
                 distances[i][j] = a[l].distance;
             }
         }
-        return new NearestNeighborGraph(neighbors, distances);
+        return new NearestNeighborGraph(k, neighbors, distances);
     }
 
     private static void update(Set<Integer> set, HeapSelect<NeighborBuilder<double[], double[]>> pq, int k, double[] x, int index, double dist) {
