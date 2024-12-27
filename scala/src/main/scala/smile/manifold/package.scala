@@ -120,7 +120,7 @@ package object manifold {
     */
   def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]] = time("LLE") {
     val nng = NearestNeighborGraph.of(data, k)
-    LLE.of(nng, data, d)
+    LLE.of(data, nng, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
