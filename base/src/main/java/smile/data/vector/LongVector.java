@@ -55,22 +55,6 @@ public class LongVector extends PrimitiveVector {
     }
 
     @Override
-    public long getLong(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public Long get(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public LongVector get(Index index) {
-        LongVector copy = new LongVector(field, vector);
-        return slice(copy, index);
-    }
-
-    @Override
     public LongStream asLongStream() {
         if (index == null) {
             return Arrays.stream(vector);
@@ -82,6 +66,27 @@ public class LongVector extends PrimitiveVector {
     @Override
     public DoubleStream asDoubleStream() {
         return asLongStream().mapToDouble(i -> i);
+    }
+
+    @Override
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).longValue();
+    }
+
+    @Override
+    public LongVector get(Index index) {
+        LongVector copy = new LongVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public Long get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public long getLong(int i) {
+        return vector[at(i)];
     }
 
     @Override

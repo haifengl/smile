@@ -53,13 +53,13 @@ public class ByteVector extends PrimitiveVector {
     }
 
     @Override
-    public byte getByte(int i) {
-        return vector[at(i)];
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
     }
 
     @Override
-    public Byte get(int i) {
-        return vector[at(i)];
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).byteValue();
     }
 
     @Override
@@ -69,8 +69,13 @@ public class ByteVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
-        return indexStream().map(i -> vector[i]);
+    public Byte get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public byte getByte(int i) {
+        return vector[at(i)];
     }
 
     @Override

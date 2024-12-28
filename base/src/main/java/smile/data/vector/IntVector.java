@@ -55,13 +55,17 @@ public class IntVector extends PrimitiveVector {
     }
 
     @Override
-    public int getInt(int i) {
-        return vector[at(i)];
+    public IntStream asIntStream() {
+        if (index == null) {
+            return Arrays.stream(vector);
+        } else {
+            return index.stream().map(i -> vector[i]);
+        }
     }
 
     @Override
-    public Integer get(int i) {
-        return vector[at(i)];
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).intValue();
     }
 
     @Override
@@ -71,12 +75,13 @@ public class IntVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
-        if (index == null) {
-            return Arrays.stream(vector);
-        } else {
-            return index.stream().map(i -> vector[i]);
-        }
+    public Integer get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public int getInt(int i) {
+        return vector[at(i)];
     }
 
     @Override

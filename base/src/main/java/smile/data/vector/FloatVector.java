@@ -45,41 +45,6 @@ public class FloatVector extends PrimitiveVector {
         this.vector = vector;
     }
 
-    @Override
-    int length() {
-        return vector.length;
-    }
-
-    @Override
-    public float[] array() {
-        return vector;
-    }
-
-    @Override
-    public float getFloat(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public Float get(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public FloatVector get(Index index) {
-        FloatVector copy = new FloatVector(field, vector);
-        return slice(copy, index);
-    }
-
-    @Override
-    public DoubleStream asDoubleStream() {
-        if (index == null) {
-            return IntStream.range(0, vector.length).mapToDouble(i -> vector[i]);
-        } else {
-            return index.stream().mapToDouble(i -> vector[i]);
-        }
-    }
-
     /**
      * Fills NaN/Inf values using the specified value.
      * @param value the value to replace NAs.
@@ -95,6 +60,46 @@ public class FloatVector extends PrimitiveVector {
             indexStream().filter(i -> Float.isNaN(vector[at(i)]))
                     .forEach(i -> vector[at(i)] = value);
         }
+    }
+
+    @Override
+    int length() {
+        return vector.length;
+    }
+
+    @Override
+    public float[] array() {
+        return vector;
+    }
+
+    @Override
+    public DoubleStream asDoubleStream() {
+        if (index == null) {
+            return IntStream.range(0, vector.length).mapToDouble(i -> vector[i]);
+        } else {
+            return index.stream().mapToDouble(i -> vector[i]);
+        }
+    }
+
+    @Override
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).floatValue();
+    }
+
+    @Override
+    public FloatVector get(Index index) {
+        FloatVector copy = new FloatVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public Float get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public float getFloat(int i) {
+        return vector[at(i)];
     }
 
     @Override

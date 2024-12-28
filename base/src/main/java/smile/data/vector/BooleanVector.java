@@ -60,13 +60,15 @@ public class BooleanVector extends PrimitiveVector {
     }
 
     @Override
-    public boolean getBoolean(int i) {
-        return vector.get(at(i));
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector.get(i) ? 1 : 0);
     }
 
     @Override
-    public Boolean get(int i) {
-        return vector.get(at(i));
+    public void set(int i, Object value) {
+        if ((Boolean) value) {
+            vector.set(at(i));
+        }
     }
 
     @Override
@@ -76,8 +78,13 @@ public class BooleanVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
-        return indexStream().map(i -> vector.get(i) ? 1 : 0);
+    public Boolean get(int i) {
+        return vector.get(at(i));
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
+        return vector.get(at(i));
     }
 
     @Override
