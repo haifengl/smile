@@ -84,7 +84,36 @@ public record StructType(StructField[] fields, PerfectHash index) implements Dat
     }
 
     /**
+     * Return the i-th field.
+     * @param i the field index.
+     * @return the field.
+     */
+    public StructField field(int i) {
+        return fields[i];
+    }
+
+    /**
      * Return the field of given name.
+     * @param name the field name.
+     * @return the field.
+     */
+    public StructField field(String name) {
+        return fields[indexOf(name)];
+    }
+
+    /**
+     * Return the i-th field.
+     * This is an alias to {@link #field(int) field} for Scala's convenience.
+     * @param i the field index.
+     * @return the field.
+     */
+    public StructField apply(int i) {
+        return fields[i];
+    }
+
+    /**
+     * Return the field of given name.
+     * This is an alias to {@link #field(String) field} for Scala's convenience.
      * @param name the field name.
      * @return the field.
      */
@@ -201,8 +230,7 @@ public record StructType(StructField[] fields, PerfectHash index) implements Dat
         if (o instanceof Tuple t) {
             return Arrays.stream(fields)
                     .map(field -> {
-                        Object v = t.get(field.name());
-                        String value = v == null ? "null" : field.toString(v);
+                        String value = field.toString(t.get(field.name()));
                         return String.format("  %s: %s", field.name(), value);
                     })
                     .collect(Collectors.joining(",\n", "{\n", "\n}"));
