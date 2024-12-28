@@ -19,6 +19,12 @@ package smile.data.vector;
 import smile.data.type.StructField;
 import smile.util.Index;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+
 /**
  * A number object vector.
  *
@@ -27,12 +33,20 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 public class NumberVector<T extends Number> extends ObjectVector<T> {
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public NumberVector(String name, T[] vector) {
         super(name, vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public NumberVector(StructField field, T[] vector) {
         super(field, vector);
     }
@@ -71,4 +85,18 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
         return slice(copy, index);
     }
 
+    @Override
+    public IntStream asIntStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Number::intValue);
+    }
+
+    @Override
+    public LongStream asLongStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToLong(Number::longValue);
+    }
+
+    @Override
+    public DoubleStream asDoubleStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToDouble(Number::doubleValue);
+    }
 }

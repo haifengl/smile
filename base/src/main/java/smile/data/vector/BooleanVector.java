@@ -32,17 +32,29 @@ public class BooleanVector extends PrimitiveVector {
     /** The vector data. */
     private final BitSet vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public BooleanVector(String name, boolean[] vector) {
         this(new StructField(name, DataTypes.ByteType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public BooleanVector(StructField field, boolean[] vector) {
         this(field, bitSet(vector));
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param bits the bit map of vector.
+     */
     public BooleanVector(StructField field, BitSet bits) {
         super(checkMeasure(field, NumericalMeasure.class));
         this.vector = bits;
@@ -60,7 +72,11 @@ public class BooleanVector extends PrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return indexStream().map(i -> vector.get(i) ? 1 : 0);
+        if (nullMask == null) {
+            return indexStream().map(i -> vector.get(i) ? 1 : 0);
+        } else {
+            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector.get(i) ? 1 : 0);
+        }
     }
 
     @Override

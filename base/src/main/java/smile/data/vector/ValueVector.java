@@ -17,7 +17,6 @@
 package smile.data.vector;
 
 import java.util.BitSet;
-import java.util.Objects;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
@@ -106,8 +105,8 @@ public interface ValueVector {
     Object array();
 
     /**
-     * Returns an IntStream consisting of the elements of this vector,
-     * converted to integer.
+     * Returns an IntStream consisting of the non-null/missing elements of
+     * this vector, converted to integer.
      *
      * @return an IntStream consisting of the elements of this vector.
      */
@@ -116,8 +115,8 @@ public interface ValueVector {
     }
 
     /**
-     * Returns a LongStream consisting of the elements of this vector,
-     * converted to long.
+     * Returns a LongStream consisting of the non-null/missing elements of
+     * this vector, converted to long.
      *
      * @return a LongStream consisting of the elements of this vector.
      */
@@ -126,8 +125,8 @@ public interface ValueVector {
     }
 
     /**
-     * Returns a LongStream consisting of the elements of this vector,
-     * converted to double.
+     * Returns a DoubleStream consisting of the non-null/missing elements of
+     * this vector, converted to double.
      *
      * @return a DoubleStream consisting of the elements of this vector.
      */

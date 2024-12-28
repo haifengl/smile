@@ -32,12 +32,20 @@ public class IntVector extends PrimitiveVector {
     /** The vector data. */
     private final int[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public IntVector(String name, int[] vector) {
         this(new StructField(name, DataTypes.IntegerType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public IntVector(StructField field, int[] vector) {
         super(checkMeasure(field, NumericalMeasure.class));
         this.vector = vector;
@@ -55,10 +63,14 @@ public class IntVector extends PrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        if (index == null) {
-            return Arrays.stream(vector);
+        if (nullMask == null) {
+            if (index == null) {
+                return Arrays.stream(vector);
+            } else {
+                return index.stream().map(i -> vector[i]);
+            }
         } else {
-            return index.stream().map(i -> vector[i]);
+            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
         }
     }
 
