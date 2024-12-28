@@ -177,17 +177,17 @@ public class SimpleCorpus implements Corpus {
     }
 
     @Override
-    public int ndoc() {
+    public int docCount() {
         return docs.size();
     }
 
     @Override
-    public int nterm() {
+    public int termCount() {
         return freq.size();
     }
 
     @Override
-    public long nbigram() {
+    public long bigramCount() {
         return freq2.size();
     }
 

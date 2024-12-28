@@ -38,19 +38,19 @@ public interface Corpus {
      * Returns the number of documents in the corpus.
      * @return the number of documents in the corpus.
      */
-    int ndoc();
+    int docCount();
 
     /**
      * Returns the number of unique terms in the corpus.
      * @return the number of unique terms in the corpus.
      */
-    int nterm();
+    int termCount();
 
     /**
      * Returns the number of bigrams in the corpus.
      * @return the number of bigrams in the corpus.
      */
-    long nbigram();
+    long bigramCount();
 
     /**
      * Returns the average size of documents in the corpus.
