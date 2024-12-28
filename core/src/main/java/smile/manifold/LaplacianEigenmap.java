@@ -112,7 +112,7 @@ public class LaplacianEigenmap {
      */
     public static double[][] of(NearestNeighborGraph nng, int d, double t) {
         AdjacencyList graph = nng.graph(false);
-        int n = graph.getNumVertices();
+        int n = graph.getVertexCount();
 
         double[] D = new double[n];
         double gamma = -1.0 / t;
