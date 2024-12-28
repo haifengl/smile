@@ -20,7 +20,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable number object vector.
+ * A number object vector.
  *
  * @param <T> a subclass of Number.
  *

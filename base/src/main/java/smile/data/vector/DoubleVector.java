@@ -26,7 +26,7 @@ import smile.math.MathEx;
 import smile.util.Index;
 
 /**
- * An immutable double vector.
+ * A double vector.
  *
  * @author Haifeng Li
  */
