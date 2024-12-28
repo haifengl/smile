@@ -33,12 +33,20 @@ public class DoubleVector extends PrimitiveVector {
     /** The vector data. */
     private final double[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public DoubleVector(String name, double[] vector) {
         this(new StructField(name, DataTypes.DoubleType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public DoubleVector(StructField field, double[] vector) {
         super(checkMeasure(field, CategoricalMeasure.class));
         this.vector = vector;
@@ -73,10 +81,14 @@ public class DoubleVector extends PrimitiveVector {
 
     @Override
     public DoubleStream asDoubleStream() {
-        if (index == null) {
-            return Arrays.stream(vector);
+        if (nullMask == null) {
+            if (index == null) {
+                return Arrays.stream(vector);
+            } else {
+                return index.stream().mapToDouble(i -> vector[i]);
+            }
         } else {
-            return index.stream().mapToDouble(i -> vector[i]);
+            return indexStream().filter(i -> !nullMask.get(i)).mapToDouble(i -> vector[i]);
         }
     }
 

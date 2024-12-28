@@ -17,7 +17,6 @@
 package smile.data.vector;
 
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -33,12 +32,20 @@ public class FloatVector extends PrimitiveVector {
     /** The vector data. */
     private final float[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public FloatVector(String name, float[] vector) {
         this(new StructField(name, DataTypes.FloatType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public FloatVector(StructField field, float[] vector) {
         super(checkMeasure(field, CategoricalMeasure.class));
         this.vector = vector;
@@ -73,10 +80,10 @@ public class FloatVector extends PrimitiveVector {
 
     @Override
     public DoubleStream asDoubleStream() {
-        if (index == null) {
-            return IntStream.range(0, vector.length).mapToDouble(i -> vector[i]);
+        if (nullMask == null) {
+            return indexStream().mapToDouble(i -> vector[i]);
         } else {
-            return index.stream().mapToDouble(i -> vector[i]);
+            return indexStream().filter(i -> !nullMask.get(i)).mapToDouble(i -> vector[i]);
         }
     }
 

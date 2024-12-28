@@ -31,12 +31,20 @@ public class ByteVector extends PrimitiveVector {
     /** The vector data. */
     private final byte[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public ByteVector(String name, byte[] vector) {
         this(new StructField(name, DataTypes.ByteType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public ByteVector(StructField field, byte[] vector) {
         super(checkMeasure(field, NumericalMeasure.class));
         this.vector = vector;
@@ -54,7 +62,11 @@ public class ByteVector extends PrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return indexStream().map(i -> vector[i]);
+        if (nullMask == null) {
+            return indexStream().map(i -> vector[i]);
+        } else {
+            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
+        }
     }
 
     @Override

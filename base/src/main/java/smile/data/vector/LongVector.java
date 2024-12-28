@@ -33,11 +33,19 @@ public class LongVector extends PrimitiveVector {
     /** The vector data. */
     private final long[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public LongVector(String name, long[] vector) {
         this(new StructField(name, DataTypes.LongType), vector);    }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public LongVector(StructField field, long[] vector) {
         super(checkMeasure(field, NumericalMeasure.class));
         this.vector = vector;
@@ -55,10 +63,14 @@ public class LongVector extends PrimitiveVector {
 
     @Override
     public LongStream asLongStream() {
-        if (index == null) {
-            return Arrays.stream(vector);
+        if (nullMask == null) {
+            if (index == null) {
+                return Arrays.stream(vector);
+            } else {
+                return index.stream().mapToLong(i -> vector[i]);
+            }
         } else {
-            return index.stream().mapToLong(i -> vector[i]);
+            return indexStream().filter(i -> !nullMask.get(i)).mapToLong(i -> vector[i]);
         }
     }
 

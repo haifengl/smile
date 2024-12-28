@@ -36,12 +36,20 @@ public class ObjectVector<T> extends AbstractVector {
     /** The vector data. */
     final T[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public ObjectVector(String name, T[] vector) {
         this(new StructField(name, DataTypes.object(vector.getClass().getComponentType())), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public ObjectVector(StructField field, T[] vector) {
         super(field);
         this.vector = vector;
@@ -146,11 +154,8 @@ public class ObjectVector<T> extends AbstractVector {
         return get(i) == null;
     }
 
-    /**
-     * Returns true if there are any NULL values in this row.
-     * @return true if there are any NULL values in this row.
-     */
-    public boolean anyNull() {
-        return stream().anyMatch(Objects::isNull);
+    @Override
+    public int getNullCount() {
+        return (int) stream().filter(Objects::nonNull).count();
     }
 }

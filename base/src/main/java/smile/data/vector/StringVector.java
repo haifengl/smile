@@ -16,8 +16,14 @@
  */
 package smile.data.vector;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
@@ -30,13 +36,20 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 public class StringVector extends ObjectVector<String> {
-
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public StringVector(String name, String[] vector) {
         super(name, vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public StringVector(StructField field, String[] vector) {
         super(field, vector);
     }
@@ -101,6 +114,21 @@ public class StringVector extends ObjectVector<String> {
     public StringVector get(Index index) {
         StringVector copy = new StringVector(field, vector);
         return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Integer::parseInt);
+    }
+
+    @Override
+    public LongStream asLongStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToLong(Long::parseLong);
+    }
+
+    @Override
+    public DoubleStream asDoubleStream() {
+        return Arrays.stream(vector).filter(Objects::nonNull).mapToDouble(Double::parseDouble);
     }
 
     @Override

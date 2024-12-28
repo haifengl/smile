@@ -31,12 +31,20 @@ public class ShortVector extends PrimitiveVector {
     /** The vector data. */
     private final short[] vector;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param vector the elements of vector.
+     */
     public ShortVector(String name, short[] vector) {
         this(new StructField(name, DataTypes.ShortType), vector);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param field the struct field of vector.
+     * @param vector the elements of vector.
+     */
     public ShortVector(StructField field, short[] vector) {
         super(checkMeasure(field, NumericalMeasure.class));
         this.vector = vector;
@@ -54,7 +62,11 @@ public class ShortVector extends PrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return indexStream().map(i -> vector[i]);
+        if (nullMask == null) {
+            return indexStream().map(i -> vector[i]);
+        } else {
+            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
+        }
     }
 
     @Override
