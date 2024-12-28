@@ -23,7 +23,7 @@ import smile.classification.ClassLabels;
 import smile.data.DataFrame;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 
 /**
@@ -63,7 +63,7 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
      * @return the signal noise ratio.
      */
     public static SignalNoiseRatio[] fit(DataFrame data, String clazz) {
-        BaseVector<?, ?, ?> y = data.column(clazz);
+        ValueVector y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k != 2) {
@@ -89,7 +89,7 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
             if (field.isNumeric()) {
                 Arrays.fill(x1, 0.0);
                 Arrays.fill(x2, 0.0);
-                BaseVector<?, ?, ?> xi = data.column(i);
+                ValueVector xi = data.column(i);
 
                 for (int l = 0, j = 0, k = 0; l < n; l++) {
                     if (codec.y[l] == 0) {

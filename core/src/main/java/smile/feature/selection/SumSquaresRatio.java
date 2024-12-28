@@ -23,7 +23,7 @@ import smile.classification.ClassLabels;
 import smile.data.DataFrame;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 
 /**
@@ -64,7 +64,7 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
      * @return the sum squares ratio.
      */
     public static SumSquaresRatio[] fit(DataFrame data, String clazz) {
-        BaseVector<?, ?, ?> y = data.column(clazz);
+        ValueVector y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k < 2) {
@@ -86,7 +86,7 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
         return IntStream.range(0, schema.length()).mapToObj(j -> {
             StructField field = schema.field(j);
             if (field.isNumeric()) {
-                BaseVector<?, ?, ?> xj = data.column(j);
+                ValueVector xj = data.column(j);
                 double mu = 0.0;
                 Arrays.fill(condmu, 0.0);
                 for (int i = 0; i < n; i++) {

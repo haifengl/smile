@@ -94,7 +94,7 @@ public class SimpleImputer implements Transform {
     public DataFrame apply(DataFrame data) {
         int n = data.nrow();
         StructType schema = data.schema();
-        BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
+        ValueVector[] vectors = new ValueVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(j -> {
             StructField field = schema.field(j);
             Object value = values.get(field.name());
@@ -106,7 +106,7 @@ public class SimpleImputer implements Transform {
                     for (int i = 0; i < n; i++) {
                         vector[i] = Double.isNaN(column[i]) ? x : column[i];
                     }
-                    vectors[j] = DoubleVector.of(field, vector);
+                    vectors[j] = new DoubleVector(field, vector);
                 } else if (field.dtype().id() == DataType.ID.Float) {
                     float x = ((Number) value).floatValue();
                     float[] column = data.floatVector(j).array();
@@ -114,7 +114,7 @@ public class SimpleImputer implements Transform {
                     for (int i = 0; i < n; i++) {
                         vector[i] = Float.isNaN(column[i]) ? x : column[i];
                     }
-                    vectors[j] = FloatVector.of(field, vector);
+                    vectors[j] = new FloatVector(field, vector);
                 } else if (field.dtype().isObject()) {
                     if (field.dtype() == DataTypes.BooleanObjectType) {
                         boolean x = (Boolean) value;
@@ -123,7 +123,7 @@ public class SimpleImputer implements Transform {
                             Boolean cell = (Boolean) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = BooleanVector.of(field, vector);
+                        vectors[j] = new BooleanVector(field, vector);
                     } else if (field.dtype() == DataTypes.ByteObjectType) {
                         byte x = ((Number) value).byteValue();
                         byte[] vector = new byte[n];
@@ -131,7 +131,7 @@ public class SimpleImputer implements Transform {
                             Byte cell = (Byte) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = ByteVector.of(field, vector);
+                        vectors[j] = new ByteVector(field, vector);
                     } else if (field.dtype() == DataTypes.CharObjectType) {
                         char x = (Character) value;
                         char[] vector = new char[n];
@@ -139,7 +139,7 @@ public class SimpleImputer implements Transform {
                             Character cell = (Character) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = CharVector.of(field, vector);
+                        vectors[j] = new CharVector(field, vector);
                     } else if (field.dtype() == DataTypes.DoubleObjectType) {
                         double x = ((Number) value).doubleValue();
                         double[] vector = new double[n];
@@ -147,7 +147,7 @@ public class SimpleImputer implements Transform {
                             Double cell = (Double) data.get(i, j);
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
-                        vectors[j] = DoubleVector.of(field, vector);
+                        vectors[j] = new DoubleVector(field, vector);
                     } else if (field.dtype() == DataTypes.FloatObjectType) {
                         float x = ((Number) value).floatValue();
                         float[] vector = new float[n];
@@ -155,7 +155,7 @@ public class SimpleImputer implements Transform {
                             Float cell = (Float) data.get(i, j);
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
-                        vectors[j] = FloatVector.of(field, vector);
+                        vectors[j] = new FloatVector(field, vector);
                     } else if (field.dtype() == DataTypes.IntegerObjectType) {
                         int x = ((Number) value).intValue();
                         int[] vector = new int[n];
@@ -163,7 +163,7 @@ public class SimpleImputer implements Transform {
                             Integer cell = (Integer) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = IntVector.of(field, vector);
+                        vectors[j] = new IntVector(field, vector);
                     } else if (field.dtype() == DataTypes.LongObjectType) {
                         long x = ((Number) value).longValue();
                         long[] vector = new long[n];
@@ -171,7 +171,7 @@ public class SimpleImputer implements Transform {
                             Long cell = (Long) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = LongVector.of(field, vector);
+                        vectors[j] = new LongVector(field, vector);
                     } else if (field.dtype() == DataTypes.ShortObjectType) {
                         short x = ((Number) value).shortValue();
                         short[] vector = new short[n];
@@ -179,14 +179,14 @@ public class SimpleImputer implements Transform {
                             Short cell = (Short) data.get(i, j);
                             vector[i] = cell == null ? x : cell;
                         }
-                        vectors[j] = ShortVector.of(field, vector);
+                        vectors[j] = new ShortVector(field, vector);
                     } else {
                         Object[] vector = (Object[]) java.lang.reflect.Array.newInstance(value.getClass(), n);
                         for (int i = 0; i < n; i++) {
                             Object cell = data.get(i, j);
                             vector[i] = cell == null ? value : cell;
                         }
-                        vectors[j] = Vector.of(field, vector);
+                        vectors[j] = new ObjectVector<>(field, vector);
                     }
                 }
             }

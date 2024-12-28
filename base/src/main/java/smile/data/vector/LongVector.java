@@ -18,6 +18,7 @@
 package smile.data.vector;
 
 import java.util.Arrays;
+import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
@@ -76,6 +77,11 @@ public class LongVector extends PrimitiveVector {
         } else {
             return index.stream().mapToLong(i -> vector[i]);
         }
+    }
+
+    @Override
+    public DoubleStream asDoubleStream() {
+        return asLongStream().mapToDouble(i -> i);
     }
 
     @Override

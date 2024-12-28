@@ -17,7 +17,7 @@
 
 package smile.classification;
 
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.util.IntSet;
 
 /**
@@ -53,7 +53,7 @@ public abstract class AbstractClassifier<T> implements Classifier<T> {
      * Constructor.
      * @param y the sample labels.
      */
-    public AbstractClassifier(BaseVector<?, ?, ?> y) {
+    public AbstractClassifier(ValueVector y) {
         this.classes = ClassLabels.fit(y).classes;
     }
 

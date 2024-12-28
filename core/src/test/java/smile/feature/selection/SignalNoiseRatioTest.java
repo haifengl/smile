@@ -60,7 +60,7 @@ public class SignalNoiseRatioTest {
             else y[i] = 1;
         }
 
-        DataFrame data = Iris.data.drop("class").merge(IntVector.of("y", y));
+        DataFrame data = Iris.data.drop("class").merge(new IntVector("y", y));
         SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(data, "y");
         assertEquals(4, s2n.length);
         assertEquals(0.8743107, s2n[0].ratio(), 1E-7);
