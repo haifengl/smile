@@ -16,10 +16,11 @@
  */
 package smile.data.vector;
 
-import java.io.Serializable;
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.stream.*;
+
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.StructField;
@@ -33,7 +34,7 @@ import smile.util.Index;
  *
  * @author Haifeng Li
  */
-public interface ValueVector extends Serializable {
+public interface ValueVector {
     /**
      * Returns the struct field of the vector.
      * @return the struct field.
@@ -60,8 +61,8 @@ public interface ValueVector extends Serializable {
      * Returns the (optional) level of measurements. Only valid for number types.
      * @return the (optional) level of measurements.
      */
-    default Optional<Measure> measure() {
-        return Optional.ofNullable(field().measure());
+    default Measure measure() {
+        return field().measure();
     }
 
     /**
@@ -248,6 +249,32 @@ public interface ValueVector extends Serializable {
      */
     default ValueVector slice(int start, int end, int step) {
         return get(Index.range(start, end, step));
+    }
+
+    /**
+     * Returns the string representation of the value at position i.
+     * @param i the index.
+     * @return string representation.
+     */
+    default String getString(int i) {
+        return field().toString(get(i));
+    }
+
+    /**
+     * Returns the value at position i of NominalScale or OrdinalScale.
+     *
+     * @param i the index.
+     * @throws ClassCastException when the data is not nominal or ordinal.
+     * @return the value scale.
+     */
+    default String getScale(int i) {
+        int x = getInt(i);
+        var measure = measure();
+        if (measure instanceof CategoricalMeasure cat) {
+            return cat.toString(x);
+        } else {
+            return String.valueOf(x);
+        }
     }
 
     /**
