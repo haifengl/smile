@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.data;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collector;
+import smile.math.matrix.Matrix;
+
+/** Stream collectors for DataFrame. */
+public interface Collectors {
+    /**
+     * Returns a stream collector that accumulates objects into a DataFrame.
+     *
+     * @param <T>   the type of input elements to the reduction operation
+     * @param clazz The class type of elements.
+     * @return the stream collector.
+     */
+    static <T> Collector<T, List<T>, DataFrame> collect(Class<T> clazz) {
+        return Collector.of(
+                // supplier
+                ArrayList::new,
+                // accumulator
+                List::add,
+                // combiner
+                (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                },
+                // finisher
+                (container) -> DataFrame.of(clazz, container)
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates tuples into a DataFrame.
+     *
+     * @return the stream collector.
+     */
+    static Collector<Tuple, List<Tuple>, DataFrame> collect() {
+        return Collector.of(
+                // supplier
+                ArrayList::new,
+                // accumulator
+                List::add,
+                // combiner
+                (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                },
+                // finisher
+                DataFrame::of
+        );
+    }
+
+    /**
+     * Returns a stream collector that accumulates tuples into a Matrix.
+     *
+     * @return the stream collector.
+     */
+    static Collector<Tuple, List<Tuple>, Matrix> matrix() {
+        return Collector.of(
+                // supplier
+                ArrayList::new,
+                // accumulator
+                List::add,
+                // combiner
+                (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                },
+                // finisher
+                (container) -> {
+                    if (container.isEmpty()) {
+                        throw new IllegalArgumentException("Empty list of tuples");
+                    }
+                    int nrow = container.size();
+                    int ncol = container.getFirst().length();
+                    Matrix m = new Matrix(nrow, ncol);
+                    for (int i = 0; i < nrow; i++) {
+                        for (int j = 0; j < ncol; j++) {
+                            m.set(i, j, container.get(i).getDouble(j));
+                        }
+                    }
+                    return m;
+                }
+        );
+    }
+}
