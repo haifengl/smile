@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,31 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import smile.data.Tuple;
 import smile.data.measure.Measure;
+import smile.data.vector.ValueVector;
+import smile.hash.PerfectHash;
 
 /**
  * Struct data type is determined by the fixed order of the fields
  * of primitive data types in the struct. An instance of a struct type
  * will be a tuple.
  *
+ * @param fields The struct fields.
+ * @param index The map of field name to index.
+ *
  * @author Haifeng Li
  */
-public class StructType implements DataType {
-
-    /** Struct fields. */
-    private final StructField[] fields;
-    /** Field name to index map. */
-    private final Map<String, Integer> index;
-
+public record StructType(StructField[] fields, PerfectHash index) implements DataType {
     /**
      * Constructor.
      * @param fields the struct fields.
@@ -52,11 +49,30 @@ public class StructType implements DataType {
      * @param fields the struct fields.
      */
     public StructType(StructField... fields) {
-        this.fields = fields;
-        index = new HashMap<>(fields.length * 4 / 3);
+        this(fields, hash(fields));
+    }
+
+    /**
+     * Returns a perfect hash of field names.
+     * @param fields the struct fields.
+     * @return a perfect hash of field names.
+     */
+    private static PerfectHash hash(StructField[] fields) {
+        String[] names = Arrays.stream(fields).map(StructField::name).toArray(String[]::new);
+        return new PerfectHash(names);
+    }
+
+    /**
+     * Returns the schema of a set of columns.
+     * @param columns the columns to form a data frame.
+     * @return the schema.
+     */
+    public static StructType of(ValueVector... columns) {
+        StructField[] fields = new StructField[columns.length];
         for (int i = 0; i < fields.length; i++) {
-            index.put(fields[i].name(), i);
+            fields[i] = columns[i].field();
         }
+        return new StructType(fields);
     }
 
     /**
@@ -68,29 +84,12 @@ public class StructType implements DataType {
     }
 
     /**
-     * Returns the fields.
-     * @return the fields.
-     */
-    public StructField[] fields() {
-        return fields;
-    }
-
-    /**
      * Return the field of given name.
      * @param name the field name.
      * @return the field.
      */
-    public StructField field(String name) {
+    public StructField apply(String name) {
         return fields[indexOf(name)];
-    }
-
-    /**
-     * Return the field at position i.
-     * @param i the field index.
-     * @return the field.
-     */
-    public StructField field(int i) {
-        return fields[i];
     }
 
     /**
@@ -99,19 +98,7 @@ public class StructType implements DataType {
      * @return the index of field.
      */
     public int indexOf(String field) {
-        if (!index.containsKey(field)) {
-            throw new IllegalArgumentException(String.format("Field %s doesn't exist", field));
-        }
         return index.get(field);
-    }
-
-    /**
-     * Returns the field name.
-     * @param i the index of field.
-     * @return the field name.
-     */
-    public String name(int i) {
-        return fields[i].name();
     }
 
     /**
@@ -125,15 +112,6 @@ public class StructType implements DataType {
     }
 
     /**
-     * Returns the field data type.
-     * @param i the index of field.
-     * @return the field data type.
-     */
-    public DataType type(int i) {
-        return fields[i].dtype();
-    }
-
-    /**
      * Returns the field data types.
      * @return the field data types.
      */
@@ -142,15 +120,6 @@ public class StructType implements DataType {
                 .map(StructField::dtype)
                 .toList()
                 .toArray(new DataType[0]);
-    }
-
-    /**
-     * Returns the field's level of measurements.
-     * @param i the index of field.
-     * @return the field's level of measurements.
-     */
-    public Measure measure(int i) {
-        return fields[i].measure();
     }
 
     /**
@@ -229,14 +198,17 @@ public class StructType implements DataType {
 
     @Override
     public String toString(Object o) {
-        Tuple t = (Tuple) o;
-        return Arrays.stream(fields)
-                .map(field -> {
-                    Object v = t.get(field.name());
-                    String value = v == null ? "null" : field.toString(v);
-                    return String.format("  %s: %s", field.name(), value);
-                })
-                .collect(Collectors.joining(",\n", "{\n", "\n}"));
+        if (o instanceof Tuple t) {
+            return Arrays.stream(fields)
+                    .map(field -> {
+                        Object v = t.get(field.name());
+                        String value = v == null ? "null" : field.toString(v);
+                        return String.format("  %s: %s", field.name(), value);
+                    })
+                    .collect(Collectors.joining(",\n", "{\n", "\n}"));
+        } else {
+            return o.toString();
+        }
     }
 
     @Override
