@@ -17,8 +17,10 @@
 
 package smile.data.type;
 
+import java.beans.PropertyDescriptor;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 
 import smile.data.measure.CategoricalMeasure;
@@ -103,5 +105,24 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
         }
 
         return false;
+    }
+
+    /**
+     * Returns the struct field of a class property.
+     * @param prop the property descriptor.
+     * @return the struct field.
+     */
+    public static StructField of(PropertyDescriptor prop) {
+        Class<?> clazz = prop.getPropertyType();
+
+        DataType type = DataType.of(clazz);
+        NominalScale scale = null;
+
+        if (clazz.isEnum()) {
+            Object[] levels = clazz.getEnumConstants();
+            scale = new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
+        }
+
+        return new StructField(prop.getName(), type, scale);
     }
 }
