@@ -176,7 +176,7 @@ public class DataFrameTest {
     @Test
     public void testMerge() {
         System.out.println("union");
-        StringVector edu = StringVector.of("Education","MS", "BS", "Ph.D", "Middle School");
+        StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
         DataFrame two = df.merge(edu);
         assertEquals(df.nrow(), two.nrow());
         assertEquals(df.ncol()+1, two.ncol());

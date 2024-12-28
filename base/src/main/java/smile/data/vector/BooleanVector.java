@@ -17,92 +17,116 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
+import java.util.BitSet;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable boolean vector.
  *
  * @author Haifeng Li
  */
-public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.BooleanType;
+public class BooleanVector extends PrimitiveVector {
+    /** The vector data. */
+    private final BitSet vector;
+
+    /** Constructor. */
+    public BooleanVector(String name, boolean[] vector) {
+        this(new StructField(name, DataTypes.ByteType), vector);
+    }
+
+    /** Constructor. */
+    public BooleanVector(StructField field, boolean[] vector) {
+        this(field, bitSet(vector));
+    }
+
+    /** Constructor. */
+    public BooleanVector(StructField field, BitSet bits) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = bits;
     }
 
     @Override
-    boolean[] array();
+    int length() {
+        return vector.size();
+    }
 
     @Override
-    BooleanVector get(int... index);
+    public BitSet array() {
+        return vector;
+    }
 
     @Override
-    default char getChar(int i) {
+    public boolean getBoolean(int i) {
+        return vector.get(at(i));
+    }
+
+    @Override
+    public Boolean get(int i) {
+        return vector.get(at(i));
+    }
+
+    @Override
+    public BooleanVector get(Index index) {
+        BooleanVector copy = new BooleanVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector.get(i) ? 1 : 0);
+    }
+
+    @Override
+    public char getChar(int i) {
         return getBoolean(i) ? 'T' : 'F';
     }
 
     @Override
-    default byte getByte(int i) {
+    public byte getByte(int i) {
         return getBoolean(i) ? (byte) 1 : 0;
     }
 
     @Override
-    default short getShort(int i) {
+    public short getShort(int i) {
         return getBoolean(i)  ? (short) 1 : 0;
     }
 
     @Override
-    default int getInt(int i) {
+    public int getInt(int i) {
         return getBoolean(i)  ? 1 : 0;
     }
 
     @Override
-    default long getLong(int i) {
+    public long getLong(int i) {
         return getBoolean(i)  ? 1 : 0;
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getBoolean(i)  ? 1 : 0;
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getBoolean(i)  ? 1 : 0;
     }
 
     /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
+     * Converts a boolean array to BitSet.
+     * @param vector a boolean array.
+     * @return the BitSet.
      */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /**
-     * Creates a named boolean vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static BooleanVector of(String name, boolean[] vector) {
-        return new BooleanVectorImpl(name, vector);
-    }
-
-    /** Creates a named boolean vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static BooleanVector of(StructField field, boolean[] vector) {
-        return new BooleanVectorImpl(field, vector);
+    private static BitSet bitSet(boolean[] vector) {
+        BitSet bits = new BitSet(vector.length);
+        for (int i = 0; i < vector.length; i++) {
+            if (vector[i]) {
+                bits.set(i);
+            }
+        }
+        return bits;
     }
 }

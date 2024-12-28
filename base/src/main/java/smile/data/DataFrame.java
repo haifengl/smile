@@ -29,8 +29,8 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.data.vector.Vector;
 import smile.math.matrix.Matrix;
+import smile.util.Index;
 import smile.util.Strings;
 
 /**
@@ -133,10 +133,10 @@ public interface DataFrame extends Iterable<Tuple> {
      * @return the structure of data frame.
      */
     default DataFrame structure() {
-        List<BaseVector> vectors = Arrays.asList(
-                Vector.of("Column", String.class, names()),
-                Vector.of("Type", DataType.class, types()),
-                Vector.of("Measure", Measure.class, measures())
+        List<ValueVector> vectors = Arrays.asList(
+                new StringVector("Column", names()),
+                new ObjectVector<>("Type", types()),
+                new ObjectVector<>("Measure", measures())
         );
 
         return new DataFrameImpl(vectors);
@@ -162,7 +162,7 @@ public interface DataFrame extends Iterable<Tuple> {
                 vector.fillna((float) value);
             } else if (column instanceof DoubleVector vector) {
                 vector.fillna(value);
-            } else if (column instanceof NumberVector vector) {
+            } else if (column instanceof NumberVector<?> vector) {
                 vector.fillna(value);
             }
         }
@@ -195,7 +195,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @return the data frame of selected rows.
      */
     default DataFrame of(int... index) {
-        return new IndexDataFrame(this, index);
+        return new IndexDataFrame(this, Index.of(index));
     }
 
     /**
@@ -687,7 +687,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param column the column name.
      * @return the column vector.
      */
-    default BaseVector apply(String column) {
+    default ValueVector apply(String column) {
         return column(column);
     }
 
@@ -696,7 +696,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param column the field enum.
      * @return the column vector.
      */
-    default BaseVector apply(Enum<?> column) {
+    default ValueVector apply(Enum<?> column) {
         return column(column.toString());
     }
 
@@ -705,14 +705,14 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param i the column index.
      * @return the column vector.
      */
-    BaseVector column(int i);
+    ValueVector column(int i);
 
     /**
      * Selects column based on the column name.
      * @param column the column name.
      * @return the column vector.
      */
-    default BaseVector column(String column) {
+    default ValueVector column(String column) {
         return column(indexOf(column));
     }
 
@@ -721,7 +721,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param column the column name.
      * @return the column vector.
      */
-    default BaseVector column(Enum<?> column) {
+    default ValueVector column(Enum<?> column) {
         return column(indexOf(column.toString()));
     }
 
@@ -731,7 +731,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param <T> the data type of column.
      * @return the column vector.
      */
-    <T> Vector<T> vector(int i);
+    <T> ObjectVector<T> vector(int i);
 
     /**
      * Selects column based on the column name.
@@ -739,7 +739,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param <T> the data type of column.
      * @return the column vector.
      */
-    default <T> Vector<T> vector(String column) {
+    default <T> ObjectVector<T> vector(String column) {
         return vector(indexOf(column));
     }
 
@@ -749,7 +749,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param <T> the data type of column.
      * @return the column vector.
      */
-    default <T> Vector<T> vector(Enum<?> column) {
+    default <T> ObjectVector<T> vector(Enum<?> column) {
         return vector(indexOf(column.toString()));
     }
 
@@ -1026,7 +1026,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @return a new data frame that combines this DataFrame
      * with one more additional vectors.
      */
-    DataFrame merge(BaseVector... vectors);
+    DataFrame merge(ValueVector... vectors);
 
     /**
      * Unions data frames vertically by rows.
@@ -1052,7 +1052,7 @@ public interface DataFrame extends Iterable<Tuple> {
 
         int n = size();
         HashSet<String> set = new HashSet<>(Arrays.asList(columns));
-        BaseVector[] vectors = Arrays.stream(names()).map(col -> {
+        ValueVector[] vectors = Arrays.stream(names()).map(col -> {
             if (set.contains(col)) {
                 int j = indexOf(col);
                 List<String> levels = IntStream.range(0, n)
@@ -1066,9 +1066,10 @@ public interface DataFrame extends Iterable<Tuple> {
                     data[i] = s == null ? (byte) -1 : scale.valueOf(s).intValue();
                 }
 
-                return IntVector.of(new StructField(col, DataTypes.IntegerType, scale), data);
+                StructField field = new StructField(col, DataTypes.IntegerType, scale);
+                return new IntVector(field, data);
             } else return column(col);
-        }).toArray(BaseVector[]::new);
+        }).toArray(ValueVector[]::new);
 
         return of(vectors);
     }
@@ -1292,7 +1293,7 @@ public interface DataFrame extends Iterable<Tuple> {
             if (type.isInt()) {
                 IntSummaryStatistics s = type.isObject() ?
                         this.<Integer>vector(j).stream().filter(Objects::nonNull).mapToInt(Integer::intValue).summaryStatistics() :
-                        intVector(j).stream().summaryStatistics();
+                        intVector(j).asIntStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1301,7 +1302,7 @@ public interface DataFrame extends Iterable<Tuple> {
             } else if (type.isLong()) {
                 LongSummaryStatistics s = type.isObject() ?
                         this.<Long>vector(j).stream().filter(Objects::nonNull).mapToLong(Long::longValue).summaryStatistics() :
-                        longVector(j).stream().summaryStatistics();
+                        longVector(j).asLongStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1310,7 +1311,7 @@ public interface DataFrame extends Iterable<Tuple> {
             } else if (type.isFloat()) {
                 DoubleSummaryStatistics s = type.isObject() ?
                         this.<Float>vector(j).stream().filter(Objects::nonNull).mapToDouble(Float::doubleValue).summaryStatistics() :
-                        floatVector(j).stream().summaryStatistics();
+                        floatVector(j).asDoubleStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1319,7 +1320,7 @@ public interface DataFrame extends Iterable<Tuple> {
             } else if (type.isDouble()) {
                 DoubleSummaryStatistics s = type.isObject() ?
                         this.<Double>vector(j).stream().filter(Objects::nonNull).mapToDouble(Double::doubleValue).summaryStatistics() :
-                        doubleVector(j).stream().summaryStatistics();
+                        doubleVector(j).asDoubleStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1328,7 +1329,7 @@ public interface DataFrame extends Iterable<Tuple> {
             } else if (type.isByte()) {
                 IntSummaryStatistics s = type.isObject() ?
                         this.<Byte>vector(j).stream().filter(Objects::nonNull).mapToInt(Byte::intValue).summaryStatistics() :
-                        byteVector(j).stream().summaryStatistics();
+                        byteVector(j).asIntStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1337,7 +1338,7 @@ public interface DataFrame extends Iterable<Tuple> {
             } else if (type.isShort()) {
                 IntSummaryStatistics s = type.isObject() ?
                         this.<Short>vector(j).stream().filter(Objects::nonNull).mapToInt(Short::intValue).summaryStatistics() :
-                        shortVector(j).stream().summaryStatistics();
+                        shortVector(j).asIntStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
@@ -1347,11 +1348,11 @@ public interface DataFrame extends Iterable<Tuple> {
         }
 
         return new DataFrameImpl(
-                Vector.of("column", String.class, Arrays.copyOf(col, k)),
-                LongVector.of("count", Arrays.copyOf(count, k)),
-                DoubleVector.of("min", Arrays.copyOf(min, k)),
-                DoubleVector.of("avg", Arrays.copyOf(avg, k)),
-                DoubleVector.of("max", Arrays.copyOf(max, k))
+                ValueVector.of("column", Arrays.copyOf(col, k)),
+                ValueVector.of("count", Arrays.copyOf(count, k)),
+                ValueVector.of("min", Arrays.copyOf(min, k)),
+                ValueVector.of("avg", Arrays.copyOf(avg, k)),
+                ValueVector.of("max", Arrays.copyOf(max, k))
         );
     }
 
@@ -1495,7 +1496,7 @@ public interface DataFrame extends Iterable<Tuple> {
      * @param vectors The column vectors.
      * @return the data frame.
      */
-    static DataFrame of(BaseVector... vectors) {
+    static DataFrame of(ValueVector... vectors) {
         return new DataFrameImpl(vectors);
     }
 
@@ -1517,7 +1518,7 @@ public interface DataFrame extends Iterable<Tuple> {
             for (int i = 0; i < x.length; i++) {
                 x[i] = data[i][j];
             }
-            vectors[j] = DoubleVector.of(names[j], x);
+            vectors[j] = new DoubleVector(names[j], x);
         }
         return DataFrame.of(vectors);
     }
@@ -1540,7 +1541,7 @@ public interface DataFrame extends Iterable<Tuple> {
             for (int i = 0; i < x.length; i++) {
                 x[i] = data[i][j];
             }
-            vectors[j] = FloatVector.of(names[j], x);
+            vectors[j] = new FloatVector(names[j], x);
         }
         return DataFrame.of(vectors);
     }
@@ -1563,7 +1564,7 @@ public interface DataFrame extends Iterable<Tuple> {
             for (int i = 0; i < x.length; i++) {
                 x[i] = data[i][j];
             }
-            vectors[j] = IntVector.of(names[j], x);
+            vectors[j] = new IntVector(names[j], x);
         }
         return DataFrame.of(vectors);
     }

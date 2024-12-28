@@ -17,98 +17,118 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import smile.data.type.DataType;
+import java.util.stream.IntStream;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.MathEx;
+import smile.util.Index;
 
 /**
  * An immutable float vector.
  *
  * @author Haifeng Li
  */
-public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.FloatType;
+public class FloatVector extends PrimitiveVector {
+    /** The vector data. */
+    private final float[] vector;
+
+    /** Constructor. */
+    public FloatVector(String name, float[] vector) {
+        this(new StructField(name, DataTypes.FloatType), vector);
+    }
+
+    /** Constructor. */
+    public FloatVector(StructField field, float[] vector) {
+        super(checkMeasure(field, CategoricalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    float[] array();
-
-    @Override
-    FloatVector get(int... index);
-
-    @Override
-    default boolean getBoolean(int i) {
-        return MathEx.isZero(getFloat(i));
+    int length() {
+        return vector.length;
     }
 
     @Override
-    default char getChar(int i) {
-        return (char) getFloat(i);
+    public float[] array() {
+        return vector;
     }
 
     @Override
-    default byte getByte(int i) {
-        return (byte) getFloat(i);
+    public float getFloat(int i) {
+        return vector[at(i)];
     }
 
     @Override
-    default short getShort(int i) {
-        return (short) getFloat(i);
+    public Float get(int i) {
+        return vector[at(i)];
     }
 
     @Override
-    default int getInt(int i) {
-        return (int) getFloat(i);
+    public FloatVector get(Index index) {
+        FloatVector copy = new FloatVector(field, vector);
+        return slice(copy, index);
     }
 
     @Override
-    default long getLong(int i) {
-        return (long) getFloat(i);
-    }
-
-    @Override
-    default double getDouble(int i) {
-        return getFloat(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
+    public DoubleStream asDoubleStream() {
+        if (index == null) {
+            return IntStream.range(0, vector.length).mapToDouble(i -> vector[i]);
+        } else {
+            return index.stream().mapToDouble(i -> vector[i]);
+        }
     }
 
     /**
      * Fills NaN/Inf values using the specified value.
      * @param value the value to replace NAs.
      */
-    void fillna(float value);
-
-    /** Creates a named float vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static FloatVector of(String name, float[] vector) {
-        return new FloatVectorImpl(name, vector);
+    public void fillna(float value) {
+        if (index == null) {
+            for (int i = 0; i < vector.length; i++) {
+                if (Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
+                    vector[i] = value;
+                }
+            }
+        } else {
+            indexStream().filter(i -> Float.isNaN(vector[at(i)]))
+                    .forEach(i -> vector[at(i)] = value);
+        }
     }
 
-    /** Creates a named float vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static FloatVector of(StructField field, float[] vector) {
-        return new FloatVectorImpl(field, vector);
+    @Override
+    public boolean getBoolean(int i) {
+        return MathEx.isZero(getFloat(i));
+    }
+
+    @Override
+    public char getChar(int i) {
+        return (char) getFloat(i);
+    }
+
+    @Override
+    public byte getByte(int i) {
+        return (byte) getFloat(i);
+    }
+
+    @Override
+    public short getShort(int i) {
+        return (short) getFloat(i);
+    }
+
+    @Override
+    public int getInt(int i) {
+        return (int) getFloat(i);
+    }
+
+    @Override
+    public long getLong(int i) {
+        return (long) getFloat(i);
+    }
+
+    @Override
+    public double getDouble(int i) {
+        return getFloat(i);
     }
 }

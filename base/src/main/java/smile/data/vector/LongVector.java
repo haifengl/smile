@@ -17,111 +17,99 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
+import java.util.Arrays;
 import java.util.stream.LongStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable long vector.
  *
  * @author Haifeng Li
  */
-public interface LongVector extends BaseVector<Long, Long, LongStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.LongType;
+public class LongVector extends PrimitiveVector {
+    /** The vector data. */
+    private final long[] vector;
+
+    /** Constructor. */
+    public LongVector(String name, long[] vector) {
+        this(new StructField(name, DataTypes.LongType), vector);    }
+
+    /** Constructor. */
+    public LongVector(StructField field, long[] vector) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    long[] array();
+    int length() {
+        return vector.length;
+    }
 
     @Override
-    LongVector get(int... index);
+    public long[] array() {
+        return vector;
+    }
 
     @Override
-    default boolean getBoolean(int i) {
+    public long getLong(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public Long get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public LongVector get(Index index) {
+        LongVector copy = new LongVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public LongStream asLongStream() {
+        if (index == null) {
+            return Arrays.stream(vector);
+        } else {
+            return index.stream().mapToLong(i -> vector[i]);
+        }
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
         return getLong(i) != 0;
     }
 
     @Override
-    default char getChar(int i) {
+    public char getChar(int i) {
         return (char) getLong(i);
     }
 
     @Override
-    default byte getByte(int i) {
+    public byte getByte(int i) {
         return (byte) getLong(i);
     }
 
     @Override
-    default short getShort(int i) {
+    public short getShort(int i) {
         return (short) getLong(i);
     }
 
     @Override
-    default int getInt(int i) {
+    public int getInt(int i) {
         return (int) getLong(i);
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getLong(i);
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getLong(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /** Creates a named long vector.
-     *
-     * @param name the name of vector.
-     * @return the vector.
-     * @param vector the data of vector.
-     */
-    static LongVector of(String name, long[] vector) {
-        return new LongVectorImpl(name, vector);
-    }
-
-    /** Creates a named long integer vector.
-     *
-     * @param name the name of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static LongVector of(String name, LongStream stream) {
-        return new LongVectorImpl(name, stream.toArray());
-    }
-
-    /** Creates a named long integer vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static LongVector of(StructField field, long[] vector) {
-        return new LongVectorImpl(field, vector);
-    }
-
-    /** Creates a named long integer vector.
-     *
-     * @param field the struct field of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static LongVector of(StructField field, LongStream stream) {
-        return new LongVectorImpl(field, stream.toArray());
     }
 }

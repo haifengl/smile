@@ -17,111 +17,100 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
+import java.util.Arrays;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable integer vector.
  *
  * @author Haifeng Li
  */
-public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.IntegerType;
+public class IntVector extends PrimitiveVector {
+    /** The vector data. */
+    private final int[] vector;
+
+    /** Constructor. */
+    public IntVector(String name, int[] vector) {
+        this(new StructField(name, DataTypes.IntegerType), vector);
+    }
+
+    /** Constructor. */
+    public IntVector(StructField field, int[] vector) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    int[] array();
+    int length() {
+        return vector.length;
+    }
 
     @Override
-    IntVector get(int... index);
+    public int[] array() {
+        return vector;
+    }
 
     @Override
-    default boolean getBoolean(int i) {
+    public int getInt(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public Integer get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public IntVector get(Index index) {
+        IntVector copy = new IntVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        if (index == null) {
+            return Arrays.stream(vector);
+        } else {
+            return index.stream().map(i -> vector[i]);
+        }
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
         return getInt(i) != 0;
     }
 
     @Override
-    default char getChar(int i) {
+    public char getChar(int i) {
         return (char) getInt(i);
     }
 
     @Override
-    default byte getByte(int i) {
+    public byte getByte(int i) {
         return (byte) getInt(i);
     }
 
     @Override
-    default short getShort(int i) {
+    public short getShort(int i) {
         return (short) getInt(i);
     }
 
     @Override
-    default long getLong(int i) {
+    public long getLong(int i) {
         return getInt(i);
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getInt(i);
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getInt(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /** Creates a named integer vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static IntVector of(String name, int[] vector) {
-        return new IntVectorImpl(name, vector);
-    }
-
-    /** Creates a named integer vector.
-     *
-     * @param name the name of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static IntVector of(String name, IntStream stream) {
-        return new IntVectorImpl(name, stream.toArray());
-    }
-
-    /** Creates a named integer vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static IntVector of(StructField field, int[] vector) {
-        return new IntVectorImpl(field, vector);
-    }
-
-    /** Creates a named integer vector.
-     *
-     * @param field the struct field of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static IntVector of(StructField field, IntStream stream) {
-        return new IntVectorImpl(field, stream.toArray());
     }
 }

@@ -50,6 +50,7 @@ public class Longley {
             104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
     };
 
-    public static DataFrame data = DataFrame.of(x, "GNP", "unemployed", "armed_forces", "population", "year", "employed").merge(DoubleVector.of("deflator", y));
+    public static DataFrame data = DataFrame.of(x, "GNP", "unemployed", "armed_forces", "population", "year", "employed")
+            .merge(new DoubleVector("deflator", y));
     public static Formula formula = Formula.lhs("deflator");
 }

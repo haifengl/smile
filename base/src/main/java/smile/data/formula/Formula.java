@@ -484,8 +484,8 @@ public class Formula implements Serializable {
         bind(data.schema());
 
         Binding binding = this.binding.get();
-        BaseVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
-                .map(term -> term.apply(data)).toArray(BaseVector[]::new);
+        ValueVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
+                .map(term -> term.apply(data)).toArray(ValueVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -498,8 +498,8 @@ public class Formula implements Serializable {
     public DataFrame x(DataFrame data) {
         bind(data.schema());
         Binding binding = this.binding.get();
-        BaseVector[] vectors = Arrays.stream(binding.x)
-                .map(term -> term.apply(data)).toArray(BaseVector[]::new);
+        ValueVector[] vectors = Arrays.stream(binding.x)
+                .map(term -> term.apply(data)).toArray(ValueVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -553,7 +553,7 @@ public class Formula implements Serializable {
      * @param data The input data frame.
      * @return the response vector.
      */
-    public BaseVector y(DataFrame data) {
+    public ValueVector y(DataFrame data) {
         if (response == null) {
             throw new UnsupportedOperationException("The formula has no response variable.");
         }

@@ -28,10 +28,7 @@ import com.epam.parso.SasFileProperties;
 import com.epam.parso.SasFileReader;
 import com.epam.parso.impl.SasFileReaderImpl;
 import smile.data.DataFrame;
-import smile.data.type.DataTypes;
-import smile.data.vector.BaseVector;
-import smile.data.vector.DoubleVector;
-import smile.data.vector.Vector;
+import smile.data.vector.*;
 
 /**
  * Reads SAS7BDAT datasets. SAS7BDAT is currently the main format
@@ -87,7 +84,7 @@ public interface SAS {
                 rows[i] = reader.readNext();
             }
 
-            BaseVector[] vectors = new BaseVector[ncol];
+            ValueVector[] vectors = new ValueVector[ncol];
             for (int j = 0; j < ncol; j++) {
                 Column column = columns.get(j);
                 if (column.getType() == String.class) {
@@ -95,13 +92,13 @@ public interface SAS {
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = (String) rows[i][j];
                     }
-                    vectors[j] = Vector.of(column.getName(), DataTypes.StringType, vector);
+                    vectors[j] = new StringVector(column.getName(), vector);
                 } else {
                     double[] vector = new double[nrow];
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = ((Number) rows[i][j]).doubleValue();
                     }
-                    vectors[j] = DoubleVector.of(column.getName(), vector);
+                    vectors[j] = new DoubleVector(column.getName(), vector);
                 }
             }
 

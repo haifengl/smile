@@ -25,11 +25,9 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
-
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.data.vector.Vector;
 
 /**
  * A simple implementation of DataFrame that store columnar data in single machine's memory.
@@ -44,7 +42,7 @@ class DataFrameImpl implements DataFrame, Serializable {
     /** DataFrame schema. */
     private final StructType schema;
     /** The column vectors. */
-    private final List<BaseVector> columns;
+    private final List<ValueVector> columns;
     /** The number of rows. */
     private final int size;
 
@@ -52,7 +50,7 @@ class DataFrameImpl implements DataFrame, Serializable {
      * Constructor.
      * @param columns The columns of data frame.
      */
-    public DataFrameImpl(Collection<BaseVector> columns) {
+    public DataFrameImpl(SequencedCollection<ValueVector> columns) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Empty collection of columns");
         }
@@ -60,20 +58,20 @@ class DataFrameImpl implements DataFrame, Serializable {
         this.columns = new ArrayList<>(columns);
 
         StructField[] fields = columns.stream()
-                .map(BaseVector::field)
+                .map(ValueVector::field)
                 .toArray(StructField[]::new);
         this.schema = DataTypes.struct(fields);
 
         Set<String> set = new HashSet<>();
-        for (BaseVector v : columns) {
+        for (var v : columns) {
             if (!set.add(v.name())) {
                 throw new IllegalArgumentException(String.format("Duplicated column name: %s", v.name()));
             }
         }
 
-        BaseVector first = columns.iterator().next();
+        ValueVector first = columns.getFirst();
         this.size = first.size();
-        for (BaseVector v : columns) {
+        for (var v : columns) {
             if (v.size() != first.size()) {
                 throw new IllegalArgumentException(String.format("Column %s size %d != %d", v.name(), v.size(), first.size()));
             }
@@ -113,70 +111,70 @@ class DataFrameImpl implements DataFrame, Serializable {
                 if (type == int.class) {
                     int[] values = new int[size];
                     for (T datum : data) values[i++] = (int) read.invoke(datum);
-                    IntVector vector = IntVector.of(field, values);
+                    IntVector vector = new IntVector(field, values);
                     columns.add(vector);
                 } else if (type == double.class) {
                     double[] values = new double[size];
                     for (T datum : data) values[i++] = (double) read.invoke(datum);
-                    DoubleVector vector = DoubleVector.of(field, values);
+                    DoubleVector vector = new DoubleVector(field, values);
                     columns.add(vector);
                 } else if (type == boolean.class) {
                     boolean[] values = new boolean[size];
                     for (T datum : data) values[i++] = (boolean) read.invoke(datum);
-                    BooleanVector vector = BooleanVector.of(field, values);
+                    BooleanVector vector = new BooleanVector(field, values);
                     columns.add(vector);
                 } else if (type == short.class) {
                     short[] values = new short[size];
                     for (T datum : data) values[i++] = (short) read.invoke(datum);
-                    ShortVector vector = ShortVector.of(field, values);
+                    ShortVector vector = new ShortVector(field, values);
                     columns.add(vector);
                 } else if (type == long.class) {
                     long[] values = new long[size];
                     for (T datum : data) values[i++] = (long) read.invoke(datum);
-                    LongVector vector = LongVector.of(field, values);
+                    LongVector vector = new LongVector(field, values);
                     columns.add(vector);
                 } else if (type == float.class) {
                     float[] values = new float[size];
                     for (T datum : data) values[i++] = (float) read.invoke(datum);
-                    FloatVector vector = FloatVector.of(field, values);
+                    FloatVector vector = new FloatVector(field, values);
                     columns.add(vector);
                 } else if (type == byte.class) {
                     byte[] values = new byte[size];
                     for (T datum : data) values[i++] = (byte) read.invoke(datum);
-                    ByteVector vector = ByteVector.of(field, values);
+                    ByteVector vector = new ByteVector(field, values);
                     columns.add(vector);
                 } else if (type == char.class) {
                     char[] values = new char[size];
                     for (T datum : data) values[i++] = (char) read.invoke(datum);
-                    CharVector vector = CharVector.of(field, values);
+                    CharVector vector = new CharVector(field, values);
                     columns.add(vector);
                 } else if (type == String.class) {
                     String[] values = new String[size];
                     for (T datum : data) values[i++] = (String) read.invoke(datum);
-                    StringVector vector = StringVector.of(field, values);
+                    StringVector vector = new StringVector(field, values);
                     columns.add(vector);
                 } else if (type.isEnum()) {
                     Object[] levels = type.getEnumConstants();
                     if (levels.length < Byte.MAX_VALUE + 1) {
                         byte[] values = new byte[size];
                         for (T datum : data) values[i++] = (byte) ((Enum<?>) read.invoke(datum)).ordinal();
-                        ByteVector vector = ByteVector.of(field, values);
+                        ByteVector vector = new ByteVector(field, values);
                         columns.add(vector);
                     } else if (levels.length < Short.MAX_VALUE + 1) {
                         short[] values = new short[size];
                         for (T datum : data) values[i++] = (short) ((Enum<?>) read.invoke(datum)).ordinal();
-                        ShortVector vector = ShortVector.of(field, values);
+                        ShortVector vector = new ShortVector(field, values);
                         columns.add(vector);
                     } else {
                         int[] values = new int[size];
                         for (T datum : data) values[i++] = ((Enum<?>) read.invoke(datum)).ordinal();
-                        IntVector vector = IntVector.of(field, values);
+                        IntVector vector = new IntVector(field, values);
                         columns.add(vector);
                     }
                 } else {
                     Object[] values = new Object[size];
                     for (T datum : data) values[i++] = read.invoke(datum);
-                    Vector<?> vector = Vector.of(field, values);
+                    ObjectVector<?> vector = new ObjectVector<>(field, values);
                     columns.add(vector);
                 }
             }
@@ -248,7 +246,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Integer: {
                     int[] values = new int[size];
                     for (Tuple datum : data) values[i++] = datum.getInt(j);
-                    IntVector vector = IntVector.of(field, values);
+                    IntVector vector = new IntVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -256,7 +254,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Long: {
                     long[] values = new long[size];
                     for (Tuple datum : data) values[i++] = datum.getLong(j);
-                    LongVector vector = LongVector.of(field, values);
+                    LongVector vector = new LongVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -264,7 +262,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Double: {
                     double[] values = new double[size];
                     for (Tuple datum : data) values[i++] = datum.getDouble(j);
-                    DoubleVector vector = DoubleVector.of(field, values);
+                    DoubleVector vector = new DoubleVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -272,7 +270,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Float: {
                     float[] values = new float[size];
                     for (Tuple datum : data) values[i++] = datum.getFloat(j);
-                    FloatVector vector = FloatVector.of(field, values);
+                    FloatVector vector = new FloatVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -280,7 +278,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Boolean: {
                     boolean[] values = new boolean[size];
                     for (Tuple datum : data) values[i++] = datum.getBoolean(j);
-                    BooleanVector vector = BooleanVector.of(field, values);
+                    BooleanVector vector = new BooleanVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -288,7 +286,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Byte: {
                     byte[] values = new byte[size];
                     for (Tuple datum : data) values[i++] = datum.getByte(j);
-                    ByteVector vector = ByteVector.of(field, values);
+                    ByteVector vector = new ByteVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -296,7 +294,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Short: {
                     short[] values = new short[size];
                     for (Tuple datum : data) values[i++] = datum.getShort(j);
-                    ShortVector vector = ShortVector.of(field, values);
+                    ShortVector vector = new ShortVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -304,7 +302,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case Char: {
                     char[] values = new char[size];
                     for (Tuple datum : data) values[i++] = datum.getChar(j);
-                    CharVector vector = CharVector.of(field, values);
+                    CharVector vector = new CharVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -312,7 +310,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 case String: {
                     String[] values = new String[size];
                     for (Tuple datum : data) values[i++] = datum.getString(j);
-                    StringVector vector = StringVector.of(field, values);
+                    StringVector vector = new StringVector(field, values);
                     columns.add(vector);
                     break;
                 }
@@ -320,7 +318,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 default: {
                     Object[] values = new Object[size];
                     for (Tuple datum : data) values[i++] = datum.get(j);
-                    Vector<?> vector = Vector.of(field, values);
+                    ObjectVector<?> vector = new ObjectVector<>(field, values);
                     columns.add(vector);
                 }
             }
@@ -331,7 +329,7 @@ class DataFrameImpl implements DataFrame, Serializable {
      * Constructor.
      * @param vectors The column vectors.
      */
-    public DataFrameImpl(BaseVector... vectors) {
+    public DataFrameImpl(ValueVector... vectors) {
         this(Arrays.asList(vectors));
     }
 
@@ -377,14 +375,14 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public BaseVector column(int i) {
+    public ValueVector column(int i) {
         return columns.get(i);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Vector<T> vector(int i) {
-        return (Vector<T>) columns.get(i);
+    public <T> ObjectVector<T> vector(int i) {
+        return (ObjectVector<T>) columns.get(i);
     }
 
     @Override
@@ -434,7 +432,7 @@ class DataFrameImpl implements DataFrame, Serializable {
 
     @Override
     public DataFrame select(int... cols) {
-        List<BaseVector> sub = new ArrayList<>();
+        List<ValueVector> sub = new ArrayList<>();
         for (int col : cols) {
             sub.add(columns.get(col));
         }
@@ -444,8 +442,8 @@ class DataFrameImpl implements DataFrame, Serializable {
 
     @Override
     public DataFrame drop(int... cols) {
-        List<BaseVector> sub = new ArrayList<>(columns);
-        List<BaseVector> drops = new ArrayList<>();
+        List<ValueVector> sub = new ArrayList<>(columns);
+        List<ValueVector> drops = new ArrayList<>();
         for (int col : cols) {
             drops.add(columns.get(col));
         }
@@ -462,7 +460,7 @@ class DataFrameImpl implements DataFrame, Serializable {
             }
         }
 
-        List<BaseVector> all = new ArrayList<>(columns);
+        List<ValueVector> all = new ArrayList<>(columns);
         for (DataFrame df : dataframes) {
             for (int i = 0; i < df.ncol(); i++) {
                 all.add(df.column(i));
@@ -473,14 +471,14 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public DataFrame merge(BaseVector... vectors) {
-        for (BaseVector vector : vectors) {
+    public DataFrame merge(ValueVector... vectors) {
+        for (var vector : vectors) {
             if (vector.size() != size()) {
                 throw new IllegalArgumentException("Merge data frames with different size: " + size() + " vs " + vector.size());
             }
         }
 
-        List<BaseVector> columns = new ArrayList<>(this.columns);
+        List<ValueVector> columns = new ArrayList<>(this.columns);
         Collections.addAll(columns, vectors);
         return new DataFrameImpl(columns);
     }
@@ -503,7 +501,7 @@ class DataFrameImpl implements DataFrame, Serializable {
         // It doesn't work for boolean, byte, char, short though.
         Object[] vectors = new Object[ncol()];
         for (int i = 0; i < vectors.length; i++) {
-            BaseVector column = columns.get(i);
+            ValueVector column = columns.get(i);
             switch (column.dtype().id()) {
                 case Boolean:
                     vectors[i] = new boolean[nrow];
@@ -543,36 +541,36 @@ class DataFrameImpl implements DataFrame, Serializable {
             destPos += df.nrow();
         }
 
-        List<BaseVector> data = new ArrayList<>();
+        List<ValueVector> data = new ArrayList<>();
         for (int i = 0; i < vectors.length; i++) {
-            BaseVector column = columns.get(i);
+            ValueVector column = columns.get(i);
             switch (column.dtype().id()) {
                 case Boolean:
-                    data.add(BooleanVector.of(column.name(), (boolean[]) vectors[i]));
+                    data.add(new BooleanVector(column.name(), (boolean[]) vectors[i]));
                     break;
                 case Char:
-                    data.add(CharVector.of(column.name(), (char[]) vectors[i]));
+                    data.add(new CharVector(column.name(), (char[]) vectors[i]));
                     break;
                 case Byte:
-                    data.add(ByteVector.of(column.name(), (byte[]) vectors[i]));
+                    data.add(new ByteVector(column.name(), (byte[]) vectors[i]));
                     break;
                 case Short:
-                    data.add(ShortVector.of(column.name(), (short[]) vectors[i]));
+                    data.add(new ShortVector(column.name(), (short[]) vectors[i]));
                     break;
                 case Integer:
-                    data.add(IntVector.of(column.name(), (int[]) vectors[i]));
+                    data.add(new IntVector(column.name(), (int[]) vectors[i]));
                     break;
                 case Long:
-                    data.add(LongVector.of(column.name(), (long[]) vectors[i]));
+                    data.add(new LongVector(column.name(), (long[]) vectors[i]));
                     break;
                 case Float:
-                    data.add(FloatVector.of(column.name(), (float[]) vectors[i]));
+                    data.add(new FloatVector(column.name(), (float[]) vectors[i]));
                     break;
                 case Double:
-                    data.add(DoubleVector.of(column.name(), (double[]) vectors[i]));
+                    data.add(new DoubleVector(column.name(), (double[]) vectors[i]));
                     break;
                 default:
-                    data.add(Vector.of(column.name(), column.dtype(), (Object[]) vectors[i]));
+                    data.add(new ObjectVector<>(column.name(), (Object[]) vectors[i]));
             }
         }
 

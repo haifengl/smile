@@ -16,52 +16,59 @@
  */
 package smile.data.vector;
 
-import smile.data.type.DataType;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable number object vector.
  *
+ * @param <T> a subclass of Number.
+ *
  * @author Haifeng Li
  */
-public interface NumberVector extends Vector<Number> {
+public class NumberVector<T extends Number> extends ObjectVector<T> {
+    /** Constructor. */
+    public NumberVector(String name, T[] vector) {
+        super(name, vector);
+    }
+
+    /** Constructor. */
+    public NumberVector(StructField field, T[] vector) {
+        super(field, vector);
+    }
+
     /**
      * Fill null/NaN/Inf values using the specified value.
      * @param value the value to replace NAs.
      */
-    void fillna(double value);
+    @SuppressWarnings("unchecked")
+    public void fillna(double value) {
+        Number number = switch (dtype().id()) {
+            case Byte -> (byte) value;
+            case Short -> (short) value;
+            case Integer -> (int) value;
+            case Long -> (long) value;
+            case Float -> (float) value;
+            case Double -> value;
+            default -> throw new UnsupportedOperationException("Unsupported type: " + dtype().id());
+        };
 
-    /**
-     * Creates a named number vector.
-     *
-     * @param name the name of vector.
-     * @param clazz the class of data type.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static NumberVector of(String name, Class<?> clazz, Number[] vector) {
-        return new NumberVectorImpl(name, clazz, vector);
+        for (int i = 0; i < vector.length; i++) {
+            if (vector[i] == null) {
+                vector[i] = (T) number;
+            } else {
+                var x = vector[i].doubleValue();
+                if (Double.isNaN(x) || Double.isInfinite(x)) {
+                    vector[i] = (T) number;
+                }
+            }
+        }
     }
 
-    /**
-     * Creates a named number vector.
-     *
-     * @param name the name of vector.
-     * @param type the data type of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static NumberVector of(String name, DataType type, Number[] vector) {
-        return new NumberVectorImpl(name, type, vector);
+    @Override
+    public NumberVector<T> get(Index index) {
+        NumberVector<T> copy = new NumberVector<>(field, vector);
+        return slice(copy, index);
     }
 
-    /** Creates a named number vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static NumberVector of(StructField field, Number[] vector) {
-        return new NumberVectorImpl(field, vector);
-    }
 }

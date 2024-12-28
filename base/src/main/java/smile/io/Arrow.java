@@ -26,10 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
@@ -185,7 +182,7 @@ public class Arrow {
                 List<FieldVector> fieldVectors = root.getFieldVectors();
                 logger.info("read {} rows and {} columns", root.getRowCount(), fieldVectors.size());
 
-                smile.data.vector.BaseVector[] vectors = new smile.data.vector.BaseVector[fieldVectors.size()];
+                smile.data.vector.ValueVector[] vectors = new smile.data.vector.ValueVector[fieldVectors.size()];
                 for (int j = 0; j < fieldVectors.size(); j++) {
                     FieldVector fieldVector = fieldVectors.get(j);
                     ArrowType type = fieldVector.getField().getType();
@@ -399,207 +396,216 @@ public class Arrow {
     }
 
     /** Reads a boolean column. */
-    private smile.data.vector.BaseVector readBitField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readBitField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         BitVector vector = (BitVector) fieldVector;
 
+        BitSet a = new BitSet(count);
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            boolean[] a = new boolean[count];
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i) != 0;
+                if (vector.get(i) != 0) a.set(i);
             }
-
-            return smile.data.vector.BooleanVector.of(fieldVector.getField().getName(), a);
         } else {
-            Boolean[] a = new Boolean[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
-                    a[i] = vector.get(i) != 0;
+                    if (vector.get(i) != 0) a.set(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Boolean.class, a);
         }
+
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.ByteType);
+        var valueVector = new smile.data.vector.BooleanVector(field, a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a byte column. */
-    private smile.data.vector.BaseVector readByteField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readByteField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         TinyIntVector vector = (TinyIntVector) fieldVector;
 
+        byte[] a = new byte[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            byte[] a = new byte[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.ByteVector.of(fieldVector.getField().getName(), a);
         } else {
-            Byte[] a = new Byte[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Byte.class, a);
         }
+
+        var valueVector = new smile.data.vector.ByteVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a char column. */
-    private smile.data.vector.BaseVector readCharField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readCharField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
+        char[] a = new char[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            char[] a = new char[count];
             for (int i = 0; i < count; i++) {
                 a[i] = (char) vector.get(i);
             }
-
-            return smile.data.vector.CharVector.of(fieldVector.getField().getName(), a);
         } else {
-            Character[] a = new Character[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = (char) vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Character.class, a);
         }
+
+        var valueVector = new smile.data.vector.CharVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a short column. */
-    private smile.data.vector.BaseVector readShortField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readShortField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
+        short[] a = new short[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            short[] a = new short[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.ShortVector.of(fieldVector.getField().getName(), a);
         } else {
-            Short[] a = new Short[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Short.class, a);
         }
+
+        var valueVector = new smile.data.vector.ShortVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads an int column. */
-    private smile.data.vector.BaseVector readIntField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readIntField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         IntVector vector = (IntVector) fieldVector;
 
+        int[] a = new int[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            int[] a = new int[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.IntVector.of(fieldVector.getField().getName(), a);
         } else {
-            Integer[] a = new Integer[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Integer.class, a);
         }
+
+        var valueVector = new smile.data.vector.IntVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a long column. */
-    private smile.data.vector.BaseVector readLongField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readLongField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         BigIntVector vector = (BigIntVector) fieldVector;
 
+        long[] a = new long[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            long[] a = new long[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.LongVector.of(fieldVector.getField().getName(), a);
         } else {
-            Long[] a = new Long[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Long.class, a);
         }
+
+        var valueVector = new smile.data.vector.LongVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a float column. */
-    private smile.data.vector.BaseVector readFloatField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readFloatField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         Float4Vector vector = (Float4Vector) fieldVector;
 
+        float[] a = new float[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            float[] a = new float[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.FloatVector.of(fieldVector.getField().getName(), a);
         } else {
-            Float[] a = new Float[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Float.class, a);
         }
+
+        var valueVector = new smile.data.vector.FloatVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a double column. */
-    private smile.data.vector.BaseVector readDoubleField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readDoubleField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         Float8Vector vector = (Float8Vector) fieldVector;
 
+        double[] a = new double[count];
+        BitSet mask = null;
         if (!fieldVector.getField().isNullable()) {
-            double[] a = new double[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
             }
-
-            return smile.data.vector.DoubleVector.of(fieldVector.getField().getName(), a);
         } else {
-            Double[] a = new Double[count];
+            mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    mask.set(i);
                 else
                     a[i] = vector.get(i);
             }
-
-            return smile.data.vector.Vector.of(fieldVector.getField().getName(), Double.class, a);
         }
+
+        var valueVector = new smile.data.vector.DoubleVector(fieldVector.getField().getName(), a);
+        valueVector.setNullMask(mask);
+        return valueVector;
     }
 
     /** Reads a decimal column. */
-    private smile.data.vector.BaseVector readDecimalField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readDecimalField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         BigDecimal[] a = new BigDecimal[count];
         DecimalVector vector = (DecimalVector) fieldVector;
@@ -607,11 +613,12 @@ public class Arrow {
             a[i] = vector.isNull(i) ? null : vector.getObject(i);
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DecimalType, a);
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.DecimalType);
+        return new smile.data.vector.ObjectVector<>(field, a);
     }
 
     /** Reads a date column. */
-    private smile.data.vector.BaseVector readDateField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readDateField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalDate[] a = new LocalDate[count];
         ZoneOffset zone = OffsetDateTime.now().getOffset();
@@ -625,11 +632,12 @@ public class Arrow {
             }
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DateType, a);
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.DateType);
+        return new smile.data.vector.ObjectVector<>(field, a);
     }
 
     /** Reads a time column. */
-    private smile.data.vector.BaseVector readTimeField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalTime[] a = new LocalTime[count];
         switch (fieldVector) {
@@ -655,11 +663,13 @@ public class Arrow {
             }
             default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.TimeType, a);
+
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.TimeType);
+        return new smile.data.vector.ObjectVector<>(field, a);
     }
 
     /** Reads a DateTime column. */
-    private smile.data.vector.BaseVector readDateTimeField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         LocalDateTime[] a = new LocalDateTime[count];
         String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
@@ -688,11 +698,12 @@ public class Arrow {
             default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.DateTimeType, a);
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.DateTimeType);
+        return new smile.data.vector.ObjectVector<>(field, a);
     }
 
     /** Reads a byte[] column. */
-    private smile.data.vector.BaseVector readByteArrayField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readByteArrayField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         byte[][] a = new byte[count][];
         if (fieldVector instanceof VarBinaryVector vector) {
@@ -713,11 +724,12 @@ public class Arrow {
             throw new UnsupportedOperationException("Unsupported binary vector: " + fieldVector);
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.ByteArrayType, a);
+        var field = new StructField(fieldVector.getField().getName(), DataTypes.ByteArrayType);
+        return new smile.data.vector.ObjectVector<>(field, a);
     }
 
     /** Reads a String column. */
-    private smile.data.vector.BaseVector readStringField(FieldVector fieldVector) {
+    private smile.data.vector.ValueVector readStringField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         VarCharVector vector = (VarCharVector) fieldVector;
         String[] a = new String[count];
@@ -728,7 +740,7 @@ public class Arrow {
                 a[i] = new String(vector.get(i));
         }
 
-        return smile.data.vector.Vector.of(fieldVector.getField().getName(), DataTypes.StringType, a);
+        return new smile.data.vector.StringVector(fieldVector.getField().getName(), a);
     }
 
     /** Writes an int column. */
@@ -751,7 +763,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         IntVector vector = (IntVector) fieldVector;
-        smile.data.vector.Vector<Integer> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Integer> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Integer x = column.get(i);
             if (x == null) {
@@ -785,7 +797,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BitVector vector = (BitVector) fieldVector;
-        smile.data.vector.Vector<Boolean> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Boolean> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Boolean x = column.get(i);
             if (x == null) {
@@ -819,7 +831,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         UInt2Vector vector = (UInt2Vector) fieldVector;
-        smile.data.vector.Vector<Character> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Character> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Character x = column.get(i);
             if (x == null) {
@@ -853,7 +865,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TinyIntVector vector = (TinyIntVector) fieldVector;
-        smile.data.vector.Vector<Byte> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Byte> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Byte x = column.get(i);
             if (x == null) {
@@ -887,7 +899,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         SmallIntVector vector = (SmallIntVector) fieldVector;
-        smile.data.vector.Vector<Short> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Short> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Short x = column.get(i);
             if (x == null) {
@@ -921,7 +933,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BigIntVector vector = (BigIntVector) fieldVector;
-        smile.data.vector.Vector<Long> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Long> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Long x = column.get(i);
             if (x == null) {
@@ -955,7 +967,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float4Vector vector  = (Float4Vector) fieldVector;
-        smile.data.vector.Vector<Float> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Float> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Float x = column.get(i);
             if (x == null) {
@@ -989,7 +1001,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float8Vector vector  = (Float8Vector) fieldVector;
-        smile.data.vector.Vector<Double> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<Double> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             Double x = column.get(i);
             if (x == null) {
@@ -1029,7 +1041,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         DecimalVector vector = (DecimalVector) fieldVector;
-        smile.data.vector.Vector<BigDecimal> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<BigDecimal> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             BigDecimal x = column.get(j);
             if (x == null) {
@@ -1049,7 +1061,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         DateDayVector vector = (DateDayVector) fieldVector;
-        smile.data.vector.Vector<LocalDate> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<LocalDate> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             LocalDate x = column.get(j);
             if (x == null) {
@@ -1069,7 +1081,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TimeNanoVector vector = (TimeNanoVector) fieldVector;
-        smile.data.vector.Vector<LocalTime> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<LocalTime> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             LocalTime x = column.get(j);
             if (x == null) {
@@ -1089,7 +1101,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TimeStampMilliTZVector vector = (TimeStampMilliTZVector) fieldVector;
-        smile.data.vector.Vector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             LocalDateTime x = column.get(j);
             if (x == null) {
@@ -1109,7 +1121,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         VarBinaryVector vector = (VarBinaryVector) fieldVector;
-        smile.data.vector.Vector<byte[]> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ObjectVector<byte[]> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             byte[] bytes = column.get(j);
             if (bytes == null) {
