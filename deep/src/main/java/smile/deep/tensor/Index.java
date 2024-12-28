@@ -118,23 +118,23 @@ public class Index {
     }
 
     /**
-     * Returns the slice index for [start, end) with step 1.
+     * Returns the slice index for [start, end) with incremental step 1.
      *
-     * @param start the start index.
-     * @param end the end index.
-     * @return the slice.
+     * @param start the inclusive start index.
+     * @param end the exclusive end index.
+     * @return the slice index.
      */
     public static Index slice(Integer start, Integer end) {
         return slice(start, end, 1);
     }
 
     /**
-     * Returns the slice index for [start, end) with the given step.
+     * Returns the slice index for [start, end) with the given incremental step.
      *
-     * @param start the start index.
-     * @param end the end index.
+     * @param start the inclusive start index.
+     * @param end the exclusive end index.
      * @param step the incremental step.
-     * @return the slice.
+     * @return the slice index.
      */
     public static Index slice(Integer start, Integer end, Integer step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
@@ -145,23 +145,23 @@ public class Index {
     }
 
     /**
-     * Returns the slice index for [start, end) with step 1.
+     * Returns the slice index for [start, end) with incremental step 1.
      *
-     * @param start the start index.
-     * @param end the end index.
-     * @return the slice.
+     * @param start the inclusive start index.
+     * @param end the exclusive end index.
+     * @return the slice index.
      */
     public static Index slice(Long start, Long end) {
         return slice(start, end, 1L);
     }
 
     /**
-     * Returns the slice index for [start, end) with the given step.
+     * Returns the slice index for [start, end) with the given incremental step.
      *
-     * @param start the start index.
-     * @param end the end index.
+     * @param start the inclusive start index.
+     * @param end the exclusive end index.
      * @param step the incremental step.
-     * @return the slice.
+     * @return the slice index.
      */
     public static Index slice(Long start, Long end, Long step) {
         return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
