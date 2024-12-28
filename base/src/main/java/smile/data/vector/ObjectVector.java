@@ -48,27 +48,10 @@ public class ObjectVector<T> extends AbstractVector {
         this.vector = vector;
     }
 
-    @Override
-    int length() {
-        return vector.length;
-    }
-
-    @Override
-    public T[] array() {
-        return vector;
-    }
-
-    @Override
-    public T get(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public ObjectVector<T> get(Index index) {
-        ObjectVector<T> copy = new ObjectVector<>(field, vector);
-        return slice(copy, index);
-    }
-
+    /**
+     * Returns a stream consisting of the elements of this vector.
+     * @return a stream consisting of the elements of this vector.
+     */
     public Stream<T> stream() {
         if (index == null) {
             return Arrays.stream(vector);
@@ -83,6 +66,33 @@ public class ObjectVector<T> extends AbstractVector {
      */
     public List<T> distinct() {
         return stream().distinct().collect(Collectors.toList());
+    }
+
+    @Override
+    int length() {
+        return vector.length;
+    }
+
+    @Override
+    public T[] array() {
+        return vector;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void set(int i, Object value) {
+        vector[at(i)] = (T) value;
+    }
+
+    @Override
+    public ObjectVector<T> get(Index index) {
+        ObjectVector<T> copy = new ObjectVector<>(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public T get(int i) {
+        return vector[at(i)];
     }
 
     @Override

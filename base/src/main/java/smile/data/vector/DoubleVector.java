@@ -45,41 +45,6 @@ public class DoubleVector extends PrimitiveVector {
         this.vector = vector;
     }
 
-    @Override
-    int length() {
-        return vector.length;
-    }
-
-    @Override
-    public double[] array() {
-        return vector;
-    }
-
-    @Override
-    public double getDouble(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public Double get(int i) {
-        return vector[at(i)];
-    }
-
-    @Override
-    public DoubleVector get(Index index) {
-        DoubleVector copy = new DoubleVector(field, vector);
-        return slice(copy, index);
-    }
-
-    @Override
-    public DoubleStream asDoubleStream() {
-        if (index == null) {
-            return Arrays.stream(vector);
-        } else {
-            return index.stream().mapToDouble(i -> vector[i]);
-        }
-    }
-
     /**
      * Fills NaN/Inf values using the specified value.
      * @param value the value to replace NAs.
@@ -95,6 +60,46 @@ public class DoubleVector extends PrimitiveVector {
             indexStream().filter(i -> Double.isNaN(vector[at(i)]))
                     .forEach(i -> vector[at(i)] = value);
         }
+    }
+
+    @Override
+    int length() {
+        return vector.length;
+    }
+
+    @Override
+    public double[] array() {
+        return vector;
+    }
+
+    @Override
+    public DoubleStream asDoubleStream() {
+        if (index == null) {
+            return Arrays.stream(vector);
+        } else {
+            return index.stream().mapToDouble(i -> vector[i]);
+        }
+    }
+
+    @Override
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).doubleValue();
+    }
+
+    @Override
+    public DoubleVector get(Index index) {
+        DoubleVector copy = new DoubleVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public Double get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public double getDouble(int i) {
+        return vector[at(i)];
     }
 
     @Override

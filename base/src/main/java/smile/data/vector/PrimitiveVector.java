@@ -26,7 +26,7 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 public abstract class PrimitiveVector extends AbstractVector {
-    /** The null bitmap. The bit is 1 if the value is non-null. */
+    /** The null bitmap. The bit is 1 if the value is null. */
     BitSet nulls;
 
     /**

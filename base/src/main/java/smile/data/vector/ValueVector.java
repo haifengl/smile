@@ -175,6 +175,33 @@ public interface ValueVector extends Serializable {
     Object get(int i);
 
     /**
+     * Returns the value at position i, which may be null.
+     * This is an alias to {@link #get(int) get} for Scala's convenience.
+     * @param i the index.
+     * @return the value.
+     */
+    default Object apply(int i) {
+        return get(i);
+    }
+
+    /**
+     * Sets the value at position i.
+     * @param i the index.
+     * @param value the new value.
+     */
+    void set(int i, Object value);
+
+    /**
+     * Updates the value at position i.
+     * This is an alias to {@link #set(int, Object) set} for Scala's convenience.
+     * @param i the index.
+     * @param value the new value.
+     */
+    default void update(int i, Object value) {
+        set(i, value);
+    }
+
+    /**
      * Returns a new vector with selected entries.
      * @param index the index of selected entries.
      * @return the new vector of selected entries.
@@ -188,16 +215,6 @@ public interface ValueVector extends Serializable {
      */
     default ValueVector get(int... indices) {
         return get(Index.of(indices));
-    }
-
-    /**
-     * Returns the value at position i, which may be null.
-     * This is an alias to {@link #get(int) get} for Scala's convenience.
-     * @param i the index.
-     * @return the value.
-     */
-    default Object apply(int i) {
-        return get(i);
     }
 
     /**
@@ -490,7 +507,7 @@ public interface ValueVector extends Serializable {
      * @return the vector.
      */
     static <T extends Number> NumberVector<T> of(StructField field, T[] vector) {
-        return new NumberVector<T>(field, vector);
+        return new NumberVector<>(field, vector);
     }
 
     /**

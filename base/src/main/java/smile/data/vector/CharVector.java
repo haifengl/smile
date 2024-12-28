@@ -54,23 +54,28 @@ public class CharVector extends PrimitiveVector {
     }
 
     @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
+    }
+
+    @Override
+    public void set(int i, Object value) {
+        vector[at(i)] = (Character) value;
+    }
+
+    @Override
     public CharVector get(Index index) {
         CharVector copy = new CharVector(field, vector);
         return slice(copy, index);
     }
 
     @Override
-    public IntStream asIntStream() {
-        return indexStream().map(i -> vector[i]);
-    }
-
-    @Override
-    public char getChar(int i) {
+    public Character get(int i) {
         return vector[at(i)];
     }
 
     @Override
-    public Character get(int i) {
+    public char getChar(int i) {
         return vector[at(i)];
     }
 

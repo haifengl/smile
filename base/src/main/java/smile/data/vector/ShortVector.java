@@ -54,23 +54,28 @@ public class ShortVector extends PrimitiveVector {
     }
 
     @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
+    }
+
+    @Override
+    public void set(int i, Object value) {
+        vector[at(i)] = ((Number) value).shortValue();
+    }
+
+    @Override
     public ShortVector get(Index index) {
         ShortVector copy = new ShortVector(field, vector);
         return slice(copy, index);
     }
 
     @Override
-    public IntStream asIntStream() {
-        return indexStream().map(i -> vector[i]);
-    }
-
-    @Override
-    public short getShort(int i) {
+    public Short get(int i) {
         return vector[at(i)];
     }
 
     @Override
-    public Short get(int i) {
+    public short getShort(int i) {
         return vector[at(i)];
     }
 
