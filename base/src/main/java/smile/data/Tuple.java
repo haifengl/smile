@@ -58,30 +58,6 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns the field names.
-     * @return the field names.
-     */
-    default String[] names() {
-        return schema().names();
-    }
-
-    /**
-     * Returns the field data types.
-     * @return the field data types.
-     */
-    default DataType[] types() {
-        return schema().types();
-    }
-
-    /**
-     * Returns the field's level of measurements.
-     * @return the field's level of measurements.
-     */
-    default Measure[] measures() {
-        return schema().measures();
-    }
-
-    /**
      * Return an array obtained by converting the fields
      * to numeric mode. Missing values/nulls will be
      * encoded as Double.NaN.

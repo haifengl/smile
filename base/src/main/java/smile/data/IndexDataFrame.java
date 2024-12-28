@@ -17,11 +17,11 @@
 
 package smile.data;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
 import smile.data.type.*;
 import smile.data.vector.*;
+import smile.util.Index;
 
 /**
  * A data frame with a new index instead of the default [0, n) row index.
@@ -32,14 +32,14 @@ public class IndexDataFrame implements DataFrame {
     /** The underlying data frame. */
     private final DataFrame df;
     /** The row index. */
-    private final int[] index;
+    private final Index index;
 
     /**
      * Constructor.
      * @param df The underlying data frame.
      * @param index The row index.
      */
-    public IndexDataFrame(DataFrame df, int[] index) {
+    public IndexDataFrame(DataFrame df, Index index) {
         this.df = df;
         this.index = index;
     }
@@ -61,7 +61,7 @@ public class IndexDataFrame implements DataFrame {
 
     @Override
     public int size() {
-        return index.length;
+        return index.size();
     }
 
     @Override
@@ -71,12 +71,12 @@ public class IndexDataFrame implements DataFrame {
 
     @Override
     public Object get(int i, int j) {
-        return df.get(index[i], j);
+        return df.get(index.apply(i), j);
     }
 
     @Override
     public Stream<Tuple> stream() {
-        return Arrays.stream(index).mapToObj(df::get);
+        return index.stream().mapToObj(df::get);
     }
 
     @Override
@@ -85,12 +85,12 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public BaseVector column(int i) {
+    public ValueVector column(int i) {
         return df.column(i).get(index);
     }
 
     @Override
-    public <T> Vector<T> vector(int i) {
+    public <T> ObjectVector<T> vector(int i) {
         return df.<T>vector(i).get(index);
     }
 
@@ -166,8 +166,8 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public DataFrame merge(BaseVector... vectors) {
-        for (BaseVector vector : vectors) {
+    public DataFrame merge(ValueVector... vectors) {
+        for (var vector : vectors) {
             if (vector.size() != size()) {
                 throw new IllegalArgumentException("Merge data frames with different size: " + size() + " vs " + vector.size());
             }
@@ -189,6 +189,6 @@ public class IndexDataFrame implements DataFrame {
 
     @Override
     public Tuple get(int i) {
-        return df.get(index[i]);
+        return df.get(index.apply(i));
     }
 }

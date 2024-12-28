@@ -27,8 +27,8 @@ import smile.data.Tuple;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
+import smile.data.vector.ValueVector;
 import smile.math.Function;
 
 /**
@@ -76,16 +76,16 @@ public class ColumnTransform implements Transform {
     @Override
     public DataFrame apply(DataFrame data) {
         StructType schema = data.schema();
-        BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
+        ValueVector[] vectors = new ValueVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
             Function transform = transforms.get(field.name());
             if (transform != null) {
                 DoubleStream stream = data.stream().mapToDouble(t -> transform.apply(t.getDouble(i)));
                 if (field.measure() == null || field.measure() instanceof NumericalMeasure) {
-                    vectors[i] = DoubleVector.of(field, stream);
+                    vectors[i] = new DoubleVector(field, stream.toArray());
                 } else {
-                    vectors[i] = DoubleVector.of(field.name(), stream);
+                    vectors[i] = new DoubleVector(field.name(), stream.toArray());
                 }
             } else {
                 vectors[i] = data.column(i);

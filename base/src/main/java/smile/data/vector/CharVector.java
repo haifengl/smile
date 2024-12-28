@@ -17,91 +17,95 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable char vector.
  *
  * @author Haifeng Li
  */
-public interface CharVector extends BaseVector<Character, Integer, IntStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.CharType;
+public class CharVector extends PrimitiveVector {
+    /** The vector data. */
+    private final char[] vector;
+
+    /** Constructor. */
+    public CharVector(String name, char[] vector) {
+        this(new StructField(name, DataTypes.CharType), vector);
+    }
+
+    /** Constructor. */
+    public CharVector(StructField field, char[] vector) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    char[] array();
+    int length() {
+        return vector.length;
+    }
 
     @Override
-    CharVector get(int... index);
+    public char[] array() {
+        return vector;
+    }
 
     @Override
-    default boolean getBoolean(int i) {
+    public CharVector get(Index index) {
+        CharVector copy = new CharVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
+    }
+
+    @Override
+    public char getChar(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public Character get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
         return getChar(i) == 'T';
     }
 
     @Override
-    default byte getByte(int i) {
+    public byte getByte(int i) {
         return (byte) getChar(i);
     }
 
     @Override
-    default short getShort(int i) {
+    public short getShort(int i) {
         return (short) getChar(i);
     }
 
     @Override
-    default int getInt(int i) {
+    public int getInt(int i) {
         return getChar(i);
     }
 
     @Override
-    default long getLong(int i) {
+    public long getLong(int i) {
         return getChar(i);
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getChar(i);
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getChar(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /** Creates a named char vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static CharVector of(String name, char[] vector) {
-        return new CharVectorImpl(name, vector);
-    }
-
-    /** Creates a named char vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static CharVector of(StructField field, char[] vector) {
-        return new CharVectorImpl(field, vector);
     }
 }

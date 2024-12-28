@@ -127,7 +127,7 @@ public interface Feature {
      * @param data the data frame.
      * @return the feature vector.
      */
-    default BaseVector apply(DataFrame data) {
+    default ValueVector apply(DataFrame data) {
         StructField field = field();
 
         if (isVariable()) {
@@ -139,55 +139,55 @@ public interface Feature {
             case Integer: {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));
-                return IntVector.of(field, values);
+                return new IntVector(field, values);
             }
 
             case Long: {
                 long[] values = new long[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsLong(data.get(i));
-                return LongVector.of(field, values);
+                return new LongVector(field, values);
             }
 
             case Double: {
                 double[] values = new double[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsDouble(data.get(i));
-                return DoubleVector.of(field, values);
+                return new DoubleVector(field, values);
             }
 
             case Float: {
                 float[] values = new float[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsFloat(data.get(i));
-                return FloatVector.of(field, values);
+                return new FloatVector(field, values);
             }
 
             case Boolean: {
                 boolean[] values = new boolean[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsBoolean(data.get(i));
-                return BooleanVector.of(field, values);
+                return new BooleanVector(field, values);
             }
 
             case Byte: {
                 byte[] values = new byte[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsByte(data.get(i));
-                return ByteVector.of(field, values);
+                return new ByteVector(field, values);
             }
 
             case Short: {
                 short[] values = new short[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsShort(data.get(i));
-                return ShortVector.of(field, values);
+                return new ShortVector(field, values);
             }
 
             case Char: {
                 char[] values = new char[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsChar(data.get(i));
-                return CharVector.of(field, values);
+                return new CharVector(field, values);
             }
 
             default: {
                 Object[] values = new Object[size];
                 for (int i = 0; i < size; i++) values[i] = apply(data.get(i));
-                return Vector.of(field, values);
+                return new ObjectVector<>(field, values);
             }
         }
     }

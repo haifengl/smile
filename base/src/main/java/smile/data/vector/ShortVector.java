@@ -17,91 +17,95 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable short vector.
  *
  * @author Haifeng Li
  */
-public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.ShortType;
+public class ShortVector extends PrimitiveVector {
+    /** The vector data. */
+    private final short[] vector;
+
+    /** Constructor. */
+    public ShortVector(String name, short[] vector) {
+        this(new StructField(name, DataTypes.ShortType), vector);
+    }
+
+    /** Constructor. */
+    public ShortVector(StructField field, short[] vector) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    short[] array();
+    int length() {
+        return vector.length;
+    }
 
     @Override
-    ShortVector get(int... index);
+    public short[] array() {
+        return vector;
+    }
 
     @Override
-    default boolean getBoolean(int i) {
+    public ShortVector get(Index index) {
+        ShortVector copy = new ShortVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
+    }
+
+    @Override
+    public short getShort(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public Short get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
         return getShort(i) != 0;
     }
 
     @Override
-    default char getChar(int i) {
+    public char getChar(int i) {
         return (char) getShort(i);
     }
 
     @Override
-    default byte getByte(int i) {
+    public byte getByte(int i) {
         return (byte) getShort(i);
     }
 
     @Override
-    default int getInt(int i) {
+    public int getInt(int i) {
         return getShort(i);
     }
 
     @Override
-    default long getLong(int i) {
+    public long getLong(int i) {
         return getShort(i);
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getShort(i);
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getShort(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /** Creates a named short integer vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static ShortVector of(String name, short[] vector) {
-        return new ShortVectorImpl(name, vector);
-    }
-
-    /** Creates a named short integer vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static ShortVector of(StructField field, short[] vector) {
-        return new ShortVectorImpl(field, vector);
     }
 }

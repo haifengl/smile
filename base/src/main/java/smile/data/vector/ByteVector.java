@@ -14,94 +14,97 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.vector;
 
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import smile.data.type.DataType;
+import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * An immutable byte vector.
  *
  * @author Haifeng Li
  */
-public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.ByteType;
+public class ByteVector extends PrimitiveVector {
+    /** The vector data. */
+    private final byte[] vector;
+
+    /** Constructor. */
+    public ByteVector(String name, byte[] vector) {
+        this(new StructField(name, DataTypes.ByteType), vector);
+    }
+
+    /** Constructor. */
+    public ByteVector(StructField field, byte[] vector) {
+        super(checkMeasure(field, NumericalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    byte[] array();
+    int length() {
+        return vector.length;
+    }
 
     @Override
-    ByteVector get(int... index);
+    public byte[] array() {
+        return vector;
+    }
 
     @Override
-    default boolean getBoolean(int i) {
+    public byte getByte(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public Byte get(int i) {
+        return vector[at(i)];
+    }
+
+    @Override
+    public ByteVector get(Index index) {
+        ByteVector copy = new ByteVector(field, vector);
+        return slice(copy, index);
+    }
+
+    @Override
+    public IntStream asIntStream() {
+        return indexStream().map(i -> vector[i]);
+    }
+
+    @Override
+    public boolean getBoolean(int i) {
         return getByte(i) != 0;
     }
 
     @Override
-    default char getChar(int i) {
+    public char getChar(int i) {
         return (char) getByte(i);
     }
 
     @Override
-    default short getShort(int i) {
+    public short getShort(int i) {
         return getByte(i);
     }
 
     @Override
-    default int getInt(int i) {
+    public int getInt(int i) {
         return getByte(i);
     }
 
     @Override
-    default long getLong(int i) {
+    public long getLong(int i) {
         return getByte(i);
     }
 
     @Override
-    default float getFloat(int i) {
+    public float getFloat(int i) {
         return getByte(i);
     }
 
     @Override
-    default double getDouble(int i) {
+    public double getDouble(int i) {
         return getByte(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
-    }
-
-    /** Creates a named byte vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static ByteVector of(String name, byte[] vector) {
-        return new ByteVectorImpl(name, vector);
-    }
-
-    /** Creates a named byte vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static ByteVector of(StructField field, byte[] vector) {
-        return new ByteVectorImpl(field, vector);
     }
 }

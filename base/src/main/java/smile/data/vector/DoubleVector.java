@@ -17,118 +17,118 @@
 
 package smile.data.vector;
 
-import java.util.stream.Collectors;
+import java.util.Arrays;
 import java.util.stream.DoubleStream;
-import smile.data.type.DataType;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.MathEx;
+import smile.util.Index;
 
 /**
  * An immutable double vector.
  *
  * @author Haifeng Li
  */
-public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
-    @Override
-    default DataType dtype() {
-        return DataTypes.DoubleType;
+public class DoubleVector extends PrimitiveVector {
+    /** The vector data. */
+    private final double[] vector;
+
+    /** Constructor. */
+    public DoubleVector(String name, double[] vector) {
+        this(new StructField(name, DataTypes.DoubleType), vector);
+    }
+
+    /** Constructor. */
+    public DoubleVector(StructField field, double[] vector) {
+        super(checkMeasure(field, CategoricalMeasure.class));
+        this.vector = vector;
     }
 
     @Override
-    double[] array();
-
-    @Override
-    DoubleVector get(int... index);
-
-    @Override
-    default boolean getBoolean(int i) {
-        return MathEx.isZero(getDouble(i));
+    int length() {
+        return vector.length;
     }
 
     @Override
-    default char getChar(int i) {
-        return (char) getDouble(i);
+    public double[] array() {
+        return vector;
     }
 
     @Override
-    default byte getByte(int i) {
-        return (byte) getDouble(i);
+    public double getDouble(int i) {
+        return vector[at(i)];
     }
 
     @Override
-    default short getShort(int i) {
-        return (short) getDouble(i);
+    public Double get(int i) {
+        return vector[at(i)];
     }
 
     @Override
-    default int getInt(int i) {
-        return (int) getDouble(i);
+    public DoubleVector get(Index index) {
+        DoubleVector copy = new DoubleVector(field, vector);
+        return slice(copy, index);
     }
 
     @Override
-    default long getLong(int i) {
-        return (long) getDouble(i);
-    }
-
-    @Override
-    default float getFloat(int i) {
-        return (float) getDouble(i);
-    }
-
-    /**
-     * Returns the string representation of vector.
-     * @param n the number of elements to show.
-     * @return the string representation of vector.
-     */
-    default String toString(int n) {
-        String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
+    public DoubleStream asDoubleStream() {
+        if (index == null) {
+            return Arrays.stream(vector);
+        } else {
+            return index.stream().mapToDouble(i -> vector[i]);
+        }
     }
 
     /**
      * Fills NaN/Inf values using the specified value.
      * @param value the value to replace NAs.
      */
-    void fillna(double value);
-
-    /** Creates a named double vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static DoubleVector of(String name, double[] vector) {
-        return new DoubleVectorImpl(name, vector);
+    public void fillna(double value) {
+        if (index == null) {
+            for (int i = 0; i < vector.length; i++) {
+                if (Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
+                    vector[i] = value;
+                }
+            }
+        } else {
+            indexStream().filter(i -> Double.isNaN(vector[at(i)]))
+                    .forEach(i -> vector[at(i)] = value);
+        }
     }
 
-    /** Creates a named double vector.
-     *
-     * @param name the name of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static DoubleVector of(String name, DoubleStream stream) {
-        return new DoubleVectorImpl(name, stream.toArray());
+    @Override
+    public boolean getBoolean(int i) {
+        return MathEx.isZero(getDouble(i));
     }
 
-    /** Creates a named double vector.
-     *
-     * @param field the struct field of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static DoubleVector of(StructField field, double[] vector) {
-        return new DoubleVectorImpl(field, vector);
+    @Override
+    public char getChar(int i) {
+        return (char) getDouble(i);
     }
 
-    /** Creates a named double vector.
-     *
-     * @param field the struct field of vector.
-     * @param stream the data stream of vector.
-     * @return the vector.
-     */
-    static DoubleVector of(StructField field, DoubleStream stream) {
-        return new DoubleVectorImpl(field, stream.toArray());
+    @Override
+    public byte getByte(int i) {
+        return (byte) getDouble(i);
+    }
+
+    @Override
+    public short getShort(int i) {
+        return (short) getDouble(i);
+    }
+
+    @Override
+    public int getInt(int i) {
+        return (int) getDouble(i);
+    }
+
+    @Override
+    public long getLong(int i) {
+        return (long) getDouble(i);
+    }
+
+    @Override
+    public float getFloat(int i) {
+        return (float) getDouble(i);
     }
 }
