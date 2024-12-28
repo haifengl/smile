@@ -144,7 +144,7 @@ public class IsoMap {
             }
         }
 
-        int n = graph.getNumVertices();
+        int n = graph.getVertexCount();
         double[][] D = graph.dijkstra();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
