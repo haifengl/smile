@@ -27,7 +27,7 @@ import smile.util.Index;
  */
 public abstract class PrimitiveVector extends AbstractVector {
     /** The null bitmap. The bit is 1 if the value is null. */
-    BitSet nulls;
+    BitSet nullMask;
 
     /**
      * Constructor.
@@ -41,21 +41,26 @@ public abstract class PrimitiveVector extends AbstractVector {
      * Constructor.
      * @param field The struct field of the vector.
      * @param index The index of the elements in the underlying data.
-     * @param nulls The null bitmap. The bit is 1 if the value is non-null.
+     * @param nullMask The null bitmap. The bit is 1 if the value is non-null.
      */
-    public PrimitiveVector(StructField field, Index index, BitSet nulls) {
+    public PrimitiveVector(StructField field, Index index, BitSet nullMask) {
         super(field, index);
-        this.nulls = nulls;
+        this.nullMask = nullMask;
     }
 
     @Override
     public boolean isNullable() {
-        return nulls != null;
+        return nullMask != null;
     }
 
     @Override
     public boolean isNullAt(int i) {
-        return nulls != null && nulls.get(i);
+        return nullMask != null && nullMask.get(i);
+    }
+
+    @Override
+    public int getNullCount() {
+        return nullMask == null ? 0 : nullMask.cardinality();
     }
 
     /**
@@ -66,7 +71,7 @@ public abstract class PrimitiveVector extends AbstractVector {
         if (mask.size() != length()) {
             throw new IllegalArgumentException("The null bitmap mask size does not match data length");
         }
-        nulls = mask;
+        nullMask = mask;
     }
 
     /**
@@ -74,7 +79,7 @@ public abstract class PrimitiveVector extends AbstractVector {
      * @return the null bitmap mask.
      */
     public BitSet getNullMask() {
-        return nulls;
+        return nullMask;
     }
 
     /**
@@ -85,7 +90,7 @@ public abstract class PrimitiveVector extends AbstractVector {
      */
     <T extends PrimitiveVector> T slice(T vector, Index index) {
         super.slice(vector, index);
-        vector.nulls = nulls;
+        vector.nullMask = nullMask;
         return vector;
     }
 }
