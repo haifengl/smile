@@ -29,7 +29,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
@@ -268,7 +268,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector<?, ?, ?> y = formula.y(data);
+        ValueVector y = formula.y(data);
 
         int[][] order = CART.order(x);
         ClassLabels codec = ClassLabels.fit(y);

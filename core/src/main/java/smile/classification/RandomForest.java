@@ -27,7 +27,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -294,7 +294,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector<?, ?, ?> y = formula.y(data);
+        ValueVector y = formula.y(data);
 
         if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);

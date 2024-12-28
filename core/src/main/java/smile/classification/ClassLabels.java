@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
 import smile.data.Dataset;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 import smile.util.IntSet;
 
@@ -133,10 +133,10 @@ public class ClassLabels implements Serializable {
      * @param response the sample labels.
      * @return the class label mapping.
      */
-    public static ClassLabels fit(BaseVector<?, ?, ?> response) {
+    public static ClassLabels fit(ValueVector response) {
         int[] y = response.toIntArray();
 
-        Measure measure = response.measure();
+        Measure measure = response.field().measure();
         if (measure instanceof NominalScale scale) {
             int k = scale.size();
             int[] labels = IntStream.range(0, k).toArray();

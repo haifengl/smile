@@ -26,7 +26,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -179,7 +179,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector<?, ?, ?> y = formula.y(data);
+        ValueVector y = formula.y(data);
 
         ClassLabels codec = ClassLabels.fit(y);
         int[][] order = CART.order(x);

@@ -85,7 +85,7 @@ public class Projection implements Transform {
             for (int i = 0; i < x.length; i++) {
                 x[i] = y[i][j];
             }
-            vectors[j] = DoubleVector.of(schema.field(j), x);
+            vectors[j] = new DoubleVector(schema.field(j), x);
         }
         return DataFrame.of(vectors);
     }

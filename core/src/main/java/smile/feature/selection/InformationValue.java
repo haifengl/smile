@@ -27,7 +27,7 @@ import smile.data.measure.NominalScale;
 import smile.data.transform.ColumnTransform;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.math.Function;
 import smile.sort.QuickSort;
 
@@ -191,7 +191,7 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
             throw new IllegalArgumentException("Invalid number of bins: " + nbins);
         }
 
-        BaseVector<?, ?, ?> y = data.column(clazz);
+        ValueVector y = data.column(clazz);
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k != 2) {

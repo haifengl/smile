@@ -30,7 +30,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.validation.RegressionMetrics;
@@ -215,7 +215,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector<?, ?, ?> response = formula.y(data);
+        ValueVector response = formula.y(data);
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 

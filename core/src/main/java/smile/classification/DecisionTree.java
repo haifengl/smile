@@ -29,7 +29,7 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
+import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 import smile.util.IntSet;
 
@@ -139,7 +139,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         DecisionNode node = (DecisionNode) leaf;
-        BaseVector<?, ?, ?> xj = x.column(j);
+        ValueVector xj = x.column(j);
         int[] falseCount = new int[k];
 
         Split split = null;
@@ -337,7 +337,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector<?, ?, ?> y = formula.y(data);
+        ValueVector y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
         int mtry = x.ncol();
