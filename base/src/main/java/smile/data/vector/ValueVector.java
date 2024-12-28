@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.BitSet;
+import java.util.Objects;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
@@ -81,6 +82,20 @@ public interface ValueVector {
      * @return true if the value at the given index is null/missing.
      */
     boolean isNullAt(int i);
+
+    /**
+     * Returns the number of null/missing values in this vector.
+     * @return the number of null/missing values in this vector.
+     */
+    int getNullCount();
+
+    /**
+     * Returns true if there are any null/missing values in this vector.
+     * @return true if there are any null/missing values in this vector.
+     */
+    default boolean anyNull() {
+        return getNullCount() != 0;
+    }
 
     /**
      * Returns the array that backs this vector.
