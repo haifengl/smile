@@ -24,7 +24,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable short vector.
+ * A short vector.
  *
  * @author Haifeng Li
  */

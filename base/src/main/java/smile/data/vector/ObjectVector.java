@@ -27,7 +27,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable generic vector.
+ * A generic vector.
  *
  * @param <T> the data type of vector elements.
  *

@@ -24,7 +24,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable char vector.
+ * A char vector.
  *
  * @author Haifeng Li
  */

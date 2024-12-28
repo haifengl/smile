@@ -16,7 +16,8 @@
  */
 
 /**
- * Immutable named vectors.
+ * Abstraction to store a sequence of values having the same type
+ * in an individual column of data frame.
  *
  * @author Haifeng Li
  */

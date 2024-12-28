@@ -26,7 +26,7 @@ import smile.math.MathEx;
 import smile.util.Index;
 
 /**
- * An immutable float vector.
+ * A float vector.
  *
  * @author Haifeng Li
  */

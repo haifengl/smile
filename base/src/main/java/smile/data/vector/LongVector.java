@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable long vector.
+ * A long vector.
  *
  * @author Haifeng Li
  */

@@ -25,7 +25,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable boolean vector.
+ * A boolean vector.
  *
  * @author Haifeng Li
  */

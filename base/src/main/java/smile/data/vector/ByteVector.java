@@ -23,7 +23,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable byte vector.
+ * A byte vector.
  *
  * @author Haifeng Li
  */
