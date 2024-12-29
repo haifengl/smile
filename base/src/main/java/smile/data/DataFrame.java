@@ -100,7 +100,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * Returns the number of rows.
      * @return the number of rows.
      */
-    public int height() {
+    public int nrow() {
         return columns[0].size();
     }
 
@@ -108,7 +108,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * Returns the number of columns.
      * @return the number of columns.
      */
-    public int width() {
+    public int ncol() {
         return columns.length;
     }
 

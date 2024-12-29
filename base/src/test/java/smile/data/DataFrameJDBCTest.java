@@ -85,7 +85,7 @@ public class DataFrameJDBCTest {
     @Test
     public void testWidth() {
         System.out.println("width");
-        assertEquals(6, df.width());
+        assertEquals(6, df.ncol());
     }
 
     /**

@@ -100,7 +100,7 @@ public class BagOfWordsTest {
             System.out.println(df);
 
             assertEquals(data.size(), df.size());
-            assertEquals(10, df.width());
+            assertEquals(10, df.ncol());
             assertEquals(10, bag.features().length);
             assertEquals("--", bag.features()[0]);
             assertEquals("Union", bag.features()[9]);

@@ -144,7 +144,7 @@ public class ArrowTest {
         System.out.println(output);
         System.out.println(output.schema());
         assertEquals(1, output.size());
-        assertEquals(5, output.width());
+        assertEquals(5, output.ncol());
         assertEquals("Total", output.get(0,0));
         assertEquals(412L, output.get(0,1));
         assertEquals(0.99, output.get(0,2));

@@ -85,7 +85,7 @@ public class Word2Vec {
      * @return the dimension of embedding vector space.
      */
     public int dimension() {
-        return vectors.width();
+        return vectors.ncol();
     }
 
     /**
@@ -98,7 +98,7 @@ public class Word2Vec {
         if (index == null) return null;
 
         int i = index;
-        int dim = vectors.width();
+        int dim = vectors.ncol();
         float[] vector = new float[dim];
         for (int j = 0; j < dim; j++) {
             vector[j] = vectors.getFloat(i, j);
