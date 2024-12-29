@@ -435,7 +435,7 @@ public class Arff implements AutoCloseable {
         }
 
         schema = schema.boxed(rows);
-        return DataFrame.of(rows, schema);
+        return DataFrame.of(schema, rows);
     }
 
     /**
@@ -532,7 +532,7 @@ public class Arff implements AutoCloseable {
 
             writer.println("@DATA");
 
-            int p = data.ncol();
+            int p = data.columns().length;
             data.stream().forEach(t -> {
                 String line = IntStream.range(0, p).mapToObj(i -> t.toString()).collect(Collectors.joining(","));
                 writer.println(line);

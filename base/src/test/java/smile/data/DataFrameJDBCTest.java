@@ -48,10 +48,12 @@ public class DataFrameJDBCTest {
         }
 
         String url = String.format("jdbc:sqlite:%s", Paths.getTestData("sqlite/chinook.db").toAbsolutePath());
-        String sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total"
-                + " from employees as e"
-                + " join customers as c on e.employeeid = c.supportrepid"
-                + " join invoices as i on c.customerid = i.customerid";
+        String sql = """
+            select e.firstname as 'Employee First', e.lastname as 'Employee Last',
+                   c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+                from employees as e
+                join customers as c on e.employeeid = c.supportrepid
+                join invoices as i on c.customerid = i.customerid""";
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt  = conn.createStatement();
@@ -74,22 +76,16 @@ public class DataFrameJDBCTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of nrow method, of class DataFrame.
-     */
     @Test
-    public void testNrows() {
-        System.out.println("nrow");
-        assertEquals(412, df.nrow());
+    public void testSize() {
+        System.out.println("size");
+        assertEquals(412, df.size());
     }
 
-    /**
-     * Test of ncol method, of class DataFrame.
-     */
     @Test
-    public void testNcols() {
-        System.out.println("ncol");
-        assertEquals(6, df.ncol());
+    public void testWidth() {
+        System.out.println("width");
+        assertEquals(6, df.width());
     }
 
     /**
@@ -144,8 +140,8 @@ public class DataFrameJDBCTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(1, output.nrow());
-        assertEquals(5, output.ncol());
+        assertEquals(1, output.size());
+        assertEquals(5, output.columns().length);
         assertEquals("Total", output.get(0,0));
         assertEquals(412L, output.get(0,1));
         assertEquals(0.99, output.get(0,2));

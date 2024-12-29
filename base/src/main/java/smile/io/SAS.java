@@ -102,7 +102,7 @@ public interface SAS {
                 }
             }
 
-            return DataFrame.of(vectors);
+            return new DataFrame(vectors);
         }
     }
 }
