@@ -139,7 +139,7 @@ public class Avro {
                         row[i] = measure != null ? measure.valueOf(str) : str;
                     }
                 }
-                rows.add(Tuple.of(row, struct));
+                rows.add(Tuple.of(struct, row));
             }
             return DataFrame.of(rows);
         }

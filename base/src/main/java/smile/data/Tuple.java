@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.stream.IntStream;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
@@ -133,24 +132,6 @@ public interface Tuple extends Serializable {
      * @param i the index of field.
      * @return the field value.
      */
-    default Object apply(int i) {
-        return get(i);
-    }
-
-    /**
-     * Returns the value by field name. The value may be null.
-     * @param field the name of field.
-     * @return the field value.
-     */
-    default Object apply(String field) {
-        return get(field);
-    }
-
-    /**
-     * Returns the value at position i. The value may be null.
-     * @param i the index of field.
-     * @return the field value.
-     */
     Object get(int i);
 
     /**
@@ -160,6 +141,26 @@ public interface Tuple extends Serializable {
      */
     default Object get(String field) {
         return get(indexOf(field));
+    }
+
+    /**
+     * Returns the value at position i. The value may be null.
+     * This is an alias to {@link #get(int) get} for Scala's convenience.
+     * @param i the index of field.
+     * @return the field value.
+     */
+    default Object apply(int i) {
+        return get(i);
+    }
+
+    /**
+     * Returns the value by field name. The value may be null.
+     * This is an alias to {@link #get(String) get} for Scala's convenience.
+     * @param field the name of field.
+     * @return the field value.
+     */
+    default Object apply(String field) {
+        return get(field);
     }
 
     /**
@@ -184,8 +185,11 @@ public interface Tuple extends Serializable {
      * Returns true if the tuple has null/missing values.
      * @return true if the tuple has null/missing values.
      */
-    default boolean hasNull() {
-        return IntStream.range(0, length()).anyMatch(this::isNullAt);
+    default boolean anyNull() {
+        for (int i = 0; i < length(); i++) {
+            if (isNullAt(i)) return true;
+        }
+        return false;
     }
 
     /**
@@ -629,23 +633,12 @@ public interface Tuple extends Serializable {
     }
 
     /**
-     * Returns true if there are any NULL values in this tuple.
-     * @return true if there are any NULL values in this tuple.
-     */
-    default boolean anyNull() {
-        for (int i = 0; i < length(); i++) {
-            if (isNullAt(i)) return true;
-        }
-        return false;
-    }
-
-    /**
      * Returns an object array based tuple.
      * @param row the object array.
      * @param schema the schema of tuple.
      * @return the tuple.
      */
-    static Tuple of(Object[] row, StructType schema) {
+    static Tuple of(StructType schema, Object[] row) {
         return new AbstractTuple() {
             @Override
             public Object get(int i) {
@@ -665,7 +658,7 @@ public interface Tuple extends Serializable {
      * @param schema the schema of tuple.
      * @return the tuple.
      */
-    static Tuple of(double[] row, StructType schema) {
+    static Tuple of(StructType schema, double[] row) {
         return new AbstractTuple() {
             @Override
             public Object get(int i) {
@@ -690,7 +683,7 @@ public interface Tuple extends Serializable {
      * @param schema the schema of tuple.
      * @return the tuple.
      */
-    static Tuple of(int[] row, StructType schema) {
+    static Tuple of(StructType schema, int[] row) {
         return new AbstractTuple() {
             @Override
             public Object get(int i) {
@@ -716,7 +709,7 @@ public interface Tuple extends Serializable {
      * @throws SQLException when JDBC operation fails.
      * @return the tuple.
      */
-    static Tuple of(ResultSet rs, StructType schema) throws SQLException {
+    static Tuple of(StructType schema, ResultSet rs) throws SQLException {
         final Object[] row = new Object[rs.getMetaData().getColumnCount()];
         for(int i = 0; i < row.length; ++i){
             row[i] = rs.getObject(i+1);
@@ -730,6 +723,6 @@ public interface Tuple extends Serializable {
             }
         }
 
-        return of(row, schema);
+        return of(schema, row);
     }
 }

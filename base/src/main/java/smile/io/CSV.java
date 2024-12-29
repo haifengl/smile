@@ -164,7 +164,7 @@ public class CSV {
                         row[i] = parser.get(i).apply(s);
                     }
                 }
-                rows.add(Tuple.of(row, schema));
+                rows.add(Tuple.of(schema, row));
                 if (rows.size() >= limit) break;
             }
 

@@ -70,7 +70,7 @@ public class Projection implements Transform {
     @Override
     public Tuple apply(Tuple x) {
         double[] y = apply(x.toArray(columns));
-        return Tuple.of(y, schema);
+        return Tuple.of(schema, y);
     }
 
     @Override

@@ -431,7 +431,7 @@ public class Arff implements AutoCloseable {
 
             // Parse instance
             Object[] row = tokenizer.ttype == '{' ? readSparseInstance() : readInstance();
-            rows.add(Tuple.of(row, schema));
+            rows.add(Tuple.of(schema, row));
         }
 
         schema = schema.boxed(rows);

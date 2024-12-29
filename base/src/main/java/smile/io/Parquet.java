@@ -141,7 +141,7 @@ public class Parquet {
                 final MessageColumnIO columnIO = new ColumnIOFactory().getColumnIO(schema);
                 final RecordReader<Group> recordReader = columnIO.getRecordReader(store, new GroupRecordConverter(schema));
                 for (int i = 0; i < rowCount && rows.size() < nrow; i++) {
-                    rows.add(Tuple.of(readRowGroup(recordReader.read(), schema.getColumns(), struct), struct));
+                    rows.add(Tuple.of(struct, readRowGroup(recordReader.read(), schema.getColumns(), struct)));
                 }
             }
 
