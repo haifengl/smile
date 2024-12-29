@@ -19,9 +19,9 @@ package smile.data
 
 import java.util.Optional
 import java.util.stream.IntStream
-
 import smile.data.measure.CategoricalMeasure
 import smile.json._
+import smile.util.Index
 
 /**
   * Pimped data frame with Scala style methods.
@@ -36,10 +36,10 @@ case class DataFrameOps(data: DataFrame) {
   def drop(range: Range): DataFrame = data.drop(range.toArray: _*)
 
   /** Returns a new data frame with row indexing. */
-  def of(range: Range): DataFrame = data.of(range.toArray: _*)
+  def of(range: Range): DataFrame = data.get(Index.of(range.toArray: _*))
 
   /** Finds the first row satisfying a predicate. */
-  def find(p: Tuple => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
+  def find(p: Tuple => Boolean): Optional[Row] = data.stream().filter(t => p(t)).findAny()
   /** Tests if a predicate holds for at least one row of data frame. */
   def exists(p: Tuple => Boolean): Boolean = data.stream.anyMatch(t => p(t))
   /** Tests if a predicate holds for all rows of data frame. */
@@ -53,7 +53,7 @@ case class DataFrameOps(data: DataFrame) {
   /** Selects all rows which satisfy a predicate. */
   def filter(p: Tuple => Boolean): DataFrame = {
     val index = IntStream.range(0, data.size).filter(i => p(data(i))).toArray
-    data.of(index: _*)
+    data.get(Index.of(index: _*))
   }
 
   /** Partitions this DataFrame in two according to a predicate.
@@ -70,7 +70,7 @@ case class DataFrameOps(data: DataFrame) {
     IntStream.range(0, data.size).forEach { i =>
       if (p(data(i))) l += i else r += i
     }
-    (data.of(l.toArray: _*), data.of(r.toArray: _*))
+    (data.get(Index.of(l.toArray: _*)), data.get(Index.of(r.toArray: _*)))
   }
 
   /** Partitions the DataFrame into a map of DataFrames according to
@@ -82,7 +82,7 @@ case class DataFrameOps(data: DataFrame) {
     */
   def groupBy[K](f: Tuple => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
-    groups.view.mapValues(index => data.of(index: _*)).toMap
+    groups.view.mapValues(index => data.get(Index.of(index: _*))).toMap
   }
 
   /** Converts the tuple to a JSON array. */

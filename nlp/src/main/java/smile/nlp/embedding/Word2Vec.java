@@ -69,11 +69,9 @@ public class Word2Vec {
      */
     public Word2Vec(String[] words, float[][] vectors) {
         this.words = words;
-        this.vectors = DataFrame.of(
-                IntStream.range(0, vectors.length)
-                        .mapToObj(i -> FloatVector.of("V"+(i+1), vectors[i]))
-                        .toArray(FloatVector[]::new)
-        );
+        this.vectors = new DataFrame(IntStream.range(0, vectors.length)
+                .mapToObj(i -> new FloatVector("V"+(i+1), vectors[i]))
+                .toArray(FloatVector[]::new));
 
         int n = words.length;
         map = new HashMap<>(n * 4 / 3 + 3);
@@ -87,7 +85,7 @@ public class Word2Vec {
      * @return the dimension of embedding vector space.
      */
     public int dimension() {
-        return vectors.ncol();
+        return vectors.width();
     }
 
     /**
@@ -100,7 +98,7 @@ public class Word2Vec {
         if (index == null) return null;
 
         int i = index;
-        int dim = vectors.ncol();
+        int dim = vectors.width();
         float[] vector = new float[dim];
         for (int j = 0; j < dim; j++) {
             vector[j] = vectors.getFloat(i, j);

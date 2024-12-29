@@ -198,7 +198,7 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
             throw new UnsupportedOperationException("Information Value is applicable only to binary classification");
         }
 
-        int n = data.nrow();
+        int n = data.size();
         StructType schema = data.schema();
 
         return IntStream.range(0, schema.length()).mapToObj(i -> {

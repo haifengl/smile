@@ -70,7 +70,7 @@ public interface SHAP<T> {
      * @param data the data set.
      * @return the average of absolute SHAP values over a data set.
      */
-    default double[] shap(Stream<T> data) {
+    default double[] shap(Stream<? extends T> data) {
         return smile.math.MathEx.colMeans(
                 data.map(x -> {
                     double[] values = shap(x);

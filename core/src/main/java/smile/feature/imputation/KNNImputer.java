@@ -40,7 +40,7 @@ import smile.neighbor.Neighbor;
      */
     public KNNImputer(DataFrame data, int k, Distance<Tuple> distance) {
         this.k = k;
-        this.knn = LinearSearch.of(data.stream().toList(), distance);
+        this.knn = LinearSearch.of(data.stream().map(row -> (Tuple) row).toList(), distance);
     }
 
     /**

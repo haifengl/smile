@@ -99,8 +99,8 @@ public class BagOfWordsTest {
             DataFrame df = bag.apply(data);
             System.out.println(df);
 
-            assertEquals(data.nrow(), df.nrow());
-            assertEquals(10, df.ncol());
+            assertEquals(data.size(), df.size());
+            assertEquals(10, df.width());
             assertEquals(10, bag.features().length);
             assertEquals("--", bag.features()[0]);
             assertEquals("Union", bag.features()[9]);

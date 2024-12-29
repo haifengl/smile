@@ -310,7 +310,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * Train L2 tree boost.
      */
     private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
-        int n = x.nrow();
+        int n = x.size();
+        int p = x.columns().length;
         int k = codec.k;
         int[] y = codec.y;
 
@@ -331,7 +332,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             sampling(samples, permutation, nc, y, subsample);
 
             logger.info("Training {} binary trees", Strings.ordinal(t+1));
-            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
+            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, p, samples, order);
             trees[t] = tree;
 
             for (int i = 0; i < n; i++) {
@@ -339,7 +340,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
         }
 
-        double[] importance = new double[x.ncol()];
+        double[] importance = new double[p];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
@@ -356,7 +357,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order,
                                             int ntrees, int maxDepth, int maxNodes, int nodeSize,
                                             double shrinkage, double subsample) {
-        int n = x.nrow();
+        int n = x.size();
+        int p = x.columns().length;
         int k = codec.k;
         int[] y = codec.y;
 
@@ -366,11 +368,11 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         StructField field = new StructField("residual", DataTypes.DoubleType);
         RegressionTree[][] forest = new RegressionTree[k][ntrees];
 
-        double[][] p = new double[n][k]; // posteriori probabilities.
+        double[][] prob = new double[n][k]; // posteriori probabilities.
         double[][] h = new double[k][]; // boost tree output.
         Loss[] loss = new Loss[k];
         for (int i = 0; i < k; i++) {
-            loss[i] = Loss.logistic(i, k, y, p);
+            loss[i] = Loss.logistic(i, k, y, prob);
             h[i] = loss[i].residual();
         }
 
@@ -381,15 +383,15 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             logger.info("Training {} multiclass trees", Strings.ordinal(t+1));
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < k; j++) {
-                    p[i][j] = h[j][i];
+                    prob[i][j] = h[j][i];
                 }
-                MathEx.softmax(p[i]);
+                MathEx.softmax(prob[i]);
             }
 
             for (int j = 0; j < k; j++) {
                 sampling(samples, permutation, nc, y, subsample);
 
-                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
+                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, p, samples, order);
                 forest[j][t] = tree;
 
                 double[] hj = h[j];
@@ -399,7 +401,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
         }
 
-        double[] importance = new double[x.ncol()];
+        double[] importance = new double[p];
         for (RegressionTree[] grove : forest) {
             for (RegressionTree tree : grove) {
                 double[] imp = tree.importance();
@@ -575,7 +577,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     public int[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrow();
+        int n = x.size();
         int ntrees = trees != null ? trees.length : forest[0].length;
         int[][] prediction = new int[ntrees][n];
 

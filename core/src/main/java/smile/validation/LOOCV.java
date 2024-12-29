@@ -26,6 +26,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
 import smile.regression.DataFrameRegression;
+import smile.util.Index;
 import smile.validation.metric.*;
 import smile.validation.metric.Error;
 
@@ -177,7 +178,7 @@ public interface LOOCV {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
+            DataFrameClassifier model = trainer.apply(formula, data.get(Index.of(train[i])));
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
@@ -298,7 +299,7 @@ public interface LOOCV {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            DataFrameRegression model = trainer.apply(formula, data.of(train[i]));
+            DataFrameRegression model = trainer.apply(formula, data.get(Index.of(train[i])));
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();

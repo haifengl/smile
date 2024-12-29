@@ -102,7 +102,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
@@ -142,7 +142,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
         }
     }
 

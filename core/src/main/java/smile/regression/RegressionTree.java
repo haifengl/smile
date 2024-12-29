@@ -260,7 +260,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncol()]);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.width()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -323,7 +323,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
-        int mtry = x.ncol();
+        int mtry = x.columns().length;
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, mtry, null, null);
         tree.formula = formula;
         return tree;

@@ -71,7 +71,7 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
             throw new UnsupportedOperationException("Invalid number of classes: " + codec.k);
         }
 
-        int n = data.nrow();
+        int n = data.size();
         int k = codec.k;
         int[] nc = new int[k];
         double[] condmu = new double[k];
