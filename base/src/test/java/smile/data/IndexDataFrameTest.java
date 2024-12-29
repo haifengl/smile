@@ -25,6 +25,8 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.matrix.Matrix;
 import org.junit.jupiter.api.*;
+import smile.util.Index;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -68,8 +70,8 @@ public class IndexDataFrameTest {
         persons.add(new Person("Jane", Gender.Female, LocalDate.of(1970, 3, 1), 48, 230000.));
         persons.add(new Person("Amy", Gender.Female, LocalDate.of(2005, 12, 10), 13, null));
 
-        df = DataFrame.of(persons, Person.class);
-        df = df.of(2,1,3,2);
+        df = DataFrame.of(Person.class, persons);
+        df = df.get(Index.of(2,1,3,2));
     }
 
     @BeforeAll
@@ -88,22 +90,16 @@ public class IndexDataFrameTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of nrow method, of class DataFrame.
-     */
     @Test
-    public void testNrows() {
-        System.out.println("nrow");
-        assertEquals(4, df.nrow());
+    public void testSize() {
+        System.out.println("size");
+        assertEquals(4, df.size());
     }
 
-    /**
-     * Test of ncol method, of class DataFrame.
-     */
     @Test
-    public void testNcols() {
-        System.out.println("ncol");
-        assertEquals(5, df.ncol());
+    public void testWidth() {
+        System.out.println("width");
+        assertEquals(5, df.width());
     }
 
     /**
@@ -154,16 +150,16 @@ public class IndexDataFrameTest {
         System.out.println(df);
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals(48, df.getInt(0, 0));
+        assertEquals(48, df.get(0, 0));
         assertEquals("Jane", df.getString(0, 3));
         assertEquals(230000., df.get(0, 4));
-        assertEquals(23, df.getInt(1, 0));
+        assertEquals(23, df.get(1, 0));
         assertEquals("Bob", df.getString(1, 3));
         assertNull(df.get(1, 4));
-        assertEquals(13, df.getInt(2, 0));
+        assertEquals(13, df.get(2, 0));
         assertEquals("Amy", df.getString(2, 3));
         assertNull(df.get(2, 4));
-        assertEquals(48, df.getInt(3, 0));
+        assertEquals(48, df.get(3, 0));
         assertEquals("Jane", df.getString(3, 3));
         assertEquals(230000., df.get(3, 4));
     }

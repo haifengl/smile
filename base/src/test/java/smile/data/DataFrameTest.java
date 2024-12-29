@@ -69,7 +69,8 @@ public class DataFrameTest {
         persons.add(new Person("Jane", Gender.Female, LocalDate.of(1970, 3, 1), 48, 230000.));
         persons.add(new Person("Amy", Gender.Female, LocalDate.of(2005, 12, 10), 13, null));
 
-        df = DataFrame.of(persons, Person.class);
+        df = DataFrame.of(Person.class, persons);
+        System.out.println(df);
     }
 
     @BeforeAll
@@ -88,22 +89,16 @@ public class DataFrameTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of nrow method, of class DataFrame.
-     */
     @Test
-    public void testNrows() {
-        System.out.println("nrow");
-        assertEquals(4, df.nrow());
+    public void testSize() {
+        System.out.println("size");
+        assertEquals(4, df.size());
     }
 
-    /**
-     * Test of ncol method, of class DataFrame.
-     */
     @Test
-    public void testNcols() {
-        System.out.println("ncol");
-        assertEquals(5, df.ncol());
+    public void testColumnLength() {
+        System.out.println("column length");
+        assertEquals(5, df.columns().length);
     }
 
     /**
@@ -152,20 +147,20 @@ public class DataFrameTest {
     public void testUnion() {
         System.out.println("union");
         DataFrame two = df.union(df);
-        assertEquals(2*df.nrow(), two.nrow());
-        assertEquals(df.ncol(), two.ncol());
+        assertEquals(2*df.size(), two.size());
+        assertEquals(df.columns().length, two.columns().length);
 
-        assertEquals(38, two.getInt(0,0));
-        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(38, two.get(0,0));
+        assertEquals("Alex", two.get(0, 3));
         assertEquals(10000., two.get(0).get(4));
         assertEquals(13, two.get(3).getInt(0));
         assertEquals("Amy", two.get(3).getString(3));
         assertNull(two.get(3).get(4));
 
-        assertEquals(38, two.getInt(4, 0));
+        assertEquals(38, two.get(4, 0));
         assertEquals("Alex", two.getString(4, 3));
         assertEquals(10000., two.get(4, 4));
-        assertEquals(13, two.getInt(7, 0));
+        assertEquals(13, two.get(7, 0));
         assertEquals("Amy", two.getString(7, 3));
         assertNull(two.get(7, 4));
     }
@@ -178,14 +173,14 @@ public class DataFrameTest {
         System.out.println("union");
         StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
         DataFrame two = df.merge(edu);
-        assertEquals(df.nrow(), two.nrow());
-        assertEquals(df.ncol()+1, two.ncol());
+        assertEquals(df.size(), two.size());
+        assertEquals(df.columns().length+1, two.columns().length);
 
-        assertEquals(38, two.getInt(0, 0));
+        assertEquals(38, two.get(0, 0));
         assertEquals("Alex", two.getString(0, 3));
         assertEquals(10000., two.get(0, 4));
         assertEquals("MS", two.get(0, 5));
-        assertEquals(13, two.getInt(3, 0));
+        assertEquals(13, two.get(3, 0));
         assertEquals("Amy", two.getString(3, 3));
         assertNull(two.get(3, 4));
         assertEquals("Middle School", two.get(3, 5));
@@ -223,8 +218,8 @@ public class DataFrameTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrow());
-        assertEquals(5, output.ncol());
+        assertEquals(2, output.size());
+        assertEquals(5, output.columns().length);
         assertEquals("age", output.get(0,0));
         assertEquals(4L, output.get(0,1));
         assertEquals(13., output.get(0,2));

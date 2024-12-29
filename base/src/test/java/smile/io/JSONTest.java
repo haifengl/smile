@@ -59,8 +59,8 @@ public class JSONTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(7, df.nrow());
-        assertEquals(10, df.ncol());
+        assertEquals(7, df.size());
+        assertEquals(10, df.width());
 
         StructType schema = DataTypes.struct(
                 new StructField("series_t", DataTypes.StringType),
@@ -96,8 +96,8 @@ public class JSONTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(7, df.nrow());
-        assertEquals(10, df.ncol());
+        assertEquals(7, df.size());
+        assertEquals(10, df.width());
 
         StructType schema = DataTypes.struct(
                 new StructField("series_t", DataTypes.StringType),

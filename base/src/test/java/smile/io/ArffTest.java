@@ -67,17 +67,17 @@ public class ArffTest {
                 new StructField("play", DataTypes.ByteType, new NominalScale("yes", "no")));
         assertEquals(schema, weather.schema());
 
-        assertEquals(14, weather.nrow());
-        assertEquals(5, weather.ncol());
-        assertEquals("no",    weather.getScale(0, "play"));
-        assertEquals("no",    weather.getScale(1, "play"));
-        assertEquals("yes",   weather.getScale(2, "play"));
+        assertEquals(14, weather.shape(0));
+        assertEquals(5, weather.shape(1));
+        assertEquals("no",    weather.column("play").getScale(0));
+        assertEquals("no",    weather.column("play").getScale(1));
+        assertEquals("yes",   weather.column("play").getScale(2));
         assertEquals("sunny", weather.getScale(0, 0));
         assertEquals("hot",   weather.getScale(0, 1));
         assertEquals("high",  weather.getScale(0, 2));
         assertEquals("FALSE", weather.getScale(0, 3));
 
-        assertEquals("no",    weather.getScale(13, "play"));
+        assertEquals("no",    weather.column("play").getScale(13));
         assertEquals("rainy", weather.getScale(13, 0));
         assertEquals("mild",  weather.getScale(13, 1));
         assertEquals("high",  weather.getScale(13, 2));
@@ -98,17 +98,17 @@ public class ArffTest {
                 new StructField("class", DataTypes.ByteType, new NominalScale("Iris-setosa", "Iris-versicolor", "Iris-virginica")));
         assertEquals(schema, iris.schema());
 
-        assertEquals(150, iris.nrow());
-        assertEquals(5,   iris.ncol());
-        assertEquals("Iris-setosa", iris.getScale(0, "class"));
-        assertEquals("Iris-setosa", iris.getScale(1, "class"));
-        assertEquals("Iris-setosa", iris.getScale(2, "class"));
+        assertEquals(150, iris.shape(0));
+        assertEquals(5,   iris.shape(1));
+        assertEquals("Iris-setosa", iris.column("class").getScale(0));
+        assertEquals("Iris-setosa", iris.column("class").getScale(1));
+        assertEquals("Iris-setosa", iris.column("class").getScale(2));
         assertEquals(5.1, iris.getFloat(0, 0), 1E-7);
         assertEquals(3.5, iris.getFloat(0, 1), 1E-7);
         assertEquals(1.4, iris.getFloat(0, 2), 1E-7);
         assertEquals(0.2, iris.getFloat(0, 3), 1E-7);
 
-        assertEquals("Iris-virginica", iris.getScale(149, "class"));
+        assertEquals("Iris-virginica", iris.column("class").getScale(149));
         assertEquals(5.9, iris.getFloat(149, 0), 1E-7);
         assertEquals(3.0, iris.getFloat(149, 1), 1E-7);
         assertEquals(5.1, iris.getFloat(149, 2), 1E-7);
@@ -128,8 +128,8 @@ public class ArffTest {
 
         System.out.println(string);
         System.out.println(string.schema());
-        assertEquals(5, string.nrow());
-        assertEquals(2, string.ncol());
+        assertEquals(5, string.shape(0));
+        assertEquals(2, string.shape(1));
         assertEquals("AG5", string.get(0).get(0));
         assertEquals("Encyclopedias and dictionaries.;Twentieth century.", string.get(0, 1));
         assertEquals("AS281", string.get(4, 0));
@@ -146,8 +146,8 @@ public class ArffTest {
         StructType schema = DataTypes.struct(new StructField("timestamp", DataTypes.DateTimeType));
         assertEquals(schema, date.schema());
 
-        assertEquals(2, date.nrow());
-        assertEquals(1, date.ncol());
+        assertEquals(2, date.shape(0));
+        assertEquals(1, date.shape(1));
         assertEquals(LocalDateTime.parse("2001-04-03T12:12:12"), date.get(0, 0));
         assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1, 0));
     }
@@ -166,8 +166,8 @@ public class ArffTest {
                 new StructField("class", DataTypes.ByteType, new NominalScale("class A", "class B")));
         assertEquals(schema, sparse.schema());
 
-        assertEquals(2, sparse.nrow());
-        assertEquals(5, sparse.ncol());
+        assertEquals(2, sparse.shape(0));
+        assertEquals(5, sparse.shape(1));
             
         assertEquals(0.0, sparse.getDouble(0, 0), 1E-7);
         assertEquals(2.0, sparse.getDouble(0, 1), 1E-7);

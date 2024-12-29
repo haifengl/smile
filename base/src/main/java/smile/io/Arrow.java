@@ -249,7 +249,7 @@ public class Arrow {
                     }
                 }
 
-                DataFrame frame = DataFrame.of(vectors);
+                DataFrame frame = new DataFrame(vectors);
                 frames.add(frame);
                 size += frames.size();
             }
@@ -749,7 +749,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         IntVector vector = (IntVector) fieldVector;
-        smile.data.vector.IntVector column = df.intVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getInt(j));
         }
@@ -763,9 +763,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         IntVector vector = (IntVector) fieldVector;
-        smile.data.vector.ObjectVector<Integer> column = df.vector(fieldVector.getField().getName());
+        smile.data.vector.ValueVector column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Integer x = column.get(i);
+            Integer x = (Integer) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -783,7 +783,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BitVector vector = (BitVector) fieldVector;
-        smile.data.vector.BooleanVector column = df.booleanVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getInt(j));
         }
@@ -797,9 +797,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BitVector vector = (BitVector) fieldVector;
-        smile.data.vector.ObjectVector<Boolean> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Boolean x = column.get(i);
+            Boolean x = (Boolean) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -817,7 +817,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         UInt2Vector vector = (UInt2Vector) fieldVector;
-        smile.data.vector.CharVector column = df.charVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getChar(j));
         }
@@ -831,9 +831,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         UInt2Vector vector = (UInt2Vector) fieldVector;
-        smile.data.vector.ObjectVector<Character> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Character x = column.get(i);
+            Character x = (Character) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -851,7 +851,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TinyIntVector vector = (TinyIntVector) fieldVector;
-        smile.data.vector.ByteVector column = df.byteVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getByte(j));
         }
@@ -865,9 +865,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TinyIntVector vector = (TinyIntVector) fieldVector;
-        smile.data.vector.ObjectVector<Byte> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Byte x = column.get(i);
+            Byte x = (Byte) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -885,7 +885,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         SmallIntVector vector = (SmallIntVector) fieldVector;
-        smile.data.vector.ShortVector column = df.shortVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getShort(j));
         }
@@ -899,9 +899,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         SmallIntVector vector = (SmallIntVector) fieldVector;
-        smile.data.vector.ObjectVector<Short> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Short x = column.get(i);
+            Short x = (Short) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -919,7 +919,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BigIntVector vector = (BigIntVector) fieldVector;
-        smile.data.vector.LongVector column = df.longVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getLong(j));
         }
@@ -933,9 +933,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         BigIntVector vector = (BigIntVector) fieldVector;
-        smile.data.vector.ObjectVector<Long> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Long x = column.get(i);
+            Long x = (Long) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -953,7 +953,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float4Vector vector  = (Float4Vector) fieldVector;
-        smile.data.vector.FloatVector column = df.floatVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getFloat(j));
         }
@@ -967,9 +967,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float4Vector vector  = (Float4Vector) fieldVector;
-        smile.data.vector.ObjectVector<Float> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Float x = column.get(i);
+            Float x = (Float) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -987,7 +987,7 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float8Vector vector  = (Float8Vector) fieldVector;
-        smile.data.vector.DoubleVector column = df.doubleVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getDouble(j));
         }
@@ -1001,9 +1001,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         Float8Vector vector  = (Float8Vector) fieldVector;
-        smile.data.vector.ObjectVector<Double> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            Double x = column.get(i);
+            Double x = (Double) column.get(i);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1021,9 +1021,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         VarCharVector vector = (VarCharVector) fieldVector;
-        smile.data.vector.StringVector column = df.stringVector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            String x = column.get(j);
+            String x = (String) column.get(j);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1041,9 +1041,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         DecimalVector vector = (DecimalVector) fieldVector;
-        smile.data.vector.ObjectVector<BigDecimal> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            BigDecimal x = column.get(j);
+            BigDecimal x = (BigDecimal) column.get(j);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1061,9 +1061,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         DateDayVector vector = (DateDayVector) fieldVector;
-        smile.data.vector.ObjectVector<LocalDate> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            LocalDate x = column.get(j);
+            LocalDate x = (LocalDate) column.get(j);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1081,9 +1081,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TimeNanoVector vector = (TimeNanoVector) fieldVector;
-        smile.data.vector.ObjectVector<LocalTime> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            LocalTime x = column.get(j);
+            LocalTime x = (LocalTime) column.get(j);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1101,9 +1101,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         TimeStampMilliTZVector vector = (TimeStampMilliTZVector) fieldVector;
-        smile.data.vector.ObjectVector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            LocalDateTime x = column.get(j);
+            LocalDateTime x = (LocalDateTime) column.get(j);
             if (x == null) {
                 vector.setNull(i);
             } else {
@@ -1121,9 +1121,9 @@ public class Arrow {
         fieldVector.allocateNew();
 
         VarBinaryVector vector = (VarBinaryVector) fieldVector;
-        smile.data.vector.ObjectVector<byte[]> column = df.vector(fieldVector.getField().getName());
+        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
-            byte[] bytes = column.get(j);
+            byte[] bytes = (byte[]) column.get(j);
             if (bytes == null) {
                 vector.setNull(i);
             } else {

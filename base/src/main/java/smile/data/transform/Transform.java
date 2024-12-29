@@ -19,6 +19,8 @@ package smile.data.transform;
 
 import java.io.Serializable;
 import java.util.function.Function;
+
+import smile.data.Collectors;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 
@@ -67,7 +69,7 @@ public interface Transform extends Function<Tuple, Tuple>, Serializable {
      * @return the transformed data frame.
      */
     default DataFrame apply(DataFrame data) {
-        return data.stream().map(this).collect(DataFrame.Collectors.collect());
+        return data.stream().map(this).collect(Collectors.collect());
     }
 
     /**

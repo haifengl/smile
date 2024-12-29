@@ -53,8 +53,8 @@ public class ReadTest {
         System.out.println("arff");
         DataFrame weather = Read.data(Paths.getTestData("weka/weather.nominal.arff").toString());
         System.out.println(weather);
-        assertEquals(14, weather.nrow());
-        assertEquals(5, weather.ncol());
+        assertEquals(14, weather.height());
+        assertEquals(5, weather.width());
     }
 
     @Test
@@ -65,8 +65,8 @@ public class ReadTest {
                 Paths.getTestData("kylo/userdata.avsc").toString()
         );
         System.out.println(df);
-        assertEquals(1000, df.nrow());
-        assertEquals(13, df.ncol());
+        assertEquals(1000, df.height());
+        assertEquals(13, df.width());
     }
 
     @Test
@@ -74,8 +74,8 @@ public class ReadTest {
         System.out.println("json");
         DataFrame df = Read.data(Paths.getTestData("kylo/books.json").toString());
         System.out.println(df);
-        assertEquals(7, df.nrow());
-        assertEquals(10, df.ncol());
+        assertEquals(7, df.height());
+        assertEquals(10, df.width());
     }
 
     @Test
@@ -83,8 +83,8 @@ public class ReadTest {
         System.out.println("sas");
         DataFrame df = Read.data(Paths.getTestData("sas/airline.sas7bdat").toString());
         System.out.println(df);
-        assertEquals(32, df.nrow());
-        assertEquals(6, df.ncol());
+        assertEquals(32, df.height());
+        assertEquals(6, df.width());
     }
 
     @Test
@@ -92,8 +92,8 @@ public class ReadTest {
         System.out.println("parquet");
         DataFrame df = Read.data(Paths.getTestData("kylo/userdata1.parquet").toString());
         System.out.println(df);
-        assertEquals(1000, df.nrow());
-        assertEquals(13, df.ncol());
+        assertEquals(1000, df.height());
+        assertEquals(13, df.width());
     }
 
     @Test
@@ -101,8 +101,8 @@ public class ReadTest {
         System.out.println("csv zip");
         DataFrame usps = Read.data(Paths.getTestData("usps/zip.train").toString(), "csv,delimiter= ");
         System.out.println(usps);
-        assertEquals(7291, usps.nrow());
-        assertEquals(257, usps.ncol());
+        assertEquals(7291, usps.height());
+        assertEquals(257, usps.width());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class ReadTest {
         System.out.println("csv gdp");
         DataFrame gdp = Read.data(Paths.getTestData("regression/gdp.csv").toString(), "header=true,comment=%");
         System.out.println(gdp);
-        assertEquals(68, gdp.nrow());
-        assertEquals(4, gdp.ncol());
+        assertEquals(68, gdp.height());
+        assertEquals(4, gdp.width());
     }
 }

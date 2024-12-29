@@ -83,6 +83,6 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
                 vectors[i] = data.column(i);
             }
         });
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 }

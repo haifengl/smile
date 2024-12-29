@@ -181,8 +181,7 @@ public class JSON {
             String line = reader.readLine();
             while (rows.size() < limit && line != null) {
                 try {
-                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {
-                    });
+                    Map<String, String> map = objectMapper.readValue(line, new TypeReference<>() {});
                     rows.add(toTuple(map, parser));
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
@@ -192,7 +191,7 @@ public class JSON {
         }
 
         schema = schema.boxed(rows);
-        return DataFrame.of(rows, schema);
+        return DataFrame.of(schema, rows);
     }
 
     /** Converts a map to tuple. */

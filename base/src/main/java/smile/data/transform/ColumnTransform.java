@@ -91,7 +91,7 @@ public class ColumnTransform implements Transform {
                 vectors[i] = data.column(i);
             }
         });
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 
     @Override

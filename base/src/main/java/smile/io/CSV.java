@@ -169,7 +169,7 @@ public class CSV {
             }
 
             schema = schema.boxed(rows);
-            return DataFrame.of(rows, schema);
+            return DataFrame.of(schema, rows);
         }
     }
 

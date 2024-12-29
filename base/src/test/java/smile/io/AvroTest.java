@@ -58,23 +58,16 @@ public class AvroTest {
     public void tearDown() {
     }
 
-
-    /**
-     * Test of nrow method, of class DataFrame.
-     */
     @Test
-    public void testNrows() {
-        System.out.println("nrow");
-        assertEquals(1000, df.nrow());
+    public void testSize() {
+        System.out.println("size");
+        assertEquals(1000, df.size());
     }
 
-    /**
-     * Test of ncol method, of class DataFrame.
-     */
     @Test
-    public void testNcols() {
-        System.out.println("ncol");
-        assertEquals(13, df.ncol());
+    public void testShape() {
+        System.out.println("shape");
+        assertEquals(13, df.shape(1));
     }
 
     /**
@@ -136,8 +129,8 @@ public class AvroTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(3, output.nrow());
-        assertEquals(5, output.ncol());
+        assertEquals(3, output.size());
+        assertEquals(5, output.width());
         assertEquals("id", output.get(0,0));
         assertEquals(1000L, output.get(0,1));
         assertEquals(1.0, output.get(0,2));

@@ -58,7 +58,7 @@ public class BitcoinPrice {
                     .build();
             data = Read.csv(Paths.getTestData("timeseries/bitcoin_price.csv"), format);
 
-            price = data.doubleVector("Close").toDoubleArray();
+            price = data.column("Close").toDoubleArray();
             logPrice = new double[price.length];
             for (int i = 0; i < price.length; i++) {
                 logPrice[i] = Math.log(price[i]);

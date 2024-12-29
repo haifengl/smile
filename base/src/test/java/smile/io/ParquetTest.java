@@ -58,23 +58,16 @@ public class ParquetTest {
     public void tearDown() {
     }
 
-
-    /**
-     * Test of nrow method, of class DataFrame.
-     */
     @Test
-    public void testNrows() {
-        System.out.println("nrow");
-        assertEquals(1000, df.nrow());
+    public void testSize() {
+        System.out.println("size");
+        assertEquals(1000, df.size());
     }
 
-    /**
-     * Test of ncol method, of class DataFrame.
-     */
     @Test
-    public void testNcols() {
-        System.out.println("ncol");
-        assertEquals(13, df.ncol());
+    public void testWidth() {
+        System.out.println("width");
+        assertEquals(13, df.width());
     }
 
     /**
@@ -112,7 +105,7 @@ public class ParquetTest {
         System.out.println("get");
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.getDateTime(0, 0));
+        assertEquals(LocalDateTime.parse("2016-02-03T07:55:29"), df.get(0, 0));
         assertEquals(1, df.getInt(0, 1));
         assertEquals("Amanda", df.getString(0, 2));
         assertEquals("Jordan", df.getString(0, 3));
@@ -136,8 +129,8 @@ public class ParquetTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrow());
-        assertEquals(5, output.ncol());
+        assertEquals(2, output.height());
+        assertEquals(5, output.width());
         assertEquals("id", output.get(0,0));
         assertEquals(1000L, output.get(0,1));
         assertEquals(1.0, output.get(0,2));

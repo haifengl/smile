@@ -58,32 +58,32 @@ public class SQLTest {
 
         DataFrame tables = sql.tables();
         System.out.println(tables);
-        assertEquals(4, tables.nrow());
+        assertEquals(4, tables.size());
 
         DataFrame columns = sql.describe("user");
         System.out.println(columns.toString(100));
-        assertEquals(13, columns.nrow());
+        assertEquals(13, columns.size());
 
         columns = sql.describe("books");
         System.out.println(columns.toString(100));
-        assertEquals(10, columns.nrow());
+        assertEquals(10, columns.size());
 
         columns = sql.describe("gdp");
         System.out.println(columns.toString(100));
-        assertEquals(4, columns.nrow());
+        assertEquals(4, columns.size());
 
         columns = sql.describe("diabetes");
         System.out.println(columns.toString(100));
-        assertEquals(65, columns.nrow());
+        assertEquals(65, columns.size());
 
         DataFrame user = sql.query("SELECT * FROM user");
-        assertEquals(1000, user.nrow());
-        assertEquals(13, user.ncol());
+        assertEquals(1000, user.size());
+        assertEquals(13, user.columns().length);
 
         DataFrame join = sql.query("SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country");
         System.out.println(join.toString(100));
-        assertEquals(user.nrow(), join.nrow());
-        assertEquals(17, join.ncol());
+        assertEquals(user.size(), join.size());
+        assertEquals(17, join.columns().length);
         sql.close();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data;
 
 import java.io.Serializable;
@@ -24,10 +23,8 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.stream.IntStream;
-
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -108,8 +105,8 @@ public interface Tuple extends Serializable {
             array[j++] = 1.0;
         }
 
-        for (String column : fields) {
-            int i = schema.indexOf(column);
+        for (String name : fields) {
+            int i = schema.indexOf(name);
             StructField field = schema.field(i);
 
             Measure measure = field.measure();
@@ -394,7 +391,7 @@ public interface Tuple extends Serializable {
      */
     default String getString(int i) {
         Object obj = get(i);
-        return obj == null ? null : schema().field(i).toString(obj);
+        return obj == null ? null : schema().apply(i).toString(obj);
     }
 
     /**
@@ -420,7 +417,7 @@ public interface Tuple extends Serializable {
         if (o instanceof String) {
             return (String) o;
         } else {
-            return schema().field(i).toString(o);
+            return schema().apply(i).toString(o);
         }
     }
 
@@ -528,7 +525,7 @@ public interface Tuple extends Serializable {
      */
     default String getScale(int i) {
         int x = getInt(i);
-        Measure measure = schema().field(i).measure();
+        Measure measure = schema().apply(i).measure();
         return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
     }
 

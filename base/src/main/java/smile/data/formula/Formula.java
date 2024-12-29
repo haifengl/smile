@@ -486,7 +486,7 @@ public class Formula implements Serializable {
         Binding binding = this.binding.get();
         ValueVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
                 .map(term -> term.apply(data)).toArray(ValueVector[]::new);
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 
     /**
@@ -500,7 +500,7 @@ public class Formula implements Serializable {
         Binding binding = this.binding.get();
         ValueVector[] vectors = Arrays.stream(binding.x)
                 .map(term -> term.apply(data)).toArray(ValueVector[]::new);
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 
     /**
