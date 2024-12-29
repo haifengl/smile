@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.vector.ValueVector;
-import smile.hash.PerfectHash;
 
 /**
  * Struct data type is determined by the fixed order of the fields
@@ -35,7 +34,7 @@ import smile.hash.PerfectHash;
  *
  * @author Haifeng Li
  */
-public record StructType(StructField[] fields, PerfectHash index) implements DataType {
+public record StructType(StructField[] fields, Map<String, Integer> index) implements DataType {
     /**
      * Constructor.
      * @param fields the struct fields.
@@ -49,7 +48,7 @@ public record StructType(StructField[] fields, PerfectHash index) implements Dat
      * @param fields the struct fields.
      */
     public StructType(StructField... fields) {
-        this(fields, hash(fields));
+        this(fields, index(fields));
     }
 
     /**
@@ -57,9 +56,12 @@ public record StructType(StructField[] fields, PerfectHash index) implements Dat
      * @param fields the struct fields.
      * @return a perfect hash of field names.
      */
-    private static PerfectHash hash(StructField[] fields) {
-        String[] names = Arrays.stream(fields).map(StructField::name).toArray(String[]::new);
-        return new PerfectHash(names);
+    private static Map<String, Integer> index(StructField[] fields) {
+        Map<String, Integer> map = new HashMap<>();
+        for (int i = 0; i < fields.length; i++) {
+            map.put(fields[i].name(), i);
+        }
+        return map;
     }
 
     /**
