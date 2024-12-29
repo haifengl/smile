@@ -76,8 +76,20 @@ public class BooleanVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        if ((Boolean) value) {
-            vector.set(at(i));
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length());
+            }
+            nullMask.set(index);
+        } else if (value instanceof Boolean bool) {
+            if (bool) {
+                vector.set(index);
+            } else {
+                vector.clear(index);
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
     }
 
