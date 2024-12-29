@@ -261,7 +261,7 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
 
         int k = MathEx.unique(testy).length;
         long start = System.nanoTime();
-        int n = test.nrow();
+        int n = test.size();
         int[] prediction = new int[n];
         if (model.soft()) {
             double[][] posteriori = new double[n][k];

@@ -27,6 +27,7 @@ import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
+import smile.util.Index;
 
 /**
  * Regression model validation results.
@@ -133,7 +134,7 @@ public class RegressionValidation<M> implements Serializable {
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
-        int n = test.nrow();
+        int n = test.size();
         double[] prediction = new double[n];
         for (int i = 0; i < n; i++) {
             prediction[i] = model.predict(test.get(i));
@@ -157,7 +158,7 @@ public class RegressionValidation<M> implements Serializable {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            rounds.add(of(formula, data.of(bag.samples()), data.of(bag.oob()), trainer));
+            rounds.add(of(formula, data.get(Index.of(bag.samples())), data.get(Index.of(bag.oob())), trainer));
         }
 
         return new RegressionValidations<>(rounds);

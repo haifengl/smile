@@ -219,13 +219,13 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
-        if (mtry > x.ncol()) {
+        if (mtry > x.width()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncol()/3, 1);
+        int mtryFinal = mtry > 0 ? mtry : Math.max(x.width()/3, 1);
 
-        final int n = x.nrow();
+        final int n = x.size();
         double[] prediction = new double[n];
         int[] oob = new int[n];
         final int[][] order = CART.order(x);
@@ -472,7 +472,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrow();
+        int n = x.size();
         int ntrees = models.length;
         double[][] prediction = new double[ntrees][n];
 

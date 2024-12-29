@@ -90,7 +90,7 @@ public class DecisionTreeTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, DecisionTree::fit);
@@ -132,7 +132,7 @@ public class DecisionTreeTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         int[] prediction = model.predict(Segment.test);
@@ -151,7 +151,7 @@ public class DecisionTreeTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
@@ -171,7 +171,7 @@ public class DecisionTreeTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
@@ -186,7 +186,7 @@ public class DecisionTreeTest {
 
         importance = lean.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", lean.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", lean.schema().names()[i], importance[i]);
         }
 
         // The old model should not be modified.

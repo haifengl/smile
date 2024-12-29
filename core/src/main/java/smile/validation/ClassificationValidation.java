@@ -27,6 +27,7 @@ import smile.classification.DataFrameClassifier;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.data.DataFrame;
+import smile.util.Index;
 import smile.validation.metric.ConfusionMatrix;
 
 /**
@@ -167,7 +168,7 @@ public class ClassificationValidation<M> implements Serializable {
         M model = trainer.apply(formula, train);
         double fitTime = (System.nanoTime() - start) / 1E6;
 
-        int n = test.nrow();
+        int n = test.size();
         int[] prediction = new int[n];
         if (model.soft()) {
             int k = model.numClasses();
@@ -203,7 +204,7 @@ public class ClassificationValidation<M> implements Serializable {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
         for (Bag bag : bags) {
-            rounds.add(of(formula, data.of(bag.samples()), data.of(bag.oob()), trainer));
+            rounds.add(of(formula, data.get(Index.of(bag.samples())), data.get(Index.of(bag.oob())), trainer));
         }
 
         return new ClassificationValidations<>(rounds);

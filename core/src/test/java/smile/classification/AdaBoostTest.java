@@ -90,7 +90,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data,
@@ -132,7 +132,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         int error = Error.of(Segment.testy, model.predict(Segment.test));
@@ -155,7 +155,7 @@ public class AdaBoostTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
         int error = Error.of(USPS.testy, model.predict(USPS.test));

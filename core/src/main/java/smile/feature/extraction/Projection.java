@@ -87,7 +87,7 @@ public class Projection implements Transform {
             }
             vectors[j] = new DoubleVector(schema.field(j), x);
         }
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 
     /**

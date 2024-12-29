@@ -137,7 +137,7 @@ public record RegressionMetrics(double fitTime, double scoreTime, int size, doub
         double[] testy = formula.y(test).toDoubleArray();
 
         long start = System.nanoTime();
-        int n = test.nrow();
+        int n = test.size();
         double[] prediction = new double[n];
         for (int i = 0; i < n; i++) {
             prediction[i] = model.predict(test.get(i));

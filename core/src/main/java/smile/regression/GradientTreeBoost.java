@@ -218,7 +218,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
         DataFrame x = formula.x(data);
         double[] y = formula.y(data).toDoubleArray();
 
-        final int n = x.nrow();
+        final int n = x.size();
         final int N = (int) Math.round(n * subsample);
         final int[][] order = CART.order(x);
 
@@ -239,14 +239,14 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
+            trees[t] = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.width(), samples, order);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[t].predict(x.get(i));
             }
         }
         
-        double[] importance = new double[x.ncol()];
+        double[] importance = new double[x.width()];
         for (RegressionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {
@@ -334,7 +334,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrow();
+        int n = x.size();
         int ntrees = trees.length;
         double[][] prediction = new double[ntrees][n];
 

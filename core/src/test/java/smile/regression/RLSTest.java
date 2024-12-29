@@ -23,6 +23,7 @@ import smile.data.formula.Formula;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
+import smile.util.Index;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
@@ -61,8 +62,8 @@ public class RLSTest {
         System.out.println("longley");
 
         int n = Longley.data.size();
-        DataFrame batch = Longley.data.of(IntStream.range(0, n/2).toArray());
-        DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
+        DataFrame batch = Longley.data.get(Index.of(IntStream.range(0, n/2).toArray()));
+        DataFrame online = Longley.data.get(Index.of(IntStream.range(n/2, n).toArray()));
         LinearModel model = OLS.fit(Longley.formula, batch);
         double[] prediction = model.predict(online);
         double rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
@@ -109,8 +110,8 @@ public class RLSTest {
 
         RegressionValidations<LinearModel> result = CrossValidation.regression(10, formula, data, (f, x) -> {
             int n = x.size();
-            DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
-            DataFrame online = x.of(IntStream.range(n/2, n).toArray());
+            DataFrame batch = x.get(Index.of(IntStream.range(0, n/2).toArray()));
+            DataFrame online = x.get(Index.of(IntStream.range(n/2, n).toArray()));
             LinearModel model = OLS.fit(f, batch);
             model.update(online);
             return model;

@@ -92,7 +92,7 @@ public class SimpleImputer implements Transform {
 
     @Override
     public DataFrame apply(DataFrame data) {
-        int n = data.nrow();
+        int n = data.size();
         StructType schema = data.schema();
         ValueVector[] vectors = new ValueVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(j -> {
@@ -101,18 +101,20 @@ public class SimpleImputer implements Transform {
             if (value != null) {
                 if (field.dtype().id() == DataType.ID.Double) {
                     double x = ((Number) value).doubleValue();
-                    double[] column = data.doubleVector(j).array();
-                    double[] vector = new double[n];
+                    double[] vector = data.column(j).toDoubleArray();
                     for (int i = 0; i < n; i++) {
-                        vector[i] = Double.isNaN(column[i]) ? x : column[i];
+                        if (Double.isNaN(vector[i])) {
+                            vector[i] = x;
+                        }
                     }
                     vectors[j] = new DoubleVector(field, vector);
                 } else if (field.dtype().id() == DataType.ID.Float) {
                     float x = ((Number) value).floatValue();
-                    float[] column = data.floatVector(j).array();
+                    ValueVector column = data.column(j);
                     float[] vector = new float[n];
                     for (int i = 0; i < n; i++) {
-                        vector[i] = Float.isNaN(column[i]) ? x : column[i];
+                        float ci = column.getFloat(i);
+                        vector[i] = Float.isNaN(ci) ? x : ci;
                     }
                     vectors[j] = new FloatVector(field, vector);
                 } else if (field.dtype().isObject()) {
@@ -195,7 +197,7 @@ public class SimpleImputer implements Transform {
                 vectors[j] = data.column(j);
             }
         });
-        return DataFrame.of(vectors);
+        return new DataFrame(vectors);
     }
 
     @Override

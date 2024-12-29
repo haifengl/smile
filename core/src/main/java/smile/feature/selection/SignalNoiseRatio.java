@@ -70,7 +70,7 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
             throw new UnsupportedOperationException("Signal Noise Ratio is applicable only to binary classification");
         }
 
-        int n = data.nrow();
+        int n = data.size();
         int n1 = 0;
         for (int yi : codec.y) {
             if (yi == 0) {
