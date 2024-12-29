@@ -31,7 +31,7 @@ final class StructTypeOps(schema: StructType) {
           for (i <- 0 until schema.length) {
             row(i) = schema.field(i).valueOf(elements(i).compactPrint)
           }
-          Some(Tuple.of(row, schema))
+          Some(Tuple.of(schema, row))
         } catch {
           case _: Throwable => None
         }
@@ -45,7 +45,7 @@ final class StructTypeOps(schema: StructType) {
                 row(i) = schema.field(i).valueOf(value.get.compactPrint)
             }
           }
-          Some(Tuple.of(row, schema))
+          Some(Tuple.of(schema, row))
         } catch {
           case _: Throwable => None
         }
@@ -62,7 +62,7 @@ final class StructTypeOps(schema: StructType) {
       for (i <- 0 until schema.length) {
         row(i) = schema.field(i).valueOf(line(i))
       }
-      Some(Tuple.of(row, schema))
+      Some(Tuple.of(schema, row))
     } catch {
       case _: Throwable => None
     }
@@ -79,7 +79,7 @@ final class StructTypeOps(schema: StructType) {
         if (value.isEmpty) throw new RuntimeException("Missing field: " + field.name)
         row(i) = field.valueOf(value.get)
       }
-      Some(Tuple.of(row, schema))
+      Some(Tuple.of(schema, row))
     } catch {
       case _: Throwable => None
     }

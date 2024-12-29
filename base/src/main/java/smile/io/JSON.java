@@ -204,7 +204,7 @@ public class JSON {
             }
         }
 
-        return Tuple.of(row, schema);
+        return Tuple.of(schema, row);
     }
 
     /**

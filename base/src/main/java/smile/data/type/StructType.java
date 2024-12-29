@@ -252,7 +252,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
             row[i] = fields[i].valueOf(pair[1]);
         }
 
-        return Tuple.of(row, this);
+        return Tuple.of(this, row);
     }
 
     @Override

@@ -76,6 +76,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     /**
      * Returns the size of given dimension.
+     * For pandas user's convenience.
      * @param dim the dimension index.
      * @return the size of given dimension.
      */
@@ -89,7 +90,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     /**
      * Returns the number of rows.
-     * This is an alias to {@link #height() height} for Java's convention.
+     * This is an alias to {@link #nrow() nrow} for Java's convention.
      * @return the number of rows.
      */
     public int size() {
@@ -345,7 +346,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     public DataFrame omitNullRows() {
         boolean[] noNulls = new boolean[size()];
         for (int i = 0; i < noNulls.length; i++) {
-            noNulls[i] = !get(i).hasNull();
+            noNulls[i] = !get(i).anyNull();
         }
         return get(Index.of(noNulls));
     }
@@ -1201,7 +1202,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         StructType schema = DataTypes.struct(rs);
         List<Tuple> rows = new ArrayList<>();
         while (rs.next()) {
-            rows.add(Tuple.of(rs, schema));
+            rows.add(Tuple.of(schema, rs));
         }
 
         return DataFrame.of(schema, rows);

@@ -29,13 +29,13 @@ object SparkDataFrame {
     val schema = DataTypeOps.toSmileSchema(df.schema)
     DataFrame.of(
       df.collect()
-        .map(row => SparkRowTuple(row, schema))
+        .map(row => SparkRowTuple(schema, row))
         .toList
         .asJava)
   }
 }
 
-case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:StructType) extends Tuple {
+case class SparkRowTuple(override val schema:StructType, row: org.apache.spark.sql.Row) extends Tuple {
   override def length: Int = row.size
   override def indexOf(name: String): Int = row.fieldIndex(name)
   override def isNullAt(i: Int): Boolean = row.isNullAt(i)
@@ -54,6 +54,6 @@ case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:Stru
   override def getTime(i: Int): java.time.LocalTime = row.getTimestamp(i).toLocalDateTime.toLocalTime
   override def getStruct(i: Int): SparkRowTuple = {
     val tuple = row.getStruct(i)
-    SparkRowTuple(tuple, DataTypeOps.toSmileSchema(tuple.schema))
+    SparkRowTuple(DataTypeOps.toSmileSchema(tuple.schema), tuple)
   }
 }

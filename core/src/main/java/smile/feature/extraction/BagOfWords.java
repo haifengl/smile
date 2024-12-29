@@ -159,7 +159,7 @@ public class BagOfWords implements Transform {
             }
         }
 
-        return Tuple.of(bag, schema);
+        return Tuple.of(schema, bag);
     }
 
     /**
