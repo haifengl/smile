@@ -62,7 +62,7 @@ public class CSVTest {
         System.out.println(usps.schema());
 
         assertEquals(7291, usps.size());
-        assertEquals(257, usps.width());
+        assertEquals(257, usps.ncol());
 
         StructField[] fields = usps.schema().fields();
         assertEquals(DataTypes.IntegerType, fields[0].dtype());
@@ -99,7 +99,7 @@ public class CSVTest {
         System.out.println(gdp.schema());
 
         assertEquals(68, gdp.size());
-        assertEquals(4, gdp.width());
+        assertEquals(4, gdp.ncol());
 
         StructType schema = DataTypes.struct(
                 new StructField("Country", DataTypes.StringType),
@@ -135,7 +135,7 @@ public class CSVTest {
         System.out.println(diabetes.schema());
 
         assertEquals(442, diabetes.size());
-        assertEquals(65, diabetes.width());
+        assertEquals(65, diabetes.ncol());
 
         StructField[] fields = diabetes.schema().fields();
         assertEquals(DataTypes.IntegerType, fields[0].dtype());
@@ -170,7 +170,7 @@ public class CSVTest {
         System.out.println(prostate.schema());
 
         assertEquals(67, prostate.size());
-        assertEquals(9, prostate.width());
+        assertEquals(9, prostate.ncol());
 
         StructType schema = DataTypes.struct(
                 new StructField("lcavol", DataTypes.DoubleType),
@@ -207,7 +207,7 @@ public class CSVTest {
         System.out.println(abalone.schema());
 
         assertEquals(3133, abalone.size());
-        assertEquals(9, abalone.width());
+        assertEquals(9, abalone.ncol());
 
         StructField[] fields = abalone.schema().fields();
         assertEquals(DataTypes.StringType, fields[0].dtype());
@@ -242,7 +242,7 @@ public class CSVTest {
         System.out.println(df.schema());
 
         assertEquals(1000, df.size());
-        assertEquals(13, df.width());
+        assertEquals(13, df.ncol());
 
         smile.data.type.StructType schema = DataTypes.struct(
                 new StructField("registration_dttm", DataTypes.StringType),

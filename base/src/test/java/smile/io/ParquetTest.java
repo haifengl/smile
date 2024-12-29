@@ -68,8 +68,8 @@ public class ParquetTest {
 
     @Test
     public void testWidth() {
-        System.out.println("width");
-        assertEquals(13, df.width());
+        System.out.println("ncol");
+        assertEquals(13, df.ncol());
     }
 
     /**
@@ -131,8 +131,8 @@ public class ParquetTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.height());
-        assertEquals(5, output.width());
+        assertEquals(2, output.nrow());
+        assertEquals(5, output.ncol());
         assertEquals("id", output.get(0,0));
         assertEquals(1000L, output.get(0,1));
         assertEquals(1.0, output.get(0,2));

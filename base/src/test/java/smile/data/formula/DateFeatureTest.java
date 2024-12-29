@@ -84,7 +84,7 @@ public class DateFeatureTest {
         }
 
         for (int i = 0; i < output.size(); i++) {
-            for (int j = 0; j < output.width(); j++) {
+            for (int j = 0; j < output.ncol(); j++) {
                 assertEquals(result[i][j], output.getDouble(i, j), 1E-7);
             }
         }

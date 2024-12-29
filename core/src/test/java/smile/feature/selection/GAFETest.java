@@ -75,7 +75,7 @@ public class GAFETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(50, 10, Segment.train.width()-1,
+        BitString[] result = selection.apply(50, 10, Segment.train.ncol()-1,
                 GAFE.fitness("class", Segment.train, Segment.test, new Accuracy(), DecisionTree::fit));
 
         for (BitString bits : result) {
@@ -91,7 +91,7 @@ public class GAFETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(50, 10, Abalone.train.width()-1,
+        BitString[] result = selection.apply(50, 10, Abalone.train.ncol()-1,
                 GAFE.fitness("rings", Abalone.train, Abalone.test, new RMSE(), RegressionTree::fit));
 
         for (BitString bits : result) {

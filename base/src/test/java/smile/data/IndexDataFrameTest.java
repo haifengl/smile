@@ -98,8 +98,8 @@ public class IndexDataFrameTest {
 
     @Test
     public void testWidth() {
-        System.out.println("width");
-        assertEquals(5, df.width());
+        System.out.println("ncol");
+        assertEquals(5, df.ncol());
     }
 
     /**

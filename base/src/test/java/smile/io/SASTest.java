@@ -58,8 +58,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(32, df.height());
-        assertEquals(6, df.width());
+        assertEquals(32, df.nrow());
+        assertEquals(6, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -80,8 +80,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(67, df.height());
-        assertEquals(6, df.width());
+        assertEquals(67, df.nrow());
+        assertEquals(6, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -102,8 +102,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(200, df.height());
-        assertEquals(1, df.width());
+        assertEquals(200, df.nrow());
+        assertEquals(1, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -124,8 +124,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(150, df.height());
-        assertEquals(2, df.width());
+        assertEquals(150, df.nrow());
+        assertEquals(2, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -145,8 +145,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(24, df.height());
-        assertEquals(2, df.width());
+        assertEquals(24, df.nrow());
+        assertEquals(2, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -166,8 +166,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(17, df.height());
-        assertEquals(5, df.width());
+        assertEquals(17, df.nrow());
+        assertEquals(5, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
@@ -188,8 +188,8 @@ public class SASTest {
         System.out.println(df);
         System.out.println(df.schema());
 
-        assertEquals(30, df.height());
-        assertEquals(4, df.width());
+        assertEquals(30, df.nrow());
+        assertEquals(4, df.ncol());
 
         StructField[] fields = df.schema().fields();
         for (StructField field : fields) {
