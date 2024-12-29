@@ -97,14 +97,6 @@ public interface ValueVector {
     }
 
     /**
-     * Returns the array that backs this vector.
-     * This is mostly for smile internal use for high performance.
-     * The application developers should not use this method.
-     * @return the array that backs this vector.
-     */
-    Object array();
-
-    /**
      * Returns an IntStream consisting of the non-null/missing elements of
      * this vector, converted to integer.
      *

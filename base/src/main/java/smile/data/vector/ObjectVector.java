@@ -81,11 +81,6 @@ public class ObjectVector<T> extends AbstractVector {
     }
 
     @Override
-    public T[] array() {
-        return vector;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public void set(int i, Object value) {
         vector[at(i)] = (T) value;

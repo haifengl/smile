@@ -75,11 +75,6 @@ public class DoubleVector extends PrimitiveVector {
     }
 
     @Override
-    public double[] array() {
-        return vector;
-    }
-
-    @Override
     public DoubleStream asDoubleStream() {
         if (nullMask == null) {
             if (index == null) {

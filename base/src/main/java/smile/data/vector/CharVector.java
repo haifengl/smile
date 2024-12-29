@@ -56,11 +56,6 @@ public class CharVector extends PrimitiveVector {
     }
 
     @Override
-    public char[] array() {
-        return vector;
-    }
-
-    @Override
     public IntStream asIntStream() {
         if (nullMask == null) {
             return indexStream().map(i -> vector[i]);
