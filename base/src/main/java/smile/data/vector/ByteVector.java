@@ -56,11 +56,6 @@ public class ByteVector extends PrimitiveVector {
     }
 
     @Override
-    public byte[] array() {
-        return vector;
-    }
-
-    @Override
     public IntStream asIntStream() {
         if (nullMask == null) {
             return indexStream().map(i -> vector[i]);

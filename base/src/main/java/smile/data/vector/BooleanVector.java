@@ -66,11 +66,6 @@ public class BooleanVector extends PrimitiveVector {
     }
 
     @Override
-    public BitSet array() {
-        return vector;
-    }
-
-    @Override
     public IntStream asIntStream() {
         if (nullMask == null) {
             return indexStream().map(i -> vector.get(i) ? 1 : 0);
@@ -94,7 +89,12 @@ public class BooleanVector extends PrimitiveVector {
 
     @Override
     public Boolean get(int i) {
-        return vector.get(at(i));
+        int index = at(i);
+        if (nullMask == null) {
+            return vector.get(at(i));
+        } else {
+            return nullMask.get(index) ? null : vector.get(index);
+        }
     }
 
     @Override

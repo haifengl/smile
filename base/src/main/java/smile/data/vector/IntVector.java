@@ -57,11 +57,6 @@ public class IntVector extends PrimitiveVector {
     }
 
     @Override
-    public int[] array() {
-        return vector;
-    }
-
-    @Override
     public IntStream asIntStream() {
         if (nullMask == null) {
             if (index == null) {

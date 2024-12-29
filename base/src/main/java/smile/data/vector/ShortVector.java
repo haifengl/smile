@@ -56,11 +56,6 @@ public class ShortVector extends PrimitiveVector {
     }
 
     @Override
-    public short[] array() {
-        return vector;
-    }
-
-    @Override
     public IntStream asIntStream() {
         if (nullMask == null) {
             return indexStream().map(i -> vector[i]);

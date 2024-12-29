@@ -57,11 +57,6 @@ public class LongVector extends PrimitiveVector {
     }
 
     @Override
-    public long[] array() {
-        return vector;
-    }
-
-    @Override
     public LongStream asLongStream() {
         if (nullMask == null) {
             if (index == null) {
