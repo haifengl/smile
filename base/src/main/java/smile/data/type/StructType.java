@@ -230,9 +230,10 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     @Override
     public String toString(Object o) {
         if (o instanceof Tuple t) {
-            return Arrays.stream(fields)
-                    .map(field -> {
-                        String value = field.toString(t.get(field.name()));
+            return IntStream.range(0, length())
+                    .mapToObj(i -> {
+                        var field = fields[i];
+                        String value = field.toString(t.get(i));
                         return String.format("  %s: %s", field.name(), value);
                     })
                     .collect(Collectors.joining(",\n", "{\n", "\n}"));

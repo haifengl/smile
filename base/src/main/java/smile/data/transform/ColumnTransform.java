@@ -54,8 +54,7 @@ public class ColumnTransform implements Transform {
 
     @Override
     public Tuple apply(Tuple x) {
-        StructType schema = x.schema();
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
                 Function transform = transforms.get(schema.field(i).name());
@@ -64,11 +63,6 @@ public class ColumnTransform implements Transform {
                 } else {
                     return x.get(i);
                 }
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }

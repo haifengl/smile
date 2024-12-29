@@ -17,14 +17,32 @@
 
 package smile.data;
 
+import smile.data.type.StructType;
+
 /**
  * Abstract tuple base class.
  *
  * @author Haifeng Li
  */
 public abstract class AbstractTuple implements Tuple {
+    /** The schema of tuple. */
+    protected StructType schema;
+
+    /**
+     * Constructor.
+     * @param schema the schema of tuple.
+     */
+    public AbstractTuple(StructType schema) {
+        this.schema = schema;
+    }
+
+    @Override
+    public StructType schema() {
+        return schema;
+    }
+
     @Override
     public String toString() {
-        return schema().toString(this);
+        return schema.toString(this);
     }
 }

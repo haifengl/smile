@@ -88,7 +88,7 @@ public class Normalizer implements Transform {
         }
 
         final double scale = norm;
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(schema) {
             @Override
             public Object get(int i) {
                 if (columns.contains(schema.field(i).name())) {
@@ -96,11 +96,6 @@ public class Normalizer implements Transform {
                 } else {
                     return x.get(i);
                 }
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }

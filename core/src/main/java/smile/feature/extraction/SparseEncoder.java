@@ -57,7 +57,7 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
         if (columns == null || columns.length == 0) {
             columns = Arrays.stream(schema.fields())
                     .filter(field -> field.isNumeric() || field.measure() instanceof CategoricalMeasure)
-                    .map(field -> field.name())
+                    .map(StructField::name)
                     .toArray(String[]::new);
         }
 
