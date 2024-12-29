@@ -6,7 +6,6 @@ import smile.data.Tuple;
 import smile.data.measure.NominalScale;
 import smile.data.transform.Transform;
 import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.math.distance.Distance;
 import smile.math.MathEx;
 import smile.neighbor.KNNSearch;
@@ -60,9 +59,8 @@ import smile.neighbor.Neighbor;
 
     @Override
     public Tuple apply(Tuple x) {
-        StructType schema = x.schema();
         Neighbor<Tuple, Tuple>[] neighbors = knn.search(x, k);
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
@@ -98,11 +96,6 @@ import smile.neighbor.Neighbor;
                         return null;
                     }
                 }
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }

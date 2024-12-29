@@ -639,15 +639,10 @@ public interface Tuple extends Serializable {
      * @return the tuple.
      */
     static Tuple of(StructType schema, Object[] row) {
-        return new AbstractTuple() {
+        return new AbstractTuple(schema) {
             @Override
             public Object get(int i) {
                 return row[i];
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }
@@ -659,7 +654,7 @@ public interface Tuple extends Serializable {
      * @return the tuple.
      */
     static Tuple of(StructType schema, double[] row) {
-        return new AbstractTuple() {
+        return new AbstractTuple(schema) {
             @Override
             public Object get(int i) {
                 return row[i];
@@ -668,11 +663,6 @@ public interface Tuple extends Serializable {
             @Override
             public double getDouble(int i) {
                 return row[i];
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }
@@ -684,7 +674,7 @@ public interface Tuple extends Serializable {
      * @return the tuple.
      */
     static Tuple of(StructType schema, int[] row) {
-        return new AbstractTuple() {
+        return new AbstractTuple(schema) {
             @Override
             public Object get(int i) {
                 return row[i];
@@ -693,11 +683,6 @@ public interface Tuple extends Serializable {
             @Override
             public int getInt(int i) {
                 return row[i];
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }
@@ -723,6 +708,6 @@ public interface Tuple extends Serializable {
             }
         }
 
-        return of(schema, row);
+        return Tuple.of(schema, row);
     }
 }

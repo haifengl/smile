@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package smile.feature.imputation;
 
 import smile.clustering.CLARANS;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.transform.Transform;
-import smile.data.type.StructType;
 import smile.math.distance.Distance;
 
 /**
@@ -34,18 +49,12 @@ public class KMedoidsImputer implements Transform {
             return x;
         }
 
-        StructType schema = x.schema();
         Tuple medioid = kmedoids.centroids[kmedoids.predict(x)];
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
                 return SimpleImputer.isMissing(xi) ? medioid.get(i) : xi;
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }

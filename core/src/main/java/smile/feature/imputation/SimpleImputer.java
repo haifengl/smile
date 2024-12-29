@@ -75,17 +75,11 @@ public class SimpleImputer implements Transform {
 
     @Override
     public Tuple apply(Tuple x) {
-        StructType schema = x.schema();
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
                 Object xi = x.get(i);
                 return isMissing(xi) ? values.get(schema.field(i).name()) : xi;
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }

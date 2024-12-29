@@ -388,12 +388,7 @@ public class Formula implements Serializable {
         bind(tuple.schema());
 
         Binding binding = this.binding.get();
-        return new smile.data.AbstractTuple() {
-            @Override
-            public StructType schema() {
-                return binding.yxschema;
-            }
-
+        return new smile.data.AbstractTuple(binding.yxschema) {
             @Override
             public Object get(int i) {
                 return binding.yx[i].apply(tuple);
@@ -435,12 +430,7 @@ public class Formula implements Serializable {
         bind(tuple.schema());
 
         Binding binding = this.binding.get();
-        return new smile.data.AbstractTuple() {
-            @Override
-            public StructType schema() {
-                return binding.xschema;
-            }
-
+        return new smile.data.AbstractTuple(binding.xschema) {
             @Override
             public Object get(int i) {
                 return binding.x[i].apply(tuple);

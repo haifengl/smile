@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.transform;
 
 import java.util.Map;
@@ -50,8 +49,7 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
 
     @Override
     public Tuple invert(Tuple x) {
-        StructType schema = x.schema();
-        return new smile.data.AbstractTuple() {
+        return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
                 Function inverse = inverses.get(schema.field(i).name());
@@ -60,11 +58,6 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
                 } else {
                     return x.get(i);
                 }
-            }
-
-            @Override
-            public StructType schema() {
-                return schema;
             }
         };
     }
