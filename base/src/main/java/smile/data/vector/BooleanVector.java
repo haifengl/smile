@@ -91,7 +91,7 @@ public class BooleanVector extends PrimitiveVector {
     public Boolean get(int i) {
         int index = at(i);
         if (nullMask == null) {
-            return vector.get(at(i));
+            return vector.get(index);
         } else {
             return nullMask.get(index) ? null : vector.get(index);
         }

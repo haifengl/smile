@@ -82,7 +82,12 @@ public class IntVector extends PrimitiveVector {
 
     @Override
     public Integer get(int i) {
-        return vector[at(i)];
+        int index = at(i);
+        if (nullMask == null) {
+            return vector[index];
+        } else {
+            return nullMask.get(index) ? null : vector[index];
+        }
     }
 
     @Override
