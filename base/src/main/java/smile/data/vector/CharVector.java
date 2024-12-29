@@ -16,6 +16,7 @@
  */
 package smile.data.vector;
 
+import java.util.BitSet;
 import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
@@ -66,7 +67,17 @@ public class CharVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        vector[at(i)] = (Character) value;
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length);
+            }
+            nullMask.set(index);
+        } else if (value instanceof Character c) {
+            vector[index] = c;
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
+        }
     }
 
     @Override

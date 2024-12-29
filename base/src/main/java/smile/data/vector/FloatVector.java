@@ -16,6 +16,7 @@
  */
 package smile.data.vector;
 
+import java.util.BitSet;
 import java.util.stream.DoubleStream;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.type.DataTypes;
@@ -84,7 +85,17 @@ public class FloatVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        vector[at(i)] = ((Number) value).floatValue();
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length);
+            }
+            nullMask.set(index);
+        } else if (value instanceof Number n) {
+            vector[index] = n.floatValue();
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
+        }
     }
 
     @Override

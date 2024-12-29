@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
@@ -71,7 +72,17 @@ public class IntVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        vector[at(i)] = ((Number) value).intValue();
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length);
+            }
+            nullMask.set(index);
+        } else if (value instanceof Number n) {
+            vector[index] = n.intValue();
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
+        }
     }
 
     @Override

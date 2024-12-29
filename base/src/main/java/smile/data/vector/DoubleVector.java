@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.stream.DoubleStream;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.type.DataTypes;
@@ -89,7 +90,17 @@ public class DoubleVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        vector[at(i)] = ((Number) value).doubleValue();
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length);
+            }
+            nullMask.set(index);
+        } else if (value instanceof Number n) {
+            vector[index] = n.doubleValue();
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 import smile.data.measure.NumericalMeasure;
@@ -76,7 +77,17 @@ public class LongVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        vector[at(i)] = ((Number) value).longValue();
+        int index = at(i);
+        if (value == null) {
+            if (nullMask == null) {
+                nullMask = new BitSet(vector.length);
+            }
+            nullMask.set(index);
+        } else if (value instanceof Number n) {
+            vector[index] = n.longValue();
+        } else {
+            throw new IllegalArgumentException("Invalid value type: " + value.getClass());
+        }
     }
 
     @Override
