@@ -348,7 +348,7 @@ public class Formula implements Serializable {
         List<Feature> features = Arrays.stream(formula.predictors)
                 .filter(predictor -> !(predictor instanceof Delete) && !(predictor instanceof Intercept))
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new)); // mutable list
 
         binding.x = features.toArray(new Feature[0]);
         binding.xschema = new StructType(features.stream()
