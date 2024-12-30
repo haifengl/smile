@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.apache.avro.Schema;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.vector.ValueVector;
@@ -179,41 +181,6 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
         return parser;
     }
 
-    /**
-     * Updates the field type to the boxed one if the field has
-     * null/missing values in the data.
-     *
-     * @param rows a set of tuples.
-     * @return the new struct with boxed field types.
-     */
-    public StructType boxed(Collection<Tuple> rows) {
-        return new StructType(IntStream.range(0, length()).mapToObj(i -> {
-            StructField field = fields[i];
-            if (field.dtype().isPrimitive()) {
-                final int idx = i;
-                boolean missing = rows.stream().anyMatch(t -> t.isNullAt(idx));
-                if (missing) {
-                    field = new StructField(field.name(), field.dtype().boxed(), field.measure());
-                }
-            }
-            return field;
-        }).toArray(StructField[]::new));
-    }
-
-    /**
-     * Updates the field type to the primitive one.
-     * @return the new struct with primitive field types.
-     */
-    public StructType unboxed() {
-        return new StructType(IntStream.range(0, length()).mapToObj(i -> {
-            StructField field = fields[i];
-            if (field.dtype().isObject()) {
-                field = new StructField(field.name(), field.dtype().unboxed(), field.measure());
-            }
-            return field;
-        }).toArray(StructField[]::new));
-    }
-
     @Override
     public String name() {
         return Arrays.stream(fields)
@@ -295,5 +262,19 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
                 throw new RuntimeException(ex);
             }
         }
+    }
+
+    /**
+     * Converts an avro schema to smile schema.
+     * @param schema an avro schema.
+     * @return the struct type.
+     */
+    public static StructType of(Schema schema) {
+        List<StructField> fields = new ArrayList<>();
+        for (Schema.Field field : schema.getFields()) {
+            fields.add(StructField.of(field));
+        }
+
+        return new StructType(fields);
     }
 }

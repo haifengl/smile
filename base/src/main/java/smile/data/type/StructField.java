@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.Objects;
-
+import org.apache.avro.Schema;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
@@ -143,5 +143,19 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
             return new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
         }
         return null;
+    }
+
+    /**
+     * Converts an avro schema field to smile field.
+     * @param field an avro schema field.
+     * @return the struct field.
+     */
+    public static StructField of(Schema.Field field) {
+        NominalScale scale = null;
+        if (field.schema().getType() == Schema.Type.ENUM) {
+            scale = new NominalScale(field.schema().getEnumSymbols());
+        }
+
+        return new StructField(field.name(), DataType.of(field.schema()), scale);
     }
 }
