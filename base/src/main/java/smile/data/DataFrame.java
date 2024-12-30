@@ -483,7 +483,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
         var rows = Stream.concat(Stream.of(this), Stream.of(dataframes))
                 .flatMap(DataFrame::stream);
-        return DataFrame.of(rows);
+        return DataFrame.of(schema, rows);
     }
 
     /**
@@ -1094,22 +1094,8 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @param data The data stream.
      * @return the data frame.
      */
-    public static DataFrame of(Stream<? extends Tuple> data) {
-        return DataFrame.of(data.toList());
-    }
-
-    /**
-     * Creates a DataFrame from a set of tuples.
-     * @param data The data collection.
-     * @return the data frame.
-     */
-    public static DataFrame of(SequencedCollection<? extends Tuple> data) {
-        if (data.isEmpty()) {
-            throw new IllegalArgumentException("Empty tuple collections");
-        }
-
-        var schema = data.getFirst().schema();
-        return DataFrame.of(schema, data);
+    public static DataFrame of(StructType schema, Stream<? extends Tuple> data) {
+        return DataFrame.of(schema, data.toList());
     }
 
     /**
@@ -1118,7 +1104,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @param schema The schema of tuple.
      * @return the data frame.
      */
-    public static DataFrame of(StructType schema, SequencedCollection<? extends Tuple> data) {
+    public static DataFrame of(StructType schema, List<? extends Tuple> data) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty tuple collections");
         }
@@ -1128,69 +1114,140 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         ValueVector[] columns = new ValueVector[fields.length];
 
         for (int j = 0; j < fields.length; j++) {
-            int i = 0;
+            BitSet nullMask = new BitSet(n);
             StructField field = fields[j];
             columns[j] = switch (field.dtype().id()) {
                 case Integer -> {
                     int[] values = new int[n];
-                    for (Tuple datum : data) values[i++] = datum.getInt(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Integer.MIN_VALUE;
+                        } else {
+                            values[i] = datum.getInt(j);
+                        }
+                    }
                     yield new IntVector(field, values);
                 }
 
                 case Long -> {
                     long[] values = new long[n];
-                    for (Tuple datum : data) values[i++] = datum.getLong(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Long.MIN_VALUE;
+                        } else {
+                            values[i] = datum.getLong(j);
+                        }
+                    }
                     yield new LongVector(field, values);
                 }
 
                 case Double -> {
                     double[] values = new double[n];
-                    for (Tuple datum : data) values[i++] = datum.getDouble(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Double.NaN;
+                        } else {
+                            values[i] = datum.getDouble(j);
+                        }
+                    }
                     yield new DoubleVector(field, values);
                 }
 
                 case Float -> {
                     float[] values = new float[n];
-                    for (Tuple datum : data) values[i++] = datum.getFloat(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Float.NaN;
+                        } else {
+                            values[i] = datum.getFloat(j);
+                        }
+                    }
                     yield new FloatVector(field, values);
                 }
 
                 case Boolean -> {
                     boolean[] values = new boolean[n];
-                    for (Tuple datum : data) values[i++] = datum.getBoolean(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                        } else {
+                            values[i] = datum.getBoolean(j);
+                        }
+                    }
                     yield new BooleanVector(field, values);
                 }
 
                 case Byte -> {
                     byte[] values = new byte[n];
-                    for (Tuple datum : data) values[i++] = datum.getByte(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Byte.MIN_VALUE;
+                        } else {
+                            values[i] = datum.getByte(j);
+                        }
+                    }
                     yield new ByteVector(field, values);
                 }
 
                 case Short -> {
                     short[] values = new short[n];
-                    for (Tuple datum : data) values[i++] = datum.getShort(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = Short.MIN_VALUE;
+                        } else {
+                            values[i] = datum.getShort(j);
+                        }
+                    }
                     yield new ShortVector(field, values);
                 }
 
                 case Char -> {
                     char[] values = new char[n];
-                    for (Tuple datum : data) values[i++] = datum.getChar(j);
+                    for (int i = 0; i < n; i++) {
+                        Tuple datum = data.get(i);
+                        if (datum.isNullAt(j)) {
+                            nullMask.set(i);
+                            values[i] = 0;
+                        } else {
+                            values[i] = datum.getChar(j);
+                        }
+                    }
                     yield new CharVector(field, values);
                 }
 
                 case String -> {
                     String[] values = new String[n];
-                    for (Tuple datum : data) values[i++] = datum.getString(j);
+                    for (int i = 0; i < n; i++) {
+                        values[i] = data.get(i).getString(j);
+                    }
                     yield new StringVector(field, values);
                 }
 
                 default -> {
                     Object[] values = new Object[n];
-                    for (Tuple datum : data) values[i++] = datum.get(j);
+                    for (int i = 0; i < n; i++) {
+                        values[i] = data.get(i).get(j);
+                    }
                     yield new ObjectVector<>(field, values);
                 }
             };
+
+            if (columns[j] instanceof PrimitiveVector vector && !nullMask.isEmpty()) {
+                vector.setNullMask(nullMask);
+            }
         }
 
         return new DataFrame(schema, columns);
