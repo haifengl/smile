@@ -19,6 +19,7 @@ package smile.data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collector;
+import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 
 /** Stream collectors for DataFrame. */
@@ -30,7 +31,7 @@ public interface Collectors {
      * @param clazz The class type of elements.
      * @return the stream collector.
      */
-    static <T> Collector<T, List<T>, DataFrame> collect(Class<T> clazz) {
+    static <T> Collector<T, List<T>, DataFrame> toDataFrame(Class<T> clazz) {
         return Collector.of(
                 // supplier
                 ArrayList::new,
@@ -51,7 +52,7 @@ public interface Collectors {
      *
      * @return the stream collector.
      */
-    static Collector<Tuple, List<Tuple>, DataFrame> collect() {
+    static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame(StructType schema) {
         return Collector.of(
                 // supplier
                 ArrayList::new,
@@ -63,7 +64,7 @@ public interface Collectors {
                     return c1;
                 },
                 // finisher
-                DataFrame::of
+                (container) -> DataFrame.of(schema, container)
         );
     }
 
@@ -72,7 +73,7 @@ public interface Collectors {
      *
      * @return the stream collector.
      */
-    static Collector<Tuple, List<Tuple>, Matrix> matrix() {
+    static Collector<Tuple, List<Tuple>, Matrix> toMatrix() {
         return Collector.of(
                 // supplier
                 ArrayList::new,
