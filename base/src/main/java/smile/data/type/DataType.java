@@ -22,6 +22,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.avro.Schema;
+import smile.data.measure.NominalScale;
 import smile.util.Regex;
 import smile.util.Strings;
 
@@ -552,5 +557,56 @@ public interface DataType extends Serializable {
     static boolean isDouble(DataType t) {
         return (t.id() == ID.Double) ||
                (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Double.class);
+    }
+
+    /**
+     * Converts an avro type to smile data type.
+     * @param schema an avro schema.
+     * @return smile data type.
+     */
+    static DataType of(Schema schema) {
+        return switch (schema.getType()) {
+            case BOOLEAN -> DataTypes.BooleanType;
+            case INT -> DataTypes.IntegerType;
+            case LONG -> DataTypes.LongType;
+            case FLOAT -> DataTypes.FloatType;
+            case DOUBLE -> DataTypes.DoubleType;
+            case STRING -> DataTypes.StringType;
+            case FIXED, BYTES -> DataTypes.ByteArrayType;
+            case ENUM -> new NominalScale(schema.getEnumSymbols()).type();
+            case ARRAY -> DataTypes.array(DataType.of(schema.getElementType()));
+            case MAP -> DataTypes.object(java.util.Map.class);
+            case UNION -> union(schema.getTypes());
+            default -> throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
+        };
+    }
+
+    /** Converts a Union type. */
+    private static DataType union(List<Schema> union) {
+        if (union.isEmpty()) {
+            throw new IllegalArgumentException("Empty type list of Union");
+        }
+
+        if (union.size() > 2) {
+            String s = union.stream().map(Schema::getType).map(Object::toString).collect(Collectors.joining(", "));
+            throw new UnsupportedOperationException(String.format("Unsupported type Union(%s)", s));
+        }
+
+        if (union.size() == 1) {
+            return DataType.of(union.getFirst());
+        }
+
+        Schema a = union.get(0);
+        Schema b = union.get(1);
+
+        if (a.getType() == Schema.Type.NULL && b.getType() != Schema.Type.NULL) {
+            return DataType.of(b);
+        }
+
+        if (a.getType() != Schema.Type.NULL && b.getType() == Schema.Type.NULL) {
+            return DataType.of(a);
+        }
+
+        return DataTypes.object(Object.class);
     }
 }
