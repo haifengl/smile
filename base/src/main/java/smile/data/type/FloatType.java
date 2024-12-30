@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 import java.text.DecimalFormat;
@@ -24,17 +23,16 @@ import java.text.DecimalFormat;
  *
  * @author Haifeng Li
  */
-public class FloatType implements DataType {
+public class FloatType extends PrimitiveType {
     /** Format for toString. */
     private static final DecimalFormat format = new DecimalFormat("#.####");
 
-    /** Singleton instance. */
-    static final FloatType instance = new FloatType();
-
     /**
-     * Private constructor for singleton design pattern.
+     * Constructor.
+     * @param nullable True if the data may be null.
      */
-    private FloatType() {
+    FloatType(boolean nullable) {
+        super(nullable);
     }
 
     @Override
@@ -44,7 +42,7 @@ public class FloatType implements DataType {
 
     @Override
     public String name() {
-        return "float";
+        return nullable ? "Float" : "float";
     }
 
     @Override
@@ -69,6 +67,9 @@ public class FloatType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof FloatType;
+        if (o instanceof FloatType t) {
+            return nullable == t.nullable;
+        }
+        return false;
     }
 }

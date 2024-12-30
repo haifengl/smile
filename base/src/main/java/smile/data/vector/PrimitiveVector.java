@@ -17,6 +17,9 @@
 package smile.data.vector;
 
 import java.util.BitSet;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import smile.data.type.StructField;
 import smile.util.Index;
 

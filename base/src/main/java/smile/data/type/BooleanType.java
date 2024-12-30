@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 /**
@@ -22,15 +21,13 @@ package smile.data.type;
  *
  * @author Haifeng Li
  */
-public class BooleanType implements DataType {
-
-    /** Singleton instance. */
-    static final BooleanType instance = new BooleanType();
-
+public class BooleanType extends PrimitiveType {
     /**
-     * Private constructor for singleton design pattern.
+     * Constructor.
+     * @param nullable True if the data may be null.
      */
-    private BooleanType() {
+    BooleanType(boolean nullable) {
+        super(nullable);
     }
 
     @Override
@@ -39,13 +36,13 @@ public class BooleanType implements DataType {
     }
 
     @Override
-    public String name() {
-        return "boolean";
+    public ID id() {
+        return ID.Boolean;
     }
 
     @Override
-    public ID id() {
-        return ID.Boolean;
+    public String name() {
+        return nullable ? "Boolean" : "boolean";
     }
 
     @Override
@@ -60,6 +57,9 @@ public class BooleanType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof BooleanType;
+        if (o instanceof BooleanType t) {
+            return nullable == t.nullable;
+        }
+        return false;
     }
 }

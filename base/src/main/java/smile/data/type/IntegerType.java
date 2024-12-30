@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 /**
@@ -22,15 +21,13 @@ package smile.data.type;
  *
  * @author Haifeng Li
  */
-public class IntegerType implements DataType {
-
-    /** Singleton instance. */
-    static final IntegerType instance = new IntegerType();
-
+public class IntegerType extends PrimitiveType {
     /**
-     * Private constructor for singleton design pattern.
+     * Constructor.
+     * @param nullable True if the data may be null.
      */
-    private IntegerType() {
+    IntegerType(boolean nullable) {
+        super(nullable);
     }
 
     @Override
@@ -40,7 +37,7 @@ public class IntegerType implements DataType {
 
     @Override
     public String name() {
-        return "int";
+        return nullable ? "Int" : "int";
     }
 
     @Override
@@ -60,6 +57,9 @@ public class IntegerType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof IntegerType;
+        if (o instanceof IntegerType t) {
+            return nullable == t.nullable;
+        }
+        return false;
     }
 }

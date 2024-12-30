@@ -135,60 +135,60 @@ public interface Feature {
         }
 
         int size = data.size();
-        switch (field.dtype().id()) {
-            case Integer: {
+        return switch (field.dtype().id()) {
+            case Integer -> {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));
-                return new IntVector(field, values);
+                yield new IntVector(field, values);
             }
 
-            case Long: {
+            case Long -> {
                 long[] values = new long[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsLong(data.get(i));
-                return new LongVector(field, values);
+                yield new LongVector(field, values);
             }
 
-            case Double: {
+            case Double -> {
                 double[] values = new double[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsDouble(data.get(i));
-                return new DoubleVector(field, values);
+                yield new DoubleVector(field, values);
             }
 
-            case Float: {
+            case Float -> {
                 float[] values = new float[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsFloat(data.get(i));
-                return new FloatVector(field, values);
+                yield new FloatVector(field, values);
             }
 
-            case Boolean: {
+            case Boolean -> {
                 boolean[] values = new boolean[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsBoolean(data.get(i));
-                return new BooleanVector(field, values);
+                yield new BooleanVector(field, values);
             }
 
-            case Byte: {
+            case Byte -> {
                 byte[] values = new byte[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsByte(data.get(i));
-                return new ByteVector(field, values);
+                yield new ByteVector(field, values);
             }
 
-            case Short: {
+            case Short -> {
                 short[] values = new short[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsShort(data.get(i));
-                return new ShortVector(field, values);
+                yield new ShortVector(field, values);
             }
 
-            case Char: {
+            case Char -> {
                 char[] values = new char[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsChar(data.get(i));
-                return new CharVector(field, values);
+                yield new CharVector(field, values);
             }
 
-            default: {
+            default -> {
                 Object[] values = new Object[size];
                 for (int i = 0; i < size; i++) values[i] = apply(data.get(i));
-                return new ObjectVector<>(field, values);
+                yield new ObjectVector<>(field, values);
             }
-        }
+        };
     }
 }

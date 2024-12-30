@@ -116,7 +116,7 @@ public class DataFrameTest {
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
                 new StructField("name", DataTypes.StringType),
-                new StructField("salary", DataTypes.object(Double.class))
+                new StructField("salary", DataTypes.NullableDoubleType)
         );
         assertEquals(schema, df.schema());
     }
@@ -136,8 +136,8 @@ public class DataFrameTest {
      */
     @Test
     public void testTypes() {
-        System.out.println("names");
-        DataType[] dtypes = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.object(Double.class)};
+        System.out.println("dtypes");
+        DataType[] dtypes = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.NullableDoubleType};
         assertArrayEquals(dtypes, df.dtypes());
     }
 

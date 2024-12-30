@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 import java.beans.PropertyDescriptor;
@@ -23,11 +22,9 @@ import java.io.Serializable;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 import org.apache.arrow.vector.types.DateUnit;
-import org.apache.arrow.vector.types.FloatingPointPrecision;
 import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -184,60 +181,13 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
     }
 
     /**
-     * Converts an arrow field column to smile field.
+     * Converts an arrow field to smile field.
      * @param field an arrow field.
      * @return the struct field.
      */
     public static StructField of(Field field) {
         String name = field.getName();
-        ArrowType type = field.getType();
-        boolean nullable = field.isNullable();
-        var dtype = switch (type.getTypeID()) {
-            case Int -> {
-                ArrowType.Int itype = (ArrowType.Int) type;
-                int bitWidth = itype.getBitWidth();
-                yield switch (bitWidth) {
-                    case 8 -> DataTypes.ByteType;
-                    case 16 -> DataTypes.ShortType;
-                    case 32 -> DataTypes.IntegerType;
-                    case 64 -> DataTypes.LongType;
-                    default -> throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
-                };
-            }
-
-            case FloatingPoint -> {
-                FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
-                yield switch (precision) {
-                    case DOUBLE -> DataTypes.DoubleType;
-                    case SINGLE -> DataTypes.FloatType;
-                    case HALF -> throw new UnsupportedOperationException("Unsupported float precision: " + precision);
-                };
-            }
-
-            case Bool -> DataTypes.BooleanType;
-            case Decimal -> DataTypes.DecimalType;
-            case Utf8 -> DataTypes.StringType;
-            case Date -> DataTypes.DateType;
-            case Time -> DataTypes.TimeType;
-            case Timestamp -> DataTypes.DateTimeType;
-            case Binary, FixedSizeBinary -> DataTypes.ByteArrayType;
-            case List, FixedSizeList -> {
-                List<Field> child = field.getChildren();
-                if (child.size() != 1) {
-                    throw new IllegalStateException(String.format("List type has %d child fields.", child.size()));
-                }
-
-                yield DataTypes.array(StructField.of(child.getFirst()).dtype());
-            }
-
-            case Struct -> {
-                List<StructField> children = field.getChildren().stream().map(StructField::of).toList();
-                yield new StructType(children);
-            }
-
-            default ->
-                throw new UnsupportedOperationException("Unsupported arrow to smile type conversion: " + type);
-        };
+        var dtype = DataType.of(field);
         return new StructField(name, dtype);
     }
 
@@ -247,14 +197,14 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
      */
     public Field toArrow() {
         return switch (dtype.id()) {
-            case Integer -> new Field(name, new FieldType(false, new ArrowType.Int(32, true), null), null);
-            case Long -> new Field(name, new FieldType(false, new ArrowType.Int(64, true), null), null);
-            case Double -> new Field(name, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
-            case Float -> new Field(name, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
-            case Boolean -> new Field(name, new FieldType(false, new ArrowType.Bool(), null), null);
-            case Byte -> new Field(name, new FieldType(false, new ArrowType.Int(8, true), null), null);
-            case Short -> new Field(name, new FieldType(false, new ArrowType.Int(16, true), null), null);
-            case Char -> new Field(name, new FieldType(false, new ArrowType.Int(16, false), null), null);
+            case Integer -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(32, true), null), null);
+            case Long -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(64, true), null), null);
+            case Double -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.FloatingPoint(DOUBLE), null), null);
+            case Float -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.FloatingPoint(SINGLE), null), null);
+            case Boolean -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Bool(), null), null);
+            case Byte -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(8, true), null), null);
+            case Short -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(16, true), null), null);
+            case Char -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(16, false), null), null);
             case Decimal -> new Field(name, FieldType.nullable(new ArrowType.Decimal(28, 10, 128)), null);
             case String -> new Field(name, FieldType.nullable(new ArrowType.Utf8()), null);
             case Date -> new Field(name, FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);

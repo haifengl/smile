@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 import java.math.BigDecimal;
-import java.sql.JDBCType;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 /**
  * To get a specific data type, users should use singleton objects
@@ -35,21 +29,37 @@ import java.util.List;
  */
 public class DataTypes {
     /** Boolean data type. */
-    public static final smile.data.type.BooleanType BooleanType = smile.data.type.BooleanType.instance;
+    public static final smile.data.type.BooleanType BooleanType = new smile.data.type.BooleanType(false);
     /** Char data type. */
-    public static final smile.data.type.CharType CharType = smile.data.type.CharType.instance;
+    public static final smile.data.type.CharType CharType = new smile.data.type.CharType(false);
     /** Byte data type. */
-    public static final smile.data.type.ByteType ByteType = smile.data.type.ByteType.instance;
+    public static final smile.data.type.ByteType ByteType = new smile.data.type.ByteType(false);
     /** Short data type. */
-    public static final smile.data.type.ShortType ShortType = smile.data.type.ShortType.instance;
+    public static final smile.data.type.ShortType ShortType = new smile.data.type.ShortType(false);
     /** Integer data type. */
-    public static final IntegerType IntegerType = smile.data.type.IntegerType.instance;
+    public static final IntegerType IntegerType = new smile.data.type.IntegerType(false);
     /** Long data type. */
-    public static final smile.data.type.LongType LongType = smile.data.type.LongType.instance;
+    public static final smile.data.type.LongType LongType = new smile.data.type.LongType(false);
     /** Float data type. */
-    public static final smile.data.type.FloatType FloatType = smile.data.type.FloatType.instance;
+    public static final smile.data.type.FloatType FloatType = new smile.data.type.FloatType(false);
     /** Double data type. */
-    public static final smile.data.type.DoubleType DoubleType = smile.data.type.DoubleType.instance;
+    public static final smile.data.type.DoubleType DoubleType = new smile.data.type.DoubleType(false);
+    /** Nullable boolean data type. */
+    public static final smile.data.type.BooleanType NullableBooleanType = new smile.data.type.BooleanType(true);
+    /** Nullable char data type. */
+    public static final smile.data.type.CharType NullableCharType = new smile.data.type.CharType(true);
+    /** Nullable byte data type. */
+    public static final smile.data.type.ByteType NullableByteType = new smile.data.type.ByteType(true);
+    /** Nullable short data type. */
+    public static final smile.data.type.ShortType NullableShortType = new smile.data.type.ShortType(true);
+    /** Nullable integer data type. */
+    public static final smile.data.type.IntegerType NullableIntegerType = new smile.data.type.IntegerType(true);
+    /** Nullable long data type. */
+    public static final smile.data.type.LongType NullableLongType = new smile.data.type.LongType(true);
+    /** Nullable float data type. */
+    public static final smile.data.type.FloatType NullableFloatType = new smile.data.type.FloatType(true);
+    /** Nullable double data type. */
+    public static final smile.data.type.DoubleType NullableDoubleType = new smile.data.type.DoubleType(true);
     /** Decimal data type. */
     public static final smile.data.type.DecimalType DecimalType = smile.data.type.DecimalType.instance;
     /** String data type. */
@@ -62,22 +72,6 @@ public class DataTypes {
     public static final smile.data.type.TimeType TimeType = smile.data.type.TimeType.instance;
     /** Plain Object data type. */
     public static final smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
-    /** Boolean Object data type. */
-    public static final smile.data.type.ObjectType BooleanObjectType = smile.data.type.ObjectType.BooleanObjectType;
-    /** Char Object data type. */
-    public static final smile.data.type.ObjectType CharObjectType = smile.data.type.ObjectType.CharObjectType;
-    /** Byte Object data type. */
-    public static final smile.data.type.ObjectType ByteObjectType = smile.data.type.ObjectType.ByteObjectType;
-    /** Short Object data type. */
-    public static final smile.data.type.ObjectType ShortObjectType = smile.data.type.ObjectType.ShortObjectType;
-    /** Integer Object data type. */
-    public static final smile.data.type.ObjectType IntegerObjectType = smile.data.type.ObjectType.IntegerObjectType;
-    /** Long Object data type. */
-    public static final smile.data.type.ObjectType LongObjectType = smile.data.type.ObjectType.LongObjectType;
-    /** Float Object data type. */
-    public static final smile.data.type.ObjectType FloatObjectType = smile.data.type.ObjectType.FloatObjectType;
-    /** Double Object data type. */
-    public static final smile.data.type.ObjectType DoubleObjectType = smile.data.type.ObjectType.DoubleObjectType;
     /** Boolean Array data type. */
     public static final smile.data.type.ArrayType BooleanArrayType = smile.data.type.ArrayType.BooleanArrayType;
     /** Char Array data type. */
@@ -128,14 +122,6 @@ public class DataTypes {
      * @return the object data type.
      */
     public static DataType object(Class<?> clazz) {
-        if (clazz == Integer.class) return IntegerObjectType;
-        if (clazz == Long.class) return LongObjectType;
-        if (clazz == Float.class) return FloatObjectType;
-        if (clazz == Double.class) return DoubleObjectType;
-        if (clazz == Boolean.class) return BooleanObjectType;
-        if (clazz == Character.class) return CharObjectType;
-        if (clazz == Byte.class) return ByteObjectType;
-        if (clazz == Short.class) return ShortObjectType;
         if (clazz == BigDecimal.class) return DecimalType;
         if (clazz == String.class) return StringType;
         if (clazz == LocalDate.class) return DateType;

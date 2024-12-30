@@ -54,6 +54,11 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         this(StructType.of(columns), columns);
     }
 
+    @Override
+    public String toString() {
+        return toString(10, true);
+    }
+
     /**
      * Returns the column names.
      * @return the column names.

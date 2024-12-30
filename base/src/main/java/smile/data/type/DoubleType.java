@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,17 +24,16 @@ import java.text.DecimalFormat;
  *
  * @author Haifeng Li
  */
-public class DoubleType implements DataType {
+public class DoubleType extends PrimitiveType {
     /** Format for toString. */
     private static final DecimalFormat format = new DecimalFormat("#.######");
 
-    /** Singleton instance. */
-    static final DoubleType instance = new DoubleType();
-
     /**
-     * Private constructor for singleton design pattern.
+     * Constructor.
+     * @param nullable True if the data may be null.
      */
-    private DoubleType() {
+    DoubleType(boolean nullable) {
+        super(nullable);
     }
 
     @Override
@@ -49,7 +48,7 @@ public class DoubleType implements DataType {
 
     @Override
     public String name() {
-        return "double";
+        return nullable ? "Double" : "double";
     }
 
     @Override
@@ -69,6 +68,9 @@ public class DoubleType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof DoubleType;
+        if (o instanceof DoubleType t) {
+            return nullable == t.nullable;
+        }
+        return false;
     }
 }
