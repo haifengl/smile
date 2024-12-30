@@ -1260,7 +1260,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @return the data frame.
      */
     public static DataFrame of(ResultSet rs) throws SQLException {
-        StructType schema = DataTypes.struct(rs);
+        StructType schema = StructType.of(rs);
         List<Tuple> rows = new ArrayList<>();
         while (rs.next()) {
             rows.add(Tuple.of(schema, rs));

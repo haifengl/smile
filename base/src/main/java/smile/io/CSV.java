@@ -225,7 +225,7 @@ public class CSV {
             for (int i = 0; i < fields.length; i++) {
                 fields[i] = new StructField(names[i], types[i] == null ? DataTypes.StringType : types[i]);
             }
-            return DataTypes.struct(fields);
+            return new StructType(fields);
         }
     }
     

@@ -304,7 +304,7 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
 
             case Struct -> {
                 List<StructField> children = field.getChildren().stream().map(StructField::of).toList();
-                yield new StructField(name, DataTypes.struct(children));
+                yield new StructField(name, new StructType(children));
             }
 
             default ->
