@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -108,7 +107,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
     static BinarySparseDataset<Void> of(int[][] data) {
         return new BinarySparseDatasetImpl<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<int[], Void>(x, null))
-                .collect(Collectors.toList()));
+                .toList());
     }
 
     /**
@@ -129,7 +128,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
                     index[i] = Integer.parseInt(s[i]);
                 }
                 return new SampleInstance<int[], Void>(index, null);
-            }).collect(java.util.stream.Collectors.toList());
+            }).toList();
 
             return new BinarySparseDatasetImpl<>(rows);
         }

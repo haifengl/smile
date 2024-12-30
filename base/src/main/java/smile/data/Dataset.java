@@ -103,7 +103,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
      * @return the <code>List</code> of data items.
      */
     default List<SampleInstance<D, T>> toList() {
-        return stream().collect(java.util.stream.Collectors.toList());
+        return stream().toList();
     }
 
     /**

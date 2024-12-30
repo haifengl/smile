@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data;
 
 import java.io.IOException;
@@ -23,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.math.matrix.SparseMatrix;
 import smile.util.SparseArray;
@@ -168,7 +166,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
     static SparseDataset<Void> of(SparseArray[] data) {
         return new SparseDatasetImpl<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<SparseArray, Void>(x, null))
-                .collect(Collectors.toList()));
+                .toList());
     }
 
     /**
@@ -181,7 +179,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
     static SparseDataset<Void> of(SparseArray[] data, int ncol) {
         return new SparseDatasetImpl<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<SparseArray, Void>(x, null))
-                .collect(Collectors.toList()), ncol);
+                .toList(), ncol);
     }
 
     /**
@@ -191,8 +189,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @return the sparse dataset.
      */
     static SparseDataset<Void> of(Stream<SparseArray> data) {
-        return of(data.map(x -> new SampleInstance<SparseArray, Void>(x, null))
-                .collect(Collectors.toList()));
+        return of(data.map(x -> new SampleInstance<SparseArray, Void>(x, null)).toList());
     }
 
     /**
