@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.avro.Schema;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.schema.MessageType;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.vector.ValueVector;
@@ -273,6 +275,20 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
         List<StructField> fields = new ArrayList<>();
         for (Schema.Field field : schema.getFields()) {
             fields.add(StructField.of(field));
+        }
+
+        return new StructType(fields);
+    }
+
+    /**
+     * Converts a parquet schema to smile schema.
+     * @param schema a parquet schema.
+     * @return the struct type.
+     */
+    public static StructType of(MessageType schema) {
+        List<StructField> fields = new ArrayList<>();
+        for (ColumnDescriptor column : schema.getColumns()) {
+            fields.add(StructField.of(column));
         }
 
         return new StructType(fields);

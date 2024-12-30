@@ -83,7 +83,7 @@ public class ParquetTest {
         System.out.println(df);
         smile.data.type.StructType schema = DataTypes.struct(
                 new StructField("registration_dttm", DataTypes.DateTimeType),
-                new StructField("id", DataTypes.IntegerObjectType),
+                new StructField("id", DataTypes.IntegerType),
                 new StructField("first_name", DataTypes.StringType),
                 new StructField("last_name", DataTypes.StringType),
                 new StructField("email", DataTypes.StringType),
@@ -92,7 +92,7 @@ public class ParquetTest {
                 new StructField("cc", DataTypes.StringType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleObjectType),
+                new StructField("salary", DataTypes.DoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );
