@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 
@@ -133,7 +132,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
      * @return the dataset.
      */
     static <D, T> Dataset<D, T> of(Collection<SampleInstance<D, T>> instances) {
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 
     /**
@@ -149,7 +148,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         for (int i = 0; i < data.size(); i++) {
             instances.add(new SampleInstance<>(data.get(i), target.get(i)));
         }
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 
     /**
@@ -165,7 +164,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         for (int i = 0; i < data.length; i++) {
             instances.add(new SampleInstance<>(data[i], target[i]));
         }
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 
     /**
@@ -180,7 +179,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         for (int i = 0; i < data.length; i++) {
             instances.add(new SampleInstance<>(data[i], target[i]));
         }
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 
     /**
@@ -195,7 +194,7 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         for (int i = 0; i < data.length; i++) {
             instances.add(new SampleInstance<>(data[i], target[i]));
         }
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 
     /**
@@ -210,6 +209,6 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         for (int i = 0; i < data.length; i++) {
             instances.add(new SampleInstance<>(data[i], target[i]));
         }
-        return new DatasetImpl<>(instances);
+        return new SimpleDataset<>(instances);
     }
 }

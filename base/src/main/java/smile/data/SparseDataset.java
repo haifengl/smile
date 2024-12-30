@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Stream;
 import smile.math.matrix.SparseMatrix;
 import smile.util.SparseArray;
 
@@ -41,13 +40,9 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseDataset<T> implements Dataset<SparseArray, T> {
+public class SparseDataset<T> extends SimpleDataset<SparseArray, T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseDataset.class);
 
-    /**
-     * The data objects.
-     */
-    private final ArrayList<SampleInstance<SparseArray, T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -66,7 +61,10 @@ public class SparseDataset<T> implements Dataset<SparseArray, T> {
      * @param data The sample instances.
      */
     public SparseDataset(Collection<SampleInstance<SparseArray, T>> data) {
-        this(data, 1 + data.stream().flatMapToInt(instance -> instance.x().indexStream()).max().orElse(0));
+        this(data, data.stream()
+                .flatMapToInt(instance -> instance.x().indexStream())
+                .max()
+                .orElse(0) + 1);
     }
 
     /**
@@ -75,7 +73,7 @@ public class SparseDataset<T> implements Dataset<SparseArray, T> {
      * @param ncol The number of columns.
      */
     public SparseDataset(Collection<SampleInstance<SparseArray, T>> data, int ncol) {
-        this.instances = new ArrayList<>(data);
+        super(data);
         this.ncol = ncol;
         colSize = new int[ncol];
 
@@ -105,11 +103,6 @@ public class SparseDataset<T> implements Dataset<SparseArray, T> {
                 }
             }
         }
-    }
-
-    @Override
-    public int size() {
-        return instances.size();
     }
 
     /**
@@ -143,21 +136,6 @@ public class SparseDataset<T> implements Dataset<SparseArray, T> {
      */
     public int ncol() {
         return ncol;
-    }
-
-    @Override
-    public SampleInstance<SparseArray, T> get(int i) {
-        return instances.get(i);
-    }
-
-    @Override
-    public Stream<SampleInstance<SparseArray, T>> stream() {
-        return instances.stream();
-    }
-
-    @Override
-    public Iterator<SampleInstance<SparseArray, T>> iterator() {
-        return instances.iterator();
     }
 
     /**
