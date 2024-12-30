@@ -53,15 +53,15 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @param fields the struct fields.
      */
     public StructType(StructField... fields) {
-        this(fields, index(fields));
+        this(fields, name2Index(fields));
     }
 
     /**
-     * Returns a perfect hash of field names.
+     * Returns a map of field name to ordinal index.
      * @param fields the struct fields.
-     * @return a perfect hash of field names.
+     * @return a map of field name to ordinal index.
      */
-    private static Map<String, Integer> index(StructField[] fields) {
+    private static Map<String, Integer> name2Index(StructField[] fields) {
         Map<String, Integer> map = new HashMap<>();
         for (int i = 0; i < fields.length; i++) {
             map.put(fields[i].name(), i);
@@ -129,7 +129,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     }
 
     /**
-     * Returns the index of a field.
+     * Returns the ordinal index of a field.
      * @param field the field name.
      * @return the index of field.
      */
@@ -151,11 +151,10 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * Returns the field data types.
      * @return the field data types.
      */
-    public DataType[] types() {
+    public DataType[] dtypes() {
         return Arrays.stream(fields)
                 .map(StructField::dtype)
-                .toList()
-                .toArray(new DataType[0]);
+                .toArray(DataType[]::new);
     }
 
     /**

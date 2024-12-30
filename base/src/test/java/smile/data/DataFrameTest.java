@@ -136,8 +136,8 @@ public class DataFrameTest {
     @Test
     public void testTypes() {
         System.out.println("names");
-        DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.object(Double.class)};
-        assertArrayEquals(types, df.types());
+        DataType[] dtypes = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.object(Double.class)};
+        assertArrayEquals(dtypes, df.dtypes());
     }
 
     /**
