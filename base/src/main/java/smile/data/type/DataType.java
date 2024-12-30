@@ -248,19 +248,18 @@ public interface DataType extends Serializable {
             throw new IllegalArgumentException(String.format("Invalid data type for type promotion: %s", b));
 
         if (a.isDouble() || b.isDouble()) {
-            return DataTypes.DoubleType;
+            return a.isNullable() || b.isNullable() ? DataTypes.NullableDoubleType : DataTypes.DoubleType;
         }
 
         if (a.isFloat() || b.isFloat()) {
-            return DataTypes.FloatType;
+            return a.isNullable() || b.isNullable() ? DataTypes.NullableFloatType : DataTypes.FloatType;
         }
 
         if (a.isLong() || b.isLong()) {
-            return DataTypes.LongType;
+            return a.isNullable() || b.isNullable() ? DataTypes.NullableLongType : DataTypes.LongType;
         }
 
-        // Should never reach here.
-        throw new IllegalStateException(String.format("Unsupported prompt types: (%s, %s)", a, b));
+        return a.isNullable() || b.isNullable() ? DataTypes.NullableIntegerType : DataTypes.IntegerType;
     }
 
     /**
@@ -278,11 +277,11 @@ public interface DataType extends Serializable {
         if (a.id() == b.id()) return a;
 
         if ((a.id() == DataType.ID.Integer && b.id() == DataType.ID.Double) ||
-                (b.id() == DataType.ID.Integer && a.id() == DataType.ID.Double))
-            return DataTypes.DoubleType;
+            (b.id() == DataType.ID.Integer && a.id() == DataType.ID.Double))
+            return a.isNullable() || b.isNullable() ? DataTypes.NullableDoubleType : DataTypes.DoubleType;
 
         if ((a.id() == DataType.ID.Date && b.id() == DataType.ID.DateTime) ||
-                (b.id() == DataType.ID.Date && a.id() == DataType.ID.DateTime))
+            (b.id() == DataType.ID.Date && a.id() == DataType.ID.DateTime))
             return DataTypes.DateTimeType;
 
         return DataTypes.StringType;
