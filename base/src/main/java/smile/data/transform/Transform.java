@@ -69,7 +69,7 @@ public interface Transform extends Function<Tuple, Tuple>, Serializable {
      * @return the transformed data frame.
      */
     default DataFrame apply(DataFrame data) {
-        return data.stream().map(this).collect(Collectors.collect());
+        return data.stream().map(this).collect(Collectors.toDataFrame(data.schema()));
     }
 
     /**
