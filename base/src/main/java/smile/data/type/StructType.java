@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.avro.Schema;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.schema.MessageType;
@@ -292,5 +293,32 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
         }
 
         return new StructType(fields);
+    }
+
+    /**
+     * Converts an arrow schema to smile schema.
+     * @param schema an arrow schema.
+     * @return the struct type.
+     */
+    public static StructType of(org.apache.arrow.vector.types.pojo.Schema schema) {
+        List<StructField> fields = new ArrayList<>();
+        for (Field field : schema.getFields()) {
+            fields.add(StructField.of(field));
+        }
+
+        return new StructType(fields);
+    }
+
+    /**
+     * Converts smile schema to an arrow schema.
+     * @return the arrow schema.
+     */
+    public org.apache.arrow.vector.types.pojo.Schema toArrow() {
+        List<Field> fields = new ArrayList<>();
+        for (StructField field : this.fields) {
+            fields.add(field.toArrow());
+        }
+
+        return new org.apache.arrow.vector.types.pojo.Schema(fields, null);
     }
 }
