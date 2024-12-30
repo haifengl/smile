@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 import smile.util.Paths;
 import org.junit.jupiter.api.*;
@@ -81,7 +82,7 @@ public class ParquetTest {
         System.out.println(df.schema());
         System.out.println(df.structure());
         System.out.println(df);
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.DateTimeType),
                 new StructField("id", DataTypes.IntegerType),
                 new StructField("first_name", DataTypes.StringType),

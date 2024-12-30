@@ -62,7 +62,7 @@ public class JSONTest {
         assertEquals(7, df.size());
         assertEquals(10, df.ncol());
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("series_t", DataTypes.StringType),
                 new StructField("pages_i", DataTypes.IntegerType),
                 new StructField("author", DataTypes.StringType),
@@ -99,7 +99,7 @@ public class JSONTest {
         assertEquals(7, df.size());
         assertEquals(10, df.ncol());
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("series_t", DataTypes.StringType),
                 new StructField("pages_i", DataTypes.IntegerType),
                 new StructField("author", DataTypes.StringType),

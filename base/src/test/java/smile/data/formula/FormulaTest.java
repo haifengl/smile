@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class FormulaTest {
 
-    enum Gender {
+    public enum Gender {
         Male,
         Female
     }
@@ -127,7 +127,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("salary", DataTypes.DoubleObjectType),
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
@@ -149,7 +149,7 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(2, output.shape(1));
 
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("salary", DataTypes.object(Double.class)),
                 new StructField("age", DataTypes.IntegerType)
         );
@@ -160,7 +160,7 @@ public class FormulaTest {
         assertEquals(df.size(), x.size());
         assertEquals(1, x.shape(1));
 
-        smile.data.type.StructType xschema = DataTypes.struct(
+        smile.data.type.StructType xschema = new StructType(
                 new StructField("age", DataTypes.IntegerType)
         );
         assertEquals(xschema, x.schema());
@@ -178,7 +178,7 @@ public class FormulaTest {
         System.out.println("interaction");
 
         Formula formula = Formula.rhs(interact("water", "sowing_density", "wind"));
-        StructType inputSchema = DataTypes.struct(
+        StructType inputSchema = new StructType(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
@@ -186,7 +186,7 @@ public class FormulaTest {
         assertEquals(" ~ water:sowing_density:wind", formula.toString());
 
         StructType outputSchema = formula.bind(inputSchema);
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField(
                         "water:sowing_density:wind",
                         DataTypes.IntegerType,
@@ -203,7 +203,7 @@ public class FormulaTest {
         System.out.println("crossing");
 
         Formula formula = Formula.rhs(cross(2, "water", "sowing_density", "wind"));
-        StructType inputSchema = DataTypes.struct(
+        StructType inputSchema = new StructType(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
@@ -211,7 +211,7 @@ public class FormulaTest {
         assertEquals(" ~ (water x sowing_density x wind)^2", formula.toString());
 
         StructType outputSchema = formula.bind(inputSchema);
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
@@ -225,7 +225,7 @@ public class FormulaTest {
         assertEquals(" ~ (water x sowing_density x wind)", formula.toString());
 
         outputSchema = formula.bind(inputSchema);
-        schema = DataTypes.struct(
+        schema = new StructType(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
@@ -242,7 +242,7 @@ public class FormulaTest {
         System.out.println("bind");
 
         Formula formula = Formula.of("revenue", dot(), cross("water", "sowing_density") , mul("humidity", "wind"), delete("wind"));
-        StructType inputSchema = DataTypes.struct(
+        StructType inputSchema = new StructType(
                 new StructField("revenue", DataTypes.DoubleType, Measure.Currency),
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
@@ -253,7 +253,7 @@ public class FormulaTest {
         System.out.println(formula.expand(inputSchema));
 
         StructType outputSchema = formula.bind(inputSchema);
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("humidity", DataTypes.FloatType, Measure.Percent),
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
@@ -454,9 +454,9 @@ public class FormulaTest {
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.shape(1));
-        assertEquals(Math.ceil(10000), output.get(0,0));
+        assertEquals(10000.0, output.get(0,0));
         assertNull(output.get(1, 0));
-        assertEquals(Math.ceil(230000), output.get(2,0));
+        assertEquals(230000.0, output.get(2,0));
         assertNull(output.get(3, 0));
     }
 
@@ -470,9 +470,9 @@ public class FormulaTest {
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.shape(1));
-        assertEquals(Math.floor(10000), output.get(0,0));
+        assertEquals(10000.0, output.get(0,0));
         assertNull(output.get(1, 0));
-        assertEquals(Math.floor(230000), output.get(2,0));
+        assertEquals(230000.0, output.get(2,0));
         assertNull(output.get(3, 0));
     }
 
@@ -659,7 +659,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(weather);
         System.out.println(output);
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField(
                         "outlook:temperature:humidity",
                         DataTypes.IntegerType,
@@ -699,7 +699,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(weather);
         System.out.println(output);
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("outlook", DataTypes.ByteType, new NominalScale("sunny", "overcast", "rainy")),
                 new StructField("temperature", DataTypes.ByteType, new NominalScale("hot", "mild", "cool")),
                 new StructField("humidity", DataTypes.ByteType, new NominalScale("high", "normal")),

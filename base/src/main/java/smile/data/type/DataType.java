@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
+import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import smile.data.measure.NominalScale;
 import smile.util.Regex;
 import smile.util.Strings;
@@ -505,13 +508,13 @@ public interface DataType extends Serializable {
             case ENUM -> new NominalScale(schema.getEnumSymbols()).type();
             case ARRAY -> DataTypes.array(DataType.of(schema.getElementType()));
             case MAP -> DataTypes.object(java.util.Map.class);
-            case UNION -> union(schema.getTypes());
+            case UNION -> avroUnion(schema.getTypes());
             default -> throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
         };
     }
 
-    /** Converts a Union type. */
-    private static DataType union(List<Schema> union) {
+    /** Converts an avro union type. */
+    private static DataType avroUnion(List<Schema> union) {
         if (union.isEmpty()) {
             throw new IllegalArgumentException("Empty type list of Union");
         }
@@ -537,5 +540,71 @@ public interface DataType extends Serializable {
         }
 
         return DataTypes.object(Object.class);
+    }
+
+    /**
+     * Converts a parquet primitive type to smile data type.
+     * @param primitiveType a parquet primitive type.
+     * @return the data type.
+     */
+    static DataType of(PrimitiveType primitiveType) {
+        var typeName = primitiveType.getPrimitiveTypeName();
+        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
+        Type.Repetition repetition = primitiveType.getRepetition();
+
+        return switch (typeName) {
+            case BOOLEAN -> switch (repetition) {
+                case REQUIRED, OPTIONAL -> DataTypes.BooleanType;
+                case REPEATED -> DataTypes.BooleanArrayType;
+            };
+
+            case INT32 -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.DateLogicalTypeAnnotation dateLogicalTypeAnnotation -> DataTypes.DateType;
+                case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation -> DataTypes.TimeType;
+                case null, default ->
+                        switch (repetition) {
+                            case REQUIRED, OPTIONAL -> DataTypes.IntegerType;
+                            case REPEATED -> DataTypes.IntegerArrayType;
+                        };
+            };
+
+            case INT64 -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation -> DataTypes.TimeType;
+                case LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timestampLogicalTypeAnnotation -> DataTypes.DateTimeType;
+                case null, default ->
+                        switch (repetition) {
+                            case REQUIRED, OPTIONAL -> DataTypes.LongType;
+                            case REPEATED -> DataTypes.LongArrayType;
+                        };
+            };
+
+            case INT96 -> DataTypes.DateTimeType;
+
+            case FLOAT -> switch (repetition) {
+                case REQUIRED, OPTIONAL -> DataTypes.FloatType;
+                case REPEATED -> DataTypes.FloatArrayType;
+            };
+
+            case DOUBLE -> switch (repetition) {
+                case REQUIRED, OPTIONAL -> DataTypes.DoubleType;
+                case REPEATED -> DataTypes.DoubleArrayType;
+            };
+
+            case FIXED_LEN_BYTE_ARRAY -> switch (logicalType) {
+                case LogicalTypeAnnotation.UUIDLogicalTypeAnnotation uuidLogicalTypeAnnotation -> DataTypes.ObjectType;
+                case LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervalLogicalTypeAnnotation -> DataTypes.ObjectType;
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation -> DataTypes.StringType;
+                default -> DataTypes.ByteArrayType;
+            };
+
+            case BINARY -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation -> DataTypes.StringType;
+                default -> DataTypes.ByteArrayType;
+            };
+        };
     }
 }

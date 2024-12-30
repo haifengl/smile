@@ -23,6 +23,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 import org.junit.jupiter.api.*;
 import smile.util.Index;
@@ -111,7 +112,7 @@ public class IndexDataFrameTest {
         System.out.println(df.schema());
         System.out.println(df.structure());
         System.out.println(df);
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),

@@ -43,7 +43,7 @@ public class PenDigits {
         ArrayList<StructField> fields = new ArrayList<>();
         IntStream.range(1, 17).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
         fields.add(new StructField("class", DataTypes.ByteType));
-        StructType schema = DataTypes.struct(fields);
+        StructType schema = new StructType(fields);
 
         try {
             CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').build();

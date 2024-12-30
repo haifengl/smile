@@ -78,7 +78,7 @@ public class DataTypeTest {
     @Test
     public void testStruct() throws ClassNotFoundException {
         System.out.println("struct");
-        StructType type = DataTypes.struct(
+        StructType type = new StructType(
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("gender", DataTypes.CharType),

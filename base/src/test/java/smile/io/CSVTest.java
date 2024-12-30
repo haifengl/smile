@@ -101,7 +101,7 @@ public class CSVTest {
         assertEquals(68, gdp.size());
         assertEquals(4, gdp.ncol());
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("Country", DataTypes.StringType),
                 new StructField("GDP Growth", DataTypes.DoubleType),
                 new StructField("Debt", DataTypes.DoubleType),
@@ -172,7 +172,7 @@ public class CSVTest {
         assertEquals(67, prostate.size());
         assertEquals(9, prostate.ncol());
 
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("lcavol", DataTypes.DoubleType),
                 new StructField("lweight", DataTypes.DoubleType),
                 new StructField("age", DataTypes.IntegerType),
@@ -244,7 +244,7 @@ public class CSVTest {
         assertEquals(1000, df.size());
         assertEquals(13, df.ncol());
 
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.StringType),
                 new StructField("id", DataTypes.IntegerType),
                 new StructField("first_name", DataTypes.StringType),

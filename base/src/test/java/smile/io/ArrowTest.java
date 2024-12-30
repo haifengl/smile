@@ -20,6 +20,7 @@ package smile.io;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 import smile.util.Paths;
 import java.io.File;
@@ -45,10 +46,12 @@ public class ArrowTest {
         }
 
         String url = String.format("jdbc:sqlite:%s", Paths.getTestData("sqlite/chinook.db").toAbsolutePath());
-        String sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total"
-                + " from employees as e"
-                + " join customers as c on e.employeeid = c.supportrepid"
-                + " join invoices as i on c.customerid = i.customerid";
+        String sql = """
+        select e.firstname as 'Employee First', e.lastname as 'Employee Last',
+               c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+            from employees as e
+            join customers as c on e.employeeid = c.supportrepid
+            join invoices as i on c.customerid = i.customerid""";
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt  = conn.createStatement();
@@ -100,7 +103,7 @@ public class ArrowTest {
         System.out.println(df.schema());
         System.out.println(df.structure());
         System.out.println(df);
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("Employee First", DataTypes.StringType),
                 new StructField("Employee Last", DataTypes.StringType),
                 new StructField("Customer First", DataTypes.StringType),

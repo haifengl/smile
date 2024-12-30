@@ -43,7 +43,7 @@ public class Abalone {
     public static double[] testy;
 
     static {
-        StructType schema = DataTypes.struct(
+        StructType schema = new StructType(
                 new StructField("sex", DataTypes.ByteType, new NominalScale("F", "M", "I")),
                 new StructField("length", DataTypes.DoubleType),
                 new StructField("diameter", DataTypes.DoubleType),
