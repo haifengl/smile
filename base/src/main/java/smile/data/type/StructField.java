@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.apache.arrow.vector.types.DateUnit;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
@@ -326,7 +325,7 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
                 yield new Field(name,
                         new FieldType(false, new ArrowType.Struct(), null),
                         // children type
-                        Arrays.stream(children.fields()).map(StructField::toArrow).collect(Collectors.toList())
+                        Arrays.stream(children.fields()).map(StructField::toArrow).toList()
                 );
             }
         };

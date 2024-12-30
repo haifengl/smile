@@ -18,7 +18,6 @@
 package smile.association;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -69,7 +68,7 @@ public class FPGrowthTest {
     public void test() {
         System.out.println("FP-Growth");
         FPTree tree = FPTree.of(3, itemsets);
-        List<ItemSet> results = FPGrowth.apply(tree).collect(Collectors.toList());
+        List<ItemSet> results = FPGrowth.apply(tree).toList();
         for (var itemSet : results) {
             System.out.println(itemSet);
         }

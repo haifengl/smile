@@ -19,8 +19,6 @@ package smile.classification;
 
 import java.io.Serial;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -418,7 +416,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
      */
     DecisionTree prune(DataFrame test, Formula formula, IntSet classes) {
         double[] imp = importance.clone();
-        Prune prune = prune(root, test.stream().collect(Collectors.toList()), imp, formula, classes);
+        Prune prune = prune(root, test.toList(), imp, formula, classes);
         return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.classes);
     }
 
@@ -432,7 +430,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /** Prunes a subtree. */
-    private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, IntSet labels) {
+    private Prune prune(Node node, List<? extends Tuple> test, double[] importance, Formula formula, IntSet labels) {
         if (node instanceof DecisionNode leaf) {
             int y = leaf.output();
 

@@ -19,7 +19,6 @@ package smile.data.vector;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -72,7 +71,7 @@ public class ObjectVector<T> extends AbstractVector {
      * @return the distinct values.
      */
     public List<T> distinct() {
-        return stream().distinct().collect(Collectors.toList());
+        return stream().distinct().toList();
     }
 
     @Override

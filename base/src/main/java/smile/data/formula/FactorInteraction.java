@@ -94,7 +94,7 @@ public class FactorInteraction implements Term {
             CategoricalMeasure cat = (CategoricalMeasure) field.measure();
             levels = levels.stream()
                     .flatMap(l -> Arrays.stream(cat.levels()).map(level -> l.isEmpty() ? level : l + ":" + level))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         return Collections.singletonList(new InteractionFeature(levels));

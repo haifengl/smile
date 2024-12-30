@@ -17,14 +17,13 @@
 
 package smile.base.cart;
 
+import java.io.Serial;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-
-import java.io.Serial;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * A node with a nominal split variable.

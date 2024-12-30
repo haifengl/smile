@@ -95,7 +95,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
      * @param stream the stream of nonzero entries.
      */
     public SparseArray(Stream<Entry> stream) {
-        this(stream.collect(Collectors.toList()));
+        this(stream.toList());
     }
 
     @Override

@@ -19,7 +19,6 @@ package smile.neighbor;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import smile.neighbor.lsh.Bucket;
 import smile.neighbor.lsh.Hash;
 
@@ -128,7 +127,7 @@ public class MutableLSH<E> extends LSH<E> {
      * @return the keys.
      */
     public List<double[]> keys() {
-        return keys.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        return keys.stream().filter(Objects::nonNull).toList();
     }
 
     /**
@@ -136,6 +135,6 @@ public class MutableLSH<E> extends LSH<E> {
      * @return the values.
      */
     public List<E> values() {
-        return data.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        return data.stream().filter(Objects::nonNull).toList();
     }
 }

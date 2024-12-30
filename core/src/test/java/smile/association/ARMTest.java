@@ -17,7 +17,6 @@
 package smile.association;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,7 +64,7 @@ public class ARMTest {
     public void test() {
         System.out.println("ARM");
         FPTree tree = FPTree.of(3, itemsets);
-        List<AssociationRule> rules = ARM.apply(0.5, tree).collect(Collectors.toList());
+        List<AssociationRule> rules = ARM.apply(0.5, tree).toList();
         for (var rule : rules) {
             System.out.println(rule);
         }
