@@ -348,24 +348,20 @@ public class Formula implements Serializable {
         List<Feature> features = Arrays.stream(formula.predictors)
                 .filter(predictor -> !(predictor instanceof Delete) && !(predictor instanceof Intercept))
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
-                .collect(Collectors.toList());
+                .toList();
 
         binding.x = features.toArray(new Feature[0]);
-        binding.xschema = DataTypes.struct(
-                features.stream()
+        binding.xschema = new StructType(features.stream()
                      .map(Feature::field)
-                     .toArray(StructField[]::new)
-        );
+                     .toArray(StructField[]::new));
 
         if (response != null) {
             try {
                 features.addAll(0, response.bind(inputSchema));
                 binding.yx = features.toArray(new Feature[0]);
-                binding.yxschema = DataTypes.struct(
-                        features.stream()
+                binding.yxschema = new StructType(features.stream()
                              .map(Feature::field)
-                             .toArray(StructField[]::new)
-                );
+                             .toArray(StructField[]::new));
             } catch (IllegalArgumentException ex) {
                 logger.debug("The response variable {} doesn't exist in the schema {}", response, inputSchema);
             }

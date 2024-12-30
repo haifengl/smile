@@ -285,7 +285,7 @@ public class Arff implements AutoCloseable {
             throw new ParseException("no attributes declared", tokenizer.lineno());
         }
         
-        schema = DataTypes.struct(fields);
+        schema = new StructType(fields);
         parser = schema.parser();
     }
 

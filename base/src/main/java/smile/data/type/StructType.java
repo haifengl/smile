@@ -19,6 +19,10 @@ package smile.data.type;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.sql.JDBCType;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -265,6 +269,40 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
                 throw new RuntimeException(ex);
             }
         }
+    }
+
+    /**
+     * Creates a struct data type from JDBC result set meta data.
+     * @param rs the JDBC result set.
+     * @throws SQLException when JDBC operation fails.
+     * @return the struct data type.
+     */
+    public static StructType of(ResultSet rs) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        String dbms = rs.getStatement().getConnection().getMetaData().getDatabaseProductName();
+        return StructType.of(meta, dbms);
+    }
+
+    /**
+     * Creates a struct data type from JDBC result set meta data.
+     * @param meta the JDBC result set meta data.
+     * @param dbms the name of database management system.
+     * @throws SQLException when JDBC operation fails.
+     * @return the struct data type.
+     */
+    public static StructType of(ResultSetMetaData meta, String dbms) throws SQLException {
+        int ncol = meta.getColumnCount();
+        StructField[] fields = new StructField[ncol];
+        for (int i = 1; i <= ncol; i++) {
+            String name = meta.getColumnName(i);
+            DataType type = DataType.of(
+                    JDBCType.valueOf(meta.getColumnType(i)),
+                    meta.isNullable(i) != ResultSetMetaData.columnNoNulls,
+                    dbms);
+            fields[i-1] = new StructField(name, type);
+        }
+
+        return new StructType(fields);
     }
 
     /**

@@ -262,6 +262,6 @@ public class JSON {
         for (Map.Entry<String, DataType> type : types.entrySet()) {
             fields[i++] = new StructField(type.getKey(), type.getValue());
         }
-        return DataTypes.struct(fields);
+        return new StructType(fields);
     }
 }
