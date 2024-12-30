@@ -68,9 +68,6 @@ public abstract class PrimitiveVector extends AbstractVector {
      * @param mask The null bitmap mask.
      */
     public void setNullMask(BitSet mask) {
-        if (mask.size() != length()) {
-            throw new IllegalArgumentException("The null bitmap mask size does not match data length");
-        }
         nullMask = mask;
     }
 
