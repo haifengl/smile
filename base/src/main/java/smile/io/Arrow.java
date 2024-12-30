@@ -27,21 +27,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
 import org.apache.arrow.vector.ipc.ArrowStreamReader;
 import org.apache.arrow.vector.ipc.ArrowStreamWriter;
-import org.apache.arrow.vector.types.DateUnit;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
-import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
-import static org.apache.arrow.vector.types.FloatingPointPrecision.DOUBLE;
-import static org.apache.arrow.vector.types.FloatingPointPrecision.SINGLE;
 import smile.data.DataFrame;
 import smile.data.type.*;
 
@@ -277,7 +271,7 @@ public class Arrow {
             allocate(Long.MAX_VALUE);
         }
 
-        Schema schema = toArrowSchema(data.schema());
+        Schema schema = data.schema().toArrow();
         /*
          * When a field is dictionary encoded, the values are represented
          * by an array of Int32 representing the index of the value in the
@@ -1133,203 +1127,5 @@ public class Arrow {
         }
 
         fieldVector.setValueCount(count);
-    }
-
-    /** Converts a smile schema to arrow schema. */
-    private Schema toArrowSchema(StructType schema) {
-        List<Field> fields = new ArrayList<>();
-        for (StructField field : schema.fields()) {
-            fields.add(toArrowField(field));
-        }
-
-        return new Schema(fields, null);
-    }
-
-    /** Converts an arrow schema to smile schema. */
-    private StructType toSmileSchema(Schema schema) {
-        List<StructField> fields = new ArrayList<>();
-        for (Field field : schema.getFields()) {
-            fields.add(toSmileField(field));
-        }
-
-        return DataTypes.struct(fields);
-    }
-
-    /** Converts a smile struct field to arrow field. */
-    private Field toArrowField(StructField field) {
-        switch (field.dtype().id()) {
-            case Integer:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Int(32, true), null), null);
-            case Long:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Int(64, true), null), null);
-            case Double:
-                return new Field(field.name(), new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null);
-            case Float:
-                return new Field(field.name(), new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null);
-            case Boolean:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Bool(), null), null);
-            case Byte:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Int(8, true), null), null);
-            case Short:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Int(16, true), null), null);
-            case Char:
-                return new Field(field.name(), new FieldType(false, new ArrowType.Int(16, false), null), null);
-            case Decimal:
-                return new Field(field.name(), FieldType.nullable(new ArrowType.Decimal(28, 10, 128)), null);
-            case String:
-                return new Field(field.name(), FieldType.nullable(new ArrowType.Utf8()), null);
-            case Date:
-                return new Field(field.name(), FieldType.nullable(new ArrowType.Date(DateUnit.DAY)), null);
-            case Time:
-                return new Field(field.name(), FieldType.nullable(new ArrowType.Time(TimeUnit.MILLISECOND, 32)), null);
-            case DateTime:
-                return new Field(field.name(), FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
-            case Object: {
-                Class<?> clazz = ((ObjectType) field.dtype()).getObjectClass();
-                if (clazz == Integer.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(32, true)), null);
-                } else if (clazz == Long.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(64, true)), null);
-                } else if (clazz == Double.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.FloatingPoint(DOUBLE)), null);
-                } else if (clazz == Float.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.FloatingPoint(SINGLE)), null);
-                } else if (clazz == Boolean.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Bool()), null);
-                } else if (clazz == Byte.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(8, true)), null);
-                } else if (clazz == Short.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(16, true)), null);
-                } else if (clazz == Character.class) {
-                    return new Field(field.name(), FieldType.nullable(new ArrowType.Int(16, false)), null);
-                }
-                break;
-            }
-            case Array: {
-                DataType etype = ((ArrayType) field.dtype()).getComponentType();
-                switch (etype.id()) {
-                    case Integer:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
-                        );
-                    case Long:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
-                        );
-                    case Double:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
-                        );
-                    case Float:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
-                        );
-                    case Boolean:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
-                        );
-                    case Byte:
-                        return new Field(field.name(), FieldType.nullable(new ArrowType.Binary()), null);
-                    case Short:
-                        return new Field(field.name(),
-                                new FieldType(false, new ArrowType.List(), null),
-                                // children type
-                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
-                        );
-                    case Char:
-                        return new Field(field.name(), FieldType.nullable(new ArrowType.Utf8()), null);
-                }
-                break;
-            }
-            case Struct: {
-                StructType children = (StructType) field.dtype();
-                return new Field(field.name(),
-                        new FieldType(false, new ArrowType.Struct(), null),
-                        // children type
-                        Arrays.stream(children.fields()).map(this::toArrowField).collect(Collectors.toList())
-                );
-            }
-        }
-
-        throw new UnsupportedOperationException("Unsupported smile to arrow type conversion: " + field.dtype());
-    }
-
-    /** Converts an arrow field to smile struct field. */
-    private StructField toSmileField(Field field) {
-        String name = field.getName();
-        ArrowType type = field.getType();
-        boolean nullable = field.isNullable();
-        switch (type.getTypeID()) {
-            case Int:
-                ArrowType.Int itype = (ArrowType.Int) type;
-                int bitWidth = itype.getBitWidth();
-                switch (bitWidth) {
-                    case  8: return new StructField(name, nullable ? DataTypes.ByteObjectType : DataTypes.ByteType);
-                    case 16:
-                        if (itype.getIsSigned())
-                            return new StructField(name, nullable ? DataTypes.ShortObjectType : DataTypes.ShortType);
-                        else
-                            return new StructField(name, nullable ? DataTypes.CharObjectType : DataTypes.CharType);
-                    case 32: return new StructField(name, nullable ? DataTypes.IntegerObjectType : DataTypes.IntegerType);
-                    case 64: return new StructField(name, nullable ? DataTypes.LongObjectType : DataTypes.LongType);
-                    default: throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
-                }
-
-            case FloatingPoint:
-                FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
-                return switch (precision) {
-                    case DOUBLE -> new StructField(name, nullable ? DataTypes.DoubleObjectType : DataTypes.DoubleType);
-                    case SINGLE -> new StructField(name, nullable ? DataTypes.FloatObjectType : DataTypes.FloatType);
-                    case HALF -> throw new UnsupportedOperationException("Unsupported float precision: " + precision);
-                };
-
-            case Bool:
-                return new StructField(name, nullable ? DataTypes.BooleanObjectType : DataTypes.BooleanType);
-
-            case Decimal:
-                return new StructField(name, DataTypes.DecimalType);
-
-            case Utf8:
-                return new StructField(name, DataTypes.StringType);
-
-            case Date:
-                return new StructField(name, DataTypes.DateType);
-
-            case Time:
-                return new StructField(name, DataTypes.TimeType);
-
-            case Timestamp:
-                return new StructField(name, DataTypes.DateTimeType);
-
-            case Binary:
-            case FixedSizeBinary:
-                return new StructField(name, DataTypes.ByteArrayType);
-
-            case List:
-            case FixedSizeList:
-                List<Field> child = field.getChildren();
-                if (child.size() != 1) {
-                    throw new IllegalStateException(String.format("List type has %d child fields.", child.size()));
-                }
-
-                return new StructField(name, DataTypes.array(toSmileField(child.getFirst()).dtype()));
-
-            case Struct:
-                List<StructField> children = field.getChildren().stream().map(this::toSmileField).collect(Collectors.toList());
-                return new StructField(name, DataTypes.struct(children));
-
-            default:
-                throw new UnsupportedOperationException("Unsupported arrow to smile type conversion: " + type);
-        }
     }
 }
