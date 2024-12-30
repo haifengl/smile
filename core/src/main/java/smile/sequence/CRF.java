@@ -293,8 +293,8 @@ public class CRF implements Serializable {
         }
 
         NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
-        DataFrame data = DataFrame.of(x)
-                .merge(new IntVector(new StructField("s(t-1)", DataTypes.IntegerType, scale), state));
+        IntVector t1 = new IntVector(new StructField("s(t-1)", DataTypes.IntegerType, scale), state);
+        DataFrame data = DataFrame.of(x.getFirst().schema(), x).merge(t1);
 
         StructField field = new StructField("residual", DataTypes.DoubleType);
         RegressionTree[][] potentials = new RegressionTree[k][ntrees];

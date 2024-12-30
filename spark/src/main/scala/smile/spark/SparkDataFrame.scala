@@ -27,7 +27,7 @@ object SparkDataFrame {
   /** Returns a local Smile DataFrame. */
   def apply(df: org.apache.spark.sql.DataFrame): DataFrame = {
     val schema = DataTypeOps.toSmileSchema(df.schema)
-    DataFrame.of(
+    DataFrame.of(schema,
       df.collect()
         .map(row => SparkRowTuple(schema, row))
         .toList

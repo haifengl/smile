@@ -154,14 +154,14 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
      * @return the model.
      */
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+        StructType schema = formula.x(data.get(0)).schema();
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();
         OneVersusRest<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
-            DataFrame df = DataFrame.of(Arrays.asList(rows));
+            DataFrame df = DataFrame.of(schema, Arrays.asList(rows));
             return trainer.apply(formula, df);
         });
 
-        StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
             @Override
             public int numClasses() {
