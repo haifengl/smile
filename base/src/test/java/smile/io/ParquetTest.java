@@ -39,7 +39,6 @@ public class ParquetTest {
         try {
             df = Parquet.read(Paths.getTestData("kylo/userdata1.parquet"));
             System.out.println(df);
-            System.out.println(df.schema());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -79,12 +78,9 @@ public class ParquetTest {
     @Test
     public void testSchema() {
         System.out.println("schema");
-        System.out.println(df.schema());
-        System.out.println(df.structure().toString(15));
-        System.out.println(df);
         smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.DateTimeType),
-                new StructField("id", DataTypes.IntType),
+                new StructField("id", DataTypes.NullableIntType),
                 new StructField("first_name", DataTypes.StringType),
                 new StructField("last_name", DataTypes.StringType),
                 new StructField("email", DataTypes.StringType),
