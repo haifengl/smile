@@ -252,14 +252,16 @@ public class CSVTest {
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.LongObjectType),
+                new StructField("cc", DataTypes.LongType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleObjectType),
+                new StructField("salary", DataTypes.DoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );
         assertEquals(schema, df.schema());
+        assertFalse(df.column("id").isNullable());
+        assertTrue(df.column("salary").isNullable());
 
         assertEquals("2016-02-03T07:55:29Z", df.get(0,0));
         assertEquals(1, df.getLong(0, 1));
