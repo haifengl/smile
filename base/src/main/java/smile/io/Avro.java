@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
@@ -34,10 +33,6 @@ import org.apache.avro.util.Utf8;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -123,7 +118,7 @@ public class Avro {
     public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
-            StructType struct = toSmileSchema(schema);
+            StructType struct = StructType.of(schema);
 
             List<Tuple> rows = new ArrayList<>();
             GenericRecord record = null;
@@ -141,70 +136,7 @@ public class Avro {
                 }
                 rows.add(Tuple.of(struct, row));
             }
-            return DataFrame.of(rows);
+            return DataFrame.of(struct, rows);
         }
-    }
-
-    /** Converts an arrow schema to smile schema. */
-    private StructType toSmileSchema(Schema schema) {
-        List<StructField> fields = new ArrayList<>();
-        for (Schema.Field field : schema.getFields()) {
-            NominalScale scale = null;
-            if (field.schema().getType() == Schema.Type.ENUM) {
-                scale = new NominalScale(field.schema().getEnumSymbols());
-            }
-
-            fields.add(new StructField(field.name(), typeOf(field.schema()), scale));
-        }
-
-        return DataTypes.struct(fields);
-    }
-
-    /** Converts an avro type to smile type. */
-    private DataType typeOf(Schema schema) {
-        return switch (schema.getType()) {
-            case BOOLEAN -> DataTypes.BooleanType;
-            case INT -> DataTypes.IntegerType;
-            case LONG -> DataTypes.LongType;
-            case FLOAT -> DataTypes.FloatType;
-            case DOUBLE -> DataTypes.DoubleType;
-            case STRING -> DataTypes.StringType;
-            case FIXED, BYTES -> DataTypes.ByteArrayType;
-            case ENUM -> new NominalScale(schema.getEnumSymbols()).type();
-            case ARRAY -> DataTypes.array(typeOf(schema.getElementType()));
-            case MAP -> DataTypes.object(java.util.Map.class);
-            case UNION -> unionType(schema);
-            default -> throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
-        };
-    }
-
-    /** Converts a Union type. */
-    private DataType unionType(Schema schema) {
-        List<Schema> union = schema.getTypes();
-        if (union.isEmpty()) {
-            throw new IllegalArgumentException("Empty type list of Union");
-        }
-
-        if (union.size() > 2) {
-            String s = union.stream().map(Schema::getType).map(Object::toString).collect(Collectors.joining(", "));
-            throw new UnsupportedOperationException(String.format("Unsupported type Union(%s)", s));
-        }
-
-        if (union.size() == 1) {
-            return typeOf(union.getFirst());
-        }
-
-        Schema a = union.get(0);
-        Schema b = union.get(1);
-
-        if (a.getType() == Schema.Type.NULL && b.getType() != Schema.Type.NULL) {
-            return typeOf(b).boxed();
-        }
-
-        if (a.getType() != Schema.Type.NULL && b.getType() == Schema.Type.NULL) {
-            return typeOf(a).boxed();
-        }
-
-        return DataTypes.object(Object.class);
     }
 }
