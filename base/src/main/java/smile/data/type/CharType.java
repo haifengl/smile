@@ -27,7 +27,7 @@ public class CharType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     CharType(boolean nullable) {
-        super(nullable);
+        super(ID.Char, nullable);
     }
 
     @Override
@@ -36,31 +36,8 @@ public class CharType extends PrimitiveType {
     }
 
     @Override
-    public ID id() {
-        return ID.Char;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Char" : "char";
-    }
-
-    @Override
-    public String toString() {
-        return "char";
-    }
-
-    @Override
     public Character valueOf(String s) {
         if (s == null || s.isEmpty()) return null;
         return s.charAt(0);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof CharType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

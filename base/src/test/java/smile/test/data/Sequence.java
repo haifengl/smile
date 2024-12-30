@@ -109,7 +109,7 @@ public interface Sequence {
             Arrays.sort(values);
             base[i] = values[0];
             NominalScale scale = new NominalScale(IntStream.range(0, values.length).mapToObj(String::valueOf).toArray(String[]::new));
-            return new StructField("V"+(i+1), DataTypes.IntegerType, scale);
+            return new StructField("V"+(i+1), DataTypes.IntType, scale);
         }).toArray(StructField[]::new));
 
         int n = x.stream().mapToInt(xi -> xi.length).sum();

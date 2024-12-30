@@ -48,7 +48,7 @@ public class DataTypeTest {
     @Test
     public void testInt() throws ClassNotFoundException {
         System.out.println("int");
-        assertEquals(DataTypes.IntegerType, DataType.of("int"));
+        assertEquals(DataTypes.IntType, DataType.of("int"));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class DataTypeTest {
     @Test
     public void testArray() throws ClassNotFoundException {
         System.out.println("array");
-        assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("Array[int]"));
+        assertEquals(DataTypes.array(DataTypes.IntType), DataType.of("Array[int]"));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class DataTypeTest {
     public void testStruct() throws ClassNotFoundException {
         System.out.println("struct");
         StructType type = new StructType(
-                new StructField("age", DataTypes.IntegerType),
+                new StructField("age", DataTypes.IntType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("gender", DataTypes.CharType),
                 new StructField("name", DataTypes.StringType),

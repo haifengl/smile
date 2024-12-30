@@ -136,7 +136,7 @@ public interface Feature {
 
         int size = data.size();
         return switch (field.dtype().id()) {
-            case Integer -> {
+            case Int -> {
                 int[] values = new int[size];
                 for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));
                 yield new IntVector(field, values);

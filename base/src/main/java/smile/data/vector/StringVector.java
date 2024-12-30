@@ -94,14 +94,14 @@ public class StringVector extends ObjectVector<String> {
                 StructField field = new StructField(name(), DataTypes.ShortType, scale);
                 return new ShortVector(field, data);
             }
-            case Integer: {
+            case Int: {
                 int[] data = new int[size()];
                 for (int i = 0; i < data.length; i++) {
                     String s = get(i);
                     data[i] = s == null ? -1 : scale.valueOf(s).intValue();
                 }
 
-                StructField field = new StructField(name(), DataTypes.IntegerType, scale);
+                StructField field = new StructField(name(), DataTypes.IntType, scale);
                 return new IntVector(field, data);
             }
             default:

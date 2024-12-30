@@ -32,27 +32,12 @@ public class FloatType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     FloatType(boolean nullable) {
-        super(nullable);
+        super(ID.Float, nullable);
     }
 
     @Override
     public boolean isFloat() {
         return true;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Float" : "float";
-    }
-
-    @Override
-    public ID id() {
-        return ID.Float;
-    }
-
-    @Override
-    public String toString() {
-        return "float";
     }
 
     @Override
@@ -63,13 +48,5 @@ public class FloatType extends PrimitiveType {
     @Override
     public Float valueOf(String s) {
         return Float.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof FloatType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

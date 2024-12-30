@@ -22,19 +22,47 @@ package smile.data.type;
  * @author Haifeng Li
  */
 public abstract class PrimitiveType implements DataType {
+    /** The type ID. */
+    ID id;
     /** True if the data may be null. */
     boolean nullable;
 
     /**
      * Constructor.
+     * @param id The type ID.
      * @param nullable True if the data may be null.
      */
-    PrimitiveType(boolean nullable) {
+    PrimitiveType(ID id, boolean nullable) {
+        this.id = id;
         this.nullable = nullable;
+    }
+
+    @Override
+    public ID id() {
+        return id;
+    }
+
+    @Override
+    public String name() {
+        String name = id.toString();
+        return nullable ? name : name.toLowerCase();
+    }
+
+    @Override
+    public String toString() {
+        return id.toString().toLowerCase();
     }
 
     @Override
     public boolean isNullable() {
         return nullable;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof PrimitiveType t) {
+            return id == t.id && nullable == t.nullable;
+        }
+        return false;
     }
 }

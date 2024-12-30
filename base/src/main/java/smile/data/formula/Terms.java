@@ -1091,7 +1091,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private final StructField field = new StructField(String.valueOf(x), DataTypes.IntegerType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.IntType, null);
 
                     @Override
                     public StructField field() {
@@ -1320,7 +1320,7 @@ public interface Terms {
 
                 for (Feature feature : x.bind(schema)) {
                     features.add(new Feature() {
-                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.IntegerType, null);
+                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.IntType, null);
 
                         @Override
                         public StructField field() {
@@ -1571,7 +1571,7 @@ public interface Terms {
 
                     features.add(new Feature() {
                         final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name(), yfield.name()),
-                                DataTypes.IntegerType,
+                                DataTypes.IntType,
                                 null);
 
                         @Override

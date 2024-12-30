@@ -163,7 +163,7 @@ public class ArffTest {
             DataFrame sparse = arff.read();
 
             StructType schema = new StructType(
-                    new StructField("V1", DataTypes.IntegerType),
+                    new StructField("V1", DataTypes.IntType),
                     new StructField("V2", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),
                     new StructField("V3", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),
                     new StructField("V4", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),

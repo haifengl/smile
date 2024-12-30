@@ -54,7 +54,7 @@ public interface DataType extends Serializable {
         /** Short type ID. */
         Short,
         /** Integer type ID. */
-        Integer,
+        Int,
         /** Long type ID. */
         Long,
         /** Float type ID. */
@@ -123,7 +123,7 @@ public interface DataType extends Serializable {
      */
     default boolean isPrimitive() {
         return switch (id()) {
-            case Integer, Long, Float, Double, Boolean, Char, Byte, Short -> true;
+            case Int, Long, Float, Double, Boolean, Char, Byte, Short -> true;
             default -> false;
         };
     }
@@ -259,7 +259,7 @@ public interface DataType extends Serializable {
             return a.isNullable() || b.isNullable() ? DataTypes.NullableLongType : DataTypes.LongType;
         }
 
-        return a.isNullable() || b.isNullable() ? DataTypes.NullableIntegerType : DataTypes.IntegerType;
+        return a.isNullable() || b.isNullable() ? DataTypes.NullableIntType : DataTypes.IntType;
     }
 
     /**
@@ -276,8 +276,8 @@ public interface DataType extends Serializable {
 
         if (a.id() == b.id()) return a;
 
-        if ((a.id() == DataType.ID.Integer && b.id() == DataType.ID.Double) ||
-            (b.id() == DataType.ID.Integer && a.id() == DataType.ID.Double))
+        if ((a.id() == DataType.ID.Int && b.id() == DataType.ID.Double) ||
+            (b.id() == DataType.ID.Int && a.id() == DataType.ID.Double))
             return a.isNullable() || b.isNullable() ? DataTypes.NullableDoubleType : DataTypes.DoubleType;
 
         if ((a.id() == DataType.ID.Date && b.id() == DataType.ID.DateTime) ||
@@ -297,7 +297,7 @@ public interface DataType extends Serializable {
         if (Regex.DATETIME.matcher(s).matches()) return DataTypes.DateTimeType;
         if (Regex.DATE.matcher(s).matches()) return DataTypes.DateType;
         if (Regex.TIME.matcher(s).matches()) return DataTypes.TimeType;
-        if (Regex.INTEGER.matcher(s).matches()) return DataTypes.IntegerType;
+        if (Regex.INTEGER.matcher(s).matches()) return DataTypes.IntType;
         if (Regex.LONG.matcher(s).matches()) return DataTypes.LongType;
         if (Regex.DOUBLE.matcher(s).matches()) return DataTypes.DoubleType;
         if (Regex.BOOLEAN.matcher(s).matches()) return DataTypes.BooleanType;
@@ -316,7 +316,7 @@ public interface DataType extends Serializable {
             case "char" -> DataTypes.CharType;
             case "byte" -> DataTypes.ByteType;
             case "short" -> DataTypes.ShortType;
-            case "int" -> DataTypes.IntegerType;
+            case "int" -> DataTypes.IntType;
             case "long" -> DataTypes.LongType;
             case "float" -> DataTypes.FloatType;
             case "double" -> DataTypes.DoubleType;
@@ -324,7 +324,7 @@ public interface DataType extends Serializable {
             case "Char" -> DataTypes.NullableCharType;
             case "Byte" -> DataTypes.NullableByteType;
             case "Short" -> DataTypes.NullableShortType;
-            case "Int" -> DataTypes.NullableIntegerType;
+            case "Int" -> DataTypes.NullableIntType;
             case "Long" -> DataTypes.NullableLongType;
             case "Float" -> DataTypes.NullableFloatType;
             case "Double" -> DataTypes.NullableDoubleType;
@@ -366,7 +366,7 @@ public interface DataType extends Serializable {
      */
     static DataType of(Class<?> clazz) {
         if (clazz == int.class)
-            return DataTypes.IntegerType;
+            return DataTypes.IntType;
         else if (clazz == double.class)
             return DataTypes.DoubleType;
         else if (clazz == long.class)
@@ -382,7 +382,7 @@ public interface DataType extends Serializable {
         else if (clazz == char.class)
             return DataTypes.CharType;
         else if (clazz == Integer.class)
-            return DataTypes.NullableIntegerType;
+            return DataTypes.NullableIntType;
         else if (clazz == Double.class)
             return DataTypes.NullableDoubleType;
         else if (clazz == Long.class)
@@ -416,7 +416,7 @@ public interface DataType extends Serializable {
             } else if (levels < Short.MAX_VALUE + 1) {
                 return DataTypes.ShortType;
             } else {
-                return DataTypes.IntegerType;
+                return DataTypes.IntType;
             }
         }
         else
@@ -435,7 +435,7 @@ public interface DataType extends Serializable {
             case BOOLEAN, BIT -> nullable ? DataTypes.NullableBooleanType : DataTypes.BooleanType;
             case TINYINT -> nullable ? DataTypes.NullableByteType : DataTypes.ByteType;
             case SMALLINT -> nullable ? DataTypes.NullableShortType : DataTypes.ShortType;
-            case INTEGER -> nullable ? DataTypes.NullableIntegerType : DataTypes.IntegerType;
+            case INTEGER -> nullable ? DataTypes.NullableIntType : DataTypes.IntType;
             case BIGINT -> nullable ? DataTypes.NullableLongType : DataTypes.LongType;
             case NUMERIC -> {
                 // Numeric should be like Decimal.
@@ -476,7 +476,7 @@ public interface DataType extends Serializable {
     private static DataType of(Schema schema, boolean nullable) {
         return switch (schema.getType()) {
             case BOOLEAN -> nullable ? DataTypes.BooleanType : DataTypes.NullableBooleanType;
-            case INT -> nullable ? DataTypes.IntegerType : DataTypes.NullableIntegerType;
+            case INT -> nullable ? DataTypes.IntType : DataTypes.NullableIntType;
             case LONG -> nullable ? DataTypes.LongType : DataTypes.NullableLongType;
             case FLOAT -> nullable ? DataTypes.FloatType : DataTypes.NullableFloatType;
             case DOUBLE -> nullable ? DataTypes.DoubleType : DataTypes.NullableDoubleType;
@@ -542,9 +542,9 @@ public interface DataType extends Serializable {
                 case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation -> DataTypes.TimeType;
                 case null, default ->
                         switch (repetition) {
-                            case REQUIRED -> DataTypes.IntegerType;
-                            case OPTIONAL -> DataTypes.NullableIntegerType;
-                            case REPEATED -> DataTypes.IntegerArrayType;
+                            case REQUIRED -> DataTypes.IntType;
+                            case OPTIONAL -> DataTypes.NullableIntType;
+                            case REPEATED -> DataTypes.IntArrayType;
                         };
             };
 
@@ -603,9 +603,9 @@ public interface DataType extends Serializable {
                 ArrowType.Int itype = (ArrowType.Int) type;
                 int bitWidth = itype.getBitWidth();
                 yield switch (bitWidth) {
-                    case 8 -> nullable ? DataTypes.NullableByteType : DataTypes.ByteType;
+                    case  8 -> nullable ? DataTypes.NullableByteType : DataTypes.ByteType;
                     case 16 -> nullable ? DataTypes.NullableShortType : DataTypes.ShortType;
-                    case 32 -> nullable ? DataTypes.NullableIntegerType : DataTypes.IntegerType;
+                    case 32 -> nullable ? DataTypes.NullableIntType : DataTypes.IntType;
                     case 64 -> nullable ? DataTypes.NullableLongType : DataTypes.LongType;
                     default -> throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
                 };

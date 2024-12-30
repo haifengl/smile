@@ -60,7 +60,7 @@ object DataTypeOps {
       case ByteType => DataTypes.ByteType
       case BinaryType => DataTypes.ByteArrayType
       case ShortType => DataTypes.ShortType
-      case IntegerType => DataTypes.IntegerType
+      case IntegerType => DataTypes.IntType
       case LongType => DataTypes.LongType
       case FloatType => DataTypes.FloatType
       case DoubleType => DataTypes.DoubleType
@@ -120,7 +120,7 @@ object DataTypeOps {
       case DataType.ID.Byte => ByteType
       case DataType.ID.Char => StringType
       case DataType.ID.Short => ShortType
-      case DataType.ID.Integer => IntegerType
+      case DataType.ID.Int => IntegerType
       case DataType.ID.Long => LongType
       case DataType.ID.Float => FloatType
       case DataType.ID.Double => DoubleType

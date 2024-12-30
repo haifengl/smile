@@ -21,13 +21,13 @@ package smile.data.type;
  *
  * @author Haifeng Li
  */
-public class IntegerType extends PrimitiveType {
+public class IntType extends PrimitiveType {
     /**
      * Constructor.
      * @param nullable True if the data may be null.
      */
-    IntegerType(boolean nullable) {
-        super(nullable);
+    IntType(boolean nullable) {
+        super(ID.Int, nullable);
     }
 
     @Override
@@ -36,30 +36,7 @@ public class IntegerType extends PrimitiveType {
     }
 
     @Override
-    public String name() {
-        return nullable ? "Int" : "int";
-    }
-
-    @Override
-    public ID id() {
-        return ID.Integer;
-    }
-
-    @Override
-    public String toString() {
-        return "int";
-    }
-
-    @Override
     public Integer valueOf(String s) {
         return Integer.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof IntegerType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

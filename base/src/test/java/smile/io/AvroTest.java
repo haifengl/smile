@@ -93,7 +93,7 @@ public class AvroTest {
                 new StructField("cc", DataTypes.LongType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleType),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );

@@ -130,7 +130,7 @@ public class FormulaTest {
 
         StructType schema = new StructType(
                 new StructField("salary", DataTypes.DoubleType),
-                new StructField("age", DataTypes.IntegerType),
+                new StructField("age", DataTypes.IntType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("name", DataTypes.StringType),
                 new StructField("log(age)", DataTypes.DoubleType),
@@ -152,7 +152,7 @@ public class FormulaTest {
 
         smile.data.type.StructType schema = new StructType(
                 new StructField("salary", DataTypes.object(Double.class)),
-                new StructField("age", DataTypes.IntegerType)
+                new StructField("age", DataTypes.IntType)
         );
         assertEquals(schema, output.schema());
 
@@ -162,7 +162,7 @@ public class FormulaTest {
         assertEquals(1, x.shape(1));
 
         smile.data.type.StructType xschema = new StructType(
-                new StructField("age", DataTypes.IntegerType)
+                new StructField("age", DataTypes.IntType)
         );
         assertEquals(xschema, x.schema());
 
@@ -190,7 +190,7 @@ public class FormulaTest {
         StructType schema = new StructType(
                 new StructField(
                         "water:sowing_density:wind",
-                        DataTypes.IntegerType,
+                        DataTypes.IntType,
                         new NominalScale(
                                 "dry:low:weak", "dry:low:strong", "dry:high:weak", "dry:high:strong",
                                 "wet:low:weak", "wet:low:strong", "wet:high:weak", "wet:high:strong")
@@ -216,9 +216,9 @@ public class FormulaTest {
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
-                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
-                new StructField("water:wind", DataTypes.IntegerType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
-                new StructField("sowing_density:wind", DataTypes.IntegerType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong"))
+                new StructField("water:sowing_density", DataTypes.IntType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
+                new StructField("water:wind", DataTypes.IntType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
+                new StructField("sowing_density:wind", DataTypes.IntType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong"))
         );
         assertEquals(schema, outputSchema);
 
@@ -230,10 +230,10 @@ public class FormulaTest {
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
                 new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
-                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
-                new StructField("water:wind", DataTypes.IntegerType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
-                new StructField("sowing_density:wind", DataTypes.IntegerType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong")),
-                new StructField("water:sowing_density:wind", DataTypes.IntegerType, new NominalScale("dry:low:weak", "dry:low:strong", "dry:high:weak", "dry:high:strong", "wet:low:weak", "wet:low:strong", "wet:high:weak", "wet:high:strong"))
+                new StructField("water:sowing_density", DataTypes.IntType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
+                new StructField("water:wind", DataTypes.IntType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
+                new StructField("sowing_density:wind", DataTypes.IntType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong")),
+                new StructField("water:sowing_density:wind", DataTypes.IntType, new NominalScale("dry:low:weak", "dry:low:strong", "dry:high:weak", "dry:high:strong", "wet:low:weak", "wet:low:strong", "wet:high:weak", "wet:high:strong"))
         );
         assertEquals(schema, outputSchema);
     }
@@ -258,7 +258,7 @@ public class FormulaTest {
                 new StructField("humidity", DataTypes.FloatType, Measure.Percent),
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
-                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
+                new StructField("water:sowing_density", DataTypes.IntType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
                 new StructField("humidity * wind", DataTypes.FloatType)
         );
         assertEquals(schema, outputSchema);
@@ -663,7 +663,7 @@ public class FormulaTest {
         StructType schema = new StructType(
                 new StructField(
                         "outlook:temperature:humidity",
-                        DataTypes.IntegerType,
+                        DataTypes.IntType,
                         new NominalScale(
                                 "sunny:hot:high", "sunny:hot:normal", "sunny:mild:high", "sunny:mild:normal",
                                 "sunny:cool:high", "sunny:cool:normal", "overcast:hot:high", "overcast:hot:normal",
@@ -704,9 +704,9 @@ public class FormulaTest {
                 new StructField("outlook", DataTypes.ByteType, new NominalScale("sunny", "overcast", "rainy")),
                 new StructField("temperature", DataTypes.ByteType, new NominalScale("hot", "mild", "cool")),
                 new StructField("humidity", DataTypes.ByteType, new NominalScale("high", "normal")),
-                new StructField("outlook:temperature", DataTypes.IntegerType, new NominalScale("sunny:hot", "sunny:mild", "sunny:cool", "overcast:hot", "overcast:mild", "overcast:cool", "rainy:hot", "rainy:mild", "rainy:cool")),
-                new StructField("outlook:humidity", DataTypes.IntegerType, new NominalScale("sunny:high", "sunny:normal", "overcast:high", "overcast:normal", "rainy:high", "rainy:normal")),
-                new StructField("temperature:humidity", DataTypes.IntegerType, new NominalScale("hot:high", "hot:normal", "mild:high", "mild:normal", "cool:high", "cool:normal"))
+                new StructField("outlook:temperature", DataTypes.IntType, new NominalScale("sunny:hot", "sunny:mild", "sunny:cool", "overcast:hot", "overcast:mild", "overcast:cool", "rainy:hot", "rainy:mild", "rainy:cool")),
+                new StructField("outlook:humidity", DataTypes.IntType, new NominalScale("sunny:high", "sunny:normal", "overcast:high", "overcast:normal", "rainy:high", "rainy:normal")),
+                new StructField("temperature:humidity", DataTypes.IntType, new NominalScale("hot:high", "hot:normal", "mild:high", "mild:normal", "cool:high", "cool:normal"))
         );
         assertEquals(schema, output.schema());
 

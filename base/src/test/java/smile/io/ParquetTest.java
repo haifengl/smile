@@ -80,11 +80,11 @@ public class ParquetTest {
     public void testSchema() {
         System.out.println("schema");
         System.out.println(df.schema());
-        System.out.println(df.structure());
+        System.out.println(df.structure().toString(15));
         System.out.println(df);
         smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.DateTimeType),
-                new StructField("id", DataTypes.IntegerType),
+                new StructField("id", DataTypes.IntType),
                 new StructField("first_name", DataTypes.StringType),
                 new StructField("last_name", DataTypes.StringType),
                 new StructField("email", DataTypes.StringType),
@@ -93,7 +93,7 @@ public class ParquetTest {
                 new StructField("cc", DataTypes.StringType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleType),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );

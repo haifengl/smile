@@ -207,7 +207,7 @@ public abstract class CategoricalMeasure implements Measure {
         } else if (levels.length <= Short.MAX_VALUE + 1) {
             return DataTypes.ShortType;
         } else {
-            return DataTypes.IntegerType;
+            return DataTypes.IntType;
         }
     }
 

@@ -38,7 +38,9 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
   "Spark DataFrame" should {
     "convert to smile DataFrame for simple libSVM format" in {
       val smileMushrooms = SparkDataFrame(sparkMushrooms)
-      val smileSchema = DataTypes.struct(Seq(new StructField("label",DataTypes.DoubleType),new StructField("features", DataTypes.DoubleArrayType)):_*)
+      val smileSchema = new smile.data.`type`.StructType(
+        Seq(new StructField("label",DataTypes.DoubleType),
+            new StructField("features", DataTypes.DoubleArrayType)):_*)
 
       smileMushrooms.schema() mustEqual smileSchema
     }
@@ -52,9 +54,10 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val sparkPersons = spark.createDataset(Seq(person1,person2))
       val smilePersons = SparkDataFrame(sparkPersons.toDF())
 
-      val smileSchema = DataTypes.struct(Seq(new StructField("name",DataTypes.StringType),
-                                            new StructField("age", DataTypes.IntegerType),
-                        new StructField("friends", DataTypes.array(DataTypes.StringType))):_*)
+      val smileSchema = new smile.data.`type`.StructType(
+        Seq(new StructField("name",DataTypes.StringType),
+            new StructField("age", DataTypes.IntType),
+            new StructField("friends", DataTypes.array(DataTypes.StringType))):_*)
 
       smilePersons.schema() mustEqual smileSchema
     }
