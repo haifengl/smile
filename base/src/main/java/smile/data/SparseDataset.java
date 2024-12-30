@@ -41,25 +41,99 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public interface SparseDataset<T> extends Dataset<SparseArray, T> {
+public class SparseDataset<T> implements Dataset<SparseArray, T> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseDataset.class);
+
+    /**
+     * The data objects.
+     */
+    private final ArrayList<SampleInstance<SparseArray, T>> instances;
+    /**
+     * The number of nonzero entries.
+     */
+    private int n;
+    /**
+     * The number of columns.
+     */
+    private final int ncol;
+    /**
+     * The number of nonzero entries in each column.
+     */
+    private int[] colSize;
+
+    /**
+     * Constructor.
+     * @param data The sample instances.
+     */
+    public SparseDataset(Collection<SampleInstance<SparseArray, T>> data) {
+        this(data, 1 + data.stream().flatMapToInt(instance -> instance.x().indexStream()).max().orElse(0));
+    }
+
+    /**
+     * Constructor.
+     * @param data The sample instances.
+     * @param ncol The number of columns.
+     */
+    public SparseDataset(Collection<SampleInstance<SparseArray, T>> data, int ncol) {
+        this.instances = new ArrayList<>(data);
+        this.ncol = ncol;
+        colSize = new int[ncol];
+
+        for (var instance : data) {
+            var x = instance.x();
+            x.sort(); // sort array index into ascending order.
+
+            int i = -1; // index of previous element
+            for (SparseArray.Entry e : x) {
+                if (e.index() < 0) {
+                    throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", e.index()));
+                }
+
+                if (e.index() == i) {
+                    logger.warn("Ignore duplicated indices: {} in {}", e.index(), x);
+                } else {
+                    if (ncol <= e.index()) {
+                        ncol = e.index() + 1;
+                        int[] newColSize = new int[3 * ncol / 2];
+                        System.arraycopy(colSize, 0, newColSize, 0, colSize.length);
+                        colSize = newColSize;
+                    }
+
+                    colSize[e.index()]++;
+                    n++;
+                    i = e.index();
+                }
+            }
+        }
+    }
+
+    @Override
+    public int size() {
+        return instances.size();
+    }
+
     /**
      * Returns the number of nonzero entries.
      * @return the number of nonzero entries.
      */
-    int nz();
+    public int nz() {
+        return n;
+    }
 
     /**
      * Returns the number of nonzero entries in column j.
      * @param j the column index.
      * @return the number of nonzero entries in column j.
      */
-    int nz(int j);
+    public int nz(int j) {
+        return colSize[j];
+    }
 
     /**
      * Returns the number of rows.
      * @return the number of rows.
      */
-    default int nrow() {
+    public int nrow() {
         return size();
     }
 
@@ -67,7 +141,24 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * Returns the number of columns.
      * @return the number of columns.
      */
-    int ncol();
+    public int ncol() {
+        return ncol;
+    }
+
+    @Override
+    public SampleInstance<SparseArray, T> get(int i) {
+        return instances.get(i);
+    }
+
+    @Override
+    public Stream<SampleInstance<SparseArray, T>> stream() {
+        return instances.stream();
+    }
+
+    @Override
+    public Iterator<SampleInstance<SparseArray, T>> iterator() {
+        return instances.iterator();
+    }
 
     /**
      * Returns the value at entry (i, j).
@@ -75,7 +166,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @param j the column index.
      * @return the cell value.
      */
-    default double get(int i, int j) {
+    public double get(int i, int j) {
         if (i < 0 || i >= size() || j < 0 || j >= ncol()) {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
@@ -86,7 +177,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
     /**
      * Unitize each row so that L2 norm of x = 1.
      */
-    default void unitize() {
+    public void unitize() {
         stream().forEach(instance -> {
             double sum = Math.sqrt(instance.x().valueStream().map(x -> x*x).sum());
             instance.x().update((i, x) -> x / sum);
@@ -96,7 +187,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
     /**
      * Unitize each row so that L1 norm of x is 1.
      */
-    default void unitize1() {
+    public void unitize1() {
         stream().forEach(instance -> {
             double sum = instance.x().valueStream().map(Math::abs).sum();
             instance.x().update((i, x) -> x / sum);
@@ -107,7 +198,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * Convert into Harwell-Boeing column-compressed sparse matrix format.
      * @return the sparse matrix.
      */
-    default SparseMatrix toMatrix() {
+    public SparseMatrix toMatrix() {
         int nz = nz();
         int ncol = ncol();
 
@@ -138,33 +229,10 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * Returns a default implementation of SparseDataset without targets.
      *
      * @param data sparse arrays.
-     * @param <T> the target type.
      * @return the sparse dataset.
      */
-    static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data) {
-        return new SparseDatasetImpl<>(data);
-    }
-
-    /**
-     * Returns a default implementation of SparseDataset without targets.
-     *
-     * @param data sparse arrays.
-     * @param ncol the number of columns.
-     * @param <T> the target type.
-     * @return the sparse dataset.
-     */
-    static <T> SparseDataset<T> of(Collection<SampleInstance<SparseArray, T>> data, int ncol) {
-        return new SparseDatasetImpl<>(data, ncol);
-    }
-
-    /**
-     * Returns a default implementation of SparseDataset without targets.
-     *
-     * @param data sparse arrays.
-     * @return the sparse dataset.
-     */
-    static SparseDataset<Void> of(SparseArray[] data) {
-        return new SparseDatasetImpl<>(Arrays.stream(data)
+    public static SparseDataset<Void> of(SparseArray[] data) {
+        return new SparseDataset<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<SparseArray, Void>(x, null))
                 .toList());
     }
@@ -176,20 +244,10 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @param ncol the number of columns.
      * @return the sparse dataset.
      */
-    static SparseDataset<Void> of(SparseArray[] data, int ncol) {
-        return new SparseDatasetImpl<>(Arrays.stream(data)
+    public static SparseDataset<Void> of(SparseArray[] data, int ncol) {
+        return new SparseDataset<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<SparseArray, Void>(x, null))
                 .toList(), ncol);
-    }
-
-    /**
-     * Returns a default implementation of SparseDataset.
-     *
-     * @param data sparse arrays.
-     * @return the sparse dataset.
-     */
-    static SparseDataset<Void> of(Stream<SparseArray> data) {
-        return of(data.map(x -> new SampleInstance<SparseArray, Void>(x, null)).toList());
     }
 
     /**
@@ -201,7 +259,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @throws ParseException when fails to parse data.
      * @return the sparse dataset.
      */
-    static SparseDataset<Void> from(Path path) throws IOException, ParseException {
+    public static SparseDataset<Void> from(Path path) throws IOException, ParseException {
         return from(path, 0);
     }
 
@@ -242,7 +300,7 @@ public interface SparseDataset<T> extends Dataset<SparseArray, T> {
      * @exception ParseException if an index is not an integer or the value is not a double.
      * @return the sparse dataset.
      */
-    static SparseDataset<Void> from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
+    public static SparseDataset<Void> from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
              Scanner scanner = new Scanner(reader)) {
             int nrow = scanner.nextInt();
