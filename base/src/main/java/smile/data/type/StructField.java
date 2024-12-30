@@ -24,6 +24,10 @@ import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.Objects;
 import org.apache.avro.Schema;
+import org.apache.parquet.column.ColumnDescriptor;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
+import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
@@ -157,5 +161,84 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
         }
 
         return new StructField(field.name(), DataType.of(field.schema()), scale);
+    }
+
+    /**
+     * Converts a parquet column to smile field.
+     * @param column a parquet column descriptor.
+     * @return the struct field.
+     */
+    public static StructField of(ColumnDescriptor column) {
+        String name = String.join(".", column.getPath());
+        PrimitiveType primitiveType = column.getPrimitiveType();
+        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
+        Type.Repetition repetition = primitiveType.getRepetition();
+
+        return switch (primitiveType.getPrimitiveTypeName()) {
+            case BOOLEAN -> switch (repetition) {
+                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.BooleanType);
+                    case REPEATED -> new StructField(name, DataTypes.BooleanArrayType);
+                };
+
+            case INT32 -> switch (logicalType) {
+                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.DecimalType);
+                    case LogicalTypeAnnotation.DateLogicalTypeAnnotation dateLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.DateType);
+                    case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.TimeType);
+                    case null, default ->
+                        switch (repetition) {
+                            case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.IntegerType);
+                            case REPEATED -> new StructField(name, DataTypes.IntegerArrayType);
+                        };
+                };
+
+            case INT64 -> switch (logicalType) {
+                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.DecimalType);
+                    case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.TimeType);
+                    case LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timestampLogicalTypeAnnotation ->
+                        new StructField(name, DataTypes.DateTimeType);
+                    case null, default ->
+                        switch (repetition) {
+                            case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.LongType);
+                            case REPEATED -> new StructField(name, DataTypes.LongArrayType);
+                        };
+                };
+
+            case INT96 -> new StructField(name, DataTypes.DateTimeType);
+
+            case FLOAT -> switch (repetition) {
+                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.FloatType);
+                    case REPEATED -> new StructField(name, DataTypes.FloatArrayType);
+                };
+
+            case DOUBLE -> switch (repetition) {
+                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.DoubleType);
+                    case REPEATED -> new StructField(name, DataTypes.DoubleArrayType);
+                };
+
+            case FIXED_LEN_BYTE_ARRAY -> switch (logicalType) {
+                    case LogicalTypeAnnotation.UUIDLogicalTypeAnnotation uuidLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.ObjectType);
+                    case LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervalLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.ObjectType);
+                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.DecimalType);
+                    case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.StringType);
+                    default -> new StructField(name, DataTypes.ByteArrayType);
+                };
+
+            case BINARY -> switch (logicalType) {
+                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.DecimalType);
+                    case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation ->
+                            new StructField(name, DataTypes.StringType);
+                    default -> new StructField(name, DataTypes.ByteArrayType);
+                };
+        };
     }
 }

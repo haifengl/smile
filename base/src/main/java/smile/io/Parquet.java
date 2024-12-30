@@ -42,7 +42,6 @@ import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
@@ -129,23 +128,23 @@ public class Parquet {
         try (ParquetFileReader reader = ParquetFileReader.open(file)) {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();
-            StructType struct = toSmileSchema(schema);
+            StructType struct = StructType.of(schema);
             logger.debug("The meta data of parquet file {}: {}", file, ParquetMetadata.toPrettyJSON(footer));
 
-            int nrow = (int) Math.min(reader.getRecordCount(), limit);
-            List<Tuple> rows = new ArrayList<>(nrow);
+            int size = (int) Math.min(reader.getRecordCount(), limit);
+            List<Tuple> rows = new ArrayList<>(size);
 
             PageReadStore store;
             while ((store = reader.readNextRowGroup()) != null) {
                 final long rowCount = store.getRowCount();
                 final MessageColumnIO columnIO = new ColumnIOFactory().getColumnIO(schema);
                 final RecordReader<Group> recordReader = columnIO.getRecordReader(store, new GroupRecordConverter(schema));
-                for (int i = 0; i < rowCount && rows.size() < nrow; i++) {
+                for (int i = 0; i < rowCount && rows.size() < size; i++) {
                     rows.add(Tuple.of(struct, readRowGroup(recordReader.read(), schema.getColumns(), struct)));
                 }
             }
 
-            return DataFrame.of(rows);
+            return DataFrame.of(struct, rows);
         }
     }
 
@@ -466,129 +465,5 @@ public class Parquet {
             }
         }
         return o;
-    }
-
-    /** Converts a parquet schema to smile schema. */
-    private static StructType toSmileSchema(MessageType schema) {
-        List<StructField> fields = new ArrayList<>();
-        for (ColumnDescriptor column : schema.getColumns()) {
-            fields.add(toSmileField(column));
-        }
-
-        return DataTypes.struct(fields);
-    }
-
-    /** Converts a parquet column to smile struct field. */
-    private static StructField toSmileField(ColumnDescriptor column) {
-        String name = String.join(".", column.getPath());
-        PrimitiveType primitiveType = column.getPrimitiveType();
-        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
-        Type.Repetition repetition = primitiveType.getRepetition();
-
-        switch (primitiveType.getPrimitiveTypeName()) {
-            case BOOLEAN:
-                return switch (repetition) {
-                    case REQUIRED -> new StructField(name, DataTypes.BooleanType);
-                    case OPTIONAL -> new StructField(name, DataTypes.BooleanObjectType);
-                    case REPEATED -> new StructField(name, DataTypes.BooleanArrayType);
-                };
-
-            case INT32:
-                if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                    return switch (repetition) {
-                        case REQUIRED -> new StructField(name, DataTypes.IntegerType);
-                        case OPTIONAL -> new StructField(name, DataTypes.IntegerObjectType);
-                        case REPEATED -> new StructField(name, DataTypes.IntegerArrayType);
-                    };
-                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.DecimalType);
-                    }
-                } else if (logicalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.DateType);
-                    }
-                } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.TimeType);
-                    }
-                }
-                break;
-
-            case INT64:
-                if (logicalType == null || logicalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                    return switch (repetition) {
-                        case REQUIRED -> new StructField(name, DataTypes.LongType);
-                        case OPTIONAL -> new StructField(name, DataTypes.LongObjectType);
-                        case REPEATED -> new StructField(name, DataTypes.LongArrayType);
-                    };
-                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.DecimalType);
-                    }
-                } else if (logicalType instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.TimeType);
-                    }
-                } else if (logicalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-                    switch (repetition) {
-                        case REQUIRED:
-                        case OPTIONAL:
-                            return new StructField(name, DataTypes.DateTimeType);
-                    }
-                }
-                break;
-
-            case INT96:
-                return new StructField(name, DataTypes.DateTimeType);
-
-            case FLOAT:
-                return switch (repetition) {
-                    case REQUIRED -> new StructField(name, DataTypes.FloatType);
-                    case OPTIONAL -> new StructField(name, DataTypes.FloatObjectType);
-                    case REPEATED -> new StructField(name, DataTypes.FloatArrayType);
-                };
-
-            case DOUBLE:
-                return switch (repetition) {
-                    case REQUIRED -> new StructField(name, DataTypes.DoubleType);
-                    case OPTIONAL -> new StructField(name, DataTypes.DoubleObjectType);
-                    case REPEATED -> new StructField(name, DataTypes.DoubleArrayType);
-                };
-
-            case FIXED_LEN_BYTE_ARRAY :
-                if (logicalType instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.ObjectType);
-                } else if (logicalType instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.ObjectType);
-                } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.DecimalType);
-                } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.StringType);
-                } else {
-                    return new StructField(name, DataTypes.ByteArrayType);
-                }
-
-            case BINARY:
-                if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.DecimalType);
-                } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
-                    return new StructField(name, DataTypes.StringType);
-                } else {
-                    return new StructField(name, DataTypes.ByteArrayType);
-                }
-        }
-
-        throw new UnsupportedOperationException("Unsupported LogicalType " + logicalType + " for primitive type " + primitiveType);
     }
 }
