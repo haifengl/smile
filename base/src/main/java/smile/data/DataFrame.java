@@ -46,6 +46,10 @@ import smile.util.Strings;
 public record DataFrame(StructType schema, ValueVector[] columns) implements Iterable<Row> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
+    /**
+     * Constructor.
+     * @param columns the columns of DataFrame.
+     */
     public DataFrame(ValueVector... columns) {
         this(StructType.of(columns), columns);
     }
@@ -62,8 +66,8 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * Returns the column data types.
      * @return the column data types.
      */
-    public DataType[] types() {
-        return schema.types();
+    public DataType[] dtypes() {
+        return schema.dtypes();
     }
 
     /**
@@ -332,7 +336,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     public DataFrame structure() {
         ValueVector[] vectors = {
                 new StringVector("Column", names()),
-                new ObjectVector<>("Type", types()),
+                new ObjectVector<>("Type", dtypes()),
                 new ObjectVector<>("Measure", measures())
         };
 
@@ -718,7 +722,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     public DataFrame summary() {
         int ncol = columns.length;
         String[] names = names();
-        DataType[] types = types();
+        DataType[] dtypes = dtypes();
         Measure[] measures = measures();
         String[] col = new String[ncol];
         double[] min = new double[ncol];
@@ -730,22 +734,22 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         for (int j = 0; j < ncol; j++) {
             if (measures[j] instanceof CategoricalMeasure) continue;
 
-            DataType type = types[j];
-            if (type.isLong()) {
+            DataType dtype = dtypes[j];
+            if (dtype.isLong()) {
                 LongSummaryStatistics s = columns[j].asLongStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
-            } else if (type.isIntegral()) {
+            } else if (dtype.isIntegral()) {
                 IntSummaryStatistics s = columns[j].asIntStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
-            } else if (type.isFloating()) {
+            } else if (dtype.isFloating()) {
                 DoubleSummaryStatistics s = columns[j].asDoubleStream().summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
@@ -985,7 +989,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                     .toArray(StructField[]::new);
 
             int n = data.size();
-            var schema = DataTypes.struct(fields);
+            var schema = new StructType(fields);
             List<ValueVector> columns = new ArrayList<>();
 
             for (PropertyDescriptor prop : props) {
