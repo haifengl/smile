@@ -475,11 +475,11 @@ public interface DataType extends Serializable {
      */
     private static DataType of(Schema schema, boolean nullable) {
         return switch (schema.getType()) {
-            case BOOLEAN -> nullable ? DataTypes.BooleanType : DataTypes.NullableBooleanType;
-            case INT -> nullable ? DataTypes.IntType : DataTypes.NullableIntType;
-            case LONG -> nullable ? DataTypes.LongType : DataTypes.NullableLongType;
-            case FLOAT -> nullable ? DataTypes.FloatType : DataTypes.NullableFloatType;
-            case DOUBLE -> nullable ? DataTypes.DoubleType : DataTypes.NullableDoubleType;
+            case BOOLEAN -> nullable ? DataTypes.NullableBooleanType : DataTypes.BooleanType;
+            case INT -> nullable ? DataTypes.NullableIntType : DataTypes.IntType;
+            case LONG -> nullable ? DataTypes.NullableLongType : DataTypes.LongType;
+            case FLOAT -> nullable ? DataTypes.NullableFloatType : DataTypes.FloatType;
+            case DOUBLE -> nullable ? DataTypes.NullableDoubleType : DataTypes.DoubleType;
             case STRING -> DataTypes.StringType;
             case FIXED, BYTES -> DataTypes.ByteArrayType;
             case ENUM -> new NominalScale(schema.getEnumSymbols()).type();

@@ -39,7 +39,6 @@ public class AvroTest {
             Avro avro = new Avro(Paths.getTestData("kylo/userdata.avsc"));
             df = avro.read(Paths.getTestData("kylo/userdata1.avro"));
             System.out.println(df);
-            System.out.println(df.schema());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -79,9 +78,6 @@ public class AvroTest {
     @Test
     public void testSchema() {
         System.out.println("schema");
-        System.out.println(df.schema());
-        System.out.println(df.structure());
-        System.out.println(df);
         smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.StringType),
                 new StructField("id", DataTypes.LongType),
@@ -90,7 +86,7 @@ public class AvroTest {
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.LongType),
+                new StructField("cc", DataTypes.NullableLongType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
                 new StructField("salary", DataTypes.NullableDoubleType),
