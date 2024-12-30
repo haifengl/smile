@@ -20,6 +20,7 @@ package smile.data.type;
 import java.beans.PropertyDescriptor;
 import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -114,15 +115,33 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
      */
     public static StructField of(PropertyDescriptor prop) {
         Class<?> clazz = prop.getPropertyType();
+        DataType dtype = DataType.of(clazz);
+        NominalScale scale = getScale(clazz);
+        return new StructField(prop.getName(), dtype, scale);
+    }
 
-        DataType type = DataType.of(clazz);
-        NominalScale scale = null;
+    /**
+     * Returns the struct field of a record component.
+     * @param comp the record component.
+     * @return the struct field.
+     */
+    public static StructField of(RecordComponent comp) {
+        Class<?> clazz = comp.getType();
+        DataType dtype = DataType.of(clazz);
+        NominalScale scale = getScale(clazz);
+        return new StructField(comp.getName(), dtype, scale);
+    }
 
+    /**
+     * Returns the nominal scale of an enum class.
+     * @param clazz an enum class.
+     * @return the nominal scale or null if clazz is not an enum.
+     */
+    private static NominalScale getScale(Class<?> clazz) {
         if (clazz.isEnum()) {
             Object[] levels = clazz.getEnumConstants();
-            scale = new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
+            return new NominalScale(Arrays.stream(levels).map(Object::toString).toArray(String[]::new));
         }
-
-        return new StructField(prop.getName(), type, scale);
+        return null;
     }
 }
