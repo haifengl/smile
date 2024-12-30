@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 import smile.util.Paths;
 import org.junit.jupiter.api.*;
@@ -97,7 +98,7 @@ public class DataFrameJDBCTest {
         System.out.println(df.schema());
         System.out.println(df.structure());
         System.out.println(df);
-        smile.data.type.StructType schema = DataTypes.struct(
+        smile.data.type.StructType schema = new StructType(
                 new StructField("Employee First", DataTypes.StringType),
                 new StructField("Employee Last", DataTypes.StringType),
                 new StructField("Customer First", DataTypes.StringType),

@@ -35,9 +35,6 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.avro.Schema;
 import org.apache.parquet.column.ColumnDescriptor;
-import org.apache.parquet.schema.LogicalTypeAnnotation;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
@@ -183,76 +180,8 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
      */
     public static StructField of(ColumnDescriptor column) {
         String name = String.join(".", column.getPath());
-        PrimitiveType primitiveType = column.getPrimitiveType();
-        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
-        Type.Repetition repetition = primitiveType.getRepetition();
-
-        return switch (primitiveType.getPrimitiveTypeName()) {
-            case BOOLEAN -> switch (repetition) {
-                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.BooleanType);
-                    case REPEATED -> new StructField(name, DataTypes.BooleanArrayType);
-                };
-
-            case INT32 -> switch (logicalType) {
-                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.DecimalType);
-                    case LogicalTypeAnnotation.DateLogicalTypeAnnotation dateLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.DateType);
-                    case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.TimeType);
-                    case null, default ->
-                        switch (repetition) {
-                            case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.IntegerType);
-                            case REPEATED -> new StructField(name, DataTypes.IntegerArrayType);
-                        };
-                };
-
-            case INT64 -> switch (logicalType) {
-                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.DecimalType);
-                    case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.TimeType);
-                    case LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timestampLogicalTypeAnnotation ->
-                        new StructField(name, DataTypes.DateTimeType);
-                    case null, default ->
-                        switch (repetition) {
-                            case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.LongType);
-                            case REPEATED -> new StructField(name, DataTypes.LongArrayType);
-                        };
-                };
-
-            case INT96 -> new StructField(name, DataTypes.DateTimeType);
-
-            case FLOAT -> switch (repetition) {
-                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.FloatType);
-                    case REPEATED -> new StructField(name, DataTypes.FloatArrayType);
-                };
-
-            case DOUBLE -> switch (repetition) {
-                    case REQUIRED, OPTIONAL -> new StructField(name, DataTypes.DoubleType);
-                    case REPEATED -> new StructField(name, DataTypes.DoubleArrayType);
-                };
-
-            case FIXED_LEN_BYTE_ARRAY -> switch (logicalType) {
-                    case LogicalTypeAnnotation.UUIDLogicalTypeAnnotation uuidLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.ObjectType);
-                    case LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervalLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.ObjectType);
-                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.DecimalType);
-                    case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.StringType);
-                    default -> new StructField(name, DataTypes.ByteArrayType);
-                };
-
-            case BINARY -> switch (logicalType) {
-                    case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.DecimalType);
-                    case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation ->
-                            new StructField(name, DataTypes.StringType);
-                    default -> new StructField(name, DataTypes.ByteArrayType);
-                };
-        };
+        DataType dtype = DataType.of(column.getPrimitiveType());
+        return new StructField(name, dtype);
     }
 
     /**
@@ -264,15 +193,15 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
         String name = field.getName();
         ArrowType type = field.getType();
         boolean nullable = field.isNullable();
-        return switch (type.getTypeID()) {
+        var dtype = switch (type.getTypeID()) {
             case Int -> {
                 ArrowType.Int itype = (ArrowType.Int) type;
                 int bitWidth = itype.getBitWidth();
                 yield switch (bitWidth) {
-                    case 8 -> new StructField(name, DataTypes.ByteType);
-                    case 16 -> new StructField(name, DataTypes.ShortType);
-                    case 32 -> new StructField(name, DataTypes.IntegerType);
-                    case 64 -> new StructField(name, DataTypes.LongType);
+                    case 8 -> DataTypes.ByteType;
+                    case 16 -> DataTypes.ShortType;
+                    case 32 -> DataTypes.IntegerType;
+                    case 64 -> DataTypes.LongType;
                     default -> throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
                 };
             }
@@ -280,36 +209,37 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
             case FloatingPoint -> {
                 FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
                 yield switch (precision) {
-                    case DOUBLE -> new StructField(name, DataTypes.DoubleType);
-                    case SINGLE -> new StructField(name, DataTypes.FloatType);
+                    case DOUBLE -> DataTypes.DoubleType;
+                    case SINGLE -> DataTypes.FloatType;
                     case HALF -> throw new UnsupportedOperationException("Unsupported float precision: " + precision);
                 };
             }
 
-            case Bool -> new StructField(name, DataTypes.BooleanType);
-            case Decimal -> new StructField(name, DataTypes.DecimalType);
-            case Utf8 -> new StructField(name, DataTypes.StringType);
-            case Date -> new StructField(name, DataTypes.DateType);
-            case Time -> new StructField(name, DataTypes.TimeType);
-            case Timestamp -> new StructField(name, DataTypes.DateTimeType);
-            case Binary, FixedSizeBinary -> new StructField(name, DataTypes.ByteArrayType);
+            case Bool -> DataTypes.BooleanType;
+            case Decimal -> DataTypes.DecimalType;
+            case Utf8 -> DataTypes.StringType;
+            case Date -> DataTypes.DateType;
+            case Time -> DataTypes.TimeType;
+            case Timestamp -> DataTypes.DateTimeType;
+            case Binary, FixedSizeBinary -> DataTypes.ByteArrayType;
             case List, FixedSizeList -> {
                 List<Field> child = field.getChildren();
                 if (child.size() != 1) {
                     throw new IllegalStateException(String.format("List type has %d child fields.", child.size()));
                 }
 
-                yield new StructField(name, DataTypes.array(StructField.of(child.getFirst()).dtype()));
+                yield DataTypes.array(StructField.of(child.getFirst()).dtype());
             }
 
             case Struct -> {
                 List<StructField> children = field.getChildren().stream().map(StructField::of).toList();
-                yield new StructField(name, new StructType(children));
+                yield new StructType(children);
             }
 
             default ->
                 throw new UnsupportedOperationException("Unsupported arrow to smile type conversion: " + type);
         };
+        return new StructField(name, dtype);
     }
 
     /**
