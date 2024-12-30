@@ -190,7 +190,6 @@ public class JSON {
             }
         }
 
-        schema = schema.boxed(rows);
         return DataFrame.of(schema, rows);
     }
 
