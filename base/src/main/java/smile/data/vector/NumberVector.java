@@ -60,7 +60,7 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
         Number number = switch (dtype().id()) {
             case Byte -> (byte) value;
             case Short -> (short) value;
-            case Integer -> (int) value;
+            case Int -> (int) value;
             case Long -> (long) value;
             case Float -> (float) value;
             case Double -> value;

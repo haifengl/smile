@@ -39,7 +39,7 @@ public class IntVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public IntVector(String name, int[] vector) {
-        this(new StructField(name, DataTypes.IntegerType), vector);
+        this(new StructField(name, DataTypes.IntType), vector);
     }
 
     /**

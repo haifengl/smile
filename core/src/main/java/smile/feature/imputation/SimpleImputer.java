@@ -112,7 +112,7 @@ public class SimpleImputer implements Transform {
                     }
                     vectors[j] = new FloatVector(field, vector);
                 } else if (field.dtype().isObject()) {
-                    if (field.dtype() == DataTypes.BooleanObjectType) {
+                    if (field.dtype() == DataTypes.NullableBooleanType) {
                         boolean x = (Boolean) value;
                         boolean[] vector = new boolean[n];
                         for (int i = 0; i < n; i++) {
@@ -120,7 +120,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = new BooleanVector(field, vector);
-                    } else if (field.dtype() == DataTypes.ByteObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableByteType) {
                         byte x = ((Number) value).byteValue();
                         byte[] vector = new byte[n];
                         for (int i = 0; i < n; i++) {
@@ -128,7 +128,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = new ByteVector(field, vector);
-                    } else if (field.dtype() == DataTypes.CharObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableCharType) {
                         char x = (Character) value;
                         char[] vector = new char[n];
                         for (int i = 0; i < n; i++) {
@@ -136,7 +136,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = new CharVector(field, vector);
-                    } else if (field.dtype() == DataTypes.DoubleObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableDoubleType) {
                         double x = ((Number) value).doubleValue();
                         double[] vector = new double[n];
                         for (int i = 0; i < n; i++) {
@@ -144,7 +144,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
                         vectors[j] = new DoubleVector(field, vector);
-                    } else if (field.dtype() == DataTypes.FloatObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableFloatType) {
                         float x = ((Number) value).floatValue();
                         float[] vector = new float[n];
                         for (int i = 0; i < n; i++) {
@@ -152,7 +152,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null || cell.isNaN() ? x : cell;
                         }
                         vectors[j] = new FloatVector(field, vector);
-                    } else if (field.dtype() == DataTypes.IntegerObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableIntType) {
                         int x = ((Number) value).intValue();
                         int[] vector = new int[n];
                         for (int i = 0; i < n; i++) {
@@ -160,7 +160,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = new IntVector(field, vector);
-                    } else if (field.dtype() == DataTypes.LongObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableLongType) {
                         long x = ((Number) value).longValue();
                         long[] vector = new long[n];
                         for (int i = 0; i < n; i++) {
@@ -168,7 +168,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = cell == null ? x : cell;
                         }
                         vectors[j] = new LongVector(field, vector);
-                    } else if (field.dtype() == DataTypes.ShortObjectType) {
+                    } else if (field.dtype() == DataTypes.NullableShortType) {
                         short x = ((Number) value).shortValue();
                         short[] vector = new short[n];
                         for (int i = 0; i < n; i++) {

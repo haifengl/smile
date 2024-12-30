@@ -33,7 +33,7 @@ public class ArrayType implements DataType {
     /** Short array type. */
     static final ArrayType ShortArrayType = new ArrayType(DataTypes.ShortType);
     /** Integer array type. */
-    static final ArrayType IntegerArrayType = new ArrayType(DataTypes.IntegerType);
+    static final ArrayType IntArrayType = new ArrayType(DataTypes.IntType);
     /** Long array type. */
     static final ArrayType LongArrayType = new ArrayType(DataTypes.LongType);
     /** Float array type. */
@@ -82,7 +82,7 @@ public class ArrayType implements DataType {
             case Byte -> Arrays.toString((byte[]) o);
             case Char -> Arrays.toString((char[]) o);
             case Short -> Arrays.toString((short[]) o);
-            case Integer -> Arrays.toString((int[]) o);
+            case Int -> Arrays.toString((int[]) o);
             case Long -> Arrays.toString((long[]) o);
             case Float -> Arrays.toString((float[]) o);
             case Double -> Arrays.toString((double[]) o);

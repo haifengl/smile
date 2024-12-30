@@ -61,7 +61,7 @@ public class IntFunction extends AbstractFunction {
             features.add(new Feature() {
                 final StructField field = new StructField(
                         String.format("%s(%s)", name, xfield.name()),
-                        dtype.isNullable() ? DataTypes.NullableIntegerType : DataTypes.IntegerType,
+                        dtype.isNullable() ? DataTypes.NullableIntType : DataTypes.IntType,
                         xfield.measure());
 
                 @Override

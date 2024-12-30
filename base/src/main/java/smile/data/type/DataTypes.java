@@ -37,7 +37,7 @@ public class DataTypes {
     /** Short data type. */
     public static final smile.data.type.ShortType ShortType = new smile.data.type.ShortType(false);
     /** Integer data type. */
-    public static final IntegerType IntegerType = new smile.data.type.IntegerType(false);
+    public static final smile.data.type.IntType IntType = new smile.data.type.IntType(false);
     /** Long data type. */
     public static final smile.data.type.LongType LongType = new smile.data.type.LongType(false);
     /** Float data type. */
@@ -53,7 +53,7 @@ public class DataTypes {
     /** Nullable short data type. */
     public static final smile.data.type.ShortType NullableShortType = new smile.data.type.ShortType(true);
     /** Nullable integer data type. */
-    public static final smile.data.type.IntegerType NullableIntegerType = new smile.data.type.IntegerType(true);
+    public static final smile.data.type.IntType NullableIntType = new smile.data.type.IntType(true);
     /** Nullable long data type. */
     public static final smile.data.type.LongType NullableLongType = new smile.data.type.LongType(true);
     /** Nullable float data type. */
@@ -81,7 +81,7 @@ public class DataTypes {
     /** Short Array data type. */
     public static final smile.data.type.ArrayType ShortArrayType = smile.data.type.ArrayType.ShortArrayType;
     /** Integer Array data type. */
-    public static final smile.data.type.ArrayType IntegerArrayType = smile.data.type.ArrayType.IntegerArrayType;
+    public static final smile.data.type.ArrayType IntArrayType = smile.data.type.ArrayType.IntArrayType;
     /** Long Array data type. */
     public static final smile.data.type.ArrayType LongArrayType = smile.data.type.ArrayType.LongArrayType;
     /** Float Array data type. */
@@ -136,7 +136,7 @@ public class DataTypes {
      * @return the array data type.
      */
     public static ArrayType array(DataType type) {
-        if (type == IntegerType) return IntegerArrayType;
+        if (type == IntType) return IntArrayType;
         if (type == LongType) return LongArrayType;
         if (type == FloatType) return FloatArrayType;
         if (type == DoubleType) return DoubleArrayType;

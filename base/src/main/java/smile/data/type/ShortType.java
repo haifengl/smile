@@ -27,7 +27,7 @@ public class ShortType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     ShortType(boolean nullable) {
-        super(nullable);
+        super(ID.Short, nullable);
     }
 
     @Override
@@ -36,30 +36,7 @@ public class ShortType extends PrimitiveType {
     }
 
     @Override
-    public String name() {
-        return nullable ? "Short" : "short";
-    }
-
-    @Override
-    public ID id() {
-        return ID.Short;
-    }
-
-    @Override
-    public String toString() {
-        return "short";
-    }
-
-    @Override
     public Short valueOf(String s) {
         return Short.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof ShortType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

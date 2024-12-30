@@ -113,7 +113,7 @@ public class IndexDataFrameTest {
         System.out.println(df.structure());
         System.out.println(df);
         smile.data.type.StructType schema = new StructType(
-                new StructField("age", DataTypes.IntegerType),
+                new StructField("age", DataTypes.IntType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
                 new StructField("name", DataTypes.StringType),
@@ -138,7 +138,7 @@ public class IndexDataFrameTest {
     @Test
     public void testTypes() {
         System.out.println("dtypes");
-        DataType[] dtypes = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.NullableDoubleType};
+        DataType[] dtypes = {DataTypes.IntType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.NullableDoubleType};
         assertArrayEquals(dtypes, df.dtypes());
     }
 

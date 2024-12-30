@@ -27,7 +27,7 @@ public class LongType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     LongType(boolean nullable) {
-        super(nullable);
+        super(ID.Long, nullable);
     }
 
     @Override
@@ -36,30 +36,7 @@ public class LongType extends PrimitiveType {
     }
 
     @Override
-    public ID id() {
-        return ID.Long;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Long" : "long";
-    }
-
-    @Override
-    public String toString() {
-        return "long";
-    }
-
-    @Override
     public Long valueOf(String s) {
         return Long.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof LongType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

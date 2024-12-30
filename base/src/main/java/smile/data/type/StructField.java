@@ -197,7 +197,7 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
      */
     public Field toArrow() {
         return switch (dtype.id()) {
-            case Integer -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(32, true), null), null);
+            case Int -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(32, true), null), null);
             case Long -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.Int(64, true), null), null);
             case Double -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.FloatingPoint(DOUBLE), null), null);
             case Float -> new Field(name, new FieldType(dtype().isNullable(), new ArrowType.FloatingPoint(SINGLE), null), null);
@@ -235,7 +235,7 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
             case Array -> {
                 DataType etype = ((ArrayType) dtype).getComponentType();
                 yield switch (etype.id()) {
-                    case Integer -> new Field(name,
+                    case Int -> new Field(name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
                                 Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))

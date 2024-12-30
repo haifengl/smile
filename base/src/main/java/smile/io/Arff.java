@@ -315,7 +315,7 @@ public class Arff implements AutoCloseable {
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_INTEGER)) {
-                attribute = new StructField(name, DataTypes.IntegerType);
+                attribute = new StructField(name, DataTypes.IntType);
                 readTillEOL();
 
             } else if (tokenizer.sval.equalsIgnoreCase(ARFF_ATTRIBUTE_STRING)) {

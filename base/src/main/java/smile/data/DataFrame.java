@@ -519,7 +519,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                 data[i] = s == null ? (byte) -1 : scale.valueOf(s).intValue();
             }
 
-            StructField field = new StructField(column.name(), DataTypes.IntegerType, scale);
+            StructField field = new StructField(column.name(), DataTypes.IntType, scale);
             return new IntVector(field, data);
         }).toArray(ValueVector[]::new);
 
@@ -1122,7 +1122,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
             BitSet nullMask = new BitSet(n);
             StructField field = fields[j];
             columns[j] = switch (field.dtype().id()) {
-                case Integer -> {
+                case Int -> {
                     int[] values = new int[n];
                     for (int i = 0; i < n; i++) {
                         Tuple datum = data.get(i);

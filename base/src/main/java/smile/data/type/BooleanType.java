@@ -27,7 +27,7 @@ public class BooleanType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     BooleanType(boolean nullable) {
-        super(nullable);
+        super(ID.Boolean, nullable);
     }
 
     @Override
@@ -36,30 +36,7 @@ public class BooleanType extends PrimitiveType {
     }
 
     @Override
-    public ID id() {
-        return ID.Boolean;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Boolean" : "boolean";
-    }
-
-    @Override
-    public String toString() {
-        return "boolean";
-    }
-
-    @Override
     public Boolean valueOf(String s) {
         return Boolean.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof BooleanType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

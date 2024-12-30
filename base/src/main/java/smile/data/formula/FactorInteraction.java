@@ -111,7 +111,7 @@ public class FactorInteraction implements Term {
             measure = new NominalScale(levels);
             field = new StructField(
                     String.join(":", factors),
-                    DataTypes.IntegerType,
+                    DataTypes.IntType,
                     measure
             );
         }

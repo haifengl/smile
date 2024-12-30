@@ -65,7 +65,7 @@ public class CSVTest {
         assertEquals(257, usps.ncol());
 
         StructField[] fields = usps.schema().fields();
-        assertEquals(DataTypes.IntegerType, fields[0].dtype());
+        assertEquals(DataTypes.IntType, fields[0].dtype());
         for (int i = 1; i < fields.length; i++) {
             assertEquals(DataTypes.DoubleType, fields[i].dtype());
         }
@@ -138,7 +138,7 @@ public class CSVTest {
         assertEquals(65, diabetes.ncol());
 
         StructField[] fields = diabetes.schema().fields();
-        assertEquals(DataTypes.IntegerType, fields[0].dtype());
+        assertEquals(DataTypes.IntType, fields[0].dtype());
         for (int i = 1; i < fields.length; i++) {
             assertEquals(DataTypes.DoubleType, fields[i].dtype());
         }
@@ -175,12 +175,12 @@ public class CSVTest {
         StructType schema = new StructType(
                 new StructField("lcavol", DataTypes.DoubleType),
                 new StructField("lweight", DataTypes.DoubleType),
-                new StructField("age", DataTypes.IntegerType),
+                new StructField("age", DataTypes.IntType),
                 new StructField("lbph", DataTypes.DoubleType),
-                new StructField("svi", DataTypes.IntegerType),
+                new StructField("svi", DataTypes.IntType),
                 new StructField("lcp", DataTypes.DoubleType),
-                new StructField("gleason", DataTypes.IntegerType),
-                new StructField("pgg45", DataTypes.IntegerType),
+                new StructField("gleason", DataTypes.IntType),
+                new StructField("pgg45", DataTypes.IntType),
                 new StructField("lpsa", DataTypes.DoubleType)
         );
         assertEquals(schema, prostate.schema());
@@ -211,7 +211,7 @@ public class CSVTest {
 
         StructField[] fields = abalone.schema().fields();
         assertEquals(DataTypes.StringType, fields[0].dtype());
-        assertEquals(DataTypes.IntegerType, fields[fields.length - 1].dtype());
+        assertEquals(DataTypes.IntType, fields[fields.length - 1].dtype());
         for (int i = 1; i < fields.length - 1; i++) {
             assertEquals(DataTypes.DoubleType, fields[i].dtype());
         }
@@ -246,7 +246,7 @@ public class CSVTest {
 
         smile.data.type.StructType schema = new StructType(
                 new StructField("registration_dttm", DataTypes.StringType),
-                new StructField("id", DataTypes.IntegerType),
+                new StructField("id", DataTypes.IntType),
                 new StructField("first_name", DataTypes.StringType),
                 new StructField("last_name", DataTypes.StringType),
                 new StructField("email", DataTypes.StringType),

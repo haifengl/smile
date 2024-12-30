@@ -33,27 +33,12 @@ public class DoubleType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     DoubleType(boolean nullable) {
-        super(nullable);
+        super(ID.Double, nullable);
     }
 
     @Override
     public boolean isDouble() {
         return true;
-    }
-
-    @Override
-    public ID id() {
-        return ID.Double;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Double" : "double";
-    }
-
-    @Override
-    public String toString() {
-        return "double";
     }
 
     @Override
@@ -64,13 +49,5 @@ public class DoubleType extends PrimitiveType {
     @Override
     public Double valueOf(String s) {
         return Double.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof DoubleType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

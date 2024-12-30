@@ -92,7 +92,7 @@ public class CRF implements Serializable {
 
         int k = potentials.length;
         NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
-        StructField field = new StructField("s(t-1)", DataTypes.IntegerType, scale);
+        StructField field = new StructField("s(t-1)", DataTypes.IntType, scale);
 
         int length = schema.length();
         StructField[] fields = new StructField[length + 1];
@@ -293,7 +293,7 @@ public class CRF implements Serializable {
         }
 
         NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
-        IntVector t1 = new IntVector(new StructField("s(t-1)", DataTypes.IntegerType, scale), state);
+        IntVector t1 = new IntVector(new StructField("s(t-1)", DataTypes.IntType, scale), state);
         DataFrame data = DataFrame.of(x.getFirst().schema(), x).merge(t1);
 
         StructField field = new StructField("residual", DataTypes.DoubleType);

@@ -64,13 +64,13 @@ public class JSONTest {
 
         StructType schema = new StructType(
                 new StructField("series_t", DataTypes.StringType),
-                new StructField("pages_i", DataTypes.IntegerType),
+                new StructField("pages_i", DataTypes.IntType),
                 new StructField("author", DataTypes.StringType),
                 new StructField("price", DataTypes.DoubleType),
                 new StructField("cat", DataTypes.StringType),
                 new StructField("name", DataTypes.StringType),
                 new StructField("genre_s", DataTypes.StringType),
-                new StructField("sequence_i", DataTypes.IntegerType),
+                new StructField("sequence_i", DataTypes.IntType),
                 new StructField("inStock", DataTypes.BooleanType),
                 new StructField("id", DataTypes.StringType)
         );
@@ -101,13 +101,13 @@ public class JSONTest {
 
         StructType schema = new StructType(
                 new StructField("series_t", DataTypes.StringType),
-                new StructField("pages_i", DataTypes.IntegerType),
+                new StructField("pages_i", DataTypes.IntType),
                 new StructField("author", DataTypes.StringType),
                 new StructField("price", DataTypes.DoubleType),
                 new StructField("cat", DataTypes.StringType),
                 new StructField("name", DataTypes.StringType),
                 new StructField("genre_s", DataTypes.StringType),
-                new StructField("sequence_i", DataTypes.IntegerType),
+                new StructField("sequence_i", DataTypes.IntType),
                 new StructField("inStock", DataTypes.BooleanType),
                 new StructField("id", DataTypes.StringType)
         );

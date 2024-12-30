@@ -27,7 +27,7 @@ public class ByteType extends PrimitiveType {
      * @param nullable True if the data may be null.
      */
     ByteType(boolean nullable) {
-        super(nullable);
+        super(ID.Byte, nullable);
     }
 
     @Override
@@ -36,30 +36,7 @@ public class ByteType extends PrimitiveType {
     }
 
     @Override
-    public ID id() {
-        return ID.Byte;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Byte" : "byte";
-    }
-
-    @Override
-    public String toString() {
-        return "byte";
-    }
-
-    @Override
     public Byte valueOf(String s) {
         return Byte.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof ByteType t) {
-            return nullable == t.nullable;
-        }
-        return false;
     }
 }

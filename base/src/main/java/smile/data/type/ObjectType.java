@@ -59,9 +59,9 @@ public class ObjectType implements DataType {
         } else if (clazz == Double.class) {
             format = DataTypes.DoubleType::toString;
         } else if (clazz == Integer.class) {
-            format = DataTypes.IntegerType::toString;
+            format = DataTypes.IntType::toString;
         } else if (clazz == Long.class) {
-            format = DataTypes.IntegerType::toString;
+            format = DataTypes.IntType::toString;
         } else {
             format = Object::toString;
         }

@@ -101,7 +101,7 @@ public class BagOfWords implements Transform {
         }
 
         StructField[] fields = Arrays.stream(words)
-                .map(word -> new StructField("BoW_" + word, DataTypes.IntegerType))
+                .map(word -> new StructField("BoW_" + word, DataTypes.IntType))
                 .toArray(StructField[]::new);
         this.schema = new StructType(fields);
     }

@@ -299,7 +299,7 @@ public class Arrow {
                     FieldVector vector = root.getVector(field.getName());
                     DataType type = data.schema().field(field.getName()).dtype();
                     switch (type.id()) {
-                        case Integer:
+                        case Int:
                             writeIntField(data, vector, from, count);
                             break;
                         case Long:

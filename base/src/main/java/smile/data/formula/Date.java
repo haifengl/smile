@@ -98,7 +98,7 @@ public class Date implements Term {
             features.add(new Feature() {
                 final StructField field = new StructField(
                         String.format("%s_%s", name, feature),
-                        DataTypes.IntegerType,
+                        DataTypes.IntType,
                         feature == DateFeature.MONTH ? month : (feature == DateFeature.DAY_OF_WEEK ? dayOfWeek : null));
 
                 @Override
