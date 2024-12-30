@@ -53,15 +53,15 @@ public class IntFunction extends AbstractFunction {
 
         for (Feature feature : x.bind(schema)) {
             StructField xfield = feature.field();
-            DataType type = xfield.dtype();
-            if (!(type.isInt() || type.isShort() || type.isByte())) {
-                throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, type));
+            DataType dtype = xfield.dtype();
+            if (!(dtype.isInt() || dtype.isShort() || dtype.isByte())) {
+                throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, dtype));
             }
 
             features.add(new Feature() {
                 final StructField field = new StructField(
                         String.format("%s(%s)", name, xfield.name()),
-                        type.id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType,
+                        dtype.isNullable() ? DataTypes.NullableIntegerType : DataTypes.IntegerType,
                         xfield.measure());
 
                 @Override

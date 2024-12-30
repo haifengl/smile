@@ -75,6 +75,7 @@ public class FormulaTest {
         persons.add(new Person("Amy", Gender.Female, LocalDate.of(2005, 12, 10), 13, null));
 
         df = DataFrame.of(Person.class, persons);
+        System.out.println(df);
         try {
             weather = Read.arff(Paths.getTestData("weka/weather.nominal.arff"));
         } catch (Exception ex) {
@@ -128,7 +129,7 @@ public class FormulaTest {
         System.out.println(output);
 
         StructType schema = new StructType(
-                new StructField("salary", DataTypes.DoubleObjectType),
+                new StructField("salary", DataTypes.DoubleType),
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("name", DataTypes.StringType),

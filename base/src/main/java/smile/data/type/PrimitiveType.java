@@ -17,49 +17,24 @@
 package smile.data.type;
 
 /**
- * Boolean data type.
+ * Primitive data type.
  *
  * @author Haifeng Li
  */
-public class BooleanType extends PrimitiveType {
+public abstract class PrimitiveType implements DataType {
+    /** True if the data may be null. */
+    boolean nullable;
+
     /**
      * Constructor.
      * @param nullable True if the data may be null.
      */
-    BooleanType(boolean nullable) {
-        super(nullable);
+    PrimitiveType(boolean nullable) {
+        this.nullable = nullable;
     }
 
     @Override
-    public boolean isBoolean() {
-        return true;
-    }
-
-    @Override
-    public ID id() {
-        return ID.Boolean;
-    }
-
-    @Override
-    public String name() {
-        return nullable ? "Boolean" : "boolean";
-    }
-
-    @Override
-    public String toString() {
-        return "boolean";
-    }
-
-    @Override
-    public Boolean valueOf(String s) {
-        return Boolean.valueOf(s);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof BooleanType t) {
-            return nullable == t.nullable;
-        }
-        return false;
+    public boolean isNullable() {
+        return nullable;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.type;
 
 /**
@@ -22,15 +21,13 @@ package smile.data.type;
  *
  * @author Haifeng Li
  */
-public class ShortType implements DataType {
-
-    /** Singleton instance. */
-    static final ShortType instance = new ShortType();
-
+public class ShortType extends PrimitiveType {
     /**
-     * Private constructor for singleton design pattern.
+     * Constructor.
+     * @param nullable True if the data may be null.
      */
-    private ShortType() {
+    ShortType(boolean nullable) {
+        super(nullable);
     }
 
     @Override
@@ -40,7 +37,7 @@ public class ShortType implements DataType {
 
     @Override
     public String name() {
-        return "short";
+        return nullable ? "Short" : "short";
     }
 
     @Override
@@ -60,6 +57,9 @@ public class ShortType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof ShortType;
+        if (o instanceof ShortType t) {
+            return nullable == t.nullable;
+        }
+        return false;
     }
 }
