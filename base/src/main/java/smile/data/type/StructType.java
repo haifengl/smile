@@ -16,6 +16,9 @@
  */
 package smile.data.type;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,6 +38,8 @@ import smile.data.vector.ValueVector;
  * @author Haifeng Li
  */
 public record StructType(StructField[] fields, Map<String, Integer> index) implements DataType {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StructType.class);
+
     /**
      * Constructor.
      * @param fields the struct fields.
@@ -263,5 +268,33 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
         }
 
         return false;
+    }
+
+    /**
+     * Returns the struct type of record or bean class.
+     * @param clazz The class type of elements.
+     * @return the struct type.
+     */
+    public static StructType of(Class<?> clazz) {
+        if (clazz.isRecord()) {
+            StructField[] fields = Arrays.stream(clazz.getRecordComponents())
+                    .map(StructField::of)
+                    .toArray(StructField[]::new);
+            return new StructType(fields);
+        } else {
+            try {
+                BeanInfo bean = Introspector.getBeanInfo(clazz);
+                PropertyDescriptor[] props = bean.getPropertyDescriptors();
+                StructField[] fields = Arrays.stream(props)
+                        .filter(prop -> !prop.getName().equals("class"))
+                        .map(StructField::of)
+                        .toArray(StructField[]::new);
+
+                return new StructType(fields);
+            } catch (java.beans.IntrospectionException ex) {
+                logger.error("Failed to introspect a bean: ", ex);
+                throw new RuntimeException(ex);
+            }
+        }
     }
 }
