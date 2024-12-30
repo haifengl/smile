@@ -31,17 +31,17 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-class DatasetImpl<D, T> implements Dataset<D, T> {
+public class SimpleDataset<D, T> implements Dataset<D, T> {
     /**
      * The sample instances.
      */
-    private final ArrayList<SampleInstance<D, T>> instances;
+    final ArrayList<SampleInstance<D, T>> instances;
 
     /**
      * Constructor
      * @param instances The sample instances.
      */
-    public DatasetImpl(Collection<SampleInstance<D, T>> instances) {
+    public SimpleDataset(Collection<SampleInstance<D, T>> instances) {
         this.instances = new ArrayList<>(instances);
     }
 

@@ -31,13 +31,9 @@ import smile.math.matrix.SparseMatrix;
  *
  * @author Haifeng Li
  */
-public class BinarySparseDataset<T> implements Dataset<int[], T> {
+public class BinarySparseDataset<T> extends SimpleDataset<int[], T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDataset.class);
 
-    /**
-     * The sample instances.
-     */
-    private final ArrayList<SampleInstance<int[], T>> instances;
     /**
      * The number of nonzero entries.
      */
@@ -56,7 +52,7 @@ public class BinarySparseDataset<T> implements Dataset<int[], T> {
      * @param data The sample instances.
      */
     public BinarySparseDataset(Collection<SampleInstance<int[], T>> data) {
-        this.instances = new ArrayList<>(data);
+        super(data);
 
         int p = 0;
         for (var instance : instances) {
@@ -86,11 +82,6 @@ public class BinarySparseDataset<T> implements Dataset<int[], T> {
         }
     }
 
-    @Override
-    public int size() {
-        return instances.size();
-    }
-
     /**
      * Returns the number of nonzero entries.
      * @return the number of nonzero entries.
@@ -105,21 +96,6 @@ public class BinarySparseDataset<T> implements Dataset<int[], T> {
      */
     public int ncol() {
         return ncol;
-    }
-
-    @Override
-    public SampleInstance<int[], T> get(int i) {
-        return instances.get(i);
-    }
-
-    @Override
-    public Stream<SampleInstance<int[], T>> stream() {
-        return instances.stream();
-    }
-
-    @Override
-    public Iterator<SampleInstance<int[], T>> iterator() {
-        return instances.iterator();
     }
 
     /**
