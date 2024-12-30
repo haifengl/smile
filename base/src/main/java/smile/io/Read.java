@@ -588,7 +588,7 @@ public interface Read {
                 line = reader.readLine();
             }
 
-            return SparseDataset.of(data);
+            return new SparseDataset<>(data);
         }
     }    
 }

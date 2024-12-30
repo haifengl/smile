@@ -22,8 +22,31 @@ import java.util.stream.Collector;
 import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
 
-/** Stream collectors for DataFrame. */
+/** Stream collectors for Dataset, DataFrame, and Matrix. */
 public interface Collectors {
+    /**
+     * Returns a stream collector that accumulates elements into a Dataset.
+     *
+     * @param <D> the data type.
+     * @param <T> the target type.
+     * @return the stream collector.
+     */
+    static <D, T> Collector<SampleInstance<D, T>, List<SampleInstance<D, T>>, Dataset<D, T>> toDataset() {
+        return Collector.of(
+                // supplier
+                ArrayList::new,
+                // accumulator
+                List::add,
+                // combiner
+                (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                },
+                // finisher
+                Dataset::of
+        );
+    }
+
     /**
      * Returns a stream collector that accumulates objects into a DataFrame.
      *

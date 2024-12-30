@@ -212,27 +212,4 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
         }
         return new DatasetImpl<>(instances);
     }
-
-    /**
-     * Returns a stream collector that accumulates elements into a Dataset.
-     *
-     * @param <D> the data type.
-     * @param <T> the target type.
-     * @return the stream collector.
-     */
-    static <D, T> Collector<SampleInstance<D, T>, List<SampleInstance<D, T>>, Dataset<D, T>> collector() {
-        return Collector.of(
-                // supplier
-                ArrayList::new,
-                // accumulator
-                List::add,
-                // combiner
-                (c1, c2) -> {
-                    c1.addAll(c2);
-                    return c1;
-                },
-                // finisher
-                Dataset::of
-        );
-    }
 }

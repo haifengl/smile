@@ -18,10 +18,10 @@
 package smile.data;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
+import smile.math.MathEx;
+import smile.math.matrix.SparseMatrix;
 
 /**
  * Binary sparse dataset. Each item is stored as an integer array, which
@@ -31,26 +31,104 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-public interface BinarySparseDataset<T> extends Dataset<int[], T> {
+public class BinarySparseDataset<T> implements Dataset<int[], T> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDataset.class);
+
+    /**
+     * The sample instances.
+     */
+    private final ArrayList<SampleInstance<int[], T>> instances;
+    /**
+     * The number of nonzero entries.
+     */
+    private int n;
+    /**
+     * The number of columns.
+     */
+    private final int ncol;
+    /**
+     * The number of nonzero entries in each column.
+     */
+    private final int[] colSize;
+
+    /**
+     * Constructor.
+     * @param data The sample instances.
+     */
+    public BinarySparseDataset(Collection<SampleInstance<int[], T>> data) {
+        this.instances = new ArrayList<>(data);
+
+        int p = 0;
+        for (var instance : instances) {
+            p = Math.max(p, MathEx.max(instance.x()));
+        }
+        ncol = p + 1;
+        colSize = new int[ncol];
+
+        for (var instance : instances) {
+            var x = instance.x();
+            Arrays.sort(x);
+
+            int prev = -1; // index of previous element
+            for (int xi : x) {
+                if (xi < 0) {
+                    throw new IllegalArgumentException(String.format("Negative index of nonzero element: %d", xi));
+                }
+
+                if (xi == prev) {
+                    logger.warn("Ignore duplicated indices: {} in {}", xi, Arrays.toString(x));
+                } else {
+                    colSize[xi]++;
+                    n++;
+                    prev = xi;
+                }
+            }
+        }
+    }
+
+    @Override
+    public int size() {
+        return instances.size();
+    }
+
     /**
      * Returns the number of nonzero entries.
      * @return the number of nonzero entries.
      */
-    int length();
+    public int length() {
+        return n;
+    }
 
     /**
      * Returns the number of columns.
      * @return the number of columns.
      */
-    int ncol();
-    
+    public int ncol() {
+        return ncol;
+    }
+
+    @Override
+    public SampleInstance<int[], T> get(int i) {
+        return instances.get(i);
+    }
+
+    @Override
+    public Stream<SampleInstance<int[], T>> stream() {
+        return instances.stream();
+    }
+
+    @Override
+    public Iterator<SampleInstance<int[], T>> iterator() {
+        return instances.iterator();
+    }
+
     /**
      * Returns the binary value at entry (i, j) by binary search.
      * @param i the row index.
      * @param j the column index.
      * @return the binary value of cell.
      */
-    default int get(int i, int j) {
+    public int get(int i, int j) {
         if (i < 0 || i >= size()) {
             throw new IllegalArgumentException("Invalid index: i = " + i);
         }
@@ -83,17 +161,28 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      * Returns the Harwell-Boeing column-compressed sparse matrix.
      * @return the sparse matrix.
      */
-    smile.math.matrix.SparseMatrix toMatrix();
+    public SparseMatrix toMatrix() {
+        int[] pos = new int[ncol];
+        int[] colIndex = new int[ncol + 1];
+        for (int i = 0; i < ncol; i++) {
+            colIndex[i + 1] = colIndex[i] + colSize[i];
+        }
 
-    /**
-     * Returns a default implementation of BinarySparseDataset.
-     *
-     * @param data The sample instances.
-     * @param <T> the target type.
-     * @return the sparse dataset.
-     */
-    static <T> BinarySparseDataset<T> of(Collection<SampleInstance<int[], T>> data) {
-        return new BinarySparseDatasetImpl<>(data);
+        int nrow = instances.size();
+        int[] rowIndex = new int[n];
+        double[] x = new double[n];
+
+        for (int i = 0; i < nrow; i++) {
+            for (int j : instances.get(i).x()) {
+                int k = colIndex[j] + pos[j];
+
+                rowIndex[k] = i;
+                x[k] = 1;
+                pos[j]++;
+            }
+        }
+
+        return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);
     }
 
     /**
@@ -104,8 +193,8 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      *             ascending order.
      * @return the sparse dataset.
      */
-    static BinarySparseDataset<Void> of(int[][] data) {
-        return new BinarySparseDatasetImpl<>(Arrays.stream(data)
+    public static BinarySparseDataset<Void> of(int[][] data) {
+        return new BinarySparseDataset<>(Arrays.stream(data)
                 .map(x -> new SampleInstance<int[], Void>(x, null))
                 .toList());
     }
@@ -119,7 +208,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
      * @exception NumberFormatException if an entry is not an integer.
      * @return the sparse dataset.
      */
-    static BinarySparseDataset<Void> from(java.nio.file.Path path) throws IOException, NumberFormatException {
+    public static BinarySparseDataset<Void> from(java.nio.file.Path path) throws IOException, NumberFormatException {
         try (Stream<String> stream = java.nio.file.Files.lines(path)) {
             List<SampleInstance<int[], Void>> rows = stream.map(line -> {
                 String[] s = line.split("\\s+");
@@ -130,7 +219,7 @@ public interface BinarySparseDataset<T> extends Dataset<int[], T> {
                 return new SampleInstance<int[], Void>(index, null);
             }).toList();
 
-            return new BinarySparseDatasetImpl<>(rows);
+            return new BinarySparseDataset<>(rows);
         }
     }
 }
