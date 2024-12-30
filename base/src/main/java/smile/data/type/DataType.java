@@ -489,56 +489,6 @@ public interface DataType extends Serializable {
     }
 
     /**
-     * Returns true if the given type is of int, short, byte, char,
-     * either primitive or boxed.
-     * @param t the data type.
-     * @return true if the given type is of int.
-     */
-    static boolean isInt(DataType t) {
-        return switch (t.id()) {
-            case Integer, Short, Byte -> true;
-            case Object -> {
-                Class<?> clazz = ((ObjectType) t).getObjectClass();
-                yield clazz == Integer.class || clazz == Short.class || clazz == Byte.class;
-            }
-            default -> false;
-        };
-    }
-
-    /**
-     * Returns true if the given type is of long,
-     * either primitive or boxed.
-     * @param t the data type.
-     * @return true if the given type is of long.
-     */
-    static boolean isLong(DataType t) {
-        return (t.id() == ID.Long) ||
-               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Long.class);
-    }
-
-    /**
-     * Returns true if the given type is of float,
-     * either primitive or boxed.
-     * @param t the data type.
-     * @return true if the given type is of float.
-     */
-    static boolean isFloat(DataType t) {
-        return (t.id () == ID.Float) ||
-               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Float.class);
-    }
-
-    /**
-     * Returns true if the given type is of double,
-     * either primitive or boxed.
-     * @param t the data type.
-     * @return true if the given type is of double.
-     */
-    static boolean isDouble(DataType t) {
-        return (t.id() == ID.Double) ||
-               (t.id() == ID.Object && ((ObjectType) t).getObjectClass() == Double.class);
-    }
-
-    /**
      * Converts an avro type to smile data type.
      * @param schema an avro schema.
      * @return smile data type.
