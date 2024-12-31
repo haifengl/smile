@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -116,11 +117,12 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<GradientTreeBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);

@@ -19,6 +19,7 @@ package smile.classification;
 
 import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -94,17 +95,18 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<RBFNetwork<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
 
         System.out.println("RBF Network: " + result);
         assertEquals(0.9438, result.avg.accuracy(), 1E-4);
 
-        result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+        result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
 
         System.out.println("Normalized RBF Network: " + result);

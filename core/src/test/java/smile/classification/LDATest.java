@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -74,11 +75,12 @@ public class LDATest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, LDA::fit);
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.x(), cancer.y(), LDA::fit);
 
         System.out.println(result);
         assertEquals(0.9272, result.avg.accuracy(), 1E-4);

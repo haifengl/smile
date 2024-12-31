@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -107,11 +108,12 @@ public class KNNTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);

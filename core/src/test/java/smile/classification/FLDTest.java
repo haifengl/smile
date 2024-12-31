@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -75,11 +76,12 @@ public class FLDTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<FLD> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, FLD::fit);
+        var cancer = new BreastCancer();
+        ClassificationValidations<FLD> result = CrossValidation.classification(10, cancer.x(), cancer.y(), FLD::fit);
 
         System.out.println(result);
         assertEquals(0.9655, result.avg.accuracy(), 1E-4);

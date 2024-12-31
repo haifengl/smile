@@ -18,7 +18,7 @@
 package smile.feature.selection;
 
 import smile.data.transform.ColumnTransform;
-import smile.test.data.BreastCancer;
+import smile.datasets.BreastCancer;
 import smile.datasets.Default;
 import smile.test.data.Weather;
 import org.junit.jupiter.api.*;
@@ -67,10 +67,10 @@ public class InformationValueTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("BreastCancer");
-
-        InformationValue[] iv = InformationValue.fit(BreastCancer.data, "diagnosis");
+        var cancer = new BreastCancer();
+        InformationValue[] iv = InformationValue.fit(cancer.data(), "diagnosis");
         System.out.println(InformationValue.toString(iv));
 
         assertEquals(30, iv.length);

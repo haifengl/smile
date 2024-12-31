@@ -19,7 +19,7 @@ package smile.classification;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.BreastCancer;
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.test.data.PenDigits;
 import smile.test.data.USPS;
@@ -81,11 +81,12 @@ public class RDATest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<RDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
