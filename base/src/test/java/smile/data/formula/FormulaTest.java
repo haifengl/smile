@@ -129,7 +129,7 @@ public class FormulaTest {
         System.out.println(output);
 
         StructType schema = new StructType(
-                new StructField("salary", DataTypes.DoubleType),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("age", DataTypes.IntType),
                 new StructField("birthday", DataTypes.DateType),
                 new StructField("name", DataTypes.StringType),
@@ -151,7 +151,7 @@ public class FormulaTest {
         assertEquals(2, output.shape(1));
 
         smile.data.type.StructType schema = new StructType(
-                new StructField("salary", DataTypes.object(Double.class)),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("age", DataTypes.IntType)
         );
         assertEquals(schema, output.schema());
@@ -487,9 +487,9 @@ public class FormulaTest {
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.shape(1));
-        assertEquals(Math.round(10000.), output.get(0,0));
+        assertEquals(10000.0, output.get(0,0));
         assertNull(output.get(1, 0));
-        assertEquals(Math.round(230000.), output.get(2,0));
+        assertEquals(230000.0, output.get(2,0));
         assertNull(output.get(3, 0));
 
         Matrix matrix = formula.matrix(df);
