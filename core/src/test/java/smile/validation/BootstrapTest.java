@@ -19,11 +19,12 @@ package smile.validation;
 
 import smile.classification.DecisionTree;
 import smile.test.data.CPU;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -179,10 +180,11 @@ public class BootstrapTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
-        ClassificationValidations<DecisionTree> result = Bootstrap.classification(100, Iris.formula, Iris.data, DecisionTree::fit);
+        var iris = new Iris();
+        var result = Bootstrap.classification(100, iris.formula(), iris.data(), DecisionTree::fit);
 
         System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy());
         System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy());

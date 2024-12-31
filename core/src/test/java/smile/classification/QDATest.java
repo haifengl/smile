@@ -21,7 +21,7 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.test.data.BreastCancer;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -58,12 +58,16 @@ public class QDATest {
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, QDA::fit);
+        var iris = new Iris();
+        var x = iris.x();
+        var y = iris.y();
+
+        ClassificationMetrics metrics = LOOCV.classification(x, y, QDA::fit);
 
         System.out.println(metrics);
         assertEquals(0.9733, metrics.accuracy(), 1E-4);
 
-        QDA model = QDA.fit(Iris.x, Iris.y);
+        QDA model = QDA.fit(x, y);
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }

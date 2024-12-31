@@ -20,6 +20,7 @@ package smile.classification;
 import java.util.Arrays;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -125,18 +126,19 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var iris = new Iris();
+        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
+        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(), (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(metrics);
         assertEquals(0.9467, metrics.accuracy(), 1E-4);
@@ -302,12 +304,13 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var iris = new Iris();
+        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), 10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
         String[] fields = model.schema().names();
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data);
+        double[] shap = model.shap(iris.data());
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

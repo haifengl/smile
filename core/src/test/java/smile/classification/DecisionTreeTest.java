@@ -18,6 +18,7 @@
 package smile.classification;
 
 import smile.base.cart.SplitRule;
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -82,10 +83,11 @@ public class DecisionTreeTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
-        DecisionTree model = DecisionTree.fit(Iris.formula, Iris.data);
+        var iris = new Iris();
+        DecisionTree model = DecisionTree.fit(iris.formula(), iris.data());
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -93,7 +95,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, DecisionTree::fit);
+        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(), DecisionTree::fit);
 
         System.out.println(metrics);
         assertEquals(0.94, metrics.accuracy(), 1E-4);
@@ -206,12 +208,13 @@ public class DecisionTreeTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
-        DecisionTree model = DecisionTree.fit(Iris.formula, Iris.data, SplitRule.GINI, 20, 100, 5);
+        var iris = new Iris();
+        DecisionTree model = DecisionTree.fit(iris.formula(), iris.data(), SplitRule.GINI, 20, 100, 5);
         String[] fields = model.schema().names();
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data);
+        double[] shap = model.shap(iris.data());
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

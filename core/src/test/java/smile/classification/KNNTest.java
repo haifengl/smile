@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -55,7 +56,7 @@ public class KNNTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, KNN::fit);
         System.out.println("1-NN Error: " + metrics);
         assertEquals(8, metrics.error());
 
@@ -73,22 +74,22 @@ public class KNNTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
-
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,1));
+        var iris = new Iris();
+        ClassificationMetrics metrics = LOOCV.classification(iris.x(), iris.y(), (x, y) -> KNN.fit(x, y,1));
         System.out.println("1-NN Error: " + metrics);
         assertEquals(0.96, metrics.accuracy(), 1E-4);
 
-        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,3));
+        metrics = LOOCV.classification(iris.x(), iris.y(), (x, y) -> KNN.fit(x, y,3));
         System.out.println("3-NN Error: " + metrics);
         assertEquals(0.96, metrics.accuracy(), 1E-4);
 
-        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,5));
+        metrics = LOOCV.classification(iris.x(), iris.y(), (x, y) -> KNN.fit(x, y,5));
         System.out.println("5-NN Error: " + metrics);
         assertEquals(0.9667, metrics.accuracy(), 1E-4);
 
-        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,7));
+        metrics = LOOCV.classification(iris.x(), iris.y(), (x, y) -> KNN.fit(x, y,7));
         System.out.println("7-NN Error: " + metrics);
         assertEquals(0.9667, metrics.accuracy(), 1E-4);
     }

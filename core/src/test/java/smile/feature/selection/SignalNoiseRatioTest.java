@@ -21,7 +21,7 @@ import smile.data.DataFrame;
 import smile.data.vector.IntVector;
 import smile.test.data.BreastCancer;
 import smile.datasets.Default;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,16 +51,19 @@ public class SignalNoiseRatioTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
-        int[] y = new int[Iris.data.size()];
+        var iris = new Iris();
+        var x = iris.x();
+        var y = iris.y();
+
         for (int i = 0; i < y.length; i++) {
-            if (Iris.y[i] < 2) y[i] = 0;
+            if (y[i] < 2) y[i] = 0;
             else y[i] = 1;
         }
 
-        DataFrame data = Iris.data.drop("class").merge(new IntVector("y", y));
+        DataFrame data = iris.data().drop("class").merge(new IntVector("y", y));
         SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(data, "y");
         assertEquals(4, s2n.length);
         assertEquals(0.8743107, s2n[0].ratio(), 1E-7);

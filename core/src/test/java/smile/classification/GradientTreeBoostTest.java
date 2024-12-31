@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -83,18 +84,19 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 20, 6, 5, 0.05, 0.7);
+        var iris = new Iris();
+        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), 100, 20, 6, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data,
+        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(metrics);
@@ -176,12 +178,13 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 20, 6, 5, 0.05, 0.7);
+        var iris = new Iris();
+        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), 100, 20, 6, 5, 0.05, 0.7);
         String[] fields = model.schema().names();
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data);
+        double[] shap = model.shap(iris.data());
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
