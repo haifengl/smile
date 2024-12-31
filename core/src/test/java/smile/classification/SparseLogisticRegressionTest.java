@@ -55,7 +55,7 @@ public class SparseLogisticRegressionTest {
 
     /** Returns the sparse data. */
     private SparseDataset<Integer> sparse(double[][] x, int[] y) {
-        return SparseDataset.of(
+        return new SparseDataset<>(
                 IntStream.range(0, x.length).mapToObj(i -> {
                     double[] xi = x[i];
                     SparseArray a = new SparseArray();

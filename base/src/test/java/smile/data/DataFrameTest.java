@@ -71,6 +71,7 @@ public class DataFrameTest {
         persons.add(new Person("Amy", Gender.Female, LocalDate.of(2005, 12, 10), 13, null));
 
         df = DataFrame.of(Person.class, persons);
+        System.out.println(df.schema());
         System.out.println(df);
     }
 
