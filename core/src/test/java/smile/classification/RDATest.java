@@ -20,7 +20,7 @@ package smile.classification;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.BreastCancer;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import smile.test.data.PenDigits;
 import smile.test.data.USPS;
 import smile.math.MathEx;
@@ -54,13 +54,14 @@ public class RDATest {
     public void tearDown() {
     }
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
+        var iris = new Iris();
         int[] expected = {22, 24, 20, 19, 16, 12, 11, 9, 6, 3, 4};
         for (int i = 0; i <= 10; i++) {
             double alpha = i * 0.1;
-            ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
+            ClassificationMetrics metrics = LOOCV.classification(iris.x(), iris.y(), (x, y) -> RDA.fit(x, y, alpha));
 
             System.out.format("alpha = %.1f, metrics = %s%n", alpha, metrics);
             assertEquals(1.0 - expected[i]/150.0, metrics.accuracy(), 1E-4);

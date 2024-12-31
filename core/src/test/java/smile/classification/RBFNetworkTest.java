@@ -19,6 +19,7 @@ package smile.classification;
 
 import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -56,18 +57,18 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y,
+        var iris = new Iris();
+        ClassificationMetrics metrics = LOOCV.classification(iris.x(), iris.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
 
         System.out.println("RBF Network: " + metrics);
         assertEquals(0.9667, metrics.accuracy(), 1E-4);
 
-        metrics = LOOCV.classification(Iris.x, Iris.y,
+        metrics = LOOCV.classification(iris.x(), iris.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10), true));
 
         System.out.println("Normalized RBF Network: " + metrics);

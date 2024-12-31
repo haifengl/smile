@@ -18,6 +18,7 @@
 package smile.classification;
 
 import smile.data.type.StructField;
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -82,18 +83,19 @@ public class AdaBoostTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
+        var iris = new Iris();
+        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), 200, 20, 4, 5);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data,
+        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
         System.out.println(metrics);
         assertEquals(0.9533, metrics.accuracy(), 1E-4);
@@ -170,14 +172,15 @@ public class AdaBoostTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         System.out.println("SHAP");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
+        var iris = new Iris();
+        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), 200, 20, 4, 5);
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data);
+        double[] shap = model.shap(iris.data());
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

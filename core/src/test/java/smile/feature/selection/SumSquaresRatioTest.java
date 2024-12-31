@@ -19,7 +19,7 @@ package smile.feature.selection;
 
 import java.util.Arrays;
 import smile.classification.LDA;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import smile.test.data.USPS;
 import smile.validation.metric.Accuracy;
 import org.junit.jupiter.api.*;
@@ -51,9 +51,10 @@ public class SumSquaresRatioTest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
-        SumSquaresRatio[] ssr = SumSquaresRatio.fit(Iris.data, "class");
+        var iris = new Iris();
+        SumSquaresRatio[] ssr = SumSquaresRatio.fit(iris.data(), "class");
         assertEquals(4, ssr.length);
         assertEquals( 1.6226463, ssr[0].ratio(), 1E-6);
         assertEquals( 0.6444144, ssr[1].ratio(), 1E-6);

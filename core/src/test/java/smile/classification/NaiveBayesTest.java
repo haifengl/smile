@@ -24,7 +24,7 @@ import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianMixture;
 import smile.stat.distribution.EmpiricalDistribution;
-import smile.test.data.Iris;
+import smile.datasets.Iris;
 import smile.test.data.WeatherNominal;
 import smile.util.IntSet;
 import smile.validation.ClassificationMetrics;
@@ -61,10 +61,13 @@ public class NaiveBayesTest {
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        int p = Iris.x[0].length;
-        int k = MathEx.max(Iris.y) + 1;
+        var iris = new Iris();
+        var data = iris.x();
+        var label = iris.y();
+        int p = data[0].length;
+        int k = MathEx.max(label) + 1;
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> {
+        ClassificationMetrics metrics = LOOCV.classification(data, label, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
             Distribution[][] condprob = new Distribution[k][p];
@@ -91,7 +94,10 @@ public class NaiveBayesTest {
             final int c = i;
             for (int j = 0; j < p; j++) {
                 final int f = j;
-                double[] xi = IntStream.range(0, Iris.x.length).filter(l -> Iris.y[l] == c).mapToDouble(l -> Iris.x[l][f]).toArray();
+                double[] xi = IntStream.range(0, data.length)
+                        .filter(l -> label[l] == c)
+                        .mapToDouble(l -> data[l][f])
+                        .toArray();
                 condprob[i][j] = GaussianMixture.fit(3, xi);
             }
         }

@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -52,10 +53,10 @@ public class LDATest {
     }
 
     @Test
-    public void testIris() {
+    public void testIris() throws Exception {
         System.out.println("Iris");
-
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, LDA::fit);
+        var iris = new Iris();
+        ClassificationMetrics metrics = LOOCV.classification(iris.x(), iris.y(), LDA::fit);
 
         System.out.println(metrics);
         assertEquals(0.8533, metrics.accuracy(), 1E-4);
