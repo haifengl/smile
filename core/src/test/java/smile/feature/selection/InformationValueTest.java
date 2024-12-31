@@ -19,7 +19,7 @@ package smile.feature.selection;
 
 import smile.data.transform.ColumnTransform;
 import smile.test.data.BreastCancer;
-import smile.test.data.Default;
+import smile.datasets.Default;
 import smile.test.data.Weather;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,10 +50,11 @@ public class InformationValueTest {
     }
 
     @Test
-    public void testDefault() {
+    public void testDefault() throws Exception {
         System.out.println("Default");
 
-        InformationValue[] iv = InformationValue.fit(Default.data, "default");
+        var dataset = new Default();
+        InformationValue[] iv = InformationValue.fit(dataset.data(), "default");
         System.out.println(InformationValue.toString(iv));
 
         assertEquals(3, iv.length);
@@ -62,7 +63,7 @@ public class InformationValueTest {
         assertEquals(0.0664, iv[2].iv(), 1E-4);
 
         ColumnTransform transform = InformationValue.toTransform(iv);
-        System.out.println(transform.apply(Default.data));
+        System.out.println(transform.apply(dataset.data()));
     }
 
     @Test

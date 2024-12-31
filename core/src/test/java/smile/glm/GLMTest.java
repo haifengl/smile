@@ -20,7 +20,7 @@ package smile.glm;
 import smile.glm.model.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.Default;
+import smile.datasets.Default;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,7 +53,8 @@ public class GLMTest {
     public void testDefault() throws Exception {
         System.out.println("default");
 
-        GLM model = GLM.fit(Default.formula, Default.data, Bernoulli.logit());
+        var dataset = new Default();
+        GLM model = GLM.fit(dataset.formula(), dataset.data(), Bernoulli.logit());
         System.out.println(model);
 
         assertEquals(1571.5448, model.deviance(), 1E-4);
