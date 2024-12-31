@@ -24,6 +24,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
@@ -33,6 +35,10 @@ import org.apache.avro.util.Utf8;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataType;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -118,7 +124,7 @@ public class Avro {
     public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
-            StructType struct = StructType.of(schema);
+            StructType struct = toStructType(schema);
 
             List<Tuple> rows = new ArrayList<>();
             GenericRecord record = null;
@@ -138,5 +144,94 @@ public class Avro {
             }
             return DataFrame.of(struct, rows);
         }
+    }
+
+    /**
+     * Converts an avro type to smile data type.
+     * @param schema an avro schema.
+     * @return smile data type.
+     */
+    public static DataType toDataType(Schema schema) {
+        return toDataType(schema, false);
+    }
+
+    /**
+     * Converts an avro type to smile data type.
+     * @param schema an avro schema.
+     * @param nullable true if the data may be null.
+     * @return smile data type.
+     */
+    private static DataType toDataType(Schema schema, boolean nullable) {
+        return switch (schema.getType()) {
+            case BOOLEAN -> nullable ? DataTypes.NullableBooleanType : DataTypes.BooleanType;
+            case INT -> nullable ? DataTypes.NullableIntType : DataTypes.IntType;
+            case LONG -> nullable ? DataTypes.NullableLongType : DataTypes.LongType;
+            case FLOAT -> nullable ? DataTypes.NullableFloatType : DataTypes.FloatType;
+            case DOUBLE -> nullable ? DataTypes.NullableDoubleType : DataTypes.DoubleType;
+            case STRING -> DataTypes.StringType;
+            case FIXED, BYTES -> DataTypes.ByteArrayType;
+            case ENUM -> new NominalScale(schema.getEnumSymbols()).type();
+            case ARRAY -> DataTypes.array(toDataType(schema.getElementType(), nullable));
+            case MAP -> DataTypes.object(java.util.Map.class);
+            case UNION -> avroUnion(schema.getTypes());
+            default -> throw new UnsupportedOperationException("Unsupported Avro type: " + schema);
+        };
+    }
+
+    /** Converts an avro union type. */
+    private static DataType avroUnion(List<Schema> union) {
+        if (union.isEmpty()) {
+            throw new IllegalArgumentException("Empty type list of Union");
+        }
+
+        if (union.size() > 2) {
+            String s = union.stream().map(Schema::getType).map(Object::toString).collect(Collectors.joining(", "));
+            throw new UnsupportedOperationException(String.format("Unsupported type Union(%s)", s));
+        }
+
+        if (union.size() == 1) {
+            return toDataType(union.getFirst(), false);
+        }
+
+        Schema a = union.get(0);
+        Schema b = union.get(1);
+
+        if (a.getType() == Schema.Type.NULL && b.getType() != Schema.Type.NULL) {
+            return toDataType(b, true);
+        }
+
+        if (a.getType() != Schema.Type.NULL && b.getType() == Schema.Type.NULL) {
+            return toDataType(a, true);
+        }
+
+        return DataTypes.object(Object.class);
+    }
+
+    /**
+     * Converts an avro schema field to smile field.
+     * @param field an avro schema field.
+     * @return the struct field.
+     */
+    public static StructField toStructField(Schema.Field field) {
+        NominalScale scale = null;
+        if (field.schema().getType() == Schema.Type.ENUM) {
+            scale = new NominalScale(field.schema().getEnumSymbols());
+        }
+
+        return new StructField(field.name(), toDataType(field.schema()), scale);
+    }
+
+    /**
+     * Converts an avro schema to smile schema.
+     * @param schema an avro schema.
+     * @return the struct type.
+     */
+    public static StructType toStructType(Schema schema) {
+        List<StructField> fields = new ArrayList<>();
+        for (Schema.Field field : schema.getFields()) {
+            fields.add(toStructField(field));
+        }
+
+        return new StructType(fields);
     }
 }

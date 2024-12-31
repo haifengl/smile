@@ -42,6 +42,7 @@ import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
@@ -128,7 +129,7 @@ public class Parquet {
         try (ParquetFileReader reader = ParquetFileReader.open(file)) {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();
-            StructType struct = StructType.of(schema);
+            StructType struct = toStructType(schema);
             logger.debug("The meta data of parquet file {}: {}", file, ParquetMetadata.toPrettyJSON(footer));
 
             int size = (int) Math.min(reader.getRecordCount(), limit);
@@ -465,5 +466,101 @@ public class Parquet {
             }
         }
         return o;
+    }
+
+    /**
+     * Converts a parquet primitive type to smile data type.
+     * @param primitiveType a parquet primitive type.
+     * @return the data type.
+     */
+    public static DataType toDataType(PrimitiveType primitiveType) {
+        var typeName = primitiveType.getPrimitiveTypeName();
+        LogicalTypeAnnotation logicalType = primitiveType.getLogicalTypeAnnotation();
+        Type.Repetition repetition = primitiveType.getRepetition();
+
+        return switch (typeName) {
+            case BOOLEAN -> switch (repetition) {
+                case REQUIRED -> DataTypes.BooleanType;
+                case OPTIONAL -> DataTypes.NullableBooleanType;
+                case REPEATED -> DataTypes.BooleanArrayType;
+            };
+
+            case INT32 -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.DateLogicalTypeAnnotation dateLogicalTypeAnnotation -> DataTypes.DateType;
+                case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation -> DataTypes.TimeType;
+                case null, default ->
+                        switch (repetition) {
+                            case REQUIRED -> DataTypes.IntType;
+                            case OPTIONAL -> DataTypes.NullableIntType;
+                            case REPEATED -> DataTypes.IntArrayType;
+                        };
+            };
+
+            case INT64 -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.TimeLogicalTypeAnnotation timeLogicalTypeAnnotation -> DataTypes.TimeType;
+                case LogicalTypeAnnotation.TimestampLogicalTypeAnnotation timestampLogicalTypeAnnotation -> DataTypes.DateTimeType;
+                case null, default ->
+                        switch (repetition) {
+                            case REQUIRED -> DataTypes.LongType;
+                            case OPTIONAL -> DataTypes.NullableLongType;
+                            case REPEATED -> DataTypes.LongArrayType;
+                        };
+            };
+
+            case INT96 -> DataTypes.DateTimeType;
+
+            case FLOAT -> switch (repetition) {
+                case REQUIRED -> DataTypes.FloatType;
+                case OPTIONAL -> DataTypes.NullableFloatType;
+                case REPEATED -> DataTypes.FloatArrayType;
+            };
+
+            case DOUBLE -> switch (repetition) {
+                case REQUIRED -> DataTypes.DoubleType;
+                case OPTIONAL -> DataTypes.NullableDoubleType;
+                case REPEATED -> DataTypes.DoubleArrayType;
+            };
+
+            case FIXED_LEN_BYTE_ARRAY -> switch (logicalType) {
+                case LogicalTypeAnnotation.UUIDLogicalTypeAnnotation uuidLogicalTypeAnnotation -> DataTypes.ObjectType;
+                case LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervalLogicalTypeAnnotation -> DataTypes.ObjectType;
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation -> DataTypes.StringType;
+                default -> DataTypes.ByteArrayType;
+            };
+
+            case BINARY -> switch (logicalType) {
+                case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalLogicalTypeAnnotation -> DataTypes.DecimalType;
+                case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringLogicalTypeAnnotation -> DataTypes.StringType;
+                default -> DataTypes.ByteArrayType;
+            };
+        };
+    }
+
+    /**
+     * Converts a parquet column to smile field.
+     * @param column a parquet column descriptor.
+     * @return the struct field.
+     */
+    public static StructField toStructField(ColumnDescriptor column) {
+        String name = String.join(".", column.getPath());
+        DataType dtype = toDataType(column.getPrimitiveType());
+        return new StructField(name, dtype);
+    }
+
+    /**
+     * Converts a parquet schema to smile schema.
+     * @param schema a parquet schema.
+     * @return the struct type.
+     */
+    public static StructType toStructType(MessageType schema) {
+        List<StructField> fields = new ArrayList<>();
+        for (ColumnDescriptor column : schema.getColumns()) {
+            fields.add(toStructField(column));
+        }
+
+        return new StructType(fields);
     }
 }
