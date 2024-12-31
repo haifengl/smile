@@ -422,6 +422,7 @@ public class Arff implements AutoCloseable {
         }
 
         List<Tuple> rows = new ArrayList<>();
+        boolean[] missing = new boolean[schema.length()];
         for (int i = 0; i < limit; i++) {
             // Check if end of file reached.
             getFirstToken();
@@ -431,6 +432,30 @@ public class Arff implements AutoCloseable {
 
             // Parse instance
             Object[] row = tokenizer.ttype == '{' ? readSparseInstance() : readInstance();
+
+            // Check any missing values
+            int p = Math.min(row.length, schema.length());
+            for (int j = 0; j < p; j++) {
+                if (row[j] == null) {
+                    missing[j] = true;
+                }
+            }
+
+            // Set a field to nullable if any missing value in the column.
+            var fields = schema.fields();
+            for (int j = 0; j < missing.length; j++) {
+                if (missing[j] && fields[j].dtype().isPrimitive()) {
+                    var field = fields[j];
+                    if (field.dtype() == DataTypes.IntType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableIntType, field.measure());
+                    } else if (field.dtype() == DataTypes.FloatType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableFloatType, field.measure());
+                    } else if (field.dtype() == DataTypes.DoubleType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableDoubleType, field.measure());
+                    }
+                }
+            }
+            schema = new StructType(fields);
             rows.add(Tuple.of(schema, row));
         }
 
