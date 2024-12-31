@@ -21,6 +21,7 @@ import java.util.Arrays;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class RandomForestTest {
+    Abalone abalone;
     long[] seeds = {
             342317953, 521642753, 72070657, 577451521, 266953217, 179976193,
             374603777, 527788033, 303395329, 185759582, 261518209, 461300737,
@@ -72,7 +74,8 @@ public class RandomForestTest {
             50014340, 489234689, 129556481, 178766593, 142540536, 213594113,
             870440184, 277912577};
 
-    public RandomForestTest() {
+    public RandomForestTest() throws Exception {
+        abalone = new Abalone();
     }
 
     @BeforeAll
@@ -164,7 +167,7 @@ public class RandomForestTest {
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.formula, Abalone.train, 2.1931);
+        test("abalone", abalone.formula(), abalone.train(), 2.1931);
     }
 
     @Test
@@ -208,11 +211,11 @@ public class RandomForestTest {
     public void testTrim() {
         System.out.println("trim");
 
-        RandomForest model = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        RandomForest model = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         System.out.println(model.metrics());
         assertEquals(50, model.size());
 
-        double rmse = RMSE.of(Abalone.testy, model.predict(Abalone.test));
+        double rmse = RMSE.of(abalone.testy(), model.predict(abalone.test()));
         System.out.format("RMSE = %.4f%n", rmse);
         assertEquals(2.0734, rmse, 1E-4);
 
@@ -220,11 +223,15 @@ public class RandomForestTest {
         assertEquals(50, model.size());
         assertEquals(40, trimmed.size());
 
-        double rmse1 = Arrays.stream(model.models()).mapToDouble(m -> m.metrics.rmse()).max().getAsDouble();
-        double rmse2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.metrics.rmse()).max().getAsDouble();
+        double rmse1 = Arrays.stream(model.models())
+                .mapToDouble(m -> m.metrics.rmse())
+                .max().orElseThrow();
+        double rmse2 = Arrays.stream(trimmed.models())
+                .mapToDouble(m -> m.metrics.rmse())
+                .max().orElseThrow();
         assertTrue(rmse1 > rmse2);
 
-        rmse = RMSE.of(Abalone.testy, trimmed.predict(Abalone.test));
+        rmse = RMSE.of(abalone.testy(), trimmed.predict(abalone.test()));
         assertEquals(2.0748, rmse, 1E-4);
     }
 
@@ -232,12 +239,12 @@ public class RandomForestTest {
     public void testMerge() {
         System.out.println("merge");
 
-        RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
-        RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
+        RandomForest forest1 = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        RandomForest forest2 = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
         RandomForest forest = forest1.merge(forest2);
-        double rmse1 = RMSE.of(Abalone.testy, forest1.predict(Abalone.test));
-        double rmse2 = RMSE.of(Abalone.testy, forest2.predict(Abalone.test));
-        double rmse  = RMSE.of(Abalone.testy, forest.predict(Abalone.test));
+        double rmse1 = RMSE.of(abalone.testy(), forest1.predict(abalone.test()));
+        double rmse2 = RMSE.of(abalone.testy(), forest2.predict(abalone.test()));
+        double rmse  = RMSE.of(abalone.testy(), forest.predict(abalone.test()));
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);

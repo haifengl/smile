@@ -18,7 +18,7 @@
 package smile.validation;
 
 import smile.classification.DecisionTree;
-import smile.test.data.Abalone;
+import smile.datasets.Abalone;
 import smile.test.data.USPS;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
@@ -59,9 +59,10 @@ public class ValidationTest {
     }
 
     @Test
-    public void testAbalone() {
+    public void testAbalone() throws Exception {
         System.out.println("Abalone");
-        RegressionValidation<RegressionTree> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test, RegressionTree::fit);
+        var abalone = new Abalone();
+        var result = RegressionValidation.of(abalone.formula(), abalone.train(), abalone.test(), RegressionTree::fit);
 
         System.out.println(result);
         assertEquals(2.3194, result.metrics.rmse(), 1E-4);

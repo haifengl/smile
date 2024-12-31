@@ -20,6 +20,7 @@ package smile.regression;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -112,8 +113,9 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testAbalone() {
-        test("abalone", Abalone.formula, Abalone.train, 2.3670);
+    public void testAbalone() throws Exception {
+        var abalone = new Abalone();
+        test("abalone", abalone.formula(), abalone.train(), 2.3670);
     }
 
     @Test

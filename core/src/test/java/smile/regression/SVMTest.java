@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
@@ -94,10 +95,11 @@ public class SVMTest {
     }
 
     @Test
-    public void tesAbalone() {
+    public void tesAbalone() throws Exception {
         System.out.println("Abalone");
+        var abalone = new Abalone();
         GaussianKernel kernel = new GaussianKernel(5.0);
-        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(Abalone.x, Abalone.y, Abalone.testx, Abalone.testy,
+        var result = RegressionValidation.of(abalone.x(), abalone.y(), abalone.testx(), abalone.testy(),
                 (x, y) -> SVM.fit(x, y, kernel, 1.5, 100, 1E-3));
 
         System.out.println(result);

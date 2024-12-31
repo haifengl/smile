@@ -20,6 +20,7 @@ package smile.regression;
 import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -121,10 +122,11 @@ public class RLSTest {
     }
     
     @Test
-    public void testOnlineLearn() {
+    public void testOnlineLearn() throws Exception {
+        var abalone = new Abalone();
         testOnlineLearn("CPU", CPU.formula, CPU.data);
         testOnlineLearn("2dplanes", Planes.formula, Planes.data);
-        testOnlineLearn("abalone", Abalone.formula, Abalone.train);
+        testOnlineLearn("abalone", abalone.formula(), abalone.train());
         testOnlineLearn("bank32nh", Bank32nh.formula, Bank32nh.data);
         testOnlineLearn("cal_housing", CalHousing.formula, CalHousing.data);
         testOnlineLearn("puma8nh", Puma8NH.formula, Puma8NH.data);

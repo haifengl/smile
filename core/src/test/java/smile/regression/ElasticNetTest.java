@@ -20,6 +20,7 @@ package smile.regression;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -124,10 +125,10 @@ public class ElasticNetTest {
     }
 
     @Test
-    public void tesAbalone() {
+    public void tesAbalone() throws Exception {
         System.out.println("Abalone");
-
-        RegressionValidation<LinearModel> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test,
+        var abalone = new Abalone();
+        var result = RegressionValidation.of(abalone.formula(), abalone.train(), abalone.test(),
                 (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
         System.out.println(result.model);

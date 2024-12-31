@@ -21,6 +21,7 @@ import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
+import smile.datasets.Abalone;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.io.Write;
@@ -119,15 +120,18 @@ public class MLPTest {
     }
 
     @Test
-    public void testAbalone() {
-        test("abalone", Abalone.x, Abalone.y, null, 2.5298,
-                Layer.input(Abalone.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    public void testAbalone() throws Exception {
+        var abalone = new Abalone();
+        var x = abalone.x();
+        var y = abalone.y();
+        test("abalone", x, y, null, 2.5298,
+             Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
     public void testAilerons() {
         test("ailerons", Ailerons.x, Ailerons.y, null, 0.0004,
-                Layer.input(Ailerons.x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
+             Layer.input(Ailerons.x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
     }
 
     @Test

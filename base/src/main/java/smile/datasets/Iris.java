@@ -27,10 +27,12 @@ import smile.util.Paths;
 
 /**
  * Iris flower dataset. The dataset consists of 50 samples from each of
- * three species of Iris (Iris setosa, Iris virginica and Iris versicolor).
+ * three species of Iris (Iris-setosa, Iris-virginica and Iris-versicolor).
  * Four features were measured from each sample: the length and the width
  * of the sepals and petals, in centimeters.
  *
+ * @param data data frame.
+ * @param formula modeling formula.
  * @author Haifeng Li
  */
 public record Iris(DataFrame data, Formula formula) {

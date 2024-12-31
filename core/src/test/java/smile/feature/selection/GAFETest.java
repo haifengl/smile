@@ -18,7 +18,7 @@
 package smile.feature.selection;
 
 import smile.classification.DecisionTree;
-import smile.test.data.Abalone;
+import smile.datasets.Abalone;
 import smile.test.data.Segment;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
@@ -86,13 +86,14 @@ public class GAFETest {
     }
 
     @Test
-    public void testRegressionTree() {
+    public void testRegressionTree() throws Exception {
         System.out.println("RegressionTree");
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(50, 10, Abalone.train.ncol()-1,
-                GAFE.fitness("rings", Abalone.train, Abalone.test, new RMSE(), RegressionTree::fit));
+        var abalone = new Abalone();
+        BitString[] result = selection.apply(50, 10, abalone.train().ncol()-1,
+                GAFE.fitness("rings", abalone.train(), abalone.test(), new RMSE(), RegressionTree::fit));
 
         for (BitString bits : result) {
             System.out.format("%.4f %s%n", -bits.fitness(), bits);
