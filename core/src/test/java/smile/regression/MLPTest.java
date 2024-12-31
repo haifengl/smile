@@ -24,6 +24,7 @@ import smile.data.transform.InvertibleColumnTransform;
 import smile.datasets.Abalone;
 import smile.datasets.Ailerons;
 import smile.datasets.Bank32nh;
+import smile.datasets.CalHousing;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.io.Write;
@@ -149,9 +150,12 @@ public class MLPTest {
     }
 
     @Test
-    public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115704.4419,
-                Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    public void testCalHousing() throws Exception {
+        var calHousing = new CalHousing();
+        double[][] x = calHousing.x();
+        double[] y = calHousing.y();
+        test("cal_housing", x, y, null, 115704.4419,
+                Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test

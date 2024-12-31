@@ -20,6 +20,7 @@ package smile.classification;
 import smile.base.mlp.*;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
+import smile.datasets.BreastCancer;
 import smile.feature.transform.WinsorScaler;
 import smile.io.Read;
 import smile.io.Write;
@@ -92,17 +93,17 @@ public class MLPTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        DataFrame data = BreastCancer.formula.x(BreastCancer.data);
+        var cancer = new BreastCancer();
+        DataFrame data = cancer.formula().x(cancer.data());
         InvertibleColumnTransform scaler = WinsorScaler.fit(data, 0.01, 0.99);
         System.out.println(scaler);
         double[][] x = scaler.apply(data).toArray();
         int p = x[0].length;
 
-        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, cancer.y(), (xi, yi) -> {
             MLP model = new MLP(Layer.input(p),
                     Layer.sigmoid(60),
                     Layer.mle(1, OutputFunction.SIGMOID)

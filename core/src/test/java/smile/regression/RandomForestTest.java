@@ -21,10 +21,7 @@ import java.util.Arrays;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
-import smile.datasets.Abalone;
-import smile.datasets.Ailerons;
-import smile.datasets.AutoMPG;
-import smile.datasets.Bank32nh;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -78,10 +75,14 @@ public class RandomForestTest {
 
     Abalone abalone;
     Bank32nh bank32nh;
+    BostonHousing bostonHousing;
+    CalHousing calHousing;
 
     public RandomForestTest() throws Exception {
         abalone = new Abalone();
         bank32nh = new Bank32nh();
+        bostonHousing = new BostonHousing();
+        calHousing = new CalHousing();
     }
 
     @BeforeAll
@@ -202,7 +203,7 @@ public class RandomForestTest {
     @Test
     public void testCalHousing() {
         System.setProperty("smile.regression_tree.bins", "300");
-        test("cal_housing", CalHousing.formula, CalHousing.data, 59481.6595);
+        test("cal_housing", calHousing.formula(), calHousing.data(), 59481.6595);
     }
 
     @Test
@@ -265,9 +266,9 @@ public class RandomForestTest {
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
-        RandomForest model = RandomForest.fit(BostonHousing.formula, BostonHousing.data, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        RandomForest model = RandomForest.fit(bostonHousing.formula(), bostonHousing.data(), 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         double[] importance = model.importance();
-        double[] shap = model.shap(BostonHousing.data);
+        double[] shap = model.shap(bostonHousing.data());
 
         System.out.println("----- importance -----");
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);

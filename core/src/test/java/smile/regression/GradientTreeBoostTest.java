@@ -21,10 +21,7 @@ import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
-import smile.datasets.Abalone;
-import smile.datasets.Ailerons;
-import smile.datasets.AutoMPG;
-import smile.datasets.Bank32nh;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -46,11 +43,15 @@ public class GradientTreeBoostTest {
     Ailerons ailerons;
     AutoMPG autoMPG;
     Bank32nh bank32nh;
+    BostonHousing bostonHousing;
+    CalHousing calHousing;
     public GradientTreeBoostTest() throws Exception {
         abalone = new Abalone();
         ailerons = new Ailerons();
         autoMPG = new AutoMPG();
         bank32nh = new Bank32nh();
+        bostonHousing = new BostonHousing();
+        calHousing = new CalHousing();
     }
 
     @BeforeAll
@@ -239,22 +240,22 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testCalHousingLS() {
-        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60870.2308);
+        test(Loss.ls(), "cal_housing", calHousing.formula(), calHousing.data(), 60870.2308);
     }
 
     @Test
     public void testCalHousingLAD() {
-        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66813.0877);
+        test(Loss.lad(), "cal_housing", calHousing.formula(), calHousing.data(), 66813.0877);
     }
 
     @Test
     public void testCalHousingQuantile() {
-        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66813.0877);
+        test(Loss.quantile(0.5), "cal_housing", calHousing.formula(), calHousing.data(), 66813.0877);
     }
 
     @Test
     public void testCalHousingHuber() {
-        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62348.1547);
+        test(Loss.huber(0.9), "cal_housing", calHousing.formula(), calHousing.data(), 62348.1547);
     }
 
     @Test
@@ -302,9 +303,9 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
 
-        GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(bostonHousing.formula(), bostonHousing.data(), Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
         double[] importance = model.importance();
-        double[] shap = model.shap(BostonHousing.data);
+        double[] shap = model.shap(bostonHousing.data());
 
         System.out.println("----- importance -----");
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);

@@ -20,10 +20,7 @@ package smile.regression;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
-import smile.datasets.Abalone;
-import smile.datasets.Ailerons;
-import smile.datasets.AutoMPG;
-import smile.datasets.Bank32nh;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -140,9 +137,10 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testCalHousing() {
+    public void testCalHousing() throws Exception {
         System.setProperty("smile.regression_tree.bins", "300");
-        test("cal_housing", CalHousing.formula, CalHousing.data, 60563.2112);
+        var calHousing = new CalHousing();
+        test("cal_housing", calHousing.formula(), calHousing.data(), 60563.2112);
     }
 
     @Test
@@ -156,11 +154,12 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
-        RegressionTree model = RegressionTree.fit(BostonHousing.formula, BostonHousing.data, 20, 100, 5);
+        var bostonHousing = new BostonHousing();
+        RegressionTree model = RegressionTree.fit(bostonHousing.formula(), bostonHousing.data(), 20, 100, 5);
         double[] importance = model.importance();
-        double[] shap = model.shap(BostonHousing.data);
+        double[] shap = model.shap(bostonHousing.data());
 
         System.out.println("----- importance -----");
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);

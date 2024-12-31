@@ -20,6 +20,7 @@ package smile.classification;
 import java.util.Arrays;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.io.Read;
 import smile.io.Write;
@@ -157,11 +158,12 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        ClassificationValidations<RandomForest> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+        var cancer = new BreastCancer();
+        var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
                 (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);

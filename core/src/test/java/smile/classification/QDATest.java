@@ -20,7 +20,7 @@ package smile.classification;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.BreastCancer;
+import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
@@ -73,11 +73,12 @@ public class QDATest {
     }
 
     @Test
-    public void testBreastCancer() {
+    public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<QDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, QDA::fit);
+        var cancer = new BreastCancer();
+        ClassificationValidations<QDA> result = CrossValidation.classification(10, cancer.x(), cancer.y(), QDA::fit);
 
         System.out.println(result);
         assertEquals(0.9589, result.avg.accuracy(), 1E-4);
