@@ -30,6 +30,8 @@ import smile.util.Paths;
  * Credit card default dataset. The dataset consists of 10000 individuals
  * and whether their credit card has defaulted or not.
  *
+ * @param data data frame.
+ * @param formula modeling formula.
  * @author Haifeng Li
  */
 public record Default(DataFrame data, Formula formula) {

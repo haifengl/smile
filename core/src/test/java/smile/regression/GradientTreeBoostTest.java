@@ -21,6 +21,7 @@ import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
+import smile.datasets.Abalone;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -38,8 +39,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class GradientTreeBoostTest {
-    
-    public GradientTreeBoostTest() {
+    Abalone abalone;
+    public GradientTreeBoostTest() throws Exception {
+        abalone = new Abalone();
     }
 
     @BeforeAll
@@ -148,22 +150,22 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testAbaloneLS() {
-        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.1994);
+        test(Loss.ls(), "abalone", abalone.formula(), abalone.train(), 2.1994);
     }
 
     @Test
     public void testAbaloneLAD() {
-        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2933);
+        test(Loss.lad(), "abalone", abalone.formula(), abalone.train(), 2.2933);
     }
 
     @Test
     public void testAbaloneQuantile() {
-        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2933);
+        test(Loss.quantile(0.5), "abalone", abalone.formula(), abalone.train(), 2.2933);
     }
 
     @Test
     public void testAbaloneHuber() {
-        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2184);
+        test(Loss.huber(0.9), "abalone", abalone.formula(), abalone.train(), 2.2184);
     }
 
     @Test
