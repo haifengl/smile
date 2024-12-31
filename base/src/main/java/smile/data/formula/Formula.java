@@ -341,7 +341,6 @@ public class Formula implements Serializable {
         }
 
         Formula formula = expand(inputSchema);
-
         Binding binding = new Binding();
         binding.inputSchema = inputSchema;
 
@@ -362,7 +361,7 @@ public class Formula implements Serializable {
                 binding.yxschema = new StructType(features.stream()
                              .map(Feature::field)
                              .toArray(StructField[]::new));
-            } catch (IllegalArgumentException ex) {
+            } catch (RuntimeException ex) {
                 logger.debug("The response variable {} doesn't exist in the schema {}", response, inputSchema);
             }
         }
