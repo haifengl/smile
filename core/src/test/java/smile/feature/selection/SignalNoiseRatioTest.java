@@ -20,7 +20,7 @@ package smile.feature.selection;
 import smile.data.DataFrame;
 import smile.data.vector.IntVector;
 import smile.test.data.BreastCancer;
-import smile.test.data.Default;
+import smile.datasets.Default;
 import smile.test.data.Iris;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,10 +70,11 @@ public class SignalNoiseRatioTest {
     }
 
     @Test
-    public void testDefault() {
+    public void testDefault() throws Exception {
         System.out.println("Default");
 
-        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(Default.data, "default");
+        var dataset = new Default();
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(dataset.data(), "default");
         assertEquals(2, s2n.length);
         assertEquals(1.1832, s2n[0].ratio(), 1E-4);
         assertEquals(0.0545, s2n[1].ratio(), 1E-4);
