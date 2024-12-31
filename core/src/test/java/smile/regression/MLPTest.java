@@ -22,6 +22,8 @@ import smile.base.mlp.LayerBuilder;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.datasets.Abalone;
+import smile.datasets.Ailerons;
+import smile.datasets.Bank32nh;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.io.Write;
@@ -129,15 +131,21 @@ public class MLPTest {
     }
 
     @Test
-    public void testAilerons() {
-        test("ailerons", Ailerons.x, Ailerons.y, null, 0.0004,
-             Layer.input(Ailerons.x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
+    public void testAilerons() throws Exception {
+        var ailerons = new Ailerons();
+        double[][] x = ailerons.x();
+        double[] y = ailerons.y();
+        test("ailerons", x, y, null, 0.0004,
+             Layer.input(x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
     }
 
     @Test
-    public void testBank32nh() {
-        test("bank32nh", Bank32nh.x, Bank32nh.y, null, 0.1218,
-                Layer.input(Bank32nh.x[0].length), Layer.rectifier(65), Layer.sigmoid(30));
+    public void testBank32nh() throws Exception {
+        var bank32nh = new Bank32nh();
+        double[][] x = bank32nh.x();
+        double[] y = bank32nh.y();
+        test("bank32nh", x, y, null, 0.1218,
+                Layer.input(x[0].length), Layer.rectifier(65), Layer.sigmoid(30));
     }
 
     @Test

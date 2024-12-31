@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.datasets.Abalone;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -124,10 +125,11 @@ public class RLSTest {
     @Test
     public void testOnlineLearn() throws Exception {
         var abalone = new Abalone();
+        var bank32nh = new Bank32nh();
         testOnlineLearn("CPU", CPU.formula, CPU.data);
         testOnlineLearn("2dplanes", Planes.formula, Planes.data);
         testOnlineLearn("abalone", abalone.formula(), abalone.train());
-        testOnlineLearn("bank32nh", Bank32nh.formula, Bank32nh.data);
+        testOnlineLearn("bank32nh", bank32nh.formula(), bank32nh.data());
         testOnlineLearn("cal_housing", CalHousing.formula, CalHousing.data);
         testOnlineLearn("puma8nh", Puma8NH.formula, Puma8NH.data);
         testOnlineLearn("kin8nm", Kin8nm.formula, Kin8nm.data);

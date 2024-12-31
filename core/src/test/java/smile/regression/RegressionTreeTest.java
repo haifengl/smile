@@ -21,6 +21,9 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.datasets.Abalone;
+import smile.datasets.Ailerons;
+import smile.datasets.AutoMPG;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -119,18 +122,21 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testAilerons() {
-        test("ailerons", Ailerons.formula, Ailerons.data, 1.9538E-4);
+    public void testAilerons() throws Exception {
+        var ailerons = new Ailerons();
+        test("ailerons", ailerons.formula(), ailerons.data(), 1.9538E-4);
     }
 
     @Test
-    public void testBank32nh() {
-        test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.09187);
+    public void testBank32nh() throws Exception {
+        var bank32nh = new Bank32nh();
+        test("bank32nh", bank32nh.formula(), bank32nh.data(), 0.09187);
     }
 
     @Test
-    public void testAutoMPG() {
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.84619);
+    public void testAutoMPG() throws Exception {
+        var autoMPG = new AutoMPG();
+        test("autoMPG", autoMPG.formula(), autoMPG.data(), 3.84619);
     }
 
     @Test

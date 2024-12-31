@@ -22,6 +22,9 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.datasets.Abalone;
+import smile.datasets.Ailerons;
+import smile.datasets.AutoMPG;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -37,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class RandomForestTest {
-    Abalone abalone;
     long[] seeds = {
             342317953, 521642753, 72070657, 577451521, 266953217, 179976193,
             374603777, 527788033, 303395329, 185759582, 261518209, 461300737,
@@ -74,8 +76,12 @@ public class RandomForestTest {
             50014340, 489234689, 129556481, 178766593, 142540536, 213594113,
             870440184, 277912577};
 
+    Abalone abalone;
+    Bank32nh bank32nh;
+
     public RandomForestTest() throws Exception {
         abalone = new Abalone();
+        bank32nh = new Bank32nh();
     }
 
     @BeforeAll
@@ -171,24 +177,26 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testAilerons() {
-        test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    public void testAilerons() throws Exception {
+        var ailerons = new Ailerons();
+        test("ailerons", ailerons.formula(), ailerons.data(), 0.0002);
     }
 
     @Test
     public void testBank32nh() {
         System.setProperty("smile.regression_tree.bins", "1");
-        test("bank32nh - exact", Bank32nh.formula, Bank32nh.data, 0.0978);
+        test("bank32nh - exact", bank32nh.formula(), bank32nh.data(), 0.0978);
     }
 
     @Test
     public void testBank32nhHist() {
-        test("bank32nh - hist", Bank32nh.formula, Bank32nh.data, 0.0996);
+        test("bank32nh - hist", bank32nh.formula(), bank32nh.data(), 0.0996);
     }
 
     @Test
-    public void testAutoMPG() {
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5532);
+    public void testAutoMPG() throws Exception {
+        var autoMPG = new AutoMPG();
+        test("autoMPG", autoMPG.formula(), autoMPG.data(), 3.5532);
     }
 
     @Test

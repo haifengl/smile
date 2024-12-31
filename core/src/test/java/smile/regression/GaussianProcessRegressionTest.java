@@ -19,6 +19,8 @@ package smile.regression;
 
 import java.util.Arrays;
 import smile.clustering.KMeans;
+import smile.datasets.Ailerons;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -55,7 +57,7 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testOutOfBoundsException() throws Exception {
+    public void testOutOfBoundsException() {
         double[][] X = {
                 {4.543,  3.135, 0.86},
                 {5.159,  5.043, 1.53},
@@ -93,7 +95,7 @@ public class GaussianProcessRegressionTest {
                 40.9, 15.9, 6.4, 18, 38.9, 14, 15.2, 32, 56.71, 16.8, 11.6, 26.5, 0.7, 13.4, 5.5
         };
 
-        GaussianProcessRegression model = GaussianProcessRegression.fit(
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(
                 X, y, new GaussianKernel(3),
                 1e-5, false, 1e-5, 1024
         );
@@ -265,14 +267,14 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testAilerons() {
+    public void testAilerons() throws Exception {
         System.out.println("ailerons");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(Ailerons.x);
+        var ailerons = new Ailerons();
+        double[][] x = ailerons.x();
+        double[] y = ailerons.y();
         MathEx.standardize(x);
-        double[] y = Ailerons.y.clone();
         for (int i = 0; i < y.length; i++) {
             y[i] *= 10000;
         }
@@ -325,13 +327,14 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testBank32nh() {
+    public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        double[][] x = MathEx.clone(Bank32nh.x);
-        double[] y = Bank32nh.y;
+        var bank32nh = new Bank32nh();
+        double[][] x = bank32nh.x();
+        double[] y = bank32nh.y();
         MathEx.standardize(x);
 
         int[] permutation = MathEx.permutate(x.length);
