@@ -202,7 +202,15 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
 
     @Override
     public String toString() {
-        return Arrays.toString(fields);
+        return Arrays.stream(fields)
+                .map(field -> {
+                    String s = String.format("  %s", field.toString());
+                    var dtype = field.dtype();
+                    if (dtype.isPrimitive() && !dtype.isNullable()) {
+                        s += " NOT NULL";
+                    }
+                    return s;
+                }).collect(Collectors.joining(",\n", "{\n", "\n}"));
     }
 
     @Override
