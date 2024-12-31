@@ -49,26 +49,17 @@ public record CalHousing(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public CalHousing() throws IOException, ParseException {
-        this(load(Paths.getTestData("weka/regression/cal_housing.arff")), Formula.lhs("medianHouseValue"));
+        this(Paths.getTestData("weka/regression/cal_housing.arff"));
     }
 
     /**
      * Constructor.
-     * @param first the path string or initial part of the path string.
-     * @param more additional strings to be joined to form the path string.
+     * @param path the data path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      */
-    public CalHousing(String first, String... more) throws IOException, ParseException {
-        this(load(first, more), Formula.lhs("medianHouseValue"));
-    }
-
-    private static DataFrame load(String first, String... more) throws IOException, ParseException {
-        return load(Path.of(first, more));
-    }
-
-    private static DataFrame load(Path path) throws IOException, ParseException {
-        return Read.arff(path);
+    public CalHousing(Path path) throws IOException, ParseException {
+        this(Read.arff(path), Formula.lhs("medianHouseValue"));
     }
 
     /**

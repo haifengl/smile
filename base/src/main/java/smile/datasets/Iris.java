@@ -42,26 +42,17 @@ public record Iris(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public Iris() throws IOException, ParseException {
-        this(load(Paths.getTestData("weka/iris.arff")), Formula.lhs("class"));
+        this(Paths.getTestData("weka/iris.arff"));
     }
 
     /**
      * Constructor.
-     * @param first the path string or initial part of the path string.
-     * @param more additional strings to be joined to form the path string.
+     * @param path the data path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      */
-    public Iris(String first, String... more) throws IOException, ParseException {
-        this(load(first, more), Formula.lhs("class"));
-    }
-
-    private static DataFrame load(String first, String... more) throws IOException, ParseException {
-        return load(Path.of(first, more));
-    }
-
-    private static DataFrame load(Path path) throws IOException, ParseException {
-        return Read.arff(path);
+    public Iris(Path path) throws IOException, ParseException {
+        this(Read.arff(path), Formula.lhs("class"));
     }
 
     /**

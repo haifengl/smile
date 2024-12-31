@@ -66,9 +66,8 @@ public record Abalone(DataFrame train, DataFrame test, Formula formula) {
      * @throws IOException when fails to read the file.
      */
     public Abalone() throws IOException {
-        this(load(Paths.getTestData("regression/abalone-train.data")),
-             load(Paths.getTestData("regression/abalone-test.data")),
-             Formula.lhs("rings"));
+        this(Paths.getTestData("regression/abalone-train.data"),
+             Paths.getTestData("regression/abalone-test.data"));
     }
 
     /**
@@ -77,8 +76,8 @@ public record Abalone(DataFrame train, DataFrame test, Formula formula) {
      * @param testDataPath the path to testing data file.
      * @throws IOException when fails to read the file.
      */
-    public Abalone(String trainDataPath, String testDataPath) throws IOException {
-        this(load(Path.of(trainDataPath)), load(Path.of(testDataPath)), Formula.lhs("rings"));
+    public Abalone(Path trainDataPath, Path testDataPath) throws IOException {
+        this(load(trainDataPath), load(testDataPath), Formula.lhs("rings"));
     }
 
     private static DataFrame load(Path path) throws IOException {
