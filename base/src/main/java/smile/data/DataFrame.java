@@ -499,9 +499,16 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @return a new DataFrame.
      */
     public DataFrame factorize(String... names) {
+        if (names.length == 0) {
+            names = Arrays.stream(schema().fields())
+                    .filter(field -> field.dtype().isObject())
+                    .map(StructField::name)
+                    .toArray(String[]::new);
+        }
+
         int n = size();
         HashSet<String> set = new HashSet<>();
-        Collections.addAll(set, names.length == 0 ? schema.names() : names);
+        Collections.addAll(set, names);
 
         ValueVector[] vectors = Arrays.stream(columns).map(column -> {
             if (!set.contains(column.name())) return column;
