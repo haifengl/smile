@@ -17,6 +17,7 @@
 
 package smile.data.formula;
 
+import java.util.BitSet;
 import smile.data.Tuple;
 import smile.data.type.StructField;
 import smile.data.vector.*;
@@ -135,52 +136,165 @@ public interface Feature {
         }
 
         int size = data.size();
-        return switch (field.dtype().id()) {
+        BitSet nullMask = new BitSet(size);
+        var vector = switch (field.dtype().id()) {
             case Int -> {
                 int[] values = new int[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Integer.MIN_VALUE;
+                        } else {
+                            values[i] = ((Number) result).intValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsInt(data.get(i));
+                    }
+                }
+
                 yield new IntVector(field, values);
             }
 
             case Long -> {
                 long[] values = new long[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsLong(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Long.MIN_VALUE;
+                        } else {
+                            values[i] = ((Number) result).longValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsLong(data.get(i));
+                    }
+                }
                 yield new LongVector(field, values);
             }
 
             case Double -> {
                 double[] values = new double[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsDouble(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Double.NaN;
+                        } else {
+                            values[i] = ((Number) result).doubleValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsDouble(data.get(i));
+                    }
+                }
                 yield new DoubleVector(field, values);
             }
 
             case Float -> {
                 float[] values = new float[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsFloat(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Float.NaN;
+                        } else {
+                            values[i] = ((Number) result).floatValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsFloat(data.get(i));
+                    }
+                }
                 yield new FloatVector(field, values);
             }
 
             case Boolean -> {
                 boolean[] values = new boolean[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsBoolean(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                        } else {
+                            values[i] = (Boolean) result;
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsBoolean(data.get(i));
+                    }
+                }
                 yield new BooleanVector(field, values);
             }
 
             case Byte -> {
                 byte[] values = new byte[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsByte(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Byte.MIN_VALUE;
+                        } else {
+                            values[i] = ((Number) result).byteValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsByte(data.get(i));
+                    }
+                }
                 yield new ByteVector(field, values);
             }
 
             case Short -> {
                 short[] values = new short[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsShort(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = Short.MIN_VALUE;
+                        } else {
+                            values[i] = ((Number) result).shortValue();
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsShort(data.get(i));
+                    }
+                }
                 yield new ShortVector(field, values);
             }
 
             case Char -> {
                 char[] values = new char[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsChar(data.get(i));
+                if (field.dtype().isNullable()) {
+                    for (int i = 0; i < size; i++) {
+                        var result = apply(data.get(i));
+                        if (result == null) {
+                            nullMask.set(i);
+                            values[i] = 0;
+                        } else {
+                            values[i] = (Character) result;
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        values[i] = applyAsChar(data.get(i));
+                    }
+                }
                 yield new CharVector(field, values);
             }
 
@@ -190,5 +304,10 @@ public interface Feature {
                 yield new ObjectVector<>(field, values);
             }
         };
+
+        if (vector instanceof PrimitiveVector v && !nullMask.isEmpty()) {
+            v.setNullMask(nullMask);
+        }
+        return vector;
     }
 }

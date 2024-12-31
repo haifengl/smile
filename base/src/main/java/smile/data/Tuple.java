@@ -696,7 +696,7 @@ public interface Tuple extends Serializable {
      */
     static Tuple of(StructType schema, ResultSet rs) throws SQLException {
         final Object[] row = new Object[rs.getMetaData().getColumnCount()];
-        for(int i = 0; i < row.length; ++i){
+        for (int i = 0; i < row.length; ++i) {
             row[i] = rs.getObject(i+1);
 
             if (row[i] instanceof Date) {
