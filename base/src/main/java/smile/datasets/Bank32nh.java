@@ -52,26 +52,17 @@ public record Bank32nh(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public Bank32nh() throws IOException, ParseException {
-        this(load(Paths.getTestData("weka/regression/bank32nh.arff")), Formula.lhs("rej"));
+        this(Paths.getTestData("weka/regression/bank32nh.arff"));
     }
 
     /**
      * Constructor.
-     * @param first the path string or initial part of the path string.
-     * @param more additional strings to be joined to form the path string.
+     * @param path the data path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      */
-    public Bank32nh(String first, String... more) throws IOException, ParseException {
-        this(load(first, more), Formula.lhs("rej"));
-    }
-
-    private static DataFrame load(String first, String... more) throws IOException, ParseException {
-        return load(Path.of(first, more));
-    }
-
-    private static DataFrame load(Path path) throws IOException, ParseException {
-        return Read.arff(path);
+    public Bank32nh(Path path) throws IOException, ParseException {
+        this(Read.arff(path), Formula.lhs("rej"));
     }
 
     /**

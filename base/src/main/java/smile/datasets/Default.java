@@ -41,21 +41,16 @@ public record Default(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public Default() throws IOException, ParseException {
-        this(load(Paths.getTestData("classification/default.csv")), Formula.lhs("default"));
+        this(Paths.getTestData("classification/default.csv"));
     }
 
     /**
      * Constructor.
-     * @param first the path string or initial part of the path string.
-     * @param more additional strings to be joined to form the path string.
+     * @param path the data path.
      * @throws IOException when fails to read the file.
      */
-    public Default(String first, String... more) throws IOException {
-        this(load(first, more), Formula.lhs("default"));
-    }
-
-    private static DataFrame load(String first, String... more) throws IOException {
-        return load(Path.of(first, more));
+    public Default(Path path) throws IOException {
+        this(load(path), Formula.lhs("default"));
     }
 
     private static DataFrame load(Path path) throws IOException {

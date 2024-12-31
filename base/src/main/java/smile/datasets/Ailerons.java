@@ -42,26 +42,17 @@ public record Ailerons(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public Ailerons() throws IOException, ParseException {
-        this(load(Paths.getTestData("weka/regression/ailerons.arff")), Formula.lhs("goal"));
+        this(Paths.getTestData("weka/regression/ailerons.arff"));
     }
 
     /**
      * Constructor.
-     * @param first the path string or initial part of the path string.
-     * @param more additional strings to be joined to form the path string.
+     * @param path the data path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      */
-    public Ailerons(String first, String... more) throws IOException, ParseException {
-        this(load(first, more), Formula.lhs("goal"));
-    }
-
-    private static DataFrame load(String first, String... more) throws IOException, ParseException {
-        return load(Path.of(first, more));
-    }
-
-    private static DataFrame load(Path path) throws IOException, ParseException {
-        return Read.arff(path);
+    public Ailerons(Path path) throws IOException, ParseException {
+        this(Read.arff(path), Formula.lhs("goal"));
     }
 
     /**
