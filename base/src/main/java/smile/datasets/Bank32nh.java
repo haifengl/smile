@@ -1,0 +1,92 @@
+/*
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.datasets;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.text.ParseException;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.Read;
+import smile.util.Paths;
+
+/**
+ * Auto MPG dataset. A family of datasets synthetically generated from
+ * a simulation of how bank-customers choose their banks. Tasks are
+ * based on predicting the fraction of bank customers who leave the bank
+ * because of full queues. The bank family of datasets are generated from
+ * a simplistic simulator, which simulates the queues in a series of banks.
+ * The simulator was constructed with the explicit purpose of generating
+ * a family of datasets for DELVE. Customers come from several residential
+ * areas, choose their preferred bank depending on distances and have tasks
+ * of varying complexity, and various levels of patience. Each bank has
+ * several queues, that open and close according to demand. The tellers have
+ * various effectivities, and customers may change queue, if their patience
+ * expires. In the rej prototasks, the object is to predict the rate of
+ * rejections, i.e. the fraction of customers that are turned away from the
+ * bank because all the open tellers have full queues.
+ *
+ * @param data data frame.
+ * @param formula modeling formula.
+ * @author Haifeng Li
+ */
+public record Bank32nh(DataFrame data, Formula formula) {
+    /**
+     * Constructor.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     */
+    public Bank32nh() throws IOException, ParseException {
+        this(load(Paths.getTestData("weka/regression/bank32nh.arff")), Formula.lhs("rej"));
+    }
+
+    /**
+     * Constructor.
+     * @param first the path string or initial part of the path string.
+     * @param more additional strings to be joined to form the path string.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     */
+    public Bank32nh(String first, String... more) throws IOException, ParseException {
+        this(load(first, more), Formula.lhs("rej"));
+    }
+
+    private static DataFrame load(String first, String... more) throws IOException, ParseException {
+        return load(Path.of(first, more));
+    }
+
+    private static DataFrame load(Path path) throws IOException, ParseException {
+        return Read.arff(path);
+    }
+
+    /**
+     * Returns the sample features.
+     * @return the sample features.
+     */
+    public double[][] x() {
+        return formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
+    }
+
+    /**
+     * Returns the target values.
+     * @return the target values.
+     */
+    public double[] y() {
+        return formula.y(data).toDoubleArray();
+    }
+}

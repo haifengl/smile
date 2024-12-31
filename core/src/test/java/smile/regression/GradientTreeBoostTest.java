@@ -22,6 +22,9 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.datasets.Abalone;
+import smile.datasets.Ailerons;
+import smile.datasets.AutoMPG;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.test.data.*;
@@ -40,8 +43,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class GradientTreeBoostTest {
     Abalone abalone;
+    Ailerons ailerons;
+    AutoMPG autoMPG;
+    Bank32nh bank32nh;
     public GradientTreeBoostTest() throws Exception {
         abalone = new Abalone();
+        ailerons = new Ailerons();
+        autoMPG = new AutoMPG();
+        bank32nh = new Bank32nh();
     }
 
     @BeforeAll
@@ -170,62 +179,62 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testAileronsLS() {
-        test(Loss.ls(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.ls(), "ailerons", ailerons.formula(), ailerons.data(), 0.0002);
     }
 
     @Test
     public void testAileronsLAD() {
-        test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.lad(), "ailerons", ailerons.formula(), ailerons.data(), 0.0002);
     }
 
     @Test
     public void testAileronsQuantile() {
-        test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.quantile(0.5), "ailerons", ailerons.formula(), ailerons.data(), 0.0002);
     }
 
     @Test
     public void testAileronsHuber() {
-        test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.huber(0.9), "ailerons", ailerons.formula(), ailerons.data(), 0.0002);
     }
 
     @Test
     public void testBank32nhLS() {
-        test(Loss.ls(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0845);
+        test(Loss.ls(), "bank32nh", bank32nh.formula(), bank32nh.data(), 0.0845);
     }
 
     @Test
     public void testBank32nhLAD() {
-        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0911);
+        test(Loss.lad(), "bank32nh", bank32nh.formula(), bank32nh.data(), 0.0911);
     }
 
     @Test
     public void testBank32nhQuantile() {
-        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0911);
+        test(Loss.quantile(0.5), "bank32nh", bank32nh.formula(), bank32nh.data(), 0.0911);
     }
 
     @Test
     public void testBank32nhHuber() {
-        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0854);
+        test(Loss.huber(0.9), "bank32nh", bank32nh.formula(), bank32nh.data(), 0.0854);
     }
 
     @Test
     public void testAutoMPGLS() {
-        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0801);
+        test(Loss.ls(), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.0801);
     }
 
     @Test
     public void testAutoMPGLAD() {
-        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1365);
+        test(Loss.lad(), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.1365);
     }
 
     @Test
     public void testAutoMPGQuantile() {
-        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1365);
+        test(Loss.quantile(0.5), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.1365);
     }
 
     @Test
     public void testAutoMPGHuber() {
-        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0694);
+        test(Loss.huber(0.9), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.0694);
     }
 
     @Test

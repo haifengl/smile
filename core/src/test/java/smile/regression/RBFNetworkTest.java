@@ -18,6 +18,8 @@
 package smile.regression;
 
 import smile.base.rbf.RBF;
+import smile.datasets.Ailerons;
+import smile.datasets.Bank32nh;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -102,14 +104,16 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void testAilerons() {
+    public void testAilerons() throws Exception {
         System.out.println("ailerons");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        double[][] x = MathEx.clone(Ailerons.x);
+        var ailerons = new Ailerons();
+        double[][] x = ailerons.x();
+        double[] y = ailerons.y();
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, Ailerons.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
@@ -117,14 +121,16 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void testBank32nh() {
+    public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        double[][] x = MathEx.clone(Bank32nh.x);
+        var bank32nh = new Bank32nh();
+        double[][] x = bank32nh.x();
+        double[] y = bank32nh.y();
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, Bank32nh.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
