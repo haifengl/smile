@@ -156,6 +156,8 @@ public class CSV {
 
         try (CSVParser csv = CSVParser.parse(reader, format)) {
             List<Tuple> rows = new ArrayList<>();
+            boolean[] missing = new boolean[schema.length()];
+
             for (CSVRecord record : csv) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
@@ -164,10 +166,42 @@ public class CSV {
                         row[i] = parser.get(i).apply(s);
                     }
                 }
+
+                // Check any missing values
+                for (int j = 0; j < fields.length; j++) {
+                    if (row[j] == null) {
+                        missing[j] = true;
+                    }
+                }
+
                 rows.add(Tuple.of(schema, row));
                 if (rows.size() >= limit) break;
             }
 
+            // Set a field to nullable if any missing value in the column.
+            for (int j = 0; j < missing.length; j++) {
+                if (missing[j] && fields[j].dtype().isPrimitive()) {
+                    var field = fields[j];
+                    if (field.dtype() == DataTypes.IntType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableIntType, field.measure());
+                    } else if (field.dtype() == DataTypes.LongType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableLongType, field.measure());
+                    } else if (field.dtype() == DataTypes.FloatType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableFloatType, field.measure());
+                    } else if (field.dtype() == DataTypes.DoubleType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableDoubleType, field.measure());
+                    } else if (field.dtype() == DataTypes.BooleanType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableBooleanType, field.measure());
+                    } else if (field.dtype() == DataTypes.ByteType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableByteType, field.measure());
+                    } else if (field.dtype() == DataTypes.ShortType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableShortType, field.measure());
+                    } else if (field.dtype() == DataTypes.CharType) {
+                        fields[j] = new StructField(field.name(), DataTypes.NullableCharType, field.measure());
+                    }
+                }
+            }
+            schema = new StructType(fields);
             return DataFrame.of(schema, rows);
         }
     }
