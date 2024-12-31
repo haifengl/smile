@@ -789,9 +789,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @return the string representation of top rows.
      */
     public String toString(final int numRows, final boolean truncate) {
-        StringBuilder sb = new StringBuilder(schema().toString());
-        sb.append('\n');
-
+        StringBuilder sb = new StringBuilder();
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;
