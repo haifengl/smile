@@ -18,7 +18,7 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import org.apache.commons.csv.CSVFormat;
+import java.text.ParseException;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -26,39 +26,32 @@ import smile.io.Read;
 import smile.util.Paths;
 
 /**
- * Breast cancer dataset. Features are computed from a digitized image of
- * a fine needle aspirate (FNA) of a breast mass.  They describe
- * characteristics of the cell nuclei present in the image. A few of the
- * images can be found at <a href="http://www.cs.wisc.edu/~street/images/">
- * http://www.cs.wisc.edu/~street/images/</a>.
+ * CPU dataset. As used by Kilpatrick, D. & Cameron-Jones, M. (1998).
+ * Numeric prediction using instance-based learning with encoding length
+ * selection.
  *
  * @param data data frame.
  * @param formula modeling formula.
  * @author Haifeng Li
  */
-public record BreastCancer(DataFrame data, Formula formula) {
+public record CPU(DataFrame data, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
      */
-    public BreastCancer() throws IOException {
-        this(Paths.getTestData("classification/breastcancer.csv"));
+    public CPU() throws IOException, ParseException {
+        this(Paths.getTestData("weka/cpu.arff"));
     }
 
     /**
      * Constructor.
      * @param path the data path.
      * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
      */
-    public BreastCancer(Path path) throws IOException {
-        this(load(path), Formula.lhs("diagnosis"));
-    }
-
-    private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).build();
-        var data = Read.csv(path, format);
-        data = data.drop("id").factorize("diagnosis");
-        return data;
+    public CPU(Path path) throws IOException, ParseException {
+        this(Read.arff(path), Formula.lhs("class"));
     }
 
     /**
@@ -70,10 +63,10 @@ public record BreastCancer(DataFrame data, Formula formula) {
     }
 
     /**
-     * Returns the class labels.
-     * @return the class labels.
+     * Returns the target values.
+     * @return the target values.
      */
-    public int[] y() {
-        return formula.y(data).toIntArray();
+    public double[] y() {
+        return formula.y(data).toDoubleArray();
     }
 }

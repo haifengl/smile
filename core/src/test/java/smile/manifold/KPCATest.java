@@ -18,7 +18,7 @@
 package smile.manifold;
 
 import smile.math.kernel.GaussianKernel;
-import smile.test.data.CPU;
+import smile.datasets.CPU;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,15 +59,16 @@ public class KPCATest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("KPCA");
-
-        KPCA<double[]> kpca = KPCA.fit(CPU.x, new GaussianKernel(Math.sqrt(2.5)), 29);
+        var cpu = new CPU();
+        var x = cpu.x();
+        KPCA<double[]> kpca = KPCA.fit(x, new GaussianKernel(Math.sqrt(2.5)), 29);
         for (int i = 0; i < latent.length; i++) {
             assertEquals(latent[i], kpca.variances()[i], 1E-3);
         }
 
-        double[][] points = kpca.apply(CPU.x);
+        double[][] points = kpca.apply(x);
         double[][] coord = kpca.coordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {

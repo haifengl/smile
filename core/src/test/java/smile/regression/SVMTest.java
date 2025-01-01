@@ -18,6 +18,8 @@
 package smile.regression;
 
 import smile.datasets.Abalone;
+import smile.datasets.CPU;
+import smile.datasets.Diabetes;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
@@ -67,14 +69,15 @@ public class SVMTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
-
-        double[][] x = MathEx.clone(CPU.x);
+        var cpu = new CPU();
+        double[][] x = cpu.x();
+        double[] y = cpu.y();
         MathEx.standardize(x);
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, x, CPU.y,
+        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> SVM.fit(xi, yi,40.0, 10.0, 1E-3));
 
         System.out.println(result);
@@ -107,12 +110,13 @@ public class SVMTest {
     }
 
     @Test
-    public void tesDiabetes() {
+    public void tesDiabetes() throws Exception {
         System.out.println("Diabetes");
 
         MathEx.setSeed(19650218); // to get repeatable results.
+        var diabetes = new Diabetes();
         GaussianKernel kernel = new GaussianKernel(5.0);
-        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, Diabetes.x, Diabetes.y,
+        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, diabetes.x(), diabetes.y(),
                 (x, y) -> SVM.fit(x, y, kernel, 50, 1000, 1E-3));
 
         System.out.println(result);

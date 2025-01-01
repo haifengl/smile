@@ -26,23 +26,24 @@ import smile.io.Read;
 import smile.util.Paths;
 
 /**
- * Breast cancer dataset. Features are computed from a digitized image of
- * a fine needle aspirate (FNA) of a breast mass.  They describe
- * characteristics of the cell nuclei present in the image. A few of the
- * images can be found at <a href="http://www.cs.wisc.edu/~street/images/">
- * http://www.cs.wisc.edu/~street/images/</a>.
+ * Diabetes dataset. This dataset has 10 baseline variables, age, sex, body
+ * mass index, average blood pressure, and six blood serum measurements were
+ * obtained for each of 442 diabetes patients, as well as the response of
+ * interest, a quantitative measure of disease progression one year after
+ * baseline. This dataset was originally used in "Least Angle Regression"
+ * by Efron et al., 2004, in Annals of Statistics.
  *
  * @param data data frame.
  * @param formula modeling formula.
  * @author Haifeng Li
  */
-public record BreastCancer(DataFrame data, Formula formula) {
+public record Diabetes(DataFrame data, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
      */
-    public BreastCancer() throws IOException {
-        this(Paths.getTestData("classification/breastcancer.csv"));
+    public Diabetes() throws IOException {
+        this(Paths.getTestData("regression/diabetes.csv"));
     }
 
     /**
@@ -50,15 +51,13 @@ public record BreastCancer(DataFrame data, Formula formula) {
      * @param path the data path.
      * @throws IOException when fails to read the file.
      */
-    public BreastCancer(Path path) throws IOException {
+    public Diabetes(Path path) throws IOException {
         this(load(path), Formula.lhs("diagnosis"));
     }
 
     private static DataFrame load(Path path) throws IOException {
         CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).build();
-        var data = Read.csv(path, format);
-        data = data.drop("id").factorize("diagnosis");
-        return data;
+        return Read.csv(path, format);
     }
 
     /**
@@ -70,10 +69,10 @@ public record BreastCancer(DataFrame data, Formula formula) {
     }
 
     /**
-     * Returns the class labels.
-     * @return the class labels.
+     * Returns the target values.
+     * @return the target values.
      */
-    public int[] y() {
-        return formula.y(data).toIntArray();
+    public double[] y() {
+        return formula.y(data).toDoubleArray();
     }
 }

@@ -103,8 +103,9 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testCPU() {
-        test("CPU", CPU.formula, CPU.data, 74.3149);
+    public void testCPU() throws Exception {
+        var cpu = new CPU();
+        test("CPU", cpu.formula(), cpu.data(), 74.3149);
     }
 
     @Test

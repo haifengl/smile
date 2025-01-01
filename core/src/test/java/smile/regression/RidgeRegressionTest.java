@@ -19,7 +19,7 @@ package smile.regression;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.CPU;
+import smile.datasets.CPU;
 import smile.test.data.Longley;
 import smile.math.MathEx;
 import smile.validation.*;
@@ -75,15 +75,15 @@ public class RidgeRegressionTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 0.1);
+        var cpu = new CPU();
+        LinearModel model = RidgeRegression.fit(cpu.formula(), cpu.data(), 0.1);
         System.out.println(model);
 
-        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data,
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, cpu.formula(), cpu.data(),
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(result);
