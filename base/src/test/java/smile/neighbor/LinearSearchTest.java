@@ -22,7 +22,7 @@ import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.math.matrix.Matrix;
-import smile.test.data.GaussianMixture;
+import smile.datasets.GaussianMixture;
 import smile.test.data.IndexNoun;
 import smile.test.data.SwissRoll;
 import smile.test.data.USPS;
@@ -162,8 +162,8 @@ public class LinearSearchTest {
     @Test
     public void testGaussianMixture() {
         System.out.println("----- Gaussian Mixture -----");
-
-        double[][] data = GaussianMixture.x;
+        GaussianMixture mixture = GaussianMixture.generate();
+        double[][] data = mixture.x();
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
         long start = System.currentTimeMillis();

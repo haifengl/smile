@@ -19,7 +19,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.GaussianMixture;
+import smile.datasets.GaussianMixture;
 import smile.test.data.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
@@ -31,8 +31,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class KMeansTest {
-    double[][] x = GaussianMixture.x;
-    int[] y = GaussianMixture.y;
+    GaussianMixture mixture = GaussianMixture.generate();
+    double[][] x = mixture.x();
+    int[] y = mixture.y();
 
     public KMeansTest() {
 
