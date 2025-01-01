@@ -149,7 +149,7 @@ public class ScatterPlot extends Plot {
         Legend[] legends = new Legend[groups.size()];
         int k = 0;
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
-            Color color = Palette.COLORS[k % Palette.COLORS.length];
+            Color color = Palette.get(k);
             points[k] = new Point(
                     group.getValue().stream().map(i -> x[i]).toArray(double[][]::new),
                     mark,

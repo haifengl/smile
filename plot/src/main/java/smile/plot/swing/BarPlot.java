@@ -144,7 +144,7 @@ public class BarPlot extends Plot {
                 x[j][1] = data[i][j];
             }
 
-            Color color = Palette.COLORS[i];
+            Color color = Palette.get(i);
             bars[i] = new Bar(x, width, color);
             legends[i] = new Legend(labels[i], color);
         }
