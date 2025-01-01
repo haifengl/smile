@@ -21,10 +21,7 @@ import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
-import smile.datasets.Abalone;
-import smile.datasets.Ailerons;
-import smile.datasets.Bank32nh;
-import smile.datasets.CalHousing;
+import smile.datasets.*;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
 import smile.io.Write;
@@ -111,9 +108,12 @@ public class MLPTest {
     }
 
     @Test
-    public void testCPU() {
-        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 65.4472,
-                Layer.input(CPU.x[0].length), Layer.rectifier(30), Layer.sigmoid(30));
+    public void testCPU() throws Exception {
+        var cpu = new CPU();
+        double[][] x = cpu.x();
+        double[] y = cpu.y();
+        test("CPU", x, y, Scaler.standardizer(y, true), 65.4472,
+                Layer.input(x[0].length), Layer.rectifier(30), Layer.sigmoid(30));
     }
 
     @Test

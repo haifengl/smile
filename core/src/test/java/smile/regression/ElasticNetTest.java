@@ -21,6 +21,8 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 import smile.datasets.Abalone;
+import smile.datasets.CPU;
+import smile.datasets.Diabetes;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -97,15 +99,15 @@ public class ElasticNetTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
+        var cpu = new CPU();
+        LinearModel model = ElasticNet.fit(cpu.formula(), cpu.data(), 0.8, 0.2);
         System.out.println(model);
 
-        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data,
+        var result = CrossValidation.regression(10, cpu.formula(), cpu.data(),
                 (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
         System.out.println(result);
@@ -137,15 +139,15 @@ public class ElasticNetTest {
     }
 
     @Test
-    public void tesDiabetes() {
+    public void tesDiabetes() throws Exception {
         System.out.println("Diabetes");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
+        var diabetes = new Diabetes();
+        LinearModel model = ElasticNet.fit(diabetes.formula(), diabetes.data(), 0.8, 0.2);
         System.out.println(model);
 
-        RegressionValidations<LinearModel> result = CrossValidation.regression(10, Diabetes.formula, Diabetes.data,
+        var result = CrossValidation.regression(10, diabetes.formula(), diabetes.data(),
                 (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
         System.out.println(result);

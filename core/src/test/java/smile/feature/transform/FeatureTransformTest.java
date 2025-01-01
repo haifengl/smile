@@ -18,7 +18,7 @@
 package smile.feature.transform;
 
 import smile.data.DataFrame;
-import smile.test.data.Colon;
+import smile.datasets.ColonCancer;
 import smile.test.data.Segment;
 import smile.data.transform.InvertibleColumnTransform;
 import org.junit.jupiter.api.*;
@@ -168,10 +168,10 @@ public class FeatureTransformTest {
     }
 
     @Test
-    public void testNormalizer() {
+    public void testNormalizer() throws Exception {
         System.out.println("Normalizer");
-
-        DataFrame colon = DataFrame.of(Colon.x);
+        var data = ColonCancer.load();
+        DataFrame colon = DataFrame.of(data.x());
         Normalizer transform = new Normalizer(Normalizer.Norm.L1, colon.names());
         DataFrame df = transform.apply(colon);
         System.out.println(transform);

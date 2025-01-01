@@ -157,8 +157,9 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testCPU() {
-        test("CPU", CPU.formula, CPU.data, 69.0170);
+    public void testCPU() throws Exception {
+        var cpu = new CPU();
+        test("CPU", cpu.formula(), cpu.data(), 69.0170);
     }
 
     @Test

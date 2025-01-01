@@ -45,6 +45,7 @@ public class GradientTreeBoostTest {
     Bank32nh bank32nh;
     BostonHousing bostonHousing;
     CalHousing calHousing;
+    CPU cpu;
     public GradientTreeBoostTest() throws Exception {
         abalone = new Abalone();
         ailerons = new Ailerons();
@@ -52,6 +53,7 @@ public class GradientTreeBoostTest {
         bank32nh = new Bank32nh();
         bostonHousing = new BostonHousing();
         calHousing = new CalHousing();
+        cpu = new CPU();
     }
 
     @BeforeAll
@@ -120,22 +122,22 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testCpuLS() {
-        test(Loss.ls(), "CPU", CPU.formula, CPU.data, 60.5335);
+        test(Loss.ls(), "CPU", cpu.formula(), cpu.data(), 60.5335);
     }
 
     @Test
     public void testCpuLAD() {
-        test(Loss.lad(), "CPU", CPU.formula, CPU.data, 66.0549);
+        test(Loss.lad(), "CPU", cpu.formula(), cpu.data(), 66.0549);
     }
 
     @Test
     public void testCpuQuantile() {
-        test(Loss.quantile(0.5), "CPU", CPU.formula, CPU.data, 66.0549);
+        test(Loss.quantile(0.5), "CPU", cpu.formula(), cpu.data(), 66.0549);
     }
 
     @Test
     public void testCpuHuber() {
-        test(Loss.huber(0.9), "CPU", CPU.formula, CPU.data, 65.4128);
+        test(Loss.huber(0.9), "CPU", cpu.formula(), cpu.data(), 65.4128);
     }
 
     @Test

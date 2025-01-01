@@ -21,7 +21,7 @@ import smile.data.DataFrame;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.CPU;
+import smile.datasets.CPU;
 import smile.test.data.Longley;
 import smile.test.data.Prostate;
 import smile.validation.CrossValidation;
@@ -105,15 +105,15 @@ public class OLSTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        LinearModel model = OLS.fit(CPU.formula, CPU.data);
+        var cpu = new CPU();
+        LinearModel model = OLS.fit(cpu.formula(), cpu.data());
         System.out.println(model);
 
-        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data, OLS::fit);
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, cpu.formula(), cpu.data(), OLS::fit);
 
         System.out.println(result);
         assertEquals(51.0009, result.avg.rmse(), 1E-4);

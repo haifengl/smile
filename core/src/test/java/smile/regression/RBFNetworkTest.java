@@ -20,6 +20,7 @@ package smile.regression;
 import smile.base.rbf.RBF;
 import smile.datasets.Ailerons;
 import smile.datasets.Bank32nh;
+import smile.datasets.CPU;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -76,14 +77,15 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(CPU.x);
+        var cpu = new CPU();
+        double[][] x = cpu.x();
+        double[] y = cpu.y();
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, CPU.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);

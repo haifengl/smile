@@ -22,6 +22,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.datasets.Abalone;
 import smile.datasets.Bank32nh;
+import smile.datasets.CPU;
 import smile.datasets.CalHousing;
 import smile.io.Read;
 import smile.io.Write;
@@ -128,8 +129,9 @@ public class RLSTest {
         var abalone = new Abalone();
         var bank32nh = new Bank32nh();
         var calHousing = new CalHousing();
+        var cpu = new CPU();
 
-        testOnlineLearn("CPU", CPU.formula, CPU.data);
+        testOnlineLearn("CPU", cpu.formula(), cpu.data());
         testOnlineLearn("2dplanes", Planes.formula, Planes.data);
         testOnlineLearn("abalone", abalone.formula(), abalone.train());
         testOnlineLearn("bank32nh", bank32nh.formula(), bank32nh.data());

@@ -17,16 +17,13 @@
 
 package smile.validation;
 
+import java.util.Arrays;
 import smile.classification.DecisionTree;
-import smile.test.data.CPU;
+import smile.datasets.CPU;
 import smile.datasets.Iris;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
-
-import java.io.IOException;
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -185,17 +182,15 @@ public class BootstrapTest {
 
         var iris = new Iris();
         var result = Bootstrap.classification(100, iris.formula(), iris.data(), DecisionTree::fit);
-
         System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy());
         System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy());
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
-
-        RegressionValidations<RegressionTree> result = Bootstrap.regression(100, CPU.formula, CPU.data, RegressionTree::fit);
-
+        var cpu = new CPU();
+        var result = Bootstrap.regression(100, cpu.formula(), cpu.data(), RegressionTree::fit);
         System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse());
         System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse());
     }

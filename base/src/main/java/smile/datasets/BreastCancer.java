@@ -18,7 +18,6 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.ParseException;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -41,9 +40,8 @@ public record BreastCancer(DataFrame data, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public BreastCancer() throws IOException, ParseException {
+    public BreastCancer() throws IOException {
         this(Paths.getTestData("classification/breastcancer.csv"));
     }
 
@@ -51,13 +49,12 @@ public record BreastCancer(DataFrame data, Formula formula) {
      * Constructor.
      * @param path the data path.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public BreastCancer(Path path) throws IOException, ParseException {
+    public BreastCancer(Path path) throws IOException {
         this(load(path), Formula.lhs("diagnosis"));
     }
 
-    private static DataFrame load(Path path) throws IOException, ParseException {
+    private static DataFrame load(Path path) throws IOException {
         CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).build();
         var data = Read.csv(path, format);
         data = data.drop("id").factorize("diagnosis");

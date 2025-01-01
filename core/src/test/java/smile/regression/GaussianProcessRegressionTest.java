@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.regression;
 
 import java.util.Arrays;
 import smile.clustering.KMeans;
 import smile.datasets.Ailerons;
 import smile.datasets.Bank32nh;
+import smile.datasets.CPU;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
@@ -163,18 +163,19 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testCPU() {
+    public void testCPU() throws Exception {
         System.out.println("CPU");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(CPU.x);
+        var cpu = new CPU();
+        double[][] x = cpu.x();
+        double[] y = cpu.y();
         MathEx.standardize(x);
 
-        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, x, CPU.y,
+        var result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
 
-        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
+        var sparseResult = CrossValidation.regression(10, x, y, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -188,7 +189,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
+        var nystromResult = CrossValidation.regression(10, x, y, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
