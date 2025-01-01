@@ -19,7 +19,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.GaussianMixture;
+import smile.datasets.GaussianMixture;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,9 +52,9 @@ public class DBSCANTest {
     @Test
     public void testGaussianMixture() throws Exception {
         System.out.println("Gaussian Mixture");
-
-        double[][] x = GaussianMixture.x;
-        int[] y = GaussianMixture.y;
+        GaussianMixture mixture = GaussianMixture.generate();
+        double[][] x = mixture.x();
+        int[] y = mixture.y();
 
         DBSCAN<double[]> model = DBSCAN.fit(x,200, 0.8);
         System.out.println(model);

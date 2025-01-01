@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.test.data.GaussianMixture;
+import smile.datasets.GaussianMixture;
 import smile.test.data.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,8 +134,8 @@ public class KDTreeTest {
     @Test
     public void testGaussianMixture() {
         System.out.println("----- Gaussian Mixture -----");
-
-        double[][] data = GaussianMixture.x;
+        GaussianMixture mixture = GaussianMixture.generate();
+        double[][] data = mixture.x();
 
         long start = System.currentTimeMillis();
         KDTree<double[]> kdtree = new KDTree<>(data, data);
