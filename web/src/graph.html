@@ -42,7 +42,7 @@ title: Smile - Graph Data Structure
     <p>Both <code>AdjacencyList</code> and <code>AdjacencyMatrix</code> implement
         the abstract interface <code>Graph</code>. The method <code>dot()</code>
         returns the graphic representation in Graphviz dot format. You may try
-        <a href="http://viz-js.com/">http://viz-js.com/</a> to visualize the returned string.
+        <a target="_blank" href="http://viz-js.com/">http://viz-js.com/</a> to visualize the returned string.
     </p>
     
     <ul class="nav nav-tabs">
@@ -73,6 +73,8 @@ title: Smile - Graph Data Structure
     <p>In this example, we create a DOT graph with name 'SmileGraph' with 4 node labels.
         Since we have 8 nodes, the rest of nodes will use their integer ID as label.
     </p>
+
+    <h2 id="traversal" class="title">Graph Traversal</h2>
     <p>The basic operation on graph is traversal, i.e. to visit the vertices in some
         systematic order. Typically, we have breadth first search (BFS) and depth first
         search (DFS). Both of these construct spanning trees with certain properties
@@ -94,11 +96,12 @@ title: Smile - Graph Data Structure
         </div>
     </div>
 
+    <h2 id="connected_components" class="title">Connected Components</h2>
     <p>An application of graph traversal is to compute connected components.
         A connected component of an undirected graph is a connected subgraph
         that is not part of any larger connected subgraph. The components of
         any graph partition its vertices into disjoint sets, and are the
-        induced subgraphs of those sets. In <code>Graph</code>, the methods
+        induced subgraphs of those sets. In <code>Graph</code> class, the methods
         <code>bfcc()</code> and <code>dfcc()</code> compute the connected
         components with BFS and DFS algorithms, respectively. These methods
         return a two-dimensional array of which each row is the vertex IDs
@@ -127,7 +130,8 @@ title: Smile - Graph Data Structure
        one may leverage Kosaraju's algorithm or Tarjan's algorithm to compute strongly
        connected components.</p>
 
-    <p>With DFS or BFS, we can also obtain the topological ordering of a directed graph, which
+       <h2 id="topological_sort" class="title">Topological Sort</h2>
+       <p>With DFS or BFS, we can also obtain the topological ordering of a directed graph, which
         is a linear ordering of its vertices such that for every directed edge uv from vertex
         u to vertex v, u comes before v in the ordering. For instance, the vertices of the
         graph may represent tasks to be performed, and the edges may represent constraints
@@ -163,20 +167,14 @@ title: Smile - Graph Data Structure
     graph.addEdge(9, 12);
     graph.addEdge(11, 12);
 
-    graph.dfsort(); // DFS
-    graph.bfsort(); // BFS
+    graph.dfsort(); // topological sort with DFS
+    graph.bfsort(); // topological sort with BFS
           </code></pre>
             </div>
         </div>
     </div>
 
-    <p>Graph traversal can be used to compute the topological ordering of graph
-        by the methods <code>bfsort()</code> or <code>dfsort()</code>. The topological
-        ordering of a directed graph to be one in which, whenever we have an edge
-        from <code>x</code> to <code>y</code>, the ordering visits <code>x</code>
-        before <code>y</code>. Note that a graph has a topological ordering if
-        and only if it is a directed acyclic graph.</p>
-
+    <h2 id="mst" class="title">Minimum Spanning Tree</h2>
     <p>A minimum spanning tree (MST) is a subset of the edges of a connected,
         edge-weighted undirected graph that connects all the vertices together,
         without any cycles and with the minimum possible total edge weight.
@@ -213,6 +211,7 @@ title: Smile - Graph Data Structure
         </div>
     </div>
     
+    <h2 id="Dijkstra" class="title">Shortest Path</h2>
     <p>With the method <code>dijkstra()</code>, we can calculate the shortest path
         from a source to all other vertices in the graph by Dijkstra algorithm.
         If no parameter is provided, Smile will calculate all pairwise shortest
@@ -247,6 +246,7 @@ title: Smile - Graph Data Structure
         </div>
     </div>
 
+    <h2 id="TSP" class="title">Travelling Salesman Problem</h2>
     <p>The travelling salesman problem (TSP) is another important task in graph
         theory, combinatorial optimization, and operations research.
         It asks the following question: "Given a list of cities and the distances
@@ -346,6 +346,7 @@ title: Smile - Graph Data Structure
         </div>
     </div>
 
+    <h2 id="max_flow" class="title">Maximum Flow Problem</h2>
     <p>Another important graph task is the maximum flow problem that involves finding
         a feasible flow through a flow network that obtains the maximum possible flow
         rate. AdjacencyMatrix implements the push-relabel algorithm that is considered
