@@ -21,12 +21,14 @@ import smile.base.mlp.*;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.datasets.BreastCancer;
+import smile.datasets.ImageSegmentation;
+import smile.datasets.PenDigits;
+import smile.datasets.USPS;
 import smile.feature.transform.WinsorScaler;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
-import smile.test.data.*;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
 import smile.validation.metric.Error;
@@ -38,8 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class MLPTest {
-
-    public MLPTest() {
+    public MLPTest() throws Exception {
     }
 
     @BeforeAll
@@ -59,17 +60,18 @@ public class MLPTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        DataFrame data = PenDigits.formula.x(PenDigits.data);
+        var pen = new PenDigits();
+        DataFrame data = pen.formula().x(pen.data());
         InvertibleColumnTransform scaler = WinsorScaler.fit(data, 0.01, 0.99);
         double[][] x = scaler.apply(data).toArray();
+        int[] y = pen.y();
         int p = x[0].length;
-        int k = MathEx.max(PenDigits.y) + 1;
+        int k = MathEx.max(y) + 1;
 
-        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, y, (xi, yi) -> {
             MLP model = new MLP(Layer.input(p),
                     Layer.sigmoid(50),
                     Layer.mle(k, OutputFunction.SOFTMAX)
@@ -127,17 +129,19 @@ public class MLPTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment SGD");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        DataFrame data = Segment.formula.x(Segment.train);
+        var segment = new ImageSegmentation();
+        int[] y = segment.y();
+        int[] testy = segment.testy();
+        DataFrame data = segment.formula().x(segment.train());
         InvertibleColumnTransform scaler = WinsorScaler.fit(data, 0.01, 0.99);
         System.out.println(scaler);
         double[][] x = scaler.apply(data).toArray();
-        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
+        double[][] testx = scaler.apply(segment.formula().x(segment.test())).toArray();
         int p = x[0].length;
-        int k = MathEx.max(Segment.y) + 1;
+        int k = MathEx.max(y) + 1;
 
         MLP model = new MLP(Layer.input(p),
                 Layer.sigmoid(50),
@@ -151,28 +155,31 @@ public class MLPTest {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             for (int i : permutation) {
-                model.update(x[i], Segment.y[i]);
+                model.update(x[i], y[i]);
             }
 
             int[] prediction = model.predict(testx);
-            error = Error.of(Segment.testy, prediction);
+            error = Error.of(testy, prediction);
             System.out.println("Test Error = " + error);
         }
         assertEquals(30, error);
     }
 
     @Test
-    public void testSegmentMiniBatch() {
+    public void testSegmentMiniBatch() throws Exception {
         System.out.println("Segment Mini-Batch");
         MathEx.setSeed(19650218); // to get repeatable results.
+        var segment = new ImageSegmentation();
+        int[] y = segment.y();
+        int[] testy = segment.testy();
 
-        DataFrame data = Segment.formula.x(Segment.train);
+        DataFrame data = segment.formula().x(segment.train());
         InvertibleColumnTransform scaler = WinsorScaler.fit(data, 0.01, 0.99);
         System.out.println(scaler);
         double[][] x = scaler.apply(data).toArray();
-        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
+        double[][] testx = scaler.apply(segment.formula().x(segment.test())).toArray();
         int p = x[0].length;
-        int k = MathEx.max(Segment.y) + 1;
+        int k = MathEx.max(y) + 1;
 
         MLP model = new MLP(Layer.input(p),
                 Layer.sigmoid(50),
@@ -193,17 +200,17 @@ public class MLPTest {
             while (i < x.length-batch) {
                 for (int j = 0; j < batch; j++, i++) {
                     batchx[j] = x[permutation[i]];
-                    batchy[j] = Segment.y[permutation[i]];
+                    batchy[j] = y[permutation[i]];
                 }
                 model.update(batchx, batchy);
             }
 
             for (; i < x.length; i++) {
-                model.update(x[permutation[i]], Segment.y[permutation[i]]);
+                model.update(x[permutation[i]], y[permutation[i]]);
             }
 
             int[] prediction = model.predict(testx);
-            error = Error.of(Segment.testy, prediction);
+            error = Error.of(testy, prediction);
             System.out.println("Test Error = " + error);
         }
 
@@ -214,11 +221,14 @@ public class MLPTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS SGD");
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
+        double[][] testx = usps.testx();
+        int[] testy = usps.testy();
 
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
         int p = x[0].length;
-        int k = MathEx.max(USPS.y) + 1;
+        int k = MathEx.max(y) + 1;
 
         MLP model = new MLP(Layer.input(p),
                 Layer.leaky(768, 0.2, 0.02),
@@ -234,11 +244,11 @@ public class MLPTest {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             for (int i : permutation) {
-                model.update(x[i], USPS.y[i]);
+                model.update(x[i], y[i]);
             }
 
             int[] prediction = model.predict(testx);
-            error = Error.of(USPS.testy, prediction);
+            error = Error.of(testy, prediction);
             System.out.println("Test Error = " + error);
         }
 
@@ -249,14 +259,17 @@ public class MLPTest {
     }
 
     @Test
-    public void testUSPSMiniBatch() {
+    public void testUSPSMiniBatch() throws Exception {
         System.out.println("USPS Mini-Batch");
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
+        double[][] testx = usps.testx();
+        int[] testy = usps.testy();
 
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
         int p = x[0].length;
-        int k = MathEx.max(USPS.y) + 1;
+        int k = MathEx.max(y) + 1;
 
         MLP model = new MLP(Layer.input(p),
                 Layer.sigmoid(768),
@@ -284,17 +297,17 @@ public class MLPTest {
             while (i < x.length-batch) {
                 for (int j = 0; j < batch; j++, i++) {
                     batchx[j] = x[permutation[i]];
-                    batchy[j] = USPS.y[permutation[i]];
+                    batchy[j] = y[permutation[i]];
                 }
                 model.update(batchx, batchy);
             }
 
             for (; i < x.length; i++) {
-                model.update(x[permutation[i]], USPS.y[permutation[i]]);
+                model.update(x[permutation[i]], y[permutation[i]]);
             }
 
             int[] prediction = model.predict(testx);
-            error = Error.of(USPS.testy, prediction);
+            error = Error.of(testy, prediction);
             System.out.println("Test Error = " + error);
         }
 

@@ -14,19 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.regression;
 
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
-import smile.datasets.Abalone;
-import smile.datasets.CPU;
-import smile.datasets.Diabetes;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,11 +80,11 @@ public class ElasticNetTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        LinearModel model = ElasticNet.fit(Longley.formula, Longley.data, 0.1, 0.1);
+        var longley = new Longley();
+        LinearModel model = ElasticNet.fit(longley.formula(), longley.data(), 0.1, 0.1);
         System.out.println(model);
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
                 (f, x) -> ElasticNet.fit(f, x, 0.1, 0.1));
 
         System.out.println(metrics);
@@ -115,10 +111,10 @@ public class ElasticNetTest {
     }
 
     @Test
-    public void tesProstate() {
+    public void tesProstate() throws Exception {
         System.out.println("Prostate");
-
-        RegressionValidation<LinearModel> result = RegressionValidation.of(Prostate.formula, Prostate.train, Prostate.test,
+        var prostate = new ProstateCancer();
+        var result = RegressionValidation.of(prostate.formula(), prostate.train(), prostate.test(),
                 (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
         System.out.println(result.model);

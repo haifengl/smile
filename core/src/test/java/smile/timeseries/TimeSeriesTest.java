@@ -17,7 +17,7 @@
 
 package smile.timeseries;
 
-import smile.test.data.BitcoinPrice;
+import smile.datasets.BitcoinPrice;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +26,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class TimeSeriesTest {
-
-    public TimeSeriesTest() {
+    double[] price;
+    double[] logPrice;
+    double[] logPriceDiff;
+    public TimeSeriesTest() throws Exception {
+        var bitcoin = new BitcoinPrice();
+        price = bitcoin.price();
+        logPrice = bitcoin.logPrice();
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        logPriceDiff = TimeSeries.diff(logPrice, 1);
     }
 
     @BeforeAll
@@ -49,51 +56,41 @@ public class TimeSeriesTest {
     @Test
     public void testAcfPrice() {
         System.out.println("ACF of price");
-
-        double[] x = BitcoinPrice.price;
-        assertEquals(1.0, TimeSeries.acf(x, 0), 1E-7);
-        assertEquals(0.9937373, TimeSeries.acf(x, 1), 1E-7);
-        assertEquals(0.9870269, TimeSeries.acf(x, 2), 1E-7);
-        assertEquals(0.9810789, TimeSeries.acf(x, 3), 1E-7);
-        assertEquals(0.9491701, TimeSeries.acf(x, 9), 1E-7);
+        assertEquals(1.0, TimeSeries.acf(price, 0), 1E-7);
+        assertEquals(0.9937373, TimeSeries.acf(price, 1), 1E-7);
+        assertEquals(0.9870269, TimeSeries.acf(price, 2), 1E-7);
+        assertEquals(0.9810789, TimeSeries.acf(price, 3), 1E-7);
+        assertEquals(0.9491701, TimeSeries.acf(price, 9), 1E-7);
     }
 
     @Test
     public void testAcfLogPrice() {
         System.out.println("ACF of log price");
-
-        double[] x = BitcoinPrice.logPrice;
-        assertEquals(1.0, TimeSeries.acf(x, 0), 1E-7);
-        assertEquals(0.9969470, TimeSeries.acf(x, 1), 1E-7);
-        assertEquals(0.9939463, TimeSeries.acf(x, 2), 1E-7);
-        assertEquals(0.9910412, TimeSeries.acf(x, 3), 1E-7);
-        assertEquals(0.9724970, TimeSeries.acf(x, 9), 1E-7);
+        assertEquals(1.0, TimeSeries.acf(logPrice, 0), 1E-7);
+        assertEquals(0.9969470, TimeSeries.acf(logPrice, 1), 1E-7);
+        assertEquals(0.9939463, TimeSeries.acf(logPrice, 2), 1E-7);
+        assertEquals(0.9910412, TimeSeries.acf(logPrice, 3), 1E-7);
+        assertEquals(0.9724970, TimeSeries.acf(logPrice, 9), 1E-7);
     }
 
     @Test
     public void testAcfLogReturn() {
         System.out.println("ACF of log return");
-
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        assertEquals( 1.0, TimeSeries.acf(x, 0), 1E-8);
-        assertEquals( 0.00648546, TimeSeries.acf(x, 1), 1E-8);
-        assertEquals(-0.03218588, TimeSeries.acf(x, 2), 1E-8);
-        assertEquals(-0.00794621, TimeSeries.acf(x, 3), 1E-8);
-        assertEquals( 0.01021301, TimeSeries.acf(x, 9), 1E-8);
+        assertEquals( 1.0, TimeSeries.acf(logPriceDiff, 0), 1E-8);
+        assertEquals( 0.00648546, TimeSeries.acf(logPriceDiff, 1), 1E-8);
+        assertEquals(-0.03218588, TimeSeries.acf(logPriceDiff, 2), 1E-8);
+        assertEquals(-0.00794621, TimeSeries.acf(logPriceDiff, 3), 1E-8);
+        assertEquals( 0.01021301, TimeSeries.acf(logPriceDiff, 9), 1E-8);
     }
 
     @Test
     public void testPacf() {
         System.out.println("PACF");
-
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        assertEquals( 1.0, TimeSeries.pacf(x, 0), 1E-8);
-        assertEquals( 0.00648546, TimeSeries.pacf(x, 1), 1E-8);
-        assertEquals(-0.03222929, TimeSeries.pacf(x, 2), 1E-8);
-        assertEquals(-0.00752986, TimeSeries.pacf(x, 3), 1E-8);
-        assertEquals( 0.02646461, TimeSeries.pacf(x, 4), 1E-8);
-        assertEquals( 0.00713402, TimeSeries.pacf(x, 9), 1E-8);
+        assertEquals( 1.0, TimeSeries.pacf(logPriceDiff, 0), 1E-8);
+        assertEquals( 0.00648546, TimeSeries.pacf(logPriceDiff, 1), 1E-8);
+        assertEquals(-0.03222929, TimeSeries.pacf(logPriceDiff, 2), 1E-8);
+        assertEquals(-0.00752986, TimeSeries.pacf(logPriceDiff, 3), 1E-8);
+        assertEquals( 0.02646461, TimeSeries.pacf(logPriceDiff, 4), 1E-8);
+        assertEquals( 0.00713402, TimeSeries.pacf(logPriceDiff, 9), 1E-8);
     }
 }

@@ -23,7 +23,7 @@ import java.util.List;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.datasets.GaussianMixture;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -167,7 +167,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testBenchmark() throws Exception {
+    public void testBenchmark() {
         System.out.println("----- Benchmark -----");
 
         int N = 40000;
@@ -199,9 +199,9 @@ public class KDTreeTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("----- USPS -----");
-
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
+        var usps = new USPS();
+        double[][] x = usps.x();
+        double[][] testx = usps.testx();
 
         long start = System.currentTimeMillis();
         KDTree<double[]> kdtree = new KDTree<>(x, x);

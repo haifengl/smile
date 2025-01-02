@@ -25,7 +25,7 @@ import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianMixture;
 import smile.stat.distribution.EmpiricalDistribution;
 import smile.datasets.Iris;
-import smile.test.data.WeatherNominal;
+import smile.datasets.WeatherNominal;
 import smile.util.IntSet;
 import smile.validation.ClassificationMetrics;
 import smile.validation.LOOCV;
@@ -107,13 +107,15 @@ public class NaiveBayesTest {
     }
 
     @Test
-    public void testWeather() {
+    public void testWeather() throws Exception {
         System.out.println("Weather");
+        var weather = new WeatherNominal();
+        double[][] level = weather.level();
+        int[] play = weather.y();
+        int p = level[0].length;
+        int k = MathEx.max(play) + 1;
 
-        int p = WeatherNominal.level[0].length;
-        int k = MathEx.max(WeatherNominal.y) + 1;
-
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.level, WeatherNominal.y, (x, y) -> {
+        ClassificationMetrics metrics = LOOCV.classification(level, play, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
             Distribution[][] condprob = new Distribution[k][p];

@@ -18,7 +18,7 @@
 package smile.feature.extraction;
 
 import smile.math.MathEx;
-import smile.test.data.USArrests;
+import smile.datasets.USArrests;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,8 +27,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class PCATest {
-
-    public PCATest() {
+    double[][] x;
+    public PCATest() throws Exception {
+        x = new USArrests().x();
     }
 
     @BeforeAll
@@ -110,7 +111,7 @@ public class PCATest {
             {118.176327855097, 5.50757920474225, 2.71132076743689, -0.204972398473778},
             {10.4345393883043, -5.92445292066816, 3.79444682032120, 0.517867427500318}
         };
-        PCA pca = PCA.fit(USArrests.x).getProjection(4);
+        PCA pca = PCA.fit(x).getProjection(4);
         assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));
 
@@ -120,7 +121,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.apply(USArrests.x);
+        double[][] p = pca.apply(x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
@@ -192,7 +193,7 @@ public class PCATest {
             {-0.629426663525205, -0.321012967465219, 0.240659233693745, 0.166651800709434}
         };
 
-        PCA pca = PCA.cor(USArrests.x).getProjection(4);
+        PCA pca = PCA.cor(x).getProjection(4);
         System.out.println(java.util.Arrays.toString(pca.varianceProportion()));
         assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));
@@ -203,7 +204,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.apply(USArrests.x);
+        double[][] p = pca.apply(x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);

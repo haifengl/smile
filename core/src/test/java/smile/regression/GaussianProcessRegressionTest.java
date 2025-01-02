@@ -18,16 +18,13 @@ package smile.regression;
 
 import java.util.Arrays;
 import smile.clustering.KMeans;
-import smile.datasets.Ailerons;
-import smile.datasets.Bank32nh;
-import smile.datasets.CPU;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
-import smile.test.data.*;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,28 +102,28 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
         MathEx.setSeed(19650218); // to get repeatable results.
+        var longley = new Longley();
+        double[][] x = longley.x();
+        double[] y = longley.y();
+        MathEx.standardize(x);
 
-        double[][] longley = MathEx.clone(Longley.x);
-        MathEx.standardize(longley);
-
-        RegressionMetrics metrics = LOOCV.regression(longley, Longley.y,
+        RegressionMetrics metrics = LOOCV.regression(x, y,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
 
         System.out.println(metrics);
         assertEquals(2.7492, metrics.rmse(), 1E-4);
 
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y, new GaussianKernel(8.0), 0.2);
         System.out.println(model);
 
-        GaussianProcessRegression<double[]>.JointPrediction joint = model.query(Arrays.copyOf(longley, 10));
+        GaussianProcessRegression<double[]>.JointPrediction joint = model.query(Arrays.copyOf(x, 10));
         System.out.println(joint);
 
         int n = joint.mu.length;
         double[] musd = new double[2];
         for (int i = 0; i < n; i++) {
-            model.predict(longley[i], musd);
+            model.predict(x[i], musd);
             assertEquals(musd[0], joint.mu[i], 1E-7);
             assertEquals(musd[1], joint.sd[i], 1E-7);
         }
@@ -142,13 +139,13 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testHPO() {
         System.out.println("HPO longley");
-
         MathEx.setSeed(19650218); // to get repeatable results.
+        var longley = new Longley();
+        double[][] x = longley.x();
+        double[] y = longley.y();
+        MathEx.standardize(x);
 
-        double[][] longley = MathEx.clone(Longley.x);
-        MathEx.standardize(longley);
-
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2, true, 1E-5, 500);
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y, new GaussianKernel(8.0), 0.2, true, 1E-5, 500);
         System.out.println(model);
         assertEquals(-0.8996, model.L, 1E-4);
         assertEquals(0.0137, model.noise, 1E-4);
@@ -156,7 +153,7 @@ public class GaussianProcessRegressionTest {
         MercerKernel<double[]> kernel = model.kernel;
         double noise = model.noise;
 
-        RegressionMetrics metrics = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, noise));
+        RegressionMetrics metrics = LOOCV.regression(x, y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, noise));
 
         System.out.println(metrics);
         assertEquals(1.7104, metrics.rmse(), 1E-4);
@@ -212,13 +209,12 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void test2DPlanes() {
+    public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(Planes.x);
-        double[] y = Planes.y;
+        var planes = new Planes2D();
+        double[][] x = MathEx.clone(planes.x());
+        double[] y = planes.y();
 
         int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
@@ -386,13 +382,13 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testPuma8nh() {
+    public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = Puma8NH.x;
-        double[] y = Puma8NH.y;
+        var puma = new Puma8NH();
+        double[][] x = puma.x();
+        double[] y = puma.y();
 
         int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
@@ -442,13 +438,13 @@ public class GaussianProcessRegressionTest {
     }
 
     @Test
-    public void testKin8nm() {
+    public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(Kin8nm.x);
-        double[] y = Kin8nm.y;
+        var kin8nm = new Kin8nm();
+        double[][] x = kin8nm.x();
+        double[] y = kin8nm.y();
         int[] permutation = MathEx.permutate(x.length);
         double[][] datax = new double[4000][];
         double[] datay = new double[datax.length];

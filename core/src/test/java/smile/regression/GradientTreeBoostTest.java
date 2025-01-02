@@ -24,7 +24,6 @@ import smile.data.type.StructField;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
@@ -46,6 +45,9 @@ public class GradientTreeBoostTest {
     BostonHousing bostonHousing;
     CalHousing calHousing;
     CPU cpu;
+    Kin8nm kin8nm;
+    Planes2D planes;
+    Puma8NH puma;
     public GradientTreeBoostTest() throws Exception {
         abalone = new Abalone();
         ailerons = new Ailerons();
@@ -54,6 +56,9 @@ public class GradientTreeBoostTest {
         bostonHousing = new BostonHousing();
         calHousing = new CalHousing();
         cpu = new CPU();
+        kin8nm = new Kin8nm();
+        planes = new Planes2D();
+        puma = new Puma8NH();
     }
 
     @BeforeAll
@@ -76,9 +81,9 @@ public class GradientTreeBoostTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(Longley.formula, Longley.data);
+        var longley = new Longley();
+        GradientTreeBoost model = GradientTreeBoost.fit(longley.formula(), longley.data());
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -87,12 +92,12 @@ public class GradientTreeBoostTest {
         }
 
         System.out.println("----- Progressive RMSE -----");
-        double[][] test = model.test(Longley.data);
+        double[][] test = model.test(longley.data());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(longley.y(), test[i]));
         }
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, GradientTreeBoost::fit);
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(), GradientTreeBoost::fit);
 
         System.out.println(metrics);
         assertEquals(3.5453, metrics.rmse(), 1E-4);
@@ -142,22 +147,22 @@ public class GradientTreeBoostTest {
 
     @Test
     public void test2DPlanesLS() {
-        test(Loss.ls(), "2dplanes", Planes.formula, Planes.data, 1.1016);
+        test(Loss.ls(), "2dplanes", planes.formula(), planes.data(), 1.1016);
     }
 
     @Test
     public void test2DPlanesLAD() {
-        test(Loss.lad(), "2dplanes", Planes.formula, Planes.data, 1.1347);
+        test(Loss.lad(), "2dplanes", planes.formula(), planes.data(), 1.1347);
     }
 
     @Test
     public void test2DPlanesQuantile() {
-        test(Loss.quantile(0.5), "2dplanes", Planes.formula, Planes.data, 1.1347);
+        test(Loss.quantile(0.5), "2dplanes", planes.formula(), planes.data(), 1.1347);
     }
 
     @Test
     public void test2DPlanesHuber() {
-        test(Loss.huber(0.9), "2dplanes", Planes.formula, Planes.data, 1.1080);
+        test(Loss.huber(0.9), "2dplanes", planes.formula(), planes.data(), 1.1080);
     }
 
     @Test
@@ -262,42 +267,42 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testPuma8nhLS() {
-        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2372);
+        test(Loss.ls(), "puma8nh", puma.formula(), puma.data(), 3.2372);
     }
 
     @Test
     public void testPuma8nhLAD() {
-        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2502);
+        test(Loss.lad(), "puma8nh", puma.formula(), puma.data(), 3.2502);
     }
 
     @Test
     public void testPuma8nhQuantile() {
-        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2502);
+        test(Loss.quantile(0.5), "puma8nh", puma.formula(), puma.data(), 3.2502);
     }
 
     @Test
     public void testPuma8nhHuber() {
-        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2405);
+        test(Loss.huber(0.9), "puma8nh", puma.formula(), puma.data(), 3.2405);
     }
 
     @Test
     public void testKin8nmLS() {
-        test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1803);
+        test(Loss.ls(), "kin8nm", kin8nm.formula(), kin8nm.data(), 0.1803);
     }
 
     @Test
     public void testKin8nmLAD() {
-        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1822);
+        test(Loss.lad(), "kin8nm", kin8nm.formula(), kin8nm.data(), 0.1822);
     }
 
     @Test
     public void testKin8nmQuantile() {
-        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1822);
+        test(Loss.quantile(0.5), "kin8nm", kin8nm.formula(), kin8nm.data(), 0.1822);
     }
 
     @Test
     public void testKin8nmHuber() {
-        test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
+        test(Loss.huber(0.9), "kin8nm", kin8nm.formula(), kin8nm.data(), 0.1795);
     }
 
     @Test

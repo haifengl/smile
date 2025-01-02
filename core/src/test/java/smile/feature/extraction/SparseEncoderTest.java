@@ -18,7 +18,7 @@
 package smile.feature.extraction;
 
 import smile.data.DataFrame;
-import smile.test.data.Weather;
+import smile.datasets.Weather;
 import smile.util.SparseArray;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,10 +49,10 @@ public class SparseEncoderTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Sparse Encoder");
-
-        DataFrame data = Weather.data;
+        var weather = new Weather();
+        DataFrame data = weather.data();
         SparseEncoder encoder = new SparseEncoder(data.schema(), "outlook", "temperature", "humidity", "windy");
         SparseArray[] features = encoder.apply(data);
 

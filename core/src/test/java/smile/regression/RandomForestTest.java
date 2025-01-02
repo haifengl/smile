@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.regression;
 
 import java.util.Arrays;
@@ -25,7 +24,6 @@ import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.RMSE;
 import org.junit.jupiter.api.*;
@@ -105,9 +103,9 @@ public class RandomForestTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds));
+        var longley = new Longley();
+        RandomForest model = RandomForest.fit(longley.formula(), longley.data(), 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -123,12 +121,12 @@ public class RandomForestTest {
         assertEquals(31644.9317, importance[5], 1E-4);
 
         System.out.println("----- Progressive RMSE -----");
-        double[][] test = model.test(Longley.data);
+        double[][] test = model.test(longley.data());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
+            System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(longley.y(), test[i]));
         }
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
         System.out.println(metrics);
@@ -163,14 +161,16 @@ public class RandomForestTest {
     }
 
     @Test
-    public void test2DPlanes() {
+    public void test2DPlanes() throws Exception {
         System.setProperty("smile.regression_tree.bins", "1");
-        test("2dplanes - exact", Planes.formula, Planes.data, 1.3581);
+        var planes = new Planes2D();
+        test("2dplanes - exact", planes.formula(), planes.data(), 1.3581);
     }
 
     @Test
-    public void test2DPlanesHist() {
-        test("2dplanes - hist", Planes.formula, Planes.data, 1.2999);
+    public void test2DPlanesHist() throws Exception {
+        var planes = new Planes2D();
+        test("2dplanes - hist", planes.formula(), planes.data(), 1.2999);
     }
 
     @Test
@@ -208,13 +208,15 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testPuma8nh() {
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3895);
+    public void testPuma8nh() throws Exception {
+        var puma = new Puma8NH();
+        test("puma8nh", puma.formula(), puma.data(), 3.3895);
     }
 
     @Test
-    public void testKin8nm() {
-        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1774);
+    public void testKin8nm() throws Exception {
+        var kin8nm = new Kin8nm();
+        test("kin8nm", kin8nm.formula(), kin8nm.data(), 0.1774);
     }
 
     @Test

@@ -14,15 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.classification;
 
-import smile.datasets.BreastCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -64,32 +61,33 @@ public class LogisticRegressionTest {
     }
 
     @Test
-    public void testWeather() {
+    public void testWeather() throws Exception {
         System.out.println("Weather");
-
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y, LogisticRegression::fit);
+        var weather = new WeatherNominal();
+        ClassificationMetrics metrics = LOOCV.classification(weather.dummy(), weather.y(), LogisticRegression::fit);
 
         System.out.println(metrics);
         assertEquals(0.7143, metrics.accuracy(), 1E-4);
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LogisticRegression::fit);
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.x(), pen.y(), LogisticRegression::fit);
 
         System.out.println(result);
         assertEquals(0.9548, result.avg.accuracy(), 0.001);
     }
 
     @Test
-    public void testLibrasMovement() {
+    public void testLibrasMovement() throws Exception {
         System.out.println("Libras Movement");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, LibrasMovement.x, LibrasMovement.y, LogisticRegression::fit);
+        var libras = new LibrasMovement();
+        var result = CrossValidation.classification(10, libras.x(), libras.y(), LogisticRegression::fit);
 
         System.out.println(result);
         assertEquals(0.7361, result.avg.accuracy(), 1E-4);
@@ -109,30 +107,34 @@ public class LogisticRegressionTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
+        var segment = new ImageSegmentation();
+        double[][] x = segment.x();
+        int[] y = segment.y();
+        double[][] testx = segment.testx();
+        int[] testy = segment.testy();
+        LogisticRegression model = LogisticRegression.fit(x, y, 0.05, 1E-3, 1000);
 
-        LogisticRegression model = LogisticRegression.fit(Segment.x, Segment.y, 0.05, 1E-3, 1000);
-
-        int[] prediction = model.predict(Segment.testx);
-        int error = Error.of(Segment.testy, prediction);
+        int[] prediction = model.predict(testx);
+        int error = Error.of(testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(50, error, 1);
 
-        int t = Segment.x.length;
-        int round = (int) Math.round(Math.log(Segment.testx.length));
+        int t = x.length;
+        int round = (int) Math.round(Math.log(testx.length));
         for (int loop = 0; loop < round; loop++) {
             double eta = 0.1 / t;
             System.out.format("Set learning rate at %.5f%n", eta);
             model.setLearningRate(eta);
-            for (int i = 0; i < Segment.testx.length; i++) {
-                model.update(Segment.testx[i], Segment.testy[i]);
+            for (int i = 0; i < testx.length; i++) {
+                model.update(testx[i], testy[i]);
             }
-            t += Segment.testx.length;
+            t += testx.length;
         }
 
-        prediction = model.predict(Segment.testx);
-        error = Error.of(Segment.testy, prediction);
+        prediction = model.predict(testx);
+        error = Error.of(testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(39, error, 3);
     }
@@ -140,28 +142,32 @@ public class LogisticRegressionTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
+        double[][] testx = usps.testx();
+        int[] testy = usps.testy();
+        LogisticRegression model = LogisticRegression.fit(x, y, 0.3, 1E-3, 1000);
 
-        LogisticRegression model = LogisticRegression.fit(USPS.x, USPS.y, 0.3, 1E-3, 1000);
-
-        int[] prediction = model.predict(USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(testx);
+        int error = Error.of(testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(185, error);
 
-        int t = USPS.x.length;
-        int round = (int) Math.round(Math.log(USPS.testx.length));
+        int t = x.length;
+        int round = (int) Math.round(Math.log(testx.length));
         for (int loop = 0; loop < round; loop++) {
             double eta = 0.1 / t;
             System.out.format("Set learning rate at %.5f%n", eta);
             model.setLearningRate(eta);
-            for (int i = 0; i < USPS.testx.length; i++) {
-                model.update(USPS.testx[i], USPS.testy[i]);
+            for (int i = 0; i < testx.length; i++) {
+                model.update(testx[i], testy[i]);
             }
-            t += USPS.testx.length;
+            t += testx.length;
         }
 
-        prediction = model.predict(USPS.testx);
-        error = Error.of(USPS.testy, prediction);
+        prediction = model.predict(testx);
+        error = Error.of(testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);
 

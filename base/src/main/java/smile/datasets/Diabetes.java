@@ -52,7 +52,7 @@ public record Diabetes(DataFrame data, Formula formula) {
      * @throws IOException when fails to read the file.
      */
     public Diabetes(Path path) throws IOException {
-        this(load(path), Formula.lhs("diagnosis"));
+        this(load(path), Formula.lhs("y"));
     }
 
     private static DataFrame load(Path path) throws IOException {

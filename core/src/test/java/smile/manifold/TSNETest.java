@@ -17,7 +17,7 @@
 
 package smile.manifold;
 
-import smile.test.data.MNIST;
+import smile.datasets.MNIST;
 import smile.math.MathEx;
 import smile.feature.extraction.PCA;
 import org.junit.jupiter.api.*;
@@ -51,10 +51,11 @@ public class TSNETest {
     @Test
     public void test() throws Exception {
         System.out.println("tSNE");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        PCA pca = PCA.fit(MNIST.x).getProjection(50);
-        double[][] X = pca.apply(MNIST.x);
+        var mnist = new MNIST();
+        double[][] x = mnist.x();
+        PCA pca = PCA.fit(x).getProjection(50);
+        double[][] X = pca.apply(x);
 
         long start = System.currentTimeMillis();
         TSNE tsne = new TSNE(X, 2, 20, 200, 550);

@@ -17,7 +17,7 @@
 
 package smile.manifold;
 
-import smile.test.data.Eurodist;
+import smile.datasets.Eurodist;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +47,7 @@ public class IsotonicMDSTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Isotonic MDS");
         double[][] points = {
                 {2023.0068, 1868.3016},
@@ -73,7 +73,8 @@ public class IsotonicMDSTest {
                 {1069.571, 159.6601}
         };
 
-        IsotonicMDS mds = IsotonicMDS.of(Eurodist.x);
+        var euro = new Eurodist();
+        IsotonicMDS mds = IsotonicMDS.of(euro.x());
         assertEquals(0.05846, mds.stress(), 1E-5);
 
         double[][] coordinates = mds.coordinates();

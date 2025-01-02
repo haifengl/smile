@@ -19,7 +19,7 @@ package smile.feature.transform;
 
 import smile.data.DataFrame;
 import smile.datasets.ColonCancer;
-import smile.test.data.Segment;
+import smile.datasets.ImageSegmentation;
 import smile.data.transform.InvertibleColumnTransform;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,8 +29,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class FeatureTransformTest {
-
-    public FeatureTransformTest() {
+    ImageSegmentation segment;
+    public FeatureTransformTest() throws Exception {
+        segment = new ImageSegmentation();
     }
 
     @BeforeAll
@@ -53,8 +54,8 @@ public class FeatureTransformTest {
     public void testScaler() {
         System.out.println("Scaler");
 
-        InvertibleColumnTransform transform = Scaler.fit(Segment.train);
-        DataFrame df = transform.apply(Segment.test);
+        InvertibleColumnTransform transform = Scaler.fit(segment.train());
+        DataFrame df = transform.apply(segment.test());
         System.out.println(transform);
 
         assertEquals(0.565217, df.getDouble(0, 0), 1E-4);
@@ -76,8 +77,8 @@ public class FeatureTransformTest {
     public void testWinsorScaler() {
         System.out.println("Winsor");
 
-        InvertibleColumnTransform transform = WinsorScaler.fit(Segment.train);
-        DataFrame df = transform.apply(Segment.test);
+        InvertibleColumnTransform transform = WinsorScaler.fit(segment.train());
+        DataFrame df = transform.apply(segment.test());
         System.out.println(transform);
 
         assertEquals(0.573525, df.getDouble(0, 0), 1E-4);
@@ -102,8 +103,8 @@ public class FeatureTransformTest {
     public void testMaxAbsScaler() {
         System.out.println("MaxAbs");
 
-        InvertibleColumnTransform transform = MaxAbsScaler.fit(Segment.train);
-        DataFrame df = transform.apply(Segment.test);
+        InvertibleColumnTransform transform = MaxAbsScaler.fit(segment.train());
+        DataFrame df = transform.apply(segment.test());
         System.out.println(transform);
 
         assertEquals(0.566929, df.getDouble(0, 0), 1E-4);
@@ -125,8 +126,8 @@ public class FeatureTransformTest {
     public void testStandardizer() {
         System.out.println("Standardizer");
 
-        InvertibleColumnTransform transform = Standardizer.fit(Segment.train);
-        DataFrame df = transform.apply(Segment.test);
+        InvertibleColumnTransform transform = Standardizer.fit(segment.train());
+        DataFrame df = transform.apply(segment.test());
         System.out.println(transform);
 
         assertEquals( 0.256779, df.getDouble(0, 0), 1E-4);
@@ -148,8 +149,8 @@ public class FeatureTransformTest {
     public void testRobustStandardizer() {
         System.out.println("RobustStandardizer");
 
-        InvertibleColumnTransform transform = RobustStandardizer.fit(Segment.train);
-        DataFrame df = transform.apply(Segment.test);
+        InvertibleColumnTransform transform = RobustStandardizer.fit(segment.train());
+        DataFrame df = transform.apply(segment.test());
         System.out.println(transform);
 
         assertEquals( 0.173228, df.getDouble(0, 0), 1E-4);

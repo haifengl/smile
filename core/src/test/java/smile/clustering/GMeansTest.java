@@ -19,7 +19,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
@@ -55,11 +55,11 @@ public class GMeansTest {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
-        double[][] testx = USPS.testx;
-        int[] testy = USPS.testy;
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
+        double[][] testx = usps.testx();
+        int[] testy = usps.testy();
 
         GMeans model = GMeans.fit(x, 10);
         System.out.println(model);

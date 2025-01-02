@@ -19,10 +19,11 @@ package smile.classification;
 
 import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
+import smile.datasets.PenDigits;
+import smile.datasets.USPS;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -64,11 +65,11 @@ public class LDATest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LDA::fit);
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.x(), pen.y(), LDA::fit);
 
         System.out.println(result);
         assertEquals(0.8820, result.avg.accuracy(), 1E-4);
@@ -89,11 +90,11 @@ public class LDATest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        var usps = new USPS();
+        LDA model = LDA.fit(usps.x(), usps.y());
 
-        LDA model = LDA.fit(USPS.x, USPS.y);
-
-        int[] prediction = model.predict(USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.testx());
+        int error = Error.of(usps.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(256, error);
