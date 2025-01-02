@@ -126,11 +126,11 @@ graph G8 {
     }
 
     /**
-     * Test of isConnected method, of class AdjacencyList.
+     * Test of hasEdge method, of class AdjacencyList.
      */
     @Test
-    public void testIsConnected() {
-        System.out.println("isConnected");
+    public void testHasEdge() {
+        System.out.println("hasEdge");
         assertFalse(g1.hasEdge(1, 2));
         assertFalse(g1.hasEdge(1, 1));
 
@@ -228,23 +228,7 @@ graph G8 {
      * Test of removeEdge method, of class AdjacencyList.
      */
     @Test
-    public void testRemoveEdge_int_int() {
-        System.out.println("removeEdge");
-        g4.addEdge(1, 4);
-        g4.removeEdge(4, 1);
-        assertEquals(1.0, g8.getWeight(1, 4), 1E-10);
-        assertEquals(0.0, g4.getWeight(4, 1), 1E-10);
-
-        g8.removeEdge(1, 4);
-        assertEquals(0, g8.getWeight(1, 4), 1E-10);
-        assertEquals(0, g8.getWeight(4, 1), 1E-10);
-    }
-
-    /**
-     * Test of removeEdge method, of class AdjacencyList.
-     */
-    @Test
-    public void testRemoveEdge_GraphEdge() {
+    public void testRemoveEdge() {
         System.out.println("removeEdge");
         g4.addEdge(1, 4);
         g4.removeEdge(4, 1);

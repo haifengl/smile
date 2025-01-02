@@ -343,7 +343,7 @@ public abstract class Graph {
      */
     public int[] dfsort() {
         if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+            throw new UnsupportedOperationException("Topological sort cannot be applied on undirected graph.");
         }
 
         int n = getVertexCount();
@@ -383,6 +383,10 @@ public abstract class Graph {
      *         in the same connected component.
      */
     public int[][] dfcc() {
+        if (digraph) {
+            throw new UnsupportedOperationException("Connected components algorithm cannot be applied on digraph");
+        }
+
         int n = getVertexCount();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
@@ -460,7 +464,7 @@ public abstract class Graph {
      */
     public int[] bfsort() {
         if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+            throw new UnsupportedOperationException("Topological sort cannot be applied on undirected graph.");
         }
 
         int n = getVertexCount();
@@ -517,6 +521,10 @@ public abstract class Graph {
      *         in the same connected component.
      */
     public int[][] bfcc() {
+        if (digraph) {
+            throw new UnsupportedOperationException("Connected components algorithm cannot be applied on digraph");
+        }
+
         int n = getVertexCount();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
@@ -643,7 +651,7 @@ public abstract class Graph {
      */
     public double prim(List<Edge> mst) {
         if (digraph) {
-            throw new UnsupportedOperationException("Call Prim's algorithm on a digraph.");
+            throw new UnsupportedOperationException("Prim's algorithm cannot be applied on a digraph.");
         }
 
         int n = getVertexCount();
