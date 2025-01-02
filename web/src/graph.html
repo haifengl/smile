@@ -346,6 +346,40 @@ title: Smile - Graph Data Structure
         </div>
     </div>
 
+    <p>Another important graph task is the maximum flow problem that involves finding
+        a feasible flow through a flow network that obtains the maximum possible flow
+        rate. AdjacencyMatrix implements the push-relabel algorithm that is considered
+        one of the most efficient maximum flow algorithms. The name "push-relabel" comes
+        from the two basic operations used in the algorithm. Throughout its execution,
+        the algorithm maintains a "preflow" and gradually converts it into a maximum
+        flow by moving flow locally between neighboring nodes using push operations
+        under the guidance of an admissible network maintained by relabel operations.
+    </p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_11">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    AdjacencyMatrix graph = new AdjacencyMatrix(6, true);
+    graph.addEdge(0, 1, 2);
+    graph.addEdge(0, 2, 9);
+    graph.addEdge(1, 2, 1);
+    graph.addEdge(1, 3, 0);
+    graph.addEdge(1, 4, 0);
+    graph.addEdge(2, 4, 7);
+    graph.addEdge(3, 5, 7);
+    graph.addEdge(4, 5, 4);
+
+    double[][] flow = new double[6][6];
+    double maxFlow = graph.pushRelabel(flow, 0, 5);
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="interpolation.html" title="Previous Section: Interpolation"><span>Interpolation</span></a>
