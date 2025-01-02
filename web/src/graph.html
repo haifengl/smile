@@ -9,7 +9,7 @@ title: Smile - Graph Data Structure
 
     <h1 id="graph-top" class="title">Graph Data Structure</h1>
 
-    <p>Many machine learning algorithms (e.g. Isomap) employ graph data structures internally.
+    <p>Many machine learning algorithms (e.g. Isomap, UMAP, etc.) employ graph data structures internally.
         Graphs are mathematical structures used to model pairwise relations between
         objects from a certain collection. A graph is an abstract representation of
         a set of objects where some pairs of the objects are connected by links.
@@ -40,24 +40,20 @@ title: Smile - Graph Data Structure
       reverse a directed graph.</p>
 
     <p>Both <code>AdjacencyList</code> and <code>AdjacencyMatrix</code> implement
-        the abstract interface <code>Graph</code>. The basic operation on graph is
-        traversal, i.e. to visit the vertices in some systematic order.
-        Typically, we have breadth first search (BFS) and depth first search (DFS).
-        Both of these construct spanning trees with certain properties useful
-        in other graph algorithms. In <code>Graph</code>, the methods <code>bfs()</code>
-        and <code>dfs()</code> returns the connected components of graph. In addition,
-        the overloaded <code>bfs(Visitor)</code> and <code>dfs(Visitor)</code>
-        can take a user-define <code>Visitor</code> object to perform specific
-        operations when visiting a vertex.</p>
+        the abstract interface <code>Graph</code>. The method <code>dot()</code>
+        returns the graphic representation in Graphviz dot format. You may try
+        <a href="http://viz-js.com/">http://viz-js.com/</a> to visualize the returned string.
+    </p>
+    
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+                <pre class="prettyprint lang-java"><code>
     import smile.graph.*;
-
+            
     var graph = new AdjacencyList(8);
     graph.addEdge(0, 2);
     graph.addEdge(1, 7);
@@ -67,12 +63,69 @@ title: Smile - Graph Data Structure
     graph.addEdge(3, 5);
     graph.addEdge(5, 4);
 
-    graph.dfs();
+    String[] label = {"a", "b", "c", "d"}
+    graph.dot("SmileGraph", label);
+                </code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <p>In this example, we create a DOT graph with name 'SmileGraph' with 4 node labels.
+        Since we have 8 nodes, the rest of nodes will use their integer ID as label.
+    </p>
+    <p>The basic operation on graph is traversal, i.e. to visit the vertices in some
+        systematic order. Typically, we have breadth first search (BFS) and depth first
+        search (DFS). Both of these construct spanning trees with certain properties
+        useful in other graph algorithms. The generic methods <code>bfs(VertexVisitor)</code>
+        and <code>dfs(VertexVisitor)</code> take a user-define <code>VertexVisitor</code>
+        functor to perform specific operations when visiting a vertex.
+    </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    graph.dfs(i -> println("Visiting vertex " + i));
           </code></pre>
             </div>
         </div>
     </div>
 
+    <p>An application of graph traversal is to compute connected components.
+        A connected component of an undirected graph is a connected subgraph
+        that is not part of any larger connected subgraph. The components of
+        any graph partition its vertices into disjoint sets, and are the
+        induced subgraphs of those sets. In <code>Graph</code>, the methods
+        <code>bfcc()</code> and <code>dfcc()</code> compute the connected
+        components with BFS and DFS algorithms, respectively. These methods
+        return a two-dimensional array of which each row is the vertex IDs
+        in the same connected component.
+    </p>
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="java_3">
+                <div class="code" style="text-align: left;">
+              <pre class="prettyprint lang-java"><code>
+    // compute connected components with BFS
+    graph.bfcc();
+    // compute connected components with DFS
+    graph.dfcc();
+              </code></pre>
+                </div>
+            </div>
+        </div>
+
+    <p>A strongly connected component of a directed graph is a maximal subgraph
+       where every pair of vertices is mutually reachable. Note that a conventional
+       DFS method cannot be used to find the strongly connected components. Instead,
+       one may leverage Kosaraju's algorithm or Tarjan's algorithm to compute strongly
+       connected components.</p>
 
     <p>With DFS or BFS, we can also obtain the topological ordering of a directed graph, which
         is a linear ordering of its vertices such that for every directed edge uv from vertex
@@ -81,12 +134,14 @@ title: Smile - Graph Data Structure
         that one task must be performed before another; in this application, a topological
         ordering is just a valid sequence for the tasks. A topological ordering is possible
         if and only if the graph has no directed cycles, that is, if it is a directed acyclic
-        graph (DAG).</p>
+        graph (DAG).
+    </p>
+
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var graph = new AdjacencyList(13, true);
@@ -108,30 +163,69 @@ title: Smile - Graph Data Structure
     graph.addEdge(9, 12);
     graph.addEdge(11, 12);
 
-    graph.sortdfs(); // DFS
-    graph.sortbfs(); // BFS
+    graph.dfsort(); // DFS
+    graph.bfsort(); // BFS
           </code></pre>
             </div>
         </div>
     </div>
 
     <p>Graph traversal can be used to compute the topological ordering of graph
-        by the methods <code>sortbfs</code> or <code>sortdfs</code>. The topological
+        by the methods <code>bfsort()</code> or <code>dfsort()</code>. The topological
         ordering of a directed graph to be one in which, whenever we have an edge
         from <code>x</code> to <code>y</code>, the ordering visits <code>x</code>
         before <code>y</code>. Note that a graph has a topological ordering if
         and only if it is a directed acyclic graph.</p>
 
-    <p>With the method <code>dijkstra()</code>, we can calculate the shortest path
-        from a source to all other vertices in the graph by Dijkstra algorithm.
-        Many manifold algorithms employ the shortest path among the samples as
-        a similarity measure instead of pairwise distance.</p>
+    <p>A minimum spanning tree (MST) is a subset of the edges of a connected,
+        edge-weighted undirected graph that connects all the vertices together,
+        without any cycles and with the minimum possible total edge weight.
+        That is, it is a spanning tree whose sum of edge weights is as small as
+        possible. There are many use cases for minimum spanning trees.
+        With the method <code>prim</code>, we can calculate an MST by Prim's algorithm.
+    </p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane active" id="java_5">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    var graph = new AdjacencyMatrix(6);
+    graph.addEdge(0, 1, 0.41);
+    graph.addEdge(1, 2, 0.51);
+    graph.addEdge(2, 3, 0.50);
+    graph.addEdge(4, 3, 0.36);
+    graph.addEdge(3, 5, 0.38);
+    graph.addEdge(3, 0, 0.45);
+    graph.addEdge(0, 5, 0.29);
+    graph.addEdge(5, 4, 0.21);
+    graph.addEdge(1, 4, 0.32);
+    graph.addEdge(4, 2, 0.32);
+    graph.addEdge(5, 1, 0.29);
+    
+    List<Graph.Edge> mst = new ArrayList<>();
+    double cost = graph.prim(mst);
+    mst.forEach(edge -> println(edge))
+            </code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <p>With the method <code>dijkstra()</code>, we can calculate the shortest path
+        from a source to all other vertices in the graph by Dijkstra algorithm.
+        If no parameter is provided, Smile will calculate all pairwise shortest
+        path between all vertecies.
+        Many manifold algorithms employ the shortest path among the samples as
+        a similarity measure instead of pairwise distance.
+    </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var graph = new AdjacencyMatrix(6, true);
@@ -147,8 +241,107 @@ title: Smile - Graph Data Structure
     graph.addEdge(4, 2, 0.32);
     graph.addEdge(5, 1, 0.29);
 
-    graph.dijkstra();
+    double[][] distances = graph.dijkstra();
           </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The travelling salesman problem (TSP) is another important task in graph
+        theory, combinatorial optimization, and operations research.
+        It asks the following question: "Given a list of cities and the distances
+        between each pair of cities, what is the shortest possible route that visits
+        each city exactly once and returns to the origin city?"  It is an NP-hard problem.
+        Smile provides the Held-Karp algorithm to compute the optimal solution of TSP.
+        It is an efficient dynamic programming algorithm, significantly better than
+        the superexponential performance {\displaystyle \Theta (n!)} of a brute-force algorithm.
+    </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_7">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    var graph = new AdjacencyMatrix(6);
+    graph.addEdge(0, 1, 0.41);
+    graph.addEdge(1, 2, 0.51);
+    graph.addEdge(2, 3, 0.50);
+    graph.addEdge(4, 3, 0.36);
+    graph.addEdge(3, 5, 0.38);
+    graph.addEdge(3, 0, 0.45);
+    graph.addEdge(0, 5, 0.29);
+    graph.addEdge(5, 4, 0.21);
+    graph.addEdge(1, 4, 0.32);
+    graph.addEdge(4, 2, 0.32);
+    graph.addEdge(5, 1, 0.29);
+    
+    int[] tour = graph.heldKarp();
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Although the Held-Karp algorithm is significantly better than a brute-force algorithm,
+        it is still too slow to apply to large graphs. To process TSPs containing thousands
+        of cities, Smile provides a branch-and-bound algorithm.
+    </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_8">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    // Branch-and-bound algorithm
+    int[] tour = graph.tsp();
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For even large TSP problems, Smile provides several heuristic and approximate algorithms,
+        which quickly yield good solutions. For example, nearest, furthest, and arbitrary insertion
+        algorithms are implemented. These methods have a quadratic time complexity. Nearest insertion
+        algorithm yields at most 2 times longer than the optimal solution in the worest case.
+        Furthest insertion and arbitrary insertion have higher bound in the worest case. We can improve
+        the result further with the 2-Opt algorithm, which is a simple local search algorithm.
+        The main idea behind it is to take a route that crosses over itself and reorder it so that
+        it does not.
+    </p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_9">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    // Heuristic algorithm
+    var tour = graph.nearestInsertion();
+    // 2-Opt algorithm
+    double cost = graph.opt2(tour, 3);
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For tigher bound, Smile also implements the Christofides-Serdyukov algorithm yields a solution
+        that is at most 1.5 times longer than the optimal solution in the worst case. However, it has
+        a cubic time complexity.
+    </p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_10">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint lang-java"><code>
+    var tour = graph.christofides();
+            </code></pre>
             </div>
         </div>
     </div>
