@@ -23,7 +23,6 @@ import smile.datasets.SyntheticControl;
 import smile.datasets.USArrests;
 import smile.io.Read;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.util.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +52,7 @@ public class SimpleImputerTest {
     public void tearDown() {
     }
 
-    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) throws Exception {
+    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         int n = 0;

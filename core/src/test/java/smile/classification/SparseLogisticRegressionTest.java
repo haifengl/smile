@@ -17,14 +17,11 @@
 package smile.classification;
 
 import java.util.stream.IntStream;
-
-import org.apache.hadoop.mapreduce.lib.input.UncompressedSplitLineReader;
 import smile.data.SparseDataset;
 import smile.data.SampleInstance;
 import smile.datasets.USPS;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.*;
 import smile.util.SparseArray;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;

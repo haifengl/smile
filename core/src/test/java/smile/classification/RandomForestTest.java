@@ -23,7 +23,6 @@ import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -238,8 +237,8 @@ public class RandomForestTest {
         assertEquals(200, model.size());
         assertEquals(100, trimmed.size());
 
-        double weight1 = Arrays.stream(model.models()).mapToDouble(m -> m.weight).min().getAsDouble();
-        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.weight).min().getAsDouble();
+        double weight1 = Arrays.stream(model.models()).mapToDouble(m -> m.weight).min().orElse(0);
+        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.weight).min().orElse(0);
         assertTrue(weight2 > weight1);
 
         prediction = trimmed.predict(segment.test());

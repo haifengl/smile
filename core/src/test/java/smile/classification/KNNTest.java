@@ -20,7 +20,6 @@ import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
