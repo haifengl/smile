@@ -18,8 +18,8 @@ package smile.classification;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.Hyphen;
-import smile.test.data.Protein;
+import smile.datasets.Hyphen;
+import smile.datasets.Protein;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,13 +53,13 @@ public class MaxentTest {
     @Test
     public void testProtein() throws Exception {
         System.out.println("protein");
+        var protein = new Protein();
+        Maxent model = Maxent.fit(protein.train().p(), protein.train().x(), protein.train().y());
 
-        Maxent model = Maxent.fit(Protein.p, Protein.x, Protein.y);
+        int[] prediction = model.predict(protein.test().x());
+        int error = Error.of(prediction, protein.test().y());
 
-        int[] prediction = model.predict(Protein.testx);
-        int error = Error.of(prediction, Protein.testy);
-
-        System.out.format("The error is %d of %d%n", error, Protein.testx.length);
+        System.out.format("The error is %d of %d%n", error, protein.test().x().length);
         assertEquals(1339, error);
 
         java.nio.file.Path temp = Write.object(model);
@@ -67,15 +67,15 @@ public class MaxentTest {
     }
 
     @Test
-    public void testHyphen() {
+    public void testHyphen() throws Exception {
         System.out.println("hyphen");
+        var hyphen = new Hyphen();
+        Maxent model = Maxent.fit(hyphen.train().p(), hyphen.train().x(), hyphen.train().y());
 
-        Maxent model = Maxent.fit(Hyphen.p, Hyphen.x, Hyphen.y);
+        int[] prediction = model.predict(hyphen.test().x());
+        int error = Error.of(prediction, hyphen.test().y());
 
-        int[] prediction = model.predict(Hyphen.testx);
-        int error = Error.of(prediction, Hyphen.testy);
-
-        System.out.format("The error is %d of %d%n", error, Hyphen.testx.length);
+        System.out.format("The error is %d of %d%n", error, hyphen.test().x().length);
         assertEquals(762, error);
     }
 }
