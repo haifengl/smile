@@ -21,8 +21,8 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.datasets.BreastCancer;
 import smile.datasets.Iris;
-import smile.test.data.PenDigits;
-import smile.test.data.USPS;
+import smile.datasets.PenDigits;
+import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.*;
 import smile.validation.metric.Error;
@@ -69,11 +69,11 @@ public class RDATest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<RDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
@@ -96,11 +96,11 @@ public class RDATest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        var usps = new USPS();
+        RDA model = RDA.fit(usps.x(), usps.y(), 0.7);
 
-        RDA model = RDA.fit(USPS.x, USPS.y, 0.7);
-
-        int[] prediction = model.predict(USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.testx());
+        int error = Error.of(usps.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(235, error);

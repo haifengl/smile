@@ -17,14 +17,11 @@
 
 package smile.regression;
 
-import smile.datasets.Abalone;
-import smile.datasets.CPU;
-import smile.datasets.Diabetes;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,13 +54,13 @@ public class SVMTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        RegressionMetrics metrics = LOOCV.regression(Longley.x, Longley.y, (x, y) -> SVM.fit(x, y, 2.0, 10.0, 1E-3));
+        var longley = new Longley();
+        RegressionMetrics metrics = LOOCV.regression(longley.x(), longley.y(), (x, y) -> SVM.fit(x, y, 2.0, 10.0, 1E-3));
 
         System.out.println("LOOCV RMSE = " + metrics.rmse());
         assertEquals(1.6140, metrics.rmse(), 1E-4);
 
-        Regression<double[]> model = SVM.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
+        Regression<double[]> model = SVM.fit(longley.x(), longley.y(), 2.0, 10.0, 1E-3);
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }
@@ -85,13 +82,13 @@ public class SVMTest {
     }
 
     @Test
-    public void tesProstate() {
+    public void tesProstate() throws Exception {
         System.out.println("Prostate");
-
+        var prostate = new ProstateCancer();
         GaussianKernel kernel = new GaussianKernel(6.0);
 
-        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(Prostate.x, Prostate.y,
-                Prostate.testx, Prostate.testy, (x, y) -> SVM.fit(x, y, kernel, 0.5, 5, 1E-3));
+        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(prostate.x(), prostate.y(),
+                prostate.testx(), prostate.testy(), (x, y) -> SVM.fit(x, y, kernel, 0.5, 5, 1E-3));
 
         System.out.println(result);
         assertEquals(0.9112183360712871, result.metrics.rmse(), 1E-4);

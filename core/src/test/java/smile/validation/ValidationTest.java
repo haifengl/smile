@@ -19,7 +19,7 @@ package smile.validation;
 
 import smile.classification.DecisionTree;
 import smile.datasets.Abalone;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,9 +50,10 @@ public class ValidationTest {
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        ClassificationValidation<DecisionTree> result = ClassificationValidation.of(USPS.formula, USPS.train, USPS.test, DecisionTree::fit);
+        var usps = new USPS();
+        var result = ClassificationValidation.of(usps.formula(), usps.train(), usps.test(), DecisionTree::fit);
 
         System.out.println(result);
         assertEquals(0.8340, result.metrics.accuracy(), 1E-4);

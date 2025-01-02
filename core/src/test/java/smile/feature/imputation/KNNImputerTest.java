@@ -20,7 +20,7 @@ package smile.feature.imputation;
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
-import smile.test.data.SyntheticControl;
+import smile.datasets.SyntheticControl;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -51,7 +51,8 @@ public class KNNImputerTest {
     @Test
     public void test() throws Exception {
         System.out.println("KNNImputer");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         KNNImputer knnImputer = new KNNImputer(df, 5);
         Function<double[][], double[][]> imputer = x -> knnImputer.apply(DataFrame.of(x)).toArray();

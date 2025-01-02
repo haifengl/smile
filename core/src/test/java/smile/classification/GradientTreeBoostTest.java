@@ -17,12 +17,10 @@
 
 package smile.classification;
 
-import smile.datasets.BreastCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -57,9 +55,9 @@ public class GradientTreeBoostTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(WeatherNominal.formula, WeatherNominal.data, 100, 20, 6, 5, 0.05, 0.7);
+        var weather = new WeatherNominal();
+        GradientTreeBoost model = GradientTreeBoost.fit(weather.formula(), weather.data(), 100, 20, 6, 5, 0.05, 0.7);
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -68,13 +66,13 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", fields[i], importance[i]);
         }
 
-        double[] shap = model.shap(WeatherNominal.data);
+        double[] shap = model.shap(weather.data());
         System.out.println("----- SHAP -----");
         for (int i = 0; i < fields.length; i++) {
             System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
+        ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(metrics);
@@ -105,11 +103,11 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<GradientTreeBoost> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.formula(), pen.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
@@ -130,52 +128,54 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(Segment.formula, Segment.train, 100, 20, 6, 5, 0.05, 0.7);
+        var segment = new ImageSegmentation();
+        int[] testy = segment.testy();
+        GradientTreeBoost model = GradientTreeBoost.fit(segment.formula(), segment.train(), 100, 20, 6, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int[] prediction = model.predict(Segment.test);
-        int error = Error.of(Segment.testy, prediction);
+        int[] prediction = model.predict(segment.test());
+        int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(23, error, 1);
 
         System.out.println("----- Progressive Accuracy -----");
-        int[][] test = model.test(Segment.test);
+        int[][] test = model.test(segment.test());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(Segment.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(testy, test[i]));
         }
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(USPS.formula, USPS.train, 100, 20, 100, 5, 0.05, 0.7);
+        var usps = new USPS();
+        int[] testy = usps.testy();
+        GradientTreeBoost model = GradientTreeBoost.fit(usps.formula(), usps.train(), 100, 20, 100, 5, 0.05, 0.7);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int[] prediction = model.predict(USPS.test);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.test());
+        int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(126, error, 3);
 
         System.out.println("----- Progressive Accuracy -----");
-        int[][] test = model.test(USPS.test);
+        int[][] test = model.test(usps.test());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(testy, test[i]));
         }
     }
 

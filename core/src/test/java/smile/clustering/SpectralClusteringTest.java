@@ -19,7 +19,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
@@ -30,8 +30,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class SpectralClusteringTest {
-    
-    public SpectralClusteringTest() {
+    double[][] x;
+    int[] y;
+    public SpectralClusteringTest() throws Exception {
+        var usps = new USPS();
+        x = usps.x();
+        y = usps.y();
     }
 
     @BeforeAll
@@ -55,9 +59,6 @@ public class SpectralClusteringTest {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
-
         SpectralClustering model = SpectralClustering.fit(x, 10, 8.0);
         System.out.println(model);
 
@@ -79,9 +80,6 @@ public class SpectralClusteringTest {
     public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
 
         SpectralClustering model = SpectralClustering.fit(x, 10, 100, 8.0);
         System.out.println(model);

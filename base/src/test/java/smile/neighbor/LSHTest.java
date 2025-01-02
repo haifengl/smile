@@ -20,7 +20,7 @@ package smile.neighbor;
 import java.util.ArrayList;
 import java.util.List;
 import smile.math.MathEx;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,13 +30,17 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SuppressWarnings("rawtypes")
 public class LSHTest {
-    double[][] x = USPS.x;
-    double[][] testx = USPS.testx;
+    double[][] x;
+    double[][] testx;
     LSH<double[]> lsh;
-    LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
+    LinearSearch<double[], double[]> naive;
 
-    public LSHTest() {
+    public LSHTest() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        x = usps.x();
+        testx = usps.testx();
+        naive = LinearSearch.of(x, MathEx::distance);
         lsh = new LSH<>(x, x, 4.0, 1017881);
     }
 

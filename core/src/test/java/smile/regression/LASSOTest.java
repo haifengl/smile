@@ -24,7 +24,7 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.datasets.CPU;
-import smile.test.data.Longley;
+import smile.datasets.Longley;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,11 +82,11 @@ public class LASSOTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        LinearModel model = LASSO.fit(Longley.formula, Longley.data, 0.1);
+        var longley = new Longley();
+        LinearModel model = LASSO.fit(longley.formula(), longley.data(), 0.1);
         System.out.println(model);
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(metrics);

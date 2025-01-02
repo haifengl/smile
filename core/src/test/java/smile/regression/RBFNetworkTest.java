@@ -18,13 +18,10 @@
 package smile.regression;
 
 import smile.base.rbf.RBF;
-import smile.datasets.Ailerons;
-import smile.datasets.Bank32nh;
-import smile.datasets.CPU;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
@@ -60,18 +57,18 @@ public class RBFNetworkTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = MathEx.clone(Longley.x);
+        var longley = new Longley();
+        double[][] x = longley.x();
+        double[] y = longley.y();
         MathEx.standardize(x);
-        RegressionMetrics metrics = LOOCV.regression(x, Longley.y,
+        RegressionMetrics metrics = LOOCV.regression(x, y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 10, 5.0)));
 
         System.out.println(metrics);
         assertEquals(4.922188709128203, metrics.rmse(), 1E-4);
 
-        RBFNetwork<double[]> model = RBFNetwork.fit(Longley.x, Longley.y, RBF.fit(Longley.x, 10, 5.0));
+        RBFNetwork<double[]> model = RBFNetwork.fit(x, y, RBF.fit(x, 10, 5.0));
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }
@@ -93,12 +90,11 @@ public class RBFNetworkTest {
     }
 
     @Test
-    public void test2DPlanes() {
+    public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, Planes.x, Planes.y,
+        var planes = new Planes2D();
+        var result = CrossValidation.regression(10, planes.x(), planes.y(),
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);

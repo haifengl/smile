@@ -252,10 +252,10 @@ public class CSVTest {
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.LongType),
+                new StructField("cc", DataTypes.NullableLongType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleType),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );

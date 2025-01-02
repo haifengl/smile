@@ -18,12 +18,12 @@
 package smile.regression;
 
 import smile.data.DataFrame;
+import smile.datasets.ProstateCancer;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.datasets.CPU;
-import smile.test.data.Longley;
-import smile.test.data.Prostate;
+import smile.datasets.Longley;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
@@ -58,8 +58,8 @@ public class OLSTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("Longley");
-
-        LinearModel model = OLS.fit(Longley.formula, Longley.data);
+        var longley = new Longley();
+        LinearModel model = OLS.fit(longley.formula(), longley.data());
         System.out.println(model);
 
         assertEquals(12.8440, model.RSS(), 1E-4);
@@ -100,7 +100,7 @@ public class OLSTest {
         Read.object(temp);
 
         // Test with data without response variable.
-        DataFrame test = Longley.data.drop("deflator");
+        DataFrame test = longley.data().drop("deflator");
         model.predict(test);
     }
 
@@ -120,14 +120,14 @@ public class OLSTest {
     }
 
     @Test
-    public void testProstate() {
+    public void testProstate() throws Exception {
         System.out.println("Prostate");
-
-        LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
+        var prostate = new ProstateCancer();
+        LinearModel model = OLS.fit(prostate.formula(), prostate.train());
         System.out.println(model);
 
-        double[] prediction = model.predict(Prostate.test);
-        double rmse = RMSE.of(Prostate.testy, prediction);
+        double[] prediction = model.predict(prostate.test());
+        double rmse = RMSE.of(prostate.testy(), prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
     }

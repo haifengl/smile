@@ -20,7 +20,7 @@ package smile.clustering;
 import smile.clustering.linkage.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,9 +53,9 @@ public class HierarchicalClusteringTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
 
         HierarchicalClustering model = HierarchicalClustering.fit(SingleLinkage.of(x));
         int[] label = model.partition(10);

@@ -19,11 +19,10 @@ package smile.classification;
 
 import smile.base.cart.SplitRule;
 import smile.datasets.BreastCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -57,8 +56,8 @@ public class DecisionTreeTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-
-        DecisionTree model = DecisionTree.fit(WeatherNominal.formula, WeatherNominal.data, SplitRule.GINI, 8, 10, 1);
+        var weather = new WeatherNominal();
+        DecisionTree model = DecisionTree.fit(weather.formula(), weather.data(), SplitRule.GINI, 8, 10, 1);
         System.out.println(model);
         String[] fields = model.schema().names();
 
@@ -68,7 +67,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", fields[i], importance[i]);
         }
 
-        double[] shap = model.shap(WeatherNominal.data);
+        double[] shap = model.shap(weather.data());
         System.out.println("----- SHAP -----");
         for (int i = 0; i < fields.length; i++) {
             System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
@@ -77,7 +76,7 @@ public class DecisionTreeTest {
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
+        ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(), (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
 
         System.out.println(metrics);
         assertEquals(0.5, metrics.accuracy(), 1E-4);
@@ -103,11 +102,11 @@ public class DecisionTreeTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<DecisionTree> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.formula(), pen.data(),
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
@@ -128,10 +127,10 @@ public class DecisionTreeTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
-
-        DecisionTree model = DecisionTree.fit(Segment.formula, Segment.train, SplitRule.ENTROPY, 20, 100, 5);
+        var segment = new ImageSegmentation();
+        DecisionTree model = DecisionTree.fit(segment.formula(), segment.train(), SplitRule.ENTROPY, 20, 100, 5);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -139,18 +138,18 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int[] prediction = model.predict(Segment.test);
-        int error = Error.of(Segment.testy, prediction);
+        int[] prediction = model.predict(segment.test());
+        int error = Error.of(segment.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(43, error, 1E-4);
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 20, 500, 5);
+        var usps = new USPS();
+        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), SplitRule.ENTROPY, 20, 500, 5);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -158,19 +157,20 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int[] prediction = model.predict(USPS.test);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.test());
+        int error = Error.of(usps.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(331, error);
     }
 
     @Test
-    public void testPrune() {
+    public void testPrune() throws Exception {
         System.out.println("USPS");
-
+        var usps = new USPS();
+        int[] testy = usps.testy();
         // Overfitting with very large maxNodes and small nodeSize
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train, SplitRule.ENTROPY, 20, 3000, 1);
+        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), SplitRule.ENTROPY, 20, 3000, 1);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -178,14 +178,14 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int[] prediction = model.predict(USPS.test);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.test());
+        int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(897, model.size());
         assertEquals(324, error);
 
-        DecisionTree lean = model.prune(USPS.test);
+        DecisionTree lean = model.prune(usps.test());
         System.out.println(lean);
 
         importance = lean.importance();
@@ -194,15 +194,15 @@ public class DecisionTreeTest {
         }
 
         // The old model should not be modified.
-        prediction = model.predict(USPS.test);
-        error = Error.of(USPS.testy, prediction);
+        prediction = model.predict(usps.test());
+        error = Error.of(testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(897, model.size());
         assertEquals(324, error);
 
-        prediction = lean.predict(USPS.test);
-        error = Error.of(USPS.testy, prediction);
+        prediction = lean.predict(usps.test());
+        error = Error.of(testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
         assertEquals(743, lean.size());

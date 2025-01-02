@@ -17,7 +17,7 @@
 
 package smile.timeseries;
 
-import smile.test.data.BitcoinPrice;
+import smile.datasets.BitcoinPrice;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class BoxTestTest {
-
-    public BoxTestTest() {
+    double[] logPriceDiff;
+    public BoxTestTest() throws Exception {
+        var bitcoin = new BitcoinPrice();
+        var logPrice = bitcoin.logPrice();
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        logPriceDiff = TimeSeries.diff(logPrice, 1);
     }
 
     @BeforeAll
@@ -49,10 +53,7 @@ public class BoxTestTest {
     @Test
     public void testPierce() {
         System.out.println("Box-Pierce test");
-
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        BoxTest box = BoxTest.pierce(x, 5);
+        BoxTest box = BoxTest.pierce(logPriceDiff, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Box_Pierce, box.type);
         assertEquals(5, box.df);
@@ -63,10 +64,7 @@ public class BoxTestTest {
     @Test
     public void testLjung() {
         System.out.println("Ljung-Box test");
-
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        BoxTest box = BoxTest.ljung(x, 5);
+        BoxTest box = BoxTest.ljung(logPriceDiff, 5);
         System.out.println(box);
         assertEquals( BoxTest.Type.Ljung_Box, box.type);
         assertEquals(5, box.df);

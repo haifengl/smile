@@ -17,7 +17,7 @@
 
 package smile.vq;
 
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,12 +48,12 @@ public class NeuralMapTest {
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
+        var usps = new USPS();
+        double[][] x = usps.x();
+        double[][] testx = usps.testx();
 
         NeuralMap model = new NeuralMap(8, 0.01, 0.002, 50, 0.995);
         for (int i = 1; i <= 5; i++) {

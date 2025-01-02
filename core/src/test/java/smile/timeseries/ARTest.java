@@ -17,7 +17,7 @@
 
 package smile.timeseries;
 
-import smile.test.data.BitcoinPrice;
+import smile.datasets.BitcoinPrice;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class ARTest {
-
-    public ARTest() {
+    double[] logPriceDiff;
+    public ARTest() throws Exception {
+        var bitcoin = new BitcoinPrice();
+        var logPrice = bitcoin.logPrice();
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        logPriceDiff = TimeSeries.diff(logPrice, 1);
     }
 
     @BeforeAll
@@ -50,9 +54,7 @@ public class ARTest {
     public void testAR6OLS() {
         System.out.println("AR(6).ols");
 
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        AR model = AR.ols(x, 6);
+        AR model = AR.ols(logPriceDiff, 6);
         System.out.println(model);
         assertEquals(6, model.p());
         assertEquals( 0.0029, model.ar()[0], 1E-4);
@@ -83,9 +85,7 @@ public class ARTest {
     public void testAR6YW() {
         System.out.println("AR(6).yw");
 
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
-        AR model = AR.fit(x, 6);
+        AR model = AR.fit(logPriceDiff, 6);
         System.out.println(model);
         assertEquals(6, model.p());
         assertEquals( 0.0011, model.ar()[0], 1E-4);

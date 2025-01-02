@@ -21,7 +21,7 @@ import java.util.function.Function;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.math.distance.Distance;
-import smile.test.data.SyntheticControl;
+import smile.datasets.SyntheticControl;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static smile.feature.imputation.SimpleImputerTest.impute;
@@ -55,7 +55,8 @@ public class KMedoidsImputerTest {
     public void test() throws Exception {
         System.out.println("KMedoidsImputer");
         MathEx.setSeed(19650218); // to get repeatable results.
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         Distance<Tuple> distance = (x, y) -> {
             double[] xd = x.toArray();

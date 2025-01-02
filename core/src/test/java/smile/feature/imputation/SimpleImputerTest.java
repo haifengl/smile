@@ -19,6 +19,9 @@ package smile.feature.imputation;
 
 import java.util.function.Function;
 import smile.data.DataFrame;
+import smile.datasets.Longley;
+import smile.datasets.SyntheticControl;
+import smile.datasets.USArrests;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.test.data.*;
@@ -83,22 +86,25 @@ public class SimpleImputerTest {
 
     @Test
     public void testUSArrests() throws Exception {
-        System.out.println(USArrests.data);
-        SimpleImputer imputer = SimpleImputer.fit(USArrests.data);
+        var usa = new USArrests();
+        System.out.println(usa.data());
+        SimpleImputer imputer = SimpleImputer.fit(usa.data());
         System.out.println(imputer);
     }
 
     @Test
     public void testLongley() throws Exception {
-        System.out.println(Longley.data);
-        SimpleImputer imputer = SimpleImputer.fit(Longley.data);
+        var longley = new Longley();
+        System.out.println(longley.data());
+        SimpleImputer imputer = SimpleImputer.fit(longley.data());
         System.out.println(imputer);
     }
 
     @Test
     public void testAverage() throws Exception {
         System.out.println("Column Average Imputation");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
 
         impute(SimpleImputer::impute, data, 0.01, 39.11);
         impute(SimpleImputer::impute, data, 0.05, 48.86);
@@ -111,7 +117,8 @@ public class SimpleImputerTest {
     @Test
     public void testSimpleImputer() throws Exception {
         System.out.println("SimpleImputer");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         SimpleImputer simpleImputer = SimpleImputer.fit(df);
         Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();

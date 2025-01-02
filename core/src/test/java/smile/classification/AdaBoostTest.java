@@ -18,12 +18,10 @@
 package smile.classification;
 
 import smile.data.type.StructField;
-import smile.datasets.BreastCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -58,9 +56,9 @@ public class AdaBoostTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 20, 5, 8, 1);
+        var weather = new WeatherNominal();
+        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), 20, 5, 8, 1);
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -68,7 +66,7 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", fields[i], importance[i]);
         }
 
-        double[] shap = model.shap(WeatherNominal.data);
+        double[] shap = model.shap(weather.data());
         System.out.println("----- SHAP -----");
         for (int i = 0; i < fields.length; i++) {
             System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
@@ -77,7 +75,7 @@ public class AdaBoostTest {
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
+        ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
                 (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));
         System.out.println(metrics);
         assertEquals(0.6429, metrics.accuracy(), 1E-4);
@@ -103,11 +101,11 @@ public class AdaBoostTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.formula(), pen.data(),
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
         System.out.println(result);
         assertEquals(0.9525, result.avg.accuracy(), 1E-4);
@@ -128,48 +126,50 @@ public class AdaBoostTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(Segment.formula, Segment.train, 200, 20, 6, 1);
+        var segment = new ImageSegmentation();
+        var testy = segment.testy();
+        AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), 200, 20, 6, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int error = Error.of(Segment.testy, model.predict(Segment.test));
+        int error = Error.of(testy, model.predict(segment.test()));
         System.out.println("Error = " + error);
         assertEquals(30, error);
 
         System.out.println("----- Progressive Accuracy -----");
-        int[][] test = model.test(Segment.test);
+        int[][] test = model.test(segment.test());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i + 1, Accuracy.of(Segment.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i + 1, Accuracy.of(testy, test[i]));
         }
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(USPS.formula, USPS.train, 200, 20, 64, 1);
+        var usps = new USPS();
+        int[] testy = usps.testy();
+        AdaBoost model = AdaBoost.fit(usps.formula(), usps.train(), 200, 20, 64, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        int error = Error.of(USPS.testy, model.predict(USPS.test));
+        int error = Error.of(testy, model.predict(usps.test()));
         System.out.println("Error = " + error);
         assertEquals(152, error);
 
         System.out.println("----- Progressive Accuracy -----");
-        int[][] test = model.test(USPS.test);
+        int[][] test = model.test(usps.test());
         for (int i = 0; i < test.length; i++) {
-            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
+            System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(testy, test[i]));
         }
     }
 

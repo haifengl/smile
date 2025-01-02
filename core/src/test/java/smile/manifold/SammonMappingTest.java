@@ -18,7 +18,7 @@
 package smile.manifold;
 
 import java.util.Arrays;
-import smile.test.data.Eurodist;
+import smile.datasets.Eurodist;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,7 +48,7 @@ public class SammonMappingTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Sammon's Mapping");
 
         double[][] points = {
@@ -75,7 +75,8 @@ public class SammonMappingTest {
                 {-1039.3089, -170.4371}
         };
 
-        SammonMapping sammon = SammonMapping.of(Eurodist.x);
+        var euro = new Eurodist();
+        SammonMapping sammon = SammonMapping.of(euro.x());
         assertEquals(0.00941, sammon.stress, 1E-5);
 
         for (int i = 0; i < points.length; i++) {

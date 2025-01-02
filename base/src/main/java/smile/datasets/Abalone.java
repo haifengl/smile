@@ -27,6 +27,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.CSV;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -81,9 +82,7 @@ public record Abalone(DataFrame train, DataFrame test, Formula formula) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        CSV csv = new CSV(CSVFormat.DEFAULT);
-        csv.schema(schema);
-        return csv.read(path);
+        return Read.csv(path, CSVFormat.DEFAULT, schema);
     }
 
     /**
@@ -95,8 +94,8 @@ public record Abalone(DataFrame train, DataFrame test, Formula formula) {
     }
 
     /**
-     * Returns the train sample class labels.
-     * @return the train sample class labels.
+     * Returns the train sample target values.
+     * @return the train sample target values.
      */
     public double[] y() {
         return formula.y(train).toDoubleArray();
@@ -111,8 +110,8 @@ public record Abalone(DataFrame train, DataFrame test, Formula formula) {
     }
 
     /**
-     * Returns the test sample class labels.
-     * @return the test sample class labels.
+     * Returns the test sample target values.
+     * @return the test sample target values.
      */
     public double[] testy() {
         return formula.y(test).toDoubleArray();

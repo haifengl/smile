@@ -18,7 +18,7 @@
 package smile.manifold;
 
 import java.util.Arrays;
-import smile.test.data.SwissRoll;
+import smile.datasets.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1054,7 +1054,8 @@ public class LLETest {
                 {-0.0504,  0.0330}
         };
 
-        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        var roll = new SwissRoll();
+        double[][] data = Arrays.copyOf(roll.data(), 1000);
         double[][] coordinates = LLE.of(data, 7);
 
         for (int i = 0; i < points.length; i++) {

@@ -18,7 +18,7 @@
 package smile.manifold;
 
 import java.util.Arrays;
-import smile.test.data.SwissRoll;
+import smile.datasets.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1054,7 +1054,8 @@ public class IsoMapTest {
             {48.55222793362178, -20.44857359581157}
         };
 
-        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        var roll = new SwissRoll();
+        double[][] data = Arrays.copyOf(roll.data(), 1000);
         double[][] coordinates = IsoMap.of(data, 7, 2, false);
 
         for (int i = 0; i < points.length; i++) {

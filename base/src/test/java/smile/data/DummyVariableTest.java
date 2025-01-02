@@ -17,7 +17,7 @@
 
 package smile.data;
 
-import smile.test.data.WeatherNominal;
+import smile.datasets.WeatherNominal;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +47,7 @@ public class DummyVariableTest {
     }
 
     @Test
-    public void testWeather() {
+    public void testWeather() throws Exception {
         System.out.println("weather");
         byte[][] result = {
             {1, 0, 0, 1, 0, 0, 1, 0, 0, 1},
@@ -66,7 +66,8 @@ public class DummyVariableTest {
             {0, 0, 1, 0, 1, 0, 1, 0, 1, 0}
         };
 
-        double[][] data = WeatherNominal.data.toArray(false, CategoricalEncoder.ONE_HOT);
+        var weather = new WeatherNominal();
+        double[][] data = weather.onehot();
         for (int i = 0; i < result.length; i++) {
             for (int j = 0; j < result[i].length; j++) {
                 assertEquals(result[i][j], data[i][j], 1E-10);

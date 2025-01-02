@@ -24,9 +24,9 @@ import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.math.matrix.Matrix;
-import smile.test.data.IndexNoun;
-import smile.test.data.SwissRoll;
-import smile.test.data.USPS;
+import smile.datasets.WordNet;
+import smile.datasets.SwissRoll;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -139,13 +139,13 @@ public class CoverTreeTest {
     }
 
     @Test
-    public void testSwissRoll() {
+    public void testSwissRoll() throws Exception {
         System.out.println("----- Swiss Roll -----");
-
+        var roll = new SwissRoll();
         double[][] x = new double[10000][];
         double[][] testx = new double[1000][];
-        System.arraycopy(SwissRoll.data, 0, x, 0, x.length);
-        System.arraycopy(SwissRoll.data, x.length, testx, 0, testx.length);
+        System.arraycopy(roll.data(), 0, x, 0, x.length);
+        System.arraycopy(roll.data(), x.length, testx, 0, testx.length);
 
         long start = System.currentTimeMillis();
         CoverTree<double[], double[]> coverTree = CoverTree.of(x, MathEx::distance);
@@ -177,11 +177,11 @@ public class CoverTreeTest {
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("----- USPS -----");
-
-        double[][] x = Arrays.copyOf(USPS.x, 2000);
-        double[][] testx = USPS.testx;
+        var usps = new USPS();
+        double[][] x = Arrays.copyOf(usps.x(), 2000);
+        double[][] testx = usps.testx();
 
         long start = System.currentTimeMillis();
         CoverTree<double[], double[]> coverTree = CoverTree.of(x, MathEx::distance);
@@ -213,10 +213,10 @@ public class CoverTreeTest {
     }
 
     @Test
-    public void testStrings() {
+    public void testStrings() throws Exception {
         System.out.println("----- Strings -----");
-
-        String[] words = Arrays.copyOf(IndexNoun.words, 10000);
+        var wordnet = new WordNet();
+        String[] words = Arrays.copyOf(wordnet.words(), 10000);
         CoverTree<String, String> cover = CoverTree.of(words, new EditDistance(50, true));
 
         long start = System.currentTimeMillis();

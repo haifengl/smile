@@ -24,7 +24,6 @@ import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
@@ -61,8 +60,8 @@ public class RegressionTreeTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 100, 20, 2);
+        var longley = new Longley();
+        RegressionTree model = RegressionTree.fit(longley.formula(), longley.data(), 100, 20, 2);
         System.out.println("----- dot -----");
         System.out.println(model);
 
@@ -72,7 +71,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(), (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
 
         System.out.println(metrics);
         assertEquals(3.0848729264302333, metrics.rmse(), 1E-4);
@@ -109,8 +108,9 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void test2DPlanes() {
-        test("2dplanes", Planes.formula, Planes.data, 1.0025);
+    public void test2DPlanes() throws Exception {
+        var planes = new Planes2D();
+        test("2dplanes", planes.formula(), planes.data(), 1.0025);
     }
 
     @Test
@@ -145,13 +145,15 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void testPuma8nh() {
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.2726);
+    public void testPuma8nh() throws Exception {
+        var puma = new Puma8NH();
+        test("puma8nh", puma.formula(), puma.data(), 3.2726);
     }
 
     @Test
-    public void testKin8nm() {
-        test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1967);
+    public void testKin8nm() throws Exception {
+        var kin8nm = new Kin8nm();
+        test("kin8nm", kin8nm.formula(), kin8nm.data(), 0.1967);
     }
 
     @Test

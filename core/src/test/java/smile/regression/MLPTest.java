@@ -28,7 +28,6 @@ import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.Scaler;
 import smile.math.TimeFunction;
-import smile.test.data.*;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,17 +58,19 @@ public class MLPTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        int p = Longley.x[0].length;
+        var longley = new Longley();
+        double[][] x = longley.x();
+        double[] y = longley.y();
+        int p = x[0].length;
         MLP model = new MLP(Layer.input(p), Layer.rectifier(30), Layer.sigmoid(30));
         // small learning rate and weight decay to counter exploding gradient
         model.setLearningRate(TimeFunction.constant(0.01));
         model.setWeightDecay(0.1);
 
         for (int epoch = 0; epoch < 5; epoch++) {
-            int[] permutation = MathEx.permutate(Longley.x.length);
+            int[] permutation = MathEx.permutate(x.length);
             for (int i : permutation) {
-                model.update(Longley.x[i], Longley.y[i]);
+                model.update(x[i], y[i]);
             }
         }
 
@@ -117,9 +118,12 @@ public class MLPTest {
     }
 
     @Test
-    public void test2DPlanes() {
-        test("2dplanes", Planes.x, Planes.y, null, 1.5174,
-                Layer.input(Planes.x[0].length), Layer.rectifier(50), Layer.sigmoid(30));
+    public void test2DPlanes() throws Exception {
+        var planes = new Planes2D();
+        double[][] x = planes.x();
+        double[] y = planes.y();
+        test("2dplanes", x, y, null, 1.5174,
+                Layer.input(x[0].length), Layer.rectifier(50), Layer.sigmoid(30));
     }
 
     @Test
@@ -159,14 +163,20 @@ public class MLPTest {
     }
 
     @Test
-    public void testPuma8nh() {
-        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9605,
-                Layer.input(Puma8NH.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    public void testPuma8nh() throws Exception {
+        var puma = new Puma8NH();
+        double[][] x = puma.x();
+        double[] y = puma.y();
+        test("puma8nh", x, y, null, 3.9605,
+                Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
-    public void testKin8nm() {
-        test("kin8nm", Kin8nm.x, Kin8nm.y, null, 0.2638,
-                Layer.input(Kin8nm.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
+    public void testKin8nm() throws Exception {
+        var kin8nm = new Kin8nm();
+        double[][] x = kin8nm.x();
+        double[] y = kin8nm.y();
+        test("kin8nm", x, y, null, 0.2638,
+                Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 }
