@@ -257,7 +257,7 @@ public class UMAP {
         SparseMatrix conorm = computeFuzzySimplicialSet(nng, localConnectivity);
 
         int n = nng.size();
-        int[][] cc = nng.graph(true).bfcc();
+        int[][] cc = nng.graph(false).bfcc();
         logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
 
         // Initialize embedding
