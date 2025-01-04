@@ -1,22 +1,32 @@
-# Smile
+<img height="32" alt="Smile" style="float: left; margin-right: 20px;" src="web/src/images/smile.jpg"> <h1> Smile &mdash; Statistical Machine Intelligence and Learning Engine </h1>
 
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
-[Smile (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
-is a fast and comprehensive machine learning, NLP, linear algebra,
-graph, interpolation, and visualization system in Java and Scala.
-With advanced data structures and algorithms, Smile delivers
-state-of-art performance. Smile is well documented and please
-check out the project [website](https://haifengl.github.io/)
-for programming guides and more information.
+## Goal ##
+Smile is a fast and comprehensive machine learning, deep learning,
+GenAI/LLM, NLP, linear algebra, graph, interpolation, and visualization
+system in Java. Smile also provides APIs in Scala, Kotlin, and Clojure with
+corresponding language paradigms. With advanced data structures and
+algorithms, Smile delivers state-of-art performance.
 
-Smile covers every aspect of machine learning, including classification,
-regression, clustering, association rule mining, feature selection,
-manifold learning, multidimensional scaling, genetic algorithms,
-missing value imputation, efficient nearest neighbor search, etc.
+Smile covers every aspect of machine learning, including deep learning,
+large language models, classification, regression, clustering, association
+rule mining, feature selection and extraction, manifold learning,
+multidimensional scaling, genetic algorithms, missing value imputation,
+efficient nearest neighbor search, etc.
 
+## Features ##
 Smile implements the following major machine learning algorithms:
+
+- **GenAI:**
+Native Java implementation of Llama 3.1, tiktoken tokenizer, high performance
+LLM inference server with OpenAI-compatible APIs and SSE-based chat streaming,
+fully functional frontend. [An online service](https://smile-ai.org) is available
+for personal or test usage. No registration is required.
+
+- **Deep Learning:**
+Deep learning with CPU and GPU. EfficientNet model for image classification.
 
 - **Classification:**
 Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting,
@@ -59,6 +69,28 @@ Hidden Markov Model, Conditional Random Field.
 Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor,
 Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
+## License ##
+SMILE employs a dual license model designed to meet the development
+and distribution needs of both commercial distributors (such as OEMs,
+ISVs and VARs) and open source projects. For details, please see
+[LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
+
+## Issues/Discussions ##
+
+* **Discussion/Questions**:
+  If you wish to ask questions about Smile, we're active on [Stack Overflow](http://stackoverflow.com/questions/tagged/smile).
+
+* **Docs**:
+Smile is well documented and [our docs are available online](https://haifengl.github.io/), where you can find tutorial,
+programming guides, and more information. If you'd like to help improve the docs, they're part of this repository
+in the `web/src` directory. [Java Docs](https://haifengl.github.io/api/java/index.html),
+[Scala Docs](https://haifengl.github.io/api/scala/index.html), [Kotlin Docs](https://haifengl.github.io/api/kotlin/index.html),
+and [Clojure Docs](https://haifengl.github.io/api/clojure/index.html) are also available.
+
+* **Issues/Feature Requests**:
+  Finally, any bugs or features, please report to our [issue tracker](https://github.com/haifengl/smile/issues/new).
+
+## Installation ##
 You can use the libraries through Maven central repository by adding the
 following to your project pom.xml file.
 ```
@@ -69,9 +101,9 @@ following to your project pom.xml file.
     </dependency>
 ```
 
-For NLP, use the artifactId smile-nlp.
+For deep learning and NLP, use the artifactId smile-deep and smile-nlp, respectively.
 
-For Scala API, please use
+For Scala API, please add the below into your sbt script.
 ```
     libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.1.0"
 ```
@@ -82,7 +114,7 @@ of Gradle build script.
     implementation("com.github.haifengl:smile-kotlin:4.1.0")
 ```
 
-For Clojure API, add the following dependency to your project or build file:
+For Clojure API, add the following dependency to your project file:
 ```
     [org.clojars.haifengl/smile "4.1.0"]
 ```
@@ -120,23 +152,27 @@ libraryDependencies ++= {
   )
 }
 ```
-## License
-SMILE employs a dual license model designed to meet the development
-and distribution needs of both commercial distributors (such as OEMs,
-ISVs and VARs) and open source projects. For details, please see
-[LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
 
-## Shell
+## Shell ##
 Smile comes with interactive shells for Java, Scala and Kotlin.
 Download pre-packaged Smile from the
 [releases page](https://github.com/haifengl/smile/releases).
-In the home directory of Smile, type
+After unziping the package and cd into the home directory of Smile
+in a terminal, type
+```
+    ./bin/jshell.sh
+```
+to enter Smile shell in Java, which pre-imports all major Smile packages.
+You can run any valid Java expressions in the shell. In the simplest case,
+you can use it as a calculator.
+
+To enter the shell in Scala, type
 ```
     ./bin/smile
 ```
-to enter the Scala shell. You can run any valid Scala expressions
-in the shell. In the simplest case, you can use it as a calculator.
+Similar to the shell in Java, all major Smile packages are pre-imported.
 Besides, all high-level Smile operators are predefined in the shell.
+
 By default, the shell uses up to 75% memory. If you need more memory
 to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
 For example,
@@ -146,31 +182,25 @@ For example,
 You can also modify the configuration file `./conf/smile.ini` for the
 memory and other JVM settings.
 
-To use Java's JShell, type
-```
-    ./bin/jshell.sh
-```
-which has Smile's jars in the classpath. Similarly, run
+To use Smile shell in Kotlin, type
 ```
     ./bin/kotlin.sh
 ```
-to enter Kotlin REPL.
+Unfortunately, Kotlin shell doesn't support pre-import packages.
 
-## Model Serialization
+## Model Serialization ##
 Most models support the Java `Serializable` interface (all classifiers
-do support `Serializable` interface) so that you can use them in Spark.
-[Protostuff](http://code.google.com/p/protostuff/)
-is a nice alternative that supports forward-backward compatibility
-(schema evolution) and validation. Beyond XML, Protostuff supports many
-other formats such as JSON, YAML, protobuf, etc.
+do support `Serializable` interface) so that you can serialze a model
+and ship it to a production environment for inference. You may also
+use serialized models in other systems such as Spark.
 
-## Visualization
-Smile provides a Swing-based data visualization library SmilePlot,
-which provides scatter plot, line plot, staircase plot, bar plot,
-box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap,
-QQ plot, contour plot, surface, and wireframe.
-
-To use SmilePlot, add the following to dependencies
+## Visualization ##
+A picture is worth a thousand words. In machine learning, we usually handle
+high-dimensional data, which is impossible to draw on display directly.
+But a variety of statistical plots are tremendously valuable for us to grasp
+the characteristics of many data points. Smile provides data visualization tools
+such as plots and maps for researchers to understand information more easily and quickly.
+To use smile-plot, add the following to dependencies
 ```
     <dependency>
       <groupId>com.github.haifengl</groupId>
@@ -179,14 +209,26 @@ To use SmilePlot, add the following to dependencies
     </dependency>
 ```
 
-Smile also support data visualization in declarative approach.
-With `smile.plot.vega package`, we can create a specification
+On Swing-based systems, the user may leverage `smile.plot.swing` package to
+create a variety of plots such as scatter plot, line plot, staircase plot,
+bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap,
+QQ plot, contour plot, surface, and wireframe.
+
+This library also support data visualization in declarative approach.
+With `smile.plot.vega` package, we can create a specification
 that describes visualizations as mappings from data to properties
 of graphical marks (e.g., points or bars). The specification is
-based on [Vega-Lite](https://vega.github.io/vega-lite/). The
-Vega-Lite compiler automatically produces visualization components
+based on [Vega-Lite](https://vega.github.io/vega-lite/). In a web browser,
+the Vega-Lite compiler automatically produces visualization components
 including axes, legends, and scales. It then determines properties
 of these components based on a set of carefully designed rules.
+
+## Contributing ##
+Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smile.
+
+## Maintainers ##
+- Haifeng Li (@haifengl)
+- Karl Li (@kklioss)
 
 ## Gallery
 <table class="center" style="width:100%;">
