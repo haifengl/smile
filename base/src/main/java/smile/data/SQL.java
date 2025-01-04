@@ -131,12 +131,12 @@ public class SQL implements AutoCloseable {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("""
                 CREATE TABLE %s AS
-                SELECT * FROM read_csv(%s, delim='%c', """,
+                SELECT * FROM read_csv(%s,delim='%c',""",
                 name, fileList(path), delimiter));
         if (columns == null) {
-            sb.append("header = true");
+            sb.append("header=true");
         } else {
-            sb.append("columns = ");
+            sb.append("columns=");
             sb.append(columnList(columns));
         }
         sb.append(')');
