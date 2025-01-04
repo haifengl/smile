@@ -1,4 +1,4 @@
-# How to contribute to Smile
+# How to contribute to Smile #
 Welcome! If you are interested in contributing to Smile, reporting issues,
 or just getting in touch with the folks who work on Smile, this guide is
 for you.
@@ -7,22 +7,53 @@ One of the easiest ways to contribute is to participate in discussions
 and discuss issues. You can also contribute by opening an issue and
 submitting a pull request with code changes.
 
-## Open an issue
+## Build ##
+To build Smile from source, please first install Java 21, Scala 2.13
+and SBT 1.0+. Then clone the repo and build the package:
+
+```bash
+git clone https://github.com/haifengl/smile.git
+cd smile
+# compile all packages
+sbt package
+# run unit tests
+sbt test
+```
+
+To build with Scala 3, run
+```bash
+sbt ++3.3.3 scala/package
+```
+
+To test the latest code, run the following
+```bash
+git pull
+bin/smile.sh
+```
+which will build the system and enter the Smile shell in Scala.
+If you prefer Java, you may run
+```bash
+sbt shell/stage
+cd shell/target/universal/stage
+bin/jshell.sh
+```
+
+## Open an issue ##
 For bugs, issues, or other discussion, please log a new issue in the GitHub repo.
 
 GitHub supports [markdown](https://help.github.com/categories/writing-on-github/),
 so when filing bugs make sure you check the formatting before clicking submit.
 
-## Other discussions
+## Other discussions ##
 For general "how-to" and guidance questions about using Smile to build
 and run applications, please use [Stack Overflow](http://stackoverflow.com/questions/tagged/smile-ai)
 tagged with `smile-ai`.
 
-## Contributing code and content
+## Contributing code and content ##
 We welcome all forms of contributions from the community. Please read the
 following guidelines to maximize the chances of your PR being merged.
 
-### Communication
+### Communication ##
  - Before starting work on a feature, please open an issue on GitHub
    describing the proposed feature. We want to make sure any feature
    work goes smoothly. We're happy to work with you to determine if
@@ -34,7 +65,7 @@ following guidelines to maximize the chances of your PR being merged.
    for tracking purposes, but we generally don't need a discussion
    prior to opening a PR.
 
-### Development process
+### Development process ##
 Please be sure to follow the usual process for submitting PRs:
 
  - Fork the repo
@@ -44,7 +75,7 @@ Please be sure to follow the usual process for submitting PRs:
 
 We reserve the right to close PRs that are not making progress. Closed PRs can be reopened again later and work can resume.
 
-### Contributor License Agreement
+### Contributor License Agreement ##
 By contributing your code to Smile you grant us a non-exclusive,
 irrevocable, worldwide, royalty-free, sublicenseable, transferable
 license under all of Your relevant intellectual property rights
@@ -75,6 +106,6 @@ EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION,
 ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
 MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
-## Code of Conduct
+## Code of Conduct ##
 To ensure an inclusive community, contributors and users in the Smile
 community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
