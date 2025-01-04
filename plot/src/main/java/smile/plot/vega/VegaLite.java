@@ -343,19 +343,19 @@ public class VegaLite {
      */
     public String iframe(String id) {
         String src = Strings.htmlEscape(html());
-        return String.format("""
-                   <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>
-                   <script>
-                     (function() {
-                       function resizeIFrame(el, k) {
-                         var height = el.contentWindow.document.body.scrollHeight || '600'; // Fallback in case of no scroll height
-                         el.style.height = height + 'px';
-                         if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 100 + (k * 250)) };
-                       }
-                       resizeIFrame(document.getElementById("%s"), 1);
-                     })(); // IIFE
-                   </script>
-                """, id, src, id);
+        String html = """
+            <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>
+            <script>
+              (function() {
+                function resizeIFrame(el, k) {
+                  var height = el.contentWindow.document.body.scrollHeight || '600'; // Fallback in case of no scroll height
+                  el.style.height = height + 'px';
+                  if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 100 + (k * 250)) };
+                }
+                resizeIFrame(document.getElementById("%s"), 1);
+              })(); // IIFE
+            </script>""";
+        return String.format(html, id, src, id);
     }
 
     /** Returns the encoding object. */
