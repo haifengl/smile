@@ -352,77 +352,83 @@ public class Parquet {
                     break;
 
                 case FIXED_LEN_BYTE_ARRAY:
-                    if (logicalType instanceof LogicalTypeAnnotation.UUIDLogicalTypeAnnotation) {
-                        if (rep == 1) {
-                            byte[] bytes = g.getBinary(i, 0).getBytes();
-                            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-                            long high = byteBuffer.getLong();
-                            long low = byteBuffer.getLong();
-                            o[i] = new UUID(high, low);
-                        } else if (rep > 1) {
-                            UUID[] a = new UUID[rep];
-                            for (int j = 0; j < rep; j++) {
-                                byte[] bytes = g.getBinary(i, j).getBytes();
+                    switch (logicalType) {
+                        case LogicalTypeAnnotation.UUIDLogicalTypeAnnotation uuidType -> {
+                            if (rep == 1) {
+                                byte[] bytes = g.getBinary(i, 0).getBytes();
                                 ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
                                 long high = byteBuffer.getLong();
                                 long low = byteBuffer.getLong();
-                                a[j] = new UUID(high, low);
+                                o[i] = new UUID(high, low);
+                            } else if (rep > 1) {
+                                UUID[] a = new UUID[rep];
+                                for (int j = 0; j < rep; j++) {
+                                    byte[] bytes = g.getBinary(i, j).getBytes();
+                                    ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                                    long high = byteBuffer.getLong();
+                                    long low = byteBuffer.getLong();
+                                    a[j] = new UUID(high, low);
+                                }
+                                o[i] = a;
                             }
-                            o[i] = a;
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.IntervalLogicalTypeAnnotation) {
-                        if (rep == 1) {
-                            byte[] bytes = g.getBinary(i, 0).getBytes();
-                            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-                            int months = byteBuffer.getInt();
-                            int days = byteBuffer.getInt();
-                            int millis = byteBuffer.getInt();
-                            Duration duration = Duration.ofDays(days);
-                            o[i] = duration.plusDays(months * 30L).plusMillis(millis);
-                        } else if (rep > 1) {
-                            Duration[] a = new Duration[rep];
-                            for (int j = 0; j < rep; j++) {
-                                byte[] bytes = g.getBinary(i, j).getBytes();
+                        case LogicalTypeAnnotation.IntervalLogicalTypeAnnotation intervaType -> {
+                            if (rep == 1) {
+                                byte[] bytes = g.getBinary(i, 0).getBytes();
                                 ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
                                 int months = byteBuffer.getInt();
                                 int days = byteBuffer.getInt();
                                 int millis = byteBuffer.getInt();
                                 Duration duration = Duration.ofDays(days);
-                                a[j] = duration.plusDays(months * 30L).plusMillis(millis);
+                                o[i] = duration.plusDays(months * 30L).plusMillis(millis);
+                            } else if (rep > 1) {
+                                Duration[] a = new Duration[rep];
+                                for (int j = 0; j < rep; j++) {
+                                    byte[] bytes = g.getBinary(i, j).getBytes();
+                                    ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                                    int months = byteBuffer.getInt();
+                                    int days = byteBuffer.getInt();
+                                    int millis = byteBuffer.getInt();
+                                    Duration duration = Duration.ofDays(days);
+                                    a[j] = duration.plusDays(months * 30L).plusMillis(millis);
+                                }
+                                o[i] = a;
                             }
-                            o[i] = a;
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                        int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logicalType).getScale();
-                        if (rep == 1) {
-                            byte[] value = g.getBinary(i, 0).getBytes();
-                            o[i] = new BigDecimal(new BigInteger(value), scale);
-                        } else if (rep > 1) {
-                            BigDecimal[] a = new BigDecimal[rep];
-                            for (int j = 0; j < rep; j++) {
-                                byte[] value = g.getBinary(i, j).getBytes();
-                                a[j] = new BigDecimal(new BigInteger(value), scale);
+                        case LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalType -> {
+                            int scale = decimalType.getScale();
+                            if (rep == 1) {
+                                byte[] value = g.getBinary(i, 0).getBytes();
+                                o[i] = new BigDecimal(new BigInteger(value), scale);
+                            } else if (rep > 1) {
+                                BigDecimal[] a = new BigDecimal[rep];
+                                for (int j = 0; j < rep; j++) {
+                                    byte[] value = g.getBinary(i, j).getBytes();
+                                    a[j] = new BigDecimal(new BigInteger(value), scale);
+                                }
+                                o[i] = a;
                             }
-                            o[i] = a;
                         }
-                    } else if (logicalType instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation) {
-                        if (rep == 1) {
-                            o[i] = g.getString(i, 0);
-                        } else if (rep > 1) {
-                            String[] a = new String[rep];
-                            for (int j = 0; j < rep; j++)
-                                a[j] = g.getString(i, j);
-                            o[i] = a;
-                        }
-                    } else {
-                        if (rep == 1) {
-                            o[i] = g.getBinary(i, 0).getBytes();
-                        } else if (rep > 1) {
-                            byte[][] a = new byte[rep][];
-                            for (int j = 0; j < rep; j++) {
-                                a[j] = g.getBinary(i, j).getBytes();
+                        case LogicalTypeAnnotation.StringLogicalTypeAnnotation stringType -> {
+                            if (rep == 1) {
+                                o[i] = g.getString(i, 0);
+                            } else if (rep > 1) {
+                                String[] a = new String[rep];
+                                for (int j = 0; j < rep; j++)
+                                    a[j] = g.getString(i, j);
+                                o[i] = a;
                             }
-                            o[i] = a;
+                        }
+                        case null, default -> {
+                            if (rep == 1) {
+                                o[i] = g.getBinary(i, 0).getBytes();
+                            } else if (rep > 1) {
+                                byte[][] a = new byte[rep][];
+                                for (int j = 0; j < rep; j++) {
+                                    a[j] = g.getBinary(i, j).getBytes();
+                                }
+                                o[i] = a;
+                            }
                         }
                     }
                     break;
