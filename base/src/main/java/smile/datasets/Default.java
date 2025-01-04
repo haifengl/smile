@@ -18,7 +18,6 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.ParseException;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -38,9 +37,8 @@ public record Default(DataFrame data, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public Default() throws IOException, ParseException {
+    public Default() throws IOException {
         this(Paths.getTestData("classification/default.csv"));
     }
 
