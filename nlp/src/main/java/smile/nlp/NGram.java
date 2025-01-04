@@ -57,7 +57,7 @@ public class NGram {
             return true;
         }
 
-        if (obj == null || !(obj instanceof NGram other)) {
+        if (!(obj instanceof NGram other)) {
             return false;
         }
 

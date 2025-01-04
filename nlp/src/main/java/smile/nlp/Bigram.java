@@ -64,7 +64,7 @@ public class Bigram {
             return true;
         }
 
-        if (obj == null || !(obj instanceof Bigram other)) {
+        if (!(obj instanceof Bigram other)) {
             return false;
         }
 
