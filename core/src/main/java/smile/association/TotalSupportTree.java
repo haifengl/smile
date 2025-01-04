@@ -111,6 +111,7 @@ class TotalSupportTree implements Iterable<ItemSet> {
     }
 
     @Override
+    @javax.annotation.Nonnull
     public Iterator<ItemSet> iterator() {
         return new Iterator<>() {
             int i = 0;

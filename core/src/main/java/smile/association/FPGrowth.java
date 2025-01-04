@@ -90,6 +90,7 @@ public class FPGrowth implements Iterable<ItemSet> {
     }
 
     @Override
+    @javax.annotation.Nonnull
     public Iterator<ItemSet> iterator() {
         return new Iterator<>() {
             final int[] prefixItemset = new int[T0.maxItemSetSize];

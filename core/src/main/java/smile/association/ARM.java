@@ -78,6 +78,7 @@ public class ARM implements Iterable<AssociationRule> {
     }
 
     @Override
+    @javax.annotation.Nonnull
     public Iterator<AssociationRule> iterator() {
         return new Iterator<>() {
             int i = 0;
