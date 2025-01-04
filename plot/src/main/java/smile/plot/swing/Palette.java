@@ -103,7 +103,9 @@ public class Palette {
                 }
                 return new Color(red / 255.0f, green / 255.0f, blue / 255.0f, alpha);
             }
-        } catch (NumberFormatException nfe) {}
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Invalid color specification: " + colorString, nfe);
+        }
 
         throw new IllegalArgumentException("Invalid color specification: " + colorString);
     }
@@ -123,7 +125,9 @@ public class Palette {
                 }
                 return new Color(r, g, b, a);
             }
-        } catch (NumberFormatException nfe) {}
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Invalid color specification: " + color, nfe);
+        }
 
         throw new IllegalArgumentException("Invalid color specification: " + color);
     }
@@ -143,7 +147,9 @@ public class Palette {
                 }
                 return hsb(h, s, l, a);
             }
-        } catch (NumberFormatException nfe) {}
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Invalid color specification: " + color, nfe);
+        }
 
         throw new IllegalArgumentException("Invalid color specification: " + color);
     }
