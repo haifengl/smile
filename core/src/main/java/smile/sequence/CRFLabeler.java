@@ -34,9 +34,9 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
     private static final long serialVersionUID = 2L;
 
     /** The CRF model. */
-    public final CRF model;
+    private final CRF model;
     /** The feature function. */
-    public final Function<T, Tuple> features;
+    private final Function<T, Tuple> features;
 
     /**
      * Constructor.

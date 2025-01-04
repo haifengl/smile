@@ -32,9 +32,9 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
     private static final long serialVersionUID = 2L;
 
     /** The HMM model. */
-    public final HMM model;
+    private final HMM model;
     /** The lambda returns the ordinal numbers of symbols. */
-    public final ToIntFunction<T> ordinal;
+    private final ToIntFunction<T> ordinal;
 
     /**
      * Constructor.
