@@ -91,27 +91,11 @@ public class SOM implements VectorQuantizer {
 
     /**
      * Self-Organizing Map Neuron.
+     * @param i the row index of neuron in the lattice.
+     * @param j the column index of neuron in the lattice.
+     * @param w the weight vector.
      */
-    private static class Neuron implements Serializable {
-        /** The weight vector. */
-        public final double[] w;
-        /** The row index of neuron in the lattice. */
-        public final int i;
-        /** The column index of neuron in the lattice. */
-        public final int j;
-
-        /**
-         * Constructor.
-         * @param i the row index of neuron in the lattice.
-         * @param j the column index of neuron in the lattice.
-         * @param w the weight vector.
-         */
-        public Neuron(int i, int j, double[] w) {
-            this.i = i;
-            this.j = j;
-            this.w = w;
-        }
-    }
+    private record Neuron(int i, int j, double[] w) implements Serializable { }
     
     /**
      * The number of rows in the lattice.

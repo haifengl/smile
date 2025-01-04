@@ -54,7 +54,7 @@ public class HashValueParzenModel {
 
         int n = 0;
         for (MultiProbeSample sample : samples) {
-            if (sample.neighbors.size() > 1) {
+            if (sample.neighbors().size() > 1) {
                 n++;
             }
         }
@@ -62,24 +62,24 @@ public class HashValueParzenModel {
         neighborHashValueModels = new NeighborHashValueModel[n];
         int l = 0;
         for (MultiProbeSample sample : samples) {
-            if (sample.neighbors.size() > 1) {
+            if (sample.neighbors().size() > 1) {
                 double[] H = new double[k];
                 double[] mu = new double[k];
                 double[] var = new double[k];
 
                 for (int i = 0; i < k; i++) {
-                    H[i] = hash.hash(sample.query, i);
+                    H[i] = hash.hash(sample.query(), i);
 
                     double sum = 0.0;
                     double sumsq = 0.0;
-                    for (double[] v : sample.neighbors) {
+                    for (double[] v : sample.neighbors()) {
                         double h = hash.hash(v, i);
                         sum += h;
                         sumsq += h * h;
                     }
 
-                    mu[i] = sum / sample.neighbors.size();
-                    var[i] = sumsq / sample.neighbors.size() - mu[i] * mu[i];
+                    mu[i] = sum / sample.neighbors().size();
+                    var[i] = sumsq / sample.neighbors().size() - mu[i] * mu[i];
                 }
 
                 neighborHashValueModels[l++] = new NeighborHashValueModel(H, mu, var);
@@ -96,9 +96,9 @@ public class HashValueParzenModel {
     public void estimate(int m, double h) {
         double mm = 0.0, vv = 0.0, ss = 0.0;
         for (NeighborHashValueModel model : neighborHashValueModels) {
-            double k = gaussian.p(model.H[m] - h);
-            mm += k * model.mean[m];
-            vv += k * model.var[m];
+            double k = gaussian.p(model.H()[m] - h);
+            mm += k * model.mean()[m];
+            vv += k * model.var()[m];
             ss += k;
         }
 
@@ -113,7 +113,7 @@ public class HashValueParzenModel {
         if (sd < 1E-5) {
             sd = 0.0;
             for (NeighborHashValueModel model : neighborHashValueModels) {
-                sd += model.var[m];
+                sd += model.var()[m];
             }
             sd = Math.sqrt(sd / neighborHashValueModels.length);
         }

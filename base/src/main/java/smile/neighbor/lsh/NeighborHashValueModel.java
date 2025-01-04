@@ -19,32 +19,9 @@ package smile.neighbor.lsh;
 /**
  * Gaussian model of hash values of nearest neighbor.
  *
+ * @param H the hash values of query object.
+ * @param mean the mean of hash values of neighbors.
+ * @param var the variance of hash values of neighbors.
  * @author Haifeng Li
  */
-public class NeighborHashValueModel {
-
-    /**
-     * The hash values of query object.
-     */
-    public final double[] H;
-    /**
-     * The mean of hash values of neighbors.
-     */
-    public final double[] mean;
-    /**
-     * The variance of hash values of neighbors.
-     */
-    public final double[] var;
-
-    /**
-     * Constructor.
-     * @param H the hash values of query object.
-     * @param mean the mean of hash values of neighbors.
-     * @param var the variance of hash values of neighbors.
-     */
-    public NeighborHashValueModel(double[] H, double[] mean, double[] var) {
-        this.H = H;
-        this.mean = mean;
-        this.var = var;
-    }
-}
+public record NeighborHashValueModel(double[] H, double[] mean, double[] var) { }
