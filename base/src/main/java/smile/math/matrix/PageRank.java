@@ -101,14 +101,11 @@ public class PageRank {
                 p[i] = q;
             }
 
-            if (iter % 10 == 0) {
+            if (iter % 10 == 0 || delta < tol) {
                 logger.info("PageRank residual after {} power iterations: {}", iter, delta);
             }
 
-            if (delta < tol) {
-                logger.info("PageRank residual after {} power iterations: {}", iter, delta);
-                return p;
-            }
+            if (delta < tol) return p;
         }
 
         logger.error("PageRank iteration exceeded the maximum number of iterations.");

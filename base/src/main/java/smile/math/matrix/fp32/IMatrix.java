@@ -1011,14 +1011,11 @@ public abstract class IMatrix implements Serializable {
                 }
             }
 
-            if (iter % 10 == 0) {
+            if (iter % 10 == 0 || err <= tol) {
                 logger.info("BCG: the error after {} iterations: {}", iter, err);
             }
 
-            if (err <= tol) {
-                logger.info("BCG: the error after {} iterations: {}", iter, err);
-                break;
-            }
+            if (err <= tol) break;
         }
 
         return err;
