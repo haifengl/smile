@@ -25,7 +25,7 @@ import smile.data.type.StructType;
  */
 public abstract class AbstractTuple implements Tuple {
     /** The schema of tuple. */
-    protected StructType schema;
+    protected final StructType schema;
 
     /**
      * Constructor.

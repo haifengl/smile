@@ -29,7 +29,7 @@ import smile.util.Index;
  */
 public abstract class AbstractVector implements ValueVector {
     /** The struct field of the vector. */
-    StructField field;
+    final StructField field;
     /** The index of the elements in the underlying data. */
     Index index;
 

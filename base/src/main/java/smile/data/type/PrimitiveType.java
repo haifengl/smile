@@ -23,9 +23,9 @@ package smile.data.type;
  */
 public abstract class PrimitiveType implements DataType {
     /** The type ID. */
-    ID id;
+    final ID id;
     /** True if the data may be null. */
-    boolean nullable;
+    final boolean nullable;
 
     /**
      * Constructor.
