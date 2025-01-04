@@ -71,23 +71,10 @@ public class NeuralGas implements VectorQuantizer {
 
     /**
      * Neural Gas Neuron.
+     * @param i the index of neuron.
+     * @param w the weight vector.
      */
-    private static class Neuron implements Serializable {
-        /** The weight vector. */
-        public final double[] w;
-        /** The index of neuron. */
-        public final int i;
-
-        /**
-         * Constructor.
-         * @param i the index of neuron.
-         * @param w the weight vector.
-         */
-        public Neuron(int i, double[] w) {
-            this.i = i;
-            this.w = w;
-        }
-    }
+    private record Neuron(int i, double[] w) implements Serializable { }
 
     /**
      * The neurons.

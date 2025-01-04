@@ -22,30 +22,11 @@ import smile.nlp.Text;
  * In the context of information retrieval, relevance denotes how well a
  * retrieved set of documents meets the information need of the user.
  *
+ * @param text the document to rank.
+ * @param score the relevance score.
  * @author Haifeng Li
  */
-public class Relevance implements Comparable<Relevance> {
-
-    /**
-     * The document to rank.
-     */
-    public final Text text;
-
-    /**
-     * The relevance score.
-     */
-    public final double score;
-
-    /**
-     * Constructor.
-     * @param text the document to rank.
-     * @param score the relevance score.
-     */
-    public Relevance(Text text, double score) {
-        this.text = text;
-        this.score = score;
-    }
-
+public record Relevance(Text text, double score) implements Comparable<Relevance> {
     @Override
     public int compareTo(Relevance o) {
         return Double.compare(score, o.score);

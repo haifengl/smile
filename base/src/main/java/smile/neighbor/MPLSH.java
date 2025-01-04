@@ -136,7 +136,7 @@ public class MPLSH <E> extends LSH<E> {
             ArrayList<Neighbor<double[], double[]>> neighbors = new ArrayList<>();
             range.search(samples[i], radius, neighbors);
             for (var neighbor : neighbors) {
-                training[i].neighbors.add(keys.get(neighbor.index()));
+                training[i].neighbors().add(keys.get(neighbor.index()));
             }
         }
 
