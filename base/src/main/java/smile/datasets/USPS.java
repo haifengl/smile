@@ -18,7 +18,6 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
@@ -54,9 +53,8 @@ public record USPS(DataFrame train, DataFrame test, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public USPS() throws IOException, ParseException {
+    public USPS() throws IOException {
         this(Paths.getTestData("usps/zip.train"),
              Paths.getTestData("usps/zip.test"));
     }
@@ -66,9 +64,8 @@ public record USPS(DataFrame train, DataFrame test, Formula formula) {
      * @param trainDataPath the path to training data file.
      * @param testDataPath the path to testing data file.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public USPS(Path trainDataPath, Path testDataPath) throws IOException, ParseException {
+    public USPS(Path trainDataPath, Path testDataPath) throws IOException {
         this(load(trainDataPath), load(testDataPath), Formula.lhs("class"));
     }
     private static DataFrame load(Path path) throws IOException {

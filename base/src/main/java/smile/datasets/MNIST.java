@@ -21,7 +21,6 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
@@ -57,9 +56,8 @@ public record MNIST(DataFrame data, Formula formula) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public MNIST() throws IOException, ParseException {
+    public MNIST() throws IOException {
         this(Paths.getTestData("mnist/mnist2500_X.txt"),
              Paths.getTestData("mnist/mnist2500_labels.txt"));
     }
@@ -69,9 +67,8 @@ public record MNIST(DataFrame data, Formula formula) {
      * @param dataFilePath the path to data file.
      * @param labelFilePath the path to label file.
      * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
      */
-    public MNIST(Path dataFilePath, Path labelFilePath) throws IOException, ParseException {
+    public MNIST(Path dataFilePath, Path labelFilePath) throws IOException {
         this(dataFilePath.endsWith("-ubyte") ?
                         load(dataFilePath, labelFilePath) :
                         loadCSV(dataFilePath, labelFilePath),
