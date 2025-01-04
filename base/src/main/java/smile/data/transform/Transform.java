@@ -18,8 +18,6 @@ package smile.data.transform;
 
 import java.io.Serializable;
 import java.util.function.Function;
-
-import smile.data.Collectors;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 
