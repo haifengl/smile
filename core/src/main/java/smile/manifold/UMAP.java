@@ -313,7 +313,7 @@ public class UMAP {
             g[1] = -(x[0] * x[1] * Math.log(x[2]) * pow) / (de * de);
             return 1 / de;
         }
-    };
+    }
 
     /**
      * Fits the differentiable curve used in lower dimensional fuzzy simplicial
