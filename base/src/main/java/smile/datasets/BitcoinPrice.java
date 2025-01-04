@@ -37,8 +37,8 @@ import smile.util.Paths;
  *
  * <h2>References</h2>
  * <ol>
- * <li>https://www.kaggle.com/sudalairajkumar/cryptocurrencypricehistory</li>
- * <li>https://arxiv.org/pdf/1904.05315.pdf</li>
+ * <li><a href="https://www.kaggle.com/sudalairajkumar/cryptocurrencypricehistory">Cryptocurrency Historical Prices</a></li>
+ * <li><a href="https://arxiv.org/pdf/1904.05315.pdf">Bitcoin Price Prediction: An ARIMA Approach</a></li>
  * </ol>
  *
  * @param data data frame.
