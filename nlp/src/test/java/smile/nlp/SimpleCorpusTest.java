@@ -109,7 +109,7 @@ public class SimpleCorpusTest {
         while (hits.hasNext()) {
             n++;
             Relevance hit = hits.next();
-            System.out.println(hit.text + "\t" + hit.score);
+            System.out.println(hit.text() + "\t" + hit.score());
         }
         assertEquals(27, n);
     }
@@ -130,7 +130,7 @@ public class SimpleCorpusTest {
         while (hits.hasNext()) {
             n++;
             Relevance hit = hits.next();
-            System.out.println(hit.text + "\t" + hit.score);
+            System.out.println(hit.text() + "\t" + hit.score());
         }
         assertEquals(78, n);
     }
