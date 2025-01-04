@@ -231,7 +231,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
         
         // Calculate the fitness of each chromosome.
         Arrays.stream(population).parallel().forEach(chromosome -> {
-            if (chromosome instanceof LamarckianChromosome ch) {
+            if (chromosome instanceof LamarckianChromosome<?> ch) {
                 for (int j = 0; j < t; j++) {
                     ch.evolve();
                 }
@@ -270,7 +270,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
 
             // Calculate the fitness of each chromosome.
             Arrays.stream(population).parallel().forEach(chromosome -> {
-                if (chromosome instanceof LamarckianChromosome ch) {
+                if (chromosome instanceof LamarckianChromosome<?> ch) {
                     for (int j = 0; j < t; j++) {
                         ch.evolve();
                     }
