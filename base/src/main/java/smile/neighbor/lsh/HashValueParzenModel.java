@@ -24,6 +24,15 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class HashValueParzenModel {
+    /**
+     * Gaussian model of hash values of nearest neighbor.
+     *
+     * @param H the hash values of query object.
+     * @param mean the mean of hash values of neighbors.
+     * @param var the variance of hash values of neighbors.
+     * @author Haifeng Li
+     */
+    private record NeighborHashValueModel(double[] H, double[] mean, double[] var) { }
 
     /**
      * Gaussian kernel for Parzen window estimation.
@@ -96,9 +105,9 @@ public class HashValueParzenModel {
     public void estimate(int m, double h) {
         double mm = 0.0, vv = 0.0, ss = 0.0;
         for (NeighborHashValueModel model : neighborHashValueModels) {
-            double k = gaussian.p(model.H()[m] - h);
-            mm += k * model.mean()[m];
-            vv += k * model.var()[m];
+            double k = gaussian.p(model.H[m] - h);
+            mm += k * model.mean[m];
+            vv += k * model.var[m];
             ss += k;
         }
 
@@ -113,7 +122,7 @@ public class HashValueParzenModel {
         if (sd < 1E-5) {
             sd = 0.0;
             for (NeighborHashValueModel model : neighborHashValueModels) {
-                sd += model.var()[m];
+                sd += model.var[m];
             }
             sd = Math.sqrt(sd / neighborHashValueModels.length);
         }
