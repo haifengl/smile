@@ -78,9 +78,8 @@ public class SammonMappingTest {
         SammonMapping sammon = SammonMapping.of(euro.x());
         assertEquals(0.00941, sammon.stress(), 1E-5);
 
-        for (int i = 0; i < points.length; i++) {
-            System.out.println(Arrays.toString(sammon.coordinates()[i]));
-            //assertArrayEquals(points[i], sammon.coordinates[i], 1E-4);
+        for (var point : sammon.coordinates()) {
+            System.out.println(Arrays.toString(point));
         }
     }
 }
