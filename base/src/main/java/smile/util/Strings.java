@@ -18,7 +18,6 @@ package smile.util;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import smile.math.MathEx;
 
 /**
  * String utility functions.

@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.util.Strings;
