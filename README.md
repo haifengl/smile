@@ -271,22 +271,22 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/rolling.png"><img src="/web/src/images/rolling.png" alt="Rolling"></a>
-        <figcaption style="text-align: center;"><h3>Rolling Average</h3></figcaption>
+        <a href="/web/src/images/box.png"><img src="/web/src/images/box.png" alt="Box Plot"></a>
+        <figcaption style="text-align: center;"><h3>Box Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/text.png"><img src="/web/src/images/text.png" alt="Text"></a>
-        <figcaption style="text-align: center;"><h3>Text Plot</h3></figcaption>
+        <a href="/web/src/images/histogram2d.png"><img src="/web/src/images/histogram2d.png" alt="Histogram"></a>
+        <figcaption style="text-align: center;"><h3>Histogram Heatmap</h3></figcaption>
       </figure>
     </td>
   </tr>
   <tr>
-    <td colspan="2">
+    <td>
       <figure>
-        <a href="/web/src/images/box.png"><img src="/web/src/images/box.png" alt="Box Plot"></a>
-        <figcaption style="text-align: center;"><h3>Box Plot</h3></figcaption>
+        <a href="/web/src/images/rolling.png"><img src="/web/src/images/rolling.png" alt="Rolling"></a>
+        <figcaption style="text-align: center;"><h3>Rolling Average</h3></figcaption>
       </figure>
     </td>
     <td>
@@ -295,12 +295,18 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
         <figcaption style="text-align: center;"><h3>Geo Map</h3></figcaption>
       </figure>
     </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/umap.png"><img src="/web/src/images/umap.png" alt="UMAP"></a>
+        <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
+      </figure>
+    </td>
   </tr>
   <tr>
-    <td colspan="2">
+    <td>
       <figure>
-        <a href="/web/src/images/histogram2d.png"><img src="/web/src/images/histogram2d.png" alt="Histogram"></a>
-        <figcaption style="text-align: center;"><h3>Histogram Heatmap</h3></figcaption>
+        <a href="/web/src/images/text.png"><img src="/web/src/images/text.png" alt="Text"></a>
+        <figcaption style="text-align: center;"><h3>Text Plot</h3></figcaption>
       </figure>
     </td>
     <td>
@@ -309,24 +315,10 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
         <figcaption style="text-align: center;"><h3>Heatmap with Contour</h3></figcaption>
       </figure>
     </td>
-  </tr>
-  <tr>
     <td>
       <figure>
         <a href="/web/src/images/hexmap.png"><img src="/web/src/images/hexmap.png" alt="Hexmap"></a>
         <figcaption style="text-align: center;"><h3>Hexmap</h3></figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="/web/src/images/umap.png"><img src="/web/src/images/umap.png" alt="UMAP"></a>
-        <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
-        <a href="/web/src/images/tsne.png"><img src="/web/src/images/tsne.png" alt="t-SNE"></a>
-        <figcaption style="text-align: center;"><h3>t-SNE</h3></figcaption>
       </figure>
     </td>
   </tr>
