@@ -235,16 +235,50 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
 ## Gallery
 <table class="center" style="width:100%;">
   <tr>
-    <td style="width:50%;">
+    <td colspan="3">
       <figure>
-        <a href="/web/src/images/heart.png"><img src="/web/src/images/heart.png" alt="Heart"></a>
-        <figcaption style="text-align: center;"><h3>Heart Function</h3></figcaption>
+        <a href="/web/src/images/splom.png"><img src="/web/src/images/splom.png" alt="SPLOM"></a>
+        <figcaption style="text-align: center;"><h3>Scatterplot Matrix</h3></figcaption>
       </figure>
     </td>
-    <td style="width:50%;">
+  </tr>
+  <tr>
+    <td>
+      <figure>
+        <a href="/web/src/images/pca.png"><img src="/web/src/images/pca.png" alt="Scatter"></a>
+        <figcaption style="text-align: center;"><h3>Scatter Plot</h3></figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/heart.png"><img src="/web/src/images/heart.png" alt="Heart"></a>
+        <figcaption style="text-align: center;"><h3>Line Plot</h3></figcaption>
+      </figure>
+    </td>
+    <td>
       <figure>
         <a href="/web/src/images/surface.png"><img src="/web/src/images/surface.png" alt="Surface"></a>
         <figcaption style="text-align: center;"><h3>Surface Plot</h3></figcaption>
+      </figure>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <figure>
+        <a href="/web/src/images/bar.png"><img src="/web/src/images/bar.png" alt="Scatter"></a>
+        <figcaption style="text-align: center;"><h3>Bar Plot</h3></figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/rolling.png"><img src="/web/src/images/rolling.png" alt="Rolling"></a>
+        <figcaption style="text-align: center;"><h3>Rolling Average</h3></figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/text.png"><img src="/web/src/images/text.png" alt="Text"></a>
+        <figcaption style="text-align: center;"><h3>Text Plot</h3></figcaption>
       </figure>
     </td>
   </tr>
@@ -299,7 +333,7 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-kpca.png"><img src="https://haifengl.github.io/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
+        <a href="/web/src/gallery/smile-demo-kpca.png"><img src="/web/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
         <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
       </figure>
     </td>
@@ -335,13 +369,13 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-mds.png"><img src="https://haifengl.github.io/gallery/smile-demo-mds-small.png" alt="MDS"></a>
+        <a href="/web/src/gallery/smile-demo-mds.png"><img src="/web/src/gallery/smile-demo-mds-small.png" alt="MDS"></a>
         <figcaption style="text-align: center;"><h3>Multi-Dimensional Scaling</h3></figcaption>
       </figure>
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-som.png"><img src="https://haifengl.github.io/gallery/smile-demo-som-small.png" alt="SOM"></a>
+        <a href="/web/src/gallery/smile-demo-som.png"><img src="/web/src/gallery/smile-demo-som-small.png" alt="SOM"></a>
         <figcaption style="text-align: center;"><h3>SOM</h3></figcaption>
       </figure>
     </td>
@@ -349,13 +383,13 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-ann.png"><img src="https://haifengl.github.io/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
+        <a href="/web/src/gallery/smile-demo-ann.png"><img src="/web/src/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
         <figcaption style="text-align: center;"><h3>Neural Network</h3></figcaption>
       </figure>
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-svm.png"><img src="https://haifengl.github.io/gallery/smile-demo-svm-small.png" alt="SVM"></a>
+        <a href="/web/src/gallery/smile-demo-svm.png"><img src="/web/src/gallery/smile-demo-svm-small.png" alt="SVM"></a>
         <figcaption style="text-align: center;"><h3>SVM</h3></figcaption>
       </figure>
     </td>
@@ -363,13 +397,13 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering.png"><img src="https://haifengl.github.io/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
+        <a href="/web/src/gallery/smile-demo-agglomerative-clustering.png"><img src="/web/src/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
         <figcaption style="text-align: center;"><h3>Hierarchical Clustering</h3></figcaption>
       </figure>
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-xmeans.png"><img src="https://haifengl.github.io/gallery/smile-demo-xmeans-small.png" alt="X-Means"></a>
+        <a href="/web/src/gallery/smile-demo-xmeans.png"><img src="/web/src/gallery/smile-demo-xmeans-small.png" alt="X-Means"></a>
         <figcaption style="text-align: center;"><h3>X-Means</h3></figcaption>
       </figure>
     </td>
@@ -377,13 +411,13 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-dbscan.png"><img src="https://haifengl.github.io/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
+        <a href="/web/src/gallery/smile-demo-dbscan.png"><img src="/web/src/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
         <figcaption style="text-align: center;"><h3>DBSCAN</h3></figcaption>
       </figure>
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-neural-gas.png"><img src="https://haifengl.github.io/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
+        <a href="/web/src/gallery/smile-demo-neural-gas.png"><img src="/web/src/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
         <figcaption style="text-align: center;"><h3>Neural Gas</h3></figcaption>
       </figure>
     </td>
@@ -391,15 +425,23 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-wavelet.png"><img src="https://haifengl.github.io/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
+        <a href="/web/src/gallery/smile-demo-wavelet.png"><img src="/web/src/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
         <figcaption style="text-align: center;"><h3>Wavelet</h3></figcaption>
       </figure>
     </td>
     <td style="width:50%;">
       <figure>
-        <a href="https://haifengl.github.io/gallery/smile-demo-mixture.png"><img src="https://haifengl.github.io/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
+        <a href="/web/src/gallery/smile-demo-mixture.png"><img src="/web/src/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
         <figcaption style="text-align: center;"><h3>Exponential Family Mixture</h3></figcaption>
     </figure>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3">
+      <figure>
+        <a href="/web/src/images/grid-interpolation2d.png"><img src="/web/src/images/grid-interpolation2d.png" alt="Interpolation"></a>
+        <figcaption style="text-align: center;"><h3>Grid Interpolation</h3></figcaption>
+      </figure>
     </td>
   </tr>
 </table>
