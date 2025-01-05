@@ -25,6 +25,24 @@ To build with Scala 3, run
 sbt ++3.3.3 scala/package
 ```
 
+To build Kotlin package, run
+```bash
+cd kotlin
+./gradlew build
+```
+
+To use Clojure package, run
+```bash
+cd clojure
+./lein repl
+```
+
+For Kotlin and Clojure to pick up your changes in Java, you should
+first publish Smile packages locally.
+```bash
+sbt publishM2
+```
+
 To test the latest code, run the following
 ```bash
 git pull
