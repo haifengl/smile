@@ -69,13 +69,13 @@ public record MNIST(DataFrame data, Formula formula) {
      * @throws IOException when fails to read the file.
      */
     public MNIST(Path dataFilePath, Path labelFilePath) throws IOException {
-        this(dataFilePath.endsWith("csv") ?
-                        loadCSV(dataFilePath, labelFilePath) :
-                        load(dataFilePath, labelFilePath),
+        this(dataFilePath.toString().endsWith(".txt") ?
+                        loadText(dataFilePath, labelFilePath) :
+                        loadBinary(dataFilePath, labelFilePath),
              Formula.lhs("class"));
     }
 
-    private static DataFrame load(Path dataFilePath, Path labelFilePath) throws IOException {
+    private static DataFrame loadBinary(Path dataFilePath, Path labelFilePath) throws IOException {
         try (var dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(dataFilePath.toFile())));
              var labelInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(labelFilePath.toFile())))) {
             int magicNumber = dataInputStream.readInt();
@@ -113,7 +113,7 @@ public record MNIST(DataFrame data, Formula formula) {
         }
     }
 
-    private static DataFrame loadCSV(Path dataFilePath, Path labelFilePath) throws IOException {
+    private static DataFrame loadText(Path dataFilePath, Path labelFilePath) throws IOException {
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
         double[][] data = Read.csv(dataFilePath, format).toArray();
         int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
