@@ -68,9 +68,9 @@ public class TSNE implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * The coordinate matrix in embedding space.
+     * The embedding coordinates.
      */
-    public final double[][] coordinates;
+    private final double[][] coordinates;
 
     /**
      * The learning rate.
@@ -173,6 +173,14 @@ public class TSNE implements Serializable {
         }
 
         update(iterations);
+    }
+
+    /**
+     * Returns the embedding coordinates.
+     * @return the embedding coordinates.
+     */
+    public double[][] coordinates() {
+        return coordinates;
     }
 
     /**
