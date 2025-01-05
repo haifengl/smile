@@ -1,20 +1,22 @@
-# Smile &mdash; Statistical Machine Intelligence and Learning Engine <img align="right" width="32" src="/web/src/images/smile.jpg">
+# Smile &mdash; Statistical Machine Intelligence and Learning Engine
 
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
 ## Goal ##
-Smile is a fast and comprehensive machine learning, deep learning,
-GenAI/LLM, NLP, linear algebra, graph, interpolation, and visualization
-system in Java. Smile also provides APIs in Scala, Kotlin, and Clojure with
+<img align="left" width="48" src="/web/src/images/smile.jpg">
+Smile is a fast and comprehensive machine learning framework in Java.
+Smile also provides APIs in Scala, Kotlin, and Clojure with
 corresponding language paradigms. With advanced data structures and
 algorithms, Smile delivers state-of-art performance.
-
 Smile covers every aspect of machine learning, including deep learning,
 large language models, classification, regression, clustering, association
 rule mining, feature selection and extraction, manifold learning,
 multidimensional scaling, genetic algorithms, missing value imputation,
-efficient nearest neighbor search, etc.
+efficient nearest neighbor search, etc. Furthermore, Smile also provides
+advanced algorithms for graph, linear algebra, numerical analysis,
+interpolation, computer algebra system for symbolic manipulations,
+and data visualization.
 
 ## Features ##
 Smile implements the following major machine learning algorithms:
