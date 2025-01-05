@@ -1,4 +1,4 @@
-<img height="32" alt="Smile" style="float: left; margin-right: 20px;" src="web/src/images/smile.jpg"> <h1> Smile &mdash; Statistical Machine Intelligence and Learning Engine </h1>
+# Smile &mdash; Statistical Machine Intelligence and Learning Engine <img align="left" width="32" src="/web/src/images/smile.jpg">
 
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
