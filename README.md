@@ -283,16 +283,44 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
     </td>
   </tr>
   <tr>
+    <td colspan="2">
+      <figure>
+        <a href="/web/src/images/box.png"><img src="/web/src/images/box.png" alt="Box Plot"></a>
+        <figcaption style="text-align: center;"><h3>Box Plot</h3></figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/map.png"><img src="/web/src/images/map.png" alt="Map"></a>
+        <figcaption style="text-align: center;"><h3>Geo Map</h3></figcaption>
+      </figure>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <figure>
+        <a href="/web/src/images/histogram2d.png"><img src="/web/src/images/histogram2d.png" alt="Histogram"></a>
+        <figcaption style="text-align: center;"><h3>Histogram Heatmap</h3></figcaption>
+      </figure>
+    </td>
     <td>
       <figure>
         <a href="/web/src/images/contour.png"><img src="/web/src/images/contour.png" alt="Contour"></a>
         <figcaption style="text-align: center;"><h3>Heatmap with Contour</h3></figcaption>
       </figure>
     </td>
+  </tr>
+  <tr>
     <td>
       <figure>
         <a href="/web/src/images/hexmap.png"><img src="/web/src/images/hexmap.png" alt="Hexmap"></a>
         <figcaption style="text-align: center;"><h3>Hexmap</h3></figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <a href="/web/src/images/umap.png"><img src="/web/src/images/umap.png" alt="UMAP"></a>
+        <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
       </figure>
     </td>
     <td>
@@ -305,12 +333,6 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
   <tr>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-kpca.png"><img src="/web/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
-        <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
-      </figure>
-    </td>
-    <td>
-      <figure>
         <a href="/web/src/images/isomap.png"><img src="/web/src/images/isomap.png" alt="IsoMap"></a>
         <figcaption style="text-align: center;"><h3>IsoMap</h3></figcaption>
       </figure>
@@ -321,18 +343,10 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smil
         <figcaption style="text-align: center;"><h3>LLE</h3></figcaption>
       </figure>
     </td>
-  </tr>
-  <tr>
-    <td colspan="2">
-      <figure>
-        <a href="/web/src/images/umap.png"><img src="/web/src/images/umap.png" alt="UMAP"></a>
-        <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
-      </figure>
-    </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-mds.png"><img src="/web/src/gallery/smile-demo-mds-small.png" alt="MDS"></a>
-        <figcaption style="text-align: center;"><h3>Multi-Dimensional Scaling</h3></figcaption>
+        <a href="/web/src/gallery/smile-demo-kpca.png"><img src="/web/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
+        <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
       </figure>
     </td>
   </tr>
