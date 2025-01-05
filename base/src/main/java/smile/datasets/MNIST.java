@@ -69,9 +69,9 @@ public record MNIST(DataFrame data, Formula formula) {
      * @throws IOException when fails to read the file.
      */
     public MNIST(Path dataFilePath, Path labelFilePath) throws IOException {
-        this(dataFilePath.endsWith("-ubyte") ?
-                        load(dataFilePath, labelFilePath) :
-                        loadCSV(dataFilePath, labelFilePath),
+        this(dataFilePath.endsWith("csv") ?
+                        loadCSV(dataFilePath, labelFilePath) :
+                        load(dataFilePath, labelFilePath),
              Formula.lhs("class"));
     }
 
@@ -115,8 +115,8 @@ public record MNIST(DataFrame data, Formula formula) {
 
     private static DataFrame loadCSV(Path dataFilePath, Path labelFilePath) throws IOException {
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
-        double[][] data = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
-        int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
+        double[][] data = Read.csv(dataFilePath, format).toArray();
+        int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
         var df = DataFrame.of(data);
         return df.merge(ValueVector.of("class", y));
     }
