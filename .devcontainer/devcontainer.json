@@ -24,7 +24,7 @@
 	"forwardPorts": [3000, 3801, 4173],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "java -version",
+	"postCreateCommand": "bash bin/setup.sh",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
