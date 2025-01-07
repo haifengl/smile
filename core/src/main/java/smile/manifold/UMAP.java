@@ -256,13 +256,21 @@ public class UMAP {
         // fuzzy simplicial sets into a global one via a fuzzy union.
         SparseMatrix conorm = computeFuzzySimplicialSet(nng, localConnectivity);
 
-        int n = nng.size();
-        int[][] cc = nng.graph(false).bfcc();
-        logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
-
         // Initialize embedding
+        int n = nng.size();
         double[][] coordinates;
-        if (cc.length > 1) {
+        boolean connected = false;
+        if (n <= LARGE_DATA_SIZE) {
+            int[][] cc = nng.graph(false).bfcc();
+            logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
+            connected = cc.length == 1;
+        }
+
+        if (connected) {
+            logger.info("Spectral initialization will be attempted.");
+            coordinates = spectralLayout(nng, d);
+            noisyScale(coordinates, 10, 0.0001);
+        } else {
             if (data instanceof double[][]) {
                 logger.info("PCA-based initialization will be attempted.");
                 coordinates = pcaLayout((double[][]) data, d);
@@ -271,10 +279,6 @@ public class UMAP {
                 logger.info("Random initialization will be attempted.");
                 coordinates = randomLayout(n, d);
             }
-        } else {
-            logger.info("Spectral initialization will be attempted.");
-            coordinates = spectralLayout(nng, d);
-            noisyScale(coordinates,10, 0.0001);
         }
         normalize(coordinates, 10);
         logger.info("Finish embedding initialization");
@@ -554,6 +558,7 @@ public class UMAP {
                 .forEach(i -> D[i] = 1.0 / Math.sqrt(MathEx.sum(distances[i])));
 
         // Laplacian of graph.
+        logger.info("Spectral layout computes Laplacian...");
         AdjacencyList laplacian = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
@@ -567,8 +572,10 @@ public class UMAP {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with heuristic min(2*k+1, sqrt(n)).
-        int numEigen = Math.max(2*(d+1)+1, (int) Math.sqrt(n));
+        int k = d + 1;
+        int numEigen = Math.max(2*k+1, (int) Math.sqrt(n));
         SparseMatrix L = laplacian.toMatrix();
+        logger.info("Spectral layout computes {} eigen vectors", numEigen);
         Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
 
         Matrix V = eigen.Vr;

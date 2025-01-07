@@ -66,8 +66,8 @@ public class NearestNeighborGraphTest {
     }
 
     @Test
-    public void testDescent() {
-        System.out.println("Descent");
+    public void testDescentRandom() {
+        System.out.println("Descent with random initialization");
 
         var graph = NearestNeighborGraph.descent(x, MathEx::distance, 7);
         int[][] neighbors = graph.neighbors();
