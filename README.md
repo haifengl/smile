@@ -24,7 +24,7 @@ Smile implements the following major machine learning algorithms:
 - **GenAI:**
 Native Java implementation of Llama 3.1, tiktoken tokenizer, high performance
 LLM inference server with OpenAI-compatible APIs and SSE-based chat streaming,
-fully functional frontend. [An online service](https://smile-ai.org) is available
+fully functional frontend. [A free service](https://smile-ai.org) is available
 for personal or test usage. No registration is required.
 
 - **Deep Learning:**
@@ -80,7 +80,7 @@ ISVs and VARs) and open source projects. For details, please see
 ## Issues/Discussions ##
 
 * **Discussion/Questions**:
-  If you wish to ask questions about Smile, we're active on [Stack Overflow](http://stackoverflow.com/questions/tagged/smile).
+  If you wish to ask questions about Smile, we're active on [GitHub Discussions](https://github.com/haifengl/smile/discussions) and [Stack Overflow](http://stackoverflow.com/questions/tagged/smile).
 
 * **Docs**:
 Smile is well documented and [our docs are available online](https://haifengl.github.io/), where you can find tutorial,
