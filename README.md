@@ -76,6 +76,7 @@ SMILE employs a dual license model designed to meet the development
 and distribution needs of both commercial distributors (such as OEMs,
 ISVs and VARs) and open source projects. For details, please see
 [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
+To acquire a commercial license, please contact smile.sales@outlook.com.
 
 ## Issues/Discussions ##
 
