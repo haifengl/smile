@@ -61,20 +61,12 @@ while true; do
             sbt publishSigned
             check_error "!!"
 
-            git checkout scala3
-            check_error "!!"
-            git pull
-            check_error "!!"
-            git merge master
-            check_error "!!"
             sbt ++3.3.4 scala/publishSigned
             check_error "!!"
             sbt ++3.3.4 json/publishSigned
             check_error "!!"
             # sbt ++3.3.4 spark/publishSigned
             # check_error "!!"
-
-            # git checkout master
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
