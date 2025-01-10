@@ -46,8 +46,8 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.2",
-  "org.xerial"         %  "sqlite-jdbc" % "3.47.1.0",
-  "ch.qos.logback"     %  "logback-classic" % "1.5.15"
+  "org.xerial"         %  "sqlite-jdbc" % "3.47.2.0",
+  "ch.qos.logback"     %  "logback-classic" % "1.5.16"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
