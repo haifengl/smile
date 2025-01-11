@@ -21,15 +21,10 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.io.Read;
 import smile.util.Paths;
@@ -45,14 +40,6 @@ import smile.util.Paths;
  * @author Haifeng Li
  */
 public record MNIST(DataFrame data, Formula formula) {
-    private static final StructType schema;
-    static {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(1, 785).forEach(i -> fields.add(new StructField("V" + i, DataTypes.DoubleType)));
-        schema = new StructType(fields);
-    }
-
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
@@ -114,11 +101,10 @@ public record MNIST(DataFrame data, Formula formula) {
     }
 
     private static DataFrame loadText(Path dataFilePath, Path labelFilePath) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
-        double[][] data = Read.csv(dataFilePath, format).toArray();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
+        var data = Read.csv(dataFilePath, format);
         int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
-        var df = DataFrame.of(data);
-        return df.merge(ValueVector.of("class", y));
+        return data.merge(ValueVector.of("class", y));
     }
 
     /**
