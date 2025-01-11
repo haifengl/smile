@@ -56,7 +56,7 @@ public record Diabetes(DataFrame data, Formula formula) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).build();
+        CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).get();
         return Read.csv(path, format);
     }
 
