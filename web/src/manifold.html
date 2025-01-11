@@ -68,7 +68,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
+    def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
@@ -76,7 +76,8 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class IsoMap {
-        public static IsoMap of(double[][] data, int k, int d, boolean conformal);
+        public static double[][] of(double[][] data, int k, int d, boolean conformal);
+        public static double[][] of(NearestNeighborGraph nng, int d, boolean conformal);
     }
           </code></pre>
             </div>
@@ -84,7 +85,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="kotlin_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun isomap(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
+    fun isomap(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, CIsomap: Boolean = true): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
         </div>
@@ -129,15 +130,11 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter="\t").toArray()
-    plot(swissroll, '.', BLUE)
+    show(plot(swissroll, '.', BLUE))
 
-    val map = isomap(swissroll.slice(0, 2000), 7)
-    val vertices = map.coordinates
-
-    import scala.jdk.CollectionConverters._
-    val edges = map.graph.getEdges.asScala.map(edge => Array(edge.v1, edge.v2)).toArray
-
-    wireframe(vertices, edges).window()
+    val data = swissroll.slice(0, 2000)
+    val map = isomap(data, 7)
+    show(plot(map, '.', BLUE))
     </code></pre>
             </div>
         </div>
@@ -147,11 +144,16 @@ title: Smile - Manifold Learning
     var swissroll = Read.csv("data/manifold/swissroll.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
     ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
 
-    var map = IsoMap.of(Arrays.copyOf(swissroll, 2000), 7);
-    var vertices = map.coordinates;
-    var edges = map.graph.getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new);
-
-    Wireframe.of(vertices, edges).canvas().window();
+    var data = Arrays.copyOf(swissroll, 2000);
+    var nng = NearestNeighborGraph.descent(data, MathEx::distance, 7).largest(false);
+    var map = IsoMap.of(nng, 2, false);
+    var graph = nng.graph(false);
+    var edges = IntStream.range(0, data.length)
+            .mapToObj(graph::getEdges)
+            .flatMap(List::stream)
+            .map(edge -&gt; new int[]{edge.u(), edge.v()})
+            .toArray(int[][]::new);
+    Wireframe.of(map, edges).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -166,11 +168,9 @@ title: Smile - Manifold Learning
     val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter='\t').toArray();
     ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
 
-    val map = isomap(swissroll.slice(0..2000).toTypedArray(), 7);
-    val vertices = map.coordinates;
-    val edges = map.graph.getEdges().map{ intArrayOf(it.v1, it.v2) }.toTypedArray();
-
-    Wireframe.of(vertices, edges).canvas().window();
+    val data = swissroll.slice(0..2000).toTypedArray()
+    val map = isomap(data, 7);
+    ScatterPlot.of(map, '.', Color.BLUE).canvas().window();
     </code></pre>
             </div>
         </div>
@@ -210,7 +210,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def lle(data: Array[Array[Double]], k: Int, d: Int = 2): LLE
+    def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
@@ -218,7 +218,8 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LLE {
-        public static LLE of(double[][] data, int k, int d);
+        public static double[][] of(double[][] data, int k, int d);
+        public static double[][] of(double[][] data, NearestNeighborGraph nng, int d);
     }
           </code></pre>
             </div>
@@ -226,7 +227,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="kotlin_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun lle(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2): LLE
+    fun lle(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
         </div>
@@ -243,21 +244,21 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val map = lle(swissroll.slice(0, 2000), 8)
+    val map = lle(data, 2)
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var map = LLE.of(Arrays.copyOf(swissroll, 2000), 8);
+    var map = LLE.of(data, nng, 2);
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    val map = lle(swissroll.slice(0..2000).toTypedArray(), 8)
+    val map = lle(data, 8)
     </code></pre>
             </div>
         </div>
@@ -286,7 +287,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
+    def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
@@ -294,7 +295,8 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LaplacianEigenmap {
-        public static LaplacianEigenmap of(double[][] data, int k, int d, double t);
+        public static double[][] of(double[][] data, int k, int d, double t);
+        public static double[][] of(NearestNeighborGraph nng, int d, double t);
     }
           </code></pre>
             </div>
@@ -302,7 +304,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane" id="kotlin_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun laplacian(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
+    fun laplacian(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, t: Double = -1): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
         </div>
@@ -334,7 +336,7 @@ title: Smile - Manifold Learning
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var map = LaplacianEigenmap.of(Arrays.copyOf(swissroll, 1000), 10, 2, 25.0);
+    var map = LaplacianEigenmap.of(nng, 2, 25.0);
           </code></pre>
             </div>
         </div>
@@ -419,11 +421,11 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=" ")
-    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=" ").column(0).toIntArray()
+    val label = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=" ").column(0).toIntArray()
     val pc = pca(mnist).getProjection(50)
     val x50 = pc(mnist).toArray()
     val sne = tsne(x50, 3, 20, 200, 1000)
-    show(plot(sne.coordinates, y, 'o'))
+    show(plot(sne.coordinates, label, 'o'))
     </code></pre>
             </div>
         </div>
@@ -432,7 +434,7 @@ title: Smile - Manifold Learning
           <pre class="prettyprint lang-java"><code>
     var format = CSVFormat.DEFAULT.withDelimiter(' ');
     var mnist = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
-    var labels = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
+    var label = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
 
     var pca = PCA.fit(mnist).getProjection(50);
     var X = pca.apply(mnist);
@@ -440,7 +442,7 @@ title: Smile - Manifold Learning
     var perplexity = 20;
     var tsne = new TSNE(X, 2, perplexity, 200, 1000);
 
-    var canvas = ScatterPlot.of(tsne.coordinates, labels, '@').canvas();
+    var canvas = ScatterPlot.of(tsne.coordinates, label, '@').canvas();
     canvas.setTitle("t-SNE of MNIST");
     canvas.window();
           </code></pre>
@@ -451,12 +453,12 @@ title: Smile - Manifold Learning
     <pre class="prettyprint lang-kotlin"><code>
     import smile.feature.extraction.*;
     val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray();
-    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray();
+    val label = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray();
     val pc = pca(mnist).getProjection(50);
     val x50 = pc.apply(mnist);
     val sne = tsne(x50, 3, 20.0, 200.0, 1000);
 
-    val canvas = ScatterPlot.of(sne.coordinates, y, '@').canvas();
+    val canvas = ScatterPlot.of(sne.coordinates, label, '@').canvas();
     canvas.setTitle("t-SNE of MNIST");
     canvas.window();
     </code></pre>
@@ -499,12 +501,13 @@ title: Smile - Manifold Learning
     def umap(data: Array[Array[Double]],
              k: Int = 15,
              d: Int = 2,
-             iterations: Int = 0,
+             epochs: Int = 0,
              learningRate: Double = 1.0,
              minDist: Double = 0.1,
              spread: Double = 1.0,
              negativeSamples: Int = 5,
-             repulsionStrength: Double = 1.0): UMAP
+             repulsionStrength: Double = 1.0,
+             localConnectivity: Double = 1.0): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
@@ -512,15 +515,17 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     public class UAMP {
-        public of(double[][] data,
-                  int k,
-                  int d,
-                  int iterations,
-                  double learningRate,
-                  double minDist,
-                  double spread,
-                  int negativeSamples,
-                  double repulsionStrength);
+        public double[][] of(double[][] data, int k, int d, int epochs,
+                  double learningRate, double minDist, double spread,
+                  int negativeSamples, double repulsionStrength, double localConnectivity);
+
+        public double[][] of(T[] data, Metric&gt;T&lt; distance, int k, int d, int epochs,
+                  double learningRate, double minDist, double spread,
+                  int negativeSamples, double repulsionStrength, double localConnectivity);
+
+        public double[][] of(T[] data, NearestNeighborGraph nng, int d, int epochs,
+                  double learningRate, double minDist, double spread,
+                  int negativeSamples, double repulsionStrength, double localConnectivity);
     }
     </code></pre>
             </div>
@@ -531,12 +536,13 @@ title: Smile - Manifold Learning
     fun umap(data: Array&lt;DoubleArray&gt;,
              k: Int = 15,
              d: Int = 2,
-             iterations: Int = 0,
+             epochs: Int = 0,
              learningRate: Double = 1.0,
              minDist: Double = 0.1,
              spread: Double = 1.0,
              negativeSamples: Int = 5,
-             repulsionStrength: Double = 1.0): UMAP
+             repulsionStrength: Double = 1.0,
+             localConnectivity: Double = 1.0): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
         </div>
@@ -583,17 +589,15 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val map = umap(mnist.toArray())
-    val canvas = plot(map.coordinates, map.index.map(i =&gt; y(i)), 'o')
-    show(canvas)
+    show(plot(map, label, 'o'))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var map = UMAP.of(mnist);
-    var y = Arrays.stream(map.index).map(i -&gt; labels[i]).toArray();
-    ScatterPlot.of(map.coordinates, y, '@').canvas().window();
+    var map = UMAP.of(mnist, 15);
+    ScatterPlot.of(map, label, '@').canvas().window();
           </code></pre>
             </div>
         </div>
@@ -601,8 +605,7 @@ title: Smile - Manifold Learning
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     val map = umap(mnist);
-    val labels = map.index.map{ y[it] }.toIntArray();
-    ScatterPlot.of(map.coordinates, labels, '@').canvas().window();
+    ScatterPlot.of(map, label, '@').canvas().window();
     </code></pre>
             </div>
         </div>

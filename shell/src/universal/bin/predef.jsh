@@ -90,7 +90,7 @@ println("""
   ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
   `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
                                                        ``::,,,,::''
-|  Welcome to Smile  -- Version  4.0.0
+|  Welcome to Smile  -- Version  4.1.0
 ===============================================================================""")
 
 
@@ -98,6 +98,7 @@ println("""
 import java.awt.Color;
 import org.apache.commons.csv.CSVFormat;
 import smile.util.*;
+import smile.graph.*;
 import smile.math.*;
 import static java.lang.Math.*;
 import static smile.math.MathEx.*;

@@ -69,7 +69,7 @@ public class AdjacencyMatrix extends Graph implements Serializable {
     }
 
     @Override
-    public int getNumVertices() {
+    public int getVertexCount() {
         return graph.length;
     }
 

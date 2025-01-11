@@ -63,18 +63,18 @@ public class LLE {
     public static double[][] of(double[][] data, int k) {
         // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.of(data, k);
-        return of(nng.largest(false), data, 2);
+        return of(data, nng.largest(false), 2);
     }
 
     /**
      * Runs the LLE algorithm.
-     * @param nng the k-nearest neighbor graph.
      * @param data the input data.
+     * @param nng the k-nearest neighbor graph.
      * @param d the dimension of the manifold.
      * @return the embedding coordinates.
      */
-    public static double[][] of(NearestNeighborGraph nng, double[][] data, int d) {
-        int k = nng.neighbors()[0].length;
+    public static double[][] of(double[][] data, NearestNeighborGraph nng, int d) {
+        int k = nng.k();
         int D = data[0].length;
 
         double tol = 0.0;

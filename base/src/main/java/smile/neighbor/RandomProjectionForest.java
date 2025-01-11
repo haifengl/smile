@@ -28,9 +28,6 @@ import smile.sort.HeapSelect;
  * @author Karl Li
  */
 public class RandomProjectionForest implements KNNSearch<double[], double[]> {
-    /** Threshold for nearly zero comparison. */
-    private static final double EPS = 1E-8;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomProjectionForest.class);
     private final List<FlatTree> trees;
     private final double[][] data;
     private final boolean angular;
@@ -125,7 +122,7 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
                 distances[i][j] = a[l].distance;
             }
         }
-        return new NearestNeighborGraph(neighbors, distances);
+        return new NearestNeighborGraph(k, neighbors, distances);
     }
 
     private static void update(Set<Integer> set, HeapSelect<NeighborBuilder<double[], double[]>> pq, int k, double[] x, int index, double dist) {
