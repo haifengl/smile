@@ -12,7 +12,7 @@ check_error() {
 }
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+    export JAVA_HOME=`/usr/libexec/java_home -v 21`
 fi
 
 sbt clean
@@ -29,44 +29,46 @@ sbt ++3.3.4 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
-cd kotlin
-./gradlew dokkaHtml
-check_error "!!"
-find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
-
 # build smile-kotlin.jar and copy it to shell
-rm ../shell/src/universal/bin/smile-kotlin-*.jar
+rm shell/src/universal/bin/smile-kotlin-*.jar
+cd kotlin
 ./gradlew build
 check_error "!!"
 
-cd ../clojure
+./gradlew dokkaHtml
+check_error "!!"
+cd ..
+find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+
+cd clojure
 ./lein codox
 check_error "!!"
+cd ..
 find doc/api/clojure -name '*.html' -exec tidy -m {} \;
 find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
-cd ../web
+cd web
 npm run deploy
 check_error "!!"
 
-# build shell's smile.zip
+# build binary package
 cd ..
 sbt shell/Universal/packageBin
 check_error "!!"
 
 while true; do
-    read -p "Do you want to publish it? " ans
+    read -p "Do you want to publish smile? (yes/no): " ans
     case $ans in
         [Yy]* )
             sbt publishSigned
-            check_error "!!"
+            check_error "sbt publish"
 
             sbt ++3.3.4 scala/publishSigned
-            check_error "!!"
+            check_error "sbt scala/publish"
             sbt ++3.3.4 json/publishSigned
-            check_error "!!"
+            check_error "sbt json/publish"
             # sbt ++3.3.4 spark/publishSigned
-            # check_error "!!"
+            # check_error "sbt spark/publish"
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
@@ -74,7 +76,7 @@ while true; do
 done
 
 while true; do
-    read -p "Do you want to publish smile-kotlin? " ans
+    read -p "Do you want to publish smile-kotlin? (yes/no): " ans
     case $ans in
         [Yy]* )
             cd kotlin
@@ -88,7 +90,7 @@ while true; do
 done
 
 while true; do
-    read -p "Do you want to publish smile-clojure? " ans
+    read -p "Do you want to publish smile-clojure? (yes/no): " ans
     case $ans in
         [Yy]* )
             cd ../clojure
