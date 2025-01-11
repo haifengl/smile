@@ -87,7 +87,7 @@ fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true
  */
 fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): Array<DoubleArray> {
     val nng = NearestNeighborGraph.of(data, k);
-    return LLE.of(nng.largest(false), data, d)
+    return LLE.of(data, nng.largest(false), d)
 }
 
 /**
