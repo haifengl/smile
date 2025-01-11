@@ -26,7 +26,7 @@ import smile.io.Read;
 import smile.util.Paths;
 
 /**
- * CPU dataset. As used by Kilpatrick, D. & Cameron-Jones, M. (1998).
+ * CPU dataset. As used by Kilpatrick, D. &amp; Cameron-Jones, M. (1998).
  * Numeric prediction using instance-based learning with encoding length
  * selection.
  *
