@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.vq;
 
 import smile.clustering.KMeans;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import org.junit.jupiter.api.*;
@@ -29,8 +28,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class SOMTest {
-    
-    public SOMTest() {
+    double[][] x;
+    double[][] testx;
+
+    public SOMTest() throws Exception {
+        var usps = new USPS();
+        x = usps.x();
+        testx = usps.testx();
     }
 
     @BeforeAll
@@ -55,11 +59,7 @@ public class SOMTest {
         System.out.println("K-Means as a benchmark");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
-
         KMeans model = KMeans.fit(x, 400);
-
         double error = 0.0;
         for (double[] xi : x) {
             double[] yi = model.centroids[model.predict(xi)];
@@ -84,9 +84,6 @@ public class SOMTest {
     public void testUSPS() {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        double[][] x = USPS.x;
-        double[][] testx = USPS.testx;
 
         int epochs = 20;
         double[][][] lattice = SOM.lattice(20, 20, x);

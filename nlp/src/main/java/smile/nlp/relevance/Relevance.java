@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.nlp.relevance;
 
 import smile.nlp.Text;
@@ -23,30 +22,11 @@ import smile.nlp.Text;
  * In the context of information retrieval, relevance denotes how well a
  * retrieved set of documents meets the information need of the user.
  *
+ * @param text the document to rank.
+ * @param score the relevance score.
  * @author Haifeng Li
  */
-public class Relevance implements Comparable<Relevance> {
-
-    /**
-     * The document to rank.
-     */
-    public final Text text;
-
-    /**
-     * The relevance score.
-     */
-    public final double score;
-
-    /**
-     * Constructor.
-     * @param text the document to rank.
-     * @param score the relevance score.
-     */
-    public Relevance(Text text, double score) {
-        this.text = text;
-        this.score = score;
-    }
-
+public record Relevance(Text text, double score) implements Comparable<Relevance> {
     @Override
     public int compareTo(Relevance o) {
         return Double.compare(score, o.score);

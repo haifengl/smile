@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
-import smile.test.data.MNIST;
+import smile.datasets.MNIST;
 import smile.math.MathEx;
 import smile.feature.extraction.PCA;
 import org.junit.jupiter.api.*;
@@ -51,10 +50,11 @@ public class TSNETest {
     @Test
     public void test() throws Exception {
         System.out.println("tSNE");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        PCA pca = PCA.fit(MNIST.x).getProjection(50);
-        double[][] X = pca.apply(MNIST.x);
+        var mnist = new MNIST();
+        double[][] x = mnist.x();
+        PCA pca = PCA.fit(x).getProjection(50);
+        double[][] X = pca.apply(x);
 
         long start = System.currentTimeMillis();
         TSNE tsne = new TSNE(X, 2, 20, 200, 550);
@@ -63,14 +63,15 @@ public class TSNETest {
 
         assertEquals(1.3872256, tsne.cost(), 0.1);
         /*
+        var coordinates = tsne.coordinates();
         double[] coord0    = {  2.6870328, 16.8175010};
         double[] coord100  = {-16.3270630,  3.6016438};
         double[] coord1000 = {-16.2529939, 26.8543395};
         double[] coord2000 = {-17.0491869,  4.8453648};
-        assertArrayEquals(coord0,    tsne.coordinates[0], 1E-6);
-        assertArrayEquals(coord100,  tsne.coordinates[100], 1E-6);
-        assertArrayEquals(coord1000, tsne.coordinates[1000], 1E-6);
-        assertArrayEquals(coord2000, tsne.coordinates[2000], 1E-6);
+        assertArrayEquals(coord0,    coordinates[0], 1E-6);
+        assertArrayEquals(coord100,  coordinates[100], 1E-6);
+        assertArrayEquals(coord1000, coordinates[1000], 1E-6);
+        assertArrayEquals(coord2000, coordinates[2000], 1E-6);
          */
     }
 }

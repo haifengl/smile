@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.plot.swing;
 
 import java.awt.Color;
@@ -144,7 +143,7 @@ public class BarPlot extends Plot {
                 x[j][1] = data[i][j];
             }
 
-            Color color = Palette.COLORS[i];
+            Color color = Palette.get(i);
             bars[i] = new Bar(x, width, color);
             legends[i] = new Legend(labels[i], color);
         }

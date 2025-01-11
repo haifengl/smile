@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.io;
 
 import java.io.BufferedReader;
@@ -31,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.util.Strings;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
 import java.io.Serial;
@@ -69,9 +68,9 @@ public class TSNE implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * The coordinate matrix in embedding space.
+     * The embedding coordinates.
      */
-    public final double[][] coordinates;
+    private final double[][] coordinates;
 
     /**
      * The learning rate.
@@ -174,6 +173,14 @@ public class TSNE implements Serializable {
         }
 
         update(iterations);
+    }
+
+    /**
+     * Returns the embedding coordinates.
+     * @return the embedding coordinates.
+     */
+    public double[][] coordinates() {
+        return coordinates;
     }
 
     /**

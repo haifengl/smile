@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,18 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.classification;
 
 import java.io.IOException;
 import smile.data.SparseDataset;
 import smile.data.SampleInstance;
-import smile.io.Write;
-import smile.test.data.Segment;
-import smile.test.data.USPS;
+import smile.datasets.ImageSegmentation;
+import smile.datasets.USPS;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.feature.transform.Standardizer;
 import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.util.SparseArray;
@@ -142,21 +141,21 @@ public class SVMTest {
     }
 */
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
         MathEx.setSeed(19650218); // to get repeatable results.
-
-        InvertibleColumnTransform scaler = Standardizer.fit(Segment.train);
+        var segment = new ImageSegmentation();
+        InvertibleColumnTransform scaler = Standardizer.fit(segment.train());
         System.out.println(scaler);
-        double[][] x = scaler.apply(Segment.formula.x(Segment.train)).toArray();
-        double[][] testx = scaler.apply(Segment.formula.x(Segment.test)).toArray();
+        double[][] x = scaler.apply(segment.formula().x(segment.train())).toArray();
+        double[][] testx = scaler.apply(segment.formula().x(segment.test())).toArray();
 
         GaussianKernel kernel = new GaussianKernel(6.4);
-        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, segment.y(), (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
 
         int[] prediction = model.predict(testx);
-        int error = Error.of(Segment.testy, prediction);
-        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
+        int error = Error.of(segment.testy(), prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / segment.testx().length);
         assertEquals(33, error, 3);
     }
 
@@ -164,13 +163,13 @@ public class SVMTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
-
+        var usps = new USPS();
         GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3, 1));
+        OneVersusRest<double[]> model = OneVersusRest.fit(usps.x(), usps.y(), (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3, 1));
 
-        int[] prediction = model.predict(USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
-        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
+        int[] prediction = model.predict(usps.testx());
+        int error = Error.of(usps.testy(), prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / usps.testx().length);
         assertEquals(86, error, 5);
 
         java.nio.file.Path temp = Write.object(model);

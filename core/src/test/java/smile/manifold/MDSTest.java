@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
-import smile.test.data.Eurodist;
+import smile.datasets.Eurodist;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +25,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class MDSTest {
-
-    public MDSTest() {
+    double[][] x;
+    public MDSTest() throws Exception {
+        var euro = new Eurodist();
+        x = euro.x();
     }
 
     @BeforeAll
@@ -75,7 +76,7 @@ public class MDSTest {
             {  911.230500,   205.93020}
         };
 
-        MDS mds = MDS.of(Eurodist.x);
+        MDS mds = MDS.of(x);
         assertArrayEquals(eig, mds.scores(), 1E-4);
 
         double[][] coordinates = mds.coordinates();
@@ -117,7 +118,7 @@ public class MDSTest {
             {-1319.918808,  -295.010834}
         };
 
-        MDS mds = MDS.of(Eurodist.x, 2, true);
+        MDS mds = MDS.of(x, 2, true);
         assertArrayEquals(eigs, mds.scores(), 1E-2);
 
         double[][] coordinates = mds.coordinates();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.neighbor;
 
 import java.util.ArrayList;
 import java.util.List;
 import smile.math.MathEx;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,14 +29,18 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SuppressWarnings("rawtypes")
 public class MPLSHTest {
-    double[][] x = USPS.x;
-    double[][] testx = USPS.testx;
+    double[][] x;
+    double[][] testx;
     MPLSH<double[]> lsh;
-    LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
+    LinearSearch<double[], double[]> naive;
 
-    public MPLSHTest() {
+    public MPLSHTest() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        x = usps.x();
+        testx = usps.testx();
 
+        naive = LinearSearch.of(x, MathEx::distance);
         lsh = new MPLSH<>(256, 100, 3, 4.0);
         for (double[] xi : x) {
             lsh.put(xi, xi);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.extraction;
 
-import smile.test.data.USArrests;
+import smile.datasets.USArrests;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
@@ -59,24 +58,25 @@ public class GHATest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("GHA");
-
+        var usa = new USArrests();
+        var x = usa.x();
         int k = 3;
-        double[] mu = MathEx.colMeans(USArrests.x);
-        Matrix cov = Matrix.of(MathEx.cov(USArrests.x));
-        for (int i = 0; i < USArrests.x.length; i++) {
-           MathEx.sub(USArrests.x[i], mu);
+        double[] mu = MathEx.colMeans(x);
+        Matrix cov = Matrix.of(MathEx.cov(x));
+        for (double[] xi : x) {
+            MathEx.sub(xi, mu);
         }
 
         TimeFunction r = TimeFunction.constant(0.00001);
         GHA gha = new GHA(4, k, r);
         for (int iter = 1, t = 0; iter <= 1000; iter++) {
             double error = 0.0;
-            for (int i = 0; i < USArrests.x.length; i++, t++) {
-                error += gha.update(USArrests.x[i]);
+            for (int i = 0; i < x.length; i++, t++) {
+                error += gha.update(x[i]);
             }
-            error /= USArrests.x.length;
+            error /= x.length;
 
             if (iter % 100 == 0) {
                 System.out.format("Iter %3d, Error = %.5g%n", iter, error);

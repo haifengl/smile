@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.vq;
 
 import java.io.Serial;
@@ -72,23 +71,10 @@ public class NeuralGas implements VectorQuantizer {
 
     /**
      * Neural Gas Neuron.
+     * @param i the index of neuron.
+     * @param w the weight vector.
      */
-    private static class Neuron implements Serializable {
-        /** The weight vector. */
-        public final double[] w;
-        /** The index of neuron. */
-        public final int i;
-
-        /**
-         * Constructor.
-         * @param i the index of neuron.
-         * @param w the weight vector.
-         */
-        public Neuron(int i, double[] w) {
-            this.i = i;
-            this.w = w;
-        }
-    }
+    private record Neuron(int i, double[] w) implements Serializable { }
 
     /**
      * The neurons.

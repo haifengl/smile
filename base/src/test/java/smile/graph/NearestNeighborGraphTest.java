@@ -17,7 +17,7 @@
 package smile.graph;
 
 import smile.math.MathEx;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,10 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class NearestNeighborGraphTest {
-    double[][] x = USPS.x;
+    double[][] x;
 
-    public NearestNeighborGraphTest() {
+    public NearestNeighborGraphTest() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        x = usps.x();
     }
 
     @BeforeAll

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.neighbor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import smile.math.distance.EditDistance;
-import smile.test.data.IndexNoun;
+import smile.datasets.WordNet;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,12 +29,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class BKTreeTest {
-
-    String[] words = Arrays.copyOf(IndexNoun.words, 10000);
+    String[] words;
     BKTree<String, String> bktree;
     LinearSearch<String, String> naive;
 
-    public BKTreeTest() {
+    public BKTreeTest() throws Exception {
+        var wordnet = new WordNet();
+        words = Arrays.copyOf(wordnet.words(), 10000);
+
         long start = System.currentTimeMillis();
         bktree = BKTree.of(words, new EditDistance(50, true));
         double time = (System.currentTimeMillis() - start) / 1000.0;

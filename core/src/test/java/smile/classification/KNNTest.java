@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,15 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.classification;
 
-import smile.datasets.BreastCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -54,22 +51,22 @@ public class KNNTest {
     }
 
     @Test
-    public void testWeather() {
+    public void testWeather() throws Exception {
         System.out.println("Weather");
-
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, KNN::fit);
+        var weather = new WeatherNominal();
+        ClassificationMetrics metrics = LOOCV.classification(weather.onehot(), weather.y(), KNN::fit);
         System.out.println("1-NN Error: " + metrics);
         assertEquals(8, metrics.error());
 
-        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 3));
+        metrics = LOOCV.classification(weather.onehot(), weather.y(), (x, y) -> KNN.fit(x, y, 3));
         System.out.println("3-NN Error: " + metrics);
         assertEquals(7, metrics.error());
 
-        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 5));
+        metrics = LOOCV.classification(weather.onehot(), weather.y(), (x, y) -> KNN.fit(x, y, 5));
         System.out.println("5-NN Error: " + metrics);
         assertEquals(8, metrics.error());
 
-        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y,7));
+        metrics = LOOCV.classification(weather.onehot(), weather.y(), (x, y) -> KNN.fit(x, y,7));
         System.out.println("7-NN Error: " + metrics);
         assertEquals(5, metrics.error());
     }
@@ -96,11 +93,11 @@ public class KNNTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
@@ -121,13 +118,13 @@ public class KNNTest {
     }
 
     @Test
-    public void testSegment() {
+    public void testSegment() throws Exception {
         System.out.println("Segment");
+        var segment = new ImageSegmentation();
+        KNN<double[]> model = KNN.fit(segment.x(), segment.y(), 1);
 
-        KNN<double[]> model = KNN.fit(Segment.x, Segment.y, 1);
-
-        int[] prediction = model.predict(Segment.testx);
-        int error = Error.of(Segment.testy, prediction);
+        int[] prediction = model.predict(segment.testx());
+        int error = Error.of(segment.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(39, error);
@@ -136,11 +133,11 @@ public class KNNTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
+        var usps = new USPS();
+        KNN<double[]> model = KNN.fit(usps.x(), usps.y());
 
-        KNN<double[]> model = KNN.fit(USPS.x, USPS.y);
-
-        int[] prediction = model.predict(USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
+        int[] prediction = model.predict(usps.testx());
+        int error = Error.of(usps.testy(), prediction);
 
         System.out.println("Error = " + error);
         assertEquals(113, error);
