@@ -322,6 +322,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     }
 
     @Override
+    @javax.annotation.Nonnull
     public Iterator<Row> iterator() {
         return stream().iterator();
     }

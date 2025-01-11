@@ -17,7 +17,7 @@
 package smile.neighbor;
 
 import smile.math.MathEx;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,11 +26,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class RandomProjectionTreeTest {
-    double[][] x = USPS.x;
-    double[][] testx = USPS.testx;
+    double[][] x;
+    double[][] testx;
 
-    public RandomProjectionTreeTest() {
+    public RandomProjectionTreeTest() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        x = usps.x();
+        testx = usps.testx();
     }
 
     @BeforeAll

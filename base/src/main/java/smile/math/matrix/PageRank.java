@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.math.matrix;
 
 import java.util.Arrays;
@@ -102,14 +101,11 @@ public class PageRank {
                 p[i] = q;
             }
 
-            if (iter % 10 == 0) {
+            if (iter % 10 == 0 || delta < tol) {
                 logger.info("PageRank residual after {} power iterations: {}", iter, delta);
             }
 
-            if (delta < tol) {
-                logger.info("PageRank residual after {} power iterations: {}", iter, delta);
-                return p;
-            }
+            if (delta < tol) return p;
         }
 
         logger.error("PageRank iteration exceeded the maximum number of iterations.");

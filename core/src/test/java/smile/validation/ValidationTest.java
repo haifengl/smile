@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.validation;
 
 import smile.classification.DecisionTree;
 import smile.datasets.Abalone;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.regression.RegressionTree;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,9 +49,10 @@ public class ValidationTest {
     }
 
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        ClassificationValidation<DecisionTree> result = ClassificationValidation.of(USPS.formula, USPS.train, USPS.test, DecisionTree::fit);
+        var usps = new USPS();
+        var result = ClassificationValidation.of(usps.formula(), usps.train(), usps.test(), DecisionTree::fit);
 
         System.out.println(result);
         assertEquals(0.8340, result.metrics.accuracy(), 1E-4);

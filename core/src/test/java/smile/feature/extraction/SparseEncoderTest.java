@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.extraction;
 
 import smile.data.DataFrame;
-import smile.test.data.Weather;
+import smile.datasets.Weather;
 import smile.util.SparseArray;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,10 +48,10 @@ public class SparseEncoderTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Sparse Encoder");
-
-        DataFrame data = Weather.data;
+        var weather = new Weather();
+        DataFrame data = weather.data();
         SparseEncoder encoder = new SparseEncoder(data.schema(), "outlook", "temperature", "humidity", "windy");
         SparseArray[] features = encoder.apply(data);
 

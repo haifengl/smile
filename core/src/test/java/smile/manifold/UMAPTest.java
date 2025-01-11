@@ -17,10 +17,9 @@
 package smile.manifold;
 
 import java.util.Arrays;
-
 import smile.math.MathEx;
-import smile.test.data.MNIST;
-import smile.test.data.SwissRoll;
+import smile.datasets.MNIST;
+import smile.datasets.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,21 +51,22 @@ public class UMAPTest {
     @Test
     public void testMnist() throws Exception {
         System.out.println("UMAP MNIST");
-
         MathEx.setSeed(19650218); // to get repeatable results.
+        var mnist = new MNIST();
+        var x = mnist.x();
         long start = System.currentTimeMillis();
-        double[][] coordinates = UMAP.of(MNIST.x, 15);
+        double[][] coordinates = UMAP.of(x, 15);
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
-        assertEquals(MNIST.x.length, coordinates.length);
+        assertEquals(x.length, coordinates.length);
     }
 
     @Test
     public void testSwissRoll() throws Exception {
         System.out.println("UMAP SwissRoll");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        var roll = new SwissRoll();
+        double[][] data = Arrays.copyOf(roll.data(), 1000);
         long start = System.currentTimeMillis();
         double[][] coordinates = UMAP.of(data, 15);
         long end = System.currentTimeMillis();

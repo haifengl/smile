@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.plot.swing;
 
 import java.awt.Color;
@@ -149,7 +148,7 @@ public class ScatterPlot extends Plot {
         Legend[] legends = new Legend[groups.size()];
         int k = 0;
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
-            Color color = Palette.COLORS[k % Palette.COLORS.length];
+            Color color = Palette.get(k);
             points[k] = new Point(
                     group.getValue().stream().map(i -> x[i]).toArray(double[][]::new),
                     mark,
