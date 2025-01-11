@@ -118,7 +118,7 @@ public abstract class Graph {
             }
         }
 
-        int n = getNumVertices();
+        int n = getVertexCount();
         String edge = digraph ? "->" : "--";
         for (int i = 0; i < n; i++) {
             int u = i;
@@ -150,7 +150,7 @@ public abstract class Graph {
      * Returns the number of vertices.
      * @return the number of vertices.
      */
-    public abstract int getNumVertices();
+    public abstract int getVertexCount();
 
     /**
      * Returns true if and only if this graph contains an edge going
@@ -343,10 +343,10 @@ public abstract class Graph {
      */
     public int[] dfsort() {
         if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+            throw new UnsupportedOperationException("Topological sort cannot be applied on undirected graph.");
         }
 
-        int n = getNumVertices();
+        int n = getVertexCount();
         boolean[] visited = new boolean[n];
         int[] order = new int[n];
         Arrays.fill(order, -1);
@@ -383,7 +383,11 @@ public abstract class Graph {
      *         in the same connected component.
      */
     public int[][] dfcc() {
-        int n = getNumVertices();
+        if (digraph) {
+            throw new UnsupportedOperationException("Connected components algorithm cannot be applied on digraph");
+        }
+
+        int n = getVertexCount();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -443,7 +447,7 @@ public abstract class Graph {
      * @param visitor the visitor functor.
      */
     public void dfs(VertexVisitor visitor) {
-        int n = getNumVertices();
+        int n = getVertexCount();
         boolean[] visited = new boolean[n];
 
         for (int i = 0; i < n; i++) {
@@ -460,10 +464,10 @@ public abstract class Graph {
      */
     public int[] bfsort() {
         if (!digraph) {
-            throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
+            throw new UnsupportedOperationException("Topological sort cannot be applied on undirected graph.");
         }
 
-        int n = getNumVertices();
+        int n = getVertexCount();
         int[] in = new int[n];
         int[] ts = new int[n];
         for (int i = 0; i < n; i++) {
@@ -517,7 +521,11 @@ public abstract class Graph {
      *         in the same connected component.
      */
     public int[][] bfcc() {
-        int n = getNumVertices();
+        if (digraph) {
+            throw new UnsupportedOperationException("Connected components algorithm cannot be applied on digraph");
+        }
+
+        int n = getVertexCount();
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -560,7 +568,7 @@ public abstract class Graph {
      * @param visitor the visitor functor.
      */
     public void bfs(VertexVisitor visitor) {
-        int n = getNumVertices();
+        int n = getVertexCount();
         boolean[] visited = new boolean[n];
 
         Queue<Integer> queue = new LinkedList<>();
@@ -591,7 +599,7 @@ public abstract class Graph {
      *         it is the length of the shortest path to other vertices.
      */
     public double[] dijkstra(int s, boolean weighted) {
-        int n = getNumVertices();
+        int n = getVertexCount();
         double[] wt = new double[n];
         Arrays.fill(wt, Double.POSITIVE_INFINITY);
 
@@ -625,7 +633,7 @@ public abstract class Graph {
      * @return the length of shortest-path between vertices.
      */
     public double[][] dijkstra() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         double[][] wt = new double[n][];
         for (int i = 0; i < n; i++) {
             wt[i] = dijkstra(i);
@@ -643,10 +651,10 @@ public abstract class Graph {
      */
     public double prim(List<Edge> mst) {
         if (digraph) {
-            throw new UnsupportedOperationException("Call Prim's algorithm on a digraph.");
+            throw new UnsupportedOperationException("Prim's algorithm cannot be applied on a digraph.");
         }
 
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct MST with fewer than 2 vertices.");
         }
@@ -762,7 +770,7 @@ public abstract class Graph {
      * @return the MST cost.
      */
     private double mstLowerBound(boolean[] inPath) {
-        int n = getNumVertices();
+        int n = getVertexCount();
 
         // Tracks whether a node is included in the MST
         boolean[] inMST = new boolean[n];
@@ -825,7 +833,7 @@ public abstract class Graph {
      * @return the optimal TSP tour.
      */
     public int[] tsp() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
@@ -890,7 +898,7 @@ public abstract class Graph {
      * @return the optimal TSP tour.
      */
     public int[] heldKarp() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
@@ -984,7 +992,7 @@ public abstract class Graph {
      * @return the approximate solution to TSP.
      */
     public int[] nearestInsertion() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
@@ -1035,7 +1043,7 @@ public abstract class Graph {
      * @return the approximate solution to TSP.
      */
     public int[] farthestInsertion() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
@@ -1085,7 +1093,7 @@ public abstract class Graph {
      * @return the approximate solution to TSP.
      */
     public int[] arbitraryInsertion() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }
@@ -1113,7 +1121,7 @@ public abstract class Graph {
      * @return the improved tour cost.
      */
     public double opt2(int[] tour, int maxIter) {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (tour.length != n+1) {
             throw new IllegalArgumentException("Invalid tour length: " + tour.length);
         }
@@ -1147,7 +1155,7 @@ public abstract class Graph {
      * @return the approximate solution to TSP.
      */
     public int[] christofides() {
-        int n = getNumVertices();
+        int n = getVertexCount();
         if (n < 2) {
             throw new UnsupportedOperationException("Cannot construct TSP with fewer than 2 vertices.");
         }

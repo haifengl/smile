@@ -120,7 +120,7 @@ package object manifold {
     */
   def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]] = time("LLE") {
     val nng = NearestNeighborGraph.of(data, k)
-    LLE.of(nng, data, d)
+    LLE.of(data, nng, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -194,7 +194,7 @@ package object manifold {
     * @param d                  The target embedding dimensions. defaults to 2 to provide easy
     *                           visualization, but can reasonably be set to any integer value
     *                           in the range 2 to 100.
-    * @param iterations         The number of iterations to optimize the
+    * @param epochs             The number of iterations to optimize the
     *                           low-dimensional representation. Larger values result in more
     *                           accurate embedding. Muse be greater than 10. Choose wise value
     *                           based on the size of the input data, e.g, 200 for large
@@ -219,18 +219,11 @@ package object manifold {
     *                           embedding optimization. Values higher than one will result in
     *                           greater weight being given to negative samples, default 1.0.
     */
-  def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, iterations: Int = 0, learningRate: Double = 1.0,
+  def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, epochs: Int = 0, learningRate: Double = 1.0,
            minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0,
            localConnectivity: Double = 1.0): Array[Array[Double]] = time("UMAP") {
-    val nng = if (data.length <= 10000) NearestNeighborGraph.of(data, k)
-                                   else NearestNeighborGraph.descent(data, k)
-
-    val iter = if (iterations >= 10) iterations else {
-      if (data.length > 10000) 200 else 500
-    }
-
-    UMAP.of(nng, data, k, d, iter, learningRate, minDist, spread,
-      negativeSamples, repulsionStrength, localConnectivity)
+    UMAP.of(data, k, d, epochs, learningRate, minDist, spread,
+            negativeSamples, repulsionStrength, localConnectivity)
   }
 
   /** Classical multidimensional scaling, also known as principal coordinates
