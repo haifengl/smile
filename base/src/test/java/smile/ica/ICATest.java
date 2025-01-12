@@ -55,7 +55,7 @@ public class ICATest {
         System.out.println("ICA");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        CSVFormat format = CSVFormat.Builder.create().build();
+        CSVFormat format = CSVFormat.Builder.create().get();
         CSV csv = new CSV(format);
         double[][] data = csv.read(Paths.getTestData("ica/ica.csv")).toArray(false, CategoricalEncoder.DUMMY);
 

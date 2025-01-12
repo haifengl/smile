@@ -90,7 +90,7 @@ public class CSVTest {
                 .setHeader()
                 .setSkipHeaderRecord(true)
                 .setCommentMarker('%')
-                .build();
+                .get();
         CSV csv = new CSV(format);
         DataFrame gdp = csv.read(Paths.getTestData("regression/gdp.csv"));
 
@@ -126,7 +126,7 @@ public class CSVTest {
         CSVFormat format = CSVFormat.Builder.create()
                 .setHeader()
                 .setSkipHeaderRecord(false)
-                .build();
+                .get();
         CSV csv = new CSV(format);
         DataFrame diabetes = csv.read(Paths.getTestData("regression/diabetes.csv"));
 
@@ -161,7 +161,7 @@ public class CSVTest {
                 .setDelimiter('\t')
                 .setHeader()
                 .setSkipHeaderRecord(true)
-                .build();
+                .get();
         CSV csv = new CSV(format);
         DataFrame prostate = csv.read(Paths.getTestData("regression/prostate-train.csv"));
 
@@ -233,7 +233,7 @@ public class CSVTest {
         CSVFormat format = CSVFormat.Builder.create()
                 .setHeader()
                 .setSkipHeaderRecord(false)
-                .build();
+                .get();
         CSV csv = new CSV(format);
         DataFrame df = csv.read(Paths.getTestData("kylo/userdata1.csv"));
 
