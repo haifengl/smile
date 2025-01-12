@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,19 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.regression;
 
 import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.datasets.Abalone;
-import smile.datasets.Bank32nh;
-import smile.datasets.CPU;
-import smile.datasets.CalHousing;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.*;
 import smile.util.Index;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
@@ -64,19 +59,19 @@ public class RLSTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-
-        int n = Longley.data.size();
-        DataFrame batch = Longley.data.get(Index.of(IntStream.range(0, n/2).toArray()));
-        DataFrame online = Longley.data.get(Index.of(IntStream.range(n/2, n).toArray()));
-        LinearModel model = OLS.fit(Longley.formula, batch);
+        var longley = new Longley();
+        int n = longley.data().size();
+        DataFrame batch = longley.data().get(Index.of(IntStream.range(0, n/2).toArray()));
+        DataFrame online = longley.data().get(Index.of(IntStream.range(n/2, n).toArray()));
+        LinearModel model = OLS.fit(longley.formula(), batch);
         double[] prediction = model.predict(online);
-        double rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
+        double rmse = RMSE.of(longley.formula().y(online).toDoubleArray(), prediction);
         System.out.println("Batch RMSE = " + rmse);
         assertEquals(6.229663, rmse, 1E-4);
 
         model.update(online);
         prediction = model.predict(online);
-        rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
+        rmse = RMSE.of(longley.formula().y(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
 
@@ -88,20 +83,20 @@ public class RLSTest {
      * Test of learn method, of class LinearRegression.
      */
     @Test
-    public void testProstate() {
+    public void testProstate() throws Exception {
         System.out.println("Prostate");
-
-        LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
+        var prostate = new ProstateCancer();
+        LinearModel model = OLS.fit(prostate.formula(), prostate.train());
         System.out.println(model);
 
-        double[] prediction = model.predict(Prostate.test);
-        double rmse = RMSE.of(Prostate.testy, prediction);
+        double[] prediction = model.predict(prostate.test());
+        double rmse = RMSE.of(prostate.testy(), prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
 
-        model.update(Prostate.test);
-        prediction = model.predict(Prostate.test);
-        rmse = RMSE.of(Prostate.testy, prediction);
+        model.update(prostate.test());
+        prediction = model.predict(prostate.test());
+        rmse = RMSE.of(prostate.testy(), prediction);
         System.out.println("RMSE after online = " + rmse);
         assertEquals(0.643182, rmse, 1E-4);
     }
@@ -130,13 +125,15 @@ public class RLSTest {
         var bank32nh = new Bank32nh();
         var calHousing = new CalHousing();
         var cpu = new CPU();
-
+        var kin8nm = new Kin8nm();
+        var planes = new Planes2D();
+        var puma = new Puma8NH();
         testOnlineLearn("CPU", cpu.formula(), cpu.data());
-        testOnlineLearn("2dplanes", Planes.formula, Planes.data);
+        testOnlineLearn("2dplanes", planes.formula(), planes.data());
         testOnlineLearn("abalone", abalone.formula(), abalone.train());
         testOnlineLearn("bank32nh", bank32nh.formula(), bank32nh.data());
         testOnlineLearn("cal_housing", calHousing.formula(), calHousing.data());
-        testOnlineLearn("puma8nh", Puma8NH.formula, Puma8NH.data);
-        testOnlineLearn("kin8nm", Kin8nm.formula, Kin8nm.data);
+        testOnlineLearn("puma8nh", puma.formula(), puma.data());
+        testOnlineLearn("kin8nm", kin8nm.formula(), kin8nm.data());
     }
 }

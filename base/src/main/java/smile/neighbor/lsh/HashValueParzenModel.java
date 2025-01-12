@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.neighbor.lsh;
 
 import smile.stat.distribution.GaussianDistribution;
@@ -25,6 +24,15 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class HashValueParzenModel {
+    /**
+     * Gaussian model of hash values of nearest neighbor.
+     *
+     * @param H the hash values of query object.
+     * @param mean the mean of hash values of neighbors.
+     * @param var the variance of hash values of neighbors.
+     * @author Haifeng Li
+     */
+    private record NeighborHashValueModel(double[] H, double[] mean, double[] var) { }
 
     /**
      * Gaussian kernel for Parzen window estimation.
@@ -55,7 +63,7 @@ public class HashValueParzenModel {
 
         int n = 0;
         for (MultiProbeSample sample : samples) {
-            if (sample.neighbors.size() > 1) {
+            if (sample.neighbors().size() > 1) {
                 n++;
             }
         }
@@ -63,24 +71,24 @@ public class HashValueParzenModel {
         neighborHashValueModels = new NeighborHashValueModel[n];
         int l = 0;
         for (MultiProbeSample sample : samples) {
-            if (sample.neighbors.size() > 1) {
+            if (sample.neighbors().size() > 1) {
                 double[] H = new double[k];
                 double[] mu = new double[k];
                 double[] var = new double[k];
 
                 for (int i = 0; i < k; i++) {
-                    H[i] = hash.hash(sample.query, i);
+                    H[i] = hash.hash(sample.query(), i);
 
                     double sum = 0.0;
                     double sumsq = 0.0;
-                    for (double[] v : sample.neighbors) {
+                    for (double[] v : sample.neighbors()) {
                         double h = hash.hash(v, i);
                         sum += h;
                         sumsq += h * h;
                     }
 
-                    mu[i] = sum / sample.neighbors.size();
-                    var[i] = sumsq / sample.neighbors.size() - mu[i] * mu[i];
+                    mu[i] = sum / sample.neighbors().size();
+                    var[i] = sumsq / sample.neighbors().size() - mu[i] * mu[i];
                 }
 
                 neighborHashValueModels[l++] = new NeighborHashValueModel(H, mu, var);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile
 
 import java.io._
@@ -86,7 +85,7 @@ object write {
     */
   def csv(data: DataFrame, file: Path, delimiter: String): Unit = {
     val format = CSVFormat.Builder.create().setDelimiter(delimiter)
-    Write.csv(data, file, format.build())
+    Write.csv(data, file, format.get())
   }
 
   /** Writes a two-dimensional array to a comma-delimited text file.
@@ -156,7 +155,7 @@ object read {
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
-    Read.csv(file, format.build(), schema)
+    Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */
@@ -166,7 +165,7 @@ object read {
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
-    Read.csv(file, format.build(), schema)
+    Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */

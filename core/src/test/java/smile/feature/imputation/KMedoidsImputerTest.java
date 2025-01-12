@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.imputation;
 
 import java.util.function.Function;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.math.distance.Distance;
-import smile.test.data.SyntheticControl;
+import smile.datasets.SyntheticControl;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static smile.feature.imputation.SimpleImputerTest.impute;
@@ -55,7 +54,8 @@ public class KMedoidsImputerTest {
     public void test() throws Exception {
         System.out.println("KMedoidsImputer");
         MathEx.setSeed(19650218); // to get repeatable results.
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         Distance<Tuple> distance = (x, y) -> {
             double[] xd = x.toArray();

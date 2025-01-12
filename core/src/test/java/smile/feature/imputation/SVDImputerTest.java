@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.imputation;
 
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
-import smile.test.data.SyntheticControl;
+import smile.datasets.SyntheticControl;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -50,7 +49,8 @@ public class SVDImputerTest {
     @Test
     public void test() throws Exception {
         System.out.println("SVDImputer");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         int k = data[0].length / 5;
 
         Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);

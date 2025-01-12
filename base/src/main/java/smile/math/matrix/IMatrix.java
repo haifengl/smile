@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.math.matrix;
 
 import java.io.IOException;
@@ -1012,14 +1011,11 @@ public abstract class IMatrix implements Serializable {
                 }
             }
 
-            if (iter % 10 == 0) {
+            if (iter % 10 == 0 || err <= tol) {
                 logger.info("BCG: the error after {} iterations: {}", iter, err);
             }
 
-            if (err <= tol) {
-                logger.info("BCG: the error after {} iterations: {}", iter, err);
-                break;
-            }
+            if (err <= tol) break;
         }
 
         return err;

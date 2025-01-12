@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.selection;
 
 import java.util.Arrays;
 import smile.classification.LDA;
 import smile.datasets.Iris;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.validation.metric.Accuracy;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,20 +62,20 @@ public class SumSquaresRatioTest {
     }
 
     @Test
-    public void tesUSPS() {
+    public void tesUSPS() throws Exception {
         System.out.println("USPS");
-
-        SumSquaresRatio[] score = SumSquaresRatio.fit(USPS.train, "class");
+        var usps = new USPS();
+        SumSquaresRatio[] score = SumSquaresRatio.fit(usps.train(), "class");
         Arrays.sort(score);
-        String[] columns = Arrays.stream(score).limit(121).map(s -> s.feature()).toArray(String[]::new);
+        String[] columns = Arrays.stream(score).limit(121).map(SumSquaresRatio::feature).toArray(String[]::new);
 
-        double[][] train = USPS.formula.x(USPS.train.drop(columns)).toArray();
-        LDA lda = LDA.fit(train, USPS.y);
+        double[][] train = usps.formula().x(usps.train().drop(columns)).toArray();
+        LDA lda = LDA.fit(train, usps.y());
 
-        double[][] test = USPS.formula.x(USPS.test.drop(columns)).toArray();
+        double[][] test = usps.formula().x(usps.test().drop(columns)).toArray();
         int[] prediction = lda.predict(test);
 
-        double accuracy = new Accuracy().score(USPS.testy, prediction);
+        double accuracy = new Accuracy().score(usps.testy(), prediction);
         System.out.format("SSR %.2f%%%n", 100 * accuracy);
         assertEquals(0.86, accuracy, 1E-2);
     }

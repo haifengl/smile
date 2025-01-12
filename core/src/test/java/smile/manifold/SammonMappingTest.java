@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
 import java.util.Arrays;
-import smile.test.data.Eurodist;
+import smile.datasets.Eurodist;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,7 +47,7 @@ public class SammonMappingTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Sammon's Mapping");
 
         double[][] points = {
@@ -75,12 +74,12 @@ public class SammonMappingTest {
                 {-1039.3089, -170.4371}
         };
 
-        SammonMapping sammon = SammonMapping.of(Eurodist.x);
-        assertEquals(0.00941, sammon.stress, 1E-5);
+        var euro = new Eurodist();
+        SammonMapping sammon = SammonMapping.of(euro.x());
+        assertEquals(0.00941, sammon.stress(), 1E-5);
 
-        for (int i = 0; i < points.length; i++) {
-            System.out.println(Arrays.toString(sammon.coordinates[i]));
-            //assertArrayEquals(points[i], sammon.coordinates[i], 1E-4);
+        for (var point : sammon.coordinates()) {
+            System.out.println(Arrays.toString(point));
         }
     }
 }

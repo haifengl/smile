@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.clustering;
 
 import smile.clustering.linkage.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.test.data.USPS;
+import smile.datasets.USPS;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,9 +52,9 @@ public class HierarchicalClusteringTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-
-        double[][] x = USPS.x;
-        int[] y = USPS.y;
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
 
         HierarchicalClustering model = HierarchicalClustering.fit(SingleLinkage.of(x));
         int[] label = model.partition(10);

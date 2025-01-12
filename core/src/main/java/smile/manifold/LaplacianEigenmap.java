@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
 import java.util.Collection;
@@ -112,7 +111,7 @@ public class LaplacianEigenmap {
      */
     public static double[][] of(NearestNeighborGraph nng, int d, double t) {
         AdjacencyList graph = nng.graph(false);
-        int n = graph.getNumVertices();
+        int n = graph.getVertexCount();
 
         double[] D = new double[n];
         double gamma = -1.0 / t;
