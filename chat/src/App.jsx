@@ -13,7 +13,7 @@ function App() {
 
   const bot = {
     id: 'meta/llama3',
-    name: 'Llama3.1',
+    name: 'Kirin',
     avatar: LlamaIcon,
   };
   
@@ -136,7 +136,7 @@ function App() {
         onerror(error) {
           console.error(error);
           messages.push({
-            text: error.message,
+            text: "Sorry, the service isn't available right now. Please try again later.",
             user: server,
             createdAt: new Date(),
           });
