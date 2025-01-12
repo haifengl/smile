@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,12 +131,12 @@ public class SQL implements AutoCloseable {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("""
                 CREATE TABLE %s AS
-                SELECT * FROM read_csv(%s, delim='%c', """,
+                SELECT * FROM read_csv(%s,delim='%c',""",
                 name, fileList(path), delimiter));
         if (columns == null) {
-            sb.append("header = true");
+            sb.append("header=true");
         } else {
-            sb.append("columns = ");
+            sb.append("columns=");
             sb.append(columnList(columns));
         }
         sb.append(')');

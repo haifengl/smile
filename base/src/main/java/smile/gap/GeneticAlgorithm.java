@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.gap;
 
 import java.util.Arrays;
@@ -232,7 +231,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
         
         // Calculate the fitness of each chromosome.
         Arrays.stream(population).parallel().forEach(chromosome -> {
-            if (chromosome instanceof LamarckianChromosome ch) {
+            if (chromosome instanceof LamarckianChromosome<?> ch) {
                 for (int j = 0; j < t; j++) {
                     ch.evolve();
                 }
@@ -271,7 +270,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
 
             // Calculate the fitness of each chromosome.
             Arrays.stream(population).parallel().forEach(chromosome -> {
-                if (chromosome instanceof LamarckianChromosome ch) {
+                if (chromosome instanceof LamarckianChromosome<?> ch) {
                     for (int j = 0; j < t; j++) {
                         ch.evolve();
                     }

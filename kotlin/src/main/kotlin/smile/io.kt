@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile
 
 import java.io.*
@@ -68,7 +67,7 @@ object write {
      */
     fun csv(data: DataFrame, file: Path, delimiter: Char): Unit {
         val format = CSVFormat.Builder.create().setDelimiter(delimiter)
-        Write.csv(data, file, format.build())
+        Write.csv(data, file, format.get())
     }
 }
 
@@ -83,14 +82,14 @@ object read {
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
-        return Read.csv(file, format.build(), schema)
+        return Read.csv(file, format.get(), schema)
     }
 
     /** Reads a CSV file. */
     fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
-        return Read.csv(file, format.build(), schema)
+        return Read.csv(file, format.get(), schema)
     }
 
     /** Reads a CSV file. */

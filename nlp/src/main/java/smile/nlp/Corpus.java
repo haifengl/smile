@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.nlp;
 
 import java.util.Iterator;
@@ -38,19 +37,19 @@ public interface Corpus {
      * Returns the number of documents in the corpus.
      * @return the number of documents in the corpus.
      */
-    int ndoc();
+    int docCount();
 
     /**
      * Returns the number of unique terms in the corpus.
      * @return the number of unique terms in the corpus.
      */
-    int nterm();
+    int termCount();
 
     /**
      * Returns the number of bigrams in the corpus.
      * @return the number of bigrams in the corpus.
      */
-    long nbigram();
+    long bigramCount();
 
     /**
      * Returns the average size of documents in the corpus.

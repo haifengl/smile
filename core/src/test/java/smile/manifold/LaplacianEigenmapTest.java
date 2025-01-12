@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
 import java.util.Arrays;
-import smile.test.data.SwissRoll;
+import smile.datasets.SwissRoll;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1054,7 +1053,8 @@ public class LaplacianEigenmapTest {
                 {-0.0432, -0.0103}
         };
 
-        double[][] data = Arrays.copyOf(SwissRoll.data, 1000);
+        var roll = new SwissRoll();
+        double[][] data = Arrays.copyOf(roll.data(), 1000);
         double[][] coordinates = LaplacianEigenmap.of(data, 7);
 
         for (int i = 0; i < points.length; i++) {

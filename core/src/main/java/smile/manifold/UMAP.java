@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.manifold;
 
 import java.util.Arrays;
@@ -64,21 +63,20 @@ public class UMAP {
     /**
      * Runs the UMAP algorithm with Euclidean distance.
      *
-     * @param data    the input data.
+     * @param data    The input data.
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
-     * @return the embedding coordinates.
+     * @return The embedding coordinates.
      */
     public static double[][] of(double[][] data, int k) {
-        int epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, k, 2, epochs, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
+        return of(data, k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
      * Runs the UMAP algorithm with Euclidean distance.
      *
-     * @param data    the input data.
+     * @param data    The input data.
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
@@ -109,7 +107,7 @@ public class UMAP {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
-     * @return the embedding coordinates.
+     * @return The embedding coordinates.
      */
     public static double[][] of(double[][] data, int k, int d, int epochs, double learningRate,
                                 double minDist, double spread, int negativeSamples,
@@ -117,31 +115,30 @@ public class UMAP {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, k) :
                 NearestNeighborGraph.descent(data, k);
-        return of(nng, data, k, d, epochs, learningRate, minDist, spread,
+        return of(data, nng, d, epochs, learningRate, minDist, spread,
                   negativeSamples, repulsionStrength, localConnectivity);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
-     * @param data    the input data.
-     * @param distance the distance function.
+     * @param data    The input data.
+     * @param distance The distance function.
      * @param k       k-nearest neighbor. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
-     * @param <T> the data type of points.
-     * @return the embedding coordinates.
+     * @param <T> The data type of points.
+     * @return The embedding coordinates.
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
-        int epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
-        return of(data, distance, k, 2, epochs, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
+        return of(data, distance, k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
-     * @param data               the input data.
-     * @param distance           the distance function.
+     * @param data               The input data.
+     * @param distance           The distance function.
      * @param k                  k-nearest neighbors. Larger values result in more global views
      *                           of the manifold, while smaller values result in more local data
      *                           being preserved. Generally in the range 2 to 100.
@@ -172,7 +169,8 @@ public class UMAP {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
-     * @return the embedding coordinates.
+     * @param <T> The data type of points.
+     * @return The embedding coordinates.
      */
     public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int epochs,
                                     double learningRate, double minDist, double spread, int negativeSamples,
@@ -180,18 +178,15 @@ public class UMAP {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, distance, k) :
                 NearestNeighborGraph.descent(data, distance, k);
-        return of(nng, data, k, d, epochs, learningRate, minDist, spread,
+        return of(data, nng, d, epochs, learningRate, minDist, spread,
                   negativeSamples, repulsionStrength, localConnectivity);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
-     * @param nng                the k-nearest neighbor graph.
-     * @param data               the input data.
-     * @param k                  k-nearest neighbors. Larger values result in more global views
-     *                           of the manifold, while smaller values result in more local data
-     *                           being preserved. Generally in the range 2 to 100.
+     * @param data               The input data.
+     * @param nng                The k-nearest neighbor graph.
      * @param d                  The target embedding dimensions. defaults to 2 to provide easy
      *                           visualization, but can reasonably be set to any integer value
      *                           in the range 2 to 100.
@@ -228,7 +223,7 @@ public class UMAP {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(NearestNeighborGraph nng, T[] data, int k, int d, int epochs,
+    public static <T> double[][] of(T[] data, NearestNeighborGraph nng, int d, int epochs,
                                     double learningRate, double minDist, double spread, int negativeSamples,
                                     double repulsionStrength, double localConnectivity) {
         if (d < 2) {
@@ -240,9 +235,6 @@ public class UMAP {
         if (minDist > spread) {
             throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ", spread=" + spread);
         }
-        if (epochs < 10) {
-            throw new IllegalArgumentException("epochs must be a positive integer of at least 10: " + epochs);
-        }
         if (learningRate <= 0) {
             throw new IllegalArgumentException("learningRate must greater than 0: " + learningRate);
         }
@@ -253,18 +245,31 @@ public class UMAP {
             throw new IllegalArgumentException("localConnectivity must be at least 1.0: " + localConnectivity);
         }
 
+        if (epochs < 10) {
+            epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
+            logger.info("Set epochs = {}", epochs);
+        }
+
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        SparseMatrix conorm = computeFuzzySimplicialSet(nng, k, localConnectivity);
-
-        int n = nng.size();
-        int[][] cc = nng.graph(true).bfcc();
-        logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
+        SparseMatrix conorm = computeFuzzySimplicialSet(nng, localConnectivity);
 
         // Initialize embedding
+        int n = nng.size();
         double[][] coordinates;
-        if (cc.length > 1) {
+        boolean connected = false;
+        if (n <= LARGE_DATA_SIZE) {
+            int[][] cc = nng.graph(false).bfcc();
+            logger.info("The nearest neighbor graph has {} connected component(s).", cc.length);
+            connected = cc.length == 1;
+        }
+
+        if (connected) {
+            logger.info("Spectral initialization will be attempted.");
+            coordinates = spectralLayout(nng, d);
+            noisyScale(coordinates, 10, 0.0001);
+        } else {
             if (data instanceof double[][]) {
                 logger.info("PCA-based initialization will be attempted.");
                 coordinates = pcaLayout((double[][]) data, d);
@@ -273,10 +278,6 @@ public class UMAP {
                 logger.info("Random initialization will be attempted.");
                 coordinates = randomLayout(n, d);
             }
-        } else {
-            logger.info("Spectral initialization will be attempted.");
-            coordinates = spectralLayout(nng, d);
-            noisyScale(coordinates,10, 0.0001);
         }
         normalize(coordinates, 10);
         logger.info("Finish embedding initialization");
@@ -314,7 +315,7 @@ public class UMAP {
             g[1] = -(x[0] * x[1] * Math.log(x[2]) * pow) / (de * de);
             return 1 / de;
         }
-    };
+    }
 
     /**
      * Fits the differentiable curve used in lower dimensional fuzzy simplicial
@@ -354,8 +355,7 @@ public class UMAP {
      * set for each such point, and then combining all the local
      * fuzzy simplicial sets into a global one via a fuzzy union.
      *
-     * @param nng     The nearest neighbor graph.
-     * @param k       k-nearest neighbor.
+     * @param nng     The k-nearest neighbor graph.
      * @param localConnectivity The local connectivity required. That is, the
      *                          number of nearest neighbors that should be assumed
      *                          to be connected at a local level. The higher this
@@ -366,12 +366,12 @@ public class UMAP {
      * entry of the matrix represents the membership strength of the
      * 1-simplex between the ith and jth sample points.
      */
-    private static SparseMatrix computeFuzzySimplicialSet(NearestNeighborGraph nng, int k, double localConnectivity) {
+    private static SparseMatrix computeFuzzySimplicialSet(NearestNeighborGraph nng, double localConnectivity) {
         // Computes a continuous version of the distance to the kth nearest neighbor.
         // That is, this is similar to knn-distance but allows continuous k values
         // rather than requiring an integral k. In essence, we are simply computing
         // the distance such that the cardinality of fuzzy set we generate is k.
-        double[][] result = smoothKnnDist(nng.distances(), k, 64, localConnectivity, 1.0);
+        double[][] result = smoothKnnDist(nng.distances(), nng.k(), 64, localConnectivity, 1.0);
         // The smooth approximator to knn-distance
         double[] sigma = result[0];
         // The distance to nearest neighbor
@@ -557,6 +557,7 @@ public class UMAP {
                 .forEach(i -> D[i] = 1.0 / Math.sqrt(MathEx.sum(distances[i])));
 
         // Laplacian of graph.
+        logger.info("Spectral layout computes Laplacian...");
         AdjacencyList laplacian = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             laplacian.setWeight(i, i, 1.0);
@@ -570,8 +571,10 @@ public class UMAP {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with heuristic min(2*k+1, sqrt(n)).
-        int numEigen = Math.max(2*(d+1)+1, (int) Math.sqrt(n));
+        int k = d + 1;
+        int numEigen = Math.max(2*k+1, (int) Math.sqrt(n));
         SparseMatrix L = laplacian.toMatrix();
+        logger.info("Spectral layout computes {} eigen vectors", numEigen);
         Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
 
         Matrix V = eigen.Vr;
@@ -594,7 +597,6 @@ public class UMAP {
      * @param noise the standard deviation of noise.
      */
     private static void noisyScale(double[][] coordinates, double scale, double noise) {
-        int n = coordinates.length;
         int d = coordinates[0].length;
         double max = Double.NEGATIVE_INFINITY;
         for (double[] coordinate : coordinates) {
@@ -607,14 +609,13 @@ public class UMAP {
         GaussianDistribution gaussian = new GaussianDistribution(0.0, noise);
         for (double[] coordinate : coordinates) {
             for (int j = 0; j < d; j++) {
-                coordinate[j] = scale * coordinate[j] + gaussian.rand();
+                coordinate[j] = expansion * coordinate[j] + gaussian.rand();
             }
         }
     }
 
     /**  Normalize coordinates. */
     private static void normalize(double[][] coordinates, double scale) {
-        int n = coordinates.length;
         int d = coordinates[0].length;
         double[] colMax = MathEx.colMax(coordinates);
         double[] colMin = MathEx.colMin(coordinates);

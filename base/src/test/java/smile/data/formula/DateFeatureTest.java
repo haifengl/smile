@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.data.formula;
 
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
-import smile.test.data.Date;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
+import smile.io.Read;
+import smile.util.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.data.formula.Terms.date;
 
@@ -55,7 +55,7 @@ public class DateFeatureTest {
      * Test of attributes method, of class DateFeature.
      */
     @Test
-    public void testDateFeatures() {
+    public void testDateFeatures() throws Exception {
         System.out.println("date");
 
         double[][] result = {
@@ -67,7 +67,8 @@ public class DateFeatureTest {
                 DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH,
                 DateFeature.DAY_OF_WEEK, DateFeature.HOUR, DateFeature.MINUTE,
                 DateFeature.SECOND));
-        DataFrame output = formula.frame(Date.data);
+        var data = Read.arff(Paths.getTestData("weka/date.arff"));
+        DataFrame output = formula.frame(data);
         assertEquals(7, output.columns().length);
 
         StructType schema = output.schema();

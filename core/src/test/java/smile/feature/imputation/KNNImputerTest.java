@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.imputation;
 
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
-import smile.test.data.SyntheticControl;
+import smile.datasets.SyntheticControl;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -51,7 +50,8 @@ public class KNNImputerTest {
     @Test
     public void test() throws Exception {
         System.out.println("KNNImputer");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         KNNImputer knnImputer = new KNNImputer(df, 5);
         Function<double[][], double[][]> imputer = x -> knnImputer.apply(DataFrame.of(x)).toArray();

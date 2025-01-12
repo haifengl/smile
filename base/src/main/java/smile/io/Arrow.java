@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.io;
 
 import java.io.InputStream;
@@ -61,7 +60,7 @@ public class Arrow {
      * Arrow provides a tree-based model for memory allocation.
      * The RootAllocator is created first, then all allocators are
      * created as children of that allocator. The RootAllocator is
-     * responsible for being the master bookeeper for memory
+     * responsible for being the master bookkeeper for memory
      * allocations. All other allocators are created as children
      * of this tree. Each allocator can first determine whether
      * it has enough local memory to satisfy a particular request.

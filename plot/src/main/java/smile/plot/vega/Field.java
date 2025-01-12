@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -174,8 +174,12 @@ public class Field {
      * @return this object.
      */
     public Field scale(String type) {
-        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
-        node.put("type", type);
+        if (type == null) {
+            spec.putNull("scale");
+        } else {
+            ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+            node.put("type", type);
+        }
         return this;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,16 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.classification;
 
-import smile.datasets.BreastCancer;
-import smile.datasets.ColonCancer;
-import smile.datasets.Iris;
+import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -65,12 +61,11 @@ public class FLDTest {
     }
 
     @Test
-    public void testPenDigits() {
+    public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<FLD> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
-                FLD::fit);
+        var pen = new PenDigits();
+        var result = CrossValidation.classification(10, pen.x(), pen.y(), FLD::fit);
 
         System.out.println(result);
         assertEquals(0.8771, result.avg.accuracy(), 1E-4);
@@ -91,8 +86,12 @@ public class FLDTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-
-        ClassificationValidation<FLD> result = ClassificationValidation.of(USPS.x, USPS.y, USPS.testx, USPS.testy, FLD::fit);
+        var usps = new USPS();
+        double[][] x = usps.x();
+        int[] y = usps.y();
+        double[][] testx = usps.testx();
+        int[] testy = usps.testy();
+        var result = ClassificationValidation.of(x, y, testx, testy, FLD::fit);
 
         System.out.println(result);
         assertEquals(262, result.metrics.error());
@@ -100,7 +99,7 @@ public class FLDTest {
         java.nio.file.Path temp = Write.object(result.model);
         FLD model = (FLD) Read.object(temp);
 
-        int error = Error.of(USPS.testy, model.predict(USPS.testx));
+        int error = Error.of(testy, model.predict(testx));
         assertEquals(262, error);
     }
 

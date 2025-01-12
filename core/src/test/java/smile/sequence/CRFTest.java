@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.sequence;
 
-import smile.test.data.Hyphen;
-import smile.test.data.Protein;
+import smile.datasets.Hyphen;
+import smile.datasets.Protein;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("unused")
 public class CRFTest {
 
     public CRFTest() {
@@ -49,29 +47,31 @@ public class CRFTest {
     }
 
     @Test
-    public void testProtein() {
+    public void testProtein() throws Exception {
         System.out.println("protein");
-
-        CRF model = CRF.fit(Protein.seq, Protein.label, 100, 20, 100, 5, 0.3);
+        var protein = new Protein();
+        CRF model = CRF.fit(protein.train().seq(), protein.train().tag(), 100, 20, 100, 5, 0.3);
 
         int error = 0;
         int n = 0;
-        for (int i = 0; i < Protein.testSeq.length; i++) {
-            n += Protein.testSeq[i].length;
-            int[] label = model.predict(Protein.testSeq[i]);
-            for (int j = 0; j < Protein.testSeq[i].length; j++) {
-                if (Protein.testLabel[i][j] != label[j]) {
+        var seq = protein.test().seq();
+        var tag = protein.test().tag();
+        for (int i = 0; i < seq.length; i++) {
+            n += seq[i].length;
+            int[] label = model.predict(seq[i]);
+            for (int j = 0; j < seq[i].length; j++) {
+                if (tag[i][j] != label[j]) {
                     error++;
                 }
             }
         }
 
         int viterbiError = 0;
-        for (int i = 0; i < Protein.testSeq.length; i++) {
-            n += Protein.testSeq[i].length;
-            int[] label = model.viterbi(Protein.testSeq[i]);
-            for (int j = 0; j < Protein.testSeq[i].length; j++) {
-                if (Protein.testLabel[i][j] != label[j]) {
+        for (int i = 0; i < seq.length; i++) {
+            n += seq[i].length;
+            int[] label = model.viterbi(seq[i]);
+            for (int j = 0; j < seq[i].length; j++) {
+                if (tag[i][j] != label[j]) {
                     viterbiError++;
                 }
             }
@@ -86,29 +86,31 @@ public class CRFTest {
     }
 
     @Test
-    public void testHyphen() {
+    public void testHyphen() throws Exception {
         System.out.println("hyphen");
-
-        CRF model = CRF.fit(Hyphen.seq, Hyphen.label, 100, 20, 100, 5, 0.3);
+        var hyphen = new Hyphen();
+        CRF model = CRF.fit(hyphen.train().seq(), hyphen.train().tag(), 100, 20, 100, 5, 0.3);
 
         int error = 0;
         int n = 0;
-        for (int i = 0; i < Hyphen.testSeq.length; i++) {
-            n += Hyphen.testSeq[i].length;
-            int[] label = model.predict(Hyphen.testSeq[i]);
-            for (int j = 0; j < Hyphen.testSeq[i].length; j++) {
-                if (Hyphen.testLabel[i][j] != label[j]) {
+        var seq = hyphen.test().seq();
+        var tag = hyphen.test().tag();
+        for (int i = 0; i < seq.length; i++) {
+            n += seq[i].length;
+            int[] label = model.predict(seq[i]);
+            for (int j = 0; j < seq[i].length; j++) {
+                if (tag[i][j] != label[j]) {
                     error++;
                 }
             }
         }
 
         int viterbiError = 0;
-        for (int i = 0; i < Hyphen.testSeq.length; i++) {
-            n += Hyphen.testSeq[i].length;
-            int[] label = model.viterbi(Hyphen.testSeq[i]);
-            for (int j = 0; j < Hyphen.testSeq[i].length; j++) {
-                if (Hyphen.testLabel[i][j] != label[j]) {
+        for (int i = 0; i < seq.length; i++) {
+            n += seq[i].length;
+            int[] label = model.viterbi(seq[i]);
+            for (int j = 0; j < seq[i].length; j++) {
+                if (tag[i][j] != label[j]) {
                     viterbiError++;
                 }
             }

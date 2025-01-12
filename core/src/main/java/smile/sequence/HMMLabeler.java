@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.sequence;
 
 import java.io.Serial;
@@ -33,9 +32,9 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
     private static final long serialVersionUID = 2L;
 
     /** The HMM model. */
-    public final HMM model;
+    private final HMM model;
     /** The lambda returns the ordinal numbers of symbols. */
-    public final ToIntFunction<T> ordinal;
+    private final ToIntFunction<T> ordinal;
 
     /**
      * Constructor.

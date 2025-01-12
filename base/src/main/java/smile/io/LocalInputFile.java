@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.io;
 
 import java.io.EOFException;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import javax.annotation.Nonnull;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.SeekableInputStream;
 
@@ -62,12 +62,12 @@ class LocalInputFile implements InputFile {
             }
 
             @Override
-            public int read(byte[] b) throws IOException {
+            public int read(@Nonnull byte[] b) throws IOException {
                 return input.read(b);
             }
 
             @Override
-            public int read(byte[] b, int off, int len) throws IOException {
+            public int read(@Nonnull byte[] b, int off, int len) throws IOException {
                 return input.read(b, off, len);
             }
 

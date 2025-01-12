@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.extraction;
 
 import smile.data.DataFrame;
-import smile.test.data.WeatherNominal;
+import smile.datasets.WeatherNominal;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,7 +47,7 @@ public class BinaryEncoderTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         System.out.println("Binary Encoder");
         int[][] result = {
             {0, 3, 6, 9},
@@ -67,7 +66,8 @@ public class BinaryEncoderTest {
             {2, 4, 6, 8}
         };
 
-        DataFrame data = WeatherNominal.data;
+        var weather = new WeatherNominal();
+        DataFrame data = weather.data();
         BinaryEncoder encoder = new BinaryEncoder(data.schema(), "outlook", "temperature", "humidity", "windy");
         int[][] onehot = encoder.apply(data);
 

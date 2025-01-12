@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.io;
 
 import org.apache.commons.csv.CSVFormat;
@@ -252,10 +251,10 @@ public class CSVTest {
                 new StructField("email", DataTypes.StringType),
                 new StructField("gender", DataTypes.StringType),
                 new StructField("ip_address", DataTypes.StringType),
-                new StructField("cc", DataTypes.LongType),
+                new StructField("cc", DataTypes.NullableLongType),
                 new StructField("country", DataTypes.StringType),
                 new StructField("birthdate", DataTypes.StringType),
-                new StructField("salary", DataTypes.DoubleType),
+                new StructField("salary", DataTypes.NullableDoubleType),
                 new StructField("title", DataTypes.StringType),
                 new StructField("comments", DataTypes.StringType)
         );

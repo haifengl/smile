@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.nlp.relevance;
 
 import smile.nlp.Corpus;
@@ -101,7 +100,7 @@ public class TFIDF implements RelevanceRanker {
     public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
         if (tf == 0) return 0.0;
 
-        int N = corpus.ndoc();
+        int N = corpus.docCount();
         int maxtf = doc.maxtf();
 
         return rank(tf, maxtf, N, n);
@@ -109,7 +108,7 @@ public class TFIDF implements RelevanceRanker {
 
     @Override
     public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
-        int N = corpus.ndoc();
+        int N = corpus.docCount();
         int maxtf = doc.maxtf();
 
         double r = 0.0;

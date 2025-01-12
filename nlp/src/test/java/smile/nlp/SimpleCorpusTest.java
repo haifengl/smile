@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.nlp;
 
 import java.io.IOException;
@@ -66,26 +65,26 @@ public class SimpleCorpusTest {
     }
 
     @Test
-    public void testGetNumDocuments() {
-        System.out.println("getNumDocuments");
-        assertEquals(5000, corpus.ndoc());
+    public void testDocCount() {
+        System.out.println("docCount");
+        assertEquals(5000, corpus.docCount());
     }
 
     @Test
-    public void testGetNumTerms() {
-        System.out.println("getNumTerms");
-        assertEquals(15077, corpus.nterm());
+    public void testTermCount() {
+        System.out.println("termCount");
+        assertEquals(15077, corpus.termCount());
     }
 
     @Test
-    public void testGetNumBigrams() {
-        System.out.println("getNumBigrams");
-        assertEquals(18303, corpus.nbigram());
+    public void testBigramCount() {
+        System.out.println("bigramCount");
+        assertEquals(18303, corpus.bigramCount());
     }
 
     @Test
-    public void testGetAverageDocumentSize() {
-        System.out.println("getAverageDocumentSize");
+    public void testAvgDocSize() {
+        System.out.println("avgDocSize");
         assertEquals(11, corpus.avgDocSize());
     }
 
@@ -110,7 +109,7 @@ public class SimpleCorpusTest {
         while (hits.hasNext()) {
             n++;
             Relevance hit = hits.next();
-            System.out.println(hit.text + "\t" + hit.score);
+            System.out.println(hit.text() + "\t" + hit.score());
         }
         assertEquals(27, n);
     }
@@ -131,7 +130,7 @@ public class SimpleCorpusTest {
         while (hits.hasNext()) {
             n++;
             Relevance hit = hits.next();
-            System.out.println(hit.text + "\t" + hit.score);
+            System.out.println(hit.text() + "\t" + hit.score());
         }
         assertEquals(78, n);
     }

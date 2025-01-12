@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.timeseries;
 
-import smile.test.data.BitcoinPrice;
+import smile.datasets.BitcoinPrice;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,11 +46,13 @@ public class ARMATest {
     }
 
     @Test
-    public void testARMA63() {
+    public void testARMA63() throws Exception {
         System.out.println("ARMA(6, 3)");
 
         // The log return series, log(p_t) - log(p_t-1), is stationary.
-        double[] x = TimeSeries.diff(BitcoinPrice.logPrice, 1);
+        var bitcoin = new BitcoinPrice();
+        var logPrice = bitcoin.logPrice();
+        double[] x = TimeSeries.diff(logPrice, 1);
         ARMA model = ARMA.fit(x, 6, 3);
         System.out.println(model);
         assertEquals(6, model.p());

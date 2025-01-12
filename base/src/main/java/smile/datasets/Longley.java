@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,19 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.test.data;
+package smile.datasets;
 
+import java.util.Arrays;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 
 /**
+ * The classic 1967 Longley dataset. This dataset contains various US
+ * macroeconomic variables that are known to be highly collinear.
+ * It has been used to appraise the accuracy of least squares routines.
  *
- * @author Haifeng
+ * @param data data frame.
+ * @param formula modeling formula.
+ * @author Haifeng Li
  */
-public class Longley {
+public record Longley(DataFrame data, Formula formula) {
 
-    public static final double[][] x = {
+    private static final double[][] x = {
             {234.289,      235.6,        159.0,    107.608, 1947,   60.323},
             {259.426,      232.5,        145.6,    108.632, 1948,   61.122},
             {258.054,      368.2,        161.6,    109.773, 1949,   60.171},
@@ -45,12 +51,37 @@ public class Longley {
             {554.894,      400.7,        282.7,    130.081, 1962,   70.551}
     };
 
-    public static final double[] y = {
+    private static final double[] y = {
             83.0,  88.5,  88.2,  89.5,  96.2,  98.1,  99.0, 100.0, 101.2,
             104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
     };
 
-    public static DataFrame data = DataFrame.of(x, "GNP", "unemployed", "armed_forces", "population", "year", "employed")
-            .merge(new DoubleVector("deflator", y));
-    public static Formula formula = Formula.lhs("deflator");
+    /**
+     * Constructor.
+     */
+    public Longley() {
+        this(DataFrame.of(x, "GNP", "unemployed", "armed_forces", "population", "year", "employed")
+                .merge(new DoubleVector("deflator", y)),
+             Formula.lhs("deflator"));
+    }
+
+    /**
+     * Returns the train sample features.
+     * @return the train sample features.
+     */
+    public double[][] x() {
+        double[][] result = new double[x.length][];
+        for (int i = 0; i < x.length; i++) {
+            result[i] = Arrays.copyOf(x[i], x[i].length);
+        }
+        return result;
+    }
+
+    /**
+     * Returns the train sample class labels.
+     * @return the train sample class labels.
+     */
+    public double[] y() {
+        return y.clone();
+    }
 }

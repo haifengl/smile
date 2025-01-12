@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.math.matrix.fp32;
 
 import java.io.IOException;
@@ -254,6 +253,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * @return the iterator of nonzero entries
      */
     @Override
+    @javax.annotation.Nonnull
     public Iterator<Entry> iterator() {
         return iterator(0, n);
     }

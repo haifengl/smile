@@ -1,4 +1,4 @@
-;   Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+;   Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
 ;
 ;   Smile is free software: you can redistribute it and/or modify
 ;   it under the terms of the GNU General Public License as published by
@@ -173,8 +173,8 @@
   `repulsionStrength` is the weight applied to negative samples in low
   dimensional embedding optimization. Values higher than one will result in
   greater weight being given to negative samples, default 1.0."
-  ([data] (UMAP/of data))
-  ([data distance] (UMAP/of data distance))
+  ([data k] (UMAP/of data k))
+  ([data distance k] (UMAP/of data distance k))
   ([data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity))
   ([data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity)))
 

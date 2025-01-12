@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.selection;
 
 import smile.classification.DecisionTree;
 import smile.datasets.Abalone;
-import smile.test.data.Segment;
+import smile.datasets.ImageSegmentation;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
 import smile.math.MathEx;
@@ -70,13 +69,13 @@ public class GAFETest {
     }
 */
     @Test
-    public void testDecisionTree() {
+    public void testDecisionTree() throws Exception {
         System.out.println("DecisionTree");
         MathEx.setSeed(19650218); // to get repeatable results.
-
+        var segment = new ImageSegmentation();
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(50, 10, Segment.train.ncol()-1,
-                GAFE.fitness("class", Segment.train, Segment.test, new Accuracy(), DecisionTree::fit));
+        BitString[] result = selection.apply(50, 10, segment.train().ncol()-1,
+                GAFE.fitness("class", segment.train(), segment.test(), new Accuracy(), DecisionTree::fit));
 
         for (BitString bits : result) {
             System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);

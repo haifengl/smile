@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,14 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package smile.feature.imputation;
 
 import java.util.function.Function;
 import smile.data.DataFrame;
+import smile.datasets.Longley;
+import smile.datasets.SyntheticControl;
+import smile.datasets.USArrests;
 import smile.io.Read;
 import smile.math.MathEx;
-import smile.test.data.*;
 import smile.util.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,7 +52,7 @@ public class SimpleImputerTest {
     public void tearDown() {
     }
 
-    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) throws Exception {
+    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         int n = 0;
@@ -83,22 +84,25 @@ public class SimpleImputerTest {
 
     @Test
     public void testUSArrests() throws Exception {
-        System.out.println(USArrests.data);
-        SimpleImputer imputer = SimpleImputer.fit(USArrests.data);
+        var usa = new USArrests();
+        System.out.println(usa.data());
+        SimpleImputer imputer = SimpleImputer.fit(usa.data());
         System.out.println(imputer);
     }
 
     @Test
     public void testLongley() throws Exception {
-        System.out.println(Longley.data);
-        SimpleImputer imputer = SimpleImputer.fit(Longley.data);
+        var longley = new Longley();
+        System.out.println(longley.data());
+        SimpleImputer imputer = SimpleImputer.fit(longley.data());
         System.out.println(imputer);
     }
 
     @Test
     public void testAverage() throws Exception {
         System.out.println("Column Average Imputation");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
 
         impute(SimpleImputer::impute, data, 0.01, 39.11);
         impute(SimpleImputer::impute, data, 0.05, 48.86);
@@ -111,7 +115,8 @@ public class SimpleImputerTest {
     @Test
     public void testSimpleImputer() throws Exception {
         System.out.println("SimpleImputer");
-        double[][] data = SyntheticControl.x;
+        var control = new SyntheticControl();
+        double[][] data = control.x();
         DataFrame df = DataFrame.of(data);
         SimpleImputer simpleImputer = SimpleImputer.fit(df);
         Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
