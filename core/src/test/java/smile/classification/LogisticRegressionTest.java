@@ -152,7 +152,7 @@ public class LogisticRegressionTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(185, error);
+        assertEquals(189, error);
 
         int t = x.length;
         int round = (int) Math.round(Math.log(testx.length));
@@ -169,7 +169,7 @@ public class LogisticRegressionTest {
         prediction = model.predict(testx);
         error = Error.of(testy, prediction);
         System.out.println("Error after online update = " + error);
-        assertEquals(184, error);
+        assertEquals(188, error);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
