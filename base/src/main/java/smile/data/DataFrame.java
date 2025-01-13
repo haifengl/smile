@@ -1140,7 +1140,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getInt(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new IntVector(field, values) : new NullableIntVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableIntVector(field, values, nullMask) : new IntVector(field, values);
                 }
 
                 case Long -> {
@@ -1154,7 +1154,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getLong(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new LongVector(field, values) : new NullableLongVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableLongVector(field, values, nullMask) : new LongVector(field, values);
                 }
 
                 case Double -> {
@@ -1168,7 +1168,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getDouble(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new DoubleVector(field, values) : new NullableDoubleVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableDoubleVector(field, values, nullMask) : new DoubleVector(field, values);
                 }
 
                 case Float -> {
@@ -1182,7 +1182,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getFloat(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new FloatVector(field, values) : new NullableFloatVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableFloatVector(field, values, nullMask) : new FloatVector(field, values);
                 }
 
                 case Boolean -> {
@@ -1195,7 +1195,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getBoolean(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new BooleanVector(field, values) : new NullableBooleanVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableBooleanVector(field, values, nullMask) : new BooleanVector(field, values);
                 }
 
                 case Byte -> {
@@ -1209,7 +1209,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getByte(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new ByteVector(field, values) : new NullableByteVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableByteVector(field, values, nullMask) : new ByteVector(field, values);
                 }
 
                 case Short -> {
@@ -1223,7 +1223,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getShort(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new ShortVector(field, values) : new NullableShortVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableShortVector(field, values, nullMask) : new ShortVector(field, values);
                 }
 
                 case Char -> {
@@ -1237,7 +1237,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getChar(j);
                         }
                     }
-                    yield nullMask.isEmpty() ? new CharVector(field, values) : new NullableCharVector(field, values, nullMask);
+                    yield field.dtype().isNullable() ? new NullableCharVector(field, values, nullMask) : new CharVector(field, values);
                 }
 
                 case String -> {
