@@ -16,11 +16,11 @@
  */
 package smile.data.vector;
 
+import java.util.BitSet;
 import java.util.Optional;
 import java.util.stream.*;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-import smile.util.Index;
 
 /**
  * Abstract base class implementation of ValueVector interface.
@@ -30,25 +30,13 @@ import smile.util.Index;
 public abstract class AbstractVector implements ValueVector {
     /** The struct field of the vector. */
     final StructField field;
-    /** The index of the elements in the underlying data. */
-    Index index;
 
     /**
      * Constructor.
      * @param field The struct field of the vector.
      */
     public AbstractVector(StructField field) {
-        this(field, null);
-    }
-
-    /**
-     * Constructor.
-     * @param field The struct field of the vector.
-     * @param index The index of the elements in the underlying data.
-     */
-    public AbstractVector(StructField field, Index index) {
         this.field = field;
-        this.index = index;
     }
 
     @Override
@@ -66,61 +54,26 @@ public abstract class AbstractVector implements ValueVector {
         return field;
     }
 
-    @Override
-    public int size() {
-        return Optional.ofNullable(index)
-                .map(Index::size)
-                .orElse(length());
+    /**
+     * Returns the stream of indices.
+     * @return the stream of indices.
+     */
+    IntStream index() {
+        return IntStream.range(0, size());
     }
 
     /**
-     * Returns the length of underlying data.
-     * @return the length of underlying data.
+     * Converts a boolean array to BitSet.
+     * @param vector a boolean array.
+     * @return the BitSet.
      */
-    abstract int length();
-
-    /**
-     * Check if a field's measure is invalid.
-     * @param field a struct field.
-     * @param invalidMeasure invalid measure class.
-     * @return the struct field.
-     */
-    static StructField checkMeasure(StructField field, Class<? extends Measure> invalidMeasure) {
-        if (invalidMeasure.isInstance(field.measure())) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure(), field.dtype()));
+    static BitSet bitSet(boolean[] vector) {
+        BitSet bits = new BitSet(vector.length);
+        for (int i = 0; i < vector.length; i++) {
+            if (vector[i]) {
+                bits.set(i);
+            }
         }
-        return field;
-    }
-
-    /**
-     * Returns the index to the underlying data.
-     * @param i the index to the vector element.
-     * @return the index to the underlying data.
-     */
-    int at(int i) {
-        return index == null ? i : index.apply(i);
-    }
-
-    /**
-     * Returns the stream of index values.
-     * @return the stream of index values.
-     */
-    IntStream indexStream() {
-        return index == null ? IntStream.range(0, length()) : index.stream();
-    }
-
-    /**
-     * Sets the index and null bitmap in the sliced vector.
-     * @param vector the sliced vector.
-     * @param index the slicing index.
-     * @return the sliced vector.
-     */
-    <T extends AbstractVector> T slice(T vector, Index index) {
-        if (this.index != null) {
-            index = this.index.flatten(index);
-        }
-
-        vector.index = index;
-        return vector;
+        return bits;
     }
 }
