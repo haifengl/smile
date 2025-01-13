@@ -16,14 +16,16 @@
  */
 package smile.data.vector;
 
-import smile.data.type.StructField;
-import smile.util.Index;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+
+import smile.data.type.DataTypes;
+import smile.data.type.ObjectType;
+import smile.data.type.StructField;
+import smile.util.Index;
 
 /**
  * A number object vector.
@@ -35,20 +37,14 @@ import java.util.stream.LongStream;
 public class NumberVector<T extends Number> extends ObjectVector<T> {
     /**
      * Constructor.
-     * @param name the name of vector.
-     * @param vector the elements of vector.
-     */
-    public NumberVector(String name, T[] vector) {
-        super(name, vector);
-    }
-
-    /**
-     * Constructor.
      * @param field the struct field of vector.
      * @param vector the elements of vector.
      */
     public NumberVector(StructField field, T[] vector) {
         super(field, vector);
+        if (!field.dtype().isNumeric()) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
     }
 
     /**
@@ -81,8 +77,13 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
 
     @Override
     public NumberVector<T> get(Index index) {
-        NumberVector<T> copy = new NumberVector<>(field, vector);
-        return slice(copy, index);
+        ObjectType dtype = (ObjectType) field.dtype();
+        @SuppressWarnings("unchecked")
+        T[] subset = (T[]) java.lang.reflect.Array.newInstance(dtype.getObjectClass(), index.size());
+        for (int i = 0; i < subset.length; i++) {
+            subset[i] = vector[index.apply(i)];
+        }
+        return new NumberVector<>(field, subset);
     }
 
     @Override

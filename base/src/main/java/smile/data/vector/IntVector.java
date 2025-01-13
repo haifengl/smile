@@ -48,38 +48,27 @@ public class IntVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public IntVector(StructField field, int[] vector) {
-        super(checkMeasure(field, NumericalMeasure.class));
+        super(field);
+        if (field.dtype() != DataTypes.IntType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
         this.vector = vector;
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     public IntStream asIntStream() {
-        if (nullMask == null) {
-            if (index == null) {
-                return Arrays.stream(vector);
-            } else {
-                return index.stream().map(i -> vector[i]);
-            }
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
-        }
+        return Arrays.stream(vector);
     }
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length);
-            }
-            nullMask.set(index);
-        } else if (value instanceof Number n) {
-            vector[index] = n.intValue();
+        if (value instanceof Number n) {
+            vector[i] = n.intValue();
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -87,23 +76,18 @@ public class IntVector extends PrimitiveVector {
 
     @Override
     public IntVector get(Index index) {
-        IntVector copy = new IntVector(field, vector);
-        return slice(copy, index);
+        var data = index.stream().map(i -> vector[i]).toArray();
+        return new IntVector(field, data);
     }
 
     @Override
     public Integer get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector[index];
-        } else {
-            return nullMask.get(index) ? null : vector[index];
-        }
+        return vector[i];
     }
 
     @Override
     public int getInt(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override

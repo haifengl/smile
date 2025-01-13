@@ -47,34 +47,27 @@ public class ShortVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public ShortVector(StructField field, short[] vector) {
-        super(checkMeasure(field, NumericalMeasure.class));
+        super(field);
+        if (field.dtype() != DataTypes.ShortType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
         this.vector = vector;
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     public IntStream asIntStream() {
-        if (nullMask == null) {
-            return indexStream().map(i -> vector[i]);
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
-        }
+        return index().map(i -> vector[i]);
     }
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length);
-            }
-            nullMask.set(index);
-        } else if (value instanceof Number n) {
-            vector[index] = n.shortValue();
+        if (value instanceof Number n) {
+            vector[i] = n.shortValue();
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -82,23 +75,22 @@ public class ShortVector extends PrimitiveVector {
 
     @Override
     public ShortVector get(Index index) {
-        ShortVector copy = new ShortVector(field, vector);
-        return slice(copy, index);
+        int n = index.size();
+        short[] data = new short[n];
+        for (int i = 0; i < n; i++) {
+            data[i] = vector[index.apply(i)];
+        }
+        return new ShortVector(field, data);
     }
 
     @Override
     public Short get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector[index];
-        } else {
-            return nullMask.get(index) ? null : vector[index];
-        }
+        return vector[i];
     }
 
     @Override
     public short getShort(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override

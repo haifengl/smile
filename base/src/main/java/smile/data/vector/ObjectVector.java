@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import smile.data.type.DataTypes;
+import smile.data.type.ObjectType;
 import smile.data.type.StructField;
 import smile.util.Index;
 
@@ -59,11 +60,7 @@ public class ObjectVector<T> extends AbstractVector {
      * @return a stream consisting of the elements of this vector.
      */
     public Stream<T> stream() {
-        if (index == null) {
-            return Arrays.stream(vector);
-        } else {
-            return index.stream().mapToObj(i -> vector[i]);
-        }
+        return Arrays.stream(vector);
     }
 
     /**
@@ -75,25 +72,30 @@ public class ObjectVector<T> extends AbstractVector {
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void set(int i, Object value) {
-        vector[at(i)] = (T) value;
+        vector[i] = (T) value;
     }
 
     @Override
     public ObjectVector<T> get(Index index) {
-        ObjectVector<T> copy = new ObjectVector<>(field, vector);
-        return slice(copy, index);
+        ObjectType dtype = (ObjectType) field.dtype();
+        @SuppressWarnings("unchecked")
+        T[] subset = (T[]) java.lang.reflect.Array.newInstance(dtype.getObjectClass(), index.size());
+        for (int i = 0; i < subset.length; i++) {
+            subset[i] = vector[index.apply(i)];
+        }
+        return new ObjectVector<>(field, subset);
     }
 
     @Override
     public T get(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override

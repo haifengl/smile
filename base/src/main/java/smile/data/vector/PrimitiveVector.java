@@ -26,68 +26,26 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 public abstract class PrimitiveVector extends AbstractVector {
-    /** The null bitmap. The bit is 1 if the value is null. */
-    BitSet nullMask;
-
     /**
      * Constructor.
      * @param field The struct field of the vector.
      */
     public PrimitiveVector(StructField field) {
-        super(field, null);
-    }
-
-    /**
-     * Constructor.
-     * @param field The struct field of the vector.
-     * @param index The index of the elements in the underlying data.
-     * @param nullMask The null bitmap. The bit is 1 if the value is non-null.
-     */
-    public PrimitiveVector(StructField field, Index index, BitSet nullMask) {
-        super(field, index);
-        this.nullMask = nullMask;
+        super(field);
     }
 
     @Override
     public boolean isNullable() {
-        return nullMask != null;
+        return false;
     }
 
     @Override
     public boolean isNullAt(int i) {
-        return nullMask != null && nullMask.get(i);
+        return false;
     }
 
     @Override
     public int getNullCount() {
-        return nullMask == null ? 0 : nullMask.cardinality();
-    }
-
-    /**
-     * Sets the null bitmap mask.
-     * @param mask The null bitmap mask.
-     */
-    public void setNullMask(BitSet mask) {
-        nullMask = mask;
-    }
-
-    /**
-     * Returns the null bitmap mask.
-     * @return the null bitmap mask.
-     */
-    public BitSet getNullMask() {
-        return nullMask;
-    }
-
-    /**
-     * Sets the index and null bitmap in the sliced vector.
-     * @param vector the sliced vector.
-     * @param index the slicing index.
-     * @return the sliced vector.
-     */
-    <T extends PrimitiveVector> T slice(T vector, Index index) {
-        super.slice(vector, index);
-        vector.nullMask = nullMask;
-        return vector;
+        return 0;
     }
 }

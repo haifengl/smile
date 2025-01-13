@@ -49,7 +49,13 @@ public class DoubleVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public DoubleVector(StructField field, double[] vector) {
-        super(checkMeasure(field, CategoricalMeasure.class));
+        super(field);
+        if (field.dtype() != DataTypes.DoubleType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
+        if (field.measure() instanceof CategoricalMeasure) {
+            throw new IllegalArgumentException("Invalid measure: " + field.measure());
+        }
         this.vector = vector;
     }
 
@@ -58,46 +64,27 @@ public class DoubleVector extends PrimitiveVector {
      * @param value the value to replace NAs.
      */
     public void fillna(double value) {
-        if (index == null) {
-            for (int i = 0; i < vector.length; i++) {
-                if (Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
-                    vector[i] = value;
-                }
+        for (int i = 0; i < vector.length; i++) {
+            if (Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
+                vector[i] = value;
             }
-        } else {
-            indexStream().filter(i -> Double.isNaN(vector[at(i)]))
-                    .forEach(i -> vector[at(i)] = value);
         }
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     public DoubleStream asDoubleStream() {
-        if (nullMask == null) {
-            if (index == null) {
-                return Arrays.stream(vector);
-            } else {
-                return index.stream().mapToDouble(i -> vector[i]);
-            }
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).mapToDouble(i -> vector[i]);
-        }
+        return Arrays.stream(vector);
     }
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length);
-            }
-            nullMask.set(index);
-        } else if (value instanceof Number n) {
-            vector[index] = n.doubleValue();
+        if (value instanceof Number n) {
+            vector[i] = n.doubleValue();
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -105,23 +92,18 @@ public class DoubleVector extends PrimitiveVector {
 
     @Override
     public DoubleVector get(Index index) {
-        DoubleVector copy = new DoubleVector(field, vector);
-        return slice(copy, index);
+        var data = index.stream().mapToDouble(i -> vector[i]).toArray();
+        return new DoubleVector(field, data);
     }
 
     @Override
     public Double get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector[index];
-        } else {
-            return nullMask.get(index) ? null : vector[index];
-        }
+        return vector[i];
     }
 
     @Override
     public double getDouble(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override
