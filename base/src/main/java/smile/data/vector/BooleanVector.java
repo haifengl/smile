@@ -31,6 +31,8 @@ import smile.util.Index;
 public class BooleanVector extends PrimitiveVector {
     /** The vector data. */
     private final BitSet vector;
+    /** The length of vector. BitSet's length and size methods have different semantics. */
+    private final int size;
 
     /**
      * Constructor.
@@ -47,47 +49,52 @@ public class BooleanVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public BooleanVector(StructField field, boolean[] vector) {
-        this(field, bitSet(vector));
+        this(field, vector.length, bitSet(vector));
+    }
+
+    /**
+     * Constructor.
+     * @param name the name of vector.
+     * @param size the length of vector.
+     * @param bits the bit map of vector.
+     */
+    public BooleanVector(String name, int size, BitSet bits) {
+        this(new StructField(name, DataTypes.ByteType), size, bits);
     }
 
     /**
      * Constructor.
      * @param field the struct field of vector.
+     * @param size the length of vector.
      * @param bits the bit map of vector.
      */
-    public BooleanVector(StructField field, BitSet bits) {
-        super(checkMeasure(field, NumericalMeasure.class));
+    public BooleanVector(StructField field, int size, BitSet bits) {
+        super(field);
+        if (field.dtype() != DataTypes.BooleanType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
+        if (field.measure() instanceof NumericalMeasure) {
+            throw new IllegalArgumentException("Invalid measure: " + field.measure());
+        }
+
+        this.size = size;
         this.vector = bits;
     }
 
     @Override
-    int length() {
-        return vector.size();
+    public int size() {
+        return size;
     }
 
     @Override
     public IntStream asIntStream() {
-        if (nullMask == null) {
-            return indexStream().map(i -> vector.get(i) ? 1 : 0);
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).map(i -> vector.get(i) ? 1 : 0);
-        }
+        return index().map(i -> vector.get(i) ? 1 : 0);
     }
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length());
-            }
-            nullMask.set(index);
-        } else if (value instanceof Boolean bool) {
-            if (bool) {
-                vector.set(index);
-            } else {
-                vector.clear(index);
-            }
+        if (value instanceof Boolean bool) {
+            vector.set(i, bool);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -95,23 +102,22 @@ public class BooleanVector extends PrimitiveVector {
 
     @Override
     public BooleanVector get(Index index) {
-        BooleanVector copy = new BooleanVector(field, vector);
-        return slice(copy, index);
+        int n = index.size();
+        BitSet data = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            data.set(i, vector.get(index.apply(i)));
+        }
+        return new BooleanVector(field, n, data);
     }
 
     @Override
     public Boolean get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector.get(index);
-        } else {
-            return nullMask.get(index) ? null : vector.get(index);
-        }
+        return vector.get(i);
     }
 
     @Override
     public boolean getBoolean(int i) {
-        return vector.get(at(i));
+        return vector.get(i);
     }
 
     @Override
@@ -126,41 +132,26 @@ public class BooleanVector extends PrimitiveVector {
 
     @Override
     public short getShort(int i) {
-        return getBoolean(i)  ? (short) 1 : 0;
+        return getBoolean(i) ? (short) 1 : 0;
     }
 
     @Override
     public int getInt(int i) {
-        return getBoolean(i)  ? 1 : 0;
+        return getBoolean(i) ? 1 : 0;
     }
 
     @Override
     public long getLong(int i) {
-        return getBoolean(i)  ? 1 : 0;
+        return getBoolean(i) ? 1 : 0;
     }
 
     @Override
     public float getFloat(int i) {
-        return getBoolean(i)  ? 1 : 0;
+        return getBoolean(i) ? 1 : 0;
     }
 
     @Override
     public double getDouble(int i) {
-        return getBoolean(i)  ? 1 : 0;
-    }
-
-    /**
-     * Converts a boolean array to BitSet.
-     * @param vector a boolean array.
-     * @return the BitSet.
-     */
-    private static BitSet bitSet(boolean[] vector) {
-        BitSet bits = new BitSet(vector.length);
-        for (int i = 0; i < vector.length; i++) {
-            if (vector[i]) {
-                bits.set(i);
-            }
-        }
-        return bits;
+        return getBoolean(i) ? 1 : 0;
     }
 }
