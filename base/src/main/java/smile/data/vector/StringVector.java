@@ -115,11 +115,11 @@ public class StringVector extends ObjectVector<String> {
 
     @Override
     public StringVector get(Index index) {
-        String[] subset = new String[index.size()];
-        for (int i = 0; i < subset.length; i++) {
-            subset[i] = vector[index.apply(i)];
+        String[] data = new String[index.size()];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = vector[index.apply(i)];
         }
-        return new StringVector(field, subset);
+        return new StringVector(field, data);
     }
 
     @Override
