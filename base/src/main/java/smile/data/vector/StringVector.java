@@ -42,7 +42,7 @@ public class StringVector extends ObjectVector<String> {
      * @param vector the elements of vector.
      */
     public StringVector(String name, String[] vector) {
-        super(name, vector);
+        this(new StructField(name, DataTypes.StringType), vector);
     }
 
     /**
@@ -52,6 +52,9 @@ public class StringVector extends ObjectVector<String> {
      */
     public StringVector(StructField field, String[] vector) {
         super(field, vector);
+        if (field.dtype() != DataTypes.StringType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
     }
 
     /**
@@ -112,8 +115,11 @@ public class StringVector extends ObjectVector<String> {
 
     @Override
     public StringVector get(Index index) {
-        StringVector copy = new StringVector(field, vector);
-        return slice(copy, index);
+        String[] subset = new String[index.size()];
+        for (int i = 0; i < subset.length; i++) {
+            subset[i] = vector[index.apply(i)];
+        }
+        return new StringVector(field, subset);
     }
 
     @Override

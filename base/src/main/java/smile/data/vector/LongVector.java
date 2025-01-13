@@ -48,26 +48,21 @@ public class LongVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public LongVector(StructField field, long[] vector) {
-        super(checkMeasure(field, NumericalMeasure.class));
+        super(field);
+        if (field.dtype() != DataTypes.LongType) {
+            throw new IllegalArgumentException("Invalid data type: ");
+        }
         this.vector = vector;
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     public LongStream asLongStream() {
-        if (nullMask == null) {
-            if (index == null) {
-                return Arrays.stream(vector);
-            } else {
-                return index.stream().mapToLong(i -> vector[i]);
-            }
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).mapToLong(i -> vector[i]);
-        }
+        return Arrays.stream(vector);
     }
 
     @Override
@@ -77,14 +72,8 @@ public class LongVector extends PrimitiveVector {
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length);
-            }
-            nullMask.set(index);
-        } else if (value instanceof Number n) {
-            vector[index] = n.longValue();
+        if (value instanceof Number n) {
+            vector[i] = n.longValue();
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -92,23 +81,18 @@ public class LongVector extends PrimitiveVector {
 
     @Override
     public LongVector get(Index index) {
-        LongVector copy = new LongVector(field, vector);
-        return slice(copy, index);
+        var data = index.stream().mapToLong(i -> vector[i]).toArray();
+        return new LongVector(field, data);
     }
 
     @Override
     public Long get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector[index];
-        } else {
-            return nullMask.get(index) ? null : vector[index];
-        }
+        return vector[i];
     }
 
     @Override
     public long getLong(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override

@@ -48,7 +48,13 @@ public class FloatVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public FloatVector(StructField field, float[] vector) {
-        super(checkMeasure(field, CategoricalMeasure.class));
+        super(field);
+        if (field.dtype() != DataTypes.FloatType) {
+            throw new IllegalArgumentException("Invalid data type: " + field);
+        }
+        if (field.measure() instanceof CategoricalMeasure) {
+            throw new IllegalArgumentException("Invalid measure: " + field.measure());
+        }
         this.vector = vector;
     }
 
@@ -57,42 +63,27 @@ public class FloatVector extends PrimitiveVector {
      * @param value the value to replace NAs.
      */
     public void fillna(float value) {
-        if (index == null) {
-            for (int i = 0; i < vector.length; i++) {
-                if (Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
-                    vector[i] = value;
-                }
+        for (int i = 0; i < vector.length; i++) {
+            if (Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
+                vector[i] = value;
             }
-        } else {
-            indexStream().filter(i -> Float.isNaN(vector[at(i)]))
-                    .forEach(i -> vector[at(i)] = value);
         }
     }
 
     @Override
-    int length() {
+    public int size() {
         return vector.length;
     }
 
     @Override
     public DoubleStream asDoubleStream() {
-        if (nullMask == null) {
-            return indexStream().mapToDouble(i -> vector[i]);
-        } else {
-            return indexStream().filter(i -> !nullMask.get(i)).mapToDouble(i -> vector[i]);
-        }
+        return index().mapToDouble(i -> vector[i]);
     }
 
     @Override
     public void set(int i, Object value) {
-        int index = at(i);
-        if (value == null) {
-            if (nullMask == null) {
-                nullMask = new BitSet(vector.length);
-            }
-            nullMask.set(index);
-        } else if (value instanceof Number n) {
-            vector[index] = n.floatValue();
+        if (value instanceof Number n) {
+            vector[i] = n.floatValue();
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
@@ -100,23 +91,22 @@ public class FloatVector extends PrimitiveVector {
 
     @Override
     public FloatVector get(Index index) {
-        FloatVector copy = new FloatVector(field, vector);
-        return slice(copy, index);
+        int n = index.size();
+        float[] data = new float[n];
+        for (int i = 0; i < n; i++) {
+            data[i] = vector[index.apply(i)];
+        }
+        return new FloatVector(field, data);
     }
 
     @Override
     public Float get(int i) {
-        int index = at(i);
-        if (nullMask == null) {
-            return vector[index];
-        } else {
-            return nullMask.get(index) ? null : vector[index];
-        }
+        return vector[i];
     }
 
     @Override
     public float getFloat(int i) {
-        return vector[at(i)];
+        return vector[i];
     }
 
     @Override
