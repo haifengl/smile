@@ -45,6 +45,11 @@ public class DecimalType implements DataType {
     }
 
     @Override
+    public boolean isDecimal() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "Decimal";
     }

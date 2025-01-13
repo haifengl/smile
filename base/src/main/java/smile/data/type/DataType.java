@@ -138,7 +138,7 @@ public interface DataType extends Serializable {
      * @return true if the type is numeric (integral or floating).
      */
     default boolean isNumeric() {
-        return isFloating() || isIntegral();
+        return isFloating() || isIntegral() || isDecimal();
     }
 
     /**
@@ -186,6 +186,14 @@ public interface DataType extends Serializable {
      * @return true if the type is long or Long.
      */
     default boolean isLong() {
+        return false;
+    }
+
+    /**
+     * Returns true if the type is decimal.
+     * @return true if the type is decimal.
+     */
+    default boolean isDecimal() {
         return false;
     }
 
