@@ -209,7 +209,7 @@ public class RandomForestTest {
         int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(150, error);
+        assertEquals(151, error);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(usps.test());

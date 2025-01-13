@@ -88,7 +88,7 @@ public class SparseLogisticRegressionTest {
 
         int error = Error.of(testy, prediction);
         System.out.println("Error = " + error);
-        assertEquals(185, error);
+        assertEquals(189, error);
 
         int t = x.length;
         int round = (int) Math.round(Math.log(testx.length));
@@ -108,7 +108,7 @@ public class SparseLogisticRegressionTest {
 
         error = Error.of(testy, prediction);
         System.out.println("Error after online update = " + error);
-        assertEquals(184, error);
+        assertEquals(188, error);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

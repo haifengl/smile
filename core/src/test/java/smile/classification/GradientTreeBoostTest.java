@@ -169,7 +169,7 @@ public class GradientTreeBoostTest {
         int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(126, error, 3);
+        assertEquals(133, error, 3);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(usps.test());

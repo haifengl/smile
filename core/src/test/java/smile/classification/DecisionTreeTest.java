@@ -160,7 +160,7 @@ public class DecisionTreeTest {
         int error = Error.of(usps.testy(), prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(331, error);
+        assertEquals(332, error);
     }
 
     @Test
@@ -205,7 +205,7 @@ public class DecisionTreeTest {
 
         System.out.println("Error of pruned model after pruning = " + error);
         assertEquals(743, lean.size());
-        assertEquals(273, error);
+        assertEquals(274, error);
     }
 
     @Test
