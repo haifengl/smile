@@ -61,8 +61,8 @@ public class RLSTest {
         System.out.println("longley");
         var longley = new Longley();
         int n = longley.data().size();
-        DataFrame batch = longley.data().get(Index.of(IntStream.range(0, n/2).toArray()));
-        DataFrame online = longley.data().get(Index.of(IntStream.range(n/2, n).toArray()));
+        DataFrame batch = longley.data().get(Index.range(0, n/2));
+        DataFrame online = longley.data().get(Index.range(n/2, n));
         LinearModel model = OLS.fit(longley.formula(), batch);
         double[] prediction = model.predict(online);
         double rmse = RMSE.of(longley.formula().y(online).toDoubleArray(), prediction);
@@ -109,8 +109,8 @@ public class RLSTest {
 
         RegressionValidations<LinearModel> result = CrossValidation.regression(10, formula, data, (f, x) -> {
             int n = x.size();
-            DataFrame batch = x.get(Index.of(IntStream.range(0, n/2).toArray()));
-            DataFrame online = x.get(Index.of(IntStream.range(n/2, n).toArray()));
+            DataFrame batch = x.get(Index.range(0, n/2));
+            DataFrame online = x.get(Index.range(n/2, n));
             LinearModel model = OLS.fit(f, batch);
             model.update(online);
             return model;
