@@ -21,10 +21,16 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.io.Read;
 import smile.util.Paths;
@@ -83,14 +89,14 @@ public record MNIST(DataFrame data, Formula formula) {
                 throw new IOException("Data file and label file have different size: " + size + " vs " + labelSize);
             }
 
-            double[][] data = new double[size][length];
+            float[][] data = new float[size][length];
             int[] y = new int[size];
             for (int i = 0; i < size; i++) {
                 y[i] = labelInputStream.readUnsignedByte();
                 var x = data[i];
                 for (int r = 0, j = 0; r < nrow; r++) {
                     for (int c = 0; c < ncol; c++, j++) {
-                        x[j] = dataInputStream.readUnsignedByte() / 255.0;
+                        x[j] = dataInputStream.readUnsignedByte() / 255.0f;
                     }
                 }
             }
@@ -101,8 +107,11 @@ public record MNIST(DataFrame data, Formula formula) {
     }
 
     private static DataFrame loadText(Path dataFilePath, Path labelFilePath) throws IOException {
+        StructType schema = new StructType(IntStream.range(1, 785)
+                .mapToObj(i -> new StructField("V" + i, DataTypes.FloatType))
+                .toList());
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
-        var data = Read.csv(dataFilePath, format);
+        var data = Read.csv(dataFilePath, format, schema);
         int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
         return data.merge(new IntVector("class", y));
     }
