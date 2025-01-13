@@ -298,11 +298,11 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
         StructField[] fields = new StructField[ncol];
         for (int i = 1; i <= ncol; i++) {
             String name = meta.getColumnName(i);
-            DataType type = DataType.of(
+            DataType dtype = DataType.of(
                     JDBCType.valueOf(meta.getColumnType(i)),
                     meta.isNullable(i) != ResultSetMetaData.columnNoNulls,
                     dbms);
-            fields[i-1] = new StructField(name, type);
+            fields[i-1] = new StructField(name, dtype);
         }
 
         return new StructType(fields);
