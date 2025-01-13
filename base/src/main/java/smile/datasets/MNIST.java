@@ -30,7 +30,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.ValueVector;
+import smile.data.vector.IntVector;
 import smile.io.Read;
 import smile.util.Paths;
 
@@ -109,7 +109,7 @@ public record MNIST(DataFrame data, Formula formula) {
             }
 
             var df = DataFrame.of(data);
-            return df.merge(ValueVector.of("class", y));
+            return df.merge(new IntVector("class", y));
         }
     }
 
@@ -118,7 +118,7 @@ public record MNIST(DataFrame data, Formula formula) {
         double[][] data = Read.csv(dataFilePath, format).toArray();
         int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
         var df = DataFrame.of(data);
-        return df.merge(ValueVector.of("class", y));
+        return df.merge(new IntVector("class", y));
     }
 
     /**
