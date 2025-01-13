@@ -733,11 +733,16 @@ public class Arrow {
 
     /** Writes an int column. */
     private void writeIntField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableIntField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         IntVector vector = (IntVector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getInt(j));
         }
@@ -767,11 +772,16 @@ public class Arrow {
 
     /** Writes a boolean column. */
     private void writeBooleanField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableBooleanField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         BitVector vector = (BitVector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getInt(j));
         }
@@ -801,11 +811,16 @@ public class Arrow {
 
     /** Writes a byte column. */
     private void writeCharField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableCharField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         UInt2Vector vector = (UInt2Vector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getChar(j));
         }
@@ -835,11 +850,16 @@ public class Arrow {
 
     /** Writes a byte column. */
     private void writeByteField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableByteField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         TinyIntVector vector = (TinyIntVector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getByte(j));
         }
@@ -869,11 +889,16 @@ public class Arrow {
 
     /** Writes a short column. */
     private void writeShortField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableShortField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         SmallIntVector vector = (SmallIntVector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getShort(j));
         }
@@ -903,11 +928,16 @@ public class Arrow {
 
     /** Writes a long column. */
     private void writeLongField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableLongField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         BigIntVector vector = (BigIntVector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getLong(j));
         }
@@ -937,11 +967,16 @@ public class Arrow {
 
     /** Writes a float column. */
     private void writeFloatField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableFloatField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         Float4Vector vector  = (Float4Vector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getFloat(j));
         }
@@ -971,11 +1006,16 @@ public class Arrow {
 
     /** Writes a double column. */
     private void writeDoubleField(DataFrame df, FieldVector fieldVector, int from, int count) {
+        var column = df.column(fieldVector.getField().getName());
+        if (column.isNullable()) {
+            writeNullableDoubleField(df, fieldVector, from, count);
+            return;
+        }
+
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
         Float8Vector vector  = (Float8Vector) fieldVector;
-        var column = df.column(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             vector.set(i, column.getDouble(j));
         }
