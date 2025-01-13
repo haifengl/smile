@@ -20,6 +20,7 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -773,11 +774,11 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         }
 
         return new DataFrame(
-                ValueVector.of("column", Arrays.copyOf(col, k)),
-                ValueVector.of("count", Arrays.copyOf(count, k)),
-                ValueVector.of("min", Arrays.copyOf(min, k)),
-                ValueVector.of("avg", Arrays.copyOf(avg, k)),
-                ValueVector.of("max", Arrays.copyOf(max, k))
+                new StringVector("column", Arrays.copyOf(col, k)),
+                new LongVector("count", Arrays.copyOf(count, k)),
+                new DoubleVector("min", Arrays.copyOf(min, k)),
+                new DoubleVector("avg", Arrays.copyOf(avg, k)),
+                new DoubleVector("max", Arrays.copyOf(max, k))
         );
     }
 
@@ -1139,7 +1140,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getInt(j);
                         }
                     }
-                    yield new IntVector(field, values);
+                    yield nullMask.isEmpty() ? new IntVector(field, values) : new NullableIntVector(field, values, nullMask);
                 }
 
                 case Long -> {
@@ -1153,7 +1154,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getLong(j);
                         }
                     }
-                    yield new LongVector(field, values);
+                    yield nullMask.isEmpty() ? new LongVector(field, values) : new NullableLongVector(field, values, nullMask);
                 }
 
                 case Double -> {
@@ -1167,7 +1168,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getDouble(j);
                         }
                     }
-                    yield new DoubleVector(field, values);
+                    yield nullMask.isEmpty() ? new DoubleVector(field, values) : new NullableDoubleVector(field, values, nullMask);
                 }
 
                 case Float -> {
@@ -1181,7 +1182,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getFloat(j);
                         }
                     }
-                    yield new FloatVector(field, values);
+                    yield nullMask.isEmpty() ? new FloatVector(field, values) : new NullableFloatVector(field, values, nullMask);
                 }
 
                 case Boolean -> {
@@ -1194,7 +1195,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getBoolean(j);
                         }
                     }
-                    yield new BooleanVector(field, values);
+                    yield nullMask.isEmpty() ? new BooleanVector(field, values) : new NullableBooleanVector(field, values, nullMask);
                 }
 
                 case Byte -> {
@@ -1208,7 +1209,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getByte(j);
                         }
                     }
-                    yield new ByteVector(field, values);
+                    yield nullMask.isEmpty() ? new ByteVector(field, values) : new NullableByteVector(field, values, nullMask);
                 }
 
                 case Short -> {
@@ -1222,7 +1223,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getShort(j);
                         }
                     }
-                    yield new ShortVector(field, values);
+                    yield nullMask.isEmpty() ? new ShortVector(field, values) : new NullableShortVector(field, values, nullMask);
                 }
 
                 case Char -> {
@@ -1236,7 +1237,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                             values[i] = datum.getChar(j);
                         }
                     }
-                    yield new CharVector(field, values);
+                    yield nullMask.isEmpty() ? new CharVector(field, values) : new NullableCharVector(field, values, nullMask);
                 }
 
                 case String -> {
@@ -1247,6 +1248,14 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                     yield new StringVector(field, values);
                 }
 
+                case Decimal -> {
+                    BigDecimal[] values = new BigDecimal[n];
+                    for (int i = 0; i < n; i++) {
+                        values[i] = (BigDecimal) data.get(i).get(j);
+                    }
+                    yield new NumberVector<>(field, values);
+                }
+
                 default -> {
                     Object[] values = new Object[n];
                     for (int i = 0; i < n; i++) {
@@ -1255,10 +1264,6 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                     yield new ObjectVector<>(field, values);
                 }
             };
-
-            if (columns[j] instanceof PrimitiveVector vector && !nullMask.isEmpty()) {
-                vector.setNullMask(nullMask);
-            }
         }
 
         return new DataFrame(schema, columns);

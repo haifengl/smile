@@ -343,21 +343,21 @@ public class Arrow {
                         case Object: {
                             Class<?> clazz = ((ObjectType) type).getObjectClass();
                             if (clazz == Integer.class) {
-                                writeIntObjectField(data, vector, from, count);
+                                writeNullableIntField(data, vector, from, count);
                             } else if (clazz == Long.class) {
-                                writeLongObjectField(data, vector, from, count);
+                                writeNullableLongField(data, vector, from, count);
                             } else if (clazz == Double.class) {
-                                writeDoubleObjectField(data, vector, from, count);
+                                writeNullableDoubleField(data, vector, from, count);
                             } else if (clazz == Float.class) {
-                                writeFloatObjectField(data, vector, from, count);
+                                writeNullableFloatField(data, vector, from, count);
                             } else if (clazz == Boolean.class) {
-                                writeBooleanObjectField(data, vector, from, count);
+                                writeNullableBooleanField(data, vector, from, count);
                             } else if (clazz == Byte.class) {
-                                writeByteObjectField(data, vector, from, count);
+                                writeNullableByteField(data, vector, from, count);
                             } else if (clazz == Short.class) {
-                                writeShortObjectField(data, vector, from, count);
+                                writeNullableShortField(data, vector, from, count);
                             } else if (clazz == Character.class) {
-                                writeCharObjectField(data, vector, from, count);
+                                writeNullableCharField(data, vector, from, count);
                             } else if (clazz == BigDecimal.class) {
                                 writeDecimalField(data, vector, from, count);
                             } else if (clazz == String.class) {
@@ -397,349 +397,338 @@ public class Arrow {
     /** Reads a boolean column. */
     private smile.data.vector.ValueVector readBitField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         BitVector vector = (BitVector) fieldVector;
 
-        BitSet a = new BitSet(count);
-        BitSet mask = null;
+        BitSet data = new BitSet(count);
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                if (vector.get(i) != 0) a.set(i);
+                data.set(i, vector.get(i) != 0);
             }
+            return new smile.data.vector.BooleanVector(name, count, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    if (vector.get(i) != 0) a.set(i);
+                    data.set(i, vector.get(i) != 0);
             }
+            return new smile.data.vector.NullableBooleanVector(name, count, data, mask);
         }
-
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.ByteType);
-        var valueVector = new smile.data.vector.BooleanVector(field, a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a byte column. */
     private smile.data.vector.ValueVector readByteField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         TinyIntVector vector = (TinyIntVector) fieldVector;
 
-        byte[] a = new byte[count];
-        BitSet mask = null;
+        byte[] data = new byte[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.ByteVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableByteVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.ByteVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a char column. */
     private smile.data.vector.ValueVector readCharField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        char[] a = new char[count];
-        BitSet mask = null;
+        char[] data = new char[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = (char) vector.get(i);
+                data[i] = (char) vector.get(i);
             }
+            return new smile.data.vector.CharVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = (char) vector.get(i);
+                    data[i] = (char) vector.get(i);
             }
+            return new smile.data.vector.NullableCharVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.CharVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a short column. */
     private smile.data.vector.ValueVector readShortField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        short[] a = new short[count];
-        BitSet mask = null;
+        short[] data = new short[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.ShortVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableShortVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.ShortVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads an int column. */
     private smile.data.vector.ValueVector readIntField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         IntVector vector = (IntVector) fieldVector;
 
-        int[] a = new int[count];
-        BitSet mask = null;
+        int[] data = new int[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.IntVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableIntVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.IntVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a long column. */
     private smile.data.vector.ValueVector readLongField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         BigIntVector vector = (BigIntVector) fieldVector;
 
-        long[] a = new long[count];
-        BitSet mask = null;
+        long[] data = new long[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.LongVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableLongVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.LongVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a float column. */
     private smile.data.vector.ValueVector readFloatField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         Float4Vector vector = (Float4Vector) fieldVector;
 
-        float[] a = new float[count];
-        BitSet mask = null;
+        float[] data = new float[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.FloatVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableFloatVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.FloatVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a double column. */
     private smile.data.vector.ValueVector readDoubleField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         Float8Vector vector = (Float8Vector) fieldVector;
 
-        double[] a = new double[count];
-        BitSet mask = null;
+        double[] data = new double[count];
         if (!fieldVector.getField().isNullable()) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.get(i);
+                data[i] = vector.get(i);
             }
+            return new smile.data.vector.DoubleVector(name, data);
         } else {
-            mask = new BitSet(count);
+            BitSet mask = new BitSet(count);
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
                     mask.set(i);
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
+            return new smile.data.vector.NullableDoubleVector(name, data, mask);
         }
-
-        var valueVector = new smile.data.vector.DoubleVector(fieldVector.getField().getName(), a);
-        valueVector.setNullMask(mask);
-        return valueVector;
     }
 
     /** Reads a decimal column. */
     private smile.data.vector.ValueVector readDecimalField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        BigDecimal[] a = new BigDecimal[count];
+        var name = fieldVector.getField().getName();
+        BigDecimal[] data = new BigDecimal[count];
         DecimalVector vector = (DecimalVector) fieldVector;
         for (int i = 0; i < count; i++) {
-            a[i] = vector.isNull(i) ? null : vector.getObject(i);
+            data[i] = vector.isNull(i) ? null : vector.getObject(i);
         }
 
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.DecimalType);
-        return new smile.data.vector.ObjectVector<>(field, a);
+        var field = new StructField(name, DataTypes.DecimalType);
+        return new smile.data.vector.NumberVector<>(field, data);
     }
 
     /** Reads a date column. */
     private smile.data.vector.ValueVector readDateField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        LocalDate[] a = new LocalDate[count];
+        var name = fieldVector.getField().getName();
+        LocalDate[] data = new LocalDate[count];
         ZoneOffset zone = OffsetDateTime.now().getOffset();
         if (fieldVector instanceof DateDayVector vector) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
+                data[i] = vector.isNull(i) ? null : LocalDate.ofEpochDay(vector.get(i));
             }
         } else if (fieldVector instanceof DateMilliVector vector) {
             for (int i = 0; i < count; i++) {
-                a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone).toLocalDate();
+                data[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone).toLocalDate();
             }
         }
 
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.DateType);
-        return new smile.data.vector.ObjectVector<>(field, a);
+        var field = new StructField(name, DataTypes.DateType);
+        return new smile.data.vector.ObjectVector<>(field, data);
     }
 
     /** Reads a time column. */
     private smile.data.vector.ValueVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        LocalTime[] a = new LocalTime[count];
+        var name = fieldVector.getField().getName();
+        LocalTime[] data = new LocalTime[count];
         switch (fieldVector) {
             case TimeNanoVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i));
+                    data[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i));
                 }
             }
             case TimeMilliVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000L);
+                    data[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000000L);
                 }
             }
             case TimeMicroVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
+                    data[i] = vector.isNull(i) ? null : LocalTime.ofNanoOfDay(vector.get(i) * 1000);
                 }
             }
             case TimeSecVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
+                    data[i] = vector.isNull(i) ? null : LocalTime.ofSecondOfDay(vector.get(i));
                 }
             }
             default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
 
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.TimeType);
-        return new smile.data.vector.ObjectVector<>(field, a);
+        var field = new StructField(name, DataTypes.TimeType);
+        return new smile.data.vector.ObjectVector<>(field, data);
     }
 
     /** Reads a DateTime column. */
     private smile.data.vector.ValueVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        LocalDateTime[] a = new LocalDateTime[count];
+        var name = fieldVector.getField().getName();
+        LocalDateTime[] data = new LocalDateTime[count];
         String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
         ZoneOffset zone = timezone == null ? OffsetDateTime.now().getOffset() : ZoneOffset.of(timezone);
         switch (fieldVector) {
             case TimeStampMilliVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone);
+                    data[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i)), zone);
                 }
             }
             case TimeStampNanoVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i) / 1000000), zone);
+                    data[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i) / 1000000), zone);
                 }
             }
             case TimeStampMicroVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i) / 1000), zone);
+                    data[i] = vector.isNull(i) ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(vector.get(i) / 1000), zone);
                 }
             }
             case TimeStampSecVector vector -> {
                 for (int i = 0; i < count; i++) {
-                    a[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
+                    data[i] = vector.isNull(i) ? null : LocalDateTime.ofEpochSecond(vector.get(i), 0, zone);
                 }
             }
             default -> throw new IllegalArgumentException("Invalid field vector type: " + fieldVector.getMinorType());
         }
 
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.DateTimeType);
-        return new smile.data.vector.ObjectVector<>(field, a);
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new smile.data.vector.ObjectVector<>(field, data);
     }
 
     /** Reads a byte[] column. */
     private smile.data.vector.ValueVector readByteArrayField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
-        byte[][] a = new byte[count][];
+        var name = fieldVector.getField().getName();
+        byte[][] data = new byte[count][];
         if (fieldVector instanceof VarBinaryVector vector) {
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    data[i] = null;
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
         } else if (fieldVector instanceof FixedSizeBinaryVector vector){
             for (int i = 0; i < count; i++) {
                 if (vector.isNull(i))
-                    a[i] = null;
+                    data[i] = null;
                 else
-                    a[i] = vector.get(i);
+                    data[i] = vector.get(i);
             }
         } else {
             throw new UnsupportedOperationException("Unsupported binary vector: " + fieldVector);
         }
 
-        var field = new StructField(fieldVector.getField().getName(), DataTypes.ByteArrayType);
-        return new smile.data.vector.ObjectVector<>(field, a);
+        var field = new StructField(name, DataTypes.ByteArrayType);
+        return new smile.data.vector.ObjectVector<>(field, data);
     }
 
     /** Reads a String column. */
     private smile.data.vector.ValueVector readStringField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
+        var name = fieldVector.getField().getName();
         VarCharVector vector = (VarCharVector) fieldVector;
-        String[] a = new String[count];
+        String[] data = new String[count];
         for (int i = 0; i < count; i++) {
             if (vector.isNull(i))
-                a[i] = null;
+                data[i] = null;
             else
-                a[i] = new String(vector.get(i));
+                data[i] = new String(vector.get(i));
         }
 
-        return new smile.data.vector.StringVector(fieldVector.getField().getName(), a);
+        return new smile.data.vector.StringVector(name, data);
     }
 
     /** Writes an int column. */
@@ -757,7 +746,7 @@ public class Arrow {
     }
 
     /** Writes a nullable int column. */
-    private void writeIntObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableIntField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -791,7 +780,7 @@ public class Arrow {
     }
 
     /** Writes a nullable boolean column. */
-    private void writeBooleanObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableBooleanField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -825,7 +814,7 @@ public class Arrow {
     }
 
     /** Writes a nullable char column. */
-    private void writeCharObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableCharField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -859,7 +848,7 @@ public class Arrow {
     }
 
     /** Writes a nullable byte column. */
-    private void writeByteObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableByteField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -893,7 +882,7 @@ public class Arrow {
     }
 
     /** Writes a nullable short column. */
-    private void writeShortObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableShortField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -927,7 +916,7 @@ public class Arrow {
     }
 
     /** Writes a nullable long column. */
-    private void writeLongObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableLongField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -961,7 +950,7 @@ public class Arrow {
     }
 
     /** Writes a nullable float column. */
-    private void writeFloatObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableFloatField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -995,7 +984,7 @@ public class Arrow {
     }
 
     /** Writes a nullable double column. */
-    private void writeDoubleObjectField(DataFrame df, FieldVector fieldVector, int from, int count) {
+    private void writeNullableDoubleField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
