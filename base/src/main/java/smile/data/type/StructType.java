@@ -300,7 +300,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
             String name = meta.getColumnName(i);
             DataType dtype = DataType.of(
                     JDBCType.valueOf(meta.getColumnType(i)),
-                    meta.isNullable(i) != ResultSetMetaData.columnNoNulls,
+                    meta.isNullable(i) == ResultSetMetaData.columnNullable,
                     dbms);
             fields[i-1] = new StructField(name, dtype);
         }
