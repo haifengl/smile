@@ -54,7 +54,7 @@ public record SwissRoll(double[][] data) {
     }
 
     private static double[][] load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
         var data = Read.csv(path, format);
         return data.toArray(false, CategoricalEncoder.DUMMY);
     }

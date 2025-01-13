@@ -69,7 +69,7 @@ public record USPS(DataFrame train, DataFrame test, Formula formula) {
         this(load(trainDataPath), load(testDataPath), Formula.lhs("class"));
     }
     private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
         return Read.csv(path, format, schema);
     }
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { useEffect, useState } from 'react'
 import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import Chat from './chat/Chat'
@@ -13,7 +29,7 @@ function App() {
 
   const bot = {
     id: 'meta/llama3',
-    name: 'Llama3.1',
+    name: 'Kirin',
     avatar: LlamaIcon,
   };
   
@@ -136,7 +152,7 @@ function App() {
         onerror(error) {
           console.error(error);
           messages.push({
-            text: error.message,
+            text: "Sorry, the service isn't available right now. Please try again later.",
             user: server,
             createdAt: new Date(),
           });

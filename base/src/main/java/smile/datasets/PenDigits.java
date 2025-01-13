@@ -63,7 +63,7 @@ public record PenDigits(DataFrame data, Formula formula) {
         fields.add(new StructField("class", DataTypes.ByteType));
         StructType schema = new StructType(fields);
 
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
         return Read.csv(path, format, schema);
     }
 

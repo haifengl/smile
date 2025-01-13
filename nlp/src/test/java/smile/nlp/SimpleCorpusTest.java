@@ -65,26 +65,26 @@ public class SimpleCorpusTest {
     }
 
     @Test
-    public void testGetNumDocuments() {
-        System.out.println("getNumDocuments");
-        assertEquals(5000, corpus.ndoc());
+    public void testDocCount() {
+        System.out.println("docCount");
+        assertEquals(5000, corpus.docCount());
     }
 
     @Test
-    public void testGetNumTerms() {
-        System.out.println("getNumTerms");
-        assertEquals(15077, corpus.nterm());
+    public void testTermCount() {
+        System.out.println("termCount");
+        assertEquals(15077, corpus.termCount());
     }
 
     @Test
-    public void testGetNumBigrams() {
-        System.out.println("getNumBigrams");
-        assertEquals(18303, corpus.nbigram());
+    public void testBigramCount() {
+        System.out.println("bigramCount");
+        assertEquals(18303, corpus.bigramCount());
     }
 
     @Test
-    public void testGetAverageDocumentSize() {
-        System.out.println("getAverageDocumentSize");
+    public void testAvgDocSize() {
+        System.out.println("avgDocSize");
         assertEquals(11, corpus.avgDocSize());
     }
 

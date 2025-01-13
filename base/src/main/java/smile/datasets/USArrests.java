@@ -54,7 +54,7 @@ public record USArrests(DataFrame data) {
         CSVFormat format = CSVFormat.Builder.create()
                 .setDelimiter('\t')
                 .setHeader().setSkipHeaderRecord(true)
-                .build();
+                .get();
         return Read.csv(path, format);
     }
 

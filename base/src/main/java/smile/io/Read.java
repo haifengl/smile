@@ -176,7 +176,7 @@ public interface Read {
             }
         }
 
-        return csv(path, formatBuilder.build());
+        return csv(path, formatBuilder.get());
     }
 
     /**
