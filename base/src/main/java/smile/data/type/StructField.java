@@ -43,7 +43,7 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
      * @param measure the level of measurement.
      */
     public StructField {
-        if (measure instanceof NumericalMeasure && !dtype.isFloating()) {
+        if (measure instanceof NumericalMeasure && (dtype.isBoolean() || dtype.isChar() || dtype.isString())) {
             throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", dtype, measure));
         }
 
