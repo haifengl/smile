@@ -13,14 +13,18 @@
 		},
 		"ghcr.io/devcontainers-extra/features/sbt-sdkman:2": {
 			"version": "latest"
-		}
+		},
+		"ghcr.io/devcontainers/features/node:1": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	// web/11ty: 3000
+	// serve/akka: 3801
+	// chat/vite: 4173
+	"forwardPorts": [3000, 3801, 4173],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "java -version",
+	"postCreateCommand": "bash bin/setup.sh",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

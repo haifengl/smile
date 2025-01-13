@@ -189,7 +189,7 @@ public class BM25 implements RelevanceRanker {
     public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
         if (tf <= 0) return 0.0;
 
-        int N = corpus.ndoc();
+        int N = corpus.docCount();
         int docSize = doc.size();
         int avgDocSize = corpus.avgDocSize();
 
@@ -198,7 +198,7 @@ public class BM25 implements RelevanceRanker {
 
     @Override
     public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
-        int N = corpus.ndoc();
+        int N = corpus.docCount();
         int docSize = doc.size();
         int avgDocSize = corpus.avgDocSize();
 

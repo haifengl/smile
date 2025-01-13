@@ -53,7 +53,7 @@ public record SyntheticControl(DataFrame data) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
         return Read.csv(path, format);
     }
 

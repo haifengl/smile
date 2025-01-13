@@ -1732,3 +1732,4 @@ public class Palette {
         cssNamedColors.put("yellowgreen", YELLOW_GREEN);
     }
 }
+

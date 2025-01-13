@@ -85,7 +85,7 @@ object write {
     */
   def csv(data: DataFrame, file: Path, delimiter: String): Unit = {
     val format = CSVFormat.Builder.create().setDelimiter(delimiter)
-    Write.csv(data, file, format.build())
+    Write.csv(data, file, format.get())
   }
 
   /** Writes a two-dimensional array to a comma-delimited text file.
@@ -155,7 +155,7 @@ object read {
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
-    Read.csv(file, format.build(), schema)
+    Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */
@@ -165,7 +165,7 @@ object read {
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
-    Read.csv(file, format.build(), schema)
+    Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */

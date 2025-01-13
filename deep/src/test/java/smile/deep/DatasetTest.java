@@ -70,7 +70,7 @@ public class DatasetTest {
         System.out.println(net);
         net.to(device);
 
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
         double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
         int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
         Dataset dataset = Dataset.of(x, y, 64);

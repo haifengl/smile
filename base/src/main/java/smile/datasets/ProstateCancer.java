@@ -59,7 +59,7 @@ public record ProstateCancer(DataFrame train, DataFrame test, Formula formula) {
         CSVFormat format = CSVFormat.Builder.create()
                 .setDelimiter('\t')
                 .setHeader().setSkipHeaderRecord(true)
-                .build();
+                .get();
         return Read.csv(path, format);
     }
 

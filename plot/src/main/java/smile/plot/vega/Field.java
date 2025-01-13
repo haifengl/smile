@@ -174,8 +174,12 @@ public class Field {
      * @return this object.
      */
     public Field scale(String type) {
-        ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
-        node.put("type", type);
+        if (type == null) {
+            spec.putNull("scale");
+        } else {
+            ObjectNode node = spec.has("scale") ? (ObjectNode) spec.get("scale") : spec.putObject("scale");
+            node.put("type", type);
+        }
         return this;
     }
 

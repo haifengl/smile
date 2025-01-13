@@ -67,7 +67,7 @@ object write {
      */
     fun csv(data: DataFrame, file: Path, delimiter: Char): Unit {
         val format = CSVFormat.Builder.create().setDelimiter(delimiter)
-        Write.csv(data, file, format.build())
+        Write.csv(data, file, format.get())
     }
 }
 
@@ -82,14 +82,14 @@ object read {
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
-        return Read.csv(file, format.build(), schema)
+        return Read.csv(file, format.get(), schema)
     }
 
     /** Reads a CSV file. */
     fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
-        return Read.csv(file, format.build(), schema)
+        return Read.csv(file, format.get(), schema)
     }
 
     /** Reads a CSV file. */

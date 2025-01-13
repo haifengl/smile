@@ -66,8 +66,8 @@ public record BitcoinPrice(DataFrame data) {
         CSVFormat format = CSVFormat.Builder.create()
                 .setTrim(true)
                 .setHeader().setSkipHeaderRecord(true)
-                .build();
-        return Read.csv(Paths.getTestData("timeseries/bitcoin_price.csv"), format);
+                .get();
+        return Read.csv(path, format);
     }
 
     /**

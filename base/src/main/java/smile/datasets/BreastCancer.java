@@ -55,7 +55,7 @@ public record BreastCancer(DataFrame data, Formula formula) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).build();
+        CSVFormat format = CSVFormat.Builder.create().setHeader().setSkipHeaderRecord(true).get();
         var data = Read.csv(path, format);
         data = data.drop("id").factorize("diagnosis");
         return data;

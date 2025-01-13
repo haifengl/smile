@@ -48,7 +48,7 @@ public record Eurodist(DataFrame data) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').build();
+        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
         return Read.csv(path, format);
     }
 
