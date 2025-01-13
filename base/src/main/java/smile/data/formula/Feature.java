@@ -16,6 +16,7 @@
  */
 package smile.data.formula;
 
+import java.math.BigDecimal;
 import java.util.BitSet;
 import smile.data.Tuple;
 import smile.data.type.StructField;
@@ -115,6 +116,24 @@ public interface Feature {
     }
 
     /**
+     * Applies the term on a data object and produces a string-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default String applyAsString(Tuple tuple) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Applies the term on a data object and produces a decimal-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default BigDecimal applyAsDecimal(Tuple tuple) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Returns true if the term represents a plain variable/column in the data frame.
      * @return true if the term represents a plain variable/column in the data frame.
      */
@@ -155,7 +174,7 @@ public interface Feature {
                     }
                 }
 
-                yield new IntVector(field, values);
+                yield nullMask.isEmpty() ? new IntVector(field, values) : new NullableIntVector(field, values, nullMask);
             }
 
             case Long -> {
@@ -175,7 +194,7 @@ public interface Feature {
                         values[i] = applyAsLong(data.get(i));
                     }
                 }
-                yield new LongVector(field, values);
+                yield nullMask.isEmpty() ? new LongVector(field, values) : new NullableLongVector(field, values, nullMask);
             }
 
             case Double -> {
@@ -195,7 +214,7 @@ public interface Feature {
                         values[i] = applyAsDouble(data.get(i));
                     }
                 }
-                yield new DoubleVector(field, values);
+                yield nullMask.isEmpty() ? new DoubleVector(field, values) : new NullableDoubleVector(field, values, nullMask);
             }
 
             case Float -> {
@@ -215,7 +234,7 @@ public interface Feature {
                         values[i] = applyAsFloat(data.get(i));
                     }
                 }
-                yield new FloatVector(field, values);
+                yield nullMask.isEmpty() ? new FloatVector(field, values) : new NullableFloatVector(field, values, nullMask);
             }
 
             case Boolean -> {
@@ -234,7 +253,7 @@ public interface Feature {
                         values[i] = applyAsBoolean(data.get(i));
                     }
                 }
-                yield new BooleanVector(field, values);
+                yield nullMask.isEmpty() ? new BooleanVector(field, values) : new NullableBooleanVector(field, values, nullMask);
             }
 
             case Byte -> {
@@ -254,7 +273,7 @@ public interface Feature {
                         values[i] = applyAsByte(data.get(i));
                     }
                 }
-                yield new ByteVector(field, values);
+                yield nullMask.isEmpty() ? new ByteVector(field, values) : new NullableByteVector(field, values, nullMask);
             }
 
             case Short -> {
@@ -274,7 +293,7 @@ public interface Feature {
                         values[i] = applyAsShort(data.get(i));
                     }
                 }
-                yield new ShortVector(field, values);
+                yield nullMask.isEmpty() ? new ShortVector(field, values) : new NullableShortVector(field, values, nullMask);
             }
 
             case Char -> {
@@ -294,7 +313,19 @@ public interface Feature {
                         values[i] = applyAsChar(data.get(i));
                     }
                 }
-                yield new CharVector(field, values);
+                yield nullMask.isEmpty() ? new CharVector(field, values) : new NullableCharVector(field, values, nullMask);
+            }
+
+            case String -> {
+                String[] values = new String[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsString(data.get(i));
+                yield new StringVector(field, values);
+            }
+
+            case Decimal -> {
+                BigDecimal[] values = new BigDecimal[size];
+                for (int i = 0; i < size; i++) values[i] = applyAsDecimal(data.get(i));
+                yield new NumberVector<>(field, values);
             }
 
             default -> {
@@ -304,9 +335,6 @@ public interface Feature {
             }
         };
 
-        if (vector instanceof PrimitiveVector v && !nullMask.isEmpty()) {
-            v.setNullMask(nullMask);
-        }
         return vector;
     }
 }
