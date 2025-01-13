@@ -46,8 +46,8 @@ public record USPS(DataFrame train, DataFrame test, Formula formula) {
     static {
         ArrayList<StructField> fields = new ArrayList<>();
         fields.add(new StructField("class", DataTypes.ByteType));
-        IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V" + i, DataTypes.DoubleType)));
-         schema = new StructType(fields);
+        IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V" + i, DataTypes.FloatType)));
+        schema = new StructType(fields);
     }
 
     /**
