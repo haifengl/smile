@@ -77,13 +77,12 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
 
     @Override
     public NumberVector<T> get(Index index) {
-        ObjectType dtype = (ObjectType) field.dtype();
         @SuppressWarnings("unchecked")
-        T[] subset = (T[]) java.lang.reflect.Array.newInstance(dtype.getObjectClass(), index.size());
-        for (int i = 0; i < subset.length; i++) {
-            subset[i] = vector[index.apply(i)];
+        T[] data = (T[]) java.lang.reflect.Array.newInstance(vector.getClass().getComponentType(), index.size());
+        for (int i = 0; i < data.length; i++) {
+            data[i] = vector[index.apply(i)];
         }
-        return new NumberVector<>(field, subset);
+        return new NumberVector<>(field, data);
     }
 
     @Override
