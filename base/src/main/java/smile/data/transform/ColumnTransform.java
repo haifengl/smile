@@ -16,6 +16,7 @@
  */
 package smile.data.transform;
 
+import java.util.BitSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -24,9 +25,11 @@ import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.measure.NumericalMeasure;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
+import smile.data.vector.NullableDoubleVector;
 import smile.data.vector.ValueVector;
 import smile.math.Function;
 
@@ -72,16 +75,23 @@ public class ColumnTransform implements Transform {
         ValueVector[] vectors = new ValueVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
+            ValueVector column = data.column(i);
             Function transform = transforms.get(field.name());
             if (transform != null) {
-                DoubleStream stream = data.stream().mapToDouble(t -> transform.apply(t.getDouble(i)));
-                if (field.measure() == null || field.measure() instanceof NumericalMeasure) {
-                    vectors[i] = new DoubleVector(field, stream.toArray());
+                DoubleStream stream = column.asDoubleStream().map(transform::apply);
+                var measure = field.measure() instanceof NumericalMeasure ? field.measure() : null;
+                if (column.isNullable()) {
+                    int n = column.size();
+                    BitSet mask = new BitSet(n);
+                    for (int j = 0; j < n; j++) mask.set(j, column.isNullAt(j));
+                    var prop = new StructField(field.name(), DataTypes.NullableDoubleType, measure);
+                    vectors[i] = new NullableDoubleVector(prop, stream.toArray(), mask);
                 } else {
-                    vectors[i] = new DoubleVector(field.name(), stream.toArray());
+                    var prop = new StructField(field.name(), DataTypes.DoubleType, measure);
+                    vectors[i] = new DoubleVector(prop, stream.toArray());
                 }
             } else {
-                vectors[i] = data.column(i);
+                vectors[i] = column;
             }
         });
         return new DataFrame(vectors);
