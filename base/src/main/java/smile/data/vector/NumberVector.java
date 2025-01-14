@@ -21,9 +21,6 @@ import java.util.Objects;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-
-import smile.data.type.DataTypes;
-import smile.data.type.ObjectType;
 import smile.data.type.StructField;
 import smile.util.Index;
 

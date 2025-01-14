@@ -66,7 +66,7 @@ public class NullableCharVector extends NullablePrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return index().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
+        return index().map(i -> nullMask.get(i) ? 0 : vector[i]);
     }
 
     @Override

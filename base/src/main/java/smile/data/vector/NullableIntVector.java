@@ -16,10 +16,8 @@
  */
 package smile.data.vector;
 
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.IntStream;
-import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.util.Index;
@@ -64,7 +62,7 @@ public class NullableIntVector extends NullablePrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return index().filter(i -> !nullMask.get(i)).map(i -> vector[i]);
+        return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : vector[i]);
     }
 
     @Override
