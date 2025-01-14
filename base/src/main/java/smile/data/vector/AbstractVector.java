@@ -17,9 +17,7 @@
 package smile.data.vector;
 
 import java.util.BitSet;
-import java.util.Optional;
 import java.util.stream.*;
-import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
 /**

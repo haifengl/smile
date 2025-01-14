@@ -16,11 +16,9 @@
  */
 package smile.data.vector;
 
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
-import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.util.Index;
@@ -65,7 +63,7 @@ public class NullableLongVector extends NullablePrimitiveVector {
 
     @Override
     public LongStream asLongStream() {
-        return index().filter(i -> !nullMask.get(i)).mapToLong(i -> vector[i]);
+        return index().mapToLong(i -> nullMask.get(i) ? Long.MIN_VALUE : vector[i]);
     }
 
     @Override

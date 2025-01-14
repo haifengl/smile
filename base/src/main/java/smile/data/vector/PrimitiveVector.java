@@ -16,9 +16,7 @@
  */
 package smile.data.vector;
 
-import java.util.BitSet;
 import smile.data.type.StructField;
-import smile.util.Index;
 
 /**
  * Abstract base class implementation of ValueVector interface.

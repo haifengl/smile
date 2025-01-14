@@ -16,7 +16,6 @@
  */
 package smile.data.vector;
 
-import java.util.BitSet;
 import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;

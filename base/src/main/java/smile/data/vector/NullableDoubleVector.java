@@ -16,7 +16,6 @@
  */
 package smile.data.vector;
 
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.DoubleStream;
 import smile.data.measure.CategoricalMeasure;
@@ -80,7 +79,7 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
 
     @Override
     public DoubleStream asDoubleStream() {
-        return index().filter(i -> !nullMask.get(i)).mapToDouble(i -> vector[i]);
+        return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : vector[i]);
     }
 
     @Override
