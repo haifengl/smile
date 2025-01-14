@@ -91,7 +91,7 @@ public class NullableBooleanVector extends NullablePrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return index().map(i -> nullMask.get(i) ? -1 : (vector.get(i) ? 1 : 0));
+        return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : (vector.get(i) ? 1 : 0));
     }
 
     @Override
