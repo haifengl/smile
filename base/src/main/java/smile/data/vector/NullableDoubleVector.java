@@ -118,36 +118,36 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return MathEx.isZero(getDouble(i));
+        return MathEx.isZero(vector[i]);
     }
 
     @Override
     public char getChar(int i) {
-        return (char) getDouble(i);
+        return (char) vector[i];
     }
 
     @Override
     public byte getByte(int i) {
-        return (byte) getDouble(i);
+        return (byte) vector[i];
     }
 
     @Override
     public short getShort(int i) {
-        return (short) getDouble(i);
+        return (short) vector[i];
     }
 
     @Override
     public int getInt(int i) {
-        return (int) getDouble(i);
+        return (int) vector[i];
     }
 
     @Override
     public long getLong(int i) {
-        return (long) getDouble(i);
+        return (long) vector[i];
     }
 
     @Override
     public float getFloat(int i) {
-        return (float) getDouble(i);
+        return (float) vector[i];
     }
 }

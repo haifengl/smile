@@ -101,36 +101,36 @@ public class NullableIntVector extends NullablePrimitiveVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return getInt(i) != 0;
+        return vector[i] != 0;
     }
 
     @Override
     public char getChar(int i) {
-        return (char) getInt(i);
+        return (char) vector[i];
     }
 
     @Override
     public byte getByte(int i) {
-        return (byte) getInt(i);
+        return (byte) vector[i];
     }
 
     @Override
     public short getShort(int i) {
-        return (short) getInt(i);
+        return (short) vector[i];
     }
 
     @Override
     public long getLong(int i) {
-        return getInt(i);
+        return vector[i];
     }
 
     @Override
     public float getFloat(int i) {
-        return getInt(i);
+        return vector[i];
     }
 
     @Override
     public double getDouble(int i) {
-        return getInt(i);
+        return vector[i];
     }
 }

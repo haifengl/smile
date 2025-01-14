@@ -139,42 +139,42 @@ public class StringVector extends ObjectVector<String> {
 
     @Override
     public boolean getBoolean(int i) {
-        return Boolean.parseBoolean(get(i));
+        return Boolean.parseBoolean(vector[i]);
     }
 
     @Override
     public char getChar(int i) {
-        String s = get(i);
+        String s = vector[i];
         return s.isEmpty() ? '\u0000' : s.charAt(0);
     }
 
     @Override
     public byte getByte(int i) {
-        return Byte.parseByte(get(i));
+        return Byte.parseByte(vector[i]);
     }
 
     @Override
     public short getShort(int i) {
-        return Short.parseShort(get(i));
+        return Short.parseShort(vector[i]);
     }
 
     @Override
     public int getInt(int i) {
-        return Integer.parseInt(get(i));
+        return Integer.parseInt(vector[i]);
     }
 
     @Override
     public long getLong(int i) {
-        return Long.parseLong(get(i));
+        return Long.parseLong(vector[i]);
     }
 
     @Override
     public float getFloat(int i) {
-        return Float.parseFloat(get(i));
+        return Float.parseFloat(vector[i]);
     }
 
     @Override
     public double getDouble(int i) {
-        return Double.parseDouble(get(i));
+        return Double.parseDouble(vector[i]);
     }
 }

@@ -93,36 +93,36 @@ public class ByteVector extends PrimitiveVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return getByte(i) != 0;
+        return vector[i] != 0;
     }
 
     @Override
     public char getChar(int i) {
-        return (char) getByte(i);
+        return (char) vector[i];
     }
 
     @Override
     public short getShort(int i) {
-        return getByte(i);
+        return vector[i];
     }
 
     @Override
     public int getInt(int i) {
-        return getByte(i);
+        return vector[i];
     }
 
     @Override
     public long getLong(int i) {
-        return getByte(i);
+        return vector[i];
     }
 
     @Override
     public float getFloat(int i) {
-        return getByte(i);
+        return vector[i];
     }
 
     @Override
     public double getDouble(int i) {
-        return getByte(i);
+        return vector[i];
     }
 }

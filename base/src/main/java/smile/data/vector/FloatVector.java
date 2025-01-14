@@ -110,36 +110,36 @@ public class FloatVector extends PrimitiveVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return MathEx.isZero(getFloat(i));
+        return MathEx.isZero(vector[i]);
     }
 
     @Override
     public char getChar(int i) {
-        return (char) getFloat(i);
+        return (char) vector[i];
     }
 
     @Override
     public byte getByte(int i) {
-        return (byte) getFloat(i);
+        return (byte) vector[i];
     }
 
     @Override
     public short getShort(int i) {
-        return (short) getFloat(i);
+        return (short) vector[i];
     }
 
     @Override
     public int getInt(int i) {
-        return (int) getFloat(i);
+        return (int) vector[i];
     }
 
     @Override
     public long getLong(int i) {
-        return (long) getFloat(i);
+        return (long) vector[i];
     }
 
     @Override
     public double getDouble(int i) {
-        return getFloat(i);
+        return vector[i];
     }
 }
