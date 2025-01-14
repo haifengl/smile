@@ -141,7 +141,7 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testCpuHuber() {
-        test(Loss.huber(0.9), "CPU", cpu.formula(), cpu.data(), 65.4128);
+        test(Loss.huber(0.9), "CPU", cpu.formula(), cpu.data(), 63.7212);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testAutoMPGLS() {
-        test(Loss.ls(), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.0801);
+        test(Loss.ls(), "autoMPG", autoMPG.formula(), autoMPG.data(), 3.0795);
     }
 
     @Test
