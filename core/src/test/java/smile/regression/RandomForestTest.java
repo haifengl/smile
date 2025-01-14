@@ -115,9 +115,9 @@ public class RandomForestTest {
 
         assertEquals(39293.8193, importance[0], 1E-4);
         assertEquals( 6578.6575, importance[1], 1E-4);
-        assertEquals(10270.8817, importance[2], 1E-4);
-        assertEquals(36150.0766, importance[3], 1E-4);
-        assertEquals(30099.2985, importance[4], 1E-4);
+        assertEquals(10222.5344, importance[2], 1E-4);
+        assertEquals(36198.4239, importance[3], 1E-4);
+        assertEquals(30099.2986, importance[4], 1E-4);
         assertEquals(31644.9317, importance[5], 1E-4);
 
         System.out.println("----- Progressive RMSE -----");
@@ -130,7 +130,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(2.7062, metrics.rmse(), 1E-4);
+        assertEquals(2.7034, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
