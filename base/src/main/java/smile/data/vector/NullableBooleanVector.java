@@ -130,36 +130,36 @@ public class NullableBooleanVector extends NullablePrimitiveVector {
 
     @Override
     public char getChar(int i) {
-        return getBoolean(i) ? 'T' : 'F';
+        return vector.get(i) ? 'T' : 'F';
     }
 
     @Override
     public byte getByte(int i) {
-        return getBoolean(i) ? (byte) 1 : 0;
+        return vector.get(i) ? (byte) 1 : 0;
     }
 
     @Override
     public short getShort(int i) {
-        return getBoolean(i) ? (short) 1 : 0;
+        return vector.get(i) ? (short) 1 : 0;
     }
 
     @Override
     public int getInt(int i) {
-        return getBoolean(i) ? 1 : 0;
+        return vector.get(i) ? 1 : 0;
     }
 
     @Override
     public long getLong(int i) {
-        return getBoolean(i) ? 1 : 0;
+        return vector.get(i) ? 1 : 0;
     }
 
     @Override
     public float getFloat(int i) {
-        return getBoolean(i) ? 1 : 0;
+        return vector.get(i) ? 1 : 0;
     }
 
     @Override
     public double getDouble(int i) {
-        return getBoolean(i) ? 1 : 0;
+        return vector.get(i) ? 1 : 0;
     }
 }

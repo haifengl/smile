@@ -98,44 +98,48 @@ public class ObjectVector<T> extends AbstractVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return (Boolean) get(i);
+        return (Boolean) vector[i];
     }
 
     @Override
     public char getChar(int i) {
-        return (Character) get(i);
+        return (Character) vector[i];
     }
 
     @Override
     public byte getByte(int i) {
-        return ((Number) get(i)).byteValue();
+        return ((Number) vector[i]).byteValue();
     }
 
     @Override
     public short getShort(int i) {
-        return ((Number) get(i)).shortValue();
+        return ((Number) vector[i]).shortValue();
     }
 
     @Override
     public int getInt(int i) {
-        return ((Number) get(i)).intValue();
+        return ((Number) vector[i]).intValue();
     }
 
     @Override
     public long getLong(int i) {
-        return ((Number) get(i)).longValue();
+        return ((Number) vector[i]).longValue();
     }
 
     @Override
     public float getFloat(int i) {
-        Number x = (Number) get(i);
-        return x == null ? Float.NaN : x.floatValue();
+        if (vector[i] instanceof Number n) {
+            return n.floatValue();
+        }
+        return Float.NaN;
     }
 
     @Override
     public double getDouble(int i) {
-        Number x = (Number) get(i);
-        return x == null ? Double.NaN : x.doubleValue();
+        if (vector[i] instanceof Number n) {
+            return n.doubleValue();
+        }
+        return Double.NaN;
     }
 
     @Override
