@@ -129,7 +129,13 @@ public class RegressionTree extends CART implements DataFrameRegression {
         RegressionNode node = (RegressionNode) leaf;
         ValueVector xj = x.column(j);
 
-        double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
+        // double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
+        // Stream overhead is too high. Move to plain loop.
+        double sum = 0;
+        for (int i = lo; i < hi; i++) {
+            int idx = index[i];
+            sum += y[idx] * samples[idx];
+        }
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
 
         Split split = null;

@@ -490,7 +490,13 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      *                  the right side of the partition.
      */
     private void shuffle(int low, int split, int high, boolean[] predicate) {
-        Arrays.stream(order).filter(Objects::nonNull).forEach(o -> shuffle(o, low, split, high, predicate));
+        // Arrays.stream(order).filter(Objects::nonNull).forEach(o -> shuffle(o, low, split, high, predicate));
+        // Use plain loop to avoid stream overhead
+        for (var column : order) {
+            if (column != null) {
+                shuffle(column, low, split, high, predicate);
+            }
+        }
         shuffle(index, low, split, high, predicate);
     }
 
