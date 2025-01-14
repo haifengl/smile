@@ -750,21 +750,21 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
             DataType dtype = dtypes[j];
             if (dtype.isLong()) {
-                LongSummaryStatistics s = columns[j].asLongStream().summaryStatistics();
+                LongSummaryStatistics s = columns[j].asLongStream().filter(x -> x != Long.MIN_VALUE).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
             } else if (dtype.isIntegral()) {
-                IntSummaryStatistics s = columns[j].asIntStream().summaryStatistics();
+                IntSummaryStatistics s = columns[j].asIntStream().filter(x -> x != Integer.MIN_VALUE).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
             } else if (dtype.isFloating()) {
-                DoubleSummaryStatistics s = columns[j].asDoubleStream().summaryStatistics();
+                DoubleSummaryStatistics s = columns[j].asDoubleStream().filter(Double::isFinite).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
