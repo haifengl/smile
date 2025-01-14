@@ -62,7 +62,7 @@ public class NullableShortVector extends NullablePrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return index().map(i -> nullMask.get(i) ? Short.MIN_VALUE : vector[i]);
+        return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : vector[i]);
     }
 
     @Override

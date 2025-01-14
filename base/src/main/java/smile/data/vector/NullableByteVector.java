@@ -61,7 +61,7 @@ public class NullableByteVector extends NullablePrimitiveVector {
 
     @Override
     public IntStream asIntStream() {
-        return index().map(i -> nullMask.get(i) ? Byte.MIN_VALUE : vector[i]);
+        return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : vector[i]);
     }
 
     @Override
