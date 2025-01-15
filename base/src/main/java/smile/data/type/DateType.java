@@ -28,35 +28,16 @@ public class DateType implements DataType {
     /** Default instance. */
     static final DateType instance = new DateType();
 
-    /** Date format pattern. */
-    private final String pattern;
-    /** Date formatter. */
-    private final DateTimeFormatter formatter;
-
     /**
      * Constructor with the ISO date formatter that formats
      * or parses a date without an offset, such as '2011-12-03'.
      */
     DateType() {
-        pattern = "uuuu-MM-dd";
-        formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-    }
-
-    /**
-     * Constructor.
-     * @param pattern Patterns for formatting and parsing. Patterns are
-     *                based on a simple sequence of letters and symbols.
-     *                For example, "d MMM uuuu" will format 2011-12-03
-     *                as '3 Dec 2011'.
-     */
-    public DateType(String pattern) {
-        this.pattern = pattern;
-        formatter = DateTimeFormatter.ofPattern(pattern);
     }
 
     @Override
     public String name() {
-        return String.format("Date[%s]", pattern);
+        return "Date";
     }
 
     @Override
@@ -71,15 +52,19 @@ public class DateType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return formatter.format((LocalDate) o);
+        if (o instanceof LocalDate d) {
+            return DateTimeFormatter.ISO_LOCAL_DATE.format(d);
+        }
+        return o.toString();
     }
 
     @Override
     public LocalDate valueOf(String s) {
-        return LocalDate.parse(s, formatter);
+        return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof DateType;
-    }}
+    }
+}

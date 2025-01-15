@@ -16,7 +16,11 @@
  */
 package smile.data.type;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -28,37 +32,16 @@ public class DateTimeType implements DataType {
     /** Default instance. */
     static final DateTimeType instance = new DateTimeType();
 
-    /** Date format pattern. */
-    private final String pattern;
-    /** Date formatter. */
-    private final DateTimeFormatter formatter;
-
     /**
      * Constructor with the ISO date time formatter that formats
      * or parses a date without an offset, such as '2011-12-03T10:15:30'.
      */
     DateTimeType() {
-        // This is only an approximation.
-        // ISO_LOCAL_DATE_TIME cannot be fully encoded by a pattern string.
-        pattern = "uuuu-MM-dd'T'HH:mm[:ss]";
-        formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    }
-
-    /**
-     * Constructor.
-     * @param pattern Patterns for formatting and parsing. Patterns are
-     *                based on a simple sequence of letters and symbols.
-     *                For example, "d MMM uuuu" will format 2011-12-03
-     *                as '3 Dec 2011'.
-     */
-    public DateTimeType(String pattern) {
-        this.pattern = pattern;
-        formatter = DateTimeFormatter.ofPattern(pattern);
     }
 
     @Override
     public String name() {
-        return String.format("DateTime[%s]", pattern);
+        return "DateTime";
     }
 
     @Override
@@ -73,15 +56,23 @@ public class DateTimeType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return formatter.format((LocalDateTime) o);
+        return switch (o) {
+            case Instant d -> DateTimeFormatter.ISO_INSTANT.format(d);
+            case LocalDateTime d -> DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(d);
+            case ZonedDateTime d -> DateTimeFormatter.ISO_ZONED_DATE_TIME.format(d);
+            case OffsetDateTime d -> DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(d);
+            case Timestamp d -> DateTimeFormatter.ISO_INSTANT.format(d.toInstant());
+            default -> o.toString();
+        };
     }
 
     @Override
     public LocalDateTime valueOf(String s) {
-        return LocalDateTime.parse(s, formatter);
+        return LocalDateTime.parse(s, DateTimeFormatter.ISO_INSTANT);
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof DateTimeType;
-    }}
+    }
+}

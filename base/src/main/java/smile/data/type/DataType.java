@@ -331,13 +331,7 @@ public interface DataType extends Serializable {
             case "DateTime" -> DataTypes.DateTimeType;
             case "Time" -> DataTypes.TimeType;
             default -> {
-                if (s.startsWith("Date[") && s.endsWith("]"))
-                    yield DataTypes.date(s.substring(5, s.length() - 1));
-                else if (s.startsWith("DateTime[") && s.endsWith("]"))
-                    yield DataTypes.datetime(s.substring(9, s.length() - 1));
-                else if (s.startsWith("Time[") && s.endsWith("]"))
-                    yield DataTypes.datetime(s.substring(5, s.length() - 1));
-                else if (s.startsWith("Object[") && s.endsWith("]"))
+                if (s.startsWith("Object[") && s.endsWith("]"))
                     yield DataTypes.object(Class.forName(s.substring(7, s.length() - 1)));
                 else if (s.startsWith("Array[") && s.endsWith("]"))
                     yield DataTypes.array(DataType.of(s.substring(6, s.length() - 1).trim()));
