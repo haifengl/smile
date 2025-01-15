@@ -30,12 +30,12 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
- * Sparse sequence dataset. Each sequence element has sparse binary feature values.
+ * Binary sparse sequence dataset. Each sequence element has sparse binary feature values.
  *
  * @author Haifeng Li
  */
-public class SparseSequenceDataset extends SimpleDataset<int[][], int[]> {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseSequenceDataset.class);
+public class BinarySparseSequenceDataset extends SimpleDataset<int[][], int[]> {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseSequenceDataset.class);
     /** The number of features of sequence elements. */
     private final int p;
     /** The number of classes of sequence elements. */
@@ -51,7 +51,7 @@ public class SparseSequenceDataset extends SimpleDataset<int[][], int[]> {
      * @param k The number of classes of sequence elements.
      * @param data The sample instances.
      */
-    public SparseSequenceDataset(int p, int k, List<SampleInstance<int[][], int[]>> data) {
+    public BinarySparseSequenceDataset(int p, int k, List<SampleInstance<int[][], int[]>> data) {
         super(data);
         this.p = p;
         this.k = k;
@@ -138,7 +138,7 @@ public class SparseSequenceDataset extends SimpleDataset<int[][], int[]> {
      * @return the sparse sequence dataset.
      * @throws IOException when fails to read the file.
      */
-    public static SparseSequenceDataset load(Path path) throws IOException {
+    public static BinarySparseSequenceDataset load(Path path) throws IOException {
         try (BufferedReader input = Files.newBufferedReader(path)) {
             ArrayList<SampleInstance<int[][], int[]>> instances = new ArrayList<>();
             ArrayList<int[]> seq = new ArrayList<>();
@@ -183,7 +183,7 @@ public class SparseSequenceDataset extends SimpleDataset<int[][], int[]> {
             int[] y = tag.stream().mapToInt(yi -> yi).toArray();
             SampleInstance<int[][], int[]> instance = new SampleInstance<>(x, y);
             instances.add(instance);
-            return new SparseSequenceDataset(p, k, instances);
+            return new BinarySparseSequenceDataset(p, k, instances);
         }
     }
 
