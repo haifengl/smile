@@ -16,10 +16,18 @@
  */
 package smile.data.vector;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.BitSet;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.util.Index;
 
@@ -335,4 +343,362 @@ public interface ValueVector {
      * @return the value.
      */
     double getDouble(int i);
+
+    /**
+     * Creates a boolean vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static BooleanVector of(String name, boolean... vector) {
+        return new BooleanVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable boolean vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableBooleanVector ofNullable(String name, Boolean... vector) {
+        int n = vector.length;
+        boolean[] data = new boolean[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableBooleanVector(name, data, mask);
+    }
+
+    /**
+     * Creates a char vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static CharVector of(String name, char... vector) {
+        return new CharVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable char vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableCharVector ofNullable(String name, Character... vector) {
+        int n = vector.length;
+        char[] data = new char[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = 0;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableCharVector(name, data, mask);
+    }
+
+    /**
+     * Creates a byte vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ByteVector of(String name, byte... vector) {
+        return new ByteVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable byte vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableByteVector ofNullable(String name, Byte... vector) {
+        int n = vector.length;
+        byte[] data = new byte[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Byte.MIN_VALUE;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableByteVector(name, data, mask);
+    }
+
+    /**
+     * Creates a short integer vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ShortVector of(String name, short... vector) {
+        return new ShortVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable short integer vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableShortVector ofNullable(String name, Short... vector) {
+        int n = vector.length;
+        short[] data = new short[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Short.MIN_VALUE;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableShortVector(name, data, mask);
+    }
+
+    /**
+     * Creates an integer vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static IntVector of(String name, int... vector) {
+        return new IntVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable integer vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableIntVector ofNullable(String name, Integer... vector) {
+        int n = vector.length;
+        int[] data = new int[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Integer.MIN_VALUE;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableIntVector(name, data, mask);
+    }
+
+    /**
+     * Creates a long vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    static LongVector of(String name, long... vector) {
+        return new LongVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable long integer vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableLongVector ofNullable(String name, Long... vector) {
+        int n = vector.length;
+        long[] data = new long[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Long.MIN_VALUE;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableLongVector(name, data, mask);
+    }
+
+    /**
+     * Creates a float vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static FloatVector of(String name, float... vector) {
+        return new FloatVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable float vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableFloatVector ofNullable(String name, Float... vector) {
+        int n = vector.length;
+        float[] data = new float[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Float.NaN;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableFloatVector(name, data, mask);
+    }
+
+    /**
+     * Creates a named double vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static DoubleVector of(String name, double... vector) {
+        return new DoubleVector(name, vector);
+    }
+
+    /**
+     * Creates a nullable double vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NullableDoubleVector ofNullable(String name, Double... vector) {
+        int n = vector.length;
+        double[] data = new double[n];
+        BitSet mask = new BitSet(n);
+        for (int i = 0; i < n; i++) {
+            if (vector[i] == null) {
+                mask.set(i);
+                data[i] = Double.NaN;
+            } else {
+                data[i] = vector[i];
+            }
+        }
+        return new NullableDoubleVector(name, data, mask);
+    }
+
+    /**
+     * Creates an object vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @param <T> the data type of vector elements.
+     * @return the vector.
+     */
+    static <T> ObjectVector<T> of(String name, T[] vector) {
+        return new ObjectVector<>(name, vector);
+    }
+
+    /**
+     * Creates a string vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    static StringVector of(String name, String... vector) {
+        return new StringVector(name, vector);
+    }
+
+    /**
+     * Creates a decimal vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static NumberVector<BigDecimal> of(String name, BigDecimal... vector) {
+        var field = new StructField(name, DataTypes.DecimalType);
+        return new NumberVector<>(field, vector);
+    }
+
+    /**
+     * Creates an instant vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<Instant> of(String name, Instant... vector) {
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a timestamp vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<Timestamp> of(String name, Timestamp... vector) {
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a datetime vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<LocalDateTime> of(String name, LocalDateTime... vector) {
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a date vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<LocalDate> of(String name, LocalDate... vector) {
+        var field = new StructField(name, DataTypes.DateType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a time vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<LocalTime> of(String name, LocalTime... vector) {
+        var field = new StructField(name, DataTypes.TimeType);
+        return new ObjectVector<>(field, vector);
+    }
 }
