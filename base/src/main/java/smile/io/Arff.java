@@ -22,6 +22,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -244,6 +246,7 @@ public class Arff implements AutoCloseable {
      */
     private void readHeader() throws IOException, ParseException {
         List<StructField> fields = new ArrayList<>();
+        parser = new ArrayList<>();
 
         // Get name of relation.
         getFirstToken();
@@ -285,7 +288,6 @@ public class Arff implements AutoCloseable {
         }
         
         schema = new StructType(fields);
-        parser = schema.parser();
     }
 
     /**
@@ -296,6 +298,7 @@ public class Arff implements AutoCloseable {
      */
     private StructField nextAttribute() throws IOException, ParseException {
         StructField attribute = null;
+        Function<String, Object> parser = null;
 
         // Get attribute name.
         getNextToken();
@@ -326,7 +329,9 @@ public class Arff implements AutoCloseable {
                     if ((tokenizer.ttype != StreamTokenizer.TT_WORD) && (tokenizer.ttype != '\'') && (tokenizer.ttype != '\"')) {
                         throw new ParseException("not a valid date format", tokenizer.lineno());
                     }
-                    attribute = new StructField(name, DataTypes.datetime(tokenizer.sval));
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(tokenizer.sval);
+                    parser = s -> LocalDateTime.parse(s, formatter);
+                    attribute = new StructField(name, DataTypes.DateTimeType);
                     readTillEOL();
                 } else {
                     attribute = new StructField(name, DataTypes.DateTimeType);
@@ -375,6 +380,9 @@ public class Arff implements AutoCloseable {
             throw new ParseException(PREMATURE_END_OF_FILE, tokenizer.lineno());
         }
 
+        if (attribute != null) {
+            this.parser.add(parser == null ? attribute::valueOf : parser);
+        }
         return attribute;
     }
 
