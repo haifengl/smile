@@ -87,6 +87,6 @@ public class DataTypeTest {
         System.out.println(type.name());
         System.out.println(type);
         assertEquals(type,
-                DataType.of("Struct[age: int, birthday: Date[uuuu-MM-dd], gender: char, name: String, salary: Object[java.lang.Integer]]"));
+                DataType.of("Struct[age: int, birthday: Date, gender: char, name: String, salary: Object[java.lang.Integer]]"));
     }
 }
