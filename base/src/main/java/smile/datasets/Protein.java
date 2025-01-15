@@ -18,7 +18,7 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import smile.data.SparseSequenceDataset;
+import smile.data.BinarySparseSequenceDataset;
 import smile.util.Paths;
 
 /**
@@ -26,7 +26,7 @@ import smile.util.Paths;
  *
  * @author Haifeng Li
  */
-public record Protein(SparseSequenceDataset train, SparseSequenceDataset test) {
+public record Protein(BinarySparseSequenceDataset train, BinarySparseSequenceDataset test) {
     /**
      * Constructor.
      * @throws IOException when fails to read the file.
@@ -43,6 +43,6 @@ public record Protein(SparseSequenceDataset train, SparseSequenceDataset test) {
      * @throws IOException when fails to read the file.
      */
     public Protein(Path trainDataPath, Path testDataPath) throws IOException {
-        this(SparseSequenceDataset.load(trainDataPath), SparseSequenceDataset.load(testDataPath));
+        this(BinarySparseSequenceDataset.load(trainDataPath), BinarySparseSequenceDataset.load(testDataPath));
     }
 }
