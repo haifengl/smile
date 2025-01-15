@@ -18,10 +18,7 @@ package smile.data.vector;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.BitSet;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
@@ -643,18 +640,6 @@ public interface ValueVector {
     }
 
     /**
-     * Creates an instant vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @return the vector.
-     */
-    static ObjectVector<Instant> of(String name, Instant... vector) {
-        var field = new StructField(name, DataTypes.DateTimeType);
-        return new ObjectVector<>(field, vector);
-    }
-
-    /**
      * Creates a timestamp vector.
      *
      * @param name the name of vector.
@@ -667,6 +652,18 @@ public interface ValueVector {
     }
 
     /**
+     * Creates an instant vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<Instant> of(String name, Instant... vector) {
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
      * Creates a datetime vector.
      *
      * @param name the name of vector.
@@ -674,6 +671,18 @@ public interface ValueVector {
      * @return the vector.
      */
     static ObjectVector<LocalDateTime> of(String name, LocalDateTime... vector) {
+        var field = new StructField(name, DataTypes.DateTimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a datetime vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<ZonedDateTime> of(String name, ZonedDateTime... vector) {
         var field = new StructField(name, DataTypes.DateTimeType);
         return new ObjectVector<>(field, vector);
     }
@@ -698,6 +707,18 @@ public interface ValueVector {
      * @return the vector.
      */
     static ObjectVector<LocalTime> of(String name, LocalTime... vector) {
+        var field = new StructField(name, DataTypes.TimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a time vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ObjectVector<OffsetTime> of(String name, OffsetTime... vector) {
         var field = new StructField(name, DataTypes.TimeType);
         return new ObjectVector<>(field, vector);
     }
