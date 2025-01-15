@@ -90,33 +90,6 @@ public class DataTypes {
     public static final smile.data.type.ArrayType DoubleArrayType = smile.data.type.ArrayType.DoubleArrayType;
 
     /**
-     * Date data type with customized format.
-     * @param pattern the date regex pattern.
-     * @return the Date type.
-     */
-    public static smile.data.type.DateType date(String pattern) {
-        return new smile.data.type.DateType(pattern);
-    }
-
-    /**
-     * Time data type with customized format.
-     * @param pattern the time regex pattern.
-     * @return the Time type.
-     */
-    public static smile.data.type.TimeType time(String pattern) {
-        return new smile.data.type.TimeType(pattern);
-    }
-
-    /**
-     * DateTime data type with customized format.
-     * @param pattern the date time regex pattern.
-     * @return the DateTime type.
-     */
-    public static smile.data.type.DateTimeType datetime(String pattern) {
-        return new smile.data.type.DateTimeType(pattern);
-    }
-
-    /**
      * Creates an object data type of given class.
      * @param clazz the object class.
      * @return the object data type.

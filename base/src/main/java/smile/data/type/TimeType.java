@@ -16,7 +16,7 @@
  */
 package smile.data.type;
 
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -28,37 +28,16 @@ public class TimeType implements DataType {
     /** Default instance. */
     static final TimeType instance = new TimeType();
 
-    /** Date format pattern. */
-    private final String pattern;
-    /** Date formatter. */
-    private final DateTimeFormatter formatter;
-
     /**
      * Constructor with the ISO date formatter that formats
      * or parses a date without an offset, such as '2011-12-03'.
      */
     TimeType() {
-        // This is only an approximation.
-        // ISO_LOCAL_TIME cannot be fully encoded by a pattern string.
-        pattern = "HH:mm[:ss]";
-        formatter = DateTimeFormatter.ISO_LOCAL_TIME;
-    }
-
-    /**
-     * Constructor.
-     * @param pattern Patterns for formatting and parsing. Patterns are
-     *                based on a simple sequence of letters and symbols.
-     *                For example, "d MMM uuuu" will format 2011-12-03
-     *                as '3 Dec 2011'.
-     */
-    public TimeType(String pattern) {
-        this.pattern = pattern;
-        formatter = DateTimeFormatter.ofPattern(pattern);
     }
 
     @Override
     public String name() {
-        return String.format("Time[%s]", pattern);
+        return "Time";
     }
 
     @Override
@@ -73,15 +52,20 @@ public class TimeType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return formatter.format((LocalTime) o);
+        return switch (o) {
+            case LocalTime d -> DateTimeFormatter.ISO_LOCAL_TIME.format(d);
+            case OffsetTime d -> DateTimeFormatter.ISO_OFFSET_TIME.format(d);
+            default -> o.toString();
+        };
     }
 
     @Override
     public LocalTime valueOf(String s) {
-        return LocalTime.parse(s, formatter);
+        return LocalTime.parse(s, DateTimeFormatter.ISO_LOCAL_TIME);
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof TimeType;
-    }}
+    }
+}
