@@ -46,6 +46,14 @@ public interface Index extends Serializable {
     IntStream stream();
 
     /**
+     * Returns an integer array of elements in the index.
+     * @return an integer array of elements in the index.
+     */
+    default int[] toArray() {
+        return stream().toArray();
+    }
+
+    /**
      * Flatten the index of index. Returns the index to the underlying data.
      * @param index the index to the elements in this index.
      * @return the index to the underlying data.
