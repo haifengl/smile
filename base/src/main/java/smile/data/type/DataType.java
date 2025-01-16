@@ -17,10 +17,6 @@
 package smile.data.type;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import smile.util.Regex;
 import smile.util.Strings;
 
@@ -356,62 +352,45 @@ public interface DataType extends Serializable {
      * @return Smile data type.
      */
     static DataType of(Class<?> clazz) {
-        if (clazz == int.class)
+        if (clazz == int.class) {
             return DataTypes.IntType;
-        else if (clazz == double.class)
+        } else if (clazz == double.class) {
             return DataTypes.DoubleType;
-        else if (clazz == long.class)
+        } else if (clazz == long.class) {
             return DataTypes.LongType;
-        else if (clazz == float.class)
+        } else if (clazz == float.class) {
             return DataTypes.FloatType;
-        else if (clazz == boolean.class)
+        } else if (clazz == boolean.class) {
             return DataTypes.BooleanType;
-        else if (clazz == short.class)
+        } else if (clazz == short.class) {
             return DataTypes.ShortType;
-        else if (clazz == byte.class)
+        } else if (clazz == byte.class) {
             return DataTypes.ByteType;
-        else if (clazz == char.class)
+        } else if (clazz == char.class) {
             return DataTypes.CharType;
-        else if (clazz == Integer.class)
+        } else if (clazz == Integer.class) {
             return DataTypes.NullableIntType;
-        else if (clazz == Double.class)
+        } else if (clazz == Double.class) {
             return DataTypes.NullableDoubleType;
-        else if (clazz == Long.class)
+        } else if (clazz == Long.class) {
             return DataTypes.NullableLongType;
-        else if (clazz == Float.class)
+        } else if (clazz == Float.class) {
             return DataTypes.NullableFloatType;
-        else if (clazz == Boolean.class)
+        } else if (clazz == Boolean.class) {
             return DataTypes.NullableBooleanType;
-        else if (clazz == Short.class)
+        } else if (clazz == Short.class) {
             return DataTypes.NullableShortType;
-        else if (clazz == Byte.class)
+        } else if (clazz == Byte.class) {
             return DataTypes.NullableByteType;
-        else if (clazz == Character.class)
+        } else if (clazz == Character.class) {
             return DataTypes.NullableCharType;
-        else if (clazz == String.class)
-            return DataTypes.StringType;
-        else if (clazz == BigDecimal.class)
-            return DataTypes.DecimalType;
-        else if (clazz == LocalDate.class)
-            return DataTypes.DateType;
-        else if (clazz == LocalDateTime.class)
-            return DataTypes.DateTimeType;
-        else if (clazz == LocalTime.class)
-            return DataTypes.TimeType;
-        else if (clazz.isArray())
+        } else if (clazz.isArray()) {
             return DataTypes.array(DataType.of(clazz.getComponentType()));
-        else if (clazz.isEnum()) {
-            int levels = clazz.getEnumConstants().length;
-            if (levels < Byte.MAX_VALUE + 1) {
-                return DataTypes.ByteType;
-            } else if (levels < Short.MAX_VALUE + 1) {
-                return DataTypes.ShortType;
-            } else {
-                return DataTypes.IntType;
-            }
-        }
-        else
+        } else if (clazz.isEnum()) {
+            return DataTypes.category(clazz.getEnumConstants().length);
+        } else {
             return DataTypes.object(clazz);
+        }
     }
 
     /**
