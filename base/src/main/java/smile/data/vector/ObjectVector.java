@@ -55,6 +55,94 @@ public class ObjectVector<T> extends AbstractVector {
     }
 
     /**
+     * Creates a boolean array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<boolean[]> of(String name, boolean[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.BooleanType), vector);
+    }
+
+    /**
+     * Creates a char array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<char[]> of(String name, char[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.CharArrayType), vector);
+    }
+
+    /**
+     * Creates a byte array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<byte[]> of(String name, byte[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.ByteArrayType), vector);
+    }
+
+    /**
+     * Creates a short integer array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<short[]> of(String name, short[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.ShortArrayType), vector);
+    }
+
+    /**
+     * Creates an integer array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<int[]> of(String name, int[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.IntArrayType), vector);
+    }
+
+    /**
+     * Creates a long integer array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<long[]> of(String name, long[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.LongArrayType), vector);
+    }
+
+    /**
+     * Creates a float array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<float[]> of(String name, float[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.FloatArrayType), vector);
+    }
+
+    /**
+     * Creates a double array vector.
+     *
+     * @param name the name of vector.
+     * @return the vector.
+     * @param vector the data of vector.
+     */
+    public static ObjectVector<double[]> of(String name, double[]... vector) {
+        return new ObjectVector<>(new StructField(name, DataTypes.DoubleArrayType), vector);
+    }
+
+    /**
      * Returns a stream consisting of the elements of this vector.
      * @return a stream consisting of the elements of this vector.
      */
