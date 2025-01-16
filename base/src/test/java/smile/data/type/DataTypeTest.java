@@ -66,12 +66,13 @@ public class DataTypeTest {
     public void testArray() throws ClassNotFoundException {
         System.out.println("array");
         assertEquals(DataTypes.array(DataTypes.IntType), DataType.of("Array[int]"));
+        assertEquals(DataTypes.array(DataTypes.NullableIntType), DataType.of("Array[Int]"));
     }
 
     @Test
     public void testObject() throws ClassNotFoundException {
         System.out.println("object");
-        assertEquals(DataTypes.object(Integer.class), DataType.of("Object[java.lang.Integer]"));
+        assertEquals(DataTypes.object(Integer.class), DataType.of("Class<java.lang.Integer>"));
     }
 
     @Test
@@ -87,6 +88,6 @@ public class DataTypeTest {
         System.out.println(type.name());
         System.out.println(type);
         assertEquals(type,
-                DataType.of("Struct[age: int, birthday: Date, gender: char, name: String, salary: Object[java.lang.Integer]]"));
+                DataType.of("Struct(age: int, birthday: Date, gender: char, name: String, salary: Class<java.lang.Integer>)"));
     }
 }

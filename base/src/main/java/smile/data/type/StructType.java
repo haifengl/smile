@@ -187,7 +187,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     public String name() {
         return Arrays.stream(fields)
                 .map(field -> String.format("%s: %s", field.name(), field.dtype().name()))
-                .collect(Collectors.joining(", ", "Struct[", "]"));
+                .collect(Collectors.joining(", ", "Struct(", ")"));
     }
 
     @Override

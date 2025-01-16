@@ -327,11 +327,11 @@ public interface DataType extends Serializable {
             case "DateTime" -> DataTypes.DateTimeType;
             case "Time" -> DataTypes.TimeType;
             default -> {
-                if (s.startsWith("Object[") && s.endsWith("]"))
-                    yield DataTypes.object(Class.forName(s.substring(7, s.length() - 1)));
+                if (s.startsWith("Class<") && s.endsWith(">"))
+                    yield DataTypes.object(Class.forName(s.substring(6, s.length() - 1)));
                 else if (s.startsWith("Array[") && s.endsWith("]"))
                     yield DataTypes.array(DataType.of(s.substring(6, s.length() - 1).trim()));
-                else if (s.startsWith("Struct[") && s.endsWith("]")) {
+                else if (s.startsWith("Struct(") && s.endsWith(")")) {
                     String[] elements = s.substring(7, s.length() - 1).split(",");
                     StructField[] fields = new StructField[elements.length];
                     for (int i = 0; i < fields.length; i++) {
