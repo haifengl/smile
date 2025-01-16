@@ -23,6 +23,8 @@ import java.util.BitSet;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
+import smile.data.measure.NominalScale;
+import smile.data.measure.OrdinalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -36,6 +38,7 @@ import smile.util.Index;
  *
  * @author Haifeng Li
  */
+@SuppressWarnings("unchecked")
 public interface ValueVector {
     /**
      * Returns the struct field of the vector.
@@ -720,6 +723,38 @@ public interface ValueVector {
      */
     static ObjectVector<OffsetTime> of(String name, OffsetTime... vector) {
         var field = new StructField(name, DataTypes.TimeType);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a nominal value vector.
+     *
+     * @param name the name of vector.
+     * @param vector the enum data of vector.
+     * @return the vector.
+     */
+    static ValueVector nominal(String name, Enum<?>... vector) {
+        var clazz = vector.getClass().getComponentType();
+        var values = clazz.getEnumConstants();
+        var dtype = DataTypes.category(values.length);
+        var measure = new NominalScale((Class<? extends Enum<?>>) clazz);
+        var field = new StructField(name, dtype, measure);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a nominal value vector.
+     *
+     * @param name the name of vector.
+     * @param vector the enum data of vector.
+     * @return the vector.
+     */
+    static ValueVector ordinal(String name, Enum<?>... vector) {
+        var clazz = vector.getClass().getComponentType();
+        var values = clazz.getEnumConstants();
+        var dtype = DataTypes.category(values.length);
+        var measure = new OrdinalScale((Class<? extends Enum<?>>) clazz);
+        var field = new StructField(name, dtype, measure);
         return new ObjectVector<>(field, vector);
     }
 }
