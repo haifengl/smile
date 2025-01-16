@@ -47,6 +47,20 @@ import smile.util.Strings;
 public record DataFrame(StructType schema, ValueVector[] columns) implements Iterable<Row> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
+    public DataFrame {
+        if (columns.length == 0) {
+            throw new IllegalArgumentException("Columns must not be empty");
+        }
+
+        int size = columns[0].size();
+        for (int i = 1; i < size; i++) {
+            if (columns[i].size() != size) {
+                String message = String.format("Columns must have the same size. Column %d has size %d", i, columns[i].size());
+                throw new IllegalArgumentException(message);
+            }
+        }
+    }
+
     /**
      * Constructor.
      * @param columns the columns of DataFrame.
