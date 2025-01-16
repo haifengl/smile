@@ -17,9 +17,8 @@
 package smile.data.type;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.sql.Timestamp;
+import java.time.*;
 
 /**
  * To get a specific data type, users should use singleton objects
@@ -90,7 +89,7 @@ public class DataTypes {
     public static final smile.data.type.ArrayType DoubleArrayType = smile.data.type.ArrayType.DoubleArrayType;
 
     /**
-     * Creates an object data type of given class.
+     * Returns an object data type of given class.
      * @param clazz the object class.
      * @return the object data type.
      */
@@ -98,13 +97,28 @@ public class DataTypes {
         if (clazz == BigDecimal.class) return DecimalType;
         if (clazz == String.class) return StringType;
         if (clazz == LocalDate.class) return DateType;
-        if (clazz == LocalTime.class) return TimeType;
-        if (clazz == LocalDateTime.class) return DateTimeType;
+        if (clazz == LocalTime.class || clazz == OffsetTime.class) return TimeType;
+        if (clazz == Timestamp.class || clazz == Instant.class || clazz == LocalDateTime.class || clazz == ZonedDateTime.class) return DateTimeType;
         return new ObjectType(clazz);
     }
 
     /**
-     * Creates an array data type.
+     * Returns a data type of categorical variable.
+     * @param levels the number of categorical measurement levels.
+     * @return the categorical data type.
+     */
+    public static DataType category(int levels) {
+        if (levels <= Byte.MAX_VALUE + 1) {
+            return DataTypes.ByteType;
+        } else if (levels <= Short.MAX_VALUE + 1) {
+            return DataTypes.ShortType;
+        } else {
+            return DataTypes.IntType;
+        }
+    }
+
+    /**
+     * Returns an array data type.
      * @param type the data type of array elements.
      * @return the array data type.
      */
