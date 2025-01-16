@@ -608,23 +608,11 @@ public interface ValueVector {
     }
 
     /**
-     * Creates an object vector.
-     *
-     * @param name the name of vector.
-     * @param vector the data of vector.
-     * @param <T> the data type of vector elements.
-     * @return the vector.
-     */
-    static <T> ObjectVector<T> of(String name, T[] vector) {
-        return new ObjectVector<>(name, vector);
-    }
-
-    /**
      * Creates a string vector.
      *
      * @param name the name of vector.
-     * @return the vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static StringVector of(String name, String... vector) {
         return new StringVector(name, vector);
