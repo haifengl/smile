@@ -44,13 +44,13 @@ public abstract class PrimitiveType implements DataType {
 
     @Override
     public String name() {
-        String name = id.toString();
+        String name = id.name();
         return nullable ? name : name.toLowerCase();
     }
 
     @Override
     public String toString() {
-        return id.toString().toLowerCase();
+        return id.name().toLowerCase();
     }
 
     @Override
