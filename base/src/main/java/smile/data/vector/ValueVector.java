@@ -19,7 +19,7 @@ package smile.data.vector;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.*;
-import java.util.BitSet;
+import java.util.*;
 import java.util.stream.*;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
@@ -746,6 +746,22 @@ public interface ValueVector {
      * Creates a nominal value vector.
      *
      * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ValueVector nominal(String name, String... vector) {
+        Set<String> values = new TreeSet<>();
+        Collections.addAll(values, vector);
+        var dtype = DataTypes.category(values.size());
+        var measure = new NominalScale(values.toArray(new String[0]));
+        var field = new StructField(name, dtype, measure);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a nominal value vector.
+     *
+     * @param name the name of vector.
      * @param vector the enum data of vector.
      * @return the vector.
      */
@@ -754,6 +770,22 @@ public interface ValueVector {
         var values = clazz.getEnumConstants();
         var dtype = DataTypes.category(values.length);
         var measure = new OrdinalScale((Class<? extends Enum<?>>) clazz);
+        var field = new StructField(name, dtype, measure);
+        return new ObjectVector<>(field, vector);
+    }
+
+    /**
+     * Creates a nominal value vector.
+     *
+     * @param name the name of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    static ValueVector ordinal(String name, String... vector) {
+        Set<String> values = new TreeSet<>();
+        Collections.addAll(values, vector);
+        var dtype = DataTypes.category(values.size());
+        var measure = new OrdinalScale(values.toArray(new String[0]));
         var field = new StructField(name, dtype, measure);
         return new ObjectVector<>(field, vector);
     }
