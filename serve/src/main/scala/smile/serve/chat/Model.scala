@@ -22,7 +22,10 @@ import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
 import spray.json._
 
 // domain model
-final case class Thread(id: Long, createdAt: Instant)
+final case class Thread(id: Long,
+                        clientIP: Option[String],
+                        userAgent: Option[String],
+                        createdAt: Instant)
 final case class ThreadMessage(id: Long,
                                threadId: Long,
                                role: String,
@@ -139,7 +142,7 @@ object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
-  implicit val threadFormat: RootJsonFormat[Thread] = jsonFormat2(Thread.apply)
+  implicit val threadFormat: RootJsonFormat[Thread] = jsonFormat4(Thread.apply)
   implicit val threadMessageFormat: RootJsonFormat[ThreadMessage] = jsonFormat6(ThreadMessage.apply)
   implicit val listThreadResponseFormat: RootJsonFormat[ListThreadResponse] = jsonFormat2(ListThreadResponse.apply)
   implicit val listMessageResponseFormat: RootJsonFormat[ListMessageResponse] = jsonFormat2(ListMessageResponse.apply)
