@@ -53,7 +53,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
         }
 
         int size = columns[0].size();
-        for (int i = 1; i < size; i++) {
+        for (int i = 1; i < columns.length; i++) {
             if (columns[i].size() != size) {
                 String message = String.format("Columns must have the same size. Column %d has size %d", i, columns[i].size());
                 throw new IllegalArgumentException(message);
