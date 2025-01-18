@@ -27,9 +27,11 @@ trait Schema {
 
   class Threads(tag: Tag) extends Table[Thread](tag, "THREAD") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
+    def clientIP = column[Option[String]]("CLIENT_IP")
+    def userAgent = column[Option[String]]("USER_AGENT")
     def createdAt = column[Instant]("CREATED_AT")
 
-    def * = (id, createdAt).mapTo[Thread]
+    def * = (id, clientIP, userAgent, createdAt).mapTo[Thread]
     def lastUpdatedIdx = index("THREAD_CREATED_IDX", createdAt)
   }
   val threads = TableQuery[Threads]

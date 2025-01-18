@@ -18,7 +18,6 @@ package smile.serve.chat
 
 import java.util.concurrent.SubmissionPublisher
 import scala.concurrent.{ExecutionContext, Future}
-import spray.json.JsObject
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.http.scaladsl.model.StatusCodes
@@ -65,9 +64,12 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
               }
             },
             post {
-              entity(as[JsObject]) { metadata =>
-                onSuccess(dao.insertThread(metadata)) { thread =>
-                  complete(StatusCodes.Created, thread)
+              extractClientIP { clientIP =>
+                optionalHeaderValueByName("User-Agent") { userAgent =>
+                  log.info("Create thread for {} using {}", clientIP, userAgent)
+                  onSuccess(dao.insertThread(clientIP, userAgent)) { thread =>
+                    complete(StatusCodes.Created, thread)
+                  }
                 }
               }
             }
