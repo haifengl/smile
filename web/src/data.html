@@ -73,9 +73,95 @@ title: Smile - Data Processing
 
     <h2 id="DataFrame">DataFrame</h2>
 
-    <p>Many Smile algorithms take simple <code>double[]</code> as input. But we also use
+    <p>Some Smile algorithms take simple <code>double[]</code> as input. But we often use
         the encapsulation class <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
-        In fact, the output of most Smile data parsers is a DataFrame object that contains
+        DataFrame is a two-dimensional data structure like a table with rows
+        and columns. Each column is a <a href="api/java/smile/data/vector/ValueVector.html">ValueVector</a>
+        that is a one-dimensional labeled abstraction to store a sequence of values having the same type.
+        Columns in a DataFrame may have different data types. There are concrete subclasses of ValueVector
+        for each primitive data type and generic object types. Creating a ValueVector by passing a list of values.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_0" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_0" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_0" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane" id="scala_0">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> import java.time._
+    smile> import smile.data._
+    smile> import smile.data.vector._
+
+    smile> ValueVector.of("A", 1.0, 2.0, 3.0)
+    $val res0: smile.data.vector.DoubleVector = A[1, 2, 3]
+
+    smile> ValueVector.of("B", Instant.now())
+    val res1: smile.data.vector.ObjectVector[java.time.Instant] = B[2025-01-19T01:58:06.813727400Z]
+
+    smile> ValueVector.nominal("C", "test", "train", "test", "train")
+    val res2: smile.data.vector.ValueVector = C[test, train, test, train]
+
+    smile> ValueVector.of("D", "this is a string vector", "Nominal/ordinal vectors store data as integers internally")
+    val res3: smile.data.vector.StringVector = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
+
+    smile> ObjectVector.of("E", Index.range(0, 4).toArray(), Array(3, 3, 3, 3))
+    val res4: smile.data.vector.ObjectVector[Array[Int]] = E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="java_0">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> import java.time.*
+    smile> import smile.data.*
+    smile> import smile.data.vector.*
+
+    smile> ValueVector.of("A", 1.0, 2.0, 3.0)
+    $2 ==> A[1, 2, 3]
+
+    smile> ValueVector.of("B", Instant.now())
+    $3 ==> B[2025-01-18T23:08:54.375073600Z]
+
+    smile> ValueVector.nominal("C", "test", "train", "test", "train")
+    $4 ==> C[test, train, test, train]
+
+    smile> ValueVector.of("D", "this is a string vector", "Nominal/ordinal vectors store data as integers internally")
+    $5 ==> D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
+
+    smile> ObjectVector.of("E", Index.range(0, 4).toArray(), new int[]{3, 3, 3, 3})
+    $6 ==> E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_0">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> import java.time._
+    >>> import smile.data._
+    >>> import smile.data.vector._
+
+    >>> ValueVector.of("A", 1.0, 2.0, 3.0)
+    res0: smile.data.vector.DoubleVector! = A[1, 2, 3]
+
+    >>> ValueVector.of("B", Instant.now())
+    res1: smile.data.vector.ObjectVector[java.time.Instant]! = B[2025-01-19T01:58:06.813727400Z]
+
+    >>> ValueVector.nominal("C", "test", "train", "test", "train")
+    res2: smile.data.vector.ValueVector! = C[test, train, test, train]
+
+    >>> ValueVector.of("D", "this is a string vector", "Nominal/ordinal vectors store data as integers internally")
+    res3: smile.data.vector.StringVector! = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
+
+    >>> ObjectVector.of("E", Index.range(0, 4).toArray(), Array(3, 3, 3, 3))
+    res4: smile.data.vector.ObjectVector[Array[Int]]! = E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In fact, the output of most Smile data parsers is a DataFrame object that contains
         a number of named columns.</p>
 
     <ul class="nav nav-tabs">
