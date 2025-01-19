@@ -16,9 +16,9 @@
  */
 package smile.serve.chat
 
+import java.net.InetAddress
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import akka.http.scaladsl.model.RemoteAddress
 import slick.dbio.DBIOAction
 import slick.jdbc.meta.MTable
 import smile.llm.Message
@@ -62,8 +62,8 @@ trait ChatDB extends Schema {
     db.run(threads.filter(_.id === id).result.headOption)
   }
 
-  def insertThread(ip: RemoteAddress, userAgent: Option[String]): Future[Thread] = {
-    val thread = Thread(0, ip.toOption.map(addr => addr.toString), userAgent, Instant.now)
+  def insertThread(ip: Option[InetAddress], userAgent: Option[String]): Future[Thread] = {
+    val thread = Thread(0, ip.map(_.getHostAddress), userAgent, Instant.now)
     db.run(insertThread += thread)
   }
 
