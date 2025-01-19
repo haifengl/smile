@@ -41,7 +41,7 @@ public abstract class AbstractVector implements ValueVector {
     public String toString() {
         int limit = Math.min(size(), 10);
         String prefix = field.name() + "[";
-        String suffix = size() > 10 ?  ", ...]" : "]";
+        String suffix = size() > 10 ?  String.format(", ..., %d more]", size()-10) : "]";
         return IntStream.range(0, limit)
                 .mapToObj(i -> field().toString(get(i)))
                 .collect(Collectors.joining(", ", prefix, suffix));
