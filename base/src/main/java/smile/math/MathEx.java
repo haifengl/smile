@@ -28,6 +28,7 @@ import smile.math.matrix.Matrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
+import smile.stat.distribution.GaussianDistribution;
 import smile.util.IntPair;
 import smile.util.SparseArray;
 
@@ -773,6 +774,26 @@ public class MathEx {
     public static int randomInt(int lo, int hi) {
         int w = hi - lo;
         return lo + random.get().nextInt(w);
+    }
+
+    /**
+     * Returns a random matrix of standard normal distribution.
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return the random matrix.
+     */
+    public static double[][] randn(int m, int n) {
+        var norm = GaussianDistribution.getInstance();
+        double[][] matrix = new double[m][n];
+
+        for (var row : matrix) {
+            for (int j = 0; j < n; j++) {
+                row[j] = norm.rand();
+            }
+        }
+
+        return matrix;
     }
 
     /**
