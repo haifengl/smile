@@ -71,7 +71,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     @Override
     public String toString() {
-        return toString(10, true);
+        return head(10);
     }
 
     /**
@@ -798,22 +798,32 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     /**
      * Returns the string representation of top rows.
-     * @param numRows the number of rows to show
+     * @param numRows the number of rows to show.
      * @return the string representation of top rows.
      */
-    public String toString(int numRows) {
-        return toString(numRows, true);
+    public String head(int numRows) {
+        return toString(0, numRows, true);
     }
 
     /**
-     * Returns the string representation of top rows.
-     * @param numRows Number of rows to show
-     * @param truncate Whether truncate long strings and align cells right.
-     * @return the string representation of top rows.
+     * Returns the string representation of bottom rows.
+     * @param numRows the number of rows to show.
+     * @return the string representation of bottom rows.
      */
-    public String toString(final int numRows, final boolean truncate) {
+    public String tail(int numRows) {
+        return toString(Math.max(0, size() - numRows), size(), true);
+    }
+
+    /**
+     * Returns the string representation of rows in specified range.
+     * @param from the initial index of the range to show, inclusive
+     * @param to the final index of the range to show, exclusive.
+     * @param truncate Whether truncate long strings and align cells right.
+     * @return the string representation of rows in specified range.
+     */
+    public String toString(final int from, int to, final boolean truncate) {
         StringBuilder sb = new StringBuilder();
-        boolean hasMoreData = size() > numRows;
+        boolean hasMoreData = from == 0 && size() > to;
         String[] names = names();
         int numCols = names.length;
         final int maxColWidth = switch (numCols) {
@@ -830,7 +840,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
         // For array values, replace Seq and Array with square brackets
         // For cells that are beyond maxColumnWidth characters, truncate it with "..."
-        List<String[]> rows = stream().limit(numRows).map( row -> {
+        List<String[]> rows = stream().limit(to).skip(from).map( row -> {
             String[] cells = new String[numCols];
             for (int i = 0; i < numCols; i++) {
                 String str = row.toString(i);
@@ -887,7 +897,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
         // For Data that has more than "numRows" records
         if (hasMoreData) {
-            int rest = size() - numRows;
+            int rest = size() - to;
             if (rest > 0) {
                 String rowsString = (rest == 1) ? "row" : "rows";
                 sb.append(String.format("%d more %s...\n", rest, rowsString));
