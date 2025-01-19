@@ -67,7 +67,7 @@ class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
               extractClientIP { clientIP =>
                 optionalHeaderValueByName("User-Agent") { userAgent =>
                   log.info("Create thread for {} using {}", clientIP, userAgent)
-                  onSuccess(dao.insertThread(clientIP, userAgent)) { thread =>
+                  onSuccess(dao.insertThread(clientIP.toOption, userAgent)) { thread =>
                     complete(StatusCodes.Created, thread)
                   }
                 }
