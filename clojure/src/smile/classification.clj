@@ -115,8 +115,8 @@
   is high.
   `tol` is the tolerance for stopping iterations.
   `max-iter` is the maximum number of iterations."
-  ([x y p] (maxent x y p 0.1 1E-5 500))
-  ([x y p lambda tol max-iter] (Maxent/fit x y p lambda tol max-iter)))
+  ([p x y] (maxent p x y 0.1 1E-5 500))
+  ([p x y lambda tol max-iter] (Maxent/fit p x y lambda tol max-iter)))
 
 (defn mlp
   "Multilayer perceptron neural network.
