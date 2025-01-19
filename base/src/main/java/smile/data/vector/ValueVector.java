@@ -727,7 +727,7 @@ public interface ValueVector {
         var dtype = DataTypes.category(values.length);
         var measure = new NominalScale((Class<? extends Enum<?>>) clazz);
         var field = new StructField(name, dtype, measure);
-        return new ObjectVector<>(field, vector);
+        return category(field, vector);
     }
 
     /**
@@ -743,7 +743,7 @@ public interface ValueVector {
         var dtype = DataTypes.category(values.size());
         var measure = new NominalScale(values.toArray(new String[0]));
         var field = new StructField(name, dtype, measure);
-        return new ObjectVector<>(field, vector);
+        return category(field, vector);
     }
 
     /**
@@ -759,7 +759,7 @@ public interface ValueVector {
         var dtype = DataTypes.category(values.length);
         var measure = new OrdinalScale((Class<? extends Enum<?>>) clazz);
         var field = new StructField(name, dtype, measure);
-        return new ObjectVector<>(field, vector);
+        return category(field, vector);
     }
 
     /**
@@ -775,6 +775,70 @@ public interface ValueVector {
         var dtype = DataTypes.category(values.size());
         var measure = new OrdinalScale(values.toArray(new String[0]));
         var field = new StructField(name, dtype, measure);
-        return new ObjectVector<>(field, vector);
+        return category(field, vector);
+    }
+
+    /**
+     * Creates a categorical value vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    private static ValueVector category(StructField field, Enum<?>[] vector) {
+        int n = vector.length;
+        var dtype = field.dtype();
+        var measure = field.measure();
+        return switch (dtype.id()) {
+            case Byte -> {
+                byte[] data = new byte[n];
+                for (int i = 0; i < n; i++) data[i] = (byte) vector[i].ordinal();
+                yield new ByteVector(field, data);
+            }
+            case Short -> {
+                short[] data = new short[n];
+                for (int i = 0; i < n; i++) data[i] = (short) vector[i].ordinal();
+                yield new ShortVector(field, data);
+            }
+            case Int -> {
+                int[] data = new int[n];
+                for (int i = 0; i < n; i++) data[i] = vector[i].ordinal();
+                yield new IntVector(field, data);
+            }
+            default ->
+                    throw new IllegalStateException("Invalid categorical data type: " + dtype);
+        };
+    }
+
+    /**
+     * Creates a categorical value vector.
+     *
+     * @param field the struct field of vector.
+     * @param vector the data of vector.
+     * @return the vector.
+     */
+    private static ValueVector category(StructField field, String[] vector) {
+        int n = vector.length;
+        var dtype = field.dtype();
+        var measure = field.measure();
+        return switch (field.dtype().id()) {
+            case Byte -> {
+                byte[] data = new byte[n];
+                for (int i = 0; i < n; i++) data[i] = (byte) measure.valueOf(vector[i]);
+                yield new ByteVector(field, data);
+            }
+            case Short -> {
+                short[] data = new short[n];
+                for (int i = 0; i < n; i++) data[i] = (short) measure.valueOf(vector[i]);
+                yield new ShortVector(field, data);
+            }
+            case Int -> {
+                int[] data = new int[n];
+                for (int i = 0; i < n; i++) data[i] = (int) measure.valueOf(vector[i]);
+                yield new IntVector(field, data);
+            }
+            default ->
+                    throw new IllegalStateException("Invalid categorical data type: " + dtype);
+        };
     }
 }
