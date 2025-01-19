@@ -138,24 +138,56 @@ title: Smile - Data Processing
         <div class="tab-pane" id="kotlin_0">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> import java.time._
-    >>> import smile.data._
-    >>> import smile.data.vector._
+    >>> import java.time.*
+    >>> import smile.data.*
+    >>> import smile.data.vector.*
+    >>> import smile.util.*
 
     >>> ValueVector.of("A", 1.0, 2.0, 3.0)
-    res0: smile.data.vector.DoubleVector! = A[1, 2, 3]
+    res4: smile.data.vector.DoubleVector = A[1, 2, 3]
 
     >>> ValueVector.of("B", Instant.now())
-    res1: smile.data.vector.ObjectVector[java.time.Instant]! = B[2025-01-19T01:58:06.813727400Z]
+    res5: smile.data.vector.ObjectVector&lt;java.time.Instant?&gt; = B[2025-01-19T01:58:06.813727400Z]
 
     >>> ValueVector.nominal("C", "test", "train", "test", "train")
-    res2: smile.data.vector.ValueVector! = C[test, train, test, train]
+    res6: smile.data.vector.ValueVector = C[test, train, test, train]
 
     >>> ValueVector.of("D", "this is a string vector", "Nominal/ordinal vectors store data as integers internally")
-    res3: smile.data.vector.StringVector! = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
+    res7: smile.data.vector.StringVector = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
 
-    >>> ObjectVector.of("E", Index.range(0, 4).toArray(), Array(3, 3, 3, 3))
-    res4: smile.data.vector.ObjectVector[Array[Int]]! = E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    >>> ObjectVector.of("E", Index.range(0, 4).toArray(), intArrayOf(3, 3, 3, 3))
+    res8: smile.data.vector.ObjectVector&lt;kotlin.IntArray?&gt; = E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that the <code>nominal</code> and <code>ordinal</code> methods factorize
+        string values and store them as integral values internally, which are more efficient,
+        compact, and friendly for machine learning algorithm. In contrast, the <code>of(String...)</code>
+        method store string values as is, which is useful for text processing.</p>
+
+    <p>It is easy to create a DataFrame by passing a list of columns.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_0.1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_0.1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> var df = new DataFrame(
+      ...>         ValueVector.of("A", 1.0),
+      ...>         ValueVector.of("B", LocalDate.parse("2013-01-02")),
+      ...>         ValueVector.of("C", "foo"),
+      ...>         ObjectVector.of("D", Index.range(0, 4).toArray()),
+      ...>         ObjectVector.of("E", new int[]{3, 3, 3, 3})
+      ...> )
+    df ==>
+    +---+----------+---+------------+------------+
+    |  A|         B|  C|           D|           E|
+    +---+----------+---+------------+------------+
+    |  1|2013-01-02|foo|[0, 1, 2, 3]|[3, 3, 3, 3]|
+    +---+----------+---+------------+------------+
     </code></pre>
             </div>
         </div>
