@@ -73,7 +73,7 @@ title: Smile - Data Processing
 
     <h2 id="DataFrame">DataFrame</h2>
 
-    <p>Some Smile algorithms take simple <code>double[]</code> as input. But we often use
+    <p>While some Smile algorithms take simple <code>double[]</code> as input, we often use
         the encapsulation class <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
         DataFrame is a two-dimensional data structure like a table with rows
         and columns. Each column is a <a href="api/java/smile/data/vector/ValueVector.html">ValueVector</a>
@@ -164,8 +164,8 @@ title: Smile - Data Processing
 
     <p>Note that the <code>nominal</code> and <code>ordinal</code> methods factorize
         string values and store them as integral values internally, which are more efficient,
-        compact, and friendly for machine learning algorithm. In contrast, the <code>of(String...)</code>
-        method store string values as is, which is useful for text processing.</p>
+        compact, and friendly for machine learning algorithm. In contrast, the <code>ValueVector.of(String...)</code>
+        method returns a <code>StringVector</code> that store string values as is, which is useful for text processing.</p>
 
     <p>It is easy to create a DataFrame by passing a list of columns.</p>
     <ul class="nav nav-tabs">
@@ -176,12 +176,12 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> var df = new DataFrame(
-      ...>         ValueVector.of("A", 1.0),
-      ...>         ValueVector.of("B", LocalDate.parse("2013-01-02")),
-      ...>         ValueVector.of("C", "foo"),
-      ...>         ObjectVector.of("D", Index.range(0, 4).toArray()),
-      ...>         ObjectVector.of("E", new int[]{3, 3, 3, 3})
-      ...> )
+                   ValueVector.of("A", 1.0),
+                   ValueVector.of("B", LocalDate.parse("2013-01-02")),
+                   ValueVector.of("C", "foo"),
+                   ObjectVector.of("D", Index.range(0, 4).toArray()),
+                   ObjectVector.of("E", new int[]{3, 3, 3, 3})
+           )
     df ==>
     +---+----------+---+------------+------------+
     |  A|         B|  C|           D|           E|
