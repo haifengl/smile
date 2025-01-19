@@ -162,12 +162,17 @@ title: Smile - Data Processing
         </div>
     </div>
 
-    <p>Note that the <code>nominal</code> and <code>ordinal</code> methods factorize
-        string values and store them as integral values internally, which are more efficient,
-        compact, and friendly for machine learning algorithm. In contrast, the <code>ValueVector.of(String...)</code>
-        method returns a <code>StringVector</code> that store string values as is, which is useful for text processing.</p>
+    <p>Note that the <code>nominal</code> and <code>ordinal</code> methods
+        factorize string values and store them as integral values internally,
+        which are more efficient, compact, and friendly for machine learning
+        algorithm. In contrast, the <code>ValueVector.of(String...)</code>
+        method returns a <code>StringVector</code> that store string values
+        as is, which is useful for text processing.</p>
 
-    <p>It is easy to create a DataFrame by passing a list of columns.</p>
+    <p>For illustration, we can create a DataFrame with a 2-dimensional array.
+        If no optional column names are passed, the default column names will be
+        V1, V2, etc. It is also easy to create a DataFrame by passing a list of
+        columns. The columns of the second DataFrame have different data types:</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_0.1" data-toggle="tab">Java</a></li>
     </ul>
@@ -175,6 +180,19 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_0.1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
+    smile> var df = DataFrame.of(MathEx.randn(6, 4))
+    df ==>
+    +---------+---------+---------+---------+
+    |       V1|       V2|       V3|       V4|
+    +---------+---------+---------+---------+
+    |-0.201469| 0.970363| 2.726932|-0.146014|
+    | 1.872161| 0.495932| 0.553859|-0.028237|
+    |-0.504866|-0.179409| 0.201377| 0.281267|
+    | 0.894446| 0.791521| 0.053346| 0.213519|
+    | 0.200011|-0.203736|-0.349196|-1.193759|
+    |  1.52529|-1.407597|  1.16758| -1.78291|
+    +---------+---------+---------+---------+
+
     smile> var df = new DataFrame(
                    ValueVector.of("A", 1.0),
                    ValueVector.of("B", LocalDate.parse("2013-01-02")),
@@ -188,13 +206,58 @@ title: Smile - Data Processing
     +---+----------+---+------------+------------+
     |  1|2013-01-02|foo|[0, 1, 2, 3]|[3, 3, 3, 3]|
     +---+----------+---+------------+------------+
+
+    smile> df.schema()
+    $4 ==> {
+      A: double NOT NULL,
+      B: Date,
+      C: String,
+      D: int[],
+      E: int[]
+    }
     </code></pre>
             </div>
         </div>
     </div>
 
-    <p>In fact, the output of most Smile data parsers is a DataFrame object that contains
-        a number of named columns.</p>
+    <p>By default, <code>DataFrame.toString()</code> returns a pretty print of
+        top 10 rows. You may also use <code>DataFrame.head()</code> and
+        <code>DataFrame.tail()</code> with a specified number to view the top
+        and bottom rows of the frame respectively.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_0.2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_0.2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> println(df.head(3))
+    +---------+---------+---------+---------+
+    |       V1|       V2|       V3|       V4|
+    +---------+---------+---------+---------+
+    |-0.556261| 1.609443|-0.992703|-0.644687|
+    | 0.993532| 0.233038| 0.124133| 0.347092|
+    |-1.313549|-1.868732| 3.906533|-2.140111|
+    +---------+---------+---------+---------+
+    3 more rows...
+
+
+    smile> println(df.tail(3))
+    +--------+--------+---------+---------+
+    |      V1|      V2|       V3|       V4|
+    +--------+--------+---------+---------+
+    |0.130157|0.708615|-1.027017|-1.268886|
+    | 1.15047|0.743469| -0.01652|  0.01736|
+    |1.593102|0.021996|-0.494544| 0.245808|
+    +--------+--------+---------+---------+
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In fact, the output of most Smile data parsers is a DataFrame.
+        The <code>smile.datasets</code> package also provide a few public
+        datasets.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
@@ -241,9 +304,8 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> import smile.data.*
-
+    smile> import smile.datasets.*
     smile> import smile.io.*
-
     smile> var iris = Read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
     $3 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
@@ -273,6 +335,26 @@ title: Smile - Data Processing
     |petallength|  150|  1|3.758667|6.9|
     | petalwidth|  150|0.1|1.198667|2.5|
     +-----------+-----+---+--------+---+
+
+    smile> var iris = new Iris() // use built-in dataset object
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    iris ==> Iris[data=
+    +-----------+----------+-----------+----------+-----------+
+    |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +-----------+----------+-----------+----------+-----------+
+    |        5.1|       3.5|        1.4|       0.2|Iris-setosa|
+    |        4.9|         3|        1.4|       0.2|Iris-setosa|
+    |        4.7|       3.2|        1.3|       0.2|Iris-setosa|
+    |        4.6|       3.1|        1.5|       0.2|Iris-setosa|
+    |          5|       3.6|        1.4|       0.2|Iris-setosa|
+    |        5.4|       3.9|        1.7|       0.4|Iris-setosa|
+    |        4.6|       3.4|        1.4|       0.3|Iris-setosa|
+    |          5|       3.4|        1.5|       0.2|Iris-setosa|
+    |        4.4|       2.9|        1.4|       0.2|Iris-setosa|
+    |        4.9|       3.1|        1.5|       0.1|Iris-setosa|
+    +-----------+----------+-----------+----------+-----------+
+    140 more rows...
+    , formula=class ~ .]
     </code></pre>
         </div>
         </div>
@@ -337,7 +419,7 @@ title: Smile - Data Processing
     }
 
     smile> iris("sepallength")
-    res6: vector.BaseVector[T, TS, S] = [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
+    res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
     </code></pre>
             </div>
         </div>
@@ -354,7 +436,7 @@ title: Smile - Data Processing
     }
 
     smile> iris.column("sepallength")
-    $8 ==> [5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ... 140 more]
+    $8 ==> sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
           </code></pre>
             </div>
         </div>
@@ -370,7 +452,7 @@ title: Smile - Data Processing
       class: Iris-setosa
     }
     >>> iris.column("sepallength")
-    res7: smile.data.vector.BaseVector<(raw) kotlin.Any!, (raw) kotlin.Any!, (raw) java.util.stream.BaseStream<*, *>!>! = [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
+    res7: smile.data.vector.ValueVecotr! = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
     </code></pre>
     </div>
     </div>
@@ -410,7 +492,7 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> iris.select("sepallength", "sepalwidth")
-    $9 ==> [sepallength: float, sepalwidth: float]
+    $9 ==>
     +-----------+----------+
     |sepallength|sepalwidth|
     +-----------+----------+
@@ -433,7 +515,7 @@ title: Smile - Data Processing
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> iris.select("sepallength", "sepalwidth")
-    res8: smile.data.DataFrame! = [sepallength: float, sepalwidth: float]
+    res8: smile.data.DataFrame! =
     +-----------+----------+
     |sepallength|sepalwidth|
     +-----------+----------+
