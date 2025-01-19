@@ -6,7 +6,7 @@ import org.jetbrains.dokka.base.DokkaBase
 import org.jetbrains.dokka.base.DokkaBaseConfiguration
 
 
-// compile bytecode to Java 21 (default is Java 6)
+// Compile bytecode to Java 21 (default is Java 6)
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "21"
 }
@@ -26,6 +26,7 @@ buildscript {
 
 group = "com.github.haifengl"
 version = "4.1.0"
+extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {
     mavenCentral()
@@ -146,6 +147,10 @@ publishing {
 }
 
 signing {
+    // Conditional signing
+    setRequired({
+        (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
+    })
     useGpgCmd()
     sign(configurations.archives.get())
     sign(publishing.publications["mavenJava"])
