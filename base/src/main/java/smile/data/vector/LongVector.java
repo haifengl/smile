@@ -59,13 +59,13 @@ public class LongVector extends PrimitiveVector {
     }
 
     @Override
-    public LongStream asLongStream() {
+    public LongStream longStream() {
         return Arrays.stream(vector);
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
-        return asLongStream().mapToDouble(i -> i);
+    public DoubleStream doubleStream() {
+        return longStream().mapToDouble(i -> i);
     }
 
     @Override

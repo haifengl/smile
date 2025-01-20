@@ -78,7 +78,7 @@ public class ColumnTransform implements Transform {
             ValueVector column = data.column(i);
             Function transform = transforms.get(field.name());
             if (transform != null) {
-                DoubleStream stream = column.asDoubleStream().map(transform::apply);
+                DoubleStream stream = column.doubleStream().map(transform::apply);
                 var measure = field.measure() instanceof NumericalMeasure ? field.measure() : null;
                 if (column.isNullable()) {
                     int n = column.size();

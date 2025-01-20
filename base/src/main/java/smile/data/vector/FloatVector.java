@@ -75,7 +75,7 @@ public class FloatVector extends PrimitiveVector {
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
+    public DoubleStream doubleStream() {
         return index().mapToDouble(i -> vector[i]);
     }
 

@@ -104,12 +104,20 @@ public interface ValueVector {
     }
 
     /**
+     * Returns a stream consisting of the elements of this vector.
+     * @return a stream consisting of the elements of this vector.
+     */
+    default Stream<?> stream() {
+        return intStream().mapToObj(this::get);
+    }
+
+    /**
      * Returns an IntStream consisting of the elements of this vector,
      * converted to integer.
      *
      * @return an IntStream consisting of the elements of this vector.
      */
-    default IntStream asIntStream() {
+    default IntStream intStream() {
         throw new UnsupportedOperationException();
     }
 
@@ -119,8 +127,8 @@ public interface ValueVector {
      *
      * @return a LongStream consisting of the elements of this vector.
      */
-    default LongStream asLongStream() {
-        return asIntStream().mapToLong(i -> i);
+    default LongStream longStream() {
+        return intStream().mapToLong(i -> i);
     }
 
     /**
@@ -129,8 +137,8 @@ public interface ValueVector {
      *
      * @return a DoubleStream consisting of the elements of this vector.
      */
-    default DoubleStream asDoubleStream() {
-        return asIntStream().mapToDouble(i -> i);
+    default DoubleStream doubleStream() {
+        return intStream().mapToDouble(i -> i);
     }
 
     /**
@@ -138,7 +146,7 @@ public interface ValueVector {
      * @return an int array.
      */
     default int[] toIntArray() {
-        return asIntStream().toArray();
+        return intStream().toArray();
     }
 
     /**
@@ -146,7 +154,7 @@ public interface ValueVector {
      * @return a long array.
      */
     default long[] toLongArray() {
-        return asLongStream().toArray();
+        return longStream().toArray();
     }
 
     /**
@@ -154,7 +162,7 @@ public interface ValueVector {
      * @return a double array.
      */
     default double[] toDoubleArray() {
-        return asDoubleStream().toArray();
+        return doubleStream().toArray();
     }
 
     /**

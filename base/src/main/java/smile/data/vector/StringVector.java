@@ -123,17 +123,17 @@ public class StringVector extends ObjectVector<String> {
     }
 
     @Override
-    public IntStream asIntStream() {
+    public IntStream intStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Integer::parseInt);
     }
 
     @Override
-    public LongStream asLongStream() {
+    public LongStream longStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToLong(Long::parseLong);
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
+    public DoubleStream doubleStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToDouble(Double::parseDouble);
     }
 

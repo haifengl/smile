@@ -76,7 +76,7 @@ public class DoubleVector extends PrimitiveVector {
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
+    public DoubleStream doubleStream() {
         return Arrays.stream(vector);
     }
 

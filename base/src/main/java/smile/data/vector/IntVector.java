@@ -59,7 +59,7 @@ public class IntVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
+    public IntStream intStream() {
         return Arrays.stream(vector);
     }
 

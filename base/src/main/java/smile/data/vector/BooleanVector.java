@@ -87,7 +87,7 @@ public class BooleanVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
+    public IntStream intStream() {
         return index().map(i -> vector.get(i) ? 1 : 0);
     }
 

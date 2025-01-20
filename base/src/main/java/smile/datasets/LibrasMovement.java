@@ -65,6 +65,6 @@ public record LibrasMovement(DataFrame data, Formula formula) {
      * @return the class labels.
      */
     public int[] y() {
-        return formula.y(data).asIntStream().map(yi -> yi - 1).toArray();
+        return formula.y(data).intStream().map(yi -> yi - 1).toArray();
     }
 }

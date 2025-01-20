@@ -62,7 +62,7 @@ public class CharVector extends PrimitiveVector {
     }
 
     @Override
-    public IntStream asIntStream() {
+    public IntStream intStream() {
         return index().map(i -> vector[i]);
     }
 
