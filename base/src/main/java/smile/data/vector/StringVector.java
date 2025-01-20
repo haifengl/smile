@@ -31,7 +31,7 @@ import smile.data.type.StructField;
 import smile.util.Index;
 
 /**
- * An immutable string vector.
+ * A string vector.
  *
  * @author Haifeng Li
  */
