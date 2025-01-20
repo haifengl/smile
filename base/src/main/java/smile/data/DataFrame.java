@@ -217,6 +217,16 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
     }
 
     /**
+     * Returns a new DataFrame with selected columns.
+     * This is an alias to {@link #select(String...) select} for Scala's convenience.
+     * @param names the column names.
+     * @return a new DataFrame with selected columns.
+     */
+    public DataFrame apply(String... names) {
+        return select(names);
+    }
+
+    /**
      * Returns the row at the specified index.
      * @param i the row index.
      * @return the i-th row.
@@ -966,7 +976,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         return sb.toString();
     }
 
-    /** Returns a formated line. */
+    /** Returns a pretty-print line. */
     private StringBuilder line(String[] row, int[] colWidths, boolean truncate) {
         StringBuilder line = new StringBuilder();
         // Index column
