@@ -156,7 +156,8 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
     }
 
     /**
-     * Sets the DataFrame index using existing column.
+     * Sets the DataFrame index using existing column. The index column
+     * will be removed from the DataFrame.
      * @param column the name of column that will be used as row index.
      * @return a new DataFrame with the row index.
      */
@@ -167,7 +168,12 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         for (int i = 0; i < n; i++) {
             index[i] = vector.get(i);
         }
-        return setIndex(index);
+
+        // Remove the column to be used as the new index.
+        var data = Arrays.stream(columns)
+                .filter(c -> !c.name().equals(column))
+                .toArray(ValueVector[]::new);
+        return new DataFrame(new RowIndex(index), data);
     }
 
     /**
@@ -883,10 +889,21 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the string representation of rows in specified range.
      */
     public String toString(int from, int to, boolean truncate) {
+        if (from < 0 || from >= size()) {
+            throw new IllegalArgumentException("from: " + from + ", size: " + size());
+        }
+
+        if (to <= from) {
+            throw new IllegalArgumentException("'to' must be greater than 'from'");
+        }
+
+        to = Math.min(to, size());
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = from == 0 && size() > to;
-        String[] names = names();
-        int numCols = names.length;
+        int numCols = ncol() + 1;
+        String[] names = new String[numCols];
+        names[0] = ""; // Index column has no name.
+        System.arraycopy(names(), 0, names, 1, ncol());
         final int maxColWidth = switch (numCols) {
             case 1 -> 78;
             case 2 -> 38;
@@ -901,14 +918,17 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
 
         // For array values, replace Seq and Array with square brackets
         // For cells that are beyond maxColumnWidth characters, truncate it with "..."
-        List<String[]> rows = stream().limit(to).skip(from).map( row -> {
-            String[] cells = new String[numCols];
-            for (int i = 0; i < numCols; i++) {
-                String str = row.toString(i);
-                cells[i] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
+        int numRows = to - from;
+        String[][] rows = new String[numRows][numCols];
+        for (int i = 0; i < numRows; i++) {
+            int row = from + i;
+            String[] cells = rows[i];
+            cells[0] = index == null ? Integer.toString(row): index.values()[row].toString();
+            for (int j = 1; j < numCols; j++) {
+                String str = columns[j-1].getString(row);
+                cells[j] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
             }
-            return cells;
-        }).toList();
+        }
 
         // Compute the width of each column
         for (String[] row : rows) {
@@ -924,34 +944,12 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         sb.append(sep);
 
         // column names
-        StringBuilder header = new StringBuilder();
-        header.append('|');
-        for (int i = 0; i < numCols; i++) {
-            if (truncate) {
-                header.append(Strings.leftPad(names[i], colWidths[i], ' '));
-            } else {
-                header.append(Strings.rightPad(names[i], colWidths[i], ' '));
-            }
-            header.append('|');
-        }
-        header.append('\n');
-        sb.append(header);
+        sb.append(line(names, colWidths, truncate));
         sb.append(sep);
 
         // data
         for (String[] row : rows) {
-            StringBuilder line = new StringBuilder();
-            line.append('|');
-            for (int i = 0; i < numCols; i++) {
-                if (truncate) {
-                    line.append(Strings.leftPad(row[i], colWidths[i], ' '));
-                } else {
-                    line.append(Strings.rightPad(row[i], colWidths[i], ' '));
-                }
-                line.append('|');
-            }
-            line.append('\n');
-            sb.append(line);
+            sb.append(line(row, colWidths, truncate));
         }
 
         sb.append(sep);
@@ -968,36 +966,25 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         return sb.toString();
     }
 
-    /**
-     * Returns the string representation of top rows.
-     * @param numRows Number of rows to show
-     * @return the string representation of top rows.
-     */
-    public String[][] toStrings(int numRows) {
-        return toStrings(numRows, true);
-    }
+    /** Returns a formated line. */
+    private StringBuilder line(String[] row, int[] colWidths, boolean truncate) {
+        StringBuilder line = new StringBuilder();
+        // Index column
+        line.append('|');
+        line.append(Strings.leftPad(row[0], colWidths[0], ' '));
+        line.append('|');
 
-    /**
-     * Returns the string representation of top rows.
-     * @param numRows Number of rows to show
-     * @param truncate Whether truncate long strings.
-     * @return the string representation of top rows.
-     */
-    public String[][] toStrings(int numRows, final boolean truncate) {
-        String[] names = names();
-        int numCols = names.length;
-        int maxColWidth = numCols == 1 ? 78 : (numCols == 2 ? 38 : 20);
-
-        // For array values, replace Seq and Array with square brackets
-        // For cells that are beyond maxColumnWidth characters, truncate it with "..."
-        return stream().limit(numRows).map( row -> {
-            String[] cells = new String[numCols];
-            for (int i = 0; i < numCols; i++) {
-                String str = row.toString(i);
-                cells[i] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
+        // Data columns
+        for (int i = 1; i < colWidths.length; i++) {
+            if (truncate) {
+                line.append(Strings.leftPad(row[i], colWidths[i], ' '));
+            } else {
+                line.append(Strings.rightPad(row[i], colWidths[i], ' '));
             }
-            return cells;
-        }).toArray(String[][]::new);
+            line.append('|');
+        }
+        line.append('\n');
+        return line;
     }
 
     /**
