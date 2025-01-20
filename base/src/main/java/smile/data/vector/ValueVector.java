@@ -104,6 +104,18 @@ public interface ValueVector {
     }
 
     /**
+     * Returns whether each element is null/missing.
+     * @return whether each element is null/missing.
+     */
+    default boolean[] isNull() {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = isNullAt(i);
+        }
+        return result;
+    }
+
+    /**
      * Returns whether each element is contained in values.
      * @param values the set of values.
      * @return whether each element is contained in values.
