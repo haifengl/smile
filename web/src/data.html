@@ -91,8 +91,8 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> import java.time._
-    smile> import smile.data._
-    smile> import smile.data.vector._
+           import smile.data._
+           import smile.data.vector._
 
     smile> ValueVector.of("A", 1.0, 2.0, 3.0)
     $val res0: smile.data.vector.DoubleVector = A[1, 2, 3]
@@ -115,8 +115,8 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> import java.time.*
-    smile> import smile.data.*
-    smile> import smile.data.vector.*
+           import smile.data.*
+           import smile.data.vector.*
 
     smile> ValueVector.of("A", 1.0, 2.0, 3.0)
     $2 ==> A[1, 2, 3]
@@ -139,9 +139,9 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> import java.time.*
-    >>> import smile.data.*
-    >>> import smile.data.vector.*
-    >>> import smile.util.*
+        import smile.data.*
+        import smile.data.vector.*
+        import smile.util.*
 
     >>> ValueVector.of("A", 1.0, 2.0, 3.0)
     res4: smile.data.vector.DoubleVector = A[1, 2, 3]
@@ -259,9 +259,9 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> import smile.data.*
-    smile> import smile.datasets.*
-    smile> import smile.io.*
-    smile> var iris = Read.arff("data/weka/iris.arff")
+           import smile.datasets.*
+           import smile.io.*
+           var iris = Read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
     $3 ==>
     +---+-----------+----------+-----------+----------+-----------+
@@ -286,9 +286,9 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> import smile.*
-    >>> import smile.data.*
-    >>> import smile.io.*
-    >>> val iris = Read.arff("data/weka/iris.arff")
+        import smile.data.*
+        import smile.io.*
+        val iris = Read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
     >>> iris
     res3: smile.data.DataFrame! =
@@ -360,8 +360,8 @@ title: Smile - Data Processing
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
-    smile> var dates = Dates.range(LocalDate.of(2025,2,1), 6)
-    smile> df = df.setIndex(dates)
+           var dates = Dates.range(LocalDate.of(2025,2,1), 6)
+           df = df.setIndex(dates)
     +----------+---------+---------+---------+---------+
     |          |       V1|       V2|       V3|       V4|
     +----------+---------+---------+---------+---------+
@@ -409,7 +409,7 @@ title: Smile - Data Processing
                    ObjectVector.of("D", Index.range(0, 4).toArray()),
                    ObjectVector.of("E", new int[]{3, 3, 3, 3})
            )
-    smile> df = df.setIndex("B")
+           df = df.setIndex("B")
     df ==>
     +----------+---+---+------------+------------+
     |          |  A|  C|           D|           E|
@@ -443,7 +443,6 @@ title: Smile - Data Processing
     +----------+---------+---------+---------+---------+
     3 more rows...
 
-
     smile> println(df.tail(3))
     +----------+---------+---------+---------+--------+
     |          |       V1|       V2|       V3|      V4|
@@ -465,7 +464,6 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_0.4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
-
     smile> iris.summary()
     +---+-----------+-----+---+--------+---+
     |   |     column|count|min|     avg|max|
@@ -481,7 +479,7 @@ title: Smile - Data Processing
     </div>
 
     <h3 id="DataFrame_Selection">Selection</h3>
-    <p>We can get a row with the array syntax or refer a column by its name.</p>
+    <p>We can get a row with the array syntax or slice a subset of rows.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
         <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
@@ -500,8 +498,22 @@ title: Smile - Data Processing
       class: Iris-setosa
     }
 
-    smile> iris("sepallength")
-    res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+    smile> iris(Index.range(10, 20))
+    res6: DataFrame =
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.4|       3.7|        1.5|       0.2|Iris-setosa|
+    |  1|        4.8|       3.4|        1.6|       0.2|Iris-setosa|
+    |  2|        4.8|         3|        1.4|       0.1|Iris-setosa|
+    |  3|        4.3|         3|        1.1|       0.1|Iris-setosa|
+    |  4|        5.8|         4|        1.2|       0.2|Iris-setosa|
+    |  5|        5.7|       4.4|        1.5|       0.4|Iris-setosa|
+    |  6|        5.4|       3.9|        1.3|       0.4|Iris-setosa|
+    |  7|        5.1|       3.5|        1.4|       0.3|Iris-setosa|
+    |  8|        5.7|       3.8|        1.7|       0.3|Iris-setosa|
+    |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
     </code></pre>
             </div>
         </div>
@@ -517,8 +529,22 @@ title: Smile - Data Processing
       class: Iris-setosa
     }
 
-    smile> iris.column("sepallength")
-    $8 ==> sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+    smile> iris.get(Index.range(10, 20))
+    $8 ==>
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.4|       3.7|        1.5|       0.2|Iris-setosa|
+    |  1|        4.8|       3.4|        1.6|       0.2|Iris-setosa|
+    |  2|        4.8|         3|        1.4|       0.1|Iris-setosa|
+    |  3|        4.3|         3|        1.1|       0.1|Iris-setosa|
+    |  4|        5.8|         4|        1.2|       0.2|Iris-setosa|
+    |  5|        5.7|       4.4|        1.5|       0.4|Iris-setosa|
+    |  6|        5.4|       3.9|        1.3|       0.4|Iris-setosa|
+    |  7|        5.1|       3.5|        1.4|       0.3|Iris-setosa|
+    |  8|        5.7|       3.8|        1.7|       0.3|Iris-setosa|
+    |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
           </code></pre>
             </div>
         </div>
@@ -533,14 +559,29 @@ title: Smile - Data Processing
       petalwidth: 0.2,
       class: Iris-setosa
     }
-    >>> iris.column("sepallength")
-    res7: smile.data.vector.ValueVecotr! = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+
+    >>> iris.get(Index.range(10, 20))
+    res7: smile.data.DataFrame! =
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.4|       3.7|        1.5|       0.2|Iris-setosa|
+    |  1|        4.8|       3.4|        1.6|       0.2|Iris-setosa|
+    |  2|        4.8|         3|        1.4|       0.1|Iris-setosa|
+    |  3|        4.3|         3|        1.1|       0.1|Iris-setosa|
+    |  4|        5.8|         4|        1.2|       0.2|Iris-setosa|
+    |  5|        5.7|       4.4|        1.5|       0.4|Iris-setosa|
+    |  6|        5.4|       3.9|        1.3|       0.4|Iris-setosa|
+    |  7|        5.1|       3.5|        1.4|       0.3|Iris-setosa|
+    |  8|        5.7|       3.8|        1.7|       0.3|Iris-setosa|
+    |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
     </code></pre>
     </div>
     </div>
     </div>
 
-    <p>Similarly, we can select a few columns to create a new data frame. </p>
+    <p>Similarly, we can refer a column by its name or select a few columns to create a new data frame.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
         <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
@@ -550,22 +591,25 @@ title: Smile - Data Processing
         <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
+    smile> iris("sepallength")
+    res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+
     smile> iris("sepallength", "sepalwidth")
     res8: DataFrame =
-    +-----------+----------+
-    |sepallength|sepalwidth|
-    +-----------+----------+
-    |        5.1|       3.5|
-    |        4.9|         3|
-    |        4.7|       3.2|
-    |        4.6|       3.1|
-    |          5|       3.6|
-    |        5.4|       3.9|
-    |        4.6|       3.4|
-    |          5|       3.4|
-    |        4.4|       2.9|
-    |        4.9|       3.1|
-    +-----------+----------+
+    +---+-----------+----------+
+    |   |sepallength|sepalwidth|
+    +---+-----------+----------+
+    |  0|        5.1|       3.5|
+    |  1|        4.9|         3|
+    |  2|        4.7|       3.2|
+    |  3|        4.6|       3.1|
+    |  4|          5|       3.6|
+    |  5|        5.4|       3.9|
+    |  6|        4.6|       3.4|
+    |  7|          5|       3.4|
+    |  8|        4.4|       2.9|
+    |  9|        4.9|       3.1|
+    +---+-----------+----------+
     140 more rows...
     </code></pre>
             </div>
@@ -573,22 +617,25 @@ title: Smile - Data Processing
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
+    smile> iris.column("sepallength")
+    $8 ==> sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+
     smile> iris.select("sepallength", "sepalwidth")
     $9 ==>
-    +-----------+----------+
-    |sepallength|sepalwidth|
-    +-----------+----------+
-    |        5.1|       3.5|
-    |        4.9|         3|
-    |        4.7|       3.2|
-    |        4.6|       3.1|
-    |          5|       3.6|
-    |        5.4|       3.9|
-    |        4.6|       3.4|
-    |          5|       3.4|
-    |        4.4|       2.9|
-    |        4.9|       3.1|
-    +-----------+----------+
+    +---+-----------+----------+
+    |   |sepallength|sepalwidth|
+    +---+-----------+----------+
+    |  0|        5.1|       3.5|
+    |  1|        4.9|         3|
+    |  2|        4.7|       3.2|
+    |  3|        4.6|       3.1|
+    |  4|          5|       3.6|
+    |  5|        5.4|       3.9|
+    |  6|        4.6|       3.4|
+    |  7|          5|       3.4|
+    |  8|        4.4|       2.9|
+    |  9|        4.9|       3.1|
+    +---+-----------+----------+
     140 more rows...
           </code></pre>
             </div>
@@ -596,26 +643,60 @@ title: Smile - Data Processing
         <div class="tab-pane" id="kotlin_3">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
+    >>> iris.column("sepallength")
+    res7: smile.data.vector.ValueVecotr! = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+
     >>> iris.select("sepallength", "sepalwidth")
     res8: smile.data.DataFrame! =
-    +-----------+----------+
-    |sepallength|sepalwidth|
-    +-----------+----------+
-    |        5.1|       3.5|
-    |        4.9|         3|
-    |        4.7|       3.2|
-    |        4.6|       3.1|
-    |          5|       3.6|
-    |        5.4|       3.9|
-    |        4.6|       3.4|
-    |          5|       3.4|
-    |        4.4|       2.9|
-    |        4.9|       3.1|
-    +-----------+----------+
+    +---+-----------+----------+
+    |   |sepallength|sepalwidth|
+    +---+-----------+----------+
+    |  0|        5.1|       3.5|
+    |  1|        4.9|         3|
+    |  2|        4.7|       3.2|
+    |  3|        4.6|       3.1|
+    |  4|          5|       3.6|
+    |  5|        5.4|       3.9|
+    |  6|        4.6|       3.4|
+    |  7|          5|       3.4|
+    |  8|        4.4|       2.9|
+    |  9|        4.9|       3.1|
+    +---+-----------+----------+
     140 more rows...
     </code></pre>
     </div>
     </div>
+    </div>
+
+    <p>We can also selct rows with boolean indexing. The below example uses
+        <code>isin()</code> method for filtering:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2.3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2.3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> iris.get(Index.of(iris.column("class").isin("Iris-setosa", "Iris-virginica")))
+    $10 ==>
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.1|       3.5|        1.4|       0.2|Iris-setosa|
+    |  1|        4.9|         3|        1.4|       0.2|Iris-setosa|
+    |  2|        4.7|       3.2|        1.3|       0.2|Iris-setosa|
+    |  3|        4.6|       3.1|        1.5|       0.2|Iris-setosa|
+    |  4|          5|       3.6|        1.4|       0.2|Iris-setosa|
+    |  5|        5.4|       3.9|        1.7|       0.4|Iris-setosa|
+    |  6|        4.6|       3.4|        1.4|       0.3|Iris-setosa|
+    |  7|          5|       3.4|        1.5|       0.2|Iris-setosa|
+    |  8|        4.4|       2.9|        1.4|       0.2|Iris-setosa|
+    |  9|        4.9|       3.1|        1.5|       0.1|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
+    90 more rows...
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <h3 id="DataFrame_Operations">Operations</h3>
