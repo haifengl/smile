@@ -83,17 +83,17 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
     }
 
     @Override
-    public IntStream asIntStream() {
+    public IntStream intStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Number::intValue);
     }
 
     @Override
-    public LongStream asLongStream() {
+    public LongStream longStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToLong(Number::longValue);
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
+    public DoubleStream doubleStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToDouble(Number::doubleValue);
     }
 }

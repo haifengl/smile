@@ -62,13 +62,13 @@ public class NullableLongVector extends NullablePrimitiveVector {
     }
 
     @Override
-    public LongStream asLongStream() {
+    public LongStream longStream() {
         return index().mapToLong(i -> nullMask.get(i) ? Long.MIN_VALUE : vector[i]);
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
-        return asLongStream().mapToDouble(i -> i);
+    public DoubleStream doubleStream() {
+        return longStream().mapToDouble(i -> i);
     }
 
     @Override

@@ -78,7 +78,7 @@ public class NullableFloatVector extends NullablePrimitiveVector {
     }
 
     @Override
-    public DoubleStream asDoubleStream() {
+    public DoubleStream doubleStream() {
         return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : vector[i]);
     }
 

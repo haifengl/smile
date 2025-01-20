@@ -142,10 +142,7 @@ public class ObjectVector<T> extends AbstractVector {
         return new ObjectVector<>(new StructField(name, DataTypes.DoubleArrayType), vector);
     }
 
-    /**
-     * Returns a stream consisting of the elements of this vector.
-     * @return a stream consisting of the elements of this vector.
-     */
+    @Override
     public Stream<T> stream() {
         return Arrays.stream(vector);
     }

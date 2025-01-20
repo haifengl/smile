@@ -841,21 +841,21 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
 
             DataType dtype = dtypes[j];
             if (dtype.isLong()) {
-                LongSummaryStatistics s = columns[j].asLongStream().filter(x -> x != Long.MIN_VALUE).summaryStatistics();
+                LongSummaryStatistics s = columns[j].longStream().filter(x -> x != Long.MIN_VALUE).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
             } else if (dtype.isIntegral()) {
-                IntSummaryStatistics s = columns[j].asIntStream().filter(x -> x != Integer.MIN_VALUE).summaryStatistics();
+                IntSummaryStatistics s = columns[j].intStream().filter(x -> x != Integer.MIN_VALUE).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
                 avg[k] = s.getAverage();
                 count[k++] = s.getCount();
             } else if (dtype.isFloating()) {
-                DoubleSummaryStatistics s = columns[j].asDoubleStream().filter(Double::isFinite).summaryStatistics();
+                DoubleSummaryStatistics s = columns[j].doubleStream().filter(Double::isFinite).summaryStatistics();
                 col[k] = names[j];
                 min[k] = s.getMin();
                 max[k] = s.getMax();
