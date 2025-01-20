@@ -41,10 +41,11 @@ import smile.util.Strings;
  *
  * @param schema the schema of DataFrame.
  * @param columns the columns of DataFrame.
+ * @param index the optional row index.
  *
  * @author Haifeng Li
  */
-public record DataFrame(StructType schema, ValueVector[] columns) implements Iterable<Row> {
+public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index) implements Iterable<Row> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
     public DataFrame {
@@ -52,8 +53,8 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
             throw new IllegalArgumentException("Columns must not be empty");
         }
 
-        int size = columns[0].size();
-        for (int i = 1; i < columns.length; i++) {
+        int size = index != null ? index.size() : columns[0].size();
+        for (int i = 0; i < columns.length; i++) {
             if (columns[i].size() != size) {
                 String message = String.format("Columns must have the same size. Column %d has size %d", i, columns[i].size());
                 throw new IllegalArgumentException(message);
@@ -66,7 +67,16 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @param columns the columns of DataFrame.
      */
     public DataFrame(ValueVector... columns) {
-        this(StructType.of(columns), columns);
+        this(null, columns);
+    }
+
+    /**
+     * Constructor.
+     * @param index the row index.
+     * @param columns the columns of DataFrame.
+     */
+    public DataFrame(RowIndex index, ValueVector... columns) {
+        this(StructType.of(columns), columns, index);
     }
 
     @Override
@@ -146,6 +156,33 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     }
 
     /**
+     * Sets the DataFrame index using existing column.
+     * @param column the name of column that will be used as row index.
+     * @return a new DataFrame with the row index.
+     */
+    public DataFrame setIndex(String column) {
+        int n = size();
+        ValueVector vector = apply(column);
+        Object[] index = new Object[n];
+        for (int i = 0; i < n; i++) {
+            index[i] = vector.get(i);
+        }
+        return setIndex(index);
+    }
+
+    /**
+     * Sets the DataFrame index.
+     * @param index the row index values.
+     * @return a new DataFrame with the row index.
+     */
+    public DataFrame setIndex(Object[] index) {
+        if (index.length != size()) {
+            throw new IllegalArgumentException("Index array must have the same size as data frame.");
+        }
+        return new DataFrame(schema, columns, new RowIndex(index));
+    }
+
+    /**
      * Returns the j-th column.
      * @param j the column index.
      * @return the column vector.
@@ -193,14 +230,38 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     }
 
     /**
+     * Returns the row with the specified index.
+     * @param row the row index.
+     * @return the row with the specified index.
+     */
+    public Tuple loc(Object row) {
+        return new Row(this, index.apply(row));
+    }
+
+    /**
+     * Returns a new data frame with specified rows.
+     * @param rows the row indices.
+     * @return a new data frame with specified rows.
+     */
+    public DataFrame loc(Object... rows) {
+        int n = rows.length;
+        int[] index = new int[n];
+        for (int i = 0; i < n; i++) {
+            index[i] = this.index.apply(rows[i]);
+        }
+        return get(Index.of(index));
+    }
+
+    /**
      * Returns a new data frame with row indexing.
      * @param index the row indices.
      * @return the data frame of selected rows.
      */
     public DataFrame get(Index index) {
+        var rowIndex = this.index != null ? this.index.get(index) : null;
         return new DataFrame(schema, Arrays.stream(columns)
                 .map(column -> column.get(index))
-                .toArray(ValueVector[]::new));
+                .toArray(ValueVector[]::new), rowIndex);
     }
 
     /**
@@ -821,7 +882,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @param truncate Whether truncate long strings and align cells right.
      * @return the string representation of rows in specified range.
      */
-    public String toString(final int from, int to, final boolean truncate) {
+    public String toString(int from, int to, boolean truncate) {
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = from == 0 && size() > to;
         String[] names = names();
@@ -922,7 +983,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
      * @param truncate Whether truncate long strings.
      * @return the string representation of top rows.
      */
-    public String[][] toStrings(final int numRows, final boolean truncate) {
+    public String[][] toStrings(int numRows, final boolean truncate) {
         String[] names = names();
         int numCols = names.length;
         int maxColWidth = numCols == 1 ? 78 : (numCols == 2 ? 38 : 20);
@@ -941,7 +1002,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     /**
      * Creates a DataFrame from a 2-dimensional array.
-     * @param data The data array.
+     * @param data the data array.
      * @param names the name of columns.
      * @return the data frame.
      */
@@ -959,12 +1020,13 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
             }
             columns[j] = new DoubleVector(names[j], x);
         }
+
         return new DataFrame(columns);
     }
 
     /**
      * Creates a DataFrame from a 2-dimensional array.
-     * @param data The data array.
+     * @param data the data array.
      * @param names the name of columns.
      * @return the data frame.
      */
@@ -987,7 +1049,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
 
     /**
      * Creates a DataFrame from a 2-dimensional array.
-     * @param data The data array.
+     * @param data the data array.
      * @param names the name of columns.
      * @return the data frame.
      */
@@ -1009,7 +1071,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
     }
 
     /**
-     * Creates a DataFrame from a collection.
+     * Creates a DataFrame from a collection of objects.
      * @param data The data collection.
      * @param clazz The class type of elements.
      * @param <T> The data type of elements.
@@ -1115,7 +1177,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
                 }
             }
 
-            return new DataFrame(schema, columns.toArray(ValueVector[]::new));
+            return new DataFrame(schema, columns.toArray(ValueVector[]::new), null);
         } catch (java.beans.IntrospectionException ex) {
             logger.error("Failed to introspect a bean: ", ex);
             throw new RuntimeException(ex);
@@ -1290,7 +1352,7 @@ public record DataFrame(StructType schema, ValueVector[] columns) implements Ite
             };
         }
 
-        return new DataFrame(schema, columns);
+        return new DataFrame(schema, columns, null);
     }
 
     /**
