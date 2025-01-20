@@ -172,7 +172,6 @@ public class Arrow {
         }
 
         try (ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
-
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
             List<DataFrame> frames = new ArrayList<>();
@@ -259,7 +258,7 @@ public class Arrow {
                 return frames.getFirst();
             } else {
                 DataFrame df = frames.getFirst();
-                return df.union(frames.subList(1, frames.size()).toArray(new DataFrame[frames.size() - 1]));
+                return df.concat(frames.subList(1, frames.size()).toArray(new DataFrame[frames.size() - 1]));
             }
         }
     }

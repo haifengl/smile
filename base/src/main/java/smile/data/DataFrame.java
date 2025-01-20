@@ -462,7 +462,11 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         for (var column : columns) {
             if (column instanceof FloatVector vector) {
                 vector.fillna((float) value);
+            } else if (column instanceof NullableFloatVector vector) {
+                vector.fillna((float) value);
             } else if (column instanceof DoubleVector vector) {
+                vector.fillna(value);
+            } else if (column instanceof NullableDoubleVector vector) {
                 vector.fillna(value);
             } else if (column instanceof NumberVector<?> vector) {
                 vector.fillna(value);
@@ -477,7 +481,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return a new DataFrame with selected columns.
      */
     public DataFrame select(int... indices) {
-        return new DataFrame(Arrays.stream(indices)
+        return new DataFrame(index, Arrays.stream(indices)
                 .mapToObj(j -> columns[j])
                 .toArray(ValueVector[]::new));
     }
@@ -488,7 +492,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return a new DataFrame with selected columns.
      */
     public DataFrame select(String... names) {
-        return new DataFrame(Arrays.stream(names)
+        return new DataFrame(index, Arrays.stream(names)
                 .map(this::column)
                 .toArray(ValueVector[]::new));
     }
@@ -504,7 +508,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             set.add(index);
         }
 
-        return new DataFrame(IntStream.range(0, columns.length)
+        return new DataFrame(index, IntStream.range(0, columns.length)
                 .filter(j -> !set.contains(j))
                 .mapToObj(j -> columns[j])
                 .toArray(ValueVector[]::new));
@@ -519,16 +523,16 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         Set<String> set = new HashSet<>();
         Collections.addAll(set, names);
 
-        return new DataFrame(Arrays.stream(columns)
+        return new DataFrame(index, Arrays.stream(columns)
                 .filter(column -> !set.contains(column.name()))
                 .toArray(ValueVector[]::new));
     }
 
     /**
-     * Merges data frames horizontally by columns.
+     * Merges data frames horizontally by columns. If there are columns
+     * with the same name, the latter ones will be skipped.
      * @param dataframes the data frames to merge.
-     * @return a new data frame that combines this DataFrame
-     * with one more other DataFrames by columns.
+     * @return a new data frame with combined columns.
      */
     public DataFrame merge(DataFrame... dataframes) {
         for (DataFrame df : dataframes) {
@@ -537,20 +541,28 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             }
         }
 
-        List<ValueVector> all = new ArrayList<>();
-        Collections.addAll(all, columns);
+        List<ValueVector> data = new ArrayList<>();
+        Collections.addAll(data, columns);
+        Set<String> names = new HashSet<>();
+        Collections.addAll(names, names());
         for (DataFrame df : dataframes) {
-            Collections.addAll(all, df.columns);
+            for (var column : df.columns) {
+                if (!names.contains(column.name())) {
+                    data.add(column);
+                    names.add(column.name());
+                }
+            }
         }
 
-        return new DataFrame(all.toArray(ValueVector[]::new));
+        return new DataFrame(index, data.toArray(ValueVector[]::new));
     }
 
     /**
-     * Merges vectors with this data frame.
+     * Merges vectors with this data frame. If a column in the data frame
+     * has the name as the provide vectors, it will be replaced.
+     *
      * @param vectors the vectors to merge.
-     * @return a new data frame that combines this DataFrame
-     * with one more additional vectors.
+     * @return a new data frame with combined columns.
      */
     public DataFrame merge(ValueVector... vectors) {
         for (var vector : vectors) {
@@ -559,29 +571,44 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             }
         }
 
-        List<ValueVector> all = new ArrayList<>();
-        Collections.addAll(all, columns);
-        Collections.addAll(all, vectors);
+        List<ValueVector> data = new ArrayList<>();
+        Collections.addAll(data, columns);
+        for (var vector : vectors) {
+            int j = schema.index().getOrDefault(vector.name(), -1);
+            if (j == -1) {
+                data.add(vector);
+            } else {
+                data.set(j, vector);
+            }
+        }
 
-        return new DataFrame(all.toArray(ValueVector[]::new));
-
+        return new DataFrame(index, data.toArray(ValueVector[]::new));
     }
 
     /**
-     * Unions data frames vertically by rows.
-     * @param dataframes the data frames to union.
+     * Concatenates data frames vertically by rows.
+     * @param dataframes the data frames to concatenate.
      * @return a new data frame that combines all the rows.
      */
-    public DataFrame union(DataFrame... dataframes) {
+    public DataFrame concat(DataFrame... dataframes) {
+        boolean hasIndex = index != null;
         for (var df : dataframes) {
             if (!schema.equals(df.schema())) {
                 throw new IllegalArgumentException("Union data frames with different schema: " + schema + " vs " + df.schema());
             }
+            hasIndex &= df.index != null;
         }
 
         var rows = Stream.concat(Stream.of(this), Stream.of(dataframes))
                 .flatMap(DataFrame::stream);
-        return DataFrame.of(schema, rows);
+        var df = DataFrame.of(schema, rows);
+
+        if (hasIndex) {
+            var index = Stream.concat(Stream.of(this), Stream.of(dataframes))
+                    .flatMap(data -> Arrays.stream(data.index.values())).toArray();
+            df = df.setIndex(index);
+        }
+        return df;
     }
 
     /**
@@ -623,7 +650,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             return new IntVector(field, data);
         }).toArray(ValueVector[]::new);
 
-        return new DataFrame(vectors);
+        return new DataFrame(index, vectors);
     }
 
     /**

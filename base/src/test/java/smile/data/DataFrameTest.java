@@ -143,12 +143,12 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of union method, of class DataFrame.
+     * Test of concat method, of class DataFrame.
      */
     @Test
-    public void testUnion() {
-        System.out.println("union");
-        DataFrame two = df.union(df);
+    public void testConcat() {
+        System.out.println("concat");
+        DataFrame two = df.concat(df);
         assertEquals(2*df.size(), two.size());
         assertEquals(df.columns().length, two.columns().length);
 
