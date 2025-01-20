@@ -104,6 +104,21 @@ public interface ValueVector {
     }
 
     /**
+     * Returns whether each element is contained in values.
+     * @param values the set of values.
+     * @return whether each element is contained in values.
+     */
+    default boolean[] isin(String... values) {
+        Set<String> set = new HashSet<>();
+        Collections.addAll(set, values);
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = set.contains(getString(i));
+        }
+        return result;
+    }
+
+    /**
      * Returns a stream consisting of the elements of this vector.
      * @return a stream consisting of the elements of this vector.
      */
