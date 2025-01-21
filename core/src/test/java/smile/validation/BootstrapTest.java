@@ -181,8 +181,8 @@ public class BootstrapTest {
 
         var iris = new Iris();
         var result = Bootstrap.classification(100, iris.formula(), iris.data(), DecisionTree::fit);
-        System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy());
-        System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy());
+        System.out.println("100-fold bootstrap accuracy average = " + result.avg().accuracy());
+        System.out.println("100-fold bootstrap accuracy std.dev = " + result.std().accuracy());
     }
 
     @Test
@@ -190,7 +190,7 @@ public class BootstrapTest {
         System.out.println("CPU");
         var cpu = new CPU();
         var result = Bootstrap.regression(100, cpu.formula(), cpu.data(), RegressionTree::fit);
-        System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse());
-        System.out.println("100-fold bootstrap RMSE std.dev = " + result.std.rmse());
+        System.out.println("100-fold bootstrap RMSE average = " + result.avg().rmse());
+        System.out.println("100-fold bootstrap RMSE std.dev = " + result.std().rmse());
     }
 }

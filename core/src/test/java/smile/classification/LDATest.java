@@ -71,7 +71,7 @@ public class LDATest {
         var result = CrossValidation.classification(10, pen.x(), pen.y(), LDA::fit);
 
         System.out.println(result);
-        assertEquals(0.8820, result.avg.accuracy(), 1E-4);
+        assertEquals(0.8820, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -83,7 +83,7 @@ public class LDATest {
         var result = CrossValidation.classification(10, cancer.x(), cancer.y(), LDA::fit);
 
         System.out.println(result);
-        assertEquals(0.9272, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9272, result.avg().accuracy(), 1E-4);
     }
 
     @Test

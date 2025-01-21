@@ -25,29 +25,22 @@ import smile.math.MathEx;
  * Classification model validation results.
  *
  * @param <M> the model type.
- *
+ * @param rounds The multiple round validations.
+ * @param avg The average of metrics.
+ * @param std The standard deviation of metrics.
  * @author Haifeng Li
  */
-public class ClassificationValidations<M> implements Serializable {
+public record ClassificationValidations<M>(List<ClassificationValidation<M>> rounds,
+                                           ClassificationMetrics avg,
+                                           ClassificationMetrics std) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The multiple round validations. */
-    public final List<ClassificationValidation<M>> rounds;
-
-    /** The average of metrics. */
-    public final ClassificationMetrics avg;
-
-    /** The standard deviation of metrics. */
-    public final ClassificationMetrics std;
+    private static final long serialVersionUID = 3L;
 
     /**
-     * Constructor.
-     * @param rounds the validation metrics of multipl rounds.
+     * Factory method.
+     * @param rounds the validation metrics of multiple rounds.
      */
-    public ClassificationValidations(List<ClassificationValidation<M>> rounds) {
-        this.rounds = rounds;
-
+    public static <M> ClassificationValidations<M> of(List<ClassificationValidation<M>> rounds) {
         int k = rounds.size();
         double[] fitTime = new double[k];
         double[] scoreTime = new double[k];
@@ -64,7 +57,7 @@ public class ClassificationValidations<M> implements Serializable {
         double[] crossentropy = new double[k];
 
         for (int i = 0; i < k; i++) {
-            ClassificationMetrics metrics = rounds.get(i).metrics;
+            ClassificationMetrics metrics = rounds.get(i).metrics();
             fitTime[i] = metrics.fitTime();
             scoreTime[i] = metrics.scoreTime();
             size[i] = metrics.size();
@@ -77,10 +70,10 @@ public class ClassificationValidations<M> implements Serializable {
             mcc[i] = metrics.mcc();
             auc[i] = metrics.auc();
             logloss[i] = metrics.logloss();
-            crossentropy[i] = metrics.crossentropy();
+            crossentropy[i] = metrics.crossEntropy();
         }
 
-        avg = new ClassificationMetrics(
+        ClassificationMetrics avg = new ClassificationMetrics(
                 MathEx.mean(fitTime),
                 MathEx.mean(scoreTime),
                 (int) Math.round(MathEx.mean(size)),
@@ -95,7 +88,7 @@ public class ClassificationValidations<M> implements Serializable {
                 MathEx.mean(logloss),
                 MathEx.mean(crossentropy)
         );
-        std = new ClassificationMetrics(
+        ClassificationMetrics std = new ClassificationMetrics(
                 MathEx.stdev(fitTime),
                 MathEx.stdev(scoreTime),
                 (int) Math.round(MathEx.stdev(size)),
@@ -110,6 +103,7 @@ public class ClassificationValidations<M> implements Serializable {
                 MathEx.stdev(logloss),
                 MathEx.stdev(crossentropy)
         );
+        return new ClassificationValidations<>(rounds, avg, std);
     }
 
     @Override
@@ -127,7 +121,7 @@ public class ClassificationValidations<M> implements Serializable {
         if (!Double.isNaN(avg.mcc())) sb.append(String.format(",\n  MCC: %.2f%% ± %.2f", 100 * avg.mcc(), 100 * std.mcc()));
         if (!Double.isNaN(avg.auc())) sb.append(String.format(",\n  AUC: %.2f%% ± %.2f", 100 * avg.auc(), 100 * std.auc()));
         if (!Double.isNaN(avg.logloss())) sb.append(String.format(",\n  log loss: %.4f ± %.4f", avg.logloss(), std.logloss()));
-        else if (!Double.isNaN(avg.crossentropy())) sb.append(String.format(",\n  cross entropy: %.4f ± %.4f", avg.crossentropy(), std.crossentropy()));
+        else if (!Double.isNaN(avg.crossEntropy())) sb.append(String.format(",\n  cross entropy: %.4f ± %.4f", avg.crossEntropy(), std.crossEntropy()));
         sb.append("\n}");
         return sb.toString();
     }

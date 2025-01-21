@@ -121,7 +121,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, loss, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse(), 1E-4);
+        assertEquals(expected, result.avg().rmse(), 1E-4);
     }
 
     @Test

@@ -570,7 +570,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
                 (metrics.mcc() + other.metrics.mcc()) / 2,
                 (metrics.auc() + other.metrics.auc()) / 2,
                 (metrics.logloss() + other.metrics.logloss()) / 2,
-                (metrics.crossentropy() + other.metrics.crossentropy()) / 2
+                (metrics.crossEntropy() + other.metrics.crossEntropy()) / 2
         );
 
         double[] mergedImportance = importance.clone();

@@ -25,29 +25,22 @@ import smile.math.MathEx;
  * Regression model validation results.
  *
  * @param <M> the regression model type.
- *
+ * @param rounds The multiple round validations.
+ * @param avg The average of metrics.
+ * @param std The standard deviation of metrics.
  * @author Haifeng Li
  */
-public class RegressionValidations<M> implements Serializable {
+public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
+                                       RegressionMetrics avg,
+                                       RegressionMetrics std) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The multiple round validations. */
-    public final List<RegressionValidation<M>> rounds;
-
-    /** The average of metrics. */
-    public final RegressionMetrics avg;
-
-    /** The standard deviation of metrics. */
-    public final RegressionMetrics std;
+    private static final long serialVersionUID = 3L;
 
     /**
-     * Constructor.
-     * @param rounds the validation metrics of multipl rounds.
+     * Factory method.
+     * @param rounds the validation metrics of multiple rounds.
      */
-    public RegressionValidations(List<RegressionValidation<M>> rounds) {
-        this.rounds = rounds;
-
+    public static <M> RegressionValidations<M> of(List<RegressionValidation<M>> rounds) {
         int k = rounds.size();
         double[] fitTime = new double[k];
         double[] scoreTime = new double[k];
@@ -59,7 +52,7 @@ public class RegressionValidations<M> implements Serializable {
         double[] r2 = new double[k];
 
         for (int i = 0; i < k; i++) {
-            RegressionMetrics metrics = rounds.get(i).metrics;
+            RegressionMetrics metrics = rounds.get(i).metrics();
             fitTime[i] = metrics.fitTime();
             scoreTime[i] = metrics.scoreTime();
             size[i] = metrics.size();
@@ -70,7 +63,7 @@ public class RegressionValidations<M> implements Serializable {
             r2[i] = metrics.r2();
         }
 
-        avg = new RegressionMetrics(
+        RegressionMetrics avg = new RegressionMetrics(
                 MathEx.mean(fitTime),
                 MathEx.mean(scoreTime),
                 (int) Math.round(MathEx.mean(size)),
@@ -80,7 +73,7 @@ public class RegressionValidations<M> implements Serializable {
                 MathEx.mean(mad),
                 MathEx.mean(r2)
         );
-        std = new RegressionMetrics(
+        RegressionMetrics std = new RegressionMetrics(
                 MathEx.stdev(fitTime),
                 MathEx.stdev(scoreTime),
                 (int) Math.round(MathEx.stdev(size)),
@@ -90,6 +83,7 @@ public class RegressionValidations<M> implements Serializable {
                 MathEx.stdev(mad),
                 MathEx.stdev(r2)
         );
+        return new RegressionValidations<>(rounds, avg, std);
     }
 
     @Override

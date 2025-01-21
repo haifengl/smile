@@ -97,7 +97,7 @@ public class RegressionTreeTest {
         RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, RegressionTree::fit);
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse(), 1E-4);
+        assertEquals(expected, result.avg().rmse(), 1E-4);
     }
 
     @Test

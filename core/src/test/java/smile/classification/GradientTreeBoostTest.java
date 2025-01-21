@@ -110,7 +110,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(0.9831, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9831, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(0.9589, result.avg.accuracy(), 0.003);
+        assertEquals(0.9589, result.avg().accuracy(), 0.003);
     }
 
     @Test

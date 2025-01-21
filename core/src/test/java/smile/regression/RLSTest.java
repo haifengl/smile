@@ -116,7 +116,7 @@ public class RLSTest {
             return model;
         });
 
-        System.out.println(result.avg);
+        System.out.println(result.avg());
     }
     
     @Test

@@ -67,13 +67,13 @@ public class ElasticNetTest {
         RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
                 (formula, data) -> ElasticNet.fit(formula, data, 0.1, 0.001));
 
-        System.out.println(result.model);
+        System.out.println(result.model());
         System.out.println(result);
 
-        assertEquals(5.0262, result.model.intercept(), 1E-4);
+        assertEquals(5.0262, result.model().intercept(), 1E-4);
         double[] w = {0.9659, -2.9425E-5, 0.9550, 7.4383E-5};
         for (int i = 0; i < w.length; i++) {
-            assertEquals(w[i], result.model.coefficients()[i], 1E-4);
+            assertEquals(w[i], result.model().coefficients()[i], 1E-4);
         }
     }
 
@@ -107,7 +107,7 @@ public class ElasticNetTest {
                 (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
         System.out.println(result);
-        assertEquals(50.9808, result.avg.rmse(), 1E-4);
+        assertEquals(50.9808, result.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -117,9 +117,9 @@ public class ElasticNetTest {
         var result = RegressionValidation.of(prostate.formula(), prostate.train(), prostate.test(),
                 (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
-        System.out.println(result.model);
+        System.out.println(result.model());
         System.out.println(result);
-        assertEquals(0.7103, result.metrics.rmse(), 1E-4);
+        assertEquals(0.7103, result.metrics().rmse(), 1E-4);
     }
 
     @Test
@@ -129,9 +129,9 @@ public class ElasticNetTest {
         var result = RegressionValidation.of(abalone.formula(), abalone.train(), abalone.test(),
                 (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
-        System.out.println(result.model);
+        System.out.println(result.model());
         System.out.println(result);
-        assertEquals(2.1263, result.metrics.rmse(), 1E-4);
+        assertEquals(2.1263, result.metrics().rmse(), 1E-4);
     }
 
     @Test
@@ -147,6 +147,6 @@ public class ElasticNetTest {
                 (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
         System.out.println(result);
-        assertEquals(58.9498, result.avg.rmse(), 0.01);
+        assertEquals(58.9498, result.avg().rmse(), 0.01);
     }
 }

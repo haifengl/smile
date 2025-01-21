@@ -87,6 +87,6 @@ public class RidgeRegressionTest {
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(50.9911, result.avg.rmse(), 1E-4);
+        assertEquals(50.9911, result.avg().rmse(), 1E-4);
     }
 }

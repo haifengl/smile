@@ -82,13 +82,13 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9162, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9162, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9190, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9190, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -101,13 +101,13 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9438, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9438, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9333, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9333, result.avg().accuracy(), 1E-4);
     }
 
     @Test

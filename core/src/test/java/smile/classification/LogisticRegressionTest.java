@@ -78,7 +78,7 @@ public class LogisticRegressionTest {
         var result = CrossValidation.classification(10, pen.x(), pen.y(), LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9548, result.avg.accuracy(), 0.001);
+        assertEquals(0.9548, result.avg().accuracy(), 0.001);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class LogisticRegressionTest {
         var result = CrossValidation.classification(10, libras.x(), libras.y(), LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.7361, result.avg.accuracy(), 1E-4);
+        assertEquals(0.7361, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class LogisticRegressionTest {
                 LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9495, result.avg.accuracy(), 0.01);
+        assertEquals(0.9495, result.avg().accuracy(), 0.01);
     }
 
     @Test

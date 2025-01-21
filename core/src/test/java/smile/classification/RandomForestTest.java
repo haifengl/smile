@@ -151,7 +151,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(0.9706, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9706, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -164,7 +164,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(0.9550, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9550, result.avg().accuracy(), 1E-4);
     }
 
     @Test
