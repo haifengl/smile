@@ -18,6 +18,7 @@ package smile.data.vector;
 
 import java.util.BitSet;
 import smile.data.type.StructField;
+import smile.math.MathEx;
 
 /**
  * Abstract base class implementation of ValueVector interface.
@@ -36,6 +37,45 @@ public abstract class NullablePrimitiveVector extends AbstractVector {
     public NullablePrimitiveVector(StructField field, BitSet nullMask) {
         super(field);
         this.nullMask = nullMask;
+    }
+
+    /** Returns the mean. */
+    public double mean() {
+        return doubleStream().filter(Double::isFinite).average().orElse(0);
+    }
+
+    /** Returns the standard deviation. */
+    public double stdev() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.stdev(data);
+    }
+
+    /** Returns the minimal value. */
+    public double min() {
+        return doubleStream().filter(Double::isFinite).min().orElse(0);
+    }
+
+    /** Returns the maximal value. */
+    public double max() {
+        return doubleStream().filter(Double::isFinite).max().orElse(0);
+    }
+
+    /** Returns the median. */
+    public double median() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.median(data);
+    }
+
+    /** Returns the 25% quantile. */
+    public double q1() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.q1(data);
+    }
+
+    /** Returns the 75% quantile. */
+    public double q3() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.q3(data);
     }
 
     @Override

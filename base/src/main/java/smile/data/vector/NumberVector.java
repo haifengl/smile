@@ -22,6 +22,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import smile.data.type.StructField;
+import smile.math.MathEx;
 import smile.util.Index;
 
 /**
@@ -70,6 +71,45 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
                 }
             }
         }
+    }
+
+    /** Returns the mean. */
+    public double mean() {
+        return doubleStream().filter(Double::isFinite).average().orElse(0);
+    }
+
+    /** Returns the standard deviation. */
+    public double stdev() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.stdev(data);
+    }
+
+    /** Returns the minimal value. */
+    public double min() {
+        return doubleStream().filter(Double::isFinite).min().orElse(0);
+    }
+
+    /** Returns the maximal value. */
+    public double max() {
+        return doubleStream().filter(Double::isFinite).max().orElse(0);
+    }
+
+    /** Returns the median. */
+    public double median() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.median(data);
+    }
+
+    /** Returns the 25% quantile. */
+    public double q1() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.q1(data);
+    }
+
+    /** Returns the 75% quantile. */
+    public double q3() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.q3(data);
     }
 
     @Override
