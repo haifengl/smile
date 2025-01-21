@@ -45,34 +45,6 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
         }
     }
 
-    /**
-     * Fill null/NaN/Inf values using the specified value.
-     * @param value the value to replace NAs.
-     */
-    @SuppressWarnings("unchecked")
-    public void fillna(double value) {
-        Number number = switch (dtype().id()) {
-            case Byte -> (byte) value;
-            case Short -> (short) value;
-            case Int -> (int) value;
-            case Long -> (long) value;
-            case Float -> (float) value;
-            case Double -> value;
-            default -> throw new UnsupportedOperationException("Unsupported type: " + dtype().id());
-        };
-
-        for (int i = 0; i < vector.length; i++) {
-            if (vector[i] == null) {
-                vector[i] = (T) number;
-            } else {
-                var x = vector[i].doubleValue();
-                if (Double.isNaN(x) || Double.isInfinite(x)) {
-                    vector[i] = (T) number;
-                }
-            }
-        }
-    }
-
     /** Returns the mean. */
     public double mean() {
         return doubleStream().filter(Double::isFinite).average().orElse(0);
@@ -110,6 +82,34 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
     public double q3() {
         double[] data = doubleStream().filter(Double::isFinite).toArray();
         return MathEx.q3(data);
+    }
+
+    /**
+     * Fills null/NaN/Inf values with the specified value.
+     * @param value the value to replace NAs.
+     */
+    @SuppressWarnings("unchecked")
+    public void fillna(double value) {
+        Number number = switch (dtype().id()) {
+            case Byte -> (byte) value;
+            case Short -> (short) value;
+            case Int -> (int) value;
+            case Long -> (long) value;
+            case Float -> (float) value;
+            case Double -> value;
+            default -> throw new UnsupportedOperationException("Unsupported type: " + dtype().id());
+        };
+
+        for (int i = 0; i < vector.length; i++) {
+            if (vector[i] == null) {
+                vector[i] = (T) number;
+            } else {
+                var x = vector[i].doubleValue();
+                if (Double.isNaN(x) || Double.isInfinite(x)) {
+                    vector[i] = (T) number;
+                }
+            }
+        }
     }
 
     @Override

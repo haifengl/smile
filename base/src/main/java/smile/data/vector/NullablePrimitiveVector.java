@@ -78,6 +78,18 @@ public abstract class NullablePrimitiveVector extends AbstractVector {
         return MathEx.q3(data);
     }
 
+    /**
+     * Fills NaN/Inf values with the specified value.
+     * @param value the value to replace NAs.
+     */
+    public void fillna(double value) {
+        for (int i = 0; i < size(); i++) {
+            if (isNullAt(i)) {
+                set(i, value);
+            }
+        }
+    }
+
     @Override
     public boolean isNullable() {
         return true;

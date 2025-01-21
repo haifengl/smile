@@ -442,7 +442,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
     }
 
     /**
-     * Fills NaN/Inf values of floating number columns using the specified value.
+     * Fills null/NaN/Inf values of numeric columns with the specified value.
      * @param value the value to replace NAs.
      * @return this data frame.
      */
@@ -450,11 +450,9 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         for (var column : columns) {
             if (column instanceof FloatVector vector) {
                 vector.fillna((float) value);
-            } else if (column instanceof NullableFloatVector vector) {
-                vector.fillna((float) value);
             } else if (column instanceof DoubleVector vector) {
                 vector.fillna(value);
-            } else if (column instanceof NullableDoubleVector vector) {
+            } else if (column instanceof NullablePrimitiveVector vector) {
                 vector.fillna(value);
             } else if (column instanceof NumberVector<?> vector) {
                 vector.fillna(value);

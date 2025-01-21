@@ -58,7 +58,7 @@ public class FloatVector extends PrimitiveVector {
     }
 
     /**
-     * Fills NaN/Inf values using the specified value.
+     * Fills NaN/Inf values with the specified value.
      * @param value the value to replace NAs.
      */
     public void fillna(float value) {
