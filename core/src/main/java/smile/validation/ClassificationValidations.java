@@ -39,7 +39,7 @@ public class ClassificationValidations<M> implements Serializable {
     public final ClassificationMetrics avg;
 
     /** The standard deviation of metrics. */
-    public final ClassificationMetrics sd;
+    public final ClassificationMetrics std;
 
     /**
      * Constructor.
@@ -95,39 +95,39 @@ public class ClassificationValidations<M> implements Serializable {
                 MathEx.mean(logloss),
                 MathEx.mean(crossentropy)
         );
-        sd = new ClassificationMetrics(
-                MathEx.sd(fitTime),
-                MathEx.sd(scoreTime),
-                (int) Math.round(MathEx.sd(size)),
-                (int) Math.round(MathEx.sd(error)),
-                MathEx.sd(accuracy),
-                MathEx.sd(sensitivity),
-                MathEx.sd(specificity),
-                MathEx.sd(precision),
-                MathEx.sd(f1),
-                MathEx.sd(mcc),
-                MathEx.sd(auc),
-                MathEx.sd(logloss),
-                MathEx.sd(crossentropy)
+        std = new ClassificationMetrics(
+                MathEx.stdev(fitTime),
+                MathEx.stdev(scoreTime),
+                (int) Math.round(MathEx.stdev(size)),
+                (int) Math.round(MathEx.stdev(error)),
+                MathEx.stdev(accuracy),
+                MathEx.stdev(sensitivity),
+                MathEx.stdev(specificity),
+                MathEx.stdev(precision),
+                MathEx.stdev(f1),
+                MathEx.stdev(mcc),
+                MathEx.stdev(auc),
+                MathEx.stdev(logloss),
+                MathEx.stdev(crossentropy)
         );
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("{\n");
-        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), sd.fitTime()));
-        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), sd.scoreTime()));
-        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size(), sd.size()));
-        sb.append(String.format("  error: %d ± %d,\n", avg.error(), sd.error()));
-        sb.append(String.format("  accuracy: %.2f%% ± %.2f", 100 * avg.accuracy(), 100 * sd.accuracy()));
-        if (!Double.isNaN(avg.sensitivity())) sb.append(String.format(",\n  sensitivity: %.2f%% ± %.2f", 100 * avg.sensitivity(), 100 * sd.sensitivity()));
-        if (!Double.isNaN(avg.specificity())) sb.append(String.format(",\n  specificity: %.2f%% ± %.2f", 100 * avg.specificity(), 100 * sd.specificity()));
-        if (!Double.isNaN(avg.precision())) sb.append(String.format(",\n  precision: %.2f%% ± %.2f", 100 * avg.precision(), 100 * sd.precision()));
-        if (!Double.isNaN(avg.f1())) sb.append(String.format(",\n  F1 score: %.2f%% ± %.2f", 100 * avg.f1(), 100 * sd.f1()));
-        if (!Double.isNaN(avg.mcc())) sb.append(String.format(",\n  MCC: %.2f%% ± %.2f", 100 * avg.mcc(), 100 * sd.mcc()));
-        if (!Double.isNaN(avg.auc())) sb.append(String.format(",\n  AUC: %.2f%% ± %.2f", 100 * avg.auc(), 100 * sd.auc()));
-        if (!Double.isNaN(avg.logloss())) sb.append(String.format(",\n  log loss: %.4f ± %.4f", avg.logloss(), sd.logloss()));
-        else if (!Double.isNaN(avg.crossentropy())) sb.append(String.format(",\n  cross entropy: %.4f ± %.4f", avg.crossentropy(), sd.crossentropy()));
+        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()));
+        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()));
+        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size(), std.size()));
+        sb.append(String.format("  error: %d ± %d,\n", avg.error(), std.error()));
+        sb.append(String.format("  accuracy: %.2f%% ± %.2f", 100 * avg.accuracy(), 100 * std.accuracy()));
+        if (!Double.isNaN(avg.sensitivity())) sb.append(String.format(",\n  sensitivity: %.2f%% ± %.2f", 100 * avg.sensitivity(), 100 * std.sensitivity()));
+        if (!Double.isNaN(avg.specificity())) sb.append(String.format(",\n  specificity: %.2f%% ± %.2f", 100 * avg.specificity(), 100 * std.specificity()));
+        if (!Double.isNaN(avg.precision())) sb.append(String.format(",\n  precision: %.2f%% ± %.2f", 100 * avg.precision(), 100 * std.precision()));
+        if (!Double.isNaN(avg.f1())) sb.append(String.format(",\n  F1 score: %.2f%% ± %.2f", 100 * avg.f1(), 100 * std.f1()));
+        if (!Double.isNaN(avg.mcc())) sb.append(String.format(",\n  MCC: %.2f%% ± %.2f", 100 * avg.mcc(), 100 * std.mcc()));
+        if (!Double.isNaN(avg.auc())) sb.append(String.format(",\n  AUC: %.2f%% ± %.2f", 100 * avg.auc(), 100 * std.auc()));
+        if (!Double.isNaN(avg.logloss())) sb.append(String.format(",\n  log loss: %.4f ± %.4f", avg.logloss(), std.logloss()));
+        else if (!Double.isNaN(avg.crossentropy())) sb.append(String.format(",\n  cross entropy: %.4f ± %.4f", avg.crossentropy(), std.crossentropy()));
         sb.append("\n}");
         return sb.toString();
     }

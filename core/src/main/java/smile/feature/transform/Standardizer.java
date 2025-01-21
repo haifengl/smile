@@ -67,7 +67,7 @@ public class Standardizer {
 
             double[] vector = data.column(column).toDoubleArray();
             double mu = MathEx.mean(vector);
-            double sd = MathEx.sd(vector);
+            double sd = MathEx.stdev(vector);
             double scale = MathEx.isZero(sd) ? 1.0 : sd;
 
             Function transform = new Function() {

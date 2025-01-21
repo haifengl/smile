@@ -191,6 +191,6 @@ public class BootstrapTest {
         var cpu = new CPU();
         var result = Bootstrap.regression(100, cpu.formula(), cpu.data(), RegressionTree::fit);
         System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse());
-        System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse());
+        System.out.println("100-fold bootstrap RMSE std.dev = " + result.std.rmse());
     }
 }
