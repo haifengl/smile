@@ -111,7 +111,7 @@ public class GaussianDistribution implements ExponentialFamily {
      */
     public static GaussianDistribution fit(double[] data) {
         double mu = MathEx.mean(data);
-        double sigma = MathEx.sd(data);
+        double sigma = MathEx.stdev(data);
         return new GaussianDistribution(mu, sigma);
     }
 

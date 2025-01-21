@@ -145,7 +145,7 @@ public class Scaler implements Function {
             double iqr = agent.quantile(0.75) - agent.quantile(0.25);
             return new Scaler(median, iqr, false);
         } else {
-            return new Scaler(MathEx.mean(data), MathEx.sd(data), false);
+            return new Scaler(MathEx.mean(data), MathEx.stdev(data), false);
         }
     }
 

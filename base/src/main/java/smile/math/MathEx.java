@@ -2016,11 +2016,11 @@ public class MathEx {
      * @param matrix the matrix.
      * @return the row standard deviations.
      */
-    public static double[] rowSds(double[][] matrix) {
+    public static double[] rowStdevs(double[][] matrix) {
         double[] x = new double[matrix.length];
 
         for (int i = 0; i < x.length; i++) {
-            x[i] = sd(matrix[i]);
+            x[i] = stdev(matrix[i]);
         }
 
         return x;
@@ -2164,7 +2164,7 @@ public class MathEx {
      * @param matrix the matrix.
      * @return the column standard deviations.
      */
-    public static double[] colSds(double[][] matrix) {
+    public static double[] colStdevs(double[][] matrix) {
         if (matrix.length < 2) {
             throw new IllegalArgumentException("matrix length is less than 2.");
         }
@@ -2483,7 +2483,7 @@ public class MathEx {
      * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(int[] array) {
+    public static double stdev(int[] array) {
         return sqrt(var(array));
     }
 
@@ -2492,7 +2492,7 @@ public class MathEx {
      * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(float[] array) {
+    public static double stdev(float[] array) {
         return sqrt(var(array));
     }
 
@@ -2501,7 +2501,7 @@ public class MathEx {
      * @param array the array.
      * @return the standard deviation.
      */
-    public static double sd(double[] array) {
+    public static double stdev(double[] array) {
         return sqrt(var(array));
     }
 
@@ -4108,7 +4108,7 @@ public class MathEx {
      */
     public static void standardize(double[] array) {
         double mu = mean(array);
-        double sigma = sd(array);
+        double sigma = stdev(array);
 
         if (isZero(sigma)) {
             logger.warn("array has variance of 0.");

@@ -84,7 +84,7 @@ public class LogNormalDistribution implements Distribution {
         }
 
         double mu = MathEx.mean(x);
-        double sigma = MathEx.sd(x);
+        double sigma = MathEx.stdev(x);
         return new LogNormalDistribution(mu, sigma);
     }
 

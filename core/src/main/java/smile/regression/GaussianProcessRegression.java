@@ -370,14 +370,14 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
         int n = x.length;
         double mean = 0.0;
-        double sd = 1.0;
+        double std = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            sd = MathEx.sd(y);
+            std = MathEx.stdev(y);
 
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / sd;
+                target[i] = (y[i] - mean) / std;
             }
             y = target;
         }
@@ -409,7 +409,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
         double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
 
-        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd, cholesky, L);
+        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, std, cholesky, L);
     }
 
     /**
@@ -472,15 +472,15 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         }
 
         double mean = 0.0;
-        double sd = 1.0;
+        double std = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            sd = MathEx.sd(y);
+            std = MathEx.stdev(y);
 
             int n = x.length;
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / sd;
+                target[i] = (y[i] - mean) / std;
             }
             y = target;
         }
@@ -493,7 +493,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         double[] Gty = G.tv(y);
         double[] w = lu.solve(Gty);
 
-        return new GaussianProcessRegression<>(kernel, t, w, noise, mean, sd);
+        return new GaussianProcessRegression<>(kernel, t, w, noise, mean, std);
     }
 
     /**
@@ -550,14 +550,14 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         int m = t.length;
 
         double mean = 0.0;
-        double sd = 1.0;
+        double std = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            sd = MathEx.sd(y);
+            std = MathEx.stdev(y);
 
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / sd;
+                target[i] = (y[i] - mean) / std;
             }
             y = target;
         }
@@ -587,7 +587,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             w[i] = (y[i] - w[i]) / noise;
         }
 
-        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
+        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, std);
     }
 
     /**

@@ -39,7 +39,7 @@ public class RegressionValidations<M> implements Serializable {
     public final RegressionMetrics avg;
 
     /** The standard deviation of metrics. */
-    public final RegressionMetrics sd;
+    public final RegressionMetrics std;
 
     /**
      * Constructor.
@@ -80,29 +80,29 @@ public class RegressionValidations<M> implements Serializable {
                 MathEx.mean(mad),
                 MathEx.mean(r2)
         );
-        sd = new RegressionMetrics(
-                MathEx.sd(fitTime),
-                MathEx.sd(scoreTime),
-                (int) Math.round(MathEx.sd(size)),
-                MathEx.sd(rss),
-                MathEx.sd(mse),
-                MathEx.sd(rmse),
-                MathEx.sd(mad),
-                MathEx.sd(r2)
+        std = new RegressionMetrics(
+                MathEx.stdev(fitTime),
+                MathEx.stdev(scoreTime),
+                (int) Math.round(MathEx.stdev(size)),
+                MathEx.stdev(rss),
+                MathEx.stdev(mse),
+                MathEx.stdev(rmse),
+                MathEx.stdev(mad),
+                MathEx.stdev(r2)
         );
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("{\n");
-        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), sd.fitTime()));
-        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), sd.scoreTime()));
-        sb.append(String.format("  validation data size:: %d ± %d,\n", avg.size(), sd.size()));
-        sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), sd.rss()));
-        sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), sd.mse()));
-        sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), sd.rmse()));
-        sb.append(String.format("  MAD: %.4f ± %.4f,\n", avg.mad(), sd.mad()));
-        sb.append(String.format("  R2: %.2f%% ± %.2f\n}", 100 * avg.r2(), 100 * sd.r2()));
+        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()));
+        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()));
+        sb.append(String.format("  validation data size:: %d ± %d,\n", avg.size(), std.size()));
+        sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), std.rss()));
+        sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), std.mse()));
+        sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), std.rmse()));
+        sb.append(String.format("  MAD: %.4f ± %.4f,\n", avg.mad(), std.mad()));
+        sb.append(String.format("  R2: %.2f%% ± %.2f\n}", 100 * avg.r2(), 100 * std.r2()));
         return sb.toString();
     }
 }

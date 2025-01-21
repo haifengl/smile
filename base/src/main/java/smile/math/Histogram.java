@@ -413,7 +413,7 @@ public interface Histogram {
      * @return the number of bins
      */
     static int scott(double[] x) {
-        double h = Math.ceil(3.5 * MathEx.sd(x) / Math.pow(x.length, 1.0/3));
+        double h = Math.ceil(3.5 * MathEx.stdev(x) / Math.pow(x.length, 1.0/3));
         return bins(x, h);
     }
 }
