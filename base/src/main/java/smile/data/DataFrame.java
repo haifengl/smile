@@ -32,6 +32,7 @@ import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.util.Index;
 import smile.util.Strings;
@@ -425,20 +426,6 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public List<Row> toList() {
         return stream().toList();
-    }
-
-    /**
-     * Returns the structure of data frame.
-     * @return the structure of data frame.
-     */
-    public DataFrame structure() {
-        ValueVector[] vectors = {
-                new StringVector("Column", names()),
-                new ObjectVector<>("Type", dtypes()),
-                new ObjectVector<>("Measure", measures())
-        };
-
-        return new DataFrame(vectors);
     }
 
     /**
@@ -848,55 +835,94 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
     }
 
     /**
-     * Returns the statistic summary of numeric columns.
-     * @return the statistic summary of numeric columns.
+     * Returns the data structure and statistics.
+     * @return the data structure and statistics.
      */
-    public DataFrame summary() {
+    public DataFrame describe() {
         int ncol = columns.length;
-        String[] names = names();
         DataType[] dtypes = dtypes();
         Measure[] measures = measures();
-        String[] col = new String[ncol];
+        int[] count = new int[ncol];
+        double[] mean = new double[ncol];
+        double[] std = new double[ncol];
         double[] min = new double[ncol];
+        double[] q1 = new double[ncol];
+        double[] median = new double[ncol];
+        double[] q3 = new double[ncol];
         double[] max = new double[ncol];
-        double[] avg = new double[ncol];
-        long[] count = new long[ncol];
+        Arrays.fill(mean, Double.NaN);
+        Arrays.fill(std, Double.NaN);
+        Arrays.fill(min, Double.NaN);
+        Arrays.fill(q1, Double.NaN);
+        Arrays.fill(median, Double.NaN);
+        Arrays.fill(q3, Double.NaN);
+        Arrays.fill(max, Double.NaN);
 
-        int k = 0;
         for (int j = 0; j < ncol; j++) {
-            if (measures[j] instanceof CategoricalMeasure) continue;
-
             DataType dtype = dtypes[j];
-            if (dtype.isLong()) {
-                LongSummaryStatistics s = columns[j].longStream().filter(x -> x != Long.MIN_VALUE).summaryStatistics();
-                col[k] = names[j];
-                min[k] = s.getMin();
-                max[k] = s.getMax();
-                avg[k] = s.getAverage();
-                count[k++] = s.getCount();
+            if (measures[j] instanceof CategoricalMeasure) {
+                int[] data = columns[j].intStream()
+                        .filter(x -> x != Integer.MIN_VALUE)
+                        .toArray();
+                count[j] = data.length;
+                min[j] = MathEx.min(data);
+                q1[j] = MathEx.q1(data);
+                median[j] = MathEx.median(data);
+                q3[j] = MathEx.q3(data);
+                max[j] = MathEx.max(data);
+            } else if (dtype.isLong()) {
+                double[] data = columns[j].longStream()
+                        .filter(x -> x != Long.MIN_VALUE)
+                        .mapToDouble(x -> x).toArray();
+                count[j] = data.length;
+                mean[j] = MathEx.mean(data);
+                std[j] = MathEx.stdev(data);
+                min[j] = MathEx.min(data);
+                q1[j] = MathEx.q1(data);
+                median[j] = MathEx.median(data);
+                q3[j] = MathEx.q3(data);
+                max[j] = MathEx.max(data);
             } else if (dtype.isIntegral()) {
-                IntSummaryStatistics s = columns[j].intStream().filter(x -> x != Integer.MIN_VALUE).summaryStatistics();
-                col[k] = names[j];
-                min[k] = s.getMin();
-                max[k] = s.getMax();
-                avg[k] = s.getAverage();
-                count[k++] = s.getCount();
-            } else if (dtype.isFloating()) {
-                DoubleSummaryStatistics s = columns[j].doubleStream().filter(Double::isFinite).summaryStatistics();
-                col[k] = names[j];
-                min[k] = s.getMin();
-                max[k] = s.getMax();
-                avg[k] = s.getAverage();
-                count[k++] = s.getCount();
+                int[] data = columns[j].intStream()
+                        .filter(x -> x != Integer.MIN_VALUE)
+                        .toArray();
+                count[j] = data.length;
+                mean[j] = MathEx.mean(data);
+                std[j] = MathEx.stdev(data);
+                min[j] = MathEx.min(data);
+                q1[j] = MathEx.q1(data);
+                median[j] = MathEx.median(data);
+                q3[j] = MathEx.q3(data);
+                max[j] = MathEx.max(data);
+            } else if (dtype.isFloating() || dtype.isDecimal()) {
+                double[] data = columns[j].doubleStream()
+                        .filter(Double::isFinite)
+                        .toArray();
+                count[j] = data.length;
+                mean[j] = MathEx.mean(data);
+                std[j] = MathEx.stdev(data);
+                min[j] = MathEx.min(data);
+                q1[j] = MathEx.q1(data);
+                median[j] = MathEx.median(data);
+                q3[j] = MathEx.q3(data);
+                max[j] = MathEx.max(data);
+            } else {
+                count[j] = (int) columns[j].stream().filter(Objects::nonNull).count();
             }
         }
 
         return new DataFrame(
-                new StringVector("column", Arrays.copyOf(col, k)),
-                new LongVector("count", Arrays.copyOf(count, k)),
-                new DoubleVector("min", Arrays.copyOf(min, k)),
-                new DoubleVector("avg", Arrays.copyOf(avg, k)),
-                new DoubleVector("max", Arrays.copyOf(max, k))
+                new StringVector("column", names()),
+                new ObjectVector<>("type", dtypes),
+                new ObjectVector<>("measure", measures),
+                new IntVector("count", count),
+                new DoubleVector("mean", mean),
+                new DoubleVector("std", std),
+                new DoubleVector("min", min),
+                new DoubleVector("25%", q1),
+                new DoubleVector("50%", median),
+                new DoubleVector("75%", q3),
+                new DoubleVector("max", max)
         );
     }
 
