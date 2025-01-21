@@ -293,7 +293,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
     }
 
     /**
-     * Checks whether the value at position (i, j) is null.
+     * Checks whether the value at position (i, j) is null or missing value.
      * @param i the row index.
      * @param j the column index.
      * @return true if the cell value is null.
