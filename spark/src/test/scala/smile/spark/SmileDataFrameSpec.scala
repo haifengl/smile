@@ -26,7 +26,7 @@ import smile.util.Paths
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   implicit var spark: SparkSession = _
-  private val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
+  private val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).dropna()
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate()

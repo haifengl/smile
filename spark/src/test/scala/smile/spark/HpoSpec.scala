@@ -39,7 +39,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
 
   "SparkCrossValidation" should {
     "Random search on mushrooms" in {
-      val mushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
+      val mushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).dropna()
       val formula = Formula.lhs("class")
 
       val hp = new Hyperparameters()

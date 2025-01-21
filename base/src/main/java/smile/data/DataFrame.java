@@ -431,14 +431,14 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
 
     /**
      * Returns a new data frame without rows that have null/missing values.
-     * @return the data frame without nulls.
+     * @return the data frame without null/missing values.
      */
-    public DataFrame omitNullRows() {
-        boolean[] noNulls = new boolean[size()];
-        for (int i = 0; i < noNulls.length; i++) {
-            noNulls[i] = !get(i).anyNull();
+    public DataFrame dropna() {
+        boolean[] nonNull = new boolean[size()];
+        for (int i = 0; i < nonNull.length; i++) {
+            nonNull[i] = !get(i).anyNull();
         }
-        return get(Index.of(noNulls));
+        return get(Index.of(nonNull));
     }
 
     /**
