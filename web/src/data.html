@@ -669,7 +669,7 @@ title: Smile - Data Processing
     </div>
     </div>
 
-    <p>We can also selct rows with boolean indexing. The below example uses
+    <p>We can also select rows with boolean indexing. The below example uses
         <code>isin()</code> method for filtering:</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2.3" data-toggle="tab">Java</a></li>
@@ -759,7 +759,60 @@ title: Smile - Data Processing
     </div>
 
     <h3 id="DataFrame_Missing">Missing Data</h3>
-    <p></p>
+    <p>For object column, <code>null</code> indicates missing data. For primitive
+        columns, Smile maintains a bit mask to indicate missing values. However,
+        it is conventional that users use <code>NaN</code> to represent missing data
+        for floating numeric types. One may use <code>DataFrame.isNullAt(i, j)</code>
+        to check if a cell is null or NaN.</p>
+
+    <p><code>DataFrame.dropna()</code> drops any rows that have null or missing value:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2.8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2.8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> var df = DataFrame.of(MathEx.randn(6, 4))
+           df.set(0, 0, Double.NaN)
+           df.set(1, 3, Double.NaN)
+           df.dropna()
+    +---+---------+---------+---------+---------+
+    |   |       V1|       V2|       V3|       V4|
+    +---+---------+---------+---------+---------+
+    |  0|-0.504866|-0.179409| 0.201377| 0.281267|
+    |  1| 0.894446| 0.791521| 0.053346| 0.213519|
+    |  2| 0.200011|-0.203736|-0.349196|-1.193759|
+    |  3|  1.52529|-1.407597|  1.16758| -1.78291|
+    +---+---------+---------+---------+---------+
+    </code></pre>
+            </div>
+        </div>
+    </div>
+    <p><code>DataFrame.fillna()</code> fills missing data in floating
+        numeric columns:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2.9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2.9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> df.fillna(100)
+    +---+---------+---------+---------+---------+
+    |   |       V1|       V2|       V3|       V4|
+    +---+---------+---------+---------+---------+
+    |  0|      100| 0.970363| 2.726932|-0.146014|
+    |  1| 1.872161| 0.495932| 0.553859|      100|
+    |  2|-0.504866|-0.179409| 0.201377| 0.281267|
+    |  3| 0.894446| 0.791521| 0.053346| 0.213519|
+    |  4| 0.200011|-0.203736|-0.349196|-1.193759|
+    |  5|  1.52529|-1.407597|  1.16758| -1.78291|
+    +---+---------+---------+---------+---------+
+    </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="DataFrame_Operations">Operations</h3>
     <p>Advanced operations such as <code>exists</code>, <code>forall</code>,
