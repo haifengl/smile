@@ -35,6 +35,16 @@ public record Row(DataFrame df, int index) implements Tuple {
     }
 
     @Override
+    public boolean isNullAt(int j) {
+        return df.isNullAt(index, j);
+    }
+
+    @Override
+    public boolean isNullAt(String field) {
+        return df.isNullAt(index, indexOf(field));
+    }
+
+    @Override
     public Object get(int j) {
         return df.get(index, j);
     }
