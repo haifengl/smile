@@ -96,6 +96,11 @@ public class DoubleVector extends PrimitiveVector {
     }
 
     @Override
+    public boolean isNullAt(int i) {
+        return Double.isNaN(vector[i]);
+    }
+
+    @Override
     public Double get(int i) {
         return vector[i];
     }
