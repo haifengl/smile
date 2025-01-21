@@ -42,14 +42,14 @@ import smile.validation.metric.Error;
  * @param mcc the Matthews correlation coefficient on validation data.
  * @param auc the AUC on validation data.
  * @param logloss the log loss on validation data.
- * @param crossentropy the cross entropy on validation data.
+ * @param crossEntropy the cross entropy on validation data.
  *
  * @author Haifeng Li
  */
 public record ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
                                     double accuracy, double sensitivity, double specificity,
                                     double precision, double f1, double mcc, double auc,
-                                    double logloss, double crossentropy) implements Serializable {
+                                    double logloss, double crossEntropy) implements Serializable {
     @Serial
     private static final long serialVersionUID = 3L;
 
@@ -72,10 +72,10 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
      * @param size the validation data size.
      * @param error the number of errors.
      * @param accuracy the accuracy on validation data.
-     * @param crossentropy the cross entropy on validation data.
+     * @param crossEntropy the cross entropy on validation data.
      */
-    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy, double crossentropy) {
-        this(fitTime, scoreTime, size, error, accuracy, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, crossentropy);
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy, double crossEntropy) {
+        this(fitTime, scoreTime, size, error, accuracy, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN, crossEntropy);
     }
 
     /**
@@ -134,7 +134,7 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
         if (!Double.isNaN(mcc)) sb.append(String.format(",\n  MCC: %.2f%%", 100 * mcc));
         if (!Double.isNaN(auc)) sb.append(String.format(",\n  AUC: %.2f%%", 100 * auc));
         if (!Double.isNaN(logloss)) sb.append(String.format(",\n  log loss: %.4f", logloss));
-        else if (!Double.isNaN(crossentropy)) sb.append(String.format(",\n  cross entropy: %.4f", crossentropy));
+        else if (!Double.isNaN(crossEntropy)) sb.append(String.format(",\n  cross entropy: %.4f", crossEntropy));
         sb.append("\n}");
         return sb.toString();
     }

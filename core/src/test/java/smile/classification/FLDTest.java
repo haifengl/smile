@@ -68,7 +68,7 @@ public class FLDTest {
         var result = CrossValidation.classification(10, pen.x(), pen.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8771, result.avg.accuracy(), 1E-4);
+        assertEquals(0.8771, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class FLDTest {
         ClassificationValidations<FLD> result = CrossValidation.classification(10, cancer.x(), cancer.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.9655, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9655, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -94,9 +94,9 @@ public class FLDTest {
         var result = ClassificationValidation.of(x, y, testx, testy, FLD::fit);
 
         System.out.println(result);
-        assertEquals(262, result.metrics.error());
+        assertEquals(262, result.metrics().error());
 
-        java.nio.file.Path temp = Write.object(result.model);
+        java.nio.file.Path temp = Write.object(result.model());
         FLD model = (FLD) Read.object(temp);
 
         int error = Error.of(testy, model.predict(testx));
@@ -112,6 +112,6 @@ public class FLDTest {
         var result = CrossValidation.classification(5, colon.x(), colon.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8524, result.avg.accuracy(), 1E-4);
+        assertEquals(0.8524, result.avg().accuracy(), 1E-4);
     }
 }

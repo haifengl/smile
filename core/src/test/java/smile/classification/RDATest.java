@@ -76,7 +76,7 @@ public class RDATest {
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
-        assertEquals(0.9863, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9863, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class RDATest {
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
-        assertEquals(0.9461, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9461, result.avg().accuracy(), 1E-4);
     }
 
     @Test

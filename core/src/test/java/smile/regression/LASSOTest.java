@@ -68,13 +68,13 @@ public class LASSOTest {
         RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
                 (formula, data) -> LASSO.fit(formula, data, 0.1, 0.001, 500));
 
-        System.out.println(result.model);
+        System.out.println(result.model());
         System.out.println(result);
         
-        assertEquals(5.0259443688265355, result.model.intercept(), 1E-7);
+        assertEquals(5.0259443688265355, result.model().intercept(), 1E-7);
         double[] w = {0.9659945126777854, -3.7147706312985876E-4, 0.9553629503697613, 9.416740009376934E-4};
         for (int i = 0; i < w.length; i++) {
-            assertEquals(w[i], result.model.coefficients()[i], 1E-5);
+            assertEquals(w[i], result.model().coefficients()[i], 1E-5);
         }
     }
 
@@ -108,6 +108,6 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(51.0009, result.avg.rmse(), 1E-4);
+        assertEquals(51.0009, result.avg().rmse(), 1E-4);
     }
 }

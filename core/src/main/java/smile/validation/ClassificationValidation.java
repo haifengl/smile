@@ -33,25 +33,19 @@ import smile.validation.metric.ConfusionMatrix;
  * Classification model validation results.
  *
  * @param <M> the model type.
+ * @param model The classification model.
+ * @param truth The ground true of validation data.
+ * @param prediction The model prediction.
+ * @param posteriori The posteriori probability of prediction if the model is a soft classifier.
+ * @param confusion The confusion matrix.
+ * @param metrics The classification metrics.
  *
  * @author Haifeng Li
  */
-public class ClassificationValidation<M> implements Serializable {
+public record ClassificationValidation<M>(M model, int[] truth, int[] prediction, double[][] posteriori,
+                                          ConfusionMatrix confusion, ClassificationMetrics metrics) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The model. */
-    public final M model;
-    /** The true class labels of validation data. */
-    public final int[] truth;
-    /** The model prediction. */
-    public final int[] prediction;
-    /** The posteriori probability of prediction if the model is a soft classifier. */
-    public final double[][] posteriori;
-    /** The confusion matrix. */
-    public final ConfusionMatrix confusion;
-    /** The classification metrics. */
-    public final ClassificationMetrics metrics;
+    private static final long serialVersionUID = 3L;
 
     /**
      * Constructor.
@@ -62,12 +56,8 @@ public class ClassificationValidation<M> implements Serializable {
      * @param prediction the predictions.
      */
     public ClassificationValidation(M model, double fitTime, double scoreTime, int[] truth, int[] prediction) {
-        this.model = model;
-        this.truth = truth;
-        this.prediction = prediction;
-        this.posteriori = null;
-        this.confusion = ConfusionMatrix.of(truth, prediction);
-        this.metrics = ClassificationMetrics.of(fitTime, scoreTime, truth, prediction);
+        this(model, truth, prediction, null, ConfusionMatrix.of(truth, prediction),
+                ClassificationMetrics.of(fitTime, scoreTime, truth, prediction));
     }
 
     /**
@@ -80,12 +70,8 @@ public class ClassificationValidation<M> implements Serializable {
      * @param posteriori the posteriori probabilities of predictions.
      */
     public ClassificationValidation(M model, double fitTime, double scoreTime, int[] truth, int[] prediction, double[][] posteriori) {
-        this.model = model;
-        this.truth = truth;
-        this.prediction = prediction;
-        this.posteriori = posteriori;
-        this.confusion = ConfusionMatrix.of(truth, prediction);
-        this.metrics = ClassificationMetrics.of(fitTime, scoreTime, truth, prediction, posteriori);
+        this(model, truth, prediction, posteriori, ConfusionMatrix.of(truth, prediction),
+                ClassificationMetrics.of(fitTime, scoreTime, truth, prediction, posteriori));
     }
 
     @Override
@@ -147,7 +133,7 @@ public class ClassificationValidation<M> implements Serializable {
             rounds.add(of(trainx, trainy, testx, testy, trainer));
         }
 
-        return new ClassificationValidations<>(rounds);
+        return ClassificationValidations.of(rounds);
     }
 
     /**
@@ -206,6 +192,6 @@ public class ClassificationValidation<M> implements Serializable {
             rounds.add(of(formula, data.get(Index.of(bag.samples())), data.get(Index.of(bag.oob())), trainer));
         }
 
-        return new ClassificationValidations<>(rounds);
+        return ClassificationValidations.of(rounds);
     }
 }

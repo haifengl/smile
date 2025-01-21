@@ -109,7 +109,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(0.9532, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9532, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(0.9275, result.avg.accuracy(), 1E-4);
+        assertEquals(0.9275, result.avg().accuracy(), 1E-4);
     }
 
     @Test

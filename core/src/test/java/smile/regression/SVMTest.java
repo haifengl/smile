@@ -77,7 +77,7 @@ public class SVMTest {
                 (xi, yi) -> SVM.fit(xi, yi,40.0, 10.0, 1E-3));
 
         System.out.println(result);
-        assertEquals(47.1872, result.avg.rmse(), 1E-4);
+        assertEquals(47.1872, result.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class SVMTest {
                 prostate.testx(), prostate.testy(), (x, y) -> SVM.fit(x, y, kernel, 0.5, 5, 1E-3));
 
         System.out.println(result);
-        assertEquals(0.9112183360712871, result.metrics.rmse(), 1E-4);
+        assertEquals(0.9112183360712871, result.metrics().rmse(), 1E-4);
     }
 
     @Test
@@ -102,7 +102,7 @@ public class SVMTest {
                 (x, y) -> SVM.fit(x, y, kernel, 1.5, 100, 1E-3));
 
         System.out.println(result);
-        assertEquals(2.1092, result.metrics.rmse(), 1E-4);
+        assertEquals(2.1092, result.metrics().rmse(), 1E-4);
     }
 
     @Test
@@ -116,6 +116,6 @@ public class SVMTest {
                 (x, y) -> SVM.fit(x, y, kernel, 50, 1000, 1E-3));
 
         System.out.println(result);
-        assertEquals(61.5148, result.avg.rmse(), 1E-4);
+        assertEquals(61.5148, result.avg().rmse(), 1E-4);
     }
 }

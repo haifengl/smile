@@ -32,35 +32,16 @@ import smile.util.Index;
  * Regression model validation results.
  *
  * @param <M> the regression model type.
- *
+ * @param model The regression model.
+ * @param truth The ground true of validation data.
+ * @param prediction The model prediction.
+ * @param metrics The regression metrics.
  * @author Haifeng Li
  */
-public class RegressionValidation<M> implements Serializable {
+public record RegressionValidation<M>(M model, double[] truth, double[] prediction,
+                                      RegressionMetrics metrics) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** The model. */
-    public final M model;
-    /** The true response variable of validation data. */
-    public final double[] truth;
-    /** The model prediction. */
-    public final double[] prediction;
-    /** The regression metrics. */
-    public final RegressionMetrics metrics;
-
-    /**
-     * Constructor.
-     * @param model the model.
-     * @param truth the ground truth.
-     * @param prediction the predictions.
-     * @param metrics the validation metrics.
-     */
-    public RegressionValidation(M model, double[] truth, double[] prediction, RegressionMetrics metrics) {
-        this.model = model;
-        this.truth = truth;
-        this.prediction = prediction;
-        this.metrics = metrics;
-    }
+    private static final long serialVersionUID = 3L;
 
     @Override
     public String toString() {
@@ -113,7 +94,7 @@ public class RegressionValidation<M> implements Serializable {
             rounds.add(of(trainx, trainy, testx, testy, trainer));
         }
 
-        return new RegressionValidations<>(rounds);
+        return RegressionValidations.of(rounds);
     }
 
     /**
@@ -160,6 +141,6 @@ public class RegressionValidation<M> implements Serializable {
             rounds.add(of(formula, data.get(Index.of(bag.samples())), data.get(Index.of(bag.oob())), trainer));
         }
 
-        return new RegressionValidations<>(rounds);
+        return RegressionValidations.of(rounds);
     }
 }

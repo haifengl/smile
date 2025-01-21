@@ -144,7 +144,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(expected, result.avg.rmse(), 1E-4);
+        assertEquals(expected, result.avg().rmse(), 1E-4);
 
         RandomForest model = RandomForest.fit(formula, data);
         double[] importance = model.importance();
