@@ -51,7 +51,7 @@ public record AutoMPG(DataFrame data, Formula formula) {
      * @throws ParseException when fails to parse the file.
      */
     public AutoMPG(Path path) throws IOException, ParseException {
-        this(Read.arff(path).omitNullRows(), Formula.lhs("class"));
+        this(Read.arff(path).dropna(), Formula.lhs("class"));
     }
 
     /**
