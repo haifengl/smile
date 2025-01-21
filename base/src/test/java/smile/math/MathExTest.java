@@ -391,15 +391,15 @@ public class MathExTest {
     }
 
     @Test
-    public void testSd() {
-        System.out.println("sd");
+    public void testStdev() {
+        System.out.println("stdev");
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-        assertEquals(2.73861, MathEx.sd(data), 1E-5);
+        assertEquals(2.73861, MathEx.stdev(data), 1E-5);
     }
 
     @Test
-    public void testColSd() {
-        System.out.println("colSd");
+    public void testColStdevs() {
+        System.out.println("colStdevs");
         double[][] data = {
             {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0},
             {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0},
@@ -408,9 +408,9 @@ public class MathExTest {
 
         data = MathEx.transpose(data);
 
-        assertEquals(2.73861, MathEx.colSds(data)[0], 1E-5);
-        assertEquals(2.73861, MathEx.colSds(data)[1], 1E-5);
-        assertEquals(2.73861, MathEx.colSds(data)[2], 1E-5);
+        assertEquals(2.73861, MathEx.colStdevs(data)[0], 1E-5);
+        assertEquals(2.73861, MathEx.colStdevs(data)[1], 1E-5);
+        assertEquals(2.73861, MathEx.colStdevs(data)[2], 1E-5);
     }
 
     @Test
@@ -547,7 +547,7 @@ public class MathExTest {
         double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
         MathEx.standardize(data);
         assertEquals(0, MathEx.mean(data), 1E-7);
-        assertEquals(1, MathEx.sd(data), 1E-7);
+        assertEquals(1, MathEx.stdev(data), 1E-7);
     }
 
     @Test
