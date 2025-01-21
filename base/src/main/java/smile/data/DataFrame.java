@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -843,6 +844,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         DataType[] dtypes = dtypes();
         Measure[] measures = measures();
         int[] count = new int[ncol];
+        Object[] mode = new Object[ncol];
         double[] mean = new double[ncol];
         double[] std = new double[ncol];
         double[] min = new double[ncol];
@@ -865,6 +867,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                         .filter(x -> x != Integer.MIN_VALUE)
                         .toArray();
                 count[j] = data.length;
+                mode[j] = MathEx.mode(data);
                 min[j] = MathEx.min(data);
                 q1[j] = MathEx.q1(data);
                 median[j] = MathEx.median(data);
@@ -875,6 +878,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                         .filter(x -> x != Long.MIN_VALUE)
                         .mapToDouble(x -> x).toArray();
                 count[j] = data.length;
+                mode[j] = Double.NaN;
                 mean[j] = MathEx.mean(data);
                 std[j] = MathEx.stdev(data);
                 min[j] = MathEx.min(data);
@@ -887,6 +891,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                         .filter(x -> x != Integer.MIN_VALUE)
                         .toArray();
                 count[j] = data.length;
+                mode[j] = MathEx.mode(data);
                 mean[j] = MathEx.mean(data);
                 std[j] = MathEx.stdev(data);
                 min[j] = MathEx.min(data);
@@ -899,6 +904,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                         .filter(Double::isFinite)
                         .toArray();
                 count[j] = data.length;
+                mode[j] = Double.NaN;
                 mean[j] = MathEx.mean(data);
                 std[j] = MathEx.stdev(data);
                 min[j] = MathEx.min(data);
@@ -908,6 +914,13 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 max[j] = MathEx.max(data);
             } else {
                 count[j] = (int) columns[j].stream().filter(Objects::nonNull).count();
+                mode[j] = columns[j].stream().filter(Objects::nonNull)
+                        .collect(java.util.stream.Collectors.groupingBy(Function.identity(), java.util.stream.Collectors.counting()))
+                        .entrySet()
+                        .stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse(null);
             }
         }
 
@@ -916,6 +929,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 new ObjectVector<>("type", dtypes),
                 new ObjectVector<>("measure", measures),
                 new IntVector("count", count),
+                new ObjectVector<>("mode", mode),
                 new DoubleVector("mean", mean),
                 new DoubleVector("std", std),
                 new DoubleVector("min", min),
