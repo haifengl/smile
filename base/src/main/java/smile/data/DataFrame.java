@@ -862,12 +862,12 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
 
         for (int j = 0; j < ncol; j++) {
             DataType dtype = dtypes[j];
-            if (measures[j] instanceof CategoricalMeasure) {
+            if (measures[j] instanceof CategoricalMeasure measure) {
                 int[] data = columns[j].intStream()
                         .filter(x -> x != Integer.MIN_VALUE)
                         .toArray();
                 count[j] = data.length;
-                mode[j] = MathEx.mode(data);
+                mode[j] = measure.toString(MathEx.mode(data));
                 min[j] = MathEx.min(data);
                 q1[j] = MathEx.q1(data);
                 median[j] = MathEx.median(data);
