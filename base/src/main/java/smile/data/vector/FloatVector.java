@@ -99,6 +99,11 @@ public class FloatVector extends PrimitiveVector {
     }
 
     @Override
+    public boolean isNullAt(int i) {
+        return Float.isNaN(vector[i]);
+    }
+
+    @Override
     public Float get(int i) {
         return vector[i];
     }
