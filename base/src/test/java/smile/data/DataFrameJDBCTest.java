@@ -96,7 +96,7 @@ public class DataFrameJDBCTest {
     public void testSchema() {
         System.out.println("schema");
         System.out.println(df.schema());
-        System.out.println(df.structure());
+        System.out.println(df.describe());
         System.out.println(df);
         smile.data.type.StructType schema = new StructType(
                 new StructField("Employee First", DataTypes.StringType),
@@ -133,21 +133,21 @@ public class DataFrameJDBCTest {
     }
 
     /**
-     * Test of summary method, of class DataFrame.
+     * Test of describe method, of class DataFrame.
      */
     @Test
-    public void testDataFrameSummary() {
-        System.out.println("summary");
-        DataFrame output = df.summary();
+    public void testDescribe() {
+        System.out.println("describe");
+        DataFrame output = df.describe();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(1, output.size());
-        assertEquals(5, output.columns().length);
-        assertEquals("Total", output.get(0,0));
-        assertEquals(412L, output.get(0,1));
-        assertEquals(0.99, output.get(0,2));
-        assertEquals(5.651941747572815, output.get(0,3));
-        assertEquals(25.86, output.get(0,4));
+        assertEquals(6, output.size());
+        assertEquals(12, output.columns().length);
+        assertEquals("Total", output.get(5,0));
+        assertEquals(412, output.get(5,3));
+        assertEquals(0.99, output.get(5,7));
+        assertEquals(5.65194, output.getDouble(5,5), 1E-5);
+        assertEquals(25.86, output.get(5,11));
     }
 
     /**

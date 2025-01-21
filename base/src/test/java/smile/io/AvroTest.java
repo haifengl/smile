@@ -119,33 +119,33 @@ public class AvroTest {
     }
 
     /**
-     * Test of summary method, of class DataFrame.
+     * Test of describe method, of class DataFrame.
      */
     @Test
-    public void testDataFrameSummary() {
-        System.out.println("summary");
-        DataFrame output = df.summary();
+    public void testDescribe() {
+        System.out.println("describe");
+        DataFrame output = df.describe();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(3, output.size());
-        assertEquals(5, output.ncol());
-        assertEquals("id", output.get(0,0));
-        assertEquals(1000L, output.get(0,1));
-        assertEquals(1.0, output.get(0,2));
-        assertEquals(500.5, output.get(0,3));
-        assertEquals(1000.0, output.get(0,4));
+        assertEquals(13, output.size());
+        assertEquals(12, output.columns().length);
+        assertEquals("id", output.get(1,0));
+        assertEquals(1000, output.get(1,3));
+        assertEquals(1.0, output.get(1,7));
+        assertEquals(500.5, output.get(1,5));
+        assertEquals(1000.0, output.get(1,11));
 
-        assertEquals("cc", output.get(1,0));
-        assertEquals(709L, output.get(1,1));
-        assertEquals(4017951658384.0, output.get(1,2));
-        assertEquals(-5976352263699199.0, output.get(1,3));
-        assertEquals(6771600305307320300.0, output.get(1,4));
+        assertEquals("cc", output.get(7,0));
+        assertEquals(709, output.get(7,3));
+        assertEquals(4017951658384.0, output.get(7,7));
+        assertEquals(410311243193780160.0, output.get(7,5));
+        assertEquals(6771600305307320300.0, output.get(7,11));
 
-        assertEquals("salary", output.get(2,0));
-        assertEquals(933L, output.get(2,1));
-        assertEquals(12380.49, output.get(2,2));
-        assertEquals(148911.96545551985, output.get(2,3));
-        assertEquals(286592.99, output.get(2,4));
+        assertEquals("salary", output.get(10,0));
+        assertEquals(933, output.get(10,3));
+        assertEquals(12380.49, output.get(10,7));
+        assertEquals(148911.96545551985, output.get(10,5));
+        assertEquals(286592.99, output.get(10,11));
     }
 
     /**

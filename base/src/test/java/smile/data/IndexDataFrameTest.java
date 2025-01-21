@@ -110,7 +110,7 @@ public class IndexDataFrameTest {
     public void testSchema() {
         System.out.println("schema");
         System.out.println(df.schema());
-        System.out.println(df.structure());
+        System.out.println(df.describe());
         System.out.println(df);
         smile.data.type.StructType schema = new StructType(
                 new StructField("age", DataTypes.IntType),

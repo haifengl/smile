@@ -119,27 +119,27 @@ public class ParquetTest {
     }
 
     /**
-     * Test of summary method, of class DataFrame.
+     * Test of describe method, of class DataFrame.
      */
     @Test
-    public void testDataFrameSummary() {
-        System.out.println("summary");
-        DataFrame output = df.summary();
+    public void testDescribe() {
+        System.out.println("describe");
+        DataFrame output = df.describe();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrow());
-        assertEquals(5, output.ncol());
-        assertEquals("id", output.get(0,0));
-        assertEquals(1000L, output.get(0,1));
-        assertEquals(1.0, output.get(0,2));
-        assertEquals(500.5, output.get(0,3));
-        assertEquals(1000.0, output.get(0,4));
+        assertEquals(13, output.size());
+        assertEquals(12, output.columns().length);
+        assertEquals("id", output.get(1,0));
+        assertEquals(1000, output.get(1,3));
+        assertEquals(1.0, output.get(1,7));
+        assertEquals(500.5, output.get(1,5));
+        assertEquals(1000.0, output.get(1,11));
 
-        assertEquals("salary", output.get(1,0));
-        assertEquals(932L, output.get(1,1));
-        assertEquals(12380.49, output.get(1,2));
-        assertEquals(149005.35665236053, output.get(1,3));
-        assertEquals(286592.99, output.get(1,4));
+        assertEquals("salary", output.get(10,0));
+        assertEquals(932, output.get(10,3));
+        assertEquals(12380.49, output.get(10,7));
+        assertEquals(149005.35665236053, output.get(10,5));
+        assertEquals(286592.99, output.get(10,11));
     }
 
     /**
