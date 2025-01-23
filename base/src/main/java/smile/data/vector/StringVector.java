@@ -123,6 +123,11 @@ public class StringVector extends ObjectVector<String> {
     }
 
     @Override
+    public StringVector withName(String name) {
+        return new StringVector(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Integer::parseInt);
     }

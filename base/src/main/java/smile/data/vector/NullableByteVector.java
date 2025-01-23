@@ -60,6 +60,11 @@ public class NullableByteVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public NullableByteVector withName(String name) {
+        return new NullableByteVector(field.withName(name), vector, nullMask);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : vector[i]);
     }

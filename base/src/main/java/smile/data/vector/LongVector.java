@@ -59,6 +59,11 @@ public class LongVector extends PrimitiveVector {
     }
 
     @Override
+    public LongVector withName(String name) {
+        return new LongVector(field.withName(name), vector);
+    }
+
+    @Override
     public LongStream longStream() {
         return Arrays.stream(vector);
     }

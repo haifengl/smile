@@ -143,6 +143,11 @@ public class ObjectVector<T> extends AbstractVector {
     }
 
     @Override
+    public ObjectVector<T> withName(String name) {
+        return new ObjectVector<>(field.withName(name), vector);
+    }
+
+    @Override
     public Stream<T> stream() {
         return Arrays.stream(vector);
     }

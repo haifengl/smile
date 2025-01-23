@@ -58,6 +58,11 @@ public class ByteVector extends PrimitiveVector {
     }
 
     @Override
+    public ByteVector withName(String name) {
+        return new ByteVector(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> vector[i]);
     }

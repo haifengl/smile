@@ -62,6 +62,11 @@ public class CharVector extends PrimitiveVector {
     }
 
     @Override
+    public CharVector withName(String name) {
+        return new CharVector(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> vector[i]);
     }

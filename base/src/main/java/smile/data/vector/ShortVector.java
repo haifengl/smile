@@ -58,6 +58,11 @@ public class ShortVector extends PrimitiveVector {
     }
 
     @Override
+    public ShortVector withName(String name) {
+        return new ShortVector(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> vector[i]);
     }
