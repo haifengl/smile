@@ -62,6 +62,11 @@ public class NullableLongVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public NullableLongVector withName(String name) {
+        return new NullableLongVector(field.withName(name), vector, nullMask);
+    }
+
+    @Override
     public LongStream longStream() {
         return index().mapToLong(i -> nullMask.get(i) ? Long.MIN_VALUE : vector[i]);
     }

@@ -59,6 +59,11 @@ public class IntVector extends PrimitiveVector {
     }
 
     @Override
+    public IntVector withName(String name) {
+        return new IntVector(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return Arrays.stream(vector);
     }

@@ -61,6 +61,11 @@ public class NullableShortVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public NullableShortVector withName(String name) {
+        return new NullableShortVector(field.withName(name), vector, nullMask);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : vector[i]);
     }

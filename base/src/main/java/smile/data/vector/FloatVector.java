@@ -75,6 +75,11 @@ public class FloatVector extends PrimitiveVector {
     }
 
     @Override
+    public FloatVector withName(String name) {
+        return new FloatVector(field.withName(name), vector);
+    }
+
+    @Override
     public DoubleStream doubleStream() {
         return index().mapToDouble(i -> vector[i]);
     }

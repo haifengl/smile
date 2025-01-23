@@ -90,6 +90,11 @@ public class NullableBooleanVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public NullableBooleanVector withName(String name) {
+        return new NullableBooleanVector(field.withName(name), size, vector, nullMask);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> nullMask.get(i) ? Integer.MIN_VALUE : (vector.get(i) ? 1 : 0));
     }

@@ -76,6 +76,11 @@ public class DoubleVector extends PrimitiveVector {
     }
 
     @Override
+    public DoubleVector withName(String name) {
+        return new DoubleVector(field.withName(name), vector);
+    }
+
+    @Override
     public DoubleStream doubleStream() {
         return Arrays.stream(vector);
     }

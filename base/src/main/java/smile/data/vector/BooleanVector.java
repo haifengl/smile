@@ -87,6 +87,11 @@ public class BooleanVector extends PrimitiveVector {
     }
 
     @Override
+    public BooleanVector withName(String name) {
+        return new BooleanVector(field.withName(name), size, vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return index().map(i -> vector.get(i) ? 1 : 0);
     }

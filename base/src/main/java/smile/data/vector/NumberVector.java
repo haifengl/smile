@@ -123,6 +123,11 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
     }
 
     @Override
+    public NumberVector<T> withName(String name) {
+        return new NumberVector<>(field.withName(name), vector);
+    }
+
+    @Override
     public IntStream intStream() {
         return Arrays.stream(vector).filter(Objects::nonNull).mapToInt(Number::intValue);
     }

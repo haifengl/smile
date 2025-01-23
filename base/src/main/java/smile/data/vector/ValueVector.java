@@ -47,6 +47,19 @@ public interface ValueVector {
     StructField field();
 
     /**
+     * Returns the number of elements in the vector.
+     * @return the number of elements in the vector.
+     */
+    int size();
+
+    /**
+     * Returns the vector with the new name.
+     * @param name the new name.
+     * @return the vector with the new name.
+     */
+    ValueVector withName(String name);
+
+    /**
      * Returns the name of vector.
      * @return the name of vector.
      */
@@ -69,12 +82,6 @@ public interface ValueVector {
     default Measure measure() {
         return field().measure();
     }
-
-    /**
-     * Returns the number of elements in the vector.
-     * @return the number of elements in the vector.
-     */
-    int size();
 
     /**
      * Returns true if the values of vector may be null.

@@ -78,6 +78,11 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public NullableDoubleVector withName(String name) {
+        return new NullableDoubleVector(field.withName(name), vector, nullMask);
+    }
+
+    @Override
     public DoubleStream doubleStream() {
         return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : vector[i]);
     }
