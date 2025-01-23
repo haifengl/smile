@@ -47,19 +47,18 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index) implements Iterable<Row> {
+public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
     public DataFrame {
-        if (columns.length == 0) {
+        if (columns.isEmpty()) {
             throw new IllegalArgumentException("Columns must not be empty");
         }
 
-        int size = index != null ? index.size() : columns[0].size();
-        for (int i = 0; i < columns.length; i++) {
-            if (columns[i].size() != size) {
-                String message = String.format("Columns must have the same size. Column %d has size %d", i, columns[i].size());
-                throw new IllegalArgumentException(message);
+        int size = index != null ? index.size() : columns.getFirst().size();
+        for (var column : columns) {
+            if (column.size() != size) {
+                throw new IllegalArgumentException("Columns must have the same size.");
             }
         }
     }
@@ -78,7 +77,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @param columns the columns of DataFrame.
      */
     public DataFrame(RowIndex index, ValueVector... columns) {
-        this(StructType.of(columns), columns, index);
+        this(StructType.of(columns), new ArrayList<>(Arrays.asList(columns)), index);
     }
 
     @Override
@@ -118,8 +117,8 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public int shape(int dim) {
         return switch (dim) {
-            case 0 -> columns[0].size();
-            case 1 -> columns.length;
+            case 0 -> columns.getFirst().size();
+            case 1 -> columns.size();
             default -> throw new IllegalArgumentException("Invalid dim: " + dim);
         };
     }
@@ -130,7 +129,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the number of rows.
      */
     public int size() {
-        return columns[0].size();
+        return columns.getFirst().size();
     }
 
     /**
@@ -138,7 +137,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the number of rows.
      */
     public int nrow() {
-        return columns[0].size();
+        return columns.getFirst().size();
     }
 
     /**
@@ -146,7 +145,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the number of columns.
      */
     public int ncol() {
-        return columns.length;
+        return columns.size();
     }
 
     /**
@@ -172,7 +171,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         }
 
         // Remove the column to be used as the new index.
-        var data = Arrays.stream(columns)
+        var data = columns.stream()
                 .filter(c -> !c.name().equals(column))
                 .toArray(ValueVector[]::new);
         return new DataFrame(new RowIndex(index), data);
@@ -196,7 +195,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the column vector.
      */
     public ValueVector column(int j) {
-        return columns[j];
+        return columns.get(j);
     }
 
     /**
@@ -205,7 +204,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the column vector.
      */
     public ValueVector column(String name) {
-        return columns[schema.indexOf(name)];
+        return columns.get(schema.indexOf(name));
     }
 
     /**
@@ -277,9 +276,9 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public DataFrame get(Index index) {
         var rowIndex = this.index != null ? this.index.get(index) : null;
-        return new DataFrame(schema, Arrays.stream(columns)
+        return new DataFrame(schema, columns.stream()
                 .map(column -> column.get(index))
-                .toArray(ValueVector[]::new), rowIndex);
+                .toList(), rowIndex);
     }
 
     /**
@@ -299,7 +298,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return true if the cell value is null.
      */
     public boolean isNullAt(int i, int j) {
-        return columns[j].isNullAt(i);
+        return columns.get(j).isNullAt(i);
     }
 
     /**
@@ -309,7 +308,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the cell value.
      */
     public Object get(int i, int j) {
-        return columns[j].get(i);
+        return columns.get(j).get(i);
     }
 
     /**
@@ -330,7 +329,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the int value of cell.
      */
     public int getInt(int i, int j) {
-        return columns[j].getInt(i);
+        return columns.get(j).getInt(i);
     }
 
     /**
@@ -340,7 +339,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the long value of cell.
      */
     public long getLong(int i, int j) {
-        return columns[j].getLong(i);
+        return columns.get(j).getLong(i);
     }
 
     /**
@@ -350,7 +349,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the float value of cell.
      */
     public float getFloat(int i, int j) {
-        return columns[j].getFloat(i);
+        return columns.get(j).getFloat(i);
     }
 
     /**
@@ -360,7 +359,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the double value of cell.
      */
     public double getDouble(int i, int j) {
-        return columns[j].getDouble(i);
+        return columns.get(j).getDouble(i);
     }
 
     /**
@@ -370,7 +369,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the string representation of cell value.
      */
     public String getString(int i, int j) {
-        return columns[j].getString(i);
+        return columns.get(j).getString(i);
     }
 
     /**
@@ -382,7 +381,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the cell scale.
      */
     public String getScale(int i, int j) {
-        return columns[j].getScale(i);
+        return columns.get(j).getScale(i);
     }
 
     /**
@@ -392,7 +391,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @param value the new value.
      */
     public void set(int i, int j, Object value) {
-        columns[j].set(i, value);
+        columns.get(j).set(i, value);
     }
 
     /**
@@ -468,7 +467,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public DataFrame select(int... indices) {
         return new DataFrame(index, Arrays.stream(indices)
-                .mapToObj(j -> columns[j])
+                .mapToObj(j -> columns.get(j))
                 .toArray(ValueVector[]::new));
     }
 
@@ -494,9 +493,9 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             set.add(index);
         }
 
-        return new DataFrame(index, IntStream.range(0, columns.length)
+        return new DataFrame(index, IntStream.range(0, columns.size())
                 .filter(j -> !set.contains(j))
-                .mapToObj(j -> columns[j])
+                .mapToObj(columns::get)
                 .toArray(ValueVector[]::new));
     }
 
@@ -509,9 +508,49 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         Set<String> set = new HashSet<>();
         Collections.addAll(set, names);
 
-        return new DataFrame(index, Arrays.stream(columns)
+        return new DataFrame(index, columns.stream()
                 .filter(column -> !set.contains(column.name()))
                 .toArray(ValueVector[]::new));
+    }
+
+    /**
+     * Sets the column values. If the column does not exist, adds it as
+     * the last column of the dataframe.
+     *
+     * @param name the column name.
+     * @param column the new column value.
+     * @return this dataframe.
+     */
+    public DataFrame set(String name, ValueVector column) {
+        if (column.size() != size()) {
+            throw new IllegalArgumentException("column size mismatch");
+        }
+
+        if (!name.equals(column.name())) {
+            column = column.withName(name);
+        }
+
+        int j = schema.index().getOrDefault(name, ncol());
+        if (j < ncol()) {
+            columns.set(j, column);
+        } else {
+            schema.set(j, column.field());
+            columns.set(j, column);
+        }
+        return this;
+    }
+
+    /**
+     * Sets the column values. If the column does not exist, adds it as
+     * the last column of the dataframe.
+     * This is an alias to {@link #set(String, ValueVector) set} for Scala's convenience.
+     *
+     * @param name the column name.
+     * @param column the new column value.
+     * @return this dataframe.
+     */
+    public DataFrame update(String name, ValueVector column) {
+        return set(name, column);
     }
 
     /**
@@ -527,8 +566,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             }
         }
 
-        List<ValueVector> data = new ArrayList<>();
-        Collections.addAll(data, columns);
+        List<ValueVector> data = new ArrayList<>(columns);
         Set<String> names = new HashSet<>();
         Collections.addAll(names, names());
         for (DataFrame df : dataframes) {
@@ -557,8 +595,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             }
         }
 
-        List<ValueVector> data = new ArrayList<>();
-        Collections.addAll(data, columns);
+        List<ValueVector> data = new ArrayList<>(columns);
         for (var vector : vectors) {
             int j = schema.index().getOrDefault(vector.name(), -1);
             if (j == -1) {
@@ -606,7 +643,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public DataFrame factorize(String... names) {
         if (names.length == 0) {
-            names = Arrays.stream(schema().fields())
+            names = schema().fields().stream()
                     .filter(field -> field.dtype().isObject())
                     .map(StructField::name)
                     .toArray(String[]::new);
@@ -616,7 +653,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         HashSet<String> set = new HashSet<>();
         Collections.addAll(set, names);
 
-        ValueVector[] vectors = Arrays.stream(columns).map(column -> {
+        ValueVector[] vectors = columns.stream().map(column -> {
             if (!set.contains(column.name())) return column;
 
             List<String> levels = IntStream.range(0, n)
@@ -758,7 +795,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      */
     public Matrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
         int nrow = size();
-        int ncol = columns.length;
+        int ncol = columns.size();
 
         ArrayList<String> colNames = new ArrayList<>();
         if (bias) colNames.add("Intercept");
@@ -838,7 +875,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
      * @return the data structure and statistics.
      */
     public DataFrame describe() {
-        int ncol = columns.length;
+        int ncol = columns.size();
         DataType[] dtypes = dtypes();
         Measure[] measures = measures();
         int[] count = new int[ncol];
@@ -861,7 +898,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         for (int j = 0; j < ncol; j++) {
             DataType dtype = dtypes[j];
             if (measures[j] instanceof CategoricalMeasure measure) {
-                int[] data = columns[j].intStream()
+                int[] data = columns.get(j).intStream()
                         .filter(x -> x != Integer.MIN_VALUE)
                         .toArray();
                 count[j] = data.length;
@@ -872,7 +909,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 q3[j] = MathEx.q3(data);
                 max[j] = MathEx.max(data);
             } else if (dtype.isLong()) {
-                double[] data = columns[j].longStream()
+                double[] data = columns.get(j).longStream()
                         .filter(x -> x != Long.MIN_VALUE)
                         .mapToDouble(x -> x).toArray();
                 count[j] = data.length;
@@ -885,7 +922,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 q3[j] = MathEx.q3(data);
                 max[j] = MathEx.max(data);
             } else if (dtype.isIntegral()) {
-                int[] data = columns[j].intStream()
+                int[] data = columns.get(j).intStream()
                         .filter(x -> x != Integer.MIN_VALUE)
                         .toArray();
                 count[j] = data.length;
@@ -898,7 +935,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 q3[j] = MathEx.q3(data);
                 max[j] = MathEx.max(data);
             } else if (dtype.isFloating() || dtype.isDecimal()) {
-                double[] data = columns[j].doubleStream()
+                double[] data = columns.get(j).doubleStream()
                         .filter(Double::isFinite)
                         .toArray();
                 count[j] = data.length;
@@ -911,8 +948,8 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 q3[j] = MathEx.q3(data);
                 max[j] = MathEx.max(data);
             } else {
-                count[j] = (int) columns[j].stream().filter(Objects::nonNull).count();
-                mode[j] = columns[j].stream().filter(Objects::nonNull)
+                count[j] = (int) columns.get(j).stream().filter(Objects::nonNull).count();
+                mode[j] = columns.get(j).stream().filter(Objects::nonNull)
                         .collect(java.util.stream.Collectors.groupingBy(Function.identity(), java.util.stream.Collectors.counting()))
                         .entrySet()
                         .stream()
@@ -1000,7 +1037,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
             String[] cells = rows[i];
             cells[0] = index == null ? Integer.toString(row): index.values()[row].toString();
             for (int j = 1; j < numCols; j++) {
-                String str = columns[j-1].getString(row);
+                String str = columns.get(j-1).getString(row);
                 cells[j] = (truncate && str.length() > maxColWidth) ? str.substring(0, maxColWidth - 3) + "..." : str;
             }
         }
@@ -1239,7 +1276,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                 }
             }
 
-            return new DataFrame(schema, columns.toArray(ValueVector[]::new), null);
+            return new DataFrame(schema, columns, null);
         } catch (java.beans.IntrospectionException ex) {
             logger.error("Failed to introspect a bean: ", ex);
             throw new RuntimeException(ex);
@@ -1270,13 +1307,13 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
         }
 
         int n = data.size();
-        StructField[] fields = schema.fields();
-        ValueVector[] columns = new ValueVector[fields.length];
+        var fields = schema.fields();
+        List<ValueVector> columns = new ArrayList<>(fields.size());
 
-        for (int j = 0; j < fields.length; j++) {
+        for (int j = 0; j < fields.size(); j++) {
             BitSet nullMask = new BitSet(n);
-            StructField field = fields[j];
-            columns[j] = switch (field.dtype().id()) {
+            StructField field = fields.get(j);
+            columns.add(switch (field.dtype().id()) {
                 case Int -> {
                     int[] values = new int[n];
                     for (int i = 0; i < n; i++) {
@@ -1411,7 +1448,7 @@ public record DataFrame(StructType schema, ValueVector[] columns, RowIndex index
                     }
                     yield new ObjectVector<>(field, values);
                 }
-            };
+            });
         }
 
         return new DataFrame(schema, columns, null);
