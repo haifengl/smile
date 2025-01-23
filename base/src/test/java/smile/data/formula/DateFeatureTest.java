@@ -69,13 +69,13 @@ public class DateFeatureTest {
                 DateFeature.SECOND));
         var data = Read.arff(Paths.getTestData("weka/date.arff"));
         DataFrame output = formula.frame(data);
-        assertEquals(7, output.columns().length);
+        assertEquals(7, output.columns().size());
 
         StructType schema = output.schema();
         System.out.println(schema);
         System.out.println(output);
 
-        for (int i = 0; i < output.columns().length; i++) {
+        for (int i = 0; i < output.columns().size(); i++) {
             assertEquals(DataTypes.IntType, schema.field(i).dtype());
             if (i == 1 || i == 3) {
                 assertTrue(schema.field(i).measure() instanceof NominalScale);

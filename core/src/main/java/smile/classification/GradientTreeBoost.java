@@ -309,8 +309,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * Train L2 tree boost.
      */
     private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
-        int n = x.size();
-        int p = x.columns().length;
+        int n = x.nrow();
+        int p = x.ncol();
         int k = codec.k;
         int[] y = codec.y;
 
@@ -357,7 +357,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
                                             int ntrees, int maxDepth, int maxNodes, int nodeSize,
                                             double shrinkage, double subsample) {
         int n = x.size();
-        int p = x.columns().length;
+        int p = x.ncol();
         int k = codec.k;
         int[] y = codec.y;
 

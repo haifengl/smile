@@ -249,7 +249,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             }
         }
         
-        double[] importance = new double[x.columns().length];
+        double[] importance = new double[x.ncol()];
         for (DecisionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {

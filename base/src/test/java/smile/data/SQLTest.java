@@ -78,12 +78,12 @@ public class SQLTest {
 
         DataFrame user = sql.query("SELECT * FROM user");
         assertEquals(1000, user.size());
-        assertEquals(13, user.columns().length);
+        assertEquals(13, user.columns().size());
 
         DataFrame join = sql.query("SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country");
         System.out.println(join.head(100));
         assertEquals(user.size(), join.size());
-        assertEquals(17, join.columns().length);
+        assertEquals(17, join.columns().size());
         sql.close();
     }
 }

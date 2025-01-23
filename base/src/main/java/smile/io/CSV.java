@@ -150,7 +150,7 @@ public class CSV {
             throw new IllegalStateException("The schema is not set or inferred.");
         }
 
-        StructField[] fields = schema.fields();
+        var fields = schema.fields();
         List<Function<String, Object>> parser = schema.parser();
 
         try (CSVParser csv = CSVParser.parse(reader, format)) {
@@ -158,8 +158,8 @@ public class CSV {
             boolean[] missing = new boolean[schema.length()];
 
             for (CSVRecord record : csv) {
-                Object[] row = new Object[fields.length];
-                for (int i = 0; i < fields.length; i++) {
+                Object[] row = new Object[fields.size()];
+                for (int i = 0; i < fields.size(); i++) {
                     String s = record.get(i).trim();
                     if (!s.isEmpty()) {
                         row[i] = parser.get(i).apply(s);
@@ -167,7 +167,7 @@ public class CSV {
                 }
 
                 // Check any missing values
-                for (int j = 0; j < fields.length; j++) {
+                for (int j = 0; j < fields.size(); j++) {
                     if (row[j] == null) {
                         missing[j] = true;
                     }
@@ -179,24 +179,24 @@ public class CSV {
 
             // Set a field to nullable if any missing value in the column.
             for (int j = 0; j < missing.length; j++) {
-                if (missing[j] && fields[j].dtype().isPrimitive()) {
-                    var field = fields[j];
+                if (missing[j] && fields.get(j).dtype().isPrimitive()) {
+                    var field = fields.get(j);
                     if (field.dtype() == DataTypes.IntType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableIntType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableIntType, field.measure()));
                     } else if (field.dtype() == DataTypes.LongType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableLongType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableLongType, field.measure()));
                     } else if (field.dtype() == DataTypes.FloatType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableFloatType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableFloatType, field.measure()));
                     } else if (field.dtype() == DataTypes.DoubleType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableDoubleType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableDoubleType, field.measure()));
                     } else if (field.dtype() == DataTypes.BooleanType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableBooleanType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableBooleanType, field.measure()));
                     } else if (field.dtype() == DataTypes.ByteType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableByteType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableByteType, field.measure()));
                     } else if (field.dtype() == DataTypes.ShortType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableShortType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableShortType, field.measure()));
                     } else if (field.dtype() == DataTypes.CharType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableCharType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableCharType, field.measure()));
                     }
                 }
             }

@@ -63,10 +63,10 @@ public class CSVTest {
         assertEquals(7291, usps.size());
         assertEquals(257, usps.ncol());
 
-        StructField[] fields = usps.schema().fields();
-        assertEquals(DataTypes.IntType, fields[0].dtype());
-        for (int i = 1; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].dtype());
+        var fields = usps.schema().fields();
+        assertEquals(DataTypes.IntType, fields.getFirst().dtype());
+        for (int i = 1; i < fields.size(); i++) {
+            assertEquals(DataTypes.DoubleType, fields.get(i).dtype());
         }
 
         assertEquals(6, usps.getInt(0, 0));
@@ -136,10 +136,10 @@ public class CSVTest {
         assertEquals(442, diabetes.size());
         assertEquals(65, diabetes.ncol());
 
-        StructField[] fields = diabetes.schema().fields();
-        assertEquals(DataTypes.IntType, fields[0].dtype());
-        for (int i = 1; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].dtype());
+        var fields = diabetes.schema().fields();
+        assertEquals(DataTypes.IntType, fields.getFirst().dtype());
+        for (int i = 1; i < fields.size(); i++) {
+            assertEquals(DataTypes.DoubleType, fields.get(i).dtype());
         }
 
         assertEquals(151, diabetes.getInt(0, 0));
@@ -208,11 +208,11 @@ public class CSVTest {
         assertEquals(3133, abalone.size());
         assertEquals(9, abalone.ncol());
 
-        StructField[] fields = abalone.schema().fields();
-        assertEquals(DataTypes.StringType, fields[0].dtype());
-        assertEquals(DataTypes.IntType, fields[fields.length - 1].dtype());
-        for (int i = 1; i < fields.length - 1; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].dtype());
+        var fields = abalone.schema().fields();
+        assertEquals(DataTypes.StringType, fields.getFirst().dtype());
+        assertEquals(DataTypes.IntType, fields.getLast().dtype());
+        for (int i = 1; i < fields.size() - 1; i++) {
+            assertEquals(DataTypes.DoubleType, fields.get(i).dtype());
         }
 
         assertEquals("M", abalone.get(0, 0));

@@ -305,7 +305,7 @@ public class Formula implements Serializable {
                 .filter(term -> term instanceof FactorCrossing || term instanceof Variable)
                 .forEach(term -> columns.addAll(term.variables()));
 
-        List<Variable> rest = Arrays.stream(inputSchema.fields())
+        List<Variable> rest = inputSchema.fields().stream()
                 .filter(field -> !columns.contains(field.name()))
                 .map(field -> new Variable(field.name()))
                 .toList();

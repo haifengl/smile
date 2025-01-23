@@ -86,18 +86,14 @@ public class CRF implements Serializable {
      * @param shrinkage the learning rate.
      */
     public CRF(StructType schema, RegressionTree[][] potentials, double shrinkage) {
+        this.schema = schema;
         this.potentials = potentials;
         this.shrinkage = shrinkage;
 
         int k = potentials.length;
         NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
         StructField field = new StructField("s(t-1)", DataTypes.IntType, scale);
-
-        int length = schema.length();
-        StructField[] fields = new StructField[length + 1];
-        System.arraycopy(schema.fields(), 0, fields, 0, length);
-        fields[length] = field;
-        this.schema = new StructType(fields);
+        schema.add(field);
     }
 
     /**

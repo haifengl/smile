@@ -51,7 +51,7 @@ public class BinaryEncoder implements Function<Tuple, int[]> {
      */
     public BinaryEncoder(StructType schema, String... columns) {
         if (columns == null || columns.length == 0) {
-            columns = Arrays.stream(schema.fields())
+            columns = schema.fields().stream()
                     .filter(field -> field.measure() instanceof CategoricalMeasure)
                     .map(StructField::name)
                     .toArray(String[]::new);
