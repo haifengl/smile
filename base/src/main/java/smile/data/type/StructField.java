@@ -86,6 +86,15 @@ public record StructField(String name, DataType dtype, Measure measure) implemen
     }
 
     /**
+     * Returns the StructField with the new name.
+     * @param name the new name.
+     * @return the StructField with the new name.
+     */
+    public StructField withName(String name) {
+        return new StructField(name, dtype, measure);
+    }
+
+    /**
      * Returns true if the field is of integer or floating but not nominal scale.
      * @return true if the field is of integer or floating but not nominal scale.
      */
