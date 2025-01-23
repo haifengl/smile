@@ -150,8 +150,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      *              that only numeric attributes need be sorted.
      */
     public CART(DataFrame x, StructField y, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
-        int n = x.size();
-        int p = x.columns().length;
+        int n = x.nrow();
+        int p = x.ncol();
 
         this.x = x;
         this.response = y;
@@ -226,7 +226,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     public static int[][] order(DataFrame x) {
         int n = x.size();
-        int p = x.columns().length;
+        int p = x.ncol();
         int[][] order = new int[p][];
         StructType schema = x.schema();
 

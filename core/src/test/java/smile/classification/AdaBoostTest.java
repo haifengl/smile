@@ -179,7 +179,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), 200, 20, 4, 5);
-        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(StructField::name).toArray(String[]::new);
+        String[] fields = model.schema().fields().stream().map(StructField::name).toArray(String[]::new);
         double[] importance = model.importance();
         double[] shap = model.shap(iris.data());
 

@@ -1315,7 +1315,7 @@ public class Arrow {
                 yield new Field(name,
                         new FieldType(false, new ArrowType.Struct(), null),
                         // children type
-                        Arrays.stream(children.fields()).map(Arrow::toArrow).toList()
+                        children.fields().stream().map(Arrow::toArrow).toList()
                 );
             }
         };

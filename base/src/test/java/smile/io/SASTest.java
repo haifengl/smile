@@ -60,8 +60,7 @@ public class SASTest {
         assertEquals(32, df.nrow());
         assertEquals(6, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        for (var field : df.schema().fields()) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -82,8 +81,7 @@ public class SASTest {
         assertEquals(67, df.nrow());
         assertEquals(6, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        for (var field : df.schema().fields()) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -104,8 +102,8 @@ public class SASTest {
         assertEquals(200, df.nrow());
         assertEquals(1, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        var fields = df.schema().fields();
+        for (var field : fields) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -126,8 +124,8 @@ public class SASTest {
         assertEquals(150, df.nrow());
         assertEquals(2, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        var fields = df.schema().fields();
+        for (var field : fields) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -147,8 +145,7 @@ public class SASTest {
         assertEquals(24, df.nrow());
         assertEquals(2, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        for (var field : df.schema().fields()) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -168,8 +165,7 @@ public class SASTest {
         assertEquals(17, df.nrow());
         assertEquals(5, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        for (StructField field : df.schema().fields()) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 
@@ -190,8 +186,7 @@ public class SASTest {
         assertEquals(30, df.nrow());
         assertEquals(4, df.ncol());
 
-        StructField[] fields = df.schema().fields();
-        for (StructField field : fields) {
+        for (StructField field : df.schema().fields()) {
             assertEquals(DataTypes.DoubleType, field.dtype());
         }
 

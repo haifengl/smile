@@ -100,7 +100,7 @@ public class DataFrameTest {
     @Test
     public void testColumnLength() {
         System.out.println("column length");
-        assertEquals(5, df.columns().length);
+        assertEquals(5, df.columns().size());
     }
 
     /**
@@ -150,7 +150,7 @@ public class DataFrameTest {
         System.out.println("concat");
         DataFrame two = df.concat(df);
         assertEquals(2*df.size(), two.size());
-        assertEquals(df.columns().length, two.columns().length);
+        assertEquals(df.columns().size(), two.columns().size());
 
         assertEquals(38, two.get(0,0));
         assertEquals("Alex", two.get(0, 3));
@@ -176,7 +176,7 @@ public class DataFrameTest {
         StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
         DataFrame two = df.merge(edu);
         assertEquals(df.size(), two.size());
-        assertEquals(df.columns().length+1, two.columns().length);
+        assertEquals(df.columns().size()+1, two.columns().size());
 
         assertEquals(38, two.get(0, 0));
         assertEquals("Alex", two.getString(0, 3));
@@ -221,7 +221,7 @@ public class DataFrameTest {
         System.out.println(output);
         System.out.println(output.schema());
         assertEquals(5, output.size());
-        assertEquals(12, output.columns().length);
+        assertEquals(12, output.columns().size());
         assertEquals("age", output.get(0,0));
         assertEquals(4, output.get(0,3));
         assertEquals(13, output.get(0,4));

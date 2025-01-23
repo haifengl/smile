@@ -128,7 +128,7 @@ public class ParquetTest {
         System.out.println(output);
         System.out.println(output.schema());
         assertEquals(13, output.size());
-        assertEquals(12, output.columns().length);
+        assertEquals(12, output.columns().size());
         assertEquals("id", output.get(1,0));
         assertEquals(1000, output.get(1,3));
         assertEquals(1.0, output.get(1,7));

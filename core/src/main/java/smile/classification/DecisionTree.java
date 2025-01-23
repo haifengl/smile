@@ -269,7 +269,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         LeafNode node = new DecisionNode(count);
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.columns().length]);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncol()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -337,7 +337,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         ValueVector y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
-        int mtry = x.columns().length;
+        int mtry = x.ncol();
         DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, mtry, null, null);
         tree.formula = formula;
         tree.classes = codec.classes;

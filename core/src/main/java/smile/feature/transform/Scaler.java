@@ -54,7 +54,7 @@ public class Scaler {
 
         StructType schema = data.schema();
         if (columns.length == 0) {
-            columns = Arrays.stream(schema.fields())
+            columns = schema.fields().stream()
                     .filter(StructField::isNumeric)
                     .map(StructField::name)
                     .toArray(String[]::new);

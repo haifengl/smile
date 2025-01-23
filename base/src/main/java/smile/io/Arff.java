@@ -451,14 +451,14 @@ public class Arff implements AutoCloseable {
             // Set a field to nullable if any missing value in the column.
             var fields = schema.fields();
             for (int j = 0; j < missing.length; j++) {
-                if (missing[j] && fields[j].dtype().isPrimitive()) {
-                    var field = fields[j];
+                if (missing[j] && fields.get(j).dtype().isPrimitive()) {
+                    var field = fields.get(j);
                     if (field.dtype() == DataTypes.IntType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableIntType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableIntType, field.measure()));
                     } else if (field.dtype() == DataTypes.FloatType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableFloatType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableFloatType, field.measure()));
                     } else if (field.dtype() == DataTypes.DoubleType) {
-                        fields[j] = new StructField(field.name(), DataTypes.NullableDoubleType, field.measure());
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableDoubleType, field.measure()));
                     }
                 }
             }
@@ -474,8 +474,8 @@ public class Arff implements AutoCloseable {
      * @throws ParseException if the information is not read successfully
      */
     private Object[] readInstance() throws IOException, ParseException {
-        StructField[] fields = schema.fields();
-        int p = fields.length;
+        var fields = schema.fields();
+        int p = fields.size();
         Object[] x = new Object[p];
 
         // Get values for all attributes.
@@ -498,8 +498,8 @@ public class Arff implements AutoCloseable {
      * @throws ParseException if the information is not read successfully
      */
     private Object[] readSparseInstance() throws IOException, ParseException {
-        StructField[] fields = schema.fields();
-        int p = fields.length;
+        var fields = schema.fields();
+        int p = fields.size();
         Object[] x = new Object[p];
 
         // Get values for all attributes.
@@ -563,7 +563,7 @@ public class Arff implements AutoCloseable {
 
             writer.println("@DATA");
 
-            int p = data.columns().length;
+            int p = data.columns().size();
             data.stream().forEach(t -> {
                 String line = IntStream.range(0, p).mapToObj(i -> t.toString()).collect(Collectors.joining(","));
                 writer.println(line);

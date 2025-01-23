@@ -142,7 +142,7 @@ public class DataFrameJDBCTest {
         System.out.println(output);
         System.out.println(output.schema());
         assertEquals(6, output.size());
-        assertEquals(12, output.columns().length);
+        assertEquals(12, output.columns().size());
         assertEquals("Total", output.get(5,0));
         assertEquals(412, output.get(5,3));
         assertEquals(0.99, output.get(5,7));

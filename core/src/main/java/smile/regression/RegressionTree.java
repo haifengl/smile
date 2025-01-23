@@ -328,7 +328,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
-        int mtry = x.columns().length;
+        int mtry = x.ncol();
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, mtry, null, null);
         tree.formula = formula;
         return tree;
