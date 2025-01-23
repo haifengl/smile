@@ -41,7 +41,7 @@ import smile.data.vector.ValueVector;
  *
  * @author Haifeng Li
  */
-public record StructType(StructField[] fields, Map<String, Integer> index) implements DataType {
+public record StructType(List<StructField> fields, Map<String, Integer> index) implements DataType {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StructType.class);
 
     /**
@@ -49,7 +49,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @param fields the struct fields.
      */
     public StructType(List<StructField> fields) {
-        this(fields.toArray(new StructField[0]));
+        this(new ArrayList<>(fields), name2Index(fields));
     }
 
     /**
@@ -57,7 +57,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @param fields the struct fields.
      */
     public StructType(StructField... fields) {
-        this(fields, name2Index(fields));
+        this(Arrays.asList(fields));
     }
 
     /**
@@ -65,10 +65,12 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @param fields the struct fields.
      * @return a map of field name to ordinal index.
      */
-    private static Map<String, Integer> name2Index(StructField[] fields) {
+    private static Map<String, Integer> name2Index(List<StructField> fields) {
         Map<String, Integer> map = new HashMap<>();
-        for (int i = 0; i < fields.length; i++) {
-            map.put(fields[i].name(), i);
+        for (int i = 0; i < fields.size(); i++) {
+            if (map.putIfAbsent(fields.get(i).name(), i) != null) {
+                throw new IllegalArgumentException("Duplicate field name: " + fields.get(i).name());
+            }
         }
         return map;
     }
@@ -91,7 +93,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the number of fields.
      */
     public int length() {
-        return fields.length;
+        return fields.size();
     }
 
     /**
@@ -100,7 +102,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field.
      */
     public StructField field(int i) {
-        return fields[i];
+        return fields.get(i);
     }
 
     /**
@@ -109,7 +111,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field.
      */
     public StructField field(String name) {
-        return fields[indexOf(name)];
+        return fields.get(indexOf(name));
     }
 
     /**
@@ -119,7 +121,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field.
      */
     public StructField apply(int i) {
-        return fields[i];
+        return fields.get(i);
     }
 
     /**
@@ -129,7 +131,57 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field.
      */
     public StructField apply(String name) {
-        return fields[indexOf(name)];
+        return fields.get(indexOf(name));
+    }
+
+    /**
+     * Sets a field.
+     * @param i the field index.
+     * @param field the new field.
+     */
+    public void set(int i, StructField field) {
+        index.remove(fields.get(i).name());
+        fields.set(i, field);
+        index.put(field.name(), i);
+    }
+
+    /**
+     * Sets a field.
+     * This is an alias to {@link #set(int, StructField) set} for Scala's convenience.
+     * @param i the field index.
+     * @param field the new field.
+     */
+    public void update(int i, StructField field) {
+        index.remove(fields.get(i).name());
+        fields.set(i, field);
+        index.put(field.name(), i);
+    }
+
+    /**
+     * Renames a field.
+     * @param name the field name.
+     * @param newName the new name.
+     */
+    public void rename(String name, String newName) {
+        Integer idx = index.get(name);
+        if (idx == null) {
+            throw new IllegalArgumentException("Field " + name + " not found");
+        }
+
+        fields.set(idx, fields.get(idx).withName(newName));
+        index.remove(name);
+        index.put(newName, idx);
+    }
+
+    /**
+     * Adds a field.
+     * @param field a struct field.
+     */
+    public void add(StructField field) {
+        if (index.putIfAbsent(field.name(), fields.size()) != null) {
+            throw new IllegalArgumentException("Duplicate field name: " + field.name());
+        }
+        fields.add(field);
     }
 
     /**
@@ -146,7 +198,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field names.
      */
     public String[] names() {
-        return Arrays.stream(fields)
+        return fields.stream()
                 .map(StructField::name)
                 .toArray(String[]::new);
     }
@@ -156,7 +208,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field data types.
      */
     public DataType[] dtypes() {
-        return Arrays.stream(fields)
+        return fields.stream()
                 .map(StructField::dtype)
                 .toArray(DataType[]::new);
     }
@@ -166,7 +218,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
      * @return the field's level of measurements.
      */
     public Measure[] measures() {
-        return Arrays.stream(fields)
+        return fields.stream()
                 .map(StructField::measure)
                 .toArray(Measure[]::new);
     }
@@ -185,7 +237,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
 
     @Override
     public String name() {
-        return Arrays.stream(fields)
+        return fields.stream()
                 .map(field -> String.format("%s: %s", field.name(), field.dtype().name()))
                 .collect(Collectors.joining(", ", "Struct(", ")"));
     }
@@ -197,7 +249,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
 
     @Override
     public String toString() {
-        return Arrays.stream(fields)
+        return fields.stream()
                 .map(field -> {
                     String s = String.format("  %s", field.toString());
                     var dtype = field.dtype();
@@ -211,9 +263,9 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     @Override
     public String toString(Object o) {
         if (o instanceof Tuple t) {
-            return IntStream.range(0, length())
+            return IntStream.range(0, fields.size())
                     .mapToObj(i -> {
-                        var field = fields[i];
+                        var field = fields.get(i);
                         String value = field.toString(t.get(i));
                         return String.format("  %s: %s", field.name(), value);
                     })
@@ -227,11 +279,11 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     public Tuple valueOf(String s) {
         // strip surrounding []
         String[] elements = s.substring(1, s.length() - 1).split(",");
-        final Object[] row = new Object[fields.length];
+        final Object[] row = new Object[fields.size()];
         for (String element : elements) {
             String[] pair = element.split(":");
             int i = index.get(pair[0]);
-            row[i] = fields[i].valueOf(pair[1]);
+            row[i] = fields.get(i).valueOf(pair[1]);
         }
 
         return Tuple.of(this, row);
@@ -240,7 +292,7 @@ public record StructType(StructField[] fields, Map<String, Integer> index) imple
     @Override
     public boolean equals(Object o) {
         if (o instanceof StructType t) {
-            return Arrays.equals(fields, t.fields);
+            return fields.equals(t.fields);
         }
 
         return false;
