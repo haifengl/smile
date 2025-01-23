@@ -78,8 +78,8 @@ object RegressionModel {
         val testMetrics = test.map(RegressionMetrics.of(model, formula, _))
 
         val y = formula.response().variables()
-        val predictors = data.schema().fields().filter(field => !y.contains(field.name))
-        val schema = new StructType(predictors: _*)
+        val predictors = data.schema().fields().stream().filter(field => !y.contains(field.name))
+        val schema = new StructType(predictors.toList)
         RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics)
     }
 
