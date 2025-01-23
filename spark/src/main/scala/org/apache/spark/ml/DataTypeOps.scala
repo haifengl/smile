@@ -87,7 +87,7 @@ object DataTypeOps {
     * @return Spark schema
     */
   def toSparkSchema(schema: StructType): org.apache.spark.sql.types.StructType = {
-    org.apache.spark.sql.types.StructType(schema.fields().map(toSparkField))
+    org.apache.spark.sql.types.StructType(schema.fields().stream().map(toSparkField).toList)
   }
 
   /**
@@ -138,9 +138,9 @@ object DataTypeOps {
       case DataType.ID.Struct =>
         org.apache.spark.sql.types.StructType(
           `type`.asInstanceOf[smile.data.`type`.StructType]
-            .fields()
+            .fields().stream()
             .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype)))
-            .toSeq)
+            .toList)
     }
   }
 }
