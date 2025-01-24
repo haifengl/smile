@@ -1,4 +1,4 @@
-(defproject org.clojars.haifengl/smile "4.1.0"
+(defproject org.clojars.haifengl/smile "4.1.1"
   :description "Smile - Statistical Machine Intelligence and Learning Engine"
   :url "https://haifengl.github.io"
   :scm {:name "git"
@@ -9,7 +9,7 @@
                  [com.github.haifengl/smile-core "4.1.0"]]
   :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
-          :project {:name "Smile - Clojure" :description "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."}
+          :project {:name "Smile - Clojure" :description "Copyright © 2010-2025 Haifeng Li. All rights reserved. Use is subject to license terms."}
           :output-path "../doc/api/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
