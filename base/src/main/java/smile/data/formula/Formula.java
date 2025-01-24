@@ -62,7 +62,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class Formula implements Serializable {
+public class Formula implements AutoCloseable, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
@@ -116,6 +116,14 @@ public class Formula implements Serializable {
      */
     public Term response() {
         return response;
+    }
+
+    @Override
+    public void close() {
+        if (binding != null) {
+            binding.remove();
+            binding = null;
+        }
     }
 
     @Override
@@ -365,6 +373,10 @@ public class Formula implements Serializable {
             }
         }
 
+        if (this.binding != null) {
+            // avoid memory leak
+            this.binding.remove();
+        }
         this.binding = new ThreadLocal<>() {
             protected synchronized Binding initialValue() {
                 return binding;
