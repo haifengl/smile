@@ -39,7 +39,7 @@ import smile.math.TimeFunction;
  *
  * @author Haifeng Li
  */
-public abstract class MultilayerPerceptron implements Serializable {
+public abstract class MultilayerPerceptron implements AutoCloseable, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     /**
@@ -125,6 +125,13 @@ public abstract class MultilayerPerceptron implements Serializable {
         this.p = net[0].getInputSize();
 
         init();
+    }
+
+    @Override
+    public void close() {
+        if (target != null) {
+            target.remove();
+        }
     }
 
     /**
