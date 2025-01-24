@@ -132,6 +132,10 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
         if (target != null) {
             target.remove();
         }
+        for (Layer layer : net) {
+            layer.close();
+        }
+        output.close();
     }
 
     /**
