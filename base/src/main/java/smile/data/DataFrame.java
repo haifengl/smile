@@ -554,8 +554,37 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Joins two data frames on their index. If either dataframe has no index,
+     * merges them horizontally by columns.
+     * @param other the data frames to merge.
+     * @return a new data frame with combined columns.
+     */
+    public DataFrame join(DataFrame other) {
+        if (index == null || other.index == null) {
+            return merge(other);
+        }
+
+        int k = 0;
+        int n = size();
+        boolean[] inner = new boolean[n];
+        int[] right = new int[n];
+        for (int i = 0; i < n; i++) {
+            var id = index.values()[i];
+            var j = other.index().loc().get(id);
+            if (j != null) {
+                inner[i] = true;
+                right[k++] = j;
+            }
+        }
+        var left = get(Index.of(inner));
+        other = other.get(Index.of(Arrays.copyOf(right, k)));
+        return left.merge(other);
+    }
+
+    /**
      * Merges data frames horizontally by columns. If there are columns
-     * with the same name, the latter ones will be skipped.
+     * with the same name, the latter ones will be renamed with suffix
+     * such as _2, _3, etc.
      * @param dataframes the data frames to merge.
      * @return a new data frame with combined columns.
      */
@@ -569,11 +598,17 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         List<ValueVector> data = new ArrayList<>(columns);
         Set<String> names = new HashSet<>();
         Collections.addAll(names, names());
+        int order = 2;
         for (DataFrame df : dataframes) {
+            var suffix = "_" + order++;
             for (var column : df.columns) {
                 if (!names.contains(column.name())) {
                     data.add(column);
                     names.add(column.name());
+                } else {
+                    var name = column.name() + suffix;
+                    data.add(column.withName(name));
+                    names.add(name);
                 }
             }
         }
