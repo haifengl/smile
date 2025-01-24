@@ -176,7 +176,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (output != null) output.remove();
         if (outputGradient != null) outputGradient.remove();
         if (weightGradient != null) weightGradient.remove();
