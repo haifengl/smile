@@ -231,7 +231,7 @@
   `lambda` is the weight decay for regularization."
   ([x y builders] (mlp x y builders 10 0.1 0.0 0.0))
   ([x y builders epochs eta alpha lambda]
-   (let [net (MLP. (.length (aget x 0)) builders)]
+   (let [net (MLP. builders)]
      ((.setLearningRate net eta)
       (.setMomentum net alpha)
       (.setWeightDecay net lambda)
