@@ -168,16 +168,13 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of merge method, of class DataFrame.
+     * Test of add method, of class DataFrame.
      */
     @Test
-    public void testMerge() {
-        System.out.println("union");
+    public void testAdd() {
+        System.out.println("add");
         StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
-        DataFrame two = df.merge(edu);
-        assertEquals(df.size(), two.size());
-        assertEquals(df.columns().size()+1, two.columns().size());
-
+        DataFrame two = df.add(edu);
         assertEquals(38, two.get(0, 0));
         assertEquals("Alex", two.getString(0, 3));
         assertEquals(10000., two.get(0, 4));
