@@ -16,9 +16,6 @@
  */
 package smile.data;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -271,7 +268,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
 
     /**
      * Returns a new data frame with row indexing.
-     * @param index the row indices.
+     * @param index the row indexing.
      * @return the data frame of selected rows.
      */
     public DataFrame get(Index index) {
@@ -284,10 +281,33 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     /**
      * Returns a new data frame with row indexing.
      * This is an alias to {@link #get(Index) get} for Scala's convenience.
-     * @param index the row indices.
+     * @param index the row indexing.
      * @return the data frame of selected rows.
      */
     public DataFrame apply(Index index) {
+        return get(index);
+    }
+
+    /**
+     * Returns a new data frame with boolean indexing.
+     * @param index the boolean indexing.
+     * @return the data frame of selected rows.
+     */
+    public DataFrame get(boolean[] index) {
+        var idx = Index.of(index);
+        var rowIndex = this.index != null ? this.index.get(idx) : null;
+        return new DataFrame(schema, columns.stream()
+                .map(column -> column.get(idx))
+                .toList(), rowIndex);
+    }
+
+    /**
+     * Returns a new data frame with boolean indexing.
+     * This is an alias to {@link #get(boolean[]) get} for Scala's convenience.
+     * @param index the boolean indexing.
+     * @return the data frame of selected rows.
+     */
+    public DataFrame apply(boolean[] index) {
         return get(index);
     }
 
@@ -514,6 +534,30 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Adds columns to this data frame.
+     *
+     * @param vectors the columns to add.
+     * @return this dataframe.
+     */
+    public DataFrame add(ValueVector... vectors) {
+        for (var vector : vectors) {
+            if (vector.size() != size()) {
+                throw new IllegalArgumentException("Add a column with different size: " + size() + " vs " + vector.size());
+            }
+
+            if (schema.index().containsKey(vector.name())) {
+                throw new IllegalArgumentException("Add a column with clashing name: " + vector.name());
+            }
+        }
+
+        for (var vector : vectors) {
+            schema.add(vector.field());
+            columns.add(vector);
+        }
+        return this;
+    }
+
+    /**
      * Sets the column values. If the column does not exist, adds it as
      * the last column of the dataframe.
      *
@@ -534,8 +578,8 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         if (j < ncol()) {
             columns.set(j, column);
         } else {
-            schema.set(j, column.field());
-            columns.set(j, column);
+            schema.add(column.field());
+            columns.add(column);
         }
         return this;
     }
@@ -554,8 +598,37 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Joins two data frames on their index. If either dataframe has no index,
+     * merges them horizontally by columns.
+     * @param other the data frames to merge.
+     * @return a new data frame with combined columns.
+     */
+    public DataFrame join(DataFrame other) {
+        if (index == null || other.index == null) {
+            return merge(other);
+        }
+
+        int k = 0;
+        int n = size();
+        boolean[] inner = new boolean[n];
+        int[] right = new int[n];
+        for (int i = 0; i < n; i++) {
+            var id = index.values()[i];
+            var j = other.index().loc().get(id);
+            if (j != null) {
+                inner[i] = true;
+                right[k++] = j;
+            }
+        }
+        var left = get(Index.of(inner));
+        other = other.get(Index.of(Arrays.copyOf(right, k)));
+        return left.merge(other);
+    }
+
+    /**
      * Merges data frames horizontally by columns. If there are columns
-     * with the same name, the latter ones will be skipped.
+     * with the same name, the latter ones will be renamed with suffix
+     * such as _2, _3, etc.
      * @param dataframes the data frames to merge.
      * @return a new data frame with combined columns.
      */
@@ -569,39 +642,18 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         List<ValueVector> data = new ArrayList<>(columns);
         Set<String> names = new HashSet<>();
         Collections.addAll(names, names());
+        int order = 2;
         for (DataFrame df : dataframes) {
+            var suffix = "_" + order++;
             for (var column : df.columns) {
                 if (!names.contains(column.name())) {
                     data.add(column);
                     names.add(column.name());
+                } else {
+                    var name = column.name() + suffix;
+                    data.add(column.withName(name));
+                    names.add(name);
                 }
-            }
-        }
-
-        return new DataFrame(index, data.toArray(ValueVector[]::new));
-    }
-
-    /**
-     * Merges vectors with this data frame. If a column in the data frame
-     * has the name as the provide vectors, it will be replaced.
-     *
-     * @param vectors the vectors to merge.
-     * @return a new data frame with combined columns.
-     */
-    public DataFrame merge(ValueVector... vectors) {
-        for (var vector : vectors) {
-            if (vector.size() != size()) {
-                throw new IllegalArgumentException("Merge ValueVectors with different size: " + size() + " vs " + vector.size());
-            }
-        }
-
-        List<ValueVector> data = new ArrayList<>(columns);
-        for (var vector : vectors) {
-            int j = schema.index().getOrDefault(vector.name(), -1);
-            if (j == -1) {
-                data.add(vector);
-            } else {
-                data.set(j, vector);
             }
         }
 
@@ -644,7 +696,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     public DataFrame factorize(String... names) {
         if (names.length == 0) {
             names = schema().fields().stream()
-                    .filter(field -> field.dtype().isObject())
+                    .filter(field -> field.dtype().isString())
                     .map(StructField::name)
                     .toArray(String[]::new);
         }
@@ -1178,26 +1230,13 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public static <T> DataFrame of(Class<T> clazz, List<T> data) {
         try {
-            BeanInfo info = Introspector.getBeanInfo(clazz);
-            PropertyDescriptor[] props = info.getPropertyDescriptors();
-            StructField[] fields = Arrays.stream(props)
-                    .filter(prop -> !prop.getName().equals("class"))
-                    .map(StructField::of)
-                    .toArray(StructField[]::new);
-
             int n = data.size();
-            var schema = new StructType(fields);
+            Property[] props = Property.of(clazz);
             List<ValueVector> columns = new ArrayList<>();
-
-            for (PropertyDescriptor prop : props) {
-                if (prop.getName().equals("class")) continue;
-
-                String name = prop.getName();
-                Class<?> type = prop.getPropertyType();
-                Method read = prop.getReadMethod();
-                StructField field = Arrays.stream(fields)
-                        .filter(f -> f.name().equals(name))
-                        .findFirst().orElseThrow(NoSuchElementException::new);
+            for (var prop : props) {
+                StructField field = prop.field();
+                Method read = prop.accessor();
+                Class<?> type = prop.type();
 
                 int i = 0;
                 if (type == int.class) {
@@ -1276,7 +1315,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
                 }
             }
 
-            return new DataFrame(schema, columns, null);
+            return new DataFrame(StructType.of(props), columns, null);
         } catch (java.beans.IntrospectionException ex) {
             logger.error("Failed to introspect a bean: ", ex);
             throw new RuntimeException(ex);
