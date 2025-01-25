@@ -271,7 +271,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
 
     /**
      * Returns a new data frame with row indexing.
-     * @param index the row indices.
+     * @param index the row indexing.
      * @return the data frame of selected rows.
      */
     public DataFrame get(Index index) {
@@ -284,10 +284,33 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     /**
      * Returns a new data frame with row indexing.
      * This is an alias to {@link #get(Index) get} for Scala's convenience.
-     * @param index the row indices.
+     * @param index the row indexing.
      * @return the data frame of selected rows.
      */
     public DataFrame apply(Index index) {
+        return get(index);
+    }
+
+    /**
+     * Returns a new data frame with boolean indexing.
+     * @param index the boolean indexing.
+     * @return the data frame of selected rows.
+     */
+    public DataFrame get(boolean[] index) {
+        var idx = Index.of(index);
+        var rowIndex = this.index != null ? this.index.get(idx) : null;
+        return new DataFrame(schema, columns.stream()
+                .map(column -> column.get(idx))
+                .toList(), rowIndex);
+    }
+
+    /**
+     * Returns a new data frame with boolean indexing.
+     * This is an alias to {@link #get(boolean[]) get} for Scala's convenience.
+     * @param index the boolean indexing.
+     * @return the data frame of selected rows.
+     */
+    public DataFrame apply(boolean[] index) {
         return get(index);
     }
 
