@@ -676,7 +676,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     public DataFrame factorize(String... names) {
         if (names.length == 0) {
             names = schema().fields().stream()
-                    .filter(field -> field.dtype().isObject())
+                    .filter(field -> field.dtype().isString())
                     .map(StructField::name)
                     .toArray(String[]::new);
         }
