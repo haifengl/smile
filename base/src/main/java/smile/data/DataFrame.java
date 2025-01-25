@@ -514,6 +514,30 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Adds columns to this data frame.
+     *
+     * @param vectors the columns to add.
+     * @return this dataframe.
+     */
+    public DataFrame add(ValueVector... vectors) {
+        for (var vector : vectors) {
+            if (vector.size() != size()) {
+                throw new IllegalArgumentException("Add a column with different size: " + size() + " vs " + vector.size());
+            }
+
+            if (schema.index().containsKey(vector.name())) {
+                throw new IllegalArgumentException("Add a column with clashing name: " + vector.name());
+            }
+        }
+
+        for (var vector : vectors) {
+            schema.add(vector.field());
+            columns.add(vector);
+        }
+        return this;
+    }
+
+    /**
      * Sets the column values. If the column does not exist, adds it as
      * the last column of the dataframe.
      *
@@ -534,8 +558,8 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         if (j < ncol()) {
             columns.set(j, column);
         } else {
-            schema.set(j, column.field());
-            columns.set(j, column);
+            schema.add(column.field());
+            columns.add(column);
         }
         return this;
     }
@@ -610,33 +634,6 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
                     data.add(column.withName(name));
                     names.add(name);
                 }
-            }
-        }
-
-        return new DataFrame(index, data.toArray(ValueVector[]::new));
-    }
-
-    /**
-     * Merges vectors with this data frame. If a column in the data frame
-     * has the name as the provide vectors, it will be replaced.
-     *
-     * @param vectors the vectors to merge.
-     * @return a new data frame with combined columns.
-     */
-    public DataFrame merge(ValueVector... vectors) {
-        for (var vector : vectors) {
-            if (vector.size() != size()) {
-                throw new IllegalArgumentException("Merge ValueVectors with different size: " + size() + " vs " + vector.size());
-            }
-        }
-
-        List<ValueVector> data = new ArrayList<>(columns);
-        for (var vector : vectors) {
-            int j = schema.index().getOrDefault(vector.name(), -1);
-            if (j == -1) {
-                data.add(vector);
-            } else {
-                data.set(j, vector);
             }
         }
 

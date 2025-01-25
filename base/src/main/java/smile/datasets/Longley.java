@@ -61,7 +61,7 @@ public record Longley(DataFrame data, Formula formula) {
      */
     public Longley() {
         this(DataFrame.of(x, "GNP", "unemployed", "armed_forces", "population", "year", "employed")
-                .merge(new DoubleVector("deflator", y)),
+                .add(new DoubleVector("deflator", y)),
              Formula.lhs("deflator"));
     }
 
