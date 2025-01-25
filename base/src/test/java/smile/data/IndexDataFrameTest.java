@@ -41,25 +41,8 @@ public class IndexDataFrameTest {
         Female
     }
 
-    static class Person {
-        String name;
-        Gender gender;
-        LocalDate birthday;
-        int age;
-        Double salary;
-        Person(String name, Gender gender, LocalDate birthday, int age, Double salary) {
-            this.name = name;
-            this.gender = gender;
-            this.birthday = birthday;
-            this.age = age;
-            this.salary = salary;
-        }
+    record Person(String name, Gender gender, LocalDate birthday, int age, Double salary) {
 
-        public String getName() { return name; }
-        public Gender getGender() { return gender; }
-        public LocalDate getBirthday() { return birthday; }
-        public int getAge() { return age; }
-        public Double getSalary() { return salary; }
     }
 
     DataFrame df;
@@ -113,10 +96,10 @@ public class IndexDataFrameTest {
         System.out.println(df.describe());
         System.out.println(df);
         smile.data.type.StructType schema = new StructType(
-                new StructField("age", DataTypes.IntType),
-                new StructField("birthday", DataTypes.DateType),
-                new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
                 new StructField("name", DataTypes.StringType),
+                new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
+                new StructField("birthday", DataTypes.DateType),
+                new StructField("age", DataTypes.IntType),
                 new StructField("salary", DataTypes.NullableDoubleType)
         );
         assertEquals(schema, df.schema());
@@ -128,7 +111,7 @@ public class IndexDataFrameTest {
     @Test
     public void testNames() {
         System.out.println("names");
-        String[] names = {"age", "birthday", "gender", "name", "salary"};
+        String[] names = {"name", "gender", "birthday", "age", "salary"};
         assertArrayEquals(names, df.names());
     }
 
@@ -138,7 +121,7 @@ public class IndexDataFrameTest {
     @Test
     public void testTypes() {
         System.out.println("dtypes");
-        DataType[] dtypes = {DataTypes.IntType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.NullableDoubleType};
+        DataType[] dtypes = {DataTypes.StringType, DataTypes.ByteType, DataTypes.DateType, DataTypes.IntType,  DataTypes.NullableDoubleType};
         assertArrayEquals(dtypes, df.dtypes());
     }
 
@@ -151,17 +134,17 @@ public class IndexDataFrameTest {
         System.out.println(df);
         System.out.println(df.get(0));
         System.out.println(df.get(1));
-        assertEquals(48, df.get(0, 0));
-        assertEquals("Jane", df.getString(0, 3));
+        assertEquals("Jane", df.getString(0, 0));
+        assertEquals(48, df.get(0, 3));
         assertEquals(230000., df.get(0, 4));
-        assertEquals(23, df.get(1, 0));
-        assertEquals("Bob", df.getString(1, 3));
+        assertEquals("Bob", df.getString(1, 0));
+        assertEquals(23, df.get(1, 3));
         assertNull(df.get(1, 4));
-        assertEquals(13, df.get(2, 0));
-        assertEquals("Amy", df.getString(2, 3));
+        assertEquals("Amy", df.getString(2, 0));
+        assertEquals(13, df.get(2, 3));
         assertNull(df.get(2, 4));
-        assertEquals(48, df.get(3, 0));
-        assertEquals("Jane", df.getString(3, 3));
+        assertEquals("Jane", df.getString(3, 0));
+        assertEquals(48, df.get(3, 3));
         assertEquals(230000., df.get(3, 4));
     }
 
