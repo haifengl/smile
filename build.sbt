@@ -202,6 +202,7 @@ lazy val spark = project.in(file("spark"))
   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
+  .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
   .settings(akkaSettings: _*)
   .settings(publish / skip := true)
