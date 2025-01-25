@@ -64,7 +64,7 @@ public class LASSOTest {
         
         double[] y = {6, 5.2, 6.2, 5, 6};
 
-        DataFrame df = DataFrame.of(A).merge(new DoubleVector("y", y));
+        DataFrame df = DataFrame.of(A).add(new DoubleVector("y", y));
         RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
                 (formula, data) -> LASSO.fit(formula, data, 0.1, 0.001, 500));
 

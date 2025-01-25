@@ -25,8 +25,11 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.StringVector;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import org.junit.jupiter.api.*;
+import smile.util.Dates;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -142,9 +145,119 @@ public class DataFrameTest {
         assertArrayEquals(dtypes, df.dtypes());
     }
 
-    /**
-     * Test of concat method, of class DataFrame.
-     */
+    @Test
+    public void testGet() {
+        System.out.println("get");
+        System.out.println(df.get(0));
+        System.out.println(df.get(1));
+        assertEquals(38, df.get(0).getInt(0));
+        assertEquals("Alex", df.get(0).getString(3));
+        assertEquals(10000., df.get(0).get(4));
+        assertEquals(13, df.get(3).getInt(0));
+        assertEquals("Amy", df.get(3).getString(3));
+        assertNull(df.get(3).get(4));
+
+        assertEquals(38, df.get(0,0));
+        assertEquals("Alex", df.get(0,3));
+        assertEquals(10000., df.get(0,4));
+        assertEquals(13, df.get(3,0));
+        assertEquals("Amy", df.get(3,3));
+        assertNull(df.get(3, 4));
+    }
+
+    @Test
+    public void testSet() {
+        System.out.println("set");
+        StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
+        DataFrame two = df.set("Education", edu);
+        assertEquals(38, two.get(0, 0));
+        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(10000., two.get(0, 4));
+        assertEquals("MS", two.get(0, 5));
+        assertEquals(13, two.get(3, 0));
+        assertEquals("Amy", two.getString(3, 3));
+        assertNull(two.get(3, 4));
+        assertEquals("Middle School", two.get(3, 5));
+    }
+
+    @Test
+    public void testAdd() {
+        System.out.println("add");
+        StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
+        DataFrame two = df.add(edu);
+        assertEquals(38, two.get(0, 0));
+        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(10000., two.get(0, 4));
+        assertEquals("MS", two.get(0, 5));
+        assertEquals(13, two.get(3, 0));
+        assertEquals("Amy", two.getString(3, 3));
+        assertNull(two.get(3, 4));
+        assertEquals("Middle School", two.get(3, 5));
+    }
+
+    @Test
+    public void testDrop() {
+        System.out.println("drop");
+        DataFrame two = df.drop("salary");
+        assertEquals(4, two.nrow());
+        assertEquals(4, two.ncol());
+        assertEquals(38, two.get(0, 0));
+        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(13, two.get(3, 0));
+        assertEquals("Amy", two.getString(3, 3));
+    }
+
+    @Test
+    public void testSelect() {
+        System.out.println("select");
+        StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
+        DataFrame two = df.select("name", "salary");
+        assertEquals(4, two.nrow());
+        assertEquals(2, two.ncol());
+        assertEquals("Alex", two.getString(0, 0));
+        assertEquals(10000., two.get(0, 1));
+        assertEquals("Amy", two.getString(3, 0));
+        assertNull(two.get(3, 1));
+    }
+
+    @Test
+    public void testJoin() {
+        System.out.println("join");
+        var dates = Dates.range(LocalDate.of(2025,2,1), 6);
+        var df1 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
+        var df2 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
+        var df = df1.join(df2);
+
+        assertEquals(6, df.nrow());
+        assertEquals(8, df.ncol());
+        assertEquals(df1.get(0, 0), df.get(0, 0));
+        assertEquals(df2.get(0, 0), df.get(0, 4));
+        assertEquals(df1.get(3, 0), df.get(3, 0));
+        assertEquals(df2.get(3, 0), df.get(3, 4));
+        assertEquals(df1.get(5, 0), df.get(5, 0));
+        assertEquals(df2.get(5, 0), df.get(5, 4));
+    }
+
+    @Test
+    public void testMerge() {
+        System.out.println("merge");
+        DataFrame two = df.merge(df);
+        assertEquals(4, two.nrow());
+        assertEquals(10, two.ncol());
+        assertEquals(38, two.get(0, 0));
+        assertEquals("Alex", two.getString(0, 3));
+        assertEquals(10000., two.get(0, 4));
+        assertEquals(38, two.get(0, 5));
+        assertEquals("Alex", two.getString(0, 8));
+        assertEquals(10000., two.get(0, 9));
+        assertEquals(13, two.get(3, 0));
+        assertEquals("Amy", two.getString(3, 3));
+        assertNull(two.get(3, 4));
+        assertEquals(13, two.get(3, 5));
+        assertEquals("Amy", two.getString(3, 8));
+        assertNull(two.get(3, 9));
+    }
+
     @Test
     public void testConcat() {
         System.out.println("concat");
@@ -167,53 +280,24 @@ public class DataFrameTest {
         assertNull(two.get(7, 4));
     }
 
-    /**
-     * Test of merge method, of class DataFrame.
-     */
     @Test
-    public void testMerge() {
-        System.out.println("union");
-        StringVector edu = new StringVector("Education", new String[]{"MS", "BS", "Ph.D", "Middle School"});
-        DataFrame two = df.merge(edu);
-        assertEquals(df.size(), two.size());
-        assertEquals(df.columns().size()+1, two.columns().size());
-
-        assertEquals(38, two.get(0, 0));
+    public void testFactorize() {
+        System.out.println("factorize");
+        var two = df.factorize();
+        System.out.println(two.schema());
+        System.out.println(two);
+        assertTrue(two.schema().field("name").dtype().isIntegral());
+        assertTrue(two.schema().field("name").measure() instanceof NominalScale);
+        assertEquals(38, two.get(0,0));
+        assertEquals(0, two.get(0, 3));
         assertEquals("Alex", two.getString(0, 3));
-        assertEquals(10000., two.get(0, 4));
-        assertEquals("MS", two.get(0, 5));
-        assertEquals(13, two.get(3, 0));
-        assertEquals("Amy", two.getString(3, 3));
-        assertNull(two.get(3, 4));
-        assertEquals("Middle School", two.get(3, 5));
+        assertEquals(10000., two.get(0).get(4));
+        assertEquals(13, two.get(3).getInt(0));
+        assertEquals(1, two.get(3, 3));
+        assertEquals("Amy", two.get(3).getString(3));
+        assertNull(two.get(3).get(4));
     }
 
-    /**
-     * Test of get method, of class DataFrame.
-     */
-    @Test
-    public void testGet() {
-        System.out.println("get");
-        System.out.println(df.get(0));
-        System.out.println(df.get(1));
-        assertEquals(38, df.get(0).getInt(0));
-        assertEquals("Alex", df.get(0).getString(3));
-        assertEquals(10000., df.get(0).get(4));
-        assertEquals(13, df.get(3).getInt(0));
-        assertEquals("Amy", df.get(3).getString(3));
-        assertNull(df.get(3).get(4));
-
-        assertEquals(38, df.get(0,0));
-        assertEquals("Alex", df.get(0,3));
-        assertEquals(10000., df.get(0,4));
-        assertEquals(13, df.get(3,0));
-        assertEquals("Amy", df.get(3,3));
-        assertNull(df.get(3, 4));
-    }
-
-    /**
-     * Test of describe method, of class DataFrame.
-     */
     @Test
     public void testDescribe() {
         System.out.println("describe");

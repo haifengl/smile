@@ -102,7 +102,7 @@ public record MNIST(DataFrame data, Formula formula) {
             }
 
             var df = DataFrame.of(data);
-            return df.merge(new IntVector("class", y));
+            return df.add(new IntVector("class", y));
         }
     }
 
@@ -113,7 +113,7 @@ public record MNIST(DataFrame data, Formula formula) {
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
         var data = Read.csv(dataFilePath, format, schema);
         int[] y = Read.csv(labelFilePath, format).column(0).toIntArray();
-        return data.merge(new IntVector("class", y));
+        return data.add(new IntVector("class", y));
     }
 
     /**
