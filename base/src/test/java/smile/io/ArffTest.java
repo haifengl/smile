@@ -185,4 +185,14 @@ public class ArffTest {
             assertEquals(1.0, sparse.getDouble(1, 4), 1E-7);
         }
     }
+
+    @Test
+    public void testParseMushrooms() throws Exception {
+        System.out.println("mushrooms");
+        try (Arff arff = new Arff(Paths.getTestData("weka/mushrooms.arff"))) {
+            DataFrame mushrooms = arff.read();
+            assertEquals(8124, mushrooms.size());
+            assertEquals(5644, mushrooms.dropna().size());
+        }
+    }
 }
