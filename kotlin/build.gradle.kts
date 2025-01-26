@@ -25,7 +25,7 @@ buildscript {
 }
 
 group = "com.github.haifengl"
-version = "4.1.0"
+version = "4.2.0"
 extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {
@@ -35,8 +35,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:4.1.0")
-    api("com.github.haifengl:smile-nlp:4.1.0")
+    api("com.github.haifengl:smile-core:4.2.0")
+    api("com.github.haifengl:smile-nlp:4.2.0")
 }
 
 // Copy jar to shell lib
