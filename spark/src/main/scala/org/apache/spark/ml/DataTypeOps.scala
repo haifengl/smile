@@ -139,7 +139,7 @@ object DataTypeOps {
         org.apache.spark.sql.types.StructType(
           dtype.asInstanceOf[smile.data.`type`.StructType]
             .fields().stream()
-            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype)))
+            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype), f.dtype.isNullable))
             .toList)
     }
   }
