@@ -16,6 +16,7 @@
  */
 package smile.data.vector;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.*;
@@ -39,7 +40,7 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 @SuppressWarnings("unchecked")
-public interface ValueVector {
+public interface ValueVector extends Serializable {
     /**
      * Returns the struct field of the vector.
      * @return the struct field.
