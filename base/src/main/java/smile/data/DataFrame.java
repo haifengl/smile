@@ -16,6 +16,7 @@
  */
 package smile.data;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -44,7 +45,7 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row> {
+public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row>, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
     public DataFrame {
