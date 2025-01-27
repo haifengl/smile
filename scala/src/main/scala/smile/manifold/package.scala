@@ -95,7 +95,7 @@ package object manifold {
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
   def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]] = time("IsoMap") {
-    IsoMap.of(data, k, d, CIsomap)
+    IsoMap.of(data, new IsoMap.Options(k, d, CIsomap))
   }
 
   /** Locally Linear Embedding. It has several advantages over Isomap, including
@@ -267,7 +267,7 @@ package object manifold {
     * @param maxIter maximum number of iterations.
     */
   def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
-    IsotonicMDS.of(proximity, k, tol, maxIter)
+    IsotonicMDS.of(proximity, new IsotonicMDS.Options(k, tol, maxIter))
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint

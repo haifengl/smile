@@ -1055,7 +1055,8 @@ public class IsoMapTest {
 
         var roll = new SwissRoll();
         double[][] data = Arrays.copyOf(roll.data(), 1000);
-        double[][] coordinates = IsoMap.of(data, 7, 2, false);
+        var options = new IsoMap.Options(7, 2, false);
+        double[][] coordinates = IsoMap.of(data, options);
 
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {

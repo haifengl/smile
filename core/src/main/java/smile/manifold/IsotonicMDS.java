@@ -39,55 +39,63 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);
 
     /**
+     * Kruskal's non-metric MDS hyper-parameters.
+     * @param d the dimension of the projection.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter maximum number of iterations.
+     */
+    public record Options(int d, double tol, int maxIter) {
+        /** Constructor. */
+        public Options() {
+            this(2, 1E-4, 200);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.isotonic_mds.d", Integer.toString(d));
+            props.setProperty("smile.isotonic_mds.tolerance", Double.toString(tol));
+            props.setProperty("smile.isotonic_mds.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int d = Integer.parseInt(props.getProperty("smile.isotonic_mds.d", "2"));
+            double tol = Double.parseDouble(props.getProperty("smile.isotonic_mds.tolerance", "1E-4"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.isotonic_mds.iterations", "200"));
+            return new Options(d, tol, maxIter);
+        }
+    }
+
+    /**
      * Fits Kruskal's non-metric MDS with default k = 2, tolerance = 1E-4 and maxIter = 200.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity) {
-        return of(proximity, new Properties());
+        return of(proximity, new Options());
     }
 
     /**
      * Fits Kruskal's non-metric MDS.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param k the dimension of the projection.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity, int k) {
-        return of(proximity, k, 1E-4, 200);
-    }
-
-    /**
-     * Fits Kruskal's non-metric MDS.
-     *
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static IsotonicMDS of(double[][] proximity, Properties params) {
-        int k = Integer.parseInt(params.getProperty("smile.isotonic_mds.k", "2"));
-        double tol = Double.parseDouble(params.getProperty("smile.isotonic_mds.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.isotonic_mds.iterations", "200"));
-        return of(proximity, k, tol, maxIter);
-    }
-
-    /**
-     * Fits Kruskal's non-metric MDS.
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param k the dimension of the projection.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter maximum number of iterations.
-     * @return the model.
-     */
-    public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
-        MDS mds = MDS.of(proximity, k);
-        return of(proximity, mds.coordinates(), tol, maxIter);
+    public static IsotonicMDS of(double[][] proximity, Options options) {
+        MDS mds = MDS.of(proximity, options.d);
+        return of(proximity, mds.coordinates(), options);
     }
 
     /**
@@ -96,11 +104,10 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      * size is the projection dimension.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity, double[][] init, double tol, int maxIter) {
+    public static IsotonicMDS of(double[][] proximity, double[][] init, Options options) {
         if (proximity.length != proximity[0].length) {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
@@ -134,10 +141,11 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
 
         double stress;
         try {
-            stress = BFGS.minimize(func, 5, x, tol, maxIter);
+            stress = BFGS.minimize(func, 5, x, options.tol, options.maxIter);
         } catch (Exception ex) {
             // If L-BFGS doesn't work, let's try BFGS.
-            stress = BFGS.minimize(func, x, tol, maxIter);
+            logger.warn("L-BFGS minimization failed: {}. Try BFGS...", ex.getMessage());
+            stress = BFGS.minimize(func, x, options.tol, options.maxIter);
         }
 
         if (stress == 0.0) {
