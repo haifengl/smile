@@ -19,6 +19,7 @@ package smile.manifold;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
@@ -68,6 +69,62 @@ public class TSNE implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
+     * The t-SNE hyper-parameters.
+     * @param d the dimension of embedding space.
+     * @param perplexity the perplexity of the conditional distribution.
+     * @param eta the learning rate.
+     * @param iterations the number of iterations.
+     */
+    public record Options(int d, double perplexity, double eta, int iterations) {
+        public Options {
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+            if (perplexity < 2) {
+                throw new IllegalArgumentException("Invalid perplexity: " + perplexity);
+            }
+            if (eta <= 0) {
+                throw new IllegalArgumentException("Invalid learning rate: " + eta);
+            }
+            if (iterations <= 0) {
+                throw new IllegalArgumentException("Invalid iterations: " + iterations);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(2, 20, 200, 1000);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.t_sne.d", Integer.toString(d));
+            props.setProperty("smile.t_sne.perplexity", Double.toString(perplexity));
+            props.setProperty("smile.t_sne.eta", Double.toString(eta));
+            props.setProperty("smile.t_sne.iterations", Integer.toString(iterations));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int d = Integer.parseInt(props.getProperty("smile.t_sne.d", "2"));
+            double perplexity = Double.parseDouble(props.getProperty("smile.t_sne.perplexity", "20"));
+            double eta = Double.parseDouble(props.getProperty("smile.t_sne.eta", "200"));
+            int iterations = Integer.parseInt(props.getProperty("smile.t_sne.iterations", "1000"));
+            return new Options(d, perplexity, eta, iterations);
+        }
+    }
+
+    /**
      * The embedding coordinates.
      */
     private final double[][] coordinates;
@@ -109,28 +166,17 @@ public class TSNE implements Serializable {
     /** The cost function value. */
     private double cost;
 
-    /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
-     *
-     * @param X the input data. If X is a square matrix, it is assumed to be
-     *          the squared distance/dissimilarity matrix.
-     * @param d the dimension of embedding space.
-     */
-    public TSNE(double[][] X, int d) {
-        this(X, d, 20, 200, 1000);
-    }
-
-    /** Constructor. Train t-SNE for given number of iterations.
+    /**
+     * Constructor. Train t-SNE for given number of iterations.
      *
      * @param X the input data. If X is a square matrix, it is assumed to be
      *         the squared distance/dissimilarity matrix.
-     * @param d the dimension of embedding space.
-     * @param perplexity the perplexity of the conditional distribution.
-     * @param eta the learning rate.
-     * @param iterations the number of iterations.
+     * @param options the hyper-parameters.
      */
-    public TSNE(double[][] X, int d, double perplexity, double eta, int iterations) {
-        this.eta = eta;
+    public TSNE(double[][] X, Options options) {
+        eta = options.eta;
         int n = X.length;
+        int d = options.d;
 
         double[][] D;
         if (X.length == X[0].length) {
@@ -156,7 +202,7 @@ public class TSNE implements Serializable {
 
         // Large tolerance to speed up the search of Gaussian kernel width
         // A small difference of kernel width is not important.
-        P = expd(D, perplexity, 1E-3);
+        P = expd(D, options.perplexity, 1E-3);
         Q = new double[n][n];
 
         // Make P symmetric
@@ -172,7 +218,7 @@ public class TSNE implements Serializable {
             }
         }
 
-        update(iterations);
+        update(options.iterations);
     }
 
     /**
