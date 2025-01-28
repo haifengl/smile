@@ -143,7 +143,7 @@ package object manifold {
     *          Non-positive value means discrete weights.
     */
   def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]] = time("Laplacian Eigen Map") {
-    LaplacianEigenmap.of(data, k, d, t)
+    LaplacianEigenmap.of(data, new LaplacianEigenmap.Options(k, d, t))
   }
 
   /** t-distributed stochastic neighbor embedding. t-SNE is a nonlinear
@@ -167,7 +167,7 @@ package object manifold {
     * @param iterations the number of iterations.
     */
   def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = time("t-SNE") {
-    new TSNE(X, d, perplexity, eta, iterations)
+    new TSNE(X, new TSNE.Options(d, perplexity, eta, iterations))
   }
 
   /**
@@ -221,8 +221,8 @@ package object manifold {
   def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, epochs: Int = 0, learningRate: Double = 1.0,
            minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0,
            localConnectivity: Double = 1.0): Array[Array[Double]] = time("UMAP") {
-    UMAP.of(data, k, d, epochs, learningRate, minDist, spread,
-            negativeSamples, repulsionStrength, localConnectivity)
+    UMAP.of(data, new UMAP.Options(k, d, epochs, learningRate, minDist, spread,
+                                   negativeSamples, repulsionStrength, localConnectivity))
   }
 
   /** Classical multidimensional scaling, also known as principal coordinates
@@ -236,7 +236,7 @@ package object manifold {
     *                  diagonal should be zero and all other elements should be positive and
     *                  symmetric. For pairwise distances matrix, it should be just the plain
     *                  distance, not squared.
-    * @param k the dimension of the projection.
+    * @param d the dimension of the projection.
     * @param positive if true, estimate an appropriate constant to be added
     *            to all the dissimilarities, apart from the self-dissimilarities, that
     *            makes the learning matrix positive semi-definite. The other formulation of
@@ -248,8 +248,8 @@ package object manifold {
     *            to minimize the dimensionality of the Euclidean space required for
     *            representing the objects.
     */
-  def mds(proximity: Array[Array[Double]], k: Int, positive: Boolean = false): MDS = time("MDS") {
-    MDS.of(proximity, k, positive)
+  def mds(proximity: Array[Array[Double]], d: Int, positive: Boolean = false): MDS = time("MDS") {
+    MDS.of(proximity, new MDS.Options(d, positive))
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -262,12 +262,12 @@ package object manifold {
     *
     * @param proximity the non-negative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
-    * @param k the dimension of the projection.
+    * @param d the dimension of the projection.
     * @param tol tolerance for stopping iterations.
     * @param maxIter maximum number of iterations.
     */
-  def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
-    IsotonicMDS.of(proximity, new IsotonicMDS.Options(k, tol, maxIter))
+  def isomds(proximity: Array[Array[Double]], d: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
+    IsotonicMDS.of(proximity, new IsotonicMDS.Options(d, tol, maxIter))
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -300,14 +300,14 @@ package object manifold {
     *
     * @param proximity the non-negative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
-    * @param k         the dimension of the projection.
+    * @param d         the dimension of the projection.
     * @param lambda    initial value of the step size constant in diagonal Newton method.
     * @param tol       tolerance for stopping iterations.
     * @param stepTol   tolerance on step size.
     * @param maxIter   maximum number of iterations.
     */
-  def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
-    SammonMapping.of(proximity, k, lambda, tol, stepTol, maxIter)
+  def sammon(proximity: Array[Array[Double]], d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
+    SammonMapping.of(proximity, new SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].

@@ -17,6 +17,7 @@
 package smile.manifold;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
@@ -61,22 +62,7 @@ public class UMAP {
     private static final int LARGE_DATA_SIZE = 10000;
 
     /**
-     * Runs the UMAP algorithm with Euclidean distance.
-     *
-     * @param data    The input data.
-     * @param k       k-nearest neighbors. Larger values result in more global views
-     *                of the manifold, while smaller values result in more local data
-     *                being preserved. Generally in the range 2 to 100.
-     * @return The embedding coordinates.
-     */
-    public static double[][] of(double[][] data, int k) {
-        return of(data, k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
-    }
-
-    /**
-     * Runs the UMAP algorithm with Euclidean distance.
-     *
-     * @param data    The input data.
+     * The UMAP hyper-parameters.
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
@@ -107,144 +93,123 @@ public class UMAP {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     */
+    public record Options(int k, int d, int epochs, double learningRate,
+                          double minDist, double spread, int negativeSamples,
+                          double repulsionStrength, double localConnectivity) {
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
+            }
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+            if (minDist <= 0) {
+                throw new IllegalArgumentException("minDist must greater than 0: " + minDist);
+            }
+            if (minDist > spread) {
+                throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ", spread=" + spread);
+            }
+            if (learningRate <= 0) {
+                throw new IllegalArgumentException("learningRate must greater than 0: " + learningRate);
+            }
+            if (negativeSamples <= 0) {
+                throw new IllegalArgumentException("negativeSamples must greater than 0: " + negativeSamples);
+            }
+            if (localConnectivity < 1) {
+                throw new IllegalArgumentException("localConnectivity must be at least 1.0: " + localConnectivity);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k k-nearest neighbor.
+         */
+        public Options(int k) {
+            this(k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.umap.k", Integer.toString(k));
+            props.setProperty("smile.umap.d", Integer.toString(d));
+            props.setProperty("smile.umap.epochs", Integer.toString(epochs));
+            props.setProperty("smile.umap.learning_rate", Double.toString(learningRate));
+            props.setProperty("smile.umap.min_dist", Double.toString(minDist));
+            props.setProperty("smile.umap.spread", Double.toString(spread));
+            props.setProperty("smile.umap.negative_samples", Integer.toString(negativeSamples));
+            props.setProperty("smile.umap.repulsion_strength", Double.toString(repulsionStrength));
+            props.setProperty("smile.umap.local_connectivity", Double.toString(localConnectivity));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.umap.k", "15"));
+            int d = Integer.parseInt(props.getProperty("smile.umap.d", "2"));
+            int epochs = Integer.parseInt(props.getProperty("smile.umap.epochs", "0"));
+            double learningRate = Double.parseDouble(props.getProperty("smile.umap.learning_rate", "1.0"));
+            double minDist = Double.parseDouble(props.getProperty("smile.umap.min_dist", "0.1"));
+            double spread = Double.parseDouble(props.getProperty("smile.umap.spread", "1.0"));
+            int negativeSamples = Integer.parseInt(props.getProperty("smile.umap.negative_samples", "5"));
+            double repulsionStrength = Double.parseDouble(props.getProperty("smile.umap.repulsion_strength", "1.0"));
+            double localConnectivity = Double.parseDouble(props.getProperty("smile.umap.local_connectivity", "1.0"));
+            return new Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
+            repulsionStrength, localConnectivity);
+        }
+    }
+
+    /**
+     * Runs the UMAP algorithm with Euclidean distance.
+     *
+     * @param data    the input data.
+     * @param options the hyper-parameters.
      * @return The embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d, int epochs, double learningRate,
-                                double minDist, double spread, int negativeSamples,
-                                double repulsionStrength, double localConnectivity) {
+    public static double[][] of(double[][] data, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
-                NearestNeighborGraph.of(data, k) :
-                NearestNeighborGraph.descent(data, k);
-        return of(data, nng, d, epochs, learningRate, minDist, spread,
-                  negativeSamples, repulsionStrength, localConnectivity);
+                NearestNeighborGraph.of(data, options.k) :
+                NearestNeighborGraph.descent(data, options.k);
+        return of(data, nng, options);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
-     * @param data    The input data.
-     * @param distance The distance function.
-     * @param k       k-nearest neighbor. Larger values result in more global views
-     *                of the manifold, while smaller values result in more local data
-     *                being preserved. Generally in the range 2 to 100.
+     * @param data     the input data.
+     * @param distance the distance function.
+     * @param options  the hyper-parameters.
      * @param <T> The data type of points.
      * @return The embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Metric<T> distance, int k) {
-        return of(data, distance, k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
-    }
-
-    /**
-     * Runs the UMAP algorithm.
-     *
-     * @param data               The input data.
-     * @param distance           The distance function.
-     * @param k                  k-nearest neighbors. Larger values result in more global views
-     *                           of the manifold, while smaller values result in more local data
-     *                           being preserved. Generally in the range 2 to 100.
-     * @param d                  The target embedding dimensions. defaults to 2 to provide easy
-     *                           visualization, but can reasonably be set to any integer value
-     *                           in the range 2 to 100.
-     * @param epochs             The number of epochs to optimize the
-     *                           low-dimensional representation. Larger values result in more
-     *                           accurate embedding. Muse be at least 10. Choose wise value
-     *                           based on the size of the input data, e.g, 200 for large
-     *                           data (10000+ samples), 500 for small.
-     * @param learningRate       The initial learning rate for the embedding optimization,
-     *                           default 1.
-     * @param minDist            The desired separation between close points in the embedding
-     *                           space. Smaller values will result in a more clustered/clumped
-     *                           embedding where nearby points on the manifold are drawn closer
-     *                           together, while larger values will result on a more even
-     *                           disperse of points. The value should be set no-greater than
-     *                           and relative to the spread value, which determines the scale
-     *                           at which embedded points will be spread out. default 0.1.
-     * @param spread             The effective scale of embedded points. In combination with
-     *                           minDist, this determines how clustered/clumped the embedded
-     *                           points are. default 1.0.
-     * @param negativeSamples    The number of negative samples to select per positive sample
-     *                           in the optimization process. Increasing this value will result
-     *                           in greater repulsive force being applied, greater optimization
-     *                           cost, but slightly more accuracy, default 5.
-     * @param repulsionStrength  Weighting applied to negative samples in low dimensional
-     *                           embedding optimization. Values higher than one will result in
-     *                           greater weight being given to negative samples, default 1.0.
-     * @param <T> The data type of points.
-     * @return The embedding coordinates.
-     */
-    public static <T> double[][] of(T[] data, Metric<T> distance, int k, int d, int epochs,
-                                    double learningRate, double minDist, double spread, int negativeSamples,
-                                    double repulsionStrength, double localConnectivity) {
+    public static <T> double[][] of(T[] data, Metric<T> distance, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
-                NearestNeighborGraph.of(data, distance, k) :
-                NearestNeighborGraph.descent(data, distance, k);
-        return of(data, nng, d, epochs, learningRate, minDist, spread,
-                  negativeSamples, repulsionStrength, localConnectivity);
+                NearestNeighborGraph.of(data, distance, options.k) :
+                NearestNeighborGraph.descent(data, distance, options.k);
+        return of(data, nng, options);
     }
 
     /**
      * Runs the UMAP algorithm.
      *
-     * @param data               The input data.
-     * @param nng                The k-nearest neighbor graph.
-     * @param d                  The target embedding dimensions. defaults to 2 to provide easy
-     *                           visualization, but can reasonably be set to any integer value
-     *                           in the range 2 to 100.
-     * @param epochs             The number of iterations to optimize the
-     *                           low-dimensional representation. Larger values result in more
-     *                           accurate embedding. Muse be at least 10. Choose wise value
-     *                           based on the size of the input data, e.g, 200 for large
-     *                           data (1000+ samples), 500 for small.
-     * @param learningRate       The initial learning rate for the embedding optimization,
-     *                           default 1.
-     * @param minDist            The desired separation between close points in the embedding
-     *                           space. Smaller values will result in a more clustered/clumped
-     *                           embedding where nearby points on the manifold are drawn closer
-     *                           together, while larger values will result on a more even
-     *                           disperse of points. The value should be set no-greater than
-     *                           and relative to the spread value, which determines the scale
-     *                           at which embedded points will be spread out. default 0.1.
-     * @param spread             The effective scale of embedded points. In combination with
-     *                           minDist, this determines how clustered/clumped the embedded
-     *                           points are. default 1.0.
-     * @param negativeSamples    The number of negative samples to select per positive sample
-     *                           in the optimization process. Increasing this value will result
-     *                           in greater repulsive force being applied, greater optimization
-     *                           cost, but slightly more accuracy, default 5.
-     * @param repulsionStrength  Weighting applied to negative samples in low dimensional
-     *                           embedding optimization. Values higher than one will result in
-     *                           greater weight being given to negative samples, default 1.0.
-     * @param localConnectivity The local connectivity required. That is, the
-     *                          number of nearest neighbors that should be assumed
-     *                          to be connected at a local level. The higher this
-     *                          value the more connected the manifold becomes locally.
-     *                          In practice this should be not more than the local
-     *                          intrinsic dimension of the manifold.
+     * @param data    the input data.
+     * @param nng     the k-nearest neighbor graph.
+     * @param options the hyper-parameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, NearestNeighborGraph nng, int d, int epochs,
-                                    double learningRate, double minDist, double spread, int negativeSamples,
-                                    double repulsionStrength, double localConnectivity) {
-        if (d < 2) {
-            throw new IllegalArgumentException("d must be greater than 1: " + d);
-        }
-        if (minDist <= 0) {
-            throw new IllegalArgumentException("minDist must greater than 0: " + minDist);
-        }
-        if (minDist > spread) {
-            throw new IllegalArgumentException("minDist must be less than or equal to spread: " + minDist + ", spread=" + spread);
-        }
-        if (learningRate <= 0) {
-            throw new IllegalArgumentException("learningRate must greater than 0: " + learningRate);
-        }
-        if (negativeSamples <= 0) {
-            throw new IllegalArgumentException("negativeSamples must greater than 0: " + negativeSamples);
-        }
-        if (localConnectivity < 1) {
-            throw new IllegalArgumentException("localConnectivity must be at least 1.0: " + localConnectivity);
-        }
-
+    public static <T> double[][] of(T[] data, NearestNeighborGraph nng, Options options) {
+        int d = options.d;
+        int epochs = options.epochs;
         if (epochs < 10) {
             epochs = data.length > LARGE_DATA_SIZE ? 200 : 500;
             logger.info("Set epochs = {}", epochs);
@@ -253,7 +218,7 @@ public class UMAP {
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        SparseMatrix conorm = computeFuzzySimplicialSet(nng, localConnectivity);
+        SparseMatrix conorm = computeFuzzySimplicialSet(nng, options.localConnectivity);
 
         // Initialize embedding
         int n = nng.size();
@@ -284,13 +249,13 @@ public class UMAP {
 
         // parameters for the differentiable curve used in lower
         // dimensional fuzzy simplicial complex construction.
-        double[] curve = fitCurve(spread, minDist);
+        double[] curve = fitCurve(options.spread, options.minDist);
         logger.info("Finish fitting the curve parameters: {}", Arrays.toString(curve));
 
         // Optimizing the embedding
         SparseMatrix epochsPerSample = computeEpochPerSample(conorm, epochs);
         logger.info("Start optimizing the layout");
-        optimizeLayout(coordinates, curve, epochsPerSample, epochs, learningRate, negativeSamples, repulsionStrength);
+        optimizeLayout(coordinates, curve, epochsPerSample, epochs, options.learningRate, options.negativeSamples, options.repulsionStrength);
         return coordinates;
     }
 

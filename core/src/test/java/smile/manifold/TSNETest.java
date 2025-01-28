@@ -57,7 +57,7 @@ public class TSNETest {
         double[][] X = pca.apply(x);
 
         long start = System.currentTimeMillis();
-        TSNE tsne = new TSNE(X, 2, 20, 200, 550);
+        TSNE tsne = new TSNE(X, new TSNE.Options(2, 20, 200, 550));
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 

@@ -45,6 +45,12 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * @param maxIter maximum number of iterations.
      */
     public record Options(int d, double tol, int maxIter) {
+        public Options {
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
         /** Constructor. */
         public Options() {
             this(2, 1E-4, 200);
@@ -94,7 +100,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, Options options) {
-        MDS mds = MDS.of(proximity, options.d);
+        MDS mds = MDS.of(proximity, new MDS.Options(options.d, false));
         return of(proximity, mds.coordinates(), options);
     }
 

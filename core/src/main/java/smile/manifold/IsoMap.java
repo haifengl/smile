@@ -79,6 +79,15 @@ public class IsoMap {
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
     public record Options(int k, int d, boolean conformal) {
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
+            }
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
         /**
          * Constructor.
          * @param k k-nearest neighbor.

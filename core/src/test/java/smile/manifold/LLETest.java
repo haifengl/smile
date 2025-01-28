@@ -1055,7 +1055,7 @@ public class LLETest {
 
         var roll = new SwissRoll();
         double[][] data = Arrays.copyOf(roll.data(), 1000);
-        double[][] coordinates = LLE.of(data, 7);
+        double[][] coordinates = LLE.of(data, new LLE.Options(7));
 
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {

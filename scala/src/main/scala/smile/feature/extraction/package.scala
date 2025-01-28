@@ -178,7 +178,7 @@ package object extraction {
     *                  the given threshold will be kept.
     */
   def kpca(data: DataFrame, kernel: MercerKernel[Array[Double]], k: Int, threshold: Double = 0.0001): KernelPCA = time("Kernel PCA") {
-    KernelPCA.fit(data, kernel, k, threshold)
+    KernelPCA.fit(data, kernel, new smile.manifold.KPCA.Options(k, threshold))
   }
 
   /** Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -189,7 +189,7 @@ package object extraction {
     *
     * It guarantees that GHA finds the first k eigenvectors of the covariance matrix,
     * assuming that the associated eigenvalues are distinct. The convergence theorem
-    * is forumulated in terms of a time-varying learning rate &eta;. In practice, the
+    * is formulated in terms of a time-varying learning rate &eta;. In practice, the
     * learning rate &eta; is chosen to be a small constant, in which case convergence is
     * guaranteed with mean-squared error in synaptic weights of order &eta;.
     *
