@@ -28,7 +28,7 @@ function App() {
   };
 
   const bot = {
-    id: 'meta/llama3',
+    id: 'smile',
     name: 'Kirin',
     avatar: LlamaIcon,
   };
@@ -88,9 +88,9 @@ function App() {
     setShowTypingIndicator(true);
 
     const data = {
-      "model": "meta/llama3",
+      "model": "llama3.3",
       "threadId": threadId,
-      "stream": true,
+      "stream": false,
       "messages": [
         {
           "role": "user",
@@ -107,7 +107,7 @@ function App() {
       });
     }
 
-    const url = '/v1/chat/completions';
+    const url = '/api/chat';
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -170,14 +170,11 @@ function App() {
           }
           return response.json();
         })
-        .then(data => {
-          let content = data['choices'][0]['message']['content'];
-          content = content.trim();
-
+        .then(response => {
           messages.push({
-            text: content,
+            text: response.message.content,
             user: bot,
-            createdAt: new Date(data['created']),
+            createdAt: new Date(response['created_at']),
           });
 
           setMessages([...messages]);
