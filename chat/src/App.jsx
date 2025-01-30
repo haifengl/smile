@@ -88,7 +88,7 @@ function App() {
     setShowTypingIndicator(true);
 
     const data = {
-      "model": "llama3.3",
+      "model": "deepseek-r1:70b",
       "threadId": threadId,
       "stream": false,
       "messages": [
@@ -100,7 +100,7 @@ function App() {
     };
 
     // Guide the system if this is the first user message.
-    if (messages.length == 2) {
+    if (messages.length === 2) {
       data.messages.unshift({
           "role": "system",
           "content": "You are a helpful, respectful and honest assistant."
@@ -171,8 +171,14 @@ function App() {
           return response.json();
         })
         .then(response => {
+          let msg = response.message.content;
+          let pos = msg.indexOf("</think>");
+          if (pos === -1) {
+            console.log(msg.substring(0, pos + 8));
+            msg = msg.substring(pos + 8);
+          }
           messages.push({
-            text: response.message.content,
+            text: msg,
             user: bot,
             createdAt: new Date(response['created_at']),
           });
