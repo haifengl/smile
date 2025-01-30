@@ -119,6 +119,7 @@ function App() {
 
     if (data["stream"]) {
       requestOptions['headers']['Accept'] = 'text/event-stream';
+      requestOptions['payload'] = JSON.stringify(data);
 
       const history = messages;
       const message = {
@@ -155,6 +156,7 @@ function App() {
 
       source.stream();
     } else {
+      requestOptions['body'] = JSON.stringify(data);
       fetch(url, requestOptions)
         .then(response => {
           if (!response.ok) {
@@ -164,7 +166,7 @@ function App() {
         })
         .then(response => {
           let msg = response.message.content;
-          let pos = msg.indexOf("</think>");
+          let pos = msg.indexOf('</think>');
           if (pos === -1) {
             console.log(msg.substring(0, pos + 8));
             msg = msg.substring(pos + 8);
