@@ -107,14 +107,13 @@ function App() {
       });
     }
 
-    const url = '/api/chat';
+    const url = '/v1/chat/completions';
     const requestOptions = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache'
       },
-      payload: JSON.stringify(data),
     };
 
     if (data["stream"]) {
@@ -135,7 +134,7 @@ function App() {
       });
 
       source.addEventListener('open', (e) => {
-        console.log('SSE open ' + e.responseCode);
+        console.log('SSE open: ' + e.responseCode);
       });
 
       source.addEventListener('abort', (e) => {
@@ -143,7 +142,15 @@ function App() {
         setShowTypingIndicator(false);
       });
 
+      source.addEventListener('readystatechange', (e) => {
+        console.log('SSE ready state: ' + e.readyState);
+        if (e.readyState === 2) { // CLOSED
+          setShowTypingIndicator(false);
+        }
+      });
+
       source.addEventListener('error', (e) => {
+        console.log('SSE error: ' + e.responseCode);
         messages.push({
           text: "Sorry, the service isn't available right now. Please try again later.",
           user: server,
