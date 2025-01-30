@@ -74,32 +74,31 @@ object Generator {
 
         case ChatStream(request, publisher) =>
           if (request.model != model.family()) {
+            publisher.submit(s"Unsupported model: ${request.model}")
             publisher.close()
-            throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
-          }
-
-          val result = dao.insertMessages(request)
-          Await.ready(result, 10.seconds).onComplete {
-            case Success((threadId, context)) =>
-              try {
-                val messages = context.reverse.map(msg => new Message(Role.valueOf(msg.role), msg.content)) ++ request.messages
-                val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
-                val completions = model.chat(Array(messages.toArray),
-                  request.max_tokens.getOrElse(config.maxSeqLen / 4), request.temperature.getOrElse(0.6),
-                  request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, publisher)
-                val response = CompletionResponse(threadId, completions(0))
-                log.info("Reply {}", response)
-                dao.insertMessages(threadId, response)
-              } catch {
-                case e: Throwable => log.error("ChatStream: ", e)
-              } finally {
+          } else {
+            val result = dao.insertMessages(request)
+            Await.ready(result, 10.seconds).onComplete {
+              case Success((threadId, context)) =>
+                try {
+                  val messages = context.reverse.map(msg => new Message(Role.valueOf(msg.role), msg.content)) ++ request.messages
+                  val seed: java.lang.Long = if (request.seed.isDefined) request.seed.get else null
+                  val completions = model.chat(Array(messages.toArray),
+                    request.max_tokens.getOrElse(config.maxSeqLen / 4), request.temperature.getOrElse(0.6),
+                    request.top_p.getOrElse(0.9), request.logprobs.getOrElse(false), seed, publisher)
+                  val response = CompletionResponse(threadId, completions(0))
+                  log.info("Reply {}", response)
+                  dao.insertMessages(threadId, response)
+                } catch {
+                  case e: Throwable => log.error("ChatStream: ", e)
+                } finally {
+                  publisher.close()
+                }
+              case Failure(ex) =>
                 publisher.close()
-              }
-            case Failure(ex) =>
-              publisher.close()
-              log.error("ChatStream: ", ex)
+                log.error("ChatStream: ", ex)
+            }
           }
-
           Behaviors.same
       }
     }
