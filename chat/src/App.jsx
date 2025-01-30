@@ -129,7 +129,6 @@ function App() {
 
       let source = new SSE(url, requestOptions);
       source.addEventListener('message', (e) => {
-        console.log(e.data);
         message.text += e.data;
         setMessages([...history, message]);
       });
