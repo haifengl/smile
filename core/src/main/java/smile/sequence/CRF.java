@@ -219,45 +219,88 @@ public class CRF implements Serializable {
     }
 
     /**
-     * Fits a CRF model.
-     * @param sequences the training data.
-     * @param labels the training sequence labels.
-     * @return the model.
-     */
-    public static CRF fit(Tuple[][] sequences, int[][] labels) {
-        return fit(sequences, labels, new Properties());
-    }
-
-    /**
-     * Fits a CRF model.
-     * @param sequences the training data.
-     * @param labels the training sequence labels.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.crf.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.crf.max_nodes", "100"));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.crf.node_size", "5"));
-        double shrinkage = Double.parseDouble(params.getProperty("smile.crf.shrinkage", "1.0"));
-        return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
-    }
-
-    /**
-     * Fits a CRF model.
-     * @param sequences the training data.
-     * @param labels the training sequence labels.
+     * CRF hyper-parameters.
      * @param ntrees the number of trees/iterations.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     */
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maxDepth: " + maxDepth);
+            }
+            if (maxNodes < 2) {
+                throw new IllegalArgumentException("Invalid maxNodes: " + maxDepth);
+            }
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid nodeSize: " + maxDepth);
+            }
+            if (shrinkage <= 0 || shrinkage > 1) {
+                throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(100, 20, 100, 5, 1.0);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.crf.trees", Integer.toString(ntrees));
+            props.setProperty("smile.crf.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.crf.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.crf.node_size", Integer.toString(nodeSize));
+            props.setProperty("smile.crf.shrinkage", Double.toString(shrinkage));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.crf.trees", "100"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.crf.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.crf.max_nodes", "100"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.crf.node_size", "5"));
+            double shrinkage = Double.parseDouble(props.getProperty("smile.crf.shrinkage", "1.0"));
+            return new Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+        }
+    }
+
+    /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
      * @return the model.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+    public static CRF fit(Tuple[][] sequences, int[][] labels) {
+        return fit(sequences, labels, new Options());
+    }
+
+    /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     * @param options the hyper-parameters.
+     * @return the model.
+     */
+    public static CRF fit(Tuple[][] sequences, int[][] labels, Options options) {
         int k = MathEx.max(labels) + 1;
+        int ntrees = options.ntrees;
         double[][] scaling = new double[sequences.length][];
         Trellis[] trellis = new Trellis[sequences.length];
         for (int i = 0; i < sequences.length; i++) {
@@ -339,17 +382,17 @@ public class CRF implements Serializable {
             });
 
             for (int j = 0; j < k; j++) {
-                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncol(), samples, order);
+                RegressionTree tree = new RegressionTree(data, loss[j], field, options.maxDepth, options.maxNodes, options.nodeSize, data.ncol(), samples, order);
                 potentials[j][iter] = tree;
 
                 double[] hj = h[j];
                 for (int i = 0; i < n; i++) {
-                    hj[i] += shrinkage * tree.predict(data.get(i));
+                    hj[i] += options.shrinkage * tree.predict(data.get(i));
                 }
             }
         }
 
-        return new CRF(sequences[0][0].schema(), potentials, shrinkage);
+        return new CRF(sequences[0][0].schema(), potentials, options.shrinkage);
     }
 
     /**
