@@ -22,8 +22,8 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
-import 'katex/dist/katex.min.css' // `rehype-katex` does not import the CSS
 import CopyButton from './CopyButton';
+import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
 
 export default function TextContent({
