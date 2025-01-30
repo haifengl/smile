@@ -49,6 +49,7 @@ object Generator {
         case Chat(request, replyTo) =>
           try {
             if (request.model != model.family()) {
+              log.error("Unsupported model: {}", request.model)
               throw new IllegalArgumentException(s"Unsupported model: ${request.model}")
             }
 
@@ -74,6 +75,7 @@ object Generator {
 
         case ChatStream(request, publisher) =>
           if (request.model != model.family()) {
+            log.error("Unsupported model: {}", request.model)
             publisher.submit(s"Unsupported model: ${request.model}")
             publisher.close()
           } else {
