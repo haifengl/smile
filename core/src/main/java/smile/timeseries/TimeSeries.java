@@ -68,11 +68,11 @@ public interface TimeSeries {
     }
 
     /**
-     * Autocovariance function.
+     * Auto-covariance function.
      *
      * @param x time series.
      * @param lag the lag.
-     * @return autocovariance.
+     * @return auto-covariance.
      */
     static double cov(double[] x, int lag) {
         if (lag < 0) {
@@ -91,11 +91,11 @@ public interface TimeSeries {
     }
 
     /**
-     * Autocorrelation function.
+     * Auto-correlation function.
      *
      * @param x time series.
      * @param lag the lag.
-     * @return autocorrelation.
+     * @return auto-correlation.
      */
     static double acf(double[] x, int lag) {
         if (lag == 0) {
@@ -124,14 +124,14 @@ public interface TimeSeries {
     }
 
     /**
-     * Partial autocorrelation function. The partial autocorrelation function
+     * Partial auto-correlation function. The partial auto-correlation function
      * (PACF) gives the partial correlation of a stationary time series with
      * its own lagged values, regressed the values of the time series at all
      * shorter lags.
      *
      * @param x time series.
      * @param lag the lag.
-     * @return partial autocorrelation.
+     * @return partial auto-correlation.
      */
     static double pacf(double[] x, int lag) {
         if (lag < 0) {
