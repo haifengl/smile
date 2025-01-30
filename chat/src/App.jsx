@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { useEffect, useState } from 'react'
-import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
+import { SSE } from 'sse.js'
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
@@ -90,7 +90,7 @@ function App() {
     const data = {
       "model": "deepseek-r1:70b",
       "threadId": threadId,
-      "stream": false,
+      "stream": true,
       "messages": [
         {
           "role": "user",
@@ -112,8 +112,9 @@ function App() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       },
-      body: JSON.stringify(data),
+      payload: JSON.stringify(data),
     };
 
     if (data["stream"]) {
@@ -126,42 +127,34 @@ function App() {
         createdAt: new Date(),
       };
 
-      fetchEventSource(url, {
-        ...requestOptions,
-        async onopen(response) {
-          if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
-            // everything's good
-          } else {
-            throw new Error(response.statusText);
-          }
-        },
-        onmessage(msg) {
-          // if the server emits an error message, throw an exception
-          // so it gets handled by the onerror callback below:
-          if (msg.event === 'FatalError') {
-            throw new Error(msg.data);
-          }
-
-          message.text += msg.data;
-          setMessages([...history, message]);
-        },
-        onclose() {
-          console.log("Server closes the connection");
-          setShowTypingIndicator(false);
-        },
-        onerror(error) {
-          console.error(error);
-          messages.push({
-            text: "Sorry, the service isn't available right now. Please try again later.",
-            user: server,
-            createdAt: new Date(),
-          });
-
-          setMessages([...messages]);
-          setShowTypingIndicator(false);
-          throw error; // rethrow to stop the operation
-        }
+      let source = new SSE(url, requestOptions);
+      source.addEventListener('message', (e) => {
+        console.log(e.data);
+        message.text += e.data;
+        setMessages([...history, message]);
       });
+
+      source.addEventListener('open', (e) => {
+        console.log('SSE open ' + e.responseCode);
+      });
+
+      source.addEventListener('abort', (e) => {
+        console.log('SSE abort');
+        setShowTypingIndicator(false);
+      });
+
+      source.addEventListener('error', (e) => {
+        messages.push({
+          text: "Sorry, the service isn't available right now. Please try again later.",
+          user: server,
+          createdAt: new Date(),
+        });
+
+        setMessages([...messages]);
+        setShowTypingIndicator(false);
+      });
+
+      source.stream();
     } else {
       fetch(url, requestOptions)
         .then(response => {
