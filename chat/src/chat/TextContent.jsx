@@ -20,6 +20,9 @@ import remarkGemoji from 'remark-gemoji'
 import remarkGfm from 'remark-gfm'
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
+import 'katex/dist/katex.min.css' // `rehype-katex` does not import the CSS
 import CopyButton from './CopyButton';
 import './TextContent.css'
 
@@ -34,7 +37,8 @@ export default function TextContent({
     return (
         <div className="text-content">
             <Markdown className="line-break"
-                remarkPlugins={[remarkGfm, remarkGemoji]}
+                remarkPlugins={[remarkGfm, remarkGemoji, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
                 components={{
                   pre: Pre,
                   code(props) {

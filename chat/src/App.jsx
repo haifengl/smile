@@ -167,7 +167,7 @@ function App() {
         .then(response => {
           let msg = response.message.content;
           let pos = msg.indexOf('</think>');
-          if (pos === -1) {
+          if (pos !== -1) {
             console.log(msg.substring(0, pos + 8));
             msg = msg.substring(pos + 8);
           }
