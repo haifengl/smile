@@ -73,7 +73,13 @@ public class ElasticNet {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.elastic_net.lambda1</code> is the L1 shrinkage/regularization parameter
+         * <li><code>smile.elastic_net.lambda2</code> is the L2 shrinkage/regularization parameter
+         * <li><code>smile.elastic_net.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+         * <li><code>smile.elastic_net.iterations</code> is the maximum number of IPM (Newton) iterations.
+         * </ul>
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -101,14 +107,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
-     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
-     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
-     * </ul>
-     *
+     * Fits an Elastic Net model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
@@ -121,13 +120,7 @@ public class ElasticNet {
     }
 
     /**
-     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
-     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
-     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
-     * </ul>
+     * Fits an Elastic Net model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.

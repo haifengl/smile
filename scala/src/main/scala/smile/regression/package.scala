@@ -174,7 +174,7 @@ package object regression {
     * @return SVR model.
     */
   def svm[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time("SVR") {
-    SVM.fit(x, y, kernel, eps, C, tol)
+    SVM.fit(x, y, kernel, new SVM.Options(eps, C, tol))
   }
 
   /** Regression tree. A classification/regression tree can be learned by
@@ -441,7 +441,7 @@ package object regression {
       * @param maxIter   the maximum number of iterations for HPO. No HPO if maxIter <= 0.
       */
     def apply[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true, tol: Double = 1E-5, maxIter: Int = 0): GaussianProcessRegression[T] = time("Gaussian Process Regression") {
-      GaussianProcessRegression.fit(x, y, kernel, noise, normalize, tol, maxIter)
+      GaussianProcessRegression.fit(x, y, kernel, new GaussianProcessRegression.Options(noise, normalize, tol, maxIter))
     }
 
     /** Fits an approximate Gaussian process model with a subset of regressors.
@@ -456,7 +456,7 @@ package object regression {
       * @param normalize the option to normalize the response variable.
       */
     def approx[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true): GaussianProcessRegression[T] = time("SoR Gaussian Process Regression") {
-      GaussianProcessRegression.fit(x, y, t, kernel, noise, normalize)
+      GaussianProcessRegression.fit(x, y, t, kernel, new GaussianProcessRegression.Options(noise, normalize))
     }
 
     /** Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
@@ -471,7 +471,7 @@ package object regression {
       * @param normalize the option to normalize the response variable.
       */
     def nystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true): GaussianProcessRegression[T] = time("Nystrom Approximate Gaussian Process Regression") {
-      GaussianProcessRegression.nystrom(x, y, t, kernel, noise, normalize)
+      GaussianProcessRegression.nystrom(x, y, t, kernel, new GaussianProcessRegression.Options(noise, normalize))
     }
   }
 

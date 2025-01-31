@@ -54,7 +54,7 @@ public class SVMTest {
 
         CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
         double[][] data = Read.csv(Paths.getTestData("clustering/rem.txt"), format).toArray();
-        SVM<double[]> model = SVM.fit(data, new GaussianKernel(1.0), 0.2, 1E-3);
+        SVM<double[]> model = SVM.fit(data, new GaussianKernel(1.0), new SVM.Options(0.2, 1E-3));
 
         double[][] grid = new double[201][201];
         for (int i = 0; i < grid.length; i++) {

@@ -302,6 +302,68 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     }
 
     /**
+     * Gaussian process regression hyper-parameters.
+     * @param noise the noise variance, which also works as a regularization parameter.
+     * @param normalize the flag if normalize the response variable.
+     * @param tol the stopping tolerance for HPO.
+     * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
+     */
+    public record Options(double noise, boolean normalize, double tol, int maxIter) {
+        public Options {
+            if (noise < 0.0) {
+                throw new IllegalArgumentException("Invalid noise variance = " + noise);
+            }
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param noise the noise variance, which also works as a regularization parameter.
+         */
+        public Options(double noise) {
+            this(noise, true);
+        }
+
+        /**
+         * Constructor.
+         * @param noise the noise variance, which also works as a regularization parameter.
+         * @param normalize the flag if normalize the response variable.
+         */
+        public Options(double noise, boolean normalize) {
+            this(noise, normalize,1E-5, 0);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.gaussian_process.noise", Double.toString(noise));
+            props.setProperty("smile.gaussian_process.normalize", Boolean.toString(normalize));
+            props.setProperty("smile.gaussian_process.tolerance", Double.toString(tol));
+            props.setProperty("smile.gaussian_process.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double noise = Double.parseDouble(props.getProperty("smile.gaussian_process.noise", "1E-10"));
+            boolean normalize = Boolean.parseBoolean(props.getProperty("smile.gaussian_process.normalize", "true"));
+            double tol = Double.parseDouble(props.getProperty("smile.gaussian_process.tolerance", "1E-5"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.gaussian_process.iterations", "0"));
+            return new Options(noise, normalize, tol, maxIter);
+        }
+    }
+
+    /**
      * Fits a regular Gaussian process model.
      * @param x the training dataset.
      * @param y the response variable.
@@ -310,11 +372,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      */
     public static GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties params) {
         MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.gaussian_process.kernel", "linear"));
-        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
-        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
-        double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
-        return fit(x, y, kernel, noise, normalize, tol, maxIter);
+        return fit(x, y, kernel, Options.of(params));
     }
 
     /**
@@ -322,56 +380,19 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param kernel the Mercer kernel.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties params) {
-        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
-        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
-        double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
-        return fit(x, y, kernel, noise, normalize, tol, maxIter);
-    }
-
-    /**
-     * Fits a regular Gaussian process model by the method of subset of regressors.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise) {
-        return fit(x, y, kernel, noise,true,1E-5, 0);
-    }
-
-    /**
-     * Fits a regular Gaussian process model.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param normalize the flag if normalize the response variable.
-     * @param tol the stopping tolerance for HPO.
-     * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize, double tol, int maxIter) {
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (noise < 0.0) {
-            throw new IllegalArgumentException("Invalid noise variance = " + noise);
         }
 
         int n = x.length;
         double mean = 0.0;
         double std = 1.0;
-        if (normalize) {
+        if (options.normalize) {
             mean = MathEx.mean(y);
             std = MathEx.stdev(y);
 
@@ -382,7 +403,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             y = target;
         }
 
-        if (maxIter > 0) {
+        double noise = options.noise;
+        if (options.maxIter > 0) {
             LogMarginalLikelihood<T> objective = new LogMarginalLikelihood<>(x, y, kernel);
             double[] hp = kernel.hyperparameters();
             double[] lo = kernel.lo();
@@ -396,7 +418,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             l[m] = 1E-10;
             u[m] = 1E5;
 
-            BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
+            BFGS.minimize(objective, 5, params, l, u, options.tol, options.maxIter);
             kernel = kernel.of(params);
             noise = params[params.length - 1];
         }
@@ -421,59 +443,18 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          be chosen randomly from the training set or as the centers of
      *          k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties params) {
-        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
-        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
-        return fit(x, y, t, kernel, noise, normalize);
-    }
-
-    /**
-     * Fits an approximate Gaussian process model by the method of subset of regressors.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param t the inducing input, which are pre-selected or inducing samples
-     *          acting as active set of regressors. In simple case, these can
-     *          be chosen randomly from the training set or as the centers of
-     *          k-means clustering.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
-        return fit(x, y, t, kernel, noise, true);
-    }
-
-    /**
-     * Fits an approximate Gaussian process model by the method of subset of regressors.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param t the inducing input, which are pre-selected or inducing samples
-     *          acting as active set of regressors. In simple case, these can
-     *          be chosen randomly from the training set or as the centers of
-     *          k-means clustering.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param normalize the option to normalize the response variable.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (noise < 0.0) {
-            throw new IllegalArgumentException("Invalid noise variance = " + noise);
-        }
-
         double mean = 0.0;
         double std = 1.0;
-        if (normalize) {
+        if (options.normalize) {
             mean = MathEx.mean(y);
             std = MathEx.stdev(y);
 
@@ -485,6 +466,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             y = target;
         }
 
+        double noise = options.noise;
         Matrix G = kernel.K(x, t);
         Matrix K = G.ata();
         Matrix Kt = kernel.K(t);
@@ -502,48 +484,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties params) {
-        double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
-        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
-        return nystrom(x, y, t, kernel, noise, normalize);
-    }
-
-    /**
-     * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param t the inducing input, which are pre-selected for Nystrom approximation.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
-        return nystrom(x, y, t, kernel, noise, true);
-    }
-
-    /**
-     * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
-     * @param x the training dataset.
-     * @param y the response variable.
-     * @param t the inducing input, which are pre-selected for Nystrom approximation.
-     * @param kernel the Mercer kernel.
-     * @param noise the noise variance, which also works as a regularization parameter.
-     * @param normalize the option to normalize the response variable.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
+    public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (noise < 0.0) {
-            throw new IllegalArgumentException("Invalid noise variance = " + noise);
         }
 
         int n = x.length;
@@ -551,7 +498,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
         double mean = 0.0;
         double std = 1.0;
-        if (normalize) {
+        if (options.normalize) {
             mean = MathEx.mean(y);
             std = MathEx.stdev(y);
 
@@ -571,10 +518,10 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             D.set(i, i, 1.0 / Math.sqrt(D.get(i, i)));
         }
 
+        double noise = options.noise;
         Matrix UD = U.mm(D);
         Matrix UDUt = UD.mt(U);
         Matrix L = E.mm(UDUt);
-
         Matrix LtL = L.ata();
         LtL.addDiag(noise);
 
