@@ -54,12 +54,13 @@ public class SVMTest {
     public void testLongley() throws Exception {
         System.out.println("longley");
         var longley = new Longley();
-        RegressionMetrics metrics = LOOCV.regression(longley.x(), longley.y(), (x, y) -> SVM.fit(x, y, 2.0, 10.0, 1E-3));
+        var options = new SVM.Options(2.0, 10.0, 1E-3);
+        RegressionMetrics metrics = LOOCV.regression(longley.x(), longley.y(), (x, y) -> SVM.fit(x, y, options));
 
         System.out.println("LOOCV RMSE = " + metrics.rmse());
         assertEquals(1.6140, metrics.rmse(), 1E-4);
 
-        Regression<double[]> model = SVM.fit(longley.x(), longley.y(), 2.0, 10.0, 1E-3);
+        Regression<double[]> model = SVM.fit(longley.x(), longley.y(), options);
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }
@@ -74,7 +75,7 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, x, y,
-                (xi, yi) -> SVM.fit(xi, yi,40.0, 10.0, 1E-3));
+                (xi, yi) -> SVM.fit(xi, yi, new SVM.Options(40.0, 10.0, 1E-3)));
 
         System.out.println(result);
         assertEquals(47.1872, result.avg().rmse(), 1E-4);
@@ -87,7 +88,7 @@ public class SVMTest {
         GaussianKernel kernel = new GaussianKernel(6.0);
 
         RegressionValidation<Regression<double[]>> result = RegressionValidation.of(prostate.x(), prostate.y(),
-                prostate.testx(), prostate.testy(), (x, y) -> SVM.fit(x, y, kernel, 0.5, 5, 1E-3));
+                prostate.testx(), prostate.testy(), (x, y) -> SVM.fit(x, y, kernel, new SVM.Options(0.5, 5, 1E-3)));
 
         System.out.println(result);
         assertEquals(0.9112183360712871, result.metrics().rmse(), 1E-4);
@@ -99,7 +100,7 @@ public class SVMTest {
         var abalone = new Abalone();
         GaussianKernel kernel = new GaussianKernel(5.0);
         var result = RegressionValidation.of(abalone.x(), abalone.y(), abalone.testx(), abalone.testy(),
-                (x, y) -> SVM.fit(x, y, kernel, 1.5, 100, 1E-3));
+                (x, y) -> SVM.fit(x, y, kernel, new SVM.Options(1.5, 100, 1E-3)));
 
         System.out.println(result);
         assertEquals(2.1092, result.metrics().rmse(), 1E-4);
@@ -113,7 +114,7 @@ public class SVMTest {
         var diabetes = new Diabetes();
         GaussianKernel kernel = new GaussianKernel(5.0);
         RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, diabetes.x(), diabetes.y(),
-                (x, y) -> SVM.fit(x, y, kernel, 50, 1000, 1E-3));
+                (x, y) -> SVM.fit(x, y, kernel, new SVM.Options(50, 1000, 1E-3)));
 
         System.out.println(result);
         assertEquals(61.5148, result.avg().rmse(), 1E-4);

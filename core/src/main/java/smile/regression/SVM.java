@@ -43,9 +43,7 @@ import smile.util.SparseArray;
  */
 public class SVM {
     /**
-     * Fits a linear epsilon-SVR.
-     * @param x training samples.
-     * @param y response variable.
+     * SVM hyper-parameters.
      * @param eps the parameter of epsilon-insensitive hinge loss.
      *            There is no penalty associated with samples which are
      *            predicted within distance epsilon from the actual value.
@@ -53,10 +51,60 @@ public class SVM {
      *            to the calibration/training data.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
+     */
+    public record Options(double eps, double C, double tol) {
+        public Options {
+            if (eps <= 0) {
+                throw new IllegalArgumentException("Invalid epsilon: " + eps);
+            }
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+            if (C < 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + C);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(1.0, 1.0, 1E-3);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.svm.epsilon", Double.toString(eps));
+            props.setProperty("smile.svm.C", Double.toString(C));
+            props.setProperty("smile.svm.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double eps = Double.parseDouble(props.getProperty("smile.svm.epsilon", "1.0"));
+            double C = Double.parseDouble(props.getProperty("smile.svm.C", "1.0"));
+            double tol = Double.parseDouble(props.getProperty("smile.svm.tolerance", "1E-3"));
+            return new Options(eps, C, tol);
+        }
+    }
+
+    /**
+     * Fits a linear epsilon-SVR.
+     * @param x training samples.
+     * @param y response variable.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Regression<double[]> fit(double[][] x, double[] y, double eps, double C, double tol) {
-        smile.base.svm.SVR<double[]> svr = new smile.base.svm.SVR<>(new LinearKernel(), eps, C, tol);
+    public static Regression<double[]> fit(double[][] x, double[] y, Options options) {
+        smile.base.svm.SVR<double[]> svr = new smile.base.svm.SVR<>(new LinearKernel(), options.eps, options.C, options.tol);
         KernelMachine<double[]> svm = svr.fit(x, y);
 
         return new Regression<>() {
@@ -73,18 +121,12 @@ public class SVM {
      * Fits a linear epsilon-SVR of binary sparse data.
      * @param x training samples.
      * @param y response variable.
-     * @param eps the parameter of epsilon-insensitive hinge loss.
-     *            There is no penalty associated with samples which are
-     *            predicted within distance epsilon from the actual value.
-     *            Decreasing epsilon forces closer fitting
-     *            to the calibration/training data.
      * @param p the dimension of input vector.
-     * @param C the soft margin penalty parameter.
-     * @param tol the tolerance of convergence test.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Regression<int[]> fit(int[][] x, double[] y, int p, double eps, double C, double tol) {
-        smile.base.svm.SVR<int[]> svr = new smile.base.svm.SVR<>(new BinarySparseLinearKernel(), eps, C, tol);
+    public static Regression<int[]> fit(int[][] x, double[] y, int p, Options options) {
+        smile.base.svm.SVR<int[]> svr = new smile.base.svm.SVR<>(new BinarySparseLinearKernel(), options.eps, options.C, options.tol);
         KernelMachine<int[]> svm = svr.fit(x, y);
 
         return new Regression<>() {
@@ -101,18 +143,12 @@ public class SVM {
      * Fits a linear epsilon-SVR of sparse data.
      * @param x training samples.
      * @param y response variable.
-     * @param eps the parameter of epsilon-insensitive hinge loss.
-     *            There is no penalty associated with samples which are
-     *            predicted within distance epsilon from the actual value.
-     *            Decreasing epsilon forces closer fitting
-     *            to the calibration/training data.
      * @param p the dimension of input vector.
-     * @param C the soft margin penalty parameter.
-     * @param tol the tolerance of convergence test.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Regression<SparseArray> fit(SparseArray[] x, double[] y, int p, double eps, double C, double tol) {
-        smile.base.svm.SVR<SparseArray> svr = new smile.base.svm.SVR<>(new SparseLinearKernel(), eps, C, tol);
+    public static Regression<SparseArray> fit(SparseArray[] x, double[] y, int p, Options options) {
+        smile.base.svm.SVR<SparseArray> svr = new smile.base.svm.SVR<>(new SparseLinearKernel(), options.eps, options.C, options.tol);
         KernelMachine<SparseArray> svm = svr.fit(x, y);
 
         return new Regression<>() {
@@ -129,19 +165,13 @@ public class SVM {
      * Fits an epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param eps the parameter of epsilon-insensitive hinge loss.
-     *            There is no penalty associated with samples which are
-     *            predicted within distance epsilon from the actual value.
-     *            Decreasing epsilon forces closer fitting
-     *            to the calibration/training data.
      * @param kernel the kernel function.
-     * @param C the soft margin penalty parameter.
-     * @param tol the tolerance of convergence test.
+     * @param options the hyper-parameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double eps, double C, double tol) {
-        smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<>(kernel, eps, C, tol);
+    public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Options options) {
+        smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<>(kernel, options.eps, options.C, options.tol);
         return svr.fit(x, y);
     }
 
@@ -154,14 +184,10 @@ public class SVM {
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Properties params) {
         MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.svm.kernel", "linear"));
-        double eps = Double.parseDouble(params.getProperty("smile.svm.epsilon", "1.0"));
-        double C = Double.parseDouble(params.getProperty("smile.svm.C", "1.0"));
-        double tol = Double.parseDouble(params.getProperty("smile.svm.tolerance", "1E-3"));
-
         if (kernel instanceof LinearKernel) {
-            return SVM.fit(x, y, eps, C, tol);
+            return SVM.fit(x, y, Options.of(params));
         } else {
-            return SVM.fit(x, y, kernel, eps, C, tol);
+            return SVM.fit(x, y, kernel, Options.of(params));
         }
     }
 }

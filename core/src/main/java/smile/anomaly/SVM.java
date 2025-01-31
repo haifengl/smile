@@ -16,6 +16,7 @@
  */
 package smile.anomaly;
 
+import java.util.Properties;
 import smile.base.svm.KernelMachine;
 import smile.base.svm.OCSVM;
 import smile.math.kernel.MercerKernel;
@@ -39,6 +40,53 @@ import smile.math.kernel.MercerKernel;
  */
 public class SVM<T> extends KernelMachine<T>  {
     /**
+     * SVM hyper-parameters.
+     * @param nu the parameter sets an upper bound on the fraction of outliers
+     *           (training examples regarded out-of-class) and it is a lower
+     *           bound on the number of training examples used as Support Vector.
+     * @param tol the tolerance of convergence test.
+     */
+    public record Options(double nu, double tol) {
+        public Options {
+            if (nu <= 0 || nu > 1) {
+                throw new IllegalArgumentException("Invalid nu: " + nu);
+            }
+
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(0.5, 1E-3);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.svm.nu", Double.toString(nu));
+            props.setProperty("smile.svm.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double nu = Double.parseDouble(props.getProperty("smile.svm.nu", "0.5"));
+            double tol = Double.parseDouble(props.getProperty("smile.svm.tolerance", "1E-3"));
+            return new SVM.Options(nu, tol);
+        }
+    }
+
+    /**
      * Constructor.
      * @param kernel Kernel function.
      * @param vectors The support vectors.
@@ -57,30 +105,19 @@ public class SVM<T> extends KernelMachine<T>  {
      * @return the model.
      */
     public static <T> SVM<T> fit(T[] x, MercerKernel<T> kernel) {
-        return fit(x, kernel, 0.5, 1E-3);
+        return fit(x, kernel, new Options());
     }
 
     /**
      * Fits a one-class SVM.
      * @param x training samples.
      * @param kernel the kernel function.
-     * @param nu the parameter sets an upper bound on the fraction of outliers
-     *           (training examples regarded out-of-class) and it is a lower
-     *           bound on the number of training examples used as Support Vector.
-     * @param tol the tolerance of convergence test.
+     * @param options the hyper-parameters.
      * @param <T> the data type.
      * @return the model.
      */
-    public static <T> SVM<T> fit(T[] x, MercerKernel<T> kernel, double nu, double tol) {
-        if (nu <= 0 || nu > 1) {
-            throw new IllegalArgumentException("Invalid nu: " + nu);
-        }
-
-        if (tol <= 0) {
-            throw new IllegalArgumentException("Invalid tol: " + tol);
-        }
-
-        OCSVM<T> svm = new OCSVM<>(kernel, nu, tol);
+    public static <T> SVM<T> fit(T[] x, MercerKernel<T> kernel, Options options) {
+        OCSVM<T> svm = new OCSVM<>(kernel, options.nu, options.tol);
         KernelMachine<T> model = svm.fit(x);
         return new SVM<>(model.kernel(), model.vectors(), model.weights(), model.intercept());
     }
