@@ -155,7 +155,7 @@ package object regression {
     * @param maxIter the maximum number of iterations.
     */
   def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel = time("LASSO") {
-    LASSO.fit(formula, data, lambda, tol, maxIter)
+    LASSO.fit(formula, data, new LASSO.Options(lambda, tol, maxIter))
   }
 
   /** Support vector regression. Like SVM for classification, the model produced
@@ -386,7 +386,7 @@ package object regression {
   def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500, maxDepth: Int = 20,
           maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
           subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
-    GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
+    GradientTreeBoost.fit(formula, data, new GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
   }
 
   /** Gaussian Process for Regression. */

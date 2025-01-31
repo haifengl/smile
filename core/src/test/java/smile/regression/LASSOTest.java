@@ -66,7 +66,7 @@ public class LASSOTest {
 
         DataFrame df = DataFrame.of(A).add(new DoubleVector("y", y));
         RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
-                (formula, data) -> LASSO.fit(formula, data, 0.1, 0.001, 500));
+                (formula, data) -> LASSO.fit(formula, data, new LASSO.Options(0.1, 0.001, 500)));
 
         System.out.println(result.model());
         System.out.println(result);
@@ -82,11 +82,11 @@ public class LASSOTest {
     public void testLongley() throws Exception {
         System.out.println("longley");
         var longley = new Longley();
-        LinearModel model = LASSO.fit(longley.formula(), longley.data(), 0.1);
+        LinearModel model = LASSO.fit(longley.formula(), longley.data(), new LASSO.Options(0.1));
         System.out.println(model);
 
         RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
-                (f, x) -> LASSO.fit(f, x, 0.1));
+                (f, x) -> LASSO.fit(f, x, new LASSO.Options(0.1)));
 
         System.out.println(metrics);
         assertEquals(1.4146, metrics.rmse(), 1E-4);
@@ -101,11 +101,11 @@ public class LASSOTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
-        LinearModel model = LASSO.fit(cpu.formula(), cpu.data(), 0.1);
+        LinearModel model = LASSO.fit(cpu.formula(), cpu.data(), new LASSO.Options(0.1));
         System.out.println(model);
 
         RegressionValidations<LinearModel> result  = CrossValidation.regression(10, cpu.formula(), cpu.data(),
-                (f, x) -> LASSO.fit(f, x, 0.1));
+                (f, x) -> LASSO.fit(f, x, new LASSO.Options(0.1)));
 
         System.out.println(result);
         assertEquals(51.0009, result.avg().rmse(), 1E-4);

@@ -69,6 +69,72 @@ public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
     /**
+     * Lasso hyper-parameters.
+     * @param lambda the shrinkage/regularization parameter.
+     * @param tol the tolerance to stop iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     */
+    public record Options(double lambda, double tol, int maxIter) {
+        public Options {
+            if (lambda < 0.0) {
+                throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
+            }
+
+            if (tol <= 0.0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(1.0);
+        }
+
+        /**
+         * Constructor.
+         * @param lambda the shrinkage/regularization parameter.
+         */
+        public Options(double lambda) {
+            this(lambda, 1E-4, 1000);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+         *               Choosing an appropriate value of lambda is important, and also difficult.
+         * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+         * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.lasso.lambda", Double.toString(lambda));
+            props.setProperty("smile.lasso.tolerance", Double.toString(tol));
+            props.setProperty("smile.lasso.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double lambda = Double.parseDouble(props.getProperty("smile.lasso.lambda", "1"));
+            double tol = Double.parseDouble(props.getProperty("smile.lasso.tolerance", "1E-4"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.lasso.iterations", "1000"));
+            return new Options(lambda, tol, maxIter);
+        }
+    }
+
+    /**
      * Fits a L1-regularized least squares model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -76,28 +142,7 @@ public class LASSO {
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits a L1-regularized least squares model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
-     *               Choosing an appropriate value of lambda is important, and also difficult.
-     * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
-     * </ul>
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
-        double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.iterations", "1000"));
-        return fit(formula, data, lambda, tol, maxIter);
+        return fit(formula, data, new Options());
     }
 
     /**
@@ -105,24 +150,10 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
-        return fit(formula, data, lambda, 1E-4, 1000);
-    }
-
-    /**
-     * Fits a L1-regularized least squares model.
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance to stop iterations (relative target duality gap).
-     * @param maxIter the maximum number of IPM (Newton) iterations.
-     * @return the model.
-     */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
+    public static LinearModel fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
@@ -140,7 +171,7 @@ public class LASSO {
 
         Matrix scaledX = X.scale(center, scale);
 
-        double[] w = train(scaledX, y, lambda, tol, maxIter);
+        double[] w = train(scaledX, y, options.lambda, options.tol, options.maxIter);
 
         int p = w.length;
         for (int j = 0; j < p; j++) {
@@ -161,18 +192,6 @@ public class LASSO {
      * @return the model.
      */
     static double[] train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
-        if (lambda < 0.0) {
-            throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
         // INITIALIZE
         // IPM PARAMETERS
         final int MU = 2;             // updating parameter of t

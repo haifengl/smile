@@ -96,13 +96,13 @@ object RegressionModel {
             case "random_forest" =>
                 RandomForest.fit(formula, data, params)
             case "gradient_boost" =>
-                GradientTreeBoost.fit(formula, data, params)
+                GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options.of(params))
             case "cart" =>
                 RegressionTree.fit(formula, data, params)
             case "ols" =>
                 OLS.fit(formula, data, params)
             case "lasso" =>
-                LASSO.fit(formula, data, params)
+                LASSO.fit(formula, data, LASSO.Options.of(params))
             case "elastic_net" =>
                 ElasticNet.fit(formula, data, ElasticNet.Options.of(params))
             case "ridge" =>
