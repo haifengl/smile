@@ -84,8 +84,8 @@ package object regression {
     * @param method the fitting method ("svd" or "qr").
     * @param recursive if true, the return model supports recursive least squares.
     */
-  def lm(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel = time("Least Squares") {
-    OLS.fit(formula, data, method, stderr, recursive)
+  def lm(formula: Formula, data: DataFrame, method: OLS.Method = OLS.Method.QR, stderr: Boolean = true, recursive: Boolean = true): LinearModel = time("Least Squares") {
+    OLS.fit(formula, data, new OLS.Options(method, stderr, recursive))
   }
 
   /** Ridge Regression. When the predictor variables are highly correlated amongst
@@ -247,7 +247,7 @@ package object regression {
     * @return Regression tree model.
     */
   def cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree = time("Regression Tree") {
-    RegressionTree.fit(formula, data, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
+    RegressionTree.fit(formula, data, new RegressionTree.Options(maxDepth, maxNodes, nodeSize))
   }
 
   /** Random forest for regression. Random forest is an ensemble classifier
@@ -303,7 +303,7 @@ package object regression {
   def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0,
                    maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 5,
                    subsample: Double = 1.0): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
+    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample))
   }
 
   /** Gradient boosted regression trees.

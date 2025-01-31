@@ -136,6 +136,75 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
+     * Random forest hyper-parameters.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the
+     *             decision at a node of the tree. p/3 generally give good
+     *             performance, where p is the number of variables.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the number of instances in a node below which the tree will
+     *                 not split, nodeSize = 5 generally gives good results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with
+     *                  replacement. {@code < 1.0} means sampling without replacement.
+     */
+    public record Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(500, 0, 20, 0, 5, 1.0);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.random_forest.trees", Integer.toString(ntrees));
+            props.setProperty("smile.random_forest.mtry", Integer.toString(mtry));
+            props.setProperty("smile.random_forest.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.random_forest.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.random_forest.node_size", Integer.toString(nodeSize));
+            props.setProperty("smile.random_forest.sampling_rate", Double.toString(subsample));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.random_forest.trees", "500"));
+            int mtry = Integer.parseInt(props.getProperty("smile.random_forest.mtry", "0"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.random_forest.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.random_forest.max_nodes", "0"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.random_forest.node_size", "5"));
+            double subsample = Double.parseDouble(props.getProperty("smile.random_forest.sampling_rate", "1.0"));
+            return new Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
+        }
+    }
+
+    /**
      * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -143,7 +212,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
+        return fit(formula, data, new Options());
     }
 
     /**
@@ -151,17 +220,11 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
-        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(Math.max(2, data.size() / 5))));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
-        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
-        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
+    public static RandomForest fit(Formula formula, DataFrame data, Options options) {
+        return fit(formula, data, options, null);
     }
 
     /**
@@ -169,60 +232,25 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. p/3 generally give good
-     *             performance, where p is the number of variables.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. {@code < 1.0} means sampling without replacement.
-     * @return the model.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
-        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
-    }
-
-    /**
-     * Fits a random forest for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. p/3 generally give good
-     *             performance, where p is the number of variables.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. {@code < 1.0} means sampling without replacement.
+     * @param options the hyper-parameters.
      * @param seeds optional RNG seeds for each regression tree.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (subsample <= 0 || subsample > 1) {
-            throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
-        }
-
+    public static RandomForest fit(Formula formula, DataFrame data, Options options, LongStream seeds) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector response = formula.y(data);
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
-        if (mtry > x.ncol()) {
-            throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
+        if (options.mtry > x.ncol()) {
+            throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + options.mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncol()/3, 1);
+        int mtry = options.mtry > 0 ? options.mtry : Math.max(x.ncol()/3, 1);
+        int maxNodes = options.maxNodes > 0 ? options.maxNodes :Math.max(2, data.size() / 5);
+        int ntrees = options.ntrees;
+        var subsample = options.subsample;
 
         final int n = x.size();
         double[] prediction = new double[n];
@@ -256,7 +284,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             }
 
             long start = System.nanoTime();
-            RegressionTree tree = new RegressionTree(x, Loss.ls(y), field, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
+            RegressionTree tree = new RegressionTree(x, Loss.ls(y), field, options.maxDepth, maxNodes, options.nodeSize, mtry, samples, order);
             double fitTime = (System.nanoTime() - start) / 1E6;
 
             // estimate OOB metrics
