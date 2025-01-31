@@ -117,8 +117,9 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
         }
 
+        var options = new GradientTreeBoost.Options(loss, 100, 20, 6, 5, 0.05, 0.7);
         RegressionValidations<GradientTreeBoost> result = CrossValidation.regression(10, formula, data,
-                (f, x) -> GradientTreeBoost.fit(f, x, loss, 100, 20, 6, 5, 0.05, 0.7));
+                (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
         assertEquals(expected, result.avg().rmse(), 1E-4);
@@ -309,7 +310,8 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
 
-        GradientTreeBoost model = GradientTreeBoost.fit(bostonHousing.formula(), bostonHousing.data(), Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
+        var options = new GradientTreeBoost.Options(Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(bostonHousing.formula(), bostonHousing.data(), options);
         double[] importance = model.importance();
         double[] shap = model.shap(bostonHousing.data());
 

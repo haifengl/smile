@@ -332,7 +332,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
          * @param normalize the flag if normalize the response variable.
          */
         public Options(double noise, boolean normalize) {
-            this(noise, normalize,1E-5, 0);
+            this(noise, normalize, 1E-5, 0);
         }
 
         /**

@@ -155,42 +155,9 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Fits a gradient tree boosting for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits a gradient tree boosting for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.gradient_boost.trees", "500"));
-        Loss loss = Loss.valueOf(params.getProperty("smile.gradient_boost.loss", "LeastAbsoluteDeviation"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.gradient_boost.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.gradient_boost.max_nodes", "6"));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.gradient_boost.node_size", "5"));
-        double shrinkage = Double.parseDouble(params.getProperty("smile.gradient_boost.shrinkage", "0.05"));
-        double subsample = Double.parseDouble(params.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
-        return fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
-    }
-
-    /**
-     * Fits a gradient tree boosting for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param loss loss function for regression. By default, least absolute
-     * deviation is employed for robust regression.
+     * Gradient tree boosting hyper-parameters.
+     * @param loss loss function for regression. By default, least absolute deviation
+     *             is employed for robust regression.
      * @param ntrees the number of iterations (trees).
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -198,27 +165,89 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *                 not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     */
+    public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (shrinkage <= 0 || shrinkage > 1) {
+                throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
+            }
+
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(Loss.lad(), 500, 20, 6, 5, 0.05, 0.7);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.gradient_boost.trees", Integer.toString(ntrees));
+            props.setProperty("smile.gradient_boost.loss", loss.toString());
+            props.setProperty("smile.gradient_boost.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.gradient_boost.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.gradient_boost.node_size", Integer.toString(nodeSize));
+            props.setProperty("smile.gradient_boost.shrinkage", Double.toString(shrinkage));
+            props.setProperty("smile.gradient_boost.sampling_rate", Double.toString(subsample));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.gradient_boost.trees", "500"));
+            Loss loss = Loss.valueOf(props.getProperty("smile.gradient_boost.loss", "LeastAbsoluteDeviation"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.gradient_boost.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.gradient_boost.max_nodes", "6"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.gradient_boost.node_size", "5"));
+            double shrinkage = Double.parseDouble(props.getProperty("smile.gradient_boost.shrinkage", "0.05"));
+            double subsample = Double.parseDouble(props.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
+            return new Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+        }
+    }
+
+    /**
+     * Fits a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
      * @return the model.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
+    public static GradientTreeBoost fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Options());
+    }
 
-        if (shrinkage <= 0 || shrinkage > 1) {
-            throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);            
-        }
-
-        if (subsample <= 0 || subsample > 1) {
-            throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
-        }
-
+    /**
+     * Fits a gradient tree boosting for regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @return the model.
+     */
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         double[] y = formula.y(data).toDoubleArray();
 
+        var loss = options.loss;
+        var ntrees = options.ntrees;
+        var shrinkage = options.shrinkage;
         final int n = x.size();
-        final int N = (int) Math.round(n * subsample);
+        final int N = (int) Math.round(n * options.subsample);
         final int[][] order = CART.order(x);
 
         int[] permutation = IntStream.range(0, n).toArray();
@@ -238,7 +267,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncol(), samples, order);
+            trees[t] = new RegressionTree(x, loss, field, options.maxDepth, options.maxNodes, options.nodeSize, x.ncol(), samples, order);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[t].predict(x.get(i));
