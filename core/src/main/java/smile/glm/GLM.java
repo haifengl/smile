@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.stream.IntStream;
-
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -296,6 +295,51 @@ public class GLM implements Serializable {
     }
 
     /**
+     * GLM hyper-parameters.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     */
+    public record Options(double tol, int maxIter) {
+        public Options {
+            if (tol <= 0.0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(1E-5, 50);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.glm.tolerance", Double.toString(tol));
+            props.setProperty("smile.glm.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double tol = Double.parseDouble(props.getProperty("smile.glm.tolerance", "1E-5"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.glm.iterations", "50"));
+            return new Options(tol, maxIter);
+        }
+    }
+
+    /**
      * Fits the generalized linear model with IWLS (iteratively reweighted least squares).
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -304,7 +348,7 @@ public class GLM implements Serializable {
      * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model) {
-        return fit(formula, data, model, new Properties());
+        return fit(formula, data, model, new Options());
     }
 
     /**
@@ -313,34 +357,10 @@ public class GLM implements Serializable {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param model the generalized linear model specification.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static GLM fit(Formula formula, DataFrame data, Model model, Properties params) {
-        double tol = Double.parseDouble(params.getProperty("smile.glm.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.glm.iterations", "50"));
-        return fit(formula, data, model, tol, maxIter);
-    }
-
-    /**
-     * Fits the generalized linear model with IWLS (iteratively reweighted least squares).
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param model the generalized linear model specification.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
-     * @return the model.
-     */
-    public static GLM fit(Formula formula, DataFrame data, Model model, double tol, int maxIter) {
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    public static GLM fit(Formula formula, DataFrame data, Model model, Options options) {
         Matrix X = formula.matrix(data, true);
         Matrix XW = new Matrix(X.nrow(), X.ncol());
         double[] y = formula.y(data).toDoubleArray();
@@ -379,7 +399,7 @@ public class GLM implements Serializable {
         double[] beta = qr.solve(z);
 
         double dev = Double.POSITIVE_INFINITY;
-        for (int iter = 0; iter < maxIter; iter++) {
+        for (int iter = 0; iter < options.maxIter; iter++) {
             X.mv(beta, eta);
             IntStream.range(0, n).parallel().forEach(i -> {
                 mu[i] = model.invlink(eta[i]);
@@ -395,7 +415,7 @@ public class GLM implements Serializable {
                 logger.info("Deviance after {} iterations: {}", iter, dev);
             }
 
-            if (dev - newDev < tol) {
+            if (dev - newDev < options.tol) {
                 break;
             }
 

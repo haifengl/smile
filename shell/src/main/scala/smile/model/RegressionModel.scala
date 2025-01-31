@@ -104,7 +104,7 @@ object RegressionModel {
             case "lasso" =>
                 LASSO.fit(formula, data, params)
             case "elastic_net" =>
-                ElasticNet.fit(formula, data, params)
+                ElasticNet.fit(formula, data, ElasticNet.Options.of(params))
             case "ridge" =>
                 RidgeRegression.fit(formula, data, params)
             case "gaussian_process" =>

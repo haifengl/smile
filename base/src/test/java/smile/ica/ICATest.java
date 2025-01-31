@@ -60,11 +60,12 @@ public class ICATest {
         double[][] data = csv.read(Paths.getTestData("ica/ica.csv")).toArray(false, CategoricalEncoder.DUMMY);
 
         ICA ica = ICA.fit(MathEx.transpose(data), 2);
-        assertEquals(2, ica.components.length);
-        assertEquals(data.length, ica.components[0].length);
-        assertEquals( 0.02003, ica.components[0][0], 1E-5);
-        assertEquals(-0.03275, ica.components[1][0], 1E-5);
-        assertEquals(-0.01140, ica.components[0][1], 1E-5);
-        assertEquals(-0.01084, ica.components[1][1], 1E-5);
+        var components = ica.components();
+        assertEquals(2, components.length);
+        assertEquals(data.length, components[0].length);
+        assertEquals( 0.02003, components[0][0], 1E-5);
+        assertEquals(-0.03275, components[1][0], 1E-5);
+        assertEquals(-0.01140, components[0][1], 1E-5);
+        assertEquals(-0.01084, components[1][1], 1E-5);
     }
 }
