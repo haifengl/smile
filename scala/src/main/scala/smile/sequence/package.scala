@@ -79,7 +79,7 @@ package object sequence {
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     */
   def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF = time("CRF") {
-    CRF.fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
+    CRF.fit(sequences, labels, new CRF.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage))
   }
 
   /** First-order linear conditional random field. A conditional random field is a
@@ -105,7 +105,7 @@ package object sequence {
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     */
   def gcrf[T <: AnyRef](sequences: Array[Array[T]], labels: Array[Array[Int]], features: Function[T, Tuple], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRFLabeler[T] = time("CRF") {
-    CRFLabeler.fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
+    CRFLabeler.fit(sequences, labels, features, new CRF.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
