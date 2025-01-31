@@ -88,7 +88,7 @@ public class SVMTest {
         }
 
         GaussianKernel kernel = new GaussianKernel(90);
-        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
+        SVM<double[]> model = SVM.fit(x, y, kernel, new SVM.Options(100));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
@@ -151,7 +151,8 @@ public class SVMTest {
         double[][] testx = scaler.apply(segment.formula().x(segment.test())).toArray();
 
         GaussianKernel kernel = new GaussianKernel(6.4);
-        OneVersusOne<double[]> model = OneVersusOne.fit(x, segment.y(), (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
+        var options = new SVM.Options(100);
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, segment.y(), (xi, y) -> SVM.fit(xi, y, kernel, options));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(segment.testy(), prediction);
@@ -165,7 +166,8 @@ public class SVMTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusRest<double[]> model = OneVersusRest.fit(usps.x(), usps.y(), (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3, 1));
+        var options = new SVM.Options(5);
+        OneVersusRest<double[]> model = OneVersusRest.fit(usps.x(), usps.y(), (x, y) -> SVM.fit(x, y, kernel, options));
 
         int[] prediction = model.predict(usps.testx());
         int error = Error.of(usps.testy(), prediction);

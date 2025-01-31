@@ -161,8 +161,8 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * @param ntrees the number of iterations (trees).
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, setting nodeSize = 5 generally gives good results.
+     * @param nodeSize the minimum size of leaf nodes.
+     *                 Setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
@@ -248,6 +248,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param options the hyper-parameters.
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {

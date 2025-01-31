@@ -166,6 +166,107 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     }
 
     /**
+     * Random forest hyper-parameters.
+     * @param ntrees the number of trees.
+     * @param mtry the number of input variables to be used to determine the
+     *             decision at a node of the tree. p/3 generally give good
+     *             performance, where p is the number of variables.
+     * @param rule Decision tree split rule.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
+     *                 Setting nodeSize = 5 generally gives good results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with
+     *                  replacement. {@code < 1.0} means sampling without replacement.
+     * @param classWeight Priors of the classes. The weight of each class
+     *                    is roughly the ratio of samples in each class.
+     *                    For example, if there are 400 positive samples
+     *                    and 100 negative samples, the classWeight should
+     *                    be [1, 4] (assuming label 0 is of negative, label
+     *                    1 is of positive).
+     */
+    public record Options(int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(500, 0, SplitRule.GINI, 20, 0, 5, 1.0, null);
+        }
+
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         * @param mtry the number of input variables to be used to determine the
+         *             decision at a node of the tree. p/3 generally give good
+         *             performance, where p is the number of variables.
+         * @param maxDepth the maximum depth of the tree.
+         * @param maxNodes the maximum number of leaf nodes in the tree.
+         * @param nodeSize the minimum size of leaf nodes.
+         *                 Setting nodeSize = 5 generally gives good results.
+         */
+        public Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize) {
+            this(ntrees, mtry, SplitRule.GINI, maxDepth, maxNodes, nodeSize, 1.0, null);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.random_forest.trees", Integer.toString(ntrees));
+            props.setProperty("smile.random_forest.mtry", Integer.toString(mtry));
+            props.setProperty("smile.random_forest.split_rule", rule.toString());
+            props.setProperty("smile.random_forest.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.random_forest.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.random_forest.node_size", Integer.toString(nodeSize));
+            props.setProperty("smile.random_forest.sampling_rate", Double.toString(subsample));
+            if (classWeight != null) {
+                props.setProperty("smile.random_forest.class_weight", Arrays.toString(classWeight));
+            }
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.random_forest.trees", "500"));
+            int mtry = Integer.parseInt(props.getProperty("smile.random_forest.mtry", "0"));
+            SplitRule rule = SplitRule.valueOf(props.getProperty("smile.random_forest.split_rule", "GINI"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.random_forest.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.random_forest.max_nodes", "0"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.random_forest.node_size", "5"));
+            double subsample = Double.parseDouble(props.getProperty("smile.random_forest.sampling_rate", "1.0"));
+            int[] classWeight = null;
+            String weight = props.getProperty("smile.random_forest.class_weight");
+            if (weight != null) {
+                classWeight = Strings.parseIntArray(weight);
+            }
+            return new Options(ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight);
+        }
+    }
+
+    /**
      * Fits a random forest for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -173,52 +274,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits a random forest for classification.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
-        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
-        SplitRule rule = SplitRule.valueOf(params.getProperty("smile.random_forest.split_rule", "GINI"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(Math.max(2, data.size() / 5))));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
-        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
-        int[] classWeight = Strings.parseIntArray(params.getProperty("smile.random_forest.class_weight"));
-        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, null);
-    }
-
-    /**
-     * Fits a random forest for classification.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. floor(sqrt(p)) generally
-     *             gives good performance, where p is the number of variables.
-     * @param rule Decision tree split rule.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree
-     *                 will not split, nodeSize = 5 generally gives good
-     *                 results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. {@code < 1.0} means sampling without
-     *                  replacement.
-     * @return the model.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
-                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample) {
-        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, null);
+        return fit(formula, data, new Options());
     }
 
     /**
@@ -226,31 +282,11 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. floor(sqrt(p)) generally
-     *             gives good performance, where p is the number of variables
-     * @param rule Decision tree split rule.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree
-     *                 will not split, nodeSize = 5 generally gives good
-     *                 results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. {@code < 1.0} means sampling without
-     *                  replacement.
-     * @param classWeight Priors of the classes. The weight of each class
-     *                    is roughly the ratio of samples in each class.
-     *                    For example, if there are 400 positive samples
-     *                    and 100 negative samples, the classWeight should
-     *                    be [1, 4] (assuming label 0 is of negative, label
-     *                    1 is of positive).
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
-                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize,
-                                   double subsample, int[] classWeight) {
-        return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, null);
+    public static RandomForest fit(Formula formula, DataFrame data, Options options) {
+        return fit(formula, data, options, null);
     }
 
     /**
@@ -258,55 +294,30 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. floor(sqrt(p)) generally
-     *             gives good performance, where p is the number of variables.
-     * @param rule Decision tree split rule.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree
-     *                 will not split, nodeSize = 5 generally gives good
-     *                 results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. {@code < 1.0} means sampling without
-     *                  replacement.
-     * @param classWeight Priors of the classes. The weight of each class
-     *                    is roughly the ratio of samples in each class.
-     *                    For example, if there are 400 positive samples
-     *                    and 100 negative samples, the classWeight should
-     *                    be [1, 4] (assuming label 0 is of negative, label 1 is of
-     *                    positive).
+     * @param options the hyper-parameters.
      * @param seeds optional RNG seeds for each regression tree.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
-                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize,
-                                   double subsample, int[] classWeight, LongStream seeds) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (subsample <= 0 || subsample > 1) {
-            throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
-        }
-
+    public static RandomForest fit(Formula formula, DataFrame data, Options options, LongStream seeds) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
         int ncol = x.ncol();
 
-        if (mtry > ncol) {
-            throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
+        if (options.mtry > ncol) {
+            throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + options.mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : (int) Math.sqrt(ncol);
+        int mtry = options.mtry > 0 ? options.mtry : (int) Math.sqrt(ncol);
+        int maxNodes = options.maxNodes > 0 ? options.maxNodes :Math.max(2, data.size() / 5);
+        int ntrees = options.ntrees;
+        var subsample = options.subsample;
 
         ClassLabels codec = ClassLabels.fit(y);
         final int k = codec.k;
         final int n = x.size();
 
-        final int[] weight = classWeight != null ? classWeight : Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray();
+        final int[] weight = options.classWeight != null ? options.classWeight : Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray();
 
         final int[][] order = CART.order(x);
         final int[][] prediction = new int[n][k]; // out-of-bag prediction
@@ -369,7 +380,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             }
 
             long start = System.nanoTime();
-            DecisionTree tree = new DecisionTree(x, codec.y, y.field(), k, rule, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
+            DecisionTree tree = new DecisionTree(x, codec.y, y.field(), k, options.rule, options.maxDepth, maxNodes, options.nodeSize, mtry, samples, order);
             double fitTime = (System.nanoTime() - start) / 1E6;
 
             // estimate OOB metrics

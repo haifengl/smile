@@ -16,6 +16,7 @@
  */
 package smile.classification;
 
+import smile.classification.GradientTreeBoost.Options;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
@@ -56,7 +57,8 @@ public class GradientTreeBoostTest {
         System.out.println("Weather");
         MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
-        GradientTreeBoost model = GradientTreeBoost.fit(weather.formula(), weather.data(), 100, 20, 6, 5, 0.05, 0.7);
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(weather.formula(), weather.data(), options);
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -72,7 +74,7 @@ public class GradientTreeBoostTest {
         }
 
         ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
-                (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
+                (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(metrics);
         assertEquals(0.5714, metrics.accuracy(), 1E-4);
@@ -87,7 +89,8 @@ public class GradientTreeBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
-        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), 100, 20, 6, 5, 0.05, 0.7);
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), options);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -95,7 +98,7 @@ public class GradientTreeBoostTest {
         }
 
         ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
-                (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
+                (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(metrics);
         assertEquals(0.9467, metrics.accuracy(), 1E-4);
@@ -106,8 +109,9 @@ public class GradientTreeBoostTest {
         System.out.println("Pen Digits");
         MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
-                (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
+                (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
         assertEquals(0.9831, result.avg().accuracy(), 1E-4);
@@ -119,8 +123,9 @@ public class GradientTreeBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
-                (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
+                (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
         assertEquals(0.9589, result.avg().accuracy(), 0.003);
@@ -132,7 +137,8 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         int[] testy = segment.testy();
-        GradientTreeBoost model = GradientTreeBoost.fit(segment.formula(), segment.train(), 100, 20, 6, 5, 0.05, 0.7);
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(segment.formula(), segment.train(), options);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -158,7 +164,8 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         int[] testy = usps.testy();
-        GradientTreeBoost model = GradientTreeBoost.fit(usps.formula(), usps.train(), 100, 20, 100, 5, 0.05, 0.7);
+        var options = new Options(100, 20, 100, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(usps.formula(), usps.train(), options);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -182,7 +189,8 @@ public class GradientTreeBoostTest {
     public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
-        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), 100, 20, 6, 5, 0.05, 0.7);
+        var options = new Options(100, 20, 6, 5, 0.05, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), options);
         String[] fields = model.schema().names();
         double[] importance = model.importance();
         double[] shap = model.shap(iris.data());

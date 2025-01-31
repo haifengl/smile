@@ -114,7 +114,7 @@ public class LogisticRegressionTest {
         int[] y = segment.y();
         double[][] testx = segment.testx();
         int[] testy = segment.testy();
-        LogisticRegression model = LogisticRegression.fit(x, y, 0.05, 1E-3, 1000);
+        LogisticRegression model = LogisticRegression.fit(x, y, new LogisticRegression.Options(0.05, 1E-3, 1000));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
@@ -147,7 +147,7 @@ public class LogisticRegressionTest {
         int[] y = usps.y();
         double[][] testx = usps.testx();
         int[] testy = usps.testy();
-        LogisticRegression model = LogisticRegression.fit(x, y, 0.3, 1E-3, 1000);
+        LogisticRegression model = LogisticRegression.fit(x, y, new LogisticRegression.Options(0.3, 1E-3, 1000));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);

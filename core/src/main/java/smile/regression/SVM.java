@@ -65,9 +65,17 @@ public class SVM {
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(1.0, 1.0, 1E-3);
+        /**
+         * Constructor.
+         * @param eps the parameter of epsilon-insensitive hinge loss.
+         *            There is no penalty associated with samples which are
+         *            predicted within distance epsilon from the actual value.
+         *            Decreasing epsilon forces closer fitting
+         *            to the calibration/training data.
+         * @param C the soft margin penalty parameter.
+         */
+        public Options(double eps, double C) {
+            this(eps, C, 1E-3);
         }
 
         /**

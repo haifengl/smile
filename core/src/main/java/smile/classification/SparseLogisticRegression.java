@@ -249,46 +249,17 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @return the model.
      */
     public static Binomial binomial(SparseDataset<Integer> data) {
-        return binomial(data, new Properties());
-    }
-
-    /**
-     * Fits binomial logistic regression.
-     * @param data training data.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static Binomial binomial(SparseDataset<Integer> data, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return binomial(data, lambda, tol, maxIter);
+        return binomial(data, new LogisticRegression.Options());
     }
 
     /**
      * Fits binomial logistic regression.
      *
      * @param data training data.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
-        if (lambda < 0.0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    public static Binomial binomial(SparseDataset<Integer> data, LogisticRegression.Options options) {
         int n = data.size();
         int p = data.ncol();
         ClassLabels codec = ClassLabels.fit(data);
@@ -303,11 +274,11 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         for (int i = 0; i < n; i++) {
             x[i] = data.get(i).x();
         }
-        BinomialObjective objective = new BinomialObjective(x, y, p, lambda);
+        BinomialObjective objective = new BinomialObjective(x, y, p, options.lambda());
         double[] w = new double[p + 1];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        double L = -BFGS.minimize(objective, 5, w, options.tol(), options.maxIter());
 
-        Binomial model = new Binomial(w, L, lambda, codec.classes);
+        Binomial model = new Binomial(w, L, options.lambda(), codec.classes);
         model.setLearningRate(0.1 / n);
         return model;
     }
@@ -318,46 +289,17 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @return the model.
      */
     public static Multinomial multinomial(SparseDataset<Integer> data) {
-        return multinomial(data, new Properties());
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     * @param data training data.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static Multinomial multinomial(SparseDataset<Integer> data, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return multinomial(data, lambda, tol, maxIter);
+        return multinomial(data, new LogisticRegression.Options());
     }
 
     /**
      * Fits multinomial logistic regression.
      *
      * @param data training data.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
-        if (lambda < 0.0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    public static Multinomial multinomial(SparseDataset<Integer> data, LogisticRegression.Options options) {
         int n = data.size();
         int p = data.ncol();
         ClassLabels codec = ClassLabels.fit(data);
@@ -372,9 +314,9 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         for (int i = 0; i < n; i++) {
             x[i] = data.get(i).x();
         }
-        MultinomialObjective objective = new MultinomialObjective(x, y, p, k, lambda);
+        MultinomialObjective objective = new MultinomialObjective(x, y, p, k, options.lambda());
         double[] w = new double[(k - 1) * (p + 1)];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        double L = -BFGS.minimize(objective, 5, w, options.tol(), options.maxIter());
 
         double[][] W = new double[k-1][p+1];
         for (int i = 0, l = 0; i < k-1; i++) {
@@ -383,7 +325,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
+        Multinomial model = new Multinomial(W, L, options.lambda(), codec.classes);
         model.setLearningRate(0.1 / data.size());
         return model;
     }
@@ -404,29 +346,22 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset<Integer> data, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return fit(data, lambda, tol, maxIter);
+        return fit(data, LogisticRegression.Options.of(params));
     }
 
     /**
      * Fits logistic regression.
      *
      * @param data training data.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset<Integer> data, double lambda, double tol, int maxIter) {
+    public static SparseLogisticRegression fit(SparseDataset<Integer> data, LogisticRegression.Options options) {
         ClassLabels codec = ClassLabels.fit(data);
         if (codec.k == 2)
-            return binomial(data, lambda, tol, maxIter);
+            return binomial(data, options);
         else
-            return multinomial(data, lambda, tol, maxIter);
+            return multinomial(data, options);
     }
 
     /**

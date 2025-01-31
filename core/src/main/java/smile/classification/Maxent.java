@@ -241,6 +241,65 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
+     * Maximum entropy classifier hyper-parameters.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     */
+    public record Options(double lambda, double tol, int maxIter) {
+        public Options {
+            if (lambda < 0.0) {
+                throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
+            }
+
+            if (tol <= 0.0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(0.1, 1E-5, 500);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.maxent.lambda</code>
+         * <li><code>smile.maxent.tolerance</code>
+         * <li><code>smile.maxent.iterations</code>
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.maxent.lambda", Double.toString(lambda));
+            props.setProperty("smile.maxent.tolerance", Double.toString(tol));
+            props.setProperty("smile.maxent.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double lambda = Double.parseDouble(props.getProperty("smile.maxent.lambda", "0.1"));
+            double tol = Double.parseDouble(props.getProperty("smile.maxent.tolerance", "1E-5"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.maxent.iterations", "500"));
+            return new Options(lambda, tol, maxIter);
+        }
+    }
+
+    /**
      * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
@@ -250,7 +309,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y) {
-        return fit(p, x, y, new Properties());
+        return fit(p, x, y, new Options());
     }
 
     /**
@@ -260,36 +319,15 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
-        return fit(p, x, y, lambda, tol, maxIter);
-    }
-
-    /**
-     * Fits maximum entropy classifier.
-     * @param p the dimension of feature space.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter maximum number of iterations.
-     * @return the model.
-     */
-    public static Maxent fit(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Maxent fit(int p, int[][] x, int[] y, Options options) {
         ClassLabels codec = ClassLabels.fit(y);
         if (codec.k == 2)
-            return binomial(p, x, y, lambda, tol, maxIter);
+            return binomial(p, x, y, options);
         else
-            return multinomial(p, x, y, lambda, tol, maxIter);
+            return multinomial(p, x, y, options);
     }
 
     /**
@@ -302,7 +340,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y) {
-        return binomial(p, x, y, new Properties());
+        return binomial(p, x, y, new Options());
     }
 
     /**
@@ -312,31 +350,10 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
-        return binomial(p, x, y, lambda, tol, maxIter);
-    }
-
-    /**
-     * Fits maximum entropy classifier.
-     * @param p the dimension of feature space.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter maximum number of iterations.
-     * @return the model.
-     */
-    public static Binomial binomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Binomial binomial(int p, int[][] x, int[] y, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -345,28 +362,16 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             throw new IllegalArgumentException("Invalid dimension: " + p);
         }
 
-        if (lambda < 0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k != 2) {
             throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        BinomialObjective objective = new BinomialObjective(x, codec.y, p, lambda);
+        BinomialObjective objective = new BinomialObjective(x, codec.y, p, options.lambda);
         double[] w = new double[p + 1];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
-        Binomial model = new Binomial(w, L, lambda, codec.classes);
+        double L = -BFGS.minimize(objective, 5, w, options.tol, options.maxIter);
+        Binomial model = new Binomial(w, L, options.lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -381,7 +386,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y) {
-        return multinomial(p, x, y, new Properties());
+        return multinomial(p, x, y, new Options());
     }
 
     /**
@@ -391,31 +396,10 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param params the hyperparameters.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
-        return multinomial(p, x, y, lambda, tol, maxIter);
-    }
-
-    /**
-     * Fits maximum entropy classifier.
-     * @param p the dimension of feature space.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter maximum number of iterations.
-     * @return the model.
-     */
-    public static Multinomial multinomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Multinomial multinomial(int p, int[][] x, int[] y, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -424,27 +408,15 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             throw new IllegalArgumentException("Invalid dimension: " + p);
         }
 
-        if (lambda < 0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
             throw new IllegalArgumentException("Fits multinomial model on binary class data.");
         }
 
-        MultinomialObjective objective = new MultinomialObjective(x, codec.y, k, p, lambda);
+        MultinomialObjective objective = new MultinomialObjective(x, codec.y, k, p, options.lambda);
         double[] w = new double[(k - 1) * (p + 1)];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        double L = -BFGS.minimize(objective, 5, w, options.tol, options.maxIter);
 
         double[][] W = new double[k-1][p+1];
         for (int i = 0, l = 0; i < k-1; i++) {
@@ -453,7 +425,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
+        Multinomial model = new Multinomial(W, L, options.lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }

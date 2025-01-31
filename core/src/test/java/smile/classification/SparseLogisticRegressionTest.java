@@ -79,7 +79,7 @@ public class SparseLogisticRegressionTest {
         SparseDataset<Integer> train = sparse(x, y);
         SparseDataset<Integer> test = sparse(testx, testy);
 
-        SparseLogisticRegression model = SparseLogisticRegression.fit(train, 0.3, 1E-3, 1000);
+        SparseLogisticRegression model = SparseLogisticRegression.fit(train, new LogisticRegression.Options(0.3, 1E-3, 1000));
 
         int[] prediction = new int[test.size()];
         for (int i = 0; i < test.size(); i++) {
