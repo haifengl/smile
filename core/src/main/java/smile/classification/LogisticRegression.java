@@ -299,27 +299,72 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Fits binomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
-     * @return the model.
+     * Logistic regression hyper-parameters.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
      */
-    public static Binomial binomial(double[][] x, int[] y) {
-        return binomial(x, y, new Properties());
+    public record Options(double lambda, double tol, int maxIter) {
+        public Options {
+            if (lambda < 0.0) {
+                throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
+            }
+
+            if (tol <= 0.0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(0.1, 1E-5, 500);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.logistic.lambda</code>
+         * <li><code>smile.logistic.tolerance</code>
+         * <li><code>smile.logistic.iterations</code>
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.logistic.lambda", Double.toString(lambda));
+            props.setProperty("smile.logistic.tolerance", Double.toString(tol));
+            props.setProperty("smile.logistic.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double lambda = Double.parseDouble(props.getProperty("smile.logistic.lambda", "0.1"));
+            double tol = Double.parseDouble(props.getProperty("smile.logistic.tolerance", "1E-5"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.logistic.iterations", "500"));
+            return new Options(lambda, tol, maxIter);
+        }
     }
 
     /**
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param params the hyperparameters.
      * @return the model.
      */
-    public static Binomial binomial(double[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return binomial(x, y, lambda, tol, maxIter);
+    public static Binomial binomial(double[][] x, int[] y) {
+        return binomial(x, y, new Options());
     }
 
     /**
@@ -327,28 +372,12 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * 
      * @param x training samples.
      * @param y training labels.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Binomial binomial(double[][] x, int[] y, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (lambda < 0.0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);            
-        }
-        
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
 
         int p = x[0].length;
@@ -360,11 +389,11 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        BinomialObjective objective = new BinomialObjective(x, y, lambda);
+        BinomialObjective objective = new BinomialObjective(x, y, options.lambda);
         double[] w = new double[p + 1];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        double L = -BFGS.minimize(objective, 5, w, options.tol, options.maxIter);
 
-        Binomial model = new Binomial(w, L, lambda, codec.classes);
+        Binomial model = new Binomial(w, L, options.lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -376,21 +405,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the model.
      */
     public static Multinomial multinomial(double[][] x, int[] y) {
-        return multinomial(x, y, new Properties());
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     * @param x training samples.
-     * @param y training labels.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return multinomial(x, y, lambda, tol, maxIter);
+        return multinomial(x, y, new Options());
     }
 
     /**
@@ -398,28 +413,12 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      *
      * @param x training samples.
      * @param y training labels.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Multinomial multinomial(double[][] x, int[] y, Options options) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
-        }
-
-        if (lambda < 0.0) {
-            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
-        }
-
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
         int p = x[0].length;
@@ -431,9 +430,9 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             throw new IllegalArgumentException("Fits multinomial model on binary class data.");
         }
 
-        MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
+        MultinomialObjective objective = new MultinomialObjective(x, y, k, options.lambda);
         double[] w = new double[(k - 1) * (p + 1)];
-        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        double L = -BFGS.minimize(objective, 5, w, options.tol, options.maxIter);
 
         double[][] W = new double[k-1][p+1];
         for (int i = 0, l = 0; i < k-1; i++) {
@@ -442,7 +441,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
+        Multinomial model = new Multinomial(W, L, options.lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -454,7 +453,23 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the model.
      */
     public static LogisticRegression fit(double[][] x, int[] y) {
-        return fit(x, y, new Properties());
+        return fit(x, y, new Options());
+    }
+
+    /**
+     * Fits logistic regression.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     * @param options the hyper-parameters.
+     * @return the model.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y, Options options) {
+        ClassLabels codec = ClassLabels.fit(y);
+        if (codec.k == 2)
+            return binomial(x, y, options);
+        else
+            return multinomial(x, y, options);
     }
 
     /**
@@ -465,30 +480,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the model.
      */
     public static LogisticRegression fit(double[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
-        return fit(x, y, lambda, tol, maxIter);
-    }
-
-    /**
-     * Fits logistic regression.
-     *
-     * @param x training samples.
-     * @param y training labels.
-     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
-     *               weights which often has superior generalization performance,
-     *               especially when the dimensionality is high.
-     * @param tol the tolerance to stop iterations.
-     * @param maxIter the maximum number of iterations.
-     * @return the model.
-     */
-    public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
-        ClassLabels codec = ClassLabels.fit(y);
-        if (codec.k == 2)
-            return binomial(x, y, lambda, tol, maxIter);
-        else
-            return multinomial(x, y, lambda, tol, maxIter);
+        return fit(x, y, Options.of(params));
     }
 
     /**

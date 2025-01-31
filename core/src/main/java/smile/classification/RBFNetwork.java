@@ -158,11 +158,11 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
-     * @param normalized true for the normalized RBF network.
+     * @param normalize true for the normalized RBF network.
      * @param <T> the data type.
      * @return the model.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalize) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -184,7 +184,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
 
             G.set(i, m, 1);
 
-            if (normalized) {
+            if (normalize) {
                 b.set(i, codec.y[i], sum);
             } else {
                 b.set(i, codec.y[i], 1);
@@ -194,7 +194,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
         Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.classes);
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalize, codec.classes);
     }
 
     /**

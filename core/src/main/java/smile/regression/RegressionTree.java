@@ -290,8 +290,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
      * Regression tree hyper-parameters.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split.
+     * @param nodeSize the minimum size of leaf nodes.
      */
     public record Options(int maxDepth, int maxNodes, int nodeSize) {
         public Options {

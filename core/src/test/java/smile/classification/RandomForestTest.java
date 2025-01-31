@@ -17,7 +17,7 @@
 package smile.classification;
 
 import java.util.Arrays;
-import smile.base.cart.SplitRule;
+import smile.classification.RandomForest.Options;
 import smile.data.DataFrame;
 import smile.datasets.*;
 import smile.io.Read;
@@ -94,7 +94,8 @@ public class RandomForestTest {
         System.out.println("Weather");
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var weather = new WeatherNominal();
-        RandomForest model = RandomForest.fit(weather.formula(), weather.data(), 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(20, 2, 8, 10, 1);
+        RandomForest model = RandomForest.fit(weather.formula(), weather.data(), options, Arrays.stream(seeds));
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -110,7 +111,7 @@ public class RandomForestTest {
         }
 
         ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
-                (f, x) -> RandomForest.fit(f, x, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
 
         System.out.println(metrics);
         assertEquals(0.5714, metrics.accuracy(), 1E-4);
@@ -129,15 +130,15 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var iris = new Iris();
-        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(100, 3, 20, 100, 5);
+        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), options, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(), (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
-
+        ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(), (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
         System.out.println(metrics);
         assertEquals(0.9467, metrics.accuracy(), 1E-4);
     }
@@ -147,8 +148,9 @@ public class RandomForestTest {
         System.out.println("Pen Digits");
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var pen = new PenDigits();
+        var options = new Options(100, 4, 20, 100, 5);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
-                (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
 
         System.out.println(result);
         assertEquals(0.9706, result.avg().accuracy(), 1E-4);
@@ -160,8 +162,9 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var cancer = new BreastCancer();
+        var options = new Options(100, 5, 20, 100, 5);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
-                (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
 
         System.out.println(result);
         assertEquals(0.9550, result.avg().accuracy(), 1E-4);
@@ -172,7 +175,8 @@ public class RandomForestTest {
         System.out.println("Segment");
         var segment = new ImageSegmentation();
         int[] testy = segment.testy();
-        RandomForest model = RandomForest.fit(segment.formula(), segment.train(), 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(200, 16, 20, 100, 5);
+        RandomForest model = RandomForest.fit(segment.formula(), segment.train(), options, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -197,8 +201,8 @@ public class RandomForestTest {
         System.out.println("USPS");
         var usps = new USPS();
         int[] testy = usps.testy();
-
-        RandomForest model = RandomForest.fit(usps.formula(), usps.train(), 200, 16, SplitRule.GINI, 20, 200, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(200, 16, 20, 200, 5);
+        RandomForest model = RandomForest.fit(usps.formula(), usps.train(), options, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -223,7 +227,8 @@ public class RandomForestTest {
         System.out.println("trim");
         var segment = new ImageSegmentation();
         int[] testy = segment.testy();
-        RandomForest model = RandomForest.fit(segment.formula(), segment.train(), 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(200, 16, 20, 100, 5);
+        RandomForest model = RandomForest.fit(segment.formula(), segment.train(), options, Arrays.stream(seeds));
         System.out.println(model.metrics());
         assertEquals(200, model.size());
 
@@ -254,8 +259,9 @@ public class RandomForestTest {
         var segment = new ImageSegmentation();
         double[][] testx = segment.testx();
         int[] testy = segment.testy();
-        RandomForest forest1 = RandomForest.fit(segment.formula(), segment.train(), 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
-        RandomForest forest2 = RandomForest.fit(segment.formula(), segment.train(), 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(100, 16, 20, 100, 5);
+        RandomForest forest1 = RandomForest.fit(segment.formula(), segment.train(), options, Arrays.stream(seeds));
+        RandomForest forest2 = RandomForest.fit(segment.formula(), segment.train(), options, Arrays.stream(seeds));
         RandomForest forest = forest1.merge(forest2);
 
         int error1 = Error.of(testy, forest1.predict(segment.test()));
@@ -276,8 +282,8 @@ public class RandomForestTest {
         // Overfitting with very large maxNodes and small nodeSize
         var usps = new USPS();
         int[] testy = usps.testy();
-
-        RandomForest model = RandomForest.fit(usps.formula(), usps.train(), 200, 16, SplitRule.GINI, 20, 2000, 1, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(200, 16, 20, 2000, 1);
+        RandomForest model = RandomForest.fit(usps.formula(), usps.train(), options, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -315,7 +321,8 @@ public class RandomForestTest {
     public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
-        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), 10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        var options = new Options(10, 2, 20, 100, 5);
+        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), options, Arrays.stream(seeds));
         String[] fields = model.schema().names();
         double[] importance = model.importance();
         double[] shap = model.shap(iris.data());
