@@ -69,7 +69,7 @@ public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
     /**
-     * Lasso hyper-parameters.
+     * Lasso regression hyper-parameters.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance to stop iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.

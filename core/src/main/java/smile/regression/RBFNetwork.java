@@ -121,11 +121,11 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param rbf the radial basis functions.
-     * @param normalized true for the normalized RBF network.
+     * @param normalize true for the normalized RBF network.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf, boolean normalize) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -143,7 +143,7 @@ public class RBFNetwork<T> implements Regression<T> {
                 sum += r;
             }
 
-            if (normalized) {
+            if (normalize) {
                 b[i] = sum * y[i];
             } else {
                 b[i] = y[i];
@@ -153,7 +153,7 @@ public class RBFNetwork<T> implements Regression<T> {
         Matrix.QR qr = G.qr(true);
         double[] w = qr.solve(b);
 
-        return new RBFNetwork<>(rbf, w, normalized);
+        return new RBFNetwork<>(rbf, w, normalize);
     }
 
     /**

@@ -287,49 +287,83 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
+     * Regression tree hyper-parameters.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the number of instances in a node below which the tree will
+     *                 not split.
+     */
+    public record Options(int maxDepth, int maxNodes, int nodeSize) {
+        public Options {
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(20, 0, 5);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.cart.max_depth</code>
+         * <li><code>smile.cart.max_nodes</code>
+         * <li><code>smile.cart.node_size</code>
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.cart.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.cart.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.cart.node_size", Integer.toString(nodeSize));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int maxDepth = Integer.parseInt(props.getProperty("smile.cart.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.cart.max_nodes", "0"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.cart.node_size", "5"));
+            return new Options(maxDepth, maxNodes, nodeSize);
+        }
+    }
+
+    /**
      * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits a regression tree.
-     * The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>smile.cart.node.size</code>
-     * <li><code>smile.cart.max.nodes</code>
-     * </ul>
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static RegressionTree fit(Formula formula, DataFrame data, Properties params) {
-        int maxDepth = Integer.parseInt(params.getProperty("smile.cart.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.cart.max_nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.cart.node_size", "5"));
-        return fit(formula, data, maxDepth, maxNodes, nodeSize);
+        return fit(formula, data, new Options());
     }
 
     /**
      * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the minimum size of leaf nodes.
+     * @param options the hyper-parameters.
      * @return the model.
      */
-    public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
+    public static RegressionTree fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
         int mtry = x.ncol();
-        RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, mtry, null, null);
+        int maxNodes = options.maxNodes > 0 ?  options.maxNodes : data.size() / options.nodeSize;
+        RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), options.maxDepth, maxNodes, options.nodeSize, mtry, null, null);
         tree.formula = formula;
         return tree;
     }

@@ -172,6 +172,18 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
             }
 
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (maxNodes < 2) {
+                throw new IllegalArgumentException("Invalid maximum number of nodes: " + maxNodes);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+
             if (shrinkage <= 0 || shrinkage > 1) {
                 throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
             }

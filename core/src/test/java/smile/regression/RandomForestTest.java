@@ -105,7 +105,8 @@ public class RandomForestTest {
         System.out.println("longley");
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var longley = new Longley();
-        RandomForest model = RandomForest.fit(longley.formula(), longley.data(), 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds));
+        var options = new RandomForest.Options(100, 3, 20, 10, 3, 1.0);
+        RandomForest model = RandomForest.fit(longley.formula(), longley.data(), options, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -127,7 +128,7 @@ public class RandomForestTest {
         }
 
         RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
-                (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
 
         System.out.println(metrics);
         assertEquals(2.7034, metrics.rmse(), 1E-4);
@@ -140,8 +141,9 @@ public class RandomForestTest {
         System.out.println(name);
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
+        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0);
         RegressionValidations<RandomForest> result = CrossValidation.regression(3, formula, data,
-                (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
 
         System.out.println(result);
         assertEquals(expected, result.avg().rmse(), 1E-4);
@@ -222,8 +224,8 @@ public class RandomForestTest {
     @Test
     public void testTrim() {
         System.out.println("trim");
-
-        RandomForest model = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds));
         System.out.println(model.metrics());
         assertEquals(50, model.size());
 
@@ -250,9 +252,9 @@ public class RandomForestTest {
     @Test
     public void testMerge() {
         System.out.println("merge");
-
-        RandomForest forest1 = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
-        RandomForest forest2 = RandomForest.fit(abalone.formula(), abalone.train(), 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
+        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0);
+        RandomForest forest1 = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds));
+        RandomForest forest2 = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds).skip(50));
         RandomForest forest = forest1.merge(forest2);
         double rmse1 = RMSE.of(abalone.testy(), forest1.predict(abalone.test()));
         double rmse2 = RMSE.of(abalone.testy(), forest2.predict(abalone.test()));
@@ -269,7 +271,8 @@ public class RandomForestTest {
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
-        RandomForest model = RandomForest.fit(bostonHousing.formula(), bostonHousing.data(), 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(bostonHousing.formula(), bostonHousing.data(), options, Arrays.stream(seeds));
         double[] importance = model.importance();
         double[] shap = model.shap(bostonHousing.data());
 

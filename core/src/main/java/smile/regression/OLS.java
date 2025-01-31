@@ -33,7 +33,7 @@ import smile.math.special.Beta;
  * that minimize the sum of squared residuals, SSE (also denoted RSS).
  * <p>
  * The OLS estimator is consistent when the independent variables are
- * exogenous and there is no multicollinearity, and optimal in the class
+ * exogenous and there is no multi-collinearity, and optimal in the class
  * of linear unbiased estimators when the errors are homoscedastic and
  * serially uncorrelated. Under these conditions, the method of OLS provides
  * minimum-variance mean-unbiased estimation when the errors have finite
@@ -73,6 +73,56 @@ import smile.math.special.Beta;
 public class OLS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);
 
+    /** Computational methods to fit the model. */
+    enum Method {
+        QR,
+        SVD
+    }
+
+    /**
+     * Least squares hyper-parameters.
+     * @param method the fitting method.
+     * @param stderr if true, compute the standard errors of the estimate of parameters.
+     * @param recursive if true, the return model supports recursive least squares.
+     */
+    public record Options(Method method, boolean stderr, boolean recursive) {
+        /** Constructor. */
+        public Options() {
+            this(Method.QR, true, true);
+        }
+
+        /**
+         * Returns the persistent set of hyper-parameters including
+         * <ul>
+         * <li><code>smile.ols.method</code> (default "svd") is a string (svd or qr) for the fitting method
+         * <li><code>smile.ols.standard.error</code> (default true) is a boolean. If true, compute the estimated standard
+         *     errors of the estimate of parameters
+         * <li><code>smile.ols.recursive</code>  (default true) is a boolean. If true, the return model supports recursive least squares
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.ols.method", method.toString());
+            props.setProperty("smile.ols.standard_error", Boolean.toString(stderr));
+            props.setProperty("smile.ols.recursive", Boolean.toString(recursive));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyper-parameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            Method method = Method.valueOf(props.getProperty("smile.ols.method", "QR"));
+            boolean stderr = Boolean.parseBoolean(props.getProperty("smile.ols.standard_error", "true"));
+            boolean recursive = Boolean.parseBoolean(props.getProperty("smile.ols.recursive", "true"));
+            return new Options(method, stderr, recursive);
+        }
+    }
+
     /**
      * Fits an ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
@@ -81,41 +131,17 @@ public class OLS {
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
+        return fit(formula, data, new Options());
     }
 
-    /**
-     * Fits an ordinary least squares model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>smile.ols.method</code> (default "svd") is a string (svd or qr) for the fitting method
-     * <li><code>smile.ols.standard.error</code> (default true) is a boolean. If true, compute the estimated standard
-     *     errors of the estimate of parameters
-     * <li><code>smile.ols.recursive</code>  (default true) is a boolean. If true, the return model supports recursive least squares
-     * </ul>
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
-        String method = params.getProperty("smile.ols.method", "qr");
-        boolean stderr = Boolean.parseBoolean(params.getProperty("smile.ols.standard_error", "true"));
-        boolean recursive = Boolean.parseBoolean(params.getProperty("smile.ols.recursive", "true"));
-        return fit(formula, data, method, stderr, recursive);
-    }
-    
     /**
      * Fits an ordinary least squares model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param method the fitting method ("svd" or "qr").
-     * @param stderr if true, compute the standard errors of the estimate of parameters.
-     * @param recursive if true, the return model supports recursive least squares.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
+    public static LinearModel fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
@@ -134,7 +160,7 @@ public class OLS {
         Matrix.QR qr = null;
         Matrix.SVD svd;
 
-        if (method.equalsIgnoreCase("svd")) {
+        if (options.method == Method.SVD) {
             svd = X.svd();
             w = svd.solve(y);
         } else {
@@ -143,7 +169,6 @@ public class OLS {
                 w = qr.solve(y);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
-                method = "svd";
                 svd = X.svd();
                 w = svd.solve(y);
             }
@@ -152,13 +177,13 @@ public class OLS {
         LinearModel model = new LinearModel(formula, schema, X, y, w, 0.0);
 
         Matrix inv = null;
-        if (stderr || recursive) {
+        if (options.stderr || options.recursive) {
             Matrix.Cholesky cholesky = qr == null ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
             inv = cholesky.inverse();
             model.V = inv;
         }
 
-        if (stderr) {
+        if (options.stderr) {
             double[][] ttest = new double[p][4];
             model.ttest = ttest;
 
