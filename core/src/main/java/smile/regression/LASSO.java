@@ -89,11 +89,6 @@ public class LASSO {
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(1.0);
-        }
-
         /**
          * Constructor.
          * @param lambda the shrinkage/regularization parameter.
@@ -142,7 +137,7 @@ public class LASSO {
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(1.0));
     }
 
     /**
