@@ -54,7 +54,7 @@ install_almond() {
   SCALA_VERSION=3.4.2 ALMOND_VERSION=0.14.0
   ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
     --install \
-    --id scala213 \
+    --id scala3 \
     --display-name "Scala (3.4)" \
     --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0" \
     --variable-inspector \
@@ -125,4 +125,4 @@ then
     exit
 fi
 
-jupyter lab --notebook-dir="$app_home/.."
+jupyter lab --notebook-dir="$app_home/.." --ip 0.0.0.0
