@@ -73,7 +73,7 @@ public class IsoMap {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
 
     /**
-     * IsoMap hyper-parameters.
+     * IsoMap hyperparameters.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
@@ -97,7 +97,7 @@ public class IsoMap {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -111,7 +111,7 @@ public class IsoMap {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -125,7 +125,7 @@ public class IsoMap {
     /**
      * Runs the Isomap algorithm.
      * @param data the input data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, Options options) {
@@ -136,7 +136,7 @@ public class IsoMap {
      * Runs the Isomap algorithm.
      * @param data the input data.
      * @param distance the distance function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
@@ -149,7 +149,7 @@ public class IsoMap {
     /**
      * Runs the Isomap algorithm.
      * @param nng the k-nearest neighbor graph.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
     public static double[][] of(NearestNeighborGraph nng, Options options) {

@@ -133,7 +133,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
     }
 
     /**
-     * AdaBoost hyper-parameters.
+     * AdaBoost hyperparameters.
      * @param ntrees the number of trees.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -160,7 +160,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -175,7 +175,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -203,7 +203,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Options options) {

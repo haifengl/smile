@@ -63,7 +63,7 @@ public record ICA(double[][] components) implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICA.class);
 
     /**
-     * ICA hyper-parameters.
+     * ICA hyperparameters.
      * @param contrast the contrast function which is capable of separating or
      *                 extracting independent sources from a linear mixture.
      *                 It must be a non-quadratic non-linear function that
@@ -105,7 +105,7 @@ public record ICA(double[][] components) implements Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -125,7 +125,7 @@ public record ICA(double[][] components) implements Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) throws InvocationTargetException, InstantiationException,
@@ -164,7 +164,7 @@ public record ICA(double[][] components) implements Serializable {
      *
      * @param data training data.
      * @param p the number of independent components.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static ICA fit(double[][] data, int p, Options options) {

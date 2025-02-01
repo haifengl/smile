@@ -69,7 +69,7 @@ public class TSNE implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * The t-SNE hyper-parameters.
+     * The t-SNE hyperparameters.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param eta the learning rate.
@@ -97,7 +97,7 @@ public class TSNE implements Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -112,7 +112,7 @@ public class TSNE implements Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -171,7 +171,7 @@ public class TSNE implements Serializable {
      *
      * @param X the input data. If X is a square matrix, it is assumed to be
      *         the squared distance/dissimilarity matrix.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      */
     public TSNE(double[][] X, Options options) {
         eta = options.eta;

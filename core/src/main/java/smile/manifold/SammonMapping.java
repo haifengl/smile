@@ -60,7 +60,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);
 
     /**
-     * Sammon's mapping hyper-parameters.
+     * Sammon's mapping hyperparameters.
      * @param d the dimension of the projection.
      * @param lambda initial value of the step size constant in diagonal Newton method.
      * @param tol the tolerance on objective function for stopping iterations.
@@ -88,7 +88,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -104,7 +104,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -131,7 +131,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * Fits Sammon's mapping.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity, Options options) {
@@ -146,7 +146,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      *                  should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      *             size is the projection dimension. It will be modified.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity, double[][] init, Options options) {

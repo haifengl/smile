@@ -219,7 +219,7 @@ public class CRF implements Serializable {
     }
 
     /**
-     * CRF hyper-parameters.
+     * CRF hyperparameters.
      * @param ntrees the number of trees/iterations.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -252,7 +252,7 @@ public class CRF implements Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -268,7 +268,7 @@ public class CRF implements Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -295,7 +295,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Options options) {

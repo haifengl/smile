@@ -302,7 +302,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     }
 
     /**
-     * Gaussian process regression hyper-parameters.
+     * Gaussian process regression hyperparameters.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the flag if normalize the response variable.
      * @param tol the stopping tolerance for HPO.
@@ -336,7 +336,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -351,7 +351,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -380,7 +380,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param kernel the Mercer kernel.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
@@ -443,7 +443,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          be chosen randomly from the training set or as the centers of
      *          k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
@@ -484,7 +484,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */

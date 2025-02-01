@@ -80,7 +80,7 @@ public class OLS {
     }
 
     /**
-     * Least squares hyper-parameters.
+     * Least squares hyperparameters.
      * @param method the fitting method.
      * @param stderr if true, compute the standard errors of the estimate of parameters.
      * @param recursive if true, the return model supports recursive least squares.
@@ -92,7 +92,7 @@ public class OLS {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.ols.method</code> (default "svd") is a string (svd or qr) for the fitting method
          * <li><code>smile.ols.standard.error</code> (default true) is a boolean. If true, compute the estimated standard
@@ -112,7 +112,7 @@ public class OLS {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {

@@ -54,7 +54,7 @@ import smile.util.SparseArray;
  */
 public class LaplacianEigenmap {
     /**
-     * Laplacian Eigenmaps hyper-parameters.
+     * Laplacian Eigenmaps hyperparameters.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
@@ -79,7 +79,7 @@ public class LaplacianEigenmap {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -93,7 +93,7 @@ public class LaplacianEigenmap {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -107,7 +107,7 @@ public class LaplacianEigenmap {
     /**
      * Laplacian Eigenmaps with Gaussian kernel.
      * @param data the input data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, Options options) {
@@ -118,7 +118,7 @@ public class LaplacianEigenmap {
      * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
      * @param distance the distance function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
@@ -131,7 +131,7 @@ public class LaplacianEigenmap {
     /**
      * Laplacian Eigenmaps with Gaussian kernel.
      * @param nng the k-nearest neighbor graph.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
     public static double[][] of(NearestNeighborGraph nng, Options options) {

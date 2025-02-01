@@ -120,7 +120,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
     }
 
     /**
-     * SVM hyper-parameters.
+     * SVM hyperparameters.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
      * @param epochs the number of epochs, usually 1 or 2 is sufficient.
@@ -144,7 +144,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -158,7 +158,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static SVM.Options of(Properties props) {
@@ -173,7 +173,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * Fits a binary linear SVM.
      * @param x training samples.
      * @param y training labels of {-1, +1}.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Classifier<double[]> fit(double[][] x, int[] y, Options options) {
@@ -196,7 +196,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param x training samples.
      * @param y training labels of {-1, +1}.
      * @param p the dimension of input vector.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Classifier<int[]> fit(int[][] x, int[] y, int p, Options options) {
@@ -219,7 +219,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param x training samples.
      * @param y training labels of {-1, +1}.
      * @param p the dimension of input vector.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Classifier<SparseArray> fit(SparseArray[] x, int[] y, int p, Options options) {
@@ -242,7 +242,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param x training samples.
      * @param y training labels of {-1, +1}.
      * @param kernel the kernel function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type.
      * @return the model.
      */

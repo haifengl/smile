@@ -105,7 +105,7 @@ public class IsolationForest implements Serializable {
     }
 
     /**
-     * Isolation Forest hyper-parameters.
+     * Isolation Forest hyperparameters.
      * @param ntrees the number of trees.
      * @param maxDepth the maximum depth of the tree.
      * @param subsample the sampling rate for training tree.
@@ -128,7 +128,7 @@ public class IsolationForest implements Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -143,7 +143,7 @@ public class IsolationForest implements Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -169,7 +169,7 @@ public class IsolationForest implements Serializable {
      * Fits a random forest for classification.
      *
      * @param data the training data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Options options) {

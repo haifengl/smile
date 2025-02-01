@@ -136,7 +136,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Random forest hyper-parameters.
+     * Random forest hyperparameters.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the
      *             decision at a node of the tree. p/3 generally give good
@@ -173,7 +173,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -190,7 +190,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -220,7 +220,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Options options) {
@@ -232,7 +232,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param seeds optional RNG seeds for each regression tree.
      * @return the model.
      */
