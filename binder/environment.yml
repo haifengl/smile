@@ -7,4 +7,4 @@ dependencies:
   - plotly
   - ipywidgets
   - kotlin-jupyter-kernel
-    #  - clojupyter
+  - clojupyter
