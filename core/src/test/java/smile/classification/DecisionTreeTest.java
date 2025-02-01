@@ -17,6 +17,7 @@
 package smile.classification;
 
 import smile.base.cart.SplitRule;
+import smile.classification.DecisionTree.Options;
 import smile.datasets.BreastCancer;
 import smile.datasets.*;
 import smile.io.Read;
@@ -56,7 +57,8 @@ public class DecisionTreeTest {
     public void testWeather() throws Exception {
         System.out.println("Weather");
         var weather = new WeatherNominal();
-        DecisionTree model = DecisionTree.fit(weather.formula(), weather.data(), SplitRule.GINI, 8, 10, 1);
+        var options = new Options(SplitRule.GINI, 8, 10, 1);
+        DecisionTree model = DecisionTree.fit(weather.formula(), weather.data(), options);
         System.out.println(model);
         String[] fields = model.schema().names();
 
@@ -75,7 +77,7 @@ public class DecisionTreeTest {
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
 
-        ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(), (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
+        ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(), (f, x) -> DecisionTree.fit(f, x, options));
 
         System.out.println(metrics);
         assertEquals(0.5, metrics.accuracy(), 1E-4);
@@ -105,8 +107,9 @@ public class DecisionTreeTest {
         System.out.println("Pen Digits");
         MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
+        var options = new Options(SplitRule.GINI, 20, 100, 5);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
-                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
+                (f, x) -> DecisionTree.fit(f, x, options));
 
         System.out.println(result);
         assertEquals(0.9532, result.avg().accuracy(), 1E-4);
@@ -118,8 +121,9 @@ public class DecisionTreeTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
+        var options = new Options(SplitRule.GINI, 20, 100, 5);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
-                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
+                (f, x) -> DecisionTree.fit(f, x, options));
 
         System.out.println(result);
         assertEquals(0.9275, result.avg().accuracy(), 1E-4);
@@ -129,7 +133,8 @@ public class DecisionTreeTest {
     public void testSegment() throws Exception {
         System.out.println("Segment");
         var segment = new ImageSegmentation();
-        DecisionTree model = DecisionTree.fit(segment.formula(), segment.train(), SplitRule.ENTROPY, 20, 100, 5);
+        var options = new Options(SplitRule.ENTROPY, 20, 100, 5);
+        DecisionTree model = DecisionTree.fit(segment.formula(), segment.train(), options);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -148,7 +153,8 @@ public class DecisionTreeTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();
-        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), SplitRule.ENTROPY, 20, 500, 5);
+        var options = new Options(SplitRule.ENTROPY, 20, 500, 5);
+        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), options);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -169,7 +175,8 @@ public class DecisionTreeTest {
         var usps = new USPS();
         int[] testy = usps.testy();
         // Overfitting with very large maxNodes and small nodeSize
-        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), SplitRule.ENTROPY, 20, 3000, 1);
+        var options = new Options(SplitRule.ENTROPY, 20, 3000, 1);
+        DecisionTree model = DecisionTree.fit(usps.formula(), usps.train(), options);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -212,7 +219,8 @@ public class DecisionTreeTest {
     public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
-        DecisionTree model = DecisionTree.fit(iris.formula(), iris.data(), SplitRule.GINI, 20, 100, 5);
+        var options = new Options(SplitRule.GINI, 20, 100, 5);
+        DecisionTree model = DecisionTree.fit(iris.formula(), iris.data(), options);
         String[] fields = model.schema().names();
         double[] importance = model.importance();
         double[] shap = model.shap(iris.data());

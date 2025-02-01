@@ -18,6 +18,8 @@ package smile.ica;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
 import smile.math.MathEx;
@@ -52,24 +54,96 @@ import smile.stat.distribution.GaussianDistribution;
  * <li>Aapo Hyvärinen, Erkki Oja: Independent component analysis: Algorithms and applications, 2000</li>
  * </ol>
  *
+ * @param components each row is an independent component.
  * @author Haifeng Li
  */
-public class ICA implements Serializable {
+public record ICA(double[][] components) implements Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICA.class);
 
     /**
-     * The independent components (row-wise).
+     * ICA hyperparameters.
+     * @param contrast the contrast function which is capable of separating or
+     *                 extracting independent sources from a linear mixture.
+     *                 It must be a non-quadratic non-linear function that
+     *                 has second-order derivative.
+     * @param tol the tolerance of convergence test.
+     * @param maxIter the maximum number of iterations.
      */
-    public final double[][] components;
+    public record Options(DifferentiableFunction contrast, double tol, int maxIter) {
+        public Options {
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
 
-    /**
-     * Constructor.
-     * @param components each row is an independent component.
-     */
-    private ICA(double[][] components) {
-        this.components = components;
+        /**
+         * Constructor.
+         * @param contrast the contrast function which is capable of separating or
+         *                 extracting independent sources from a linear mixture.
+         *                 It must be a non-quadratic non-linear function that
+         *                 has second-order derivative.
+         */
+        public Options(DifferentiableFunction contrast) {
+            this(contrast, 1E-4, 100);
+        }
+
+        /**
+         * Constructor.
+         * @param contrast the name of contrast function, "LogCosh" or "Gaussian".
+         */
+        public Options(String contrast) {
+            this(switch (contrast) {
+                case "LogCosh" -> new LogCosh();
+                case "Gaussian" -> new Exp();
+                default -> throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
+            });
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.ica.tolerance", Double.toString(tol));
+            props.setProperty("smile.ica.iterations", Integer.toString(maxIter));
+
+            String name = switch (contrast) {
+                case LogCosh cosh -> "LogCosh";
+                case Exp exp -> "Gaussian";
+                default -> getClass().getName();
+            };
+            props.setProperty("smile.ica.contrast", name);
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) throws InvocationTargetException, InstantiationException,
+                IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
+            String name = props.getProperty("smile.ica.contrast", "LogCosh");
+            DifferentiableFunction contrast = switch (name) {
+                case "LogCosh" -> new LogCosh();
+                case "Gaussian" -> new Exp();
+                default -> {
+                    Class<?> clazz = Class.forName(name);
+                    Constructor<?> constructor = clazz.getDeclaredConstructor();
+                    yield (DifferentiableFunction) constructor.newInstance();
+                }
+            };
+            double tol = Double.parseDouble(props.getProperty("smile.ica.tolerance", "1E-4"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.ica.iterations", "100"));
+            return new Options(contrast, tol, maxIter);
+        }
     }
 
     /**
@@ -82,61 +156,27 @@ public class ICA implements Serializable {
      * @return the model.
      */
     public static ICA fit(double[][] data, int p) {
-        return fit(data, p, new Properties());
+        return fit(data, p, new Options(new LogCosh()));
     }
-
-    /**
-     * Fits independent component analysis.
-     *
-     * @param data training data. The number of columns corresponding with the
-     *             number of samples of mixed signals and the number of rows
-     *             corresponding with the number of independent source signals.
-     * @param p the number of independent components.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static ICA fit(double[][] data, int p, Properties params) {
-        DifferentiableFunction f;
-        String contrast = params.getProperty("smile.ica.contrast", "LogCosh");
-        f = switch (contrast) {
-            case "LogCosh" -> new LogCosh();
-            case "Gaussian" -> new Exp();
-            default -> throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
-        };
-        double tol = Double.parseDouble(params.getProperty("smile.ica.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.ica.iterations", "100"));
-        return fit(data, p, f, tol, maxIter);
-    }
-
 
     /**
      * Fits independent component analysis.
      *
      * @param data training data.
      * @param p the number of independent components.
-     * @param contrast the contrast function which is capable of separating or
-     *                 extracting independent sources from a linear mixture.
-     *                 It must be a non-quadratic non-linear function that
-     *                 has second-order derivative.
-     * @param tol the tolerance of convergence test.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static ICA fit(double[][] data, int p, DifferentiableFunction contrast, double tol, int maxIter) {
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    public static ICA fit(double[][] data, int p, Options options) {
         int n = data[0].length;
         int m = data.length;
         if (p < 1 || p > m) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
+        var contrast = options.contrast;
+        var tol = options.tol;
+        var maxIter = options.maxIter;
         GaussianDistribution g = new GaussianDistribution(0, 1);
         double[][] W = new double[p][n];
         for (int i = 0; i < p; i++) {

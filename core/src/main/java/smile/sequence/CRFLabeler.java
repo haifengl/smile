@@ -18,7 +18,6 @@ package smile.sequence;
 
 import java.io.Serial;
 import java.util.Arrays;
-import java.util.Properties;
 import java.util.function.Function;
 import smile.data.Tuple;
 
@@ -58,25 +57,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features) {
-        return fit(sequences, labels, features, new Properties());
-    }
-
-    /**
-     * Fits a CRF model.
-     * @param sequences the training data.
-     * @param labels the training sequence labels.
-     * @param features the feature function.
-     * @param params the hyperparameters.
-     * @param <T> the data type of observations.
-     * @return the model.
-     */
-    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.crf.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.crf.max_nodes", "100"));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.crf.node_size", "5"));
-        double shrinkage = Double.parseDouble(params.getProperty("smile.crf.shrinkage", "1.0"));
-        return fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+        return fit(sequences, labels, features, new CRF.Options());
     }
 
     /**
@@ -86,16 +67,11 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param labels the state labels of observations, of which states take
      *               values in [0, k), where k is the number of hidden states.
      * @param features the feature function.
-     * @param ntrees the number of trees/iterations.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize  the number of instances in a node below which the tree will
-     *                  not split, setting nodeSize = 5 generally gives good results.
-     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @param options the hyperparameters.
      * @param <T> the data type of observations.
      * @return the model.
      */
-    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, CRF.Options options) {
         if (sequences.length != labels.length) {
             throw new IllegalArgumentException("The number of observation sequences and that of label sequences are different.");
         }
@@ -104,7 +80,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
                 Arrays.stream(sequences)
                         .map(sequence -> Arrays.stream(sequence).map(features).toArray(Tuple[]::new))
                         .toArray(Tuple[][]::new),
-                labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+                labels, options);
 
         return new CRFLabeler<>(model, features);
     }

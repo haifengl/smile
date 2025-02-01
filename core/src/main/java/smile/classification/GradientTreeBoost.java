@@ -209,6 +209,80 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     /**
+     * Gradient tree boosting hyperparameters.
+     * @param ntrees the number of iterations (trees).
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
+     *                 Setting nodeSize = 5 generally gives good results.
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @param subsample the sampling fraction for stochastic tree boosting.
+     */
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (maxNodes < 2) {
+                throw new IllegalArgumentException("Invalid maximum number of nodes: " + maxNodes);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+
+            if (shrinkage <= 0 || shrinkage > 1) {
+                throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
+            }
+
+            if (subsample <= 0 || subsample > 1) {
+                throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(500, 20, 6, 5, 0.05, 0.7);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.gradient_boost.trees", Integer.toString(ntrees));
+            props.setProperty("smile.gradient_boost.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.gradient_boost.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.gradient_boost.node_size", Integer.toString(nodeSize));
+            props.setProperty("smile.gradient_boost.shrinkage", Double.toString(shrinkage));
+            props.setProperty("smile.gradient_boost.sampling_rate", Double.toString(subsample));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.gradient_boost.trees", "500"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.gradient_boost.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.gradient_boost.max_nodes", "6"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.gradient_boost.node_size", "5"));
+            double shrinkage = Double.parseDouble(props.getProperty("smile.gradient_boost.shrinkage", "0.05"));
+            double subsample = Double.parseDouble(props.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
+            return new Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+        }
+    }
+
+    /**
      * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -216,55 +290,18 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
+        return fit(formula, data, new Options());
     }
 
     /**
      * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
+     * @param data    the data frame of the explanatory and response variables.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.gradient_boost.trees", "500"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.gradient_boost.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.gradient_boost.max_nodes", "6"));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.gradient_boost.node_size", "5"));
-        double shrinkage = Double.parseDouble(params.getProperty("smile.gradient_boost.shrinkage", "0.05"));
-        double subsample = Double.parseDouble(params.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
-        return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
-    }
-
-    /**
-     * Fits a gradient tree boosting for classification.
-     *
-     * @param formula   a symbolic description of the model to be fitted.
-     * @param data      the data frame of the explanatory and response variables.
-     * @param ntrees    the number of iterations (trees).
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize  the number of instances in a node below which the tree will
-     *                  not split, setting nodeSize = 5 generally gives good results.
-     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-     * @param subsample the sampling fraction for stochastic tree boosting.
-     * @return the model.
-     */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth,
-                                        int maxNodes, int nodeSize, double shrinkage, double subsample) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (shrinkage <= 0 || shrinkage > 1) {
-            throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
-        }
-
-        if (subsample <= 0 || subsample > 1) {
-            throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
-        }
-
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
@@ -273,9 +310,9 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k == 2) {
-            return train2(formula, x, codec, order, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+            return train2(formula, x, codec, order, options.ntrees, options.maxDepth, options.maxNodes, options.nodeSize, options.shrinkage, options.subsample);
         } else {
-            return traink(formula, x, codec, order, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+            return traink(formula, x, codec, order, options.ntrees, options.maxDepth, options.maxNodes, options.nodeSize, options.shrinkage, options.subsample);
         }
     }
 

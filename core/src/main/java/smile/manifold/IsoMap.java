@@ -16,6 +16,7 @@
  */
 package smile.manifold;
 
+import java.util.Properties;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
@@ -72,64 +73,90 @@ public class IsoMap {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
 
     /**
-     * Runs the C-Isomap algorithm with Euclidean distance.
-     * @param data the input data.
+     * IsoMap hyperparameters.
      * @param k k-nearest neighbor.
-     * @return the embedding coordinates.
+     * @param d the dimension of the manifold.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
-    public static double[][] of(double[][] data, int k) {
-        return of(data, k, 2, true);
+    public record Options(int k, int d, boolean conformal) {
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
+            }
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k k-nearest neighbor.
+         */
+        public Options(int k) {
+            this(k, 2, true);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.isomap.k", Integer.toString(k));
+            props.setProperty("smile.isomap.d", Integer.toString(d));
+            props.setProperty("smile.isomap.conformal", Boolean.toString(conformal));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.isomap.k", "7"));
+            int d = Integer.parseInt(props.getProperty("smile.isomap.d", "2"));
+            boolean conformal = Boolean.parseBoolean(props.getProperty("smile.isomap.conformal", "true"));
+            return new Options(k, d, conformal);
+        }
     }
 
     /**
      * Runs the Isomap algorithm.
      * @param data the input data.
-     * @param d the dimension of the manifold.
-     * @param k k-nearest neighbor.
-     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d, boolean conformal) {
-        return of(data, MathEx::distance, k, d, conformal);
-    }
-
-    /**
-     * Runs the C-Isomap algorithm.
-     * @param data the input data.
-     * @param k k-nearest neighbor.
-     * @param distance the distance function.
-     * @param <T> the data type of points.
-     * @return the embedding coordinates.
-     */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
-        return of(data, distance, k, 2, true);
+    public static double[][] of(double[][] data, Options options) {
+        return of(data, MathEx::distance, options);
     }
 
     /**
      * Runs the Isomap algorithm.
      * @param data the input data.
      * @param distance the distance function.
-     * @param k k-nearest neighbor.
-     * @param d the dimension of the manifold.
-     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param options the hyperparameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
+    public static <T> double[][] of(T[] data, Distance<T> distance, Options options) {
         // Use the largest connected component of nearest neighbor graph.
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
-        return of(nng.largest(false), d, conformal);
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, options.k);
+        return of(nng.largest(false), options);
     }
 
     /**
      * Runs the Isomap algorithm.
      * @param nng the k-nearest neighbor graph.
-     * @param d the dimension of the manifold.
-     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(NearestNeighborGraph nng, int d, boolean conformal) {
+    public static double[][] of(NearestNeighborGraph nng, Options options) {
+        int d = options.d;
+        boolean conformal = options.conformal;
         AdjacencyList graph = nng.graph(false);
+
         if (conformal) {
             double[] M = MathEx.rowMeans(nng.distances());
             int n = M.length;

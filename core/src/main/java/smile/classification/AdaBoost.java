@@ -133,6 +133,61 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
     }
 
     /**
+     * AdaBoost hyperparameters.
+     * @param ntrees the number of trees.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize the minimum size of leaf nodes.
+     */
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (maxDepth < 2) {
+                throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);
+            }
+
+            if (nodeSize < 1) {
+                throw new IllegalArgumentException("Invalid node size: " + nodeSize);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(500, 20, 6, 1);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.adaboost.trees", Integer.toString(ntrees));
+            props.setProperty("smile.adaboost.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.adaboost.max_nodes", Integer.toString(maxNodes));
+            props.setProperty("smile.adaboost.node_size", Integer.toString(nodeSize));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.adaboost.trees", "500"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.adaboost.max_depth", "20"));
+            int maxNodes = Integer.parseInt(props.getProperty("smile.adaboost.max_nodes", "6"));
+            int nodeSize = Integer.parseInt(props.getProperty("smile.adaboost.node_size", "5"));
+            return new Options(ntrees, maxDepth, maxNodes, nodeSize);
+        }
+    }
+
+    /**
      * Fits a AdaBoost model.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -140,7 +195,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
+        return fit(formula, data, new Options());
     }
 
     /**
@@ -148,34 +203,10 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param params the hyperparameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static AdaBoost fit(Formula formula, DataFrame data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.adaboost.trees", "500"));
-        int maxDepth = Integer.parseInt(params.getProperty("smile.adaboost.max_depth", "20"));
-        int maxNodes = Integer.parseInt(params.getProperty("smile.adaboost.max_nodes", "6"));
-        int nodeSize = Integer.parseInt(params.getProperty("smile.adaboost.node_size", "1"));
-        return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
-    }
-
-    /**
-     * Fits a AdaBoost model.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, setting nodeSize = 5 generally gives good results.
-     * @return the model.
-     */
-    public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
+    public static AdaBoost fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
@@ -194,6 +225,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
         int failures = 0; // the number of weak classifiers less accurate than guess.
 
+        int ntrees = options.ntrees;
         DecisionTree[] trees = new DecisionTree[ntrees];
         double[] alpha = new double[ntrees];
         double[] error = new double[ntrees];
@@ -209,7 +241,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 samples[s]++;
             }
 
-            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, options.maxDepth, options.maxNodes, options.nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 wrong[i] = trees[t].predict(x.get(i)) != codec.y[i];

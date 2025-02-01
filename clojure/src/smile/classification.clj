@@ -176,7 +176,7 @@
   significantly exceeds the needed free parameters. There are two general
   approaches for avoiding this problem: The first is to use cross-validation
   and similar techniques to check for the presence of over-fitting and
-  optimally select hyper-parameters such as to minimize the generalization
+  optimally select hyperparameters such as to minimize the generalization
   error. The second is to use some form of regularization, which emerges
   naturally in a Bayesian framework, where the regularization can be
   performed by selecting a larger prior probability over simpler models;
@@ -209,7 +209,7 @@
   `lambda` is the weight decay for regularization."
   ([x y builders] (mlp x y builders 10 0.1 0.0 0.0))
   ([x y builders epochs eta alpha lambda]
-   (let [net (MLP. (.length (aget x 0)) builders)]
+   (let [net (MLP. builders)]
      ((.setLearningRate net eta)
       (.setMomentum net alpha)
       (.setWeightDecay net lambda)

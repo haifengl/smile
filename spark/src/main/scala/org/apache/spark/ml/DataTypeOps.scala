@@ -43,35 +43,35 @@ object DataTypeOps {
     * @return Smile field
     */
   def toSmileField(field: org.apache.spark.sql.types.StructField): StructField = {
-    new StructField(field.name, toSmileType(field.dataType))
+    new StructField(field.name, toSmileType(field.dataType, field.nullable))
   }
 
   /**
     * Converts a SparkSQL DataType to a Smile DataType.
     * Deals with nested type or even user defined types.
     *
-    * @param `type` Spark datatype
-    * @return Smile datatype
+    * @param dtype Spark data type
+    * @return Smile data type
     */
-  def toSmileType(`type`: org.apache.spark.sql.types.DataType): DataType = {
-    `type` match {
-      case BooleanType => DataTypes.BooleanType
-      case ByteType => DataTypes.ByteType
+  def toSmileType(dtype: org.apache.spark.sql.types.DataType, nullable: Boolean): DataType = {
+    dtype match {
+      case BooleanType => if (nullable) DataTypes.NullableBooleanType else DataTypes.BooleanType
+      case ByteType => if (nullable) DataTypes.NullableByteType else DataTypes.ByteType
       case BinaryType => DataTypes.ByteArrayType
-      case ShortType => DataTypes.ShortType
-      case IntegerType => DataTypes.IntType
-      case LongType => DataTypes.LongType
-      case FloatType => DataTypes.FloatType
-      case DoubleType => DataTypes.DoubleType
+      case ShortType => if (nullable) DataTypes.NullableShortType else DataTypes.ShortType
+      case IntegerType => if (nullable) DataTypes.NullableIntType else DataTypes.IntType
+      case LongType => if (nullable) DataTypes.NullableLongType else DataTypes.LongType
+      case FloatType => if (nullable) DataTypes.NullableFloatType else DataTypes.FloatType
+      case DoubleType => if (nullable) DataTypes.NullableDoubleType else DataTypes.DoubleType
       case _: DecimalType => DataTypes.DecimalType
       case StringType => DataTypes.StringType
       case TimestampType => DataTypes.DateTimeType
       case DateType => DataTypes.DateType
-      case ArrayType(elementType, _) => DataTypes.array(toSmileType(elementType))
+      case ArrayType(elementType, nullable) => DataTypes.array(toSmileType(elementType, nullable))
       case org.apache.spark.sql.types.StructType(fields) => new StructType(fields.map(toSmileField): _*)
-      case MapType(keyType, valueType, _) => DataTypes.array(new StructType(Seq(
-          new StructField("key", toSmileType(keyType)),
-          new StructField("value", toSmileType(valueType))): _*))
+      case MapType(keyType, valueType, nullable) => DataTypes.array(new StructType(Seq(
+          new StructField("key", toSmileType(keyType, nullable)),
+          new StructField("value", toSmileType(valueType, nullable))): _*))
       case ObjectType(cls) => DataTypes.`object`(cls)
       case _: NullType => DataTypes.StringType
       case _: VectorUDT => DataTypes.array(DataTypes.DoubleType)
@@ -98,7 +98,7 @@ object DataTypeOps {
     */
   def toSparkField(field: StructField): org.apache.spark.sql.types.StructField = {
     val sparkType = toSparkType(field.dtype)
-    val nullable = !field.dtype.isPrimitive
+    val nullable = field.dtype.isNullable
     val builder = new MetadataBuilder
     if (field.measure != null) {
       builder.putString("measure", field.measure.toString)
@@ -110,11 +110,11 @@ object DataTypeOps {
     * Convert a Smile DataType to a SparkSQL DataType.
     * Deals with nested type or even user defined types.
     *
-    * @param `type` Smile datatype
-    * @return Spark datatype
+    * @param dtype Smile data type
+    * @return Spark data type
     */
-  def toSparkType(`type`: DataType): org.apache.spark.sql.types.DataType = {
-    `type`.id match {
+  def toSparkType(dtype: DataType): org.apache.spark.sql.types.DataType = {
+    dtype.id match {
       case DataType.ID.Boolean => BooleanType
       case DataType.ID.Byte => ByteType
       case DataType.ID.Char => StringType
@@ -130,16 +130,16 @@ object DataTypeOps {
       case DataType.ID.DateTime => TimestampType
       case DataType.ID.Object =>
         ExpressionEncoder
-          .javaBean(`type`.asInstanceOf[smile.data.`type`.ObjectType].getObjectClass)
+          .javaBean(dtype.asInstanceOf[smile.data.`type`.ObjectType].getObjectClass)
           .schema
       case DataType.ID.Array =>
         new ArrayType(
-          toSparkType(`type`.asInstanceOf[smile.data.`type`.ArrayType].getComponentType),false)
+          toSparkType(dtype.asInstanceOf[smile.data.`type`.ArrayType].getComponentType),false)
       case DataType.ID.Struct =>
         org.apache.spark.sql.types.StructType(
-          `type`.asInstanceOf[smile.data.`type`.StructType]
+          dtype.asInstanceOf[smile.data.`type`.StructType]
             .fields().stream()
-            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype)))
+            .map(f => org.apache.spark.sql.types.StructField(f.name, toSparkType(f.dtype), f.dtype.isNullable))
             .toList)
     }
   }

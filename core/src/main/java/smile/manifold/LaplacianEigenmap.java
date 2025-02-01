@@ -17,6 +17,7 @@
 package smile.manifold;
 
 import java.util.Collection;
+import java.util.Properties;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
@@ -53,65 +54,91 @@ import smile.util.SparseArray;
  */
 public class LaplacianEigenmap {
     /**
-     * Laplacian Eigenmaps with discrete weights.
-     * @param data the input data.
+     * Laplacian Eigenmaps hyperparameters.
      * @param k k-nearest neighbor.
-     * @return the embedding coordinates.
+     * @param d the dimension of the manifold.
+     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
+     *          Non-positive value means discrete weights.
      */
-    public static double[][] of(double[][] data, int k) {
-        return of(data, k, 2, -1);
+    public record Options(int k, int d, double t) {
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
+            }
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k k-nearest neighbor.
+         */
+        public Options(int k) {
+            this(k, 2, -1);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.laplacian_eigenmap.k", Integer.toString(k));
+            props.setProperty("smile.laplacian_eigenmap.d", Integer.toString(d));
+            props.setProperty("smile.laplacian_eigenmap.t", Double.toString(t));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.laplacian_eigenmap.k", "7"));
+            int d = Integer.parseInt(props.getProperty("smile.laplacian_eigenmap.d", "2"));
+            double t = Double.parseDouble(props.getProperty("smile.laplacian_eigenmap.t", "-1"));
+            return new Options(k, d, t);
+        }
     }
 
     /**
      * Laplacian Eigenmaps with Gaussian kernel.
      * @param data the input data.
-     * @param d the dimension of the manifold.
-     * @param k k-nearest neighbor.
-     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
-     *          Non-positive value means discrete weights.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k, int d, double t) {
-        return of(data, MathEx::distance, k, d, t);
+    public static double[][] of(double[][] data, Options options) {
+        return of(data, MathEx::distance, options);
     }
 
     /**
      * Laplacian Eigenmaps with discrete weights.
      * @param data the input data.
      * @param distance the distance function.
-     * @param k k-nearest neighbor.
+     * @param options the hyperparameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k) {
-        return of(data, distance, k, 2, -1);
-    }
-
-    /**
-     * Laplacian Eigenmaps with discrete weights.
-     * @param data the input data.
-     * @param distance the distance function.
-     * @param k k-nearest neighbor.
-     * @param <T> the data type of points.
-     * @return the embedding coordinates.
-     */
-    public static <T> double[][] of(T[] data, Distance<T> distance, int k, int d, double t) {
+    public static <T> double[][] of(T[] data, Distance<T> distance, Options options) {
         // Use the largest connected component of nearest neighbor graph.
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, k);
-        return of(nng.largest(false), d, t);
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, options.k);
+        return of(nng.largest(false), options);
     }
 
     /**
      * Laplacian Eigenmaps with Gaussian kernel.
      * @param nng the k-nearest neighbor graph.
-     * @param d the dimension of the manifold.
-     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
-     *          Non-positive value means discrete weights.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(NearestNeighborGraph nng, int d, double t) {
+    public static double[][] of(NearestNeighborGraph nng, Options options) {
         AdjacencyList graph = nng.graph(false);
         int n = graph.getVertexCount();
+        int d = options.d;
+        double t = options.t;
 
         double[] D = new double[n];
         double gamma = -1.0 / t;

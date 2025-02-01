@@ -66,28 +66,27 @@ public interface HadoopInput {
      * @return the file input stream.
      */
     static InputStream stream(String path) throws IOException, URISyntaxException {
-        // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
+        try {
+            URI uri = new URI(path);
+            if (uri.getScheme() == null) return Files.newInputStream(Paths.get(path));
+
+            switch (uri.getScheme().toLowerCase()) {
+                case "file":
+                    return Files.newInputStream(Paths.get(path));
+
+                case "s3":
+                case "s3a":
+                case "s3n":
+                case "hdfs":
+                    Configuration conf = new Configuration();
+                    FileSystem fs = FileSystem.get(conf);
+                    return fs.open(new org.apache.hadoop.fs.Path(path));
+
+                default: // http, ftp, ...
+                    return uri.toURL().openStream();
+            }
+        } catch (URISyntaxException e) {
             return Files.newInputStream(Paths.get(path));
-        }
-
-        URI uri = new URI(path);
-        if (uri.getScheme() == null) return Files.newInputStream(Paths.get(path));
-
-        switch (uri.getScheme().toLowerCase()) {
-            case "file":
-                return Files.newInputStream(Paths.get(path));
-
-            case "s3":
-            case "s3a":
-            case "s3n":
-            case "hdfs":
-                Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf);
-                return fs.open(new org.apache.hadoop.fs.Path(path));
-
-            default: // http, ftp, ...
-                return uri.toURL().openStream();
         }
     }
 
@@ -99,28 +98,27 @@ public interface HadoopInput {
      * @return Parquet's InputFile.
      */
     static InputFile file(String path) throws IOException, URISyntaxException {
-        // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
+        try {
+            URI uri = new URI(path);
+            if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));
+
+            switch (uri.getScheme().toLowerCase()) {
+                case "file":
+                    return new LocalInputFile(Paths.get(path));
+
+                case "s3":
+                case "s3a":
+                case "s3n":
+                case "hdfs":
+                    Configuration conf = new Configuration();
+                    FileSystem fs = FileSystem.get(conf); // initialize file system
+                    return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), conf);
+
+                default: // http, ftp, ...
+                    throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);
+            }
+        } catch (URISyntaxException e) {
             return new LocalInputFile(Paths.get(path));
-        }
-
-        URI uri = new URI(path);
-        if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));
-
-        switch (uri.getScheme().toLowerCase()) {
-            case "file":
-                return new LocalInputFile(Paths.get(path));
-
-            case "s3":
-            case "s3a":
-            case "s3n":
-            case "hdfs":
-                Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf); // initialize file system
-                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), conf);
-
-            default: // http, ftp, ...
-                throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);
         }
     }
 }

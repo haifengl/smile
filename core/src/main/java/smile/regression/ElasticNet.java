@@ -45,31 +45,69 @@ import smile.math.matrix.Matrix;
  */
 public class ElasticNet {
     /**
-     * Fits an Elastic Net model.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyperparameters.
-     * @return the model.
+     * Elastic Net hyperparameters.
+     * @param lambda1 the L1 shrinkage/regularization parameter
+     * @param lambda2 the L2 shrinkage/regularization parameter
+     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
-        double lambda1 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda1"));
-        double lambda2 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda2"));
-        double tol = Double.parseDouble(params.getProperty("smile.elastic_net.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.iterations", "1000"));
-        return fit(formula, data, lambda1, lambda2, tol, maxIter);
+    public record Options(double lambda1, double lambda2, double tol, int maxIter) {
+        public Options {
+            if (lambda1 <= 0) {
+                throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
+            }
+            if (lambda2 <= 0) {
+                throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting: " + lambda2);
+            }
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options(double lambda1, double lambda2) {
+            this(lambda1, lambda2, 1E-4, 1000);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters including
+         * <ul>
+         * <li><code>smile.elastic_net.lambda1</code> is the L1 shrinkage/regularization parameter
+         * <li><code>smile.elastic_net.lambda2</code> is the L2 shrinkage/regularization parameter
+         * <li><code>smile.elastic_net.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+         * <li><code>smile.elastic_net.iterations</code> is the maximum number of IPM (Newton) iterations.
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.elastic_net.lambda1", Double.toString(lambda1));
+            props.setProperty("smile.elastic_net.lambda2", Double.toString(lambda2));
+            props.setProperty("smile.elastic_net.tolerance", Double.toString(tol));
+            props.setProperty("smile.elastic_net.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double lambda1 = Double.parseDouble(props.getProperty("smile.elastic_net.lambda1"));
+            double lambda2 = Double.parseDouble(props.getProperty("smile.elastic_net.lambda2"));
+            double tol = Double.parseDouble(props.getProperty("smile.elastic_net.tolerance", "1E-4"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.elastic_net.iterations", "1000"));
+            return new Options(lambda1, lambda2, tol, maxIter);
+        }
     }
 
     /**
-     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
-     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
-     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
-     * </ul>
-     *
+     * Fits an Elastic Net model.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
@@ -78,36 +116,20 @@ public class ElasticNet {
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
-        return fit(formula, data, lambda1, lambda2, 1E-4, 1000);
+        return fit(formula, data, new Options(lambda1, lambda2));
     }
 
     /**
-     * Fits an Elastic Net model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>lambda1</code> is the L1 shrinkage/regularization parameter
-     * <li><code>lambda2</code> is the L2 shrinkage/regularization parameter
-     * <li><code>tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>iterations</code> is the maximum number of IPM (Newton) iterations.
-     * </ul>
+     * Fits an Elastic Net model.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param lambda1 the L1 shrinkage/regularization parameter
-     * @param lambda2 the L2 shrinkage/regularization parameter
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
-     * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, double tol, int maxIter) {
-        if (lambda1 <= 0) {
-            throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
-        }
-        if (lambda2 <= 0) {
-            throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting: " + lambda2);
-        }
-
-        double c = 1 / Math.sqrt(1 + lambda2);
+    public static LinearModel fit(Formula formula, DataFrame data, Options options) {
+        double c = 1 / Math.sqrt(1 + options.lambda2);
 
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
@@ -132,7 +154,7 @@ public class ElasticNet {
 
         // Scales the original data array and pads a weighted identity matrix
         Matrix X2 = new Matrix(X.nrow()+ p, p);
-        double padding = c * Math.sqrt(lambda2);
+        double padding = c * Math.sqrt(options.lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 X2.set(i, j, c * (X.get(i, j) - center[j]) / scale[j]);
@@ -141,7 +163,7 @@ public class ElasticNet {
             X2.set(j + n, j, padding);
         }
 
-        double[] w = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
+        double[] w = LASSO.train(X2, y2,options.lambda1 * c, options.tol, options.maxIter);
         for (int i = 0; i < p; i++) {
             w[i] = c * w[i] / scale[i];
         }

@@ -60,23 +60,22 @@ public interface Input {
      * @return the file input stream.
      */
     static InputStream stream(String path) throws IOException, URISyntaxException {
-        // Windows file path
-        if (path.matches("([a-zA-Z]:\\\\)?[\\\\\\S|*]?.*")) {
+        try {
+            URI uri = new URI(path);
+            String scheme = uri.getScheme();
+            // If scheme is single character, assume it is the drive letter in Windows.
+            if (scheme == null || scheme.length() < 2) {
+                return Files.newInputStream(Paths.get(path));
+            }
+
+            if ("file".equalsIgnoreCase(uri.getScheme())) {
+                return Files.newInputStream(Paths.get(uri.getPath()));
+            }
+
+            // http, ftp, ...
+            return uri.toURL().openStream();
+        } catch (URISyntaxException e) {
             return Files.newInputStream(Paths.get(path));
         }
-
-        URI uri = new URI(path);
-        String scheme = uri.getScheme();
-        // If scheme is single character, assume it is the drive letter in Windows.
-        if (scheme == null || scheme.length() < 2) {
-            return Files.newInputStream(Paths.get(path));
-        }
-
-        if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return Files.newInputStream(Paths.get(uri.getPath()));
-        }
-
-        // http, ftp, ...
-        return uri.toURL().openStream();
     }
 }

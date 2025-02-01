@@ -42,54 +42,8 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MDS.class);
 
     /**
-     * Fits the classical multidimensional scaling.
-     * Map original data into 2-dimensional Euclidean space.
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @return the model.
-     */
-    public static MDS of(double[][] proximity) {
-        return of(proximity, new Properties());
-    }
-
-    /**
-     * Fits the classical multidimensional scaling.
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @param k the dimension of the projection.
-     * @return the model.
-     */
-    public static MDS of(double[][] proximity, int k) {
-        return of(proximity, k, false);
-    }
-
-    /**
-     * Fits the classical multidimensional scaling.
-     *
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static MDS of(double[][] proximity, Properties params) {
-        int k = Integer.parseInt(params.getProperty("smile.mds.k", "2"));
-        boolean positive = Boolean.parseBoolean(params.getProperty("smile.mds.positive", "false"));
-        return of(proximity, k, positive);
-    }
-
-    /**
-     * Fits the classical multidimensional scaling.
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @param k the dimension of the projection.
+     * MDS hyperparameters.
+     * @param d the dimension of the projection.
      * @param positive if true, estimate an appropriate constant to be added
      * to all the dissimilarities, apart from the self-dissimilarities, that
      * makes the learning matrix positive semi-definite. The other formulation of
@@ -100,9 +54,66 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * such that proximity + c may be taken as ratio data, and also possibly
      * to minimize the dimensionality of the Euclidean space required for
      * representing the objects.
+     */
+    public record Options(int d, boolean positive) {
+        public Options {
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(2, false);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.mds.d", Integer.toString(d));
+            props.setProperty("smile.mds.positive", Boolean.toString(positive));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int d = Integer.parseInt(props.getProperty("smile.mds.d", "2"));
+            boolean positive = Boolean.parseBoolean(props.getProperty("smile.mds.positive", "false"));
+            return new Options(d, positive);
+        }
+    }
+
+    /**
+     * Fits the classical multidimensional scaling.
+     * Map original data into 2-dimensional Euclidean space.
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
+     * diagonal should be zero and all other elements should be positive and
+     * symmetric. For pairwise distances matrix, it should be just the plain
+     * distance, not squared.
      * @return the model.
      */
-    public static MDS of(double[][] proximity, int k, boolean positive) {
+    public static MDS of(double[][] proximity) {
+        return of(proximity, new Options());
+    }
+
+    /**
+     * Fits the classical multidimensional scaling.
+     * @param proximity the non-negative proximity matrix of dissimilarities. The
+     * diagonal should be zero and all other elements should be positive and
+     * symmetric. For pairwise distances matrix, it should be just the plain
+     * distance, not squared.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static MDS of(double[][] proximity, Options options) {
         int m = proximity.length;
         int n = proximity[0].length;
 
@@ -110,13 +121,14 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
 
-        if (k < 1 || k >= n) {
-            throw new IllegalArgumentException("Invalid k = " + k);
+        int d = options.d;
+        if (d >= n) {
+            throw new IllegalArgumentException("Invalid d = " + d);
         }
 
         Matrix B = getGram(proximity);
 
-        if (positive) {
+        if (options.positive) {
             Matrix Z = new Matrix(2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
@@ -150,17 +162,17 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
         }
 
         B.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, k);
+        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
-        if (eigen.wr.length < k) {
-            logger.warn("eigen({}) returns only {} eigen vectors", k, eigen.wr.length);
-            k = eigen.wr.length;
+        if (eigen.wr.length < d) {
+            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);
+            d = eigen.wr.length;
         }
 
-        double[][] coordinates = new double[n][k];
-        for (int j = 0; j < k; j++) {
+        double[][] coordinates = new double[n][d];
+        for (int j = 0; j < d; j++) {
             if (eigen.wr[j] < 0) {
-                throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", k));
+                throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
             }
 
             double scale = Math.sqrt(eigen.wr[j]);

@@ -19,7 +19,7 @@ package smile.spark
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
 import org.apache.spark.sql.SparkSession
-import smile.data.`type`.{StructField,StructType}
+import smile.data.`type`.{StructField, StructType}
 import smile.io.Read
 import smile.util.Paths
 
@@ -34,7 +34,7 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   "Smile DataFrame" should {
     "conversions should be idempotent but lose smile measures" in {
-      val schema = new StructType(smileMushrooms.schema().fields().stream().map(field => new StructField(field.name,field.dtype)).toList)
+      val schema = new StructType(smileMushrooms.schema().fields().stream().map(field => new StructField(field.name, field.dtype)).toList)
       schema mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms)).schema()
     }
 

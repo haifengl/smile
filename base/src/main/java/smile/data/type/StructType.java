@@ -300,7 +300,7 @@ public record StructType(List<StructField> fields, Map<String, Integer> index) i
 
     /**
      * Returns the struct type of record or bean class.
-     * @param clazz The class type of elements.
+     * @param clazz the class type of elements.
      * @return the struct type.
      */
     public static StructType of(Class<?> clazz) {
@@ -327,7 +327,16 @@ public record StructType(List<StructField> fields, Map<String, Integer> index) i
     }
 
     /**
-     * Creates a struct data type from JDBC result set meta data.
+     * Returns the struct type of record or bean class properties.
+     * @param props the record or bean class properties.
+     * @return the struct type.
+     */
+    public static StructType of(Property[] props) {
+        return new StructType(Arrays.stream(props).map(Property::field).toList());
+    }
+
+    /**
+     * Returns a struct data type from JDBC result set meta data.
      * @param rs the JDBC result set.
      * @throws SQLException when JDBC operation fails.
      * @return the struct data type.
@@ -339,7 +348,7 @@ public record StructType(List<StructField> fields, Map<String, Integer> index) i
     }
 
     /**
-     * Creates a struct data type from JDBC result set meta data.
+     * Returns a struct data type from JDBC result set meta data.
      * @param meta the JDBC result set meta data.
      * @param dbms the name of database management system.
      * @throws SQLException when JDBC operation fails.

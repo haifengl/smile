@@ -60,59 +60,83 @@ public record SammonMapping(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);
 
     /**
-     * Fits Sammon's mapping with default k = 2, lambda = 0.2, tolerance = 1E-4 and maxIter = 100.
+     * Sammon's mapping hyperparameters.
+     * @param d the dimension of the projection.
+     * @param lambda initial value of the step size constant in diagonal Newton method.
+     * @param tol the tolerance on objective function for stopping iterations.
+     * @param stepTol the tolerance on step size.
+     * @param maxIter maximum number of iterations.
+     */
+    public record Options(int d, double lambda, double tol, double stepTol, int maxIter) {
+        public Options {
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+
+            if (tol <= 0.0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(2, 0.2, 1E-4, 1E-3, 100);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.sammon.d", Integer.toString(d));
+            props.setProperty("smile.sammon.lambda", Double.toString(lambda));
+            props.setProperty("smile.sammon.tolerance", Double.toString(tol));
+            props.setProperty("smile.sammon.step_tolerance", Double.toString(stepTol));
+            props.setProperty("smile.sammon.iterations", Integer.toString(maxIter));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int d = Integer.parseInt(props.getProperty("smile.sammon.d", "2"));
+            double lambda = Double.parseDouble(props.getProperty("smile.sammon.lambda", "0.2"));
+            double tol = Double.parseDouble(props.getProperty("smile.sammon.tolerance", "1E-4"));
+            double stepTol = Double.parseDouble(props.getProperty("smile.sammon.step_tolerance", "1E-3"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.sammon.iterations", "100"));
+            return new Options(d, lambda, tol, stepTol, maxIter);
+        }
+    }
+
+    /**
+     * Fits Sammon's mapping with default d = 2, lambda = 0.2, tolerance = 1E-4 and maxIter = 100.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @return the model.
      */
     public static SammonMapping of(double[][] proximity) {
-        return of(proximity, new Properties());
+        return of(proximity, new Options());
     }
 
     /**
      * Fits Sammon's mapping.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param k the dimension of the projection.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static SammonMapping of(double[][] proximity, int k) {
-        return of(proximity, k, 0.2, 1E-4, 1E-3, 100);
-    }
-
-    /**
-     * Fits Sammon's mapping.
-     *
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and
-     * symmetric. For pairwise distances matrix, it should be just the plain
-     * distance, not squared.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static SammonMapping of(double[][] proximity, Properties params) {
-        int k = Integer.parseInt(params.getProperty("smile.sammon.k", "2"));
-        double lambda = Double.parseDouble(params.getProperty("smile.sammon.lambda", "0.2"));
-        double tol = Double.parseDouble(params.getProperty("smile.sammon.tolerance", "1E-4"));
-        double stepTol = Double.parseDouble(params.getProperty("smile.sammon.step_tolerance", "1E-3"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.sammon.iterations", "100"));
-        return of(proximity, k, lambda, tol, stepTol, maxIter);
-    }
-
-    /**
-     * Fits Sammon's mapping.
-     * @param proximity the non-negative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param k the dimension of the projection.
-     * @param lambda initial value of the step size constant in diagonal Newton method.
-     * @param tol the tolerance on objective function for stopping iterations.
-     * @param stepTol the tolerance on step size.
-     * @param maxIter maximum number of iterations.
-     * @return the model.
-     */
-    public static SammonMapping of(double[][] proximity, int k, double lambda, double tol, double stepTol, int maxIter) {
-        MDS mds = MDS.of(proximity, k);
-        return of(proximity, mds.coordinates(), lambda, tol, stepTol, maxIter);
+    public static SammonMapping of(double[][] proximity, Options options) {
+        MDS mds = MDS.of(proximity, new MDS.Options(options.d, false));
+        return of(proximity, mds.coordinates(), options);
     }
 
     /**
@@ -122,13 +146,10 @@ public record SammonMapping(double stress, double[][] coordinates) {
      *                  should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      *             size is the projection dimension. It will be modified.
-     * @param lambda initial value of the step size constant in diagonal Newton method.
-     * @param tol the tolerance for stopping iterations.
-     * @param stepTol the tolerance on step size.
-     * @param maxIter maximum number of iterations.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static SammonMapping of(double[][] proximity, double[][] init, double lambda, double tol, double stepTol, int maxIter) {
+    public static SammonMapping of(double[][] proximity, double[][] init, Options options) {
         if (proximity.length != proximity[0].length) {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
@@ -137,14 +158,6 @@ public record SammonMapping(double stress, double[][] coordinates) {
             throw new IllegalArgumentException("The proximity matrix and the initial coordinates are of different size.");
         }
 
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);            
-        }
-        
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
-        }
-        
         int n = proximity.length;
         double[][] coordinates = init;
         
@@ -155,8 +168,8 @@ public record SammonMapping(double stress, double[][] coordinates) {
             }
         }
 
-        int k = coordinates[0].length;
-        double[][] xu = new double[n][k];
+        int d = options.d;
+        double[][] xu = new double[n][d];
 
         double stress = 0.0;
         for (int i = 0; i < n; i++) {
@@ -172,10 +185,14 @@ public record SammonMapping(double stress, double[][] coordinates) {
         double eprev = stress;
         logger.info("Sammon's Mapping initial stress: {}", stress);
 
-        double[] xv = new double[k];
-        double[] e1 = new double[k];
-        double[] e2 = new double[k];
+        double[] xv = new double[d];
+        double[] e1 = new double[d];
+        double[] e2 = new double[d];
 
+        double lambda = options.lambda;
+        double tol = options.tol;
+        double stepTol = options.stepTol;
+        int maxIter = options.maxIter;
         for (int iter = 1; iter <= maxIter; iter++) {
             for (int i = 0; i < n; i++) {
                 double[] ri = coordinates[i];
@@ -194,7 +211,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
                     if (dij == 0.0) dij = 1.0E-10;
 
                     double rij = 0.0;
-                    for (int l = 0; l < k; l++) {
+                    for (int l = 0; l < d; l++) {
                         double xd = ri[l] - rj[l];
                         rij += xd * xd;
                         xv[l] = xd;
@@ -204,14 +221,14 @@ public record SammonMapping(double stress, double[][] coordinates) {
 
                     double dq = dij - rij;
                     double dr = dij * rij;
-                    for (int l = 0; l < k; l++) {
+                    for (int l = 0; l < d; l++) {
                         e1[l] += xv[l] * dq / dr;
                         e2[l] += (dq - xv[l] * xv[l] * (1.0 + dq / rij) / rij) / dr;
                     }
                 }
 
                 // Correction
-                for (int l = 0; l < k; l++) {
+                for (int l = 0; l < d; l++) {
                     xu[i][l] = ri[l] + lambda * e1[l] / Math.abs(e2[l]);
                 }
             }
@@ -245,7 +262,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 // Move the centroid to origin and update
                 double[] mu = MathEx.colMeans(xu);
                 for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
+                    for (int j = 0; j < d; j++) {
                         coordinates[i][j] = xu[i][j] - mu[j];
                     }
                 }

@@ -48,7 +48,7 @@ object RegressionModel {
       * @param algorithm the learning algorithm.
       * @param formula the model formula.
       * @param data the training data.
-      * @param params the hyper-parameters.
+      * @param params the hyperparameters.
       * @param kfold k-fold cross validation if kfold > 1.
       * @param round the number of repeated cross validation.
       * @param ensemble create the ensemble of cross validation models if true.
@@ -88,25 +88,25 @@ object RegressionModel {
       * @param algorithm the learning algorithm.
       * @param formula the model formula.
       * @param data the training data.
-      * @param params the hyper-parameters.
+      * @param params the hyperparameters.
       * @return the regression model.
       */
     def fit(algorithm: String, formula: Formula, data: DataFrame, params: Properties): DataFrameRegression = {
         algorithm match {
             case "random_forest" =>
-                RandomForest.fit(formula, data, params)
+                RandomForest.fit(formula, data, RandomForest.Options.of(params))
             case "gradient_boost" =>
-                GradientTreeBoost.fit(formula, data, params)
+                GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options.of(params))
             case "cart" =>
-                RegressionTree.fit(formula, data, params)
+                RegressionTree.fit(formula, data, RegressionTree.Options.of(params))
             case "ols" =>
-                OLS.fit(formula, data, params)
+                OLS.fit(formula, data, OLS.Options.of(params))
             case "lasso" =>
-                LASSO.fit(formula, data, params)
+                LASSO.fit(formula, data, LASSO.Options.of(params))
             case "elastic_net" =>
-                ElasticNet.fit(formula, data, params)
+                ElasticNet.fit(formula, data, ElasticNet.Options.of(params))
             case "ridge" =>
-                RidgeRegression.fit(formula, data, params)
+                RidgeRegression.fit(formula, data, Array.fill[Double](data.size())(1), RidgeRegression.Options.of(params))
             case "gaussian_process" =>
                 DataFrameRegression.of(formula, data, params, GaussianProcessRegression.fit(_, _, _))
             case "mlp" =>
