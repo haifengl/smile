@@ -51,11 +51,11 @@ install_almond() {
       chmod +x coursier
   fi
 
-  SCALA_VERSION=2.13.12 ALMOND_VERSION=0.14.0-RC14
+  SCALA_VERSION=3.4.2 ALMOND_VERSION=0.14.0
   ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
     --install \
     --id scala213 \
-    --display-name "Scala (2.13)" \
+    --display-name "Scala (3.4)" \
     --env "JAVA_OPTS=-XX:MaxRAMPercentage=80.0" \
     --variable-inspector \
     </dev/null 2>&1 | grep -v '^Download'
