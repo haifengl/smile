@@ -125,7 +125,7 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
-    smile> val model = lm("y" ~, planes)
+           val model = lm("y" ~, planes)
     [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
     model: regression.LinearModel = Linear Model:
 
@@ -159,8 +159,8 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> var planes = Read.arff("data/weka/regression/2dplanes.arff")
-    smile> var model = OLS.fit(Formula.lhs("y"), planes)
-    smile> System.out.println(model)
+           var model = OLS.fit(Formula.lhs("y"), planes)
+           System.out.println(model)
     Linear Model:
 
     Residuals:
@@ -193,12 +193,10 @@ title: Smile - Regression
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> import smile.*;
-    >>> import smile.regression.*
-    >>> import smile.data.formula.*;
-    >>> val planes = read.arff("data/weka/regression/2dplanes.arff")
-    [main] INFO smile.io.Arff - Read ARFF relation 2dplanes
-    >>> val model = lm(Formula.lhs("y"), planes)
-    >>> model
+        import smile.regression.*
+        import smile.data.formula.*;
+        val planes = read.arff("data/weka/regression/2dplanes.arff")
+        val model = lm(Formula.lhs("y"), planes)
     res165: smile.regression.LinearModel = Linear Model:
 
     Residuals:
@@ -356,7 +354,7 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val longley = read.arff("data/weka/regression/longley.arff")
-    smile> val model = ridge("employed" ~, longley, 0.0057)
+           val model = ridge("employed" ~, longley, 0.0057)
     model: regression.LinearModel = Linear Model:
 
     Residuals:
@@ -382,8 +380,8 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     smile> var longley = Read.arff("data/weka/regression/longley.arff")
-    smile> var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
-    smile> System.out.println(model)
+           var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
+           System.out.println(model)
     Linear Model:
 
     Residuals:
@@ -409,9 +407,7 @@ title: Smile - Regression
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
     >>> val longley = read.arff("data/weka/regression/longley.arff")
-    [main] INFO smile.io.Arff - Read ARFF relation longley
-    >>> val model = ridge(Formula.lhs("employed"), longley, 0.0057)
-    >>> model
+        val model = ridge(Formula.lhs("employed"), longley, 0.0057)
     res169: smile.regression.LinearModel = Linear Model:
 
     Residuals:
@@ -558,9 +554,9 @@ title: Smile - Regression
           <pre class="prettyprint lang-java"><code>
     var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
     var formula = Formula.lhs("y");
-    LASSO.fit(formula, diabetes, 10);
-    LASSO.fit(formula, diabetes, 100);
-    LASSO.fit(formula, diabetes, 500);
+    LASSO.fit(formula, diabetes, new LASSO.Options(10)));
+    LASSO.fit(formula, diabetes, new LASSO.Options(100));
+    LASSO.fit(formula, diabetes, new LASSO.Options(500));
           </code></pre>
             </div>
         </div>
@@ -623,7 +619,7 @@ title: Smile - Regression
     <div class="tab-content">
         <div class="tab-pane" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
 
     def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
@@ -641,7 +637,7 @@ title: Smile - Regression
         </div>
         <div class="tab-pane" id="kotlin_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
     fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: DoubleArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
 
     fun rbfnet(x: Array&lt;DoubleArray&gt;, y: DoubleArray, k: Int, normalized: Boolean = false): RBFNetwork&lt;DoubleArray&gt;
@@ -681,7 +677,8 @@ title: Smile - Regression
           <pre class="prettyprint lang-java"><code>
     var y = diabetes.column("y").toDoubleArray();
     var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
-    CrossValidation.regression(10, x, y, (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
+    CrossValidation.regression(10, x, y,
+        (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
           </code></pre>
             </div>
         </div>
@@ -793,21 +790,26 @@ title: Smile - Regression
     <pre class="prettyprint lang-scala"><code>
     import smile.validation.*;
     import smile.math.kernel.*;
-    cv.regression(10, x, y) { case (x, y) => smile.regression.svm(x, y, new GaussianKernel(0.06), 20, 10) }
+    cv.regression(10, x, y) { case (x, y) =>
+        smile.regression.svm(x, y, new GaussianKernel(0.06), 20, 10)
+    }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    CrossValidation.regression(10, x, y, (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
+    var options = new smile.regression.SVM.Options(20, 10);
+    CrossValidation.regression(10, x, y,
+        (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), options));
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    CrossValidation.regression(10, x, y, { x, y -> smile.regression.svm(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
+    CrossValidation.regression(10, x, y,
+        { x, y -> smile.regression.svm(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
           </code></pre>
             </div>
         </div>
@@ -911,21 +913,25 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.cart(formula, data, 200) }
+    cv.regression(10, "y"~, diabetes) { (formula, data) =>
+        smile.regression.cart(formula, data, 200)
+    }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> RegressionTree.fit(formula, data));
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> RegressionTree.fit(formula, data));
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> cart(formula, data) })
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        { formula, data -> cart(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -1075,21 +1081,25 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_15">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.randomForest(formula, data, maxNodes = 100) }
+    cv.regression(10, "y"~, diabetes) { (formula, data) =>
+        smile.regression.randomForest(formula, data, maxNodes = 100)
+    }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.RandomForest.fit(formula, data));
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> smile.regression.RandomForest.fit(formula, data));
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> randomForest(formula, data) })
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        { formula, data -> randomForest(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -1242,21 +1252,25 @@ title: Smile - Regression
         <div class="tab-pane" id="scala_17">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.gbm(formula, data) }
+    cv.regression(10, "y"~, diabetes) { (formula, data) =>
+        smile.regression.gbm(formula, data)
+    }
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
           </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="kotlin_17">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> gbm(formula, data) })
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        { formula, data -> gbm(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -1335,7 +1349,7 @@ title: Smile - Regression
     <div class="tab-content">
         <div class="tab-pane" id="scala_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     object gpr {
         // regular Gaussian process model
         def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
@@ -1349,7 +1363,7 @@ title: Smile - Regression
         </div>
         <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     public class GaussianProcessRegression {
         // regular Gaussian process model
          public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double lambda);
@@ -1363,7 +1377,7 @@ title: Smile - Regression
         </div>
         <div class="tab-pane" id="kotlin_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
     // regular Gaussian process model
     fun &lt;T&gt; gpr(x: Array&lt;T&gt;, y: DoubleArray, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
 
@@ -1407,9 +1421,10 @@ title: Smile - Regression
         <div class="tab-pane active" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
+    var options = new GaussianProcessRegression.Options(0.01);
     CrossValidation.regression(10, x, y, (x, y) -> {
         var t = KMeans.fit(x, 20).centroids;
-        return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), 0.01);
+        return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), options);
     });
           </code></pre>
             </div>

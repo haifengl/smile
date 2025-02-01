@@ -769,7 +769,7 @@ title: Smile - Classification
         </div>
         <div class="tab-pane active" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     public class LogisticRegression {
         public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter);
     }
@@ -1386,7 +1386,7 @@ title: Smile - Classification
     var x = zip.drop(0).toArray();
     var y = zip.column(0).toIntArray();
     var kernel = new GaussianKernel(8.0);
-    var model = OneVersusRest.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+    var model = OneVersusRest.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, new SVM.Options(5)));
           </code></pre>
             </div>
         </div>
@@ -1468,7 +1468,7 @@ title: Smile - Classification
         </div>
         <div class="tab-pane active" id="java_24">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     public class DecisionTree {
          public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize);
     }
@@ -1510,7 +1510,7 @@ title: Smile - Classification
     <div class="tab-content">
         <div class="tab-pane" id="scala_25">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     smile> cart("V1" ~, zip)
     [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.754375
     res22: DecisionTree = n=7291
@@ -1544,7 +1544,7 @@ title: Smile - Classification
         </div>
         <div class="tab-pane active" id="java_25">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     smile> import smile.data.formula.*
     smile> DecisionTree.fit(Formula.lhs("V1"), zip)
     $232 ==> n=7291
@@ -1578,7 +1578,7 @@ title: Smile - Classification
         </div>
         <div class="tab-pane" id="kotlin_25">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
     >>> import smile.data.formula.*
     >>> cart(Formula.lhs("V1"), zip)
     res160: smile.classification.DecisionTree = n=7291
