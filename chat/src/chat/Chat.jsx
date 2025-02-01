@@ -28,7 +28,7 @@ export default function Chat({
     onSendMessage,
     showTypingIndicator,
     logo = ChatbotIcon,
-    title = "Smile Chat",
+    title = "Smile Assistant",
     placeholder = "Type prompt here",
     theme = '#8dd4e8',
 }) {

@@ -24,4 +24,7 @@ export default defineConfig({
     outDir: '../serve/src/universal/chat'
   },
   plugins: [react()],
+  preview: {
+    allowedHosts: ['smile-ai.org'],
+  },
 })

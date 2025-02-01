@@ -22,7 +22,7 @@ import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.data.`type`.{DataTypes, StructField}
 import smile.util.Paths
 
-case class Person(name:String,age:Int,friends:Array[String])
+case class Person(name: String, age: Int, friends: Array[String])
 
 class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
@@ -38,15 +38,15 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
     "convert to smile DataFrame for simple libSVM format" in {
       val smileMushrooms = SparkDataFrame(sparkMushrooms)
       val smileSchema = new smile.data.`type`.StructType(
-        Seq(new StructField("label",DataTypes.DoubleType),
+        Seq(new StructField("label", DataTypes.NullableDoubleType),
             new StructField("features", DataTypes.DoubleArrayType)):_*)
 
       smileMushrooms.schema() mustEqual smileSchema
     }
 
     "convert to smile DataFrame for typed datasets" in {
-      val person1 = Person("smith",25,Array.empty)
-      val person2 = Person("emma",28,Array(person1.name))
+      val person1 = Person("smith", 25, Array.empty)
+      val person2 = Person("emma", 28, Array(person1.name))
 
       implicit val personEncoder: Encoder[Person] = Encoders.product[Person]
 
@@ -54,7 +54,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val smilePersons = SparkDataFrame(sparkPersons.toDF())
 
       val smileSchema = new smile.data.`type`.StructType(
-        Seq(new StructField("name",DataTypes.StringType),
+        Seq(new StructField("name", DataTypes.StringType),
             new StructField("age", DataTypes.IntType),
             new StructField("friends", DataTypes.array(DataTypes.StringType))):_*)
 
@@ -70,7 +70,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val sparkPersons = spark.createDataset(Seq(person1,person2))
       val smilePersons = SparkDataFrame(sparkPersons.toDF())
 
-      val names = Set("smith","emma")
+      val names = Set("smith", "emma")
       names must contain(smilePersons("name")(0)) and (names must contain(smilePersons("name")(1)))
     }
 
