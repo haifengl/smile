@@ -453,7 +453,11 @@ public class Arff implements AutoCloseable {
             for (int j = 0; j < missing.length; j++) {
                 if (missing[j] && fields.get(j).dtype().isPrimitive()) {
                     var field = fields.get(j);
-                    if (field.dtype() == DataTypes.IntType) {
+                    if (field.dtype() == DataTypes.ByteType) {
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableByteType, field.measure()));
+                    } else if (field.dtype() == DataTypes.ShortType) {
+                        fields.set(j, new StructField(field.name(), DataTypes.NullableShortType, field.measure()));
+                    } else if (field.dtype() == DataTypes.IntType) {
                         fields.set(j, new StructField(field.name(), DataTypes.NullableIntType, field.measure()));
                     } else if (field.dtype() == DataTypes.FloatType) {
                         fields.set(j, new StructField(field.name(), DataTypes.NullableFloatType, field.measure()));

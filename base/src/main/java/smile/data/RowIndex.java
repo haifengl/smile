@@ -16,6 +16,7 @@
  */
 package smile.data;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import smile.util.Index;
@@ -29,7 +30,7 @@ import smile.util.Index;
  * @param loc the map of row index value to ordinal index.
  * @author Karl Li
  */
-public record RowIndex(Object[] values, Map<Object, Integer> loc) {
+public record RowIndex(Object[] values, Map<Object, Integer> loc) implements Serializable {
     /**
      * Constructor.
      * @param values the row values.

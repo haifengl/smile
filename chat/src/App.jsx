@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { useEffect, useState } from 'react'
-import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
+import { SSE } from 'sse.js'
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
@@ -28,7 +28,7 @@ function App() {
   };
 
   const bot = {
-    id: 'meta/llama3',
+    id: 'smile',
     name: 'Kirin',
     avatar: LlamaIcon,
   };
@@ -88,7 +88,7 @@ function App() {
     setShowTypingIndicator(true);
 
     const data = {
-      "model": "meta/llama3",
+      "model": "deepseek-r1:70b",
       "threadId": threadId,
       "stream": true,
       "messages": [
@@ -100,7 +100,7 @@ function App() {
     };
 
     // Guide the system if this is the first user message.
-    if (messages.length == 2) {
+    if (messages.length === 2) {
       data.messages.unshift({
           "role": "system",
           "content": "You are a helpful, respectful and honest assistant."
@@ -112,12 +112,13 @@ function App() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       },
-      body: JSON.stringify(data),
     };
 
     if (data["stream"]) {
       requestOptions['headers']['Accept'] = 'text/event-stream';
+      requestOptions['payload'] = JSON.stringify(data);
 
       const history = messages;
       const message = {
@@ -126,43 +127,43 @@ function App() {
         createdAt: new Date(),
       };
 
-      fetchEventSource(url, {
-        ...requestOptions,
-        async onopen(response) {
-          if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
-            // everything's good
-          } else {
-            throw new Error(response.statusText);
-          }
-        },
-        onmessage(msg) {
-          // if the server emits an error message, throw an exception
-          // so it gets handled by the onerror callback below:
-          if (msg.event === 'FatalError') {
-            throw new Error(msg.data);
-          }
+      let source = new SSE(url, requestOptions);
+      source.addEventListener('message', (e) => {
+        message.text += e.data;
+        setMessages([...history, message]);
+      });
 
-          message.text += msg.data;
-          setMessages([...history, message]);
-        },
-        onclose() {
-          console.log("Server closes the connection");
-          setShowTypingIndicator(false);
-        },
-        onerror(error) {
-          console.error(error);
-          messages.push({
-            text: "Sorry, the service isn't available right now. Please try again later.",
-            user: server,
-            createdAt: new Date(),
-          });
+      source.addEventListener('open', (e) => {
+        console.log('SSE open: ' + e.responseCode);
+      });
 
-          setMessages([...messages]);
+      source.addEventListener('abort', (e) => {
+        console.log('SSE abort');
+        setShowTypingIndicator(false);
+      });
+
+      source.addEventListener('readystatechange', (e) => {
+        console.log('SSE ready state: ' + e.readyState);
+        if (e.readyState === 2) { // CLOSED
           setShowTypingIndicator(false);
-          throw error; // rethrow to stop the operation
         }
       });
+
+      source.addEventListener('error', (e) => {
+        console.log('SSE error: ' + e.responseCode);
+        messages.push({
+          text: "Sorry, the service isn't available right now. Please try again later.",
+          user: server,
+          createdAt: new Date(),
+        });
+
+        setMessages([...messages]);
+        setShowTypingIndicator(false);
+      });
+
+      source.stream();
     } else {
+      requestOptions['body'] = JSON.stringify(data);
       fetch(url, requestOptions)
         .then(response => {
           if (!response.ok) {
@@ -170,14 +171,17 @@ function App() {
           }
           return response.json();
         })
-        .then(data => {
-          let content = data['choices'][0]['message']['content'];
-          content = content.trim();
-
+        .then(response => {
+          let msg = response.message.content;
+          let pos = msg.indexOf('</think>');
+          if (pos !== -1) {
+            console.log(msg.substring(0, pos + 8));
+            msg = msg.substring(pos + 8);
+          }
           messages.push({
-            text: content,
+            text: msg,
             user: bot,
-            createdAt: new Date(data['created']),
+            createdAt: new Date(response['created_at']),
           });
 
           setMessages([...messages]);
