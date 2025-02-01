@@ -60,7 +60,7 @@ public class KernelPCA extends Projection {
      * Fits kernel principal component analysis.
      * @param data training data.
      * @param kernel Mercer kernel.
-     * @param options kernel PCA hyper-parameters.
+     * @param options kernel PCA hyperparameters.
      * @param columns the columns to fit kernel PCA. If empty, all columns
      *                will be used.
      * @return the model.

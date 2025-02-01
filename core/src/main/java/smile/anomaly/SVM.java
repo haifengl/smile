@@ -40,7 +40,7 @@ import smile.math.kernel.MercerKernel;
  */
 public class SVM<T> extends KernelMachine<T>  {
     /**
-     * SVM hyper-parameters.
+     * SVM hyperparameters.
      * @param nu the parameter sets an upper bound on the fraction of outliers
      *           (training examples regarded out-of-class) and it is a lower
      *           bound on the number of training examples used as Support Vector.
@@ -63,7 +63,7 @@ public class SVM<T> extends KernelMachine<T>  {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -76,7 +76,7 @@ public class SVM<T> extends KernelMachine<T>  {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -112,7 +112,7 @@ public class SVM<T> extends KernelMachine<T>  {
      * Fits a one-class SVM.
      * @param x training samples.
      * @param kernel the kernel function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type.
      * @return the model.
      */

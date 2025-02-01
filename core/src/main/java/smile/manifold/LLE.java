@@ -56,7 +56,7 @@ public class LLE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
     /**
-     * LLE hyper-parameters.
+     * LLE hyperparameters.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      */
@@ -79,7 +79,7 @@ public class LLE {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -92,7 +92,7 @@ public class LLE {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -105,7 +105,7 @@ public class LLE {
     /**
      * Runs the LLE algorithm.
      * @param data the input data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
     public static double[][] of(double[][] data, Options options) {

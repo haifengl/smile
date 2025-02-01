@@ -155,7 +155,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Gradient tree boosting hyper-parameters.
+     * Gradient tree boosting hyperparameters.
      * @param loss loss function for regression. By default, least absolute deviation
      *             is employed for robust regression.
      * @param ntrees the number of iterations (trees).
@@ -199,7 +199,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -217,7 +217,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -248,7 +248,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {

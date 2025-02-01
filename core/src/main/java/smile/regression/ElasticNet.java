@@ -45,7 +45,7 @@ import smile.math.matrix.Matrix;
  */
 public class ElasticNet {
     /**
-     * Elastic Net hyper-parameters.
+     * Elastic Net hyperparameters.
      * @param lambda1 the L1 shrinkage/regularization parameter
      * @param lambda2 the L2 shrinkage/regularization parameter
      * @param tol the tolerance for stopping iterations (relative target duality gap).
@@ -73,7 +73,7 @@ public class ElasticNet {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.elastic_net.lambda1</code> is the L1 shrinkage/regularization parameter
          * <li><code>smile.elastic_net.lambda2</code> is the L2 shrinkage/regularization parameter
@@ -94,7 +94,7 @@ public class ElasticNet {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -125,7 +125,7 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Options options) {

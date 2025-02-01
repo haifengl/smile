@@ -291,7 +291,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /**
-     * Decision tree hyper-parameters.
+     * Decision tree hyperparameters.
      * @param rule the splitting rule.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -314,7 +314,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.cart.split_rule</code>
          * <li><code>smile.cart.max_depth</code>
@@ -335,7 +335,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -361,7 +361,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
      * Fits a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, Options options) {

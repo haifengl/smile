@@ -67,7 +67,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param labels the state labels of observations, of which states take
      *               values in [0, k), where k is the number of hidden states.
      * @param features the feature function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of observations.
      * @return the model.
      */

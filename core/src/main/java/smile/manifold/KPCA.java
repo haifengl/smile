@@ -67,7 +67,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * Kernel PCA hyper-parameters.
+     * Kernel PCA hyperparameters.
      * @param d the dimension of the projection.
      * @param threshold only principal components with eigenvalues
      *                  larger than the given threshold will be kept.
@@ -91,7 +91,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -104,7 +104,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -167,7 +167,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
      * Fits kernel principal component analysis.
      * @param data training data.
      * @param kernel Mercer kernel.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */

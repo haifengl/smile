@@ -287,7 +287,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
-     * Regression tree hyper-parameters.
+     * Regression tree hyperparameters.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the minimum size of leaf nodes.
@@ -309,7 +309,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.cart.max_depth</code>
          * <li><code>smile.cart.max_nodes</code>
@@ -328,7 +328,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -353,7 +353,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
      * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Options options) {

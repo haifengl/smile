@@ -42,7 +42,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MDS.class);
 
     /**
-     * MDS hyper-parameters.
+     * MDS hyperparameters.
      * @param d the dimension of the projection.
      * @param positive if true, estimate an appropriate constant to be added
      * to all the dissimilarities, apart from the self-dissimilarities, that
@@ -68,7 +68,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -81,7 +81,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -110,7 +110,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static MDS of(double[][] proximity, Options options) {

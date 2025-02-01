@@ -43,7 +43,7 @@ import smile.util.SparseArray;
  */
 public class SVM {
     /**
-     * SVM hyper-parameters.
+     * SVM hyperparameters.
      * @param eps the parameter of epsilon-insensitive hinge loss.
      *            There is no penalty associated with samples which are
      *            predicted within distance epsilon from the actual value.
@@ -79,7 +79,7 @@ public class SVM {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -93,7 +93,7 @@ public class SVM {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -108,7 +108,7 @@ public class SVM {
      * Fits a linear epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Options options) {
@@ -130,7 +130,7 @@ public class SVM {
      * @param x training samples.
      * @param y response variable.
      * @param p the dimension of input vector.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Regression<int[]> fit(int[][] x, double[] y, int p, Options options) {
@@ -152,7 +152,7 @@ public class SVM {
      * @param x training samples.
      * @param y response variable.
      * @param p the dimension of input vector.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Regression<SparseArray> fit(SparseArray[] x, double[] y, int p, Options options) {
@@ -174,7 +174,7 @@ public class SVM {
      * @param x training samples.
      * @param y response variable.
      * @param kernel the kernel function.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */

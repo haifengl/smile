@@ -256,7 +256,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits binomial logistic regression.
      *
      * @param data training data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(SparseDataset<Integer> data, LogisticRegression.Options options) {
@@ -296,7 +296,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits multinomial logistic regression.
      *
      * @param data training data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(SparseDataset<Integer> data, LogisticRegression.Options options) {
@@ -353,7 +353,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits logistic regression.
      *
      * @param data training data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset<Integer> data, LogisticRegression.Options options) {

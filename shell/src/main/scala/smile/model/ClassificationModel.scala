@@ -48,7 +48,7 @@ object ClassificationModel {
     * @param algorithm the learning algorithm.
     * @param formula the model formula.
     * @param data the training data.
-    * @param params the hyper-parameters.
+    * @param params the hyperparameters.
     * @param kfold k-fold cross validation if kfold > 1.
     * @param round the number of repeated cross validation.
     * @param ensemble create the ensemble of cross validation models if true.
@@ -88,7 +88,7 @@ object ClassificationModel {
     * @param algorithm the learning algorithm.
     * @param formula the model formula.
     * @param data the training data.
-    * @param params the hyper-parameters.
+    * @param params the hyperparameters.
     * @return the classification model.
     */
   def fit(algorithm: String, formula: Formula, data: DataFrame, params: Properties): DataFrameClassifier = {

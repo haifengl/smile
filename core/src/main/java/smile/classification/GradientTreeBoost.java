@@ -209,7 +209,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     /**
-     * Gradient tree boosting hyper-parameters.
+     * Gradient tree boosting hyperparameters.
      * @param ntrees the number of iterations (trees).
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -251,7 +251,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -268,7 +268,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -298,7 +298,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data    the data frame of the explanatory and response variables.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {

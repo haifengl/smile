@@ -62,7 +62,7 @@ public class UMAP {
     private static final int LARGE_DATA_SIZE = 10000;
 
     /**
-     * The UMAP hyper-parameters.
+     * The UMAP hyperparameters.
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
@@ -130,7 +130,7 @@ public class UMAP {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -150,7 +150,7 @@ public class UMAP {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -172,7 +172,7 @@ public class UMAP {
      * Runs the UMAP algorithm with Euclidean distance.
      *
      * @param data    the input data.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return The embedding coordinates.
      */
     public static double[][] of(double[][] data, Options options) {
@@ -187,7 +187,7 @@ public class UMAP {
      *
      * @param data     the input data.
      * @param distance the distance function.
-     * @param options  the hyper-parameters.
+     * @param options  the hyperparameters.
      * @param <T> The data type of points.
      * @return The embedding coordinates.
      */
@@ -203,7 +203,7 @@ public class UMAP {
      *
      * @param data    the input data.
      * @param nng     the k-nearest neighbor graph.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */

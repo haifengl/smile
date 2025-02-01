@@ -39,7 +39,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);
 
     /**
-     * Kruskal's non-metric MDS hyper-parameters.
+     * Kruskal's non-metric MDS hyperparameters.
      * @param d the dimension of the projection.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
@@ -57,7 +57,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -71,7 +71,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -96,7 +96,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * Fits Kruskal's non-metric MDS.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, Options options) {
@@ -110,7 +110,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
      * size is the projection dimension.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, double[][] init, Options options) {

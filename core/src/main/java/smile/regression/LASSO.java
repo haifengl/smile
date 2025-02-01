@@ -69,7 +69,7 @@ public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
     /**
-     * Lasso regression hyper-parameters.
+     * Lasso regression hyperparameters.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance to stop iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
@@ -103,7 +103,7 @@ public class LASSO {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
          *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -123,7 +123,7 @@ public class LASSO {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -150,7 +150,7 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Options options) {

@@ -295,7 +295,7 @@ public class GLM implements Serializable {
     }
 
     /**
-     * GLM hyper-parameters.
+     * GLM hyperparameters.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
      */
@@ -316,7 +316,7 @@ public class GLM implements Serializable {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters.
+         * Returns the persistent set of hyperparameters.
          * @return the persistent set.
          */
         public Properties toProperties() {
@@ -329,7 +329,7 @@ public class GLM implements Serializable {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -357,7 +357,7 @@ public class GLM implements Serializable {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param model the generalized linear model specification.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Options options) {

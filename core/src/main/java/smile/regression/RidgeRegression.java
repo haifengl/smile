@@ -71,7 +71,7 @@ import smile.util.Strings;
  */
 public class RidgeRegression {
     /**
-     * Ridge regression hyper-parameters.
+     * Ridge regression hyperparameters.
      * @param lambda the shrinkage/regularization parameter. Large lambda
      *               means more shrinkage. Choosing an appropriate value of
      *               lambda is important, and also difficult. Its length may
@@ -112,7 +112,7 @@ public class RidgeRegression {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
          *               Choosing an appropriate value of lambda is important, and also difficult.
@@ -131,7 +131,7 @@ public class RidgeRegression {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -173,7 +173,7 @@ public class RidgeRegression {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param weights sample weights.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double[] weights, Options options) {

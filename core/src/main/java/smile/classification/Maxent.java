@@ -241,7 +241,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Maximum entropy classifier hyper-parameters.
+     * Maximum entropy classifier hyperparameters.
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
@@ -269,7 +269,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.maxent.lambda</code>
          * <li><code>smile.maxent.tolerance</code>
@@ -288,7 +288,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -319,7 +319,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y, Options options) {
@@ -350,7 +350,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, Options options) {
@@ -396,7 +396,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, Options options) {

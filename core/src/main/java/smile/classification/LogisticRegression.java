@@ -299,7 +299,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Logistic regression hyper-parameters.
+     * Logistic regression hyperparameters.
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
@@ -327,7 +327,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         }
 
         /**
-         * Returns the persistent set of hyper-parameters including
+         * Returns the persistent set of hyperparameters including
          * <ul>
          * <li><code>smile.logistic.lambda</code>
          * <li><code>smile.logistic.tolerance</code>
@@ -346,7 +346,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         /**
          * Returns the options from properties.
          *
-         * @param props the hyper-parameters.
+         * @param props the hyperparameters.
          * @return the options.
          */
         public static Options of(Properties props) {
@@ -372,7 +372,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * 
      * @param x training samples.
      * @param y training labels.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Binomial binomial(double[][] x, int[] y, Options options) {
@@ -413,7 +413,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      *
      * @param x training samples.
      * @param y training labels.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Options options) {
@@ -461,7 +461,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      *
      * @param x training samples.
      * @param y training labels.
-     * @param options the hyper-parameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static LogisticRegression fit(double[][] x, int[] y, Options options) {
