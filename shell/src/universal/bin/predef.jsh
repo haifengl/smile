@@ -119,7 +119,6 @@ import smile.data.vector.*;
 import smile.io.*;
 import static smile.plot.swing.Palette.*;
 import smile.plot.swing.*;
-import smile.plot.vega.*;
 import smile.interpolation.*;
 import smile.validation.*;
 import smile.validation.metric.*;

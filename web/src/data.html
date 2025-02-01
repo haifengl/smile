@@ -229,7 +229,69 @@ title: Smile - Data Processing
         </div>
     </div>
 
-    <p>In fact, the output of most Smile data parsers is a DataFrame.</p>
+    <p>We can create a DataFrame with a collection of records or beans.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_0.2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_0.2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+    smile> enum Gender {Male, Female}
+           record Person(String name, Gender gender, String state, LocalDate birthday, int age, Double salary) { }
+           List&lt;Person&gt; persons = new ArrayList<>();
+           persons.add(new Person("Alex", Gender.Male, "NY", LocalDate.of(1980, 10, 1), 38, 10000.));
+           persons.add(new Person("Bob", Gender.Male, "AZ", LocalDate.of(1995, 3, 4), 23, null));
+           persons.add(new Person("Jane", Gender.Female, "CA", LocalDate.of(1970, 3, 1), 48, 230000.));
+           persons.add(new Person("Amy", Gender.Female, "NY", LocalDate.of(2005, 12, 10), 13, null));
+           var df = DataFrame.of(Person.class, persons);
+    df ==>
+    +---+----+------+-----+----------+---+------+
+    |   |name|gender|state|  birthday|age|salary|
+    +---+----+------+-----+----------+---+------+
+    |  0|Alex|  Male|   NY|1980-10-01| 38| 10000|
+    |  1| Bob|  Male|   AZ|1995-03-04| 23|  null|
+    |  2|Jane|Female|   CA|1970-03-01| 48|230000|
+    |  3| Amy|Female|   NY|2005-12-10| 13|  null|
+    +---+----+------+-----+----------+---+------+
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In above example, the column 'state' is of string type. Apparently, it is a categorical variable.
+        We can factorize such string columns to categorical values:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_0.3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_0.3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    smile> var df2 = df.factorize("state");
+    df2 ==>
+    +---+----+------+-----+----------+---+------+
+    |   |name|gender|state|  birthday|age|salary|
+    +---+----+------+-----+----------+---+------+
+    |  0|Alex|  Male|   NY|1980-10-01| 38| 10000|
+    |  1| Bob|  Male|   AZ|1995-03-04| 23|  null|
+    |  2|Jane|Female|   CA|1970-03-01| 48|230000|
+    |  3| Amy|Female|   NY|2005-12-10| 13|  null|
+    +---+----+------+-----+----------+---+------+
+
+    smile> df.get(0, 2)
+    $25 ==> "NY"
+    smile> df2.get(0, 2)
+    $27 ==> 2
+    </code></pre>
+            </div>
+        </div>
+    </div>
+    <p>On the surface, everything seems same. But the column 'state' is actually converted
+    to integral values under the hood.</p>
+
+    <p>Smile provides many parsers for popular data formats. In fact, the output of most Smile
+        data parsers is a DataFrame.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
@@ -432,10 +494,10 @@ title: Smile - Data Processing
         <code>DataFrame.tail()</code> with a specified number to view the top
         and bottom rows of the frame respectively.</p>
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.3" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_0.4" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.3">
+        <div class="tab-pane active" id="java_0.4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     smile> println(df.head(3))
@@ -1878,11 +1940,12 @@ gdp ==>
     smile> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
     url ==> "jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
 
-    smile> var sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total " +
-                     "from employees as e " +
-                     "join customers as c on e.employeeid = c.supportrepid " +
-                     "join invoices as i on c.customerid = i.customerid "
-    sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid "
+    smile> var sql = """
+              select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+              from employees as e
+              join customers as c on e.employeeid = c.supportrepid
+              join invoices as i on c.customerid = i.customerid"""
+    sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid"
 
     smile> var conn = java.sql.DriverManager.getConnection(url)
     conn ==> org.sqlite.jdbc4.JDBC4Connection@1df82230

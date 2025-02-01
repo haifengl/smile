@@ -34,7 +34,7 @@ import smile.util.Regex;
  *
  * @author Haifeng Li
  */
-public abstract class Layer implements Serializable {
+public abstract class Layer implements AutoCloseable, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     /**
@@ -173,6 +173,21 @@ public abstract class Layer implements Serializable {
         this.dropout = dropout;
 
         init();
+    }
+
+    @Override
+    public void close() {
+        if (output != null) output.remove();
+        if (outputGradient != null) outputGradient.remove();
+        if (weightGradient != null) weightGradient.remove();
+        if (biasGradient != null) biasGradient.remove();
+        if (weightGradientMoment1 != null) weightGradientMoment1.remove();
+        if (weightGradientMoment2 != null) weightGradientMoment2.remove();
+        if (biasGradientMoment1 != null) biasGradientMoment1.remove();
+        if (biasGradientMoment2 != null) biasGradientMoment2.remove();
+        if (weightUpdate != null) weightUpdate.remove();
+        if (biasUpdate != null) biasUpdate.remove();
+        if (mask != null) mask.remove();
     }
 
     /**

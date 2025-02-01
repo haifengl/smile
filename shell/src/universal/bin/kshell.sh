@@ -71,7 +71,7 @@ run() {
     -J-D"smile.home=$smile_home" \
     -J-Djava.awt.headless=false \
     -classpath "$app_classpath" \
-    -jvm-target 17 \
+    -jvm-target 21 \
     "$@"
 
   local exit_code=$?

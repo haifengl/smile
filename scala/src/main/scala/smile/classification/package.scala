@@ -264,7 +264,7 @@ package object classification {
     * @return Logistic regression model.
     */
   def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression = time("Logistic Regression") {
-    LogisticRegression.fit(x, y, lambda, tol, maxIter)
+    LogisticRegression.fit(x, y, new LogisticRegression.Options(lambda, tol, maxIter))
   }
 
   /** Maximum entropy classifier.
@@ -298,7 +298,7 @@ package object classification {
     * @return Maximum entropy model.
     */
   def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent = time("Maximum Entropy Model") {
-    Maxent.fit(p, x, y, lambda, tol, maxIter)
+    Maxent.fit(p, x, y, new Maxent.Options(lambda, tol, maxIter))
   }
 
   /** Multilayer perceptron neural network.
@@ -357,7 +357,7 @@ package object classification {
     * significantly exceeds the needed free parameters. There are two general
     * approaches for avoiding this problem: The first is to use cross-validation
     * and similar techniques to check for the presence of over-fitting and
-    * optimally select hyper-parameters such as to minimize the generalization
+    * optimally select hyperparameters such as to minimize the generalization
     * error. The second is to use some form of regularization, which emerges
     * naturally in a Bayesian framework, where the regularization can be
     * performed by selecting a larger prior probability over simpler models;
@@ -522,12 +522,13 @@ package object classification {
     * @param kernel Mercer kernel
     * @param C the regularization parameter
     * @param tol the tolerance of convergence test.
+    * @param epochs the number of epochs, usually 1 or 2 is sufficient.
     * @tparam T the data type
     *
     * @return SVM model.
     */
-  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T] = time("SVM") {
-    SVM.fit(x, y, kernel, C, tol)
+  def svm[T <: AnyRef](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3, epochs: Int = 1): SVM[T] = time("SVM") {
+    SVM.fit(x, y, kernel, new SVM.Options(C, tol, epochs))
   }
 
   /** Decision tree. A classification/regression tree can be learned by
@@ -601,7 +602,7 @@ package object classification {
     */
   def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20,
            maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
-    DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
+    DecisionTree.fit(formula, data, new DecisionTree.Options(splitRule, maxDepth, maxNodes, nodeSize))
   }
 
   /** Random forest for classification. Random forest is an ensemble classifier
@@ -658,7 +659,7 @@ package object classification {
                    splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500,
                    nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null,
                    seeds: LongStream = null): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds)
+    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight), seeds)
   }
 
   /** Gradient boosted classification trees.
@@ -738,7 +739,7 @@ package object classification {
     */
   def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6,
           nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
-    GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
+    GradientTreeBoost.fit(formula, data,new GradientTreeBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
   }
 
   /** AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -778,7 +779,7 @@ package object classification {
     */
   def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
                maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
-    AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
+    AdaBoost.fit(formula, data, new AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize))
   }
 
   /** Fisher's linear discriminant. Fisher defined the separation between two

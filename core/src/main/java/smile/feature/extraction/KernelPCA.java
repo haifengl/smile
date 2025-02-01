@@ -60,29 +60,14 @@ public class KernelPCA extends Projection {
      * Fits kernel principal component analysis.
      * @param data training data.
      * @param kernel Mercer kernel.
-     * @param k choose up to k principal components (larger than 0.0001) used for projection.
+     * @param options kernel PCA hyperparameters.
      * @param columns the columns to fit kernel PCA. If empty, all columns
      *                will be used.
      * @return the model.
      */
-    public static KernelPCA fit(DataFrame data, MercerKernel<double[]> kernel, int k, String... columns) {
-        return fit(data, kernel, k, 0.0001, columns);
-    }
-
-    /**
-     * Fits kernel principal component analysis.
-     * @param data training data.
-     * @param kernel Mercer kernel.
-     * @param k choose top k principal components used for projection.
-     * @param threshold only principal components with eigenvalues
-     *                  larger than the given threshold will be kept.
-     * @param columns the columns to fit kernel PCA. If empty, all columns
-     *                will be used.
-     * @return the model.
-     */
-    public static KernelPCA fit(DataFrame data, MercerKernel<double[]> kernel, int k, double threshold, String... columns) {
+    public static KernelPCA fit(DataFrame data, MercerKernel<double[]> kernel, KPCA.Options options, String... columns) {
         double[][] x = data.toArray(columns);
-        KPCA<double[]> kpca = KPCA.fit(x, kernel, k, threshold);
+        KPCA<double[]> kpca = KPCA.fit(x, kernel, options);
         return new KernelPCA(kpca, columns);
     }
 

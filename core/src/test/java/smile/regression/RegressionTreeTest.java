@@ -60,7 +60,8 @@ public class RegressionTreeTest {
     public void testLongley() throws Exception {
         System.out.println("longley");
         var longley = new Longley();
-        RegressionTree model = RegressionTree.fit(longley.formula(), longley.data(), 100, 20, 2);
+        var options = new RegressionTree.Options(20, 100, 2);
+        RegressionTree model = RegressionTree.fit(longley.formula(), longley.data(), options);
         System.out.println("----- dot -----");
         System.out.println(model);
 
@@ -70,7 +71,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(), (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
+        RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(), (formula, x) -> RegressionTree.fit(formula, x, options));
 
         System.out.println(metrics);
         assertEquals(3.0848729264302333, metrics.rmse(), 1E-4);
@@ -159,7 +160,8 @@ public class RegressionTreeTest {
     public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
         var bostonHousing = new BostonHousing();
-        RegressionTree model = RegressionTree.fit(bostonHousing.formula(), bostonHousing.data(), 20, 100, 5);
+        var options = new RegressionTree.Options(20, 100, 5);
+        RegressionTree model = RegressionTree.fit(bostonHousing.formula(), bostonHousing.data(), options);
         double[] importance = model.importance();
         double[] shap = model.shap(bostonHousing.data());
 

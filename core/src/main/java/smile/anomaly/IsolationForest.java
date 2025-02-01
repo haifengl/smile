@@ -105,68 +105,85 @@ public class IsolationForest implements Serializable {
     }
 
     /**
+     * Isolation Forest hyperparameters.
+     * @param ntrees the number of trees.
+     * @param maxDepth the maximum depth of the tree.
+     * @param subsample the sampling rate for training tree.
+     * @param extensionLevel the extension level.
+     */
+    public record Options(int ntrees, int maxDepth, double subsample, int extensionLevel) {
+        public Options {
+            if (ntrees < 1) {
+                throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
+            }
+
+            if (subsample <= 0 || subsample >= 1) {
+                throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
+            }
+        }
+
+        /** Constructor. */
+        public Options() {
+            this(100, 0, 0.7, 0);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.isolation_forest.trees", Integer.toString(ntrees));
+            props.setProperty("smile.isolation_forest.max_depth", Integer.toString(maxDepth));
+            props.setProperty("smile.isolation_forest.sampling_rate", Double.toString(subsample));
+            props.setProperty("smile.isolation_forest.extension_level", Integer.toString(extensionLevel));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int ntrees = Integer.parseInt(props.getProperty("smile.isolation_forest.trees", "100"));
+            int maxDepth = Integer.parseInt(props.getProperty("smile.isolation_forest.max_depth", "0"));
+            double subsample = Double.parseDouble(props.getProperty("smile.isolation_forest.sampling_rate", "0.7"));
+            int extensionLevel = Integer.parseInt(props.getProperty("smile.isolation_forest.extension_level", "0"));
+            return new Options(ntrees, maxDepth, subsample, extensionLevel);
+        }
+    }
+
+    /**
      * Fits an isolation forest.
      *
      * @param data the training data.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data) {
-        return fit(data, new Properties());
+        return fit(data, new Options());
     }
 
     /**
      * Fits a random forest for classification.
      *
      * @param data the training data.
-     * @param params the hyperparameters.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static IsolationForest fit(double[][] data, Properties params) {
-        int ntrees = Integer.parseInt(params.getProperty("smile.isolation_forest.trees", "100"));
-        double subsample = Double.parseDouble(params.getProperty("smile.isolation_forest.sampling_rate", "0.7"));
-
-        int maxDepth = (int) MathEx.log2(data.length);
-        String depth = params.getProperty("smile.isolation_forest.max_depth");
-        if (depth != null) {
-            maxDepth = Integer.parseInt(depth);
-        }
-
-        int extensionLevel = data[0].length - 1;
-        String level = params.getProperty("smile.isolation_forest.extension_level");
-        if (level != null) {
-            extensionLevel = Integer.parseInt(level);
-        }
-
-        return fit(data, ntrees, maxDepth, subsample, extensionLevel);
-    }
-
-    /**
-     * Fits a random forest for classification.
-     *
-     * @param data the training data.
-     * @param ntrees the number of trees.
-     * @param maxDepth the maximum depth of the tree.
-     * @param subsample the sampling rate for training tree.
-     * @param extensionLevel the extension level.
-     * @return the model.
-     */
-    public static IsolationForest fit(double[][] data, int ntrees, int maxDepth, double subsample, int extensionLevel) {
-        if (ntrees < 1) {
-            throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
-        }
-
-        if (subsample <= 0 || subsample >= 1) {
-            throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
-        }
-
-        if (extensionLevel < 0 || extensionLevel > data[0].length - 1) {
+    public static IsolationForest fit(double[][] data, Options options) {
+        int extensionLevel = options.extensionLevel > 0 ? options.extensionLevel : data[0].length - 1;
+        if (options.extensionLevel >= data[0].length) {
             throw new IllegalArgumentException("Invalid extension level: " + extensionLevel);
         }
 
-        final int n = data.length;
-        final int m = (int) Math.round(n * subsample);
+        int maxDepth = options.maxDepth > 0 ? options.maxDepth : (int) MathEx.log2(data.length);
 
-        IsolationTree[] trees = IntStream.range(0, ntrees).parallel().mapToObj(k -> {
+        final int n = data.length;
+        final int m = (int) Math.round(n * options.subsample);
+
+        IsolationTree[] trees = IntStream.range(0, options.ntrees).parallel().mapToObj(k -> {
             ArrayList<double[]> samples = new ArrayList<>(m);
             for (int i : MathEx.permutate(n)) {
                 samples.add(data[i]);

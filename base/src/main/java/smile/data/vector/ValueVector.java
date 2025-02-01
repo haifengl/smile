@@ -16,6 +16,7 @@
  */
 package smile.data.vector;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.*;
@@ -39,7 +40,7 @@ import smile.util.Index;
  * @author Haifeng Li
  */
 @SuppressWarnings("unchecked")
-public interface ValueVector {
+public interface ValueVector extends Serializable {
     /**
      * Returns the struct field of the vector.
      * @return the struct field.
@@ -101,6 +102,84 @@ public interface ValueVector {
      * @return the number of null/missing values in this vector.
      */
     int getNullCount();
+
+    /**
+     * Returns the result of equality comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of equality comparison.
+     */
+    default boolean[] eq(Object other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = other.equals(get(i));
+        }
+        return result;
+    }
+
+    /**
+     * Returns the result of non-equality comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of non-equality comparison.
+     */
+    default boolean[] ne(Object other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = !other.equals(get(i));
+        }
+        return result;
+    }
+
+    /**
+     * Returns the result of less-than comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of less-than comparison.
+     */
+    default <T extends Comparable<T>> boolean[] lt(T other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = other.compareTo((T) get(i)) > 0;
+        }
+        return result;
+    }
+
+    /**
+     * Returns the result of less-than or equal comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of less-than or equal comparison.
+     */
+    default <T extends Comparable<T>> boolean[] le(T other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = other.compareTo((T) get(i)) >= 0;
+        }
+        return result;
+    }
+
+    /**
+     * Returns the result of greater-than comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of greater-than comparison.
+     */
+    default <T extends Comparable<T>> boolean[] gt(T other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = other.compareTo((T) get(i)) < 0;
+        }
+        return result;
+    }
+
+    /**
+     * Returns the result of greater-than or equal comparison.
+     * @param other the reference object with which to compare.
+     * @return the result of greater-than or equal comparison.
+     */
+    default <T extends Comparable<T>> boolean[] ge(T other) {
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = other.compareTo((T) get(i)) <= 0;
+        }
+        return result;
+    }
 
     /**
      * Returns true if there are any null/missing values in this vector.

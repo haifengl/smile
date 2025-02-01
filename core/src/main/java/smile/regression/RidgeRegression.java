@@ -24,6 +24,7 @@ import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.Strings;
 
 /**
  * Ridge Regression. Coefficient estimates for multiple linear regression
@@ -70,33 +71,78 @@ import smile.math.matrix.Matrix;
  */
 public class RidgeRegression {
     /**
-     * Fits a ridge regression model.
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @return the model.
+     * Ridge regression hyperparameters.
+     * @param lambda the shrinkage/regularization parameter. Large lambda
+     *               means more shrinkage. Choosing an appropriate value of
+     *               lambda is important, and also difficult. Its length may
+     *               be 1 so that its value is applied to all variables.
+     * @param beta0 the generalized ridge penalty target. Its length may
+     *              be 1 so that its value is applied to all variables.
      */
-    public static LinearModel fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
+    public record Options(double[] lambda, double[] beta0) {
+        public Options {
+            for (var value : lambda) {
+                if (value < 0.0) {
+                    throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + value);
+                }
+            }
 
-    /**
-     * Fits a ridge regression model. The hyperparameters in <code>prop</code> include
-     * <ul>
-     * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
-     *               Choosing an appropriate value of lambda is important, and also difficult.
-     * <li><code>smile.ridge.standard.error</code> is a boolean. If true, compute the estimated standard
-     *     errors of the estimate of parameters
-     * </ul>
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     *             NO NEED to include a constant column of 1s for bias.
-     * @param params the hyperparameters.
-     * @return the model.
-     */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.ridge.lambda", "1"));
-        return fit(formula, data, lambda);
+            for (var value : beta0) {
+                if (value < 0.0) {
+                    throw new IllegalArgumentException("Invalid generalized ridge penalty target beta0 = " + value);
+                }
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param lambda the shrinkage/regularization parameter.
+         */
+        public Options(double lambda) {
+            this(lambda, 0.0);
+        }
+
+        /**
+         * Constructor.
+         * @param lambda the shrinkage/regularization parameter.
+         * @param beta0 the generalized ridge penalty target.
+         */
+        public Options(double lambda, double beta0) {
+            this(new double[]{lambda}, new double[]{beta0});
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters including
+         * <ul>
+         * <li><code>smile.ridge.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+         *               Choosing an appropriate value of lambda is important, and also difficult.
+         * <li><code>smile.ridge.standard.error</code> is a boolean. If true, compute the estimated standard
+         *     errors of the estimate of parameters
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.ridge.lambda", Arrays.toString(lambda));
+            props.setProperty("smile.ridge.beta0", Arrays.toString(beta0));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            var lambda = props.getProperty("smile.ridge.lambda", "1");
+            var beta0 = props.getProperty("smile.ridge.beta0", "0");
+            try {
+                return new Options(Double.parseDouble(lambda), Double.parseDouble(beta0));
+            } catch (Exception e) {
+                return new Options(Strings.parseDoubleArray(lambda), Strings.parseDoubleArray(beta0));
+            }
+        }
     }
 
     /**
@@ -112,7 +158,7 @@ public class RidgeRegression {
         int n = data.size();
         double[] weights = new double[n];
         Arrays.fill(weights, 1.0);
-        return fit(formula, data, weights, new double[]{lambda}, new double[]{0.0});
+        return fit(formula, data, weights, new Options(lambda));
     }
 
     /**
@@ -127,15 +173,10 @@ public class RidgeRegression {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param weights sample weights.
-     * @param lambda the shrinkage/regularization parameter. Large lambda
-     *               means more shrinkage. Choosing an appropriate value of
-     *               lambda is important, and also difficult. Its length may
-     *               be 1 so that its value is applied to all variables.
-     * @param beta0 generalized ridge penalty target. Its length may
-     *              be 1 so that its value is applied to all variables.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, double[] weights, double[] lambda, double[] beta0) {
+    public static LinearModel fit(Formula formula, DataFrame data, double[] weights, Options options) {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
@@ -155,6 +196,7 @@ public class RidgeRegression {
             }
         }
 
+        var lambda = options.lambda;
         if (lambda.length == 1) {
             double shrinkage = lambda[0];
             lambda = new double[p];
@@ -169,6 +211,7 @@ public class RidgeRegression {
             }
         }
 
+        var beta0 = options.beta0;
         if (beta0.length == 1) {
             double beta = beta0[0];
             beta0 = new double[p];

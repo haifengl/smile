@@ -17,6 +17,8 @@
 package smile.manifold;
 
 import java.util.Arrays;
+import java.util.Properties;
+
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
@@ -54,15 +56,62 @@ public class LLE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
     /**
+     * LLE hyperparameters.
+     * @param k k-nearest neighbor.
+     * @param d the dimension of the manifold.
+     */
+    public record Options(int k, int d) {
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
+            }
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k k-nearest neighbor.
+         */
+        public Options(int k) {
+            this(k, 2);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.lle.k", Integer.toString(k));
+            props.setProperty("smile.lle.d", Integer.toString(d));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.lle.k", "7"));
+            int d = Integer.parseInt(props.getProperty("smile.lle.d", "2"));
+            return new Options(k, d);
+        }
+    }
+
+    /**
      * Runs the LLE algorithm.
      * @param data the input data.
-     * @param k k-nearest neighbor.
+     * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, int k) {
+    public static double[][] of(double[][] data, Options options) {
         // Use the largest connected component of nearest neighbor graph.
-        NearestNeighborGraph nng = NearestNeighborGraph.of(data, k);
-        return of(data, nng.largest(false), 2);
+        NearestNeighborGraph nng = NearestNeighborGraph.of(data, options.k);
+        return of(data, nng.largest(false), options.d);
     }
 
     /**

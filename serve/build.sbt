@@ -46,7 +46,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.2",
-  "org.xerial"         %  "sqlite-jdbc" % "3.47.2.0",
+  "org.xerial"         %  "sqlite-jdbc" % "3.48.0.0",
   "ch.qos.logback"     %  "logback-classic" % "1.5.16"
 )
 

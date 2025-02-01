@@ -62,7 +62,7 @@ public class KPCATest {
         System.out.println("KPCA");
         var cpu = new CPU();
         var x = cpu.x();
-        KPCA<double[]> kpca = KPCA.fit(x, new GaussianKernel(Math.sqrt(2.5)), 29);
+        KPCA<double[]> kpca = KPCA.fit(x, new GaussianKernel(Math.sqrt(2.5)), new KPCA.Options(29));
         for (int i = 0; i < latent.length; i++) {
             assertEquals(latent[i], kpca.variances()[i], 1E-3);
         }

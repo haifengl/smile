@@ -19,6 +19,7 @@ package smile.manifold;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.function.Function;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
@@ -64,6 +65,54 @@ import smile.math.matrix.Matrix;
 public class KPCA<T> implements Function<T, double[]>, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
+
+    /**
+     * Kernel PCA hyperparameters.
+     * @param d the dimension of the projection.
+     * @param threshold only principal components with eigenvalues
+     *                  larger than the given threshold will be kept.
+     */
+    public record Options(int d, double threshold) {
+        public Options {
+            if (d < 2) {
+                throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+            if (threshold < 0) {
+                throw new IllegalArgumentException("Invalid threshold = " + threshold);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param d the dimension of the projection.
+         */
+        public Options(int d) {
+            this(d, 0.0001);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.kpca.d", Integer.toString(d));
+            props.setProperty("smile.kpca.threshold", Double.toString(threshold));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int d = Integer.parseInt(props.getProperty("smile.kpca.d", "2"));
+            double threshold = Double.parseDouble(props.getProperty("smile.kpca.threshold", "0.0001"));
+            return new Options(d, threshold);
+        }
+    }
 
     /**
      * Training data.
@@ -118,31 +167,14 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
      * Fits kernel principal component analysis.
      * @param data training data.
      * @param kernel Mercer kernel.
-     * @param k choose up to k principal components (larger than 0.0001) used for projection.
+     * @param options the hyperparameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
-    public static <T> KPCA<T> fit(T[] data, MercerKernel<T> kernel, int k) {
-        return fit(data, kernel, k, 0.0001);
-    }
-
-    /**
-     * Fits kernel principal component analysis.
-     * @param data training data.
-     * @param kernel Mercer kernel.
-     * @param k choose top k principal components used for projection.
-     * @param threshold only principal components with eigenvalues
-     *                  larger than the given threshold will be kept.
-     * @param <T> the data type of samples.
-     * @return the model.
-     */
-    public static <T> KPCA<T> fit(T[] data, MercerKernel<T> kernel, int k, double threshold) {
-        if (threshold < 0) {
-            throw new IllegalArgumentException("Invalid threshold = " + threshold);
-        }
-
-        if (k < 1 || k > data.length) {
-            throw new IllegalArgumentException("Invalid dimension of feature space: " + k);
+    public static <T> KPCA<T> fit(T[] data, MercerKernel<T> kernel, Options options) {
+        int d = options.d;
+        if (d > data.length) {
+            throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
         }
 
         int n = data.length;
@@ -168,12 +200,12 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
         }
 
         K.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, k);
+        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, d);
 
         double[] eigvalues = eigen.wr;
         Matrix eigvectors = eigen.Vr;
 
-        int p = (int) Arrays.stream(eigvalues).limit(k).filter(e -> e/n > threshold).count();
+        int p = (int) Arrays.stream(eigvalues).limit(d).filter(e -> e/n > options.threshold).count();
 
         double[] latent = new double[p];
         Matrix projection = new Matrix(p, n);

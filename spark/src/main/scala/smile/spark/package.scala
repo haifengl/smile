@@ -40,16 +40,16 @@ package object spark {
     def toSpark(implicit spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df)
   }
 
-  /** Hyper-parameter optimization. */
+  /** hyperparameter optimization. */
   object hpo {
     /**
-      * Distributed hyper-parameter optimization with cross validation for classification.
+      * Distributed hyperparameter optimization with cross validation for classification.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
       * @param x              training samples.
       * @param y              training labels.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -74,13 +74,13 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization with cross validation for classification.
+      * Distributed hyperparameter optimization with cross validation for classification.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
       * @param formula        model formula.
       * @param data           training data.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -105,14 +105,14 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization for classification.
+      * Distributed hyperparameter optimization for classification.
       *
       * @param spark          spark session.
       * @param x              training samples.
       * @param y              training labels.
       * @param testx          test samples.
       * @param testy          test labels.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -137,13 +137,13 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization for classification.
+      * Distributed hyperparameter optimization for classification.
       *
       * @param spark          spark session.
       * @param formula        model formula.
       * @param train          training data.
       * @param test           test data.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -168,13 +168,13 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization with cross validation for regression.
+      * Distributed hyperparameter optimization with cross validation for regression.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
       * @param x              training samples.
       * @param y              response variable.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -199,13 +199,13 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization with cross validation for regression.
+      * Distributed hyperparameter optimization with cross validation for regression.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
       * @param formula        model formula.
       * @param data           training data.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -230,14 +230,14 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization for regression.
+      * Distributed hyperparameter optimization for regression.
       *
       * @param spark          spark session.
       * @param x              training samples.
       * @param y              response variable.
       * @param testx          test samples.
       * @param testy          test labels.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
@@ -262,13 +262,13 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization for regression.
+      * Distributed hyperparameter optimization for regression.
       *
       * @param spark          spark session.
       * @param formula        model formula.
       * @param train          training data.
       * @param test           test data.
-      * @param configurations hyper-parameter configurations.
+      * @param configurations hyperparameter configurations.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.

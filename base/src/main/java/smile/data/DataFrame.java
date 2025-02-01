@@ -16,9 +16,7 @@
  */
 package smile.data;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -47,7 +45,7 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row> {
+public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row>, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
     public DataFrame {
@@ -1233,26 +1231,13 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public static <T> DataFrame of(Class<T> clazz, List<T> data) {
         try {
-            BeanInfo info = Introspector.getBeanInfo(clazz);
-            PropertyDescriptor[] props = info.getPropertyDescriptors();
-            StructField[] fields = Arrays.stream(props)
-                    .filter(prop -> !prop.getName().equals("class"))
-                    .map(StructField::of)
-                    .toArray(StructField[]::new);
-
             int n = data.size();
-            var schema = new StructType(fields);
+            Property[] props = Property.of(clazz);
             List<ValueVector> columns = new ArrayList<>();
-
-            for (PropertyDescriptor prop : props) {
-                if (prop.getName().equals("class")) continue;
-
-                String name = prop.getName();
-                Class<?> type = prop.getPropertyType();
-                Method read = prop.getReadMethod();
-                StructField field = Arrays.stream(fields)
-                        .filter(f -> f.name().equals(name))
-                        .findFirst().orElseThrow(NoSuchElementException::new);
+            for (var prop : props) {
+                StructField field = prop.field();
+                Method read = prop.accessor();
+                Class<?> type = prop.type();
 
                 int i = 0;
                 if (type == int.class) {
@@ -1331,7 +1316,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
                 }
             }
 
-            return new DataFrame(schema, columns, null);
+            return new DataFrame(StructType.of(props), columns, null);
         } catch (java.beans.IntrospectionException ex) {
             logger.error("Failed to introspect a bean: ", ex);
             throw new RuntimeException(ex);

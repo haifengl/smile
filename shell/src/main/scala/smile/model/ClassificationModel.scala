@@ -48,7 +48,7 @@ object ClassificationModel {
     * @param algorithm the learning algorithm.
     * @param formula the model formula.
     * @param data the training data.
-    * @param params the hyper-parameters.
+    * @param params the hyperparameters.
     * @param kfold k-fold cross validation if kfold > 1.
     * @param round the number of repeated cross validation.
     * @param ensemble create the ensemble of cross validation models if true.
@@ -88,19 +88,19 @@ object ClassificationModel {
     * @param algorithm the learning algorithm.
     * @param formula the model formula.
     * @param data the training data.
-    * @param params the hyper-parameters.
+    * @param params the hyperparameters.
     * @return the classification model.
     */
   def fit(algorithm: String, formula: Formula, data: DataFrame, params: Properties): DataFrameClassifier = {
     algorithm match {
       case "random_forest" =>
-        smile.classification.RandomForest.fit(formula, data, params)
+        smile.classification.RandomForest.fit(formula, data, RandomForest.Options.of(params))
       case "gradient_boost" =>
-        smile.classification.GradientTreeBoost.fit(formula, data, params)
+        smile.classification.GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options.of(params))
       case "adaboost" =>
-        AdaBoost.fit(formula, data, params)
+        AdaBoost.fit(formula, data, AdaBoost.Options.of(params))
       case "cart" =>
-        DecisionTree.fit(formula, data, params)
+        DecisionTree.fit(formula, data, DecisionTree.Options.of(params))
       case "logistic" =>
         DataFrameClassifier.of(formula, data, params, LogisticRegression.fit(_, _, _))
       case "fisher" =>

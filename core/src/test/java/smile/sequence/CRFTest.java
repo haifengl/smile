@@ -50,7 +50,7 @@ public class CRFTest {
     public void testProtein() throws Exception {
         System.out.println("protein");
         var protein = new Protein();
-        CRF model = CRF.fit(protein.train().seq(), protein.train().tag(), 100, 20, 100, 5, 0.3);
+        CRF model = CRF.fit(protein.train().seq(), protein.train().tag(), new CRF.Options(100, 20, 100, 5, 0.3));
 
         int error = 0;
         int n = 0;
@@ -89,7 +89,7 @@ public class CRFTest {
     public void testHyphen() throws Exception {
         System.out.println("hyphen");
         var hyphen = new Hyphen();
-        CRF model = CRF.fit(hyphen.train().seq(), hyphen.train().tag(), 100, 20, 100, 5, 0.3);
+        CRF model = CRF.fit(hyphen.train().seq(), hyphen.train().tag(), new CRF.Options(100, 20, 100, 5, 0.3));
 
         int error = 0;
         int n = 0;

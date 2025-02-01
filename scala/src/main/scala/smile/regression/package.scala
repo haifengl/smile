@@ -84,8 +84,8 @@ package object regression {
     * @param method the fitting method ("svd" or "qr").
     * @param recursive if true, the return model supports recursive least squares.
     */
-  def lm(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel = time("Least Squares") {
-    OLS.fit(formula, data, method, stderr, recursive)
+  def lm(formula: Formula, data: DataFrame, method: OLS.Method = OLS.Method.QR, stderr: Boolean = true, recursive: Boolean = true): LinearModel = time("Least Squares") {
+    OLS.fit(formula, data, new OLS.Options(method, stderr, recursive))
   }
 
   /** Ridge Regression. When the predictor variables are highly correlated amongst
@@ -155,7 +155,7 @@ package object regression {
     * @param maxIter the maximum number of iterations.
     */
   def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel = time("LASSO") {
-    LASSO.fit(formula, data, lambda, tol, maxIter)
+    LASSO.fit(formula, data, new LASSO.Options(lambda, tol, maxIter))
   }
 
   /** Support vector regression. Like SVM for classification, the model produced
@@ -174,7 +174,7 @@ package object regression {
     * @return SVR model.
     */
   def svm[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T] = time("SVR") {
-    SVM.fit(x, y, kernel, eps, C, tol)
+    SVM.fit(x, y, kernel, new SVM.Options(eps, C, tol))
   }
 
   /** Regression tree. A classification/regression tree can be learned by
@@ -247,7 +247,7 @@ package object regression {
     * @return Regression tree model.
     */
   def cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree = time("Regression Tree") {
-    RegressionTree.fit(formula, data, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
+    RegressionTree.fit(formula, data, new RegressionTree.Options(maxDepth, maxNodes, nodeSize))
   }
 
   /** Random forest for regression. Random forest is an ensemble classifier
@@ -303,7 +303,7 @@ package object regression {
   def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0,
                    maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 5,
                    subsample: Double = 1.0): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
+    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample))
   }
 
   /** Gradient boosted regression trees.
@@ -386,7 +386,7 @@ package object regression {
   def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500, maxDepth: Int = 20,
           maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
           subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
-    GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
+    GradientTreeBoost.fit(formula, data, new GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
   }
 
   /** Gaussian Process for Regression. */
@@ -441,7 +441,7 @@ package object regression {
       * @param maxIter   the maximum number of iterations for HPO. No HPO if maxIter <= 0.
       */
     def apply[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true, tol: Double = 1E-5, maxIter: Int = 0): GaussianProcessRegression[T] = time("Gaussian Process Regression") {
-      GaussianProcessRegression.fit(x, y, kernel, noise, normalize, tol, maxIter)
+      GaussianProcessRegression.fit(x, y, kernel, new GaussianProcessRegression.Options(noise, normalize, tol, maxIter))
     }
 
     /** Fits an approximate Gaussian process model with a subset of regressors.
@@ -456,7 +456,7 @@ package object regression {
       * @param normalize the option to normalize the response variable.
       */
     def approx[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true): GaussianProcessRegression[T] = time("SoR Gaussian Process Regression") {
-      GaussianProcessRegression.fit(x, y, t, kernel, noise, normalize)
+      GaussianProcessRegression.fit(x, y, t, kernel, new GaussianProcessRegression.Options(noise, normalize))
     }
 
     /** Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
@@ -471,7 +471,7 @@ package object regression {
       * @param normalize the option to normalize the response variable.
       */
     def nystrom[T <: AnyRef](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true): GaussianProcessRegression[T] = time("Nystrom Approximate Gaussian Process Regression") {
-      GaussianProcessRegression.nystrom(x, y, t, kernel, noise, normalize)
+      GaussianProcessRegression.nystrom(x, y, t, kernel, new GaussianProcessRegression.Options(noise, normalize))
     }
   }
 

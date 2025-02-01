@@ -25,6 +25,7 @@ import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
+import smile.regression.GaussianProcessRegression.Options;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +56,7 @@ public class GaussianProcessRegressionTest {
 
     @Test
     public void testOutOfBoundsException() {
-        double[][] X = {
+        double[][] x = {
                 {4.543,  3.135, 0.86},
                 {5.159,  5.043, 1.53},
                 {5.366,  5.438, 1.57},
@@ -92,9 +93,9 @@ public class GaussianProcessRegressionTest {
                 40.9, 15.9, 6.4, 18, 38.9, 14, 15.2, 32, 56.71, 16.8, 11.6, 26.5, 0.7, 13.4, 5.5
         };
 
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(
-                X, y, new GaussianKernel(3),
-                1e-5, false, 1e-5, 1024
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y,
+                new GaussianKernel(3),
+                new Options(1e-5, false, 1e-5, 1024)
         );
         System.out.println(model);
     }
@@ -109,12 +110,16 @@ public class GaussianProcessRegressionTest {
         MathEx.standardize(x);
 
         RegressionMetrics metrics = LOOCV.regression(x, y,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi,
+                        new GaussianKernel(8.0),
+                        new Options(0.2)));
 
         System.out.println(metrics);
         assertEquals(2.7492, metrics.rmse(), 1E-4);
 
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y, new GaussianKernel(8.0), 0.2);
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y,
+                new GaussianKernel(8.0),
+                new Options(0.2));
         System.out.println(model);
 
         GaussianProcessRegression<double[]>.JointPrediction joint = model.query(Arrays.copyOf(x, 10));
@@ -145,7 +150,9 @@ public class GaussianProcessRegressionTest {
         double[] y = longley.y();
         MathEx.standardize(x);
 
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y, new GaussianKernel(8.0), 0.2, true, 1E-5, 500);
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(x, y,
+                new GaussianKernel(8.0),
+                new Options(0.2, true, 1E-5, 500));
         System.out.println(model);
         assertEquals(-0.8996, model.L, 1E-4);
         assertEquals(0.0137, model.noise, 1E-4);
@@ -153,7 +160,8 @@ public class GaussianProcessRegressionTest {
         MercerKernel<double[]> kernel = model.kernel;
         double noise = model.noise;
 
-        RegressionMetrics metrics = LOOCV.regression(x, y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, noise));
+        RegressionMetrics metrics = LOOCV.regression(x, y,
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, new Options(noise)));
 
         System.out.println(metrics);
         assertEquals(1.7104, metrics.rmse(), 1E-4);
@@ -170,7 +178,9 @@ public class GaussianProcessRegressionTest {
         MathEx.standardize(x);
 
         var result = CrossValidation.regression(10, x, y,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi,
+                        new GaussianKernel(47.02),
+                        new Options(0.1)));
 
         var sparseResult = CrossValidation.regression(10, x, y, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -183,7 +193,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         var nystromResult = CrossValidation.regression(10, x, y, (xi, yi) -> {
@@ -197,7 +207,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);
@@ -225,7 +235,8 @@ public class GaussianProcessRegressionTest {
         }
 
         RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi,
+                        new GaussianKernel(34.866), new Options(0.1)));
 
         RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -238,7 +249,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
@@ -252,7 +263,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);
@@ -285,7 +296,7 @@ public class GaussianProcessRegressionTest {
         }
 
         RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), new Options(0.1)));
 
         RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -298,7 +309,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
@@ -312,7 +323,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);
@@ -343,7 +354,7 @@ public class GaussianProcessRegressionTest {
         }
 
         RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), new Options(0.1)));
 
         RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -356,7 +367,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
@@ -370,7 +381,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);
@@ -399,7 +410,7 @@ public class GaussianProcessRegressionTest {
         }
 
         RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), new Options(0.1)));
 
         RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -412,7 +423,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
@@ -426,7 +437,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);
@@ -454,7 +465,7 @@ public class GaussianProcessRegressionTest {
         }
 
         RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
-                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
+                (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), new Options(0.1)));
 
         RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
@@ -467,7 +478,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
@@ -481,7 +492,7 @@ public class GaussianProcessRegressionTest {
             }
             r0 /= (2 * centers.length);
             System.out.println("Kernel width = " + r0);
-            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), 0.1);
+            return GaussianProcessRegression.nystrom(xi, yi, centers, new GaussianKernel(r0), new Options(0.1));
         });
 
         System.out.println("GPR: " + result);

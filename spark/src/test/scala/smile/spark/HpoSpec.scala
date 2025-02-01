@@ -49,7 +49,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
 
       val configurations = hp.random().limit(10).collect(Collectors.toList()).asScala.toSeq
       val scores = hpo.classification(5, formula, mushrooms, configurations) {
-        (formula: Formula, data: DataFrame, params: Properties) => RandomForest.fit(formula, data, params)
+        (formula: Formula, data: DataFrame, params: Properties) => RandomForest.fit(formula, data, RandomForest.Options.of(params))
       }
 
       (0 until configurations.length) foreach { i =>
