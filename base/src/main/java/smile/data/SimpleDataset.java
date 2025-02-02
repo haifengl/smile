@@ -60,7 +60,6 @@ public class SimpleDataset<D, T> implements Dataset<D, T> {
     }
 
     @Override
-    @javax.annotation.Nonnull
     public Iterator<SampleInstance<D, T>> iterator() {
         return instances.iterator();
     }

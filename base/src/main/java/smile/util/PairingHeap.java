@@ -17,7 +17,6 @@
 package smile.util;
 
 import java.util.*;
-import javax.annotation.Nonnull;
 
  /**
   * A pairing heap is a type of heap data structure with relatively simple
@@ -183,17 +182,17 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     @Override
-    public boolean containsAll(@Nonnull Collection<?> c) {
+    public boolean containsAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean retainAll(@Nonnull Collection<?> c) {
+    public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean removeAll(@Nonnull Collection<?> c) {
+    public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
@@ -203,19 +202,16 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     @Override
-    @Nonnull
     public Object[] toArray() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    @Nonnull
-    public <T> T[] toArray(@Nonnull T[] a) {
+    public <T> T[] toArray(T[] a) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    @Nonnull
     public Iterator<E> iterator() {
         throw new UnsupportedOperationException();
     }
