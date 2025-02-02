@@ -155,7 +155,6 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     }
 
     @Override
-    @javax.annotation.Nonnull
     public Iterator<Entry> iterator() {
         return new Iterator<>() {
             int i = 0;

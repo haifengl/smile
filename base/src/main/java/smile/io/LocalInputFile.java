@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import javax.annotation.Nonnull;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.SeekableInputStream;
 
@@ -62,12 +61,12 @@ class LocalInputFile implements InputFile {
             }
 
             @Override
-            public int read(@Nonnull byte[] b) throws IOException {
+            public int read(byte[] b) throws IOException {
                 return input.read(b);
             }
 
             @Override
-            public int read(@Nonnull byte[] b, int off, int len) throws IOException {
+            public int read(byte[] b, int off, int len) throws IOException {
                 return input.read(b, off, len);
             }
 

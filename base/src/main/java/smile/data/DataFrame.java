@@ -436,7 +436,6 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     @Override
-    @javax.annotation.Nonnull
     public Iterator<Row> iterator() {
         return stream().iterator();
     }
