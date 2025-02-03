@@ -15,9 +15,3 @@ tasks.withType<Test>().all {
     systemProperty("org.bytedeco.javacpp.pathsFirst", "true")
     systemProperty("java.library.path", "serve/src/universal/torch/li")
 }
-
-tasks.jar {
-    manifest {
-        attributes["Automatic-Module-Name"] = "smile.deep"
-    }
-}

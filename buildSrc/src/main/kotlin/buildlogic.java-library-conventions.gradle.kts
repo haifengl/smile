@@ -6,3 +6,9 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
 }
+
+tasks.jar {
+    manifest {
+        attributes["Automatic-Module-Name"] = "${rootProject.name}.${project.name}"
+    }
+}

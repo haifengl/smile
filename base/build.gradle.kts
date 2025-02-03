@@ -15,9 +15,3 @@ dependencies {
 
     testRuntimeOnly("org.xerial:sqlite-jdbc:3.48.0.0")
 }
-
-tasks.jar {
-    manifest {
-        attributes["Automatic-Module-Name"] = "smile.base"
-    }
-}
