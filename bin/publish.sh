@@ -34,7 +34,7 @@ rm shell/src/universal/bin/smile-kotlin-*.jar
 ./gradlew :kotlin:build
 check_error "!!"
 
-./gradlew :kotlin:dokkaHtml
+./gradlew :kotlin:dokkaGenerate
 check_error "!!"
 find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
