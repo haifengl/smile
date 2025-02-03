@@ -22,6 +22,17 @@ java {
     }
 }
 
+tasks.withType<JavaCompile> {
+    // Set the source and target compatibility to Java 21
+    sourceCompatibility = JavaVersion.VERSION_21.toString()
+    targetCompatibility = JavaVersion.VERSION_21.toString()
+
+    options.encoding = "UTF-8"
+    options.compilerArgs.add("-g:lines,vars,source")
+    options.compilerArgs.add("-Xlint:deprecation")
+    options.compilerArgs.add("-Xlint:unchecked")
+}
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
