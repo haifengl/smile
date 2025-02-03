@@ -46,7 +46,7 @@ title: Smile - NLP
     <div class="tab-content">
         <div class="tab-pane" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
 val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
 
 “It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
@@ -67,7 +67,7 @@ val text = unicode.normalize
         </div>
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 import smile.math.MathEx;
 import smile.nlp.*;
 import smile.nlp.tokenizer.*;
@@ -92,7 +92,7 @@ var text = SimpleNormalizer.getInstance().normalize(unicode);
         </div>
         <div class="tab-pane" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
 import smile.nlp.*;
 
 val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
@@ -140,7 +140,7 @@ val text = unicode.normalize()
     <div class="tab-content">
         <div class="tab-pane" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
 smile&gt; val sentences = text.sentences
 sentences: Array[String] = Array(
   "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
@@ -160,7 +160,7 @@ sentences: Array[String] = Array(
         </div>
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var sentences = SimpleSentenceSplitter.getInstance().split(text)
 sentences ==> String[10] { "When airport foreman Scott Babcock  ... mmal strikes are rare\"" }
 
@@ -226,7 +226,7 @@ Though this was the first seal sighting on the runway at the airport, the depart
     <div class="tab-content">
         <div class="tab-pane" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
 smile&gt; sentences.flatMap(_.words())
 res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport...
     </code></pre>
@@ -234,7 +234,7 @@ res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wile
         </div>
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var tokenizer = new SimpleTokenizer(true)
 tokenizer ==> smile.nlp.tokenizer.SimpleTokenizer@6b53e23f
 
@@ -248,7 +248,7 @@ words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runwa
         </div>
         <div class="tab-pane" id="kotlin_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
 >>> sentences.flatMap{ it.words().asIterable() }
 res6: kotlin.collections.List&lt;kotlin.String&gt; = [airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport, department, said, animals, including, birds, caribou, polar, bears, spotted, past, Wildlife, strikes, aircraft, pose, significant, safety, hazard, cost, aviation, industry, hundreds, millions, dollars, year, department, spokeswoman, Meadow, Bailey, told, Associated, Press, Birds, make, 90, percent, strikes, U.S., mammal, strikes, rare.]
     </code></pre>
@@ -381,7 +381,7 @@ $43 ==> "democr"
     <div class="tab-content">
         <div class="tab-pane" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
 smile&gt; text.bag()
 res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, snow -> 1, anim -> 2, post -> 1, footag -> 1, wait -> 1, carib -> 1, industri -> 1, sunshin -> 1, seen -> 1, abc -> 1, said -> 2, pun -> 1, polar -> 1, bear -> 1, soon -> 1, warn -> 1, sight -> 1, babcock -> 2, u.s. -> 1, clear -> 1, normal -> 1, appear -> 1, sled. -> 1, strike -> 3, foreman -> 1, milki -> 1, resum -> 1, meadow -> 1, bailei -> 1, bird -> 2, us -> 1, dollar -> 1, poke -> 1, mondai -> 1, local -> 1, term -> 1, thing -> 1, scott -> 1, year -> 1, associat -> 1, ktva -> 1, tv -> 1, told -> 2, visibl -> 1, eventu -> 1, seal -> 7, hundr -> 1, surpris -> 2, aircraft -> 1, runwai -> 3, ceil -> 1, includ -> 1, asphalt -> 1, visitor -> 1, help -> 1, hazard -> 1, transport -> ...
     </code></pre>
@@ -389,7 +389,7 @@ res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, s
         </div>
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var map = Arrays.stream(words).
          map(porter::stem).
          map(String::toLowerCase).
@@ -400,7 +400,7 @@ map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, 
         </div>
         <div class="tab-pane" id="kotlin_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
 >>> text.bag()
 res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, foreman=1, scott=1, babcock=2, went=2, runwai=3, wilei=1, post-wil=1, roger=1, memori=1, utqiagvik=1, alaska=2, mondai=1, clear=1, snow=1, surpris=2, visitor=1, wait=1, asphalt=1, 450-pound=1, beard=1, seal=7, chill=1, milki=1, sunshin=1, strang=1, seen=1, lot=1, thing=1, told=2, abc=1, new=1, footag=1, hefti=1, mammal=2, viral=1, post=1, facebook=1, accord=1, local=1, tv=1, station=2, ktva=1, anim=2, control=1, call=1, eventu=1, move=1, help=1, sled.=1, normal=1, air=1, traffic=1, soon=1, resum=1, said=2, poke=1, fun=1, appear=1, depart=3, transport=1, warn=1, pilot=1, tuesdai=1, low=3, north=1, slope=1, region=1, pun=1, ceil=1, term=1, us=1, cloud=1, poor=1, visibl=1, sight=1, includ=1, bird=2, carib=1, polar=1, bear=1, spot=1, past=1, wildlif=1, strike=3, aircraft=1, pose=1, signific=1, safeti=1, hazard=1, cost=1, aviat=1, industri=1, hundr=1, million=1, dollar=1, year=1, spokeswoman=1, meadow=1, bailei=1, associat=1, press=1, make=1, 90=1, percent=1, u.s.=1, rare.=1}
     </code></pre>
@@ -452,7 +452,7 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
         </div>
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     var lines = Files.lines(java.nio.file.Paths.get("data/text/movie.txt"));
     var corpus = lines.map(line -> {
               var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(line));
@@ -580,7 +580,7 @@ res16: Array[collocation.BigramCollocation] = Array(
         </div>
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var corpus = new SimpleCorpus()
 corpus ==> smile.nlp.SimpleCorpus@59309333
 
@@ -657,7 +657,7 @@ res20: Seq[NGram] = Buffer(
         </div>
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var turing = Files.lines(java.nio.file.Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
 turing ==> "COMPUTING MACHINERY AND INTELLIGENCE  1. The Imi ... e imitation game, the part
 
@@ -740,7 +740,7 @@ res21: Seq[NGram] = Buffer(
         </div>
         <div class="tab-pane active" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
 $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
           </code></pre>
@@ -792,7 +792,7 @@ $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46),
     <div class="tab-content">
         <div class="tab-pane" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
 smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
 sentence: String = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
 
@@ -857,7 +857,7 @@ res2: Array[pos.PennTreebankPOS] = Array(
         </div>
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
 smile> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.";
 sentence ==> "When airport foreman Scott Babcock went out onto ... ng in the milky sunshine."
 
@@ -874,7 +874,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         </div>
         <div class="tab-pane" id="kotlin_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
 >>> val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
 
 >>> sentence.postag()
@@ -923,7 +923,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         features. A Bernoulli naive Bayes classifier requires some form of feature
         selection or else its accuracy will be low.</p>
 
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes
     </code></pre>
 
@@ -960,7 +960,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         which assumes that binary features are stored in a sparse array, of which
         entries are the indices of nonzero features.</p>
 
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
     </code></pre>
 
@@ -1001,7 +1001,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
 
     <p>The below function trains a first-order hidden Markov model.</p>
 
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
 
     def hmm[T](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T]
@@ -1047,7 +1047,7 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         the order of the feature interactions, rather than exponentially as
         in previous algorithms based on iterative scaling and gradient descent.</p>
 
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF
     </code></pre>
 
