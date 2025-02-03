@@ -64,6 +64,10 @@ public enum ScalarType {
         this.value = dtype;
     }
 
+    /**
+     * Returns the PyTorch scalar type.
+     * @return the PyTorch scalar type.
+     */
     public torch.ScalarType asTorch() {
         return value;
     }

@@ -149,13 +149,15 @@ public abstract class LayerBlock implements Layer {
 
     /**
      * Returns the compute device of module.
+     * @return the compute device of module.
      */
     public Device device() {
         return device;
     }
 
     /**
-     * Returns the compute device of module.
+     * Returns the data type of module.
+     * @return the data type of module.
      */
     public ScalarType dtype() {
         return dtype;

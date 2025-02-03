@@ -51,6 +51,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     /**
      * Moves the layer block to a device.
      * @param device the compute device.
+     * @return this layer.
      */
     default Layer to(Device device) {
         asTorch().to(device.asTorch(), true);
@@ -61,6 +62,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      * Moves the layer block to a device.
      * @param device the compute device.
      * @param dtype the data type.
+     * @return this layer.
      */
     default Layer to(Device device, ScalarType dtype) {
         asTorch().to(device.asTorch(), dtype.asTorch(), true);
