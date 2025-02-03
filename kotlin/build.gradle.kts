@@ -1,42 +1,29 @@
-import java.net.URL
-import org.gradle.jvm.tasks.Jar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.dokka.base.DokkaBase
-import org.jetbrains.dokka.base.DokkaBaseConfiguration
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
-
-// Compile bytecode to Java 21 (default is Java 6)
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "21"
+// Compile bytecode to Java 21
+tasks.withType<KotlinJvmCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+    }
 }
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.9.25"
-    id("org.jetbrains.dokka") version "1.9.20"
+    kotlin("jvm") version "2.1.10"
+    id("buildlogic.common-conventions")
+    // Generates HTML documentation
+    id("org.jetbrains.dokka") version "2.0.0"
+    // Generates Javadoc documentation
+    id("org.jetbrains.dokka-javadoc") version "2.0.0"
     signing
 }
 
-buildscript {
-    dependencies {
-        classpath("org.jetbrains.dokka:dokka-base:1.9.20")
-    }
-}
-
-group = "com.github.haifengl"
-version = "4.2.0"
-extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
 dependencies {
-    implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:4.2.0")
-    api("com.github.haifengl:smile-nlp:4.2.0")
+    implementation(kotlin("stdlib"))
+    api(project(":core"))
+    api(project(":nlp"))
 }
 
 // Copy jar to shell lib
@@ -51,40 +38,35 @@ tasks.build {
 }
 
 // Configure existing Dokka task to output HTML
-tasks.dokkaHtml {
-    pluginConfiguration<DokkaBase, DokkaBaseConfiguration> {
-        footerMessage = "Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms."
-    }
-}
-
-tasks {
-    dokkaHtml.configure {
-        outputDirectory.set(buildDir.resolve("../../doc/api/kotlin"))
-        dokkaSourceSets {
-            configureEach {
-                includes.from("packages.md")
-                externalDocumentationLink {
-                    url.set(URL("http://haifengl.github.io/api/java/"))
-                }
-            }
+dokka {
+    moduleName.set("Smile Kotlin")
+    dokkaSourceSets.main {
+        includes.from("packages.md")
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl("https://github.com/haifengl/smile")
+            remoteLineSuffix.set("#L")
         }
+    }
+    pluginsConfiguration.html {
+        footerMessage.set("Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms.")
+    }
+    dokkaPublications.html {
+        outputDirectory.set(layout.buildDirectory.dir("../doc/api/kotlin"))
     }
 }
 
 // Create dokka Jar task from dokka task output
-val dokkaJar by tasks.creating(Jar::class) {
-    group = JavaBasePlugin.DOCUMENTATION_GROUP
-    description = "Assembles Kotlin docs with Dokka"
-    classifier = "javadoc"
-    from(tasks.dokkaHtml)
+tasks.register<Jar>("dokkaHtmlJar") {
+    dependsOn(tasks.dokkaHtml)
+    from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+    archiveClassifier.set("html-docs")
 }
 
-// Create sources Jar from main kotlin sources
-val sourcesJar by tasks.creating(Jar::class) {
-    group = JavaBasePlugin.DOCUMENTATION_GROUP
-    description = "Assembles sources JAR"
-    classifier = "sources"
-    from(project.the<SourceSetContainer>()["main"].allSource)
+tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
 }
 
 publishing {
@@ -93,8 +75,6 @@ publishing {
             groupId = "com.github.haifengl"
             artifactId = "smile-kotlin"
             from(components["java"])
-            artifact(sourcesJar)
-            artifact(dokkaJar)
             versionMapping {
                 usage("java-api") {
                     fromResolutionOf("runtimeClasspath")
