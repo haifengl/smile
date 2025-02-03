@@ -61,7 +61,7 @@ import smile.math.distance.Metric
  * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
  */
 fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true): Array<DoubleArray> {
-    return IsoMap.of(data, k, d, CIsomap)
+    return IsoMap.of(data, IsoMap.Options(k, d, CIsomap))
 }
 
 /**
@@ -111,7 +111,7 @@ fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): Array<DoubleArray> {
  *          Non-positive value means discrete weights.
  */
 fun laplacian(data: Array<DoubleArray>, k: Int, d: Int = 2, t: Double = -1.0): Array<DoubleArray> {
-    return LaplacianEigenmap.of(data, k, d, t)
+    return LaplacianEigenmap.of(data, LaplacianEigenmap.Options(k, d, t))
 }
 
 /**
@@ -136,7 +136,7 @@ fun laplacian(data: Array<DoubleArray>, k: Int, d: Int = 2, t: Double = -1.0): A
  * @param iterations the number of iterations.
  */
 fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE {
-    return TSNE(X, d, perplexity, eta, iterations)
+    return TSNE(X, TSNE.Options(d, perplexity, eta, iterations))
 }
 
 /**
@@ -190,8 +190,8 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
 fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
          learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
          repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, k, d, epochs, learningRate, minDist, spread, negativeSamples,
-                   repulsionStrength, localConnectivity)
+    return UMAP.of(data, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                   repulsionStrength, localConnectivity))
 }
 
 /**
@@ -246,8 +246,8 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
 fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epochs: Int = 0,
              learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
              repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, distance, k, d, epochs, learningRate, minDist, spread, negativeSamples,
-                   repulsionStrength, localConnectivity)
+    return UMAP.of(data, distance, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                   repulsionStrength, localConnectivity))
 }
 
 /**
@@ -262,7 +262,7 @@ fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epoch
  *                  diagonal should be zero and all other elements should be positive and
  *                  symmetric. For pairwise distances matrix, it should be just the plain
  *                  distance, not squared.
- * @param k the dimension of the projection.
+ * @param d the dimension of the projection.
  * @param positive if true, estimate an appropriate constant to be added
  *            to all the dissimilarities, apart from the self-dissimilarities, that
  *            makes the learning matrix positive semi-definite. The other formulation of
@@ -274,8 +274,8 @@ fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epoch
  *            to minimize the dimensionality of the Euclidean space required for
  *            representing the objects.
  */
-fun mds(proximity: Array<DoubleArray>, k: Int, positive: Boolean = false): MDS {
-    return MDS.of(proximity, k, positive)
+fun mds(proximity: Array<DoubleArray>, d: Int, positive: Boolean = false): MDS {
+    return MDS.of(proximity, MDS.Options(d, positive))
 }
 
 /**
@@ -289,12 +289,12 @@ fun mds(proximity: Array<DoubleArray>, k: Int, positive: Boolean = false): MDS {
  *
  * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and symmetric.
- * @param k the dimension of the projection.
+ * @param d the dimension of the projection.
  * @param tol tolerance for stopping iterations.
  * @param maxIter maximum number of iterations.
  */
-fun isomds(proximity: Array<DoubleArray>, k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS {
-    return IsotonicMDS.of(proximity, k, tol, maxIter)
+fun isomds(proximity: Array<DoubleArray>, d: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS {
+    return IsotonicMDS.of(proximity, IsotonicMDS.Options(d, tol, maxIter))
 }
 
 /**
@@ -328,12 +328,12 @@ fun isomds(proximity: Array<DoubleArray>, k: Int, tol: Double = 0.0001, maxIter:
  *
  * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and symmetric.
- * @param k         the dimension of the projection.
+ * @param d         the dimension of the projection.
  * @param lambda    initial value of the step size constant in diagonal Newton method.
  * @param tol       tolerance for stopping iterations.
  * @param stepTol   tolerance on step size.
  * @param maxIter   maximum number of iterations.
  */
-fun sammon(proximity: Array<DoubleArray>, k: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping {
-    return SammonMapping.of(proximity, k, lambda, tol, stepTol, maxIter)
+fun sammon(proximity: Array<DoubleArray>, d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping {
+    return SammonMapping.of(proximity, SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
 }

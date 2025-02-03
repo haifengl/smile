@@ -156,7 +156,7 @@ fun knn(x: Array<DoubleArray>, y: IntArray, k: Int): KNN<DoubleArray> {
  * @return Logistic regression model.
  */
 fun logit(x: Array<DoubleArray>, y: IntArray, lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression {
-    return LogisticRegression.fit(x, y, lambda, tol, maxIter)
+    return LogisticRegression.fit(x, y, LogisticRegression.Options(lambda, tol, maxIter))
 }
 
 /**
@@ -191,7 +191,7 @@ fun logit(x: Array<DoubleArray>, y: IntArray, lambda: Double = 0.0, tol: Double 
  * @return Maximum entropy model.
  */
 fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent {
-    return Maxent.fit(p, x, y, lambda, tol, maxIter)
+    return Maxent.fit(p, x, y, Maxent.Options(lambda, tol, maxIter))
 }
 
 /**
@@ -417,12 +417,13 @@ fun rbfnet(x: Array<DoubleArray>, y: IntArray, k: Int, normalized: Boolean = fal
  * @param kernel Mercer kernel
  * @param C the regularization parameter
  * @param tol the tolerance of convergence test.
+ * @param epochs the number of epochs, usually 1 or 2 is sufficient.
  * @tparam T the data type
  *
  * @return SVM model.
  */
-fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: Double = 1E-3): SVM<T> {
-    return SVM.fit(x, y, kernel, C, tol)
+fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: Double = 1E-3, epochs: Int = 1): SVM<T> {
+    return SVM.fit(x, y, kernel, SVM.Options(C, tol, epochs))
 }
 
 /**
@@ -497,7 +498,7 @@ fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: D
  */
 fun cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI,
          maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree {
-    return DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size() / nodeSize, nodeSize)
+    return DecisionTree.fit(formula, data, DecisionTree.Options(splitRule, maxDepth, maxNodes, nodeSize))
 }
 
 /**
@@ -555,7 +556,7 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
                  splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500,
                  nodeSize: Int = 1, subsample: Double = 1.0, classWeight: IntArray? = null,
                  seeds: LongStream? = null): RandomForest {
-    return RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds)
+    return RandomForest.fit(formula, data, RandomForest.Options(ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight), seeds)
 }
 
 /**
@@ -636,7 +637,7 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
  */
 fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6,
         nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost {
-    return GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
+    return GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
 }
 
 /**
@@ -677,7 +678,7 @@ fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20
  */
 fun adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
              maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost {
-    return AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
+    return AdaBoost.fit(formula, data, AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize))
 }
 
 /**
