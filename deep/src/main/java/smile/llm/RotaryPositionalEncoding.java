@@ -40,6 +40,7 @@ public interface RotaryPositionalEncoding {
      *
      * @param xq the query tensor.
      * @param xk the key tensor.
+     * @param cis the frequency tensor for complex exponentials.
      * @return the tuple of modified query tensor and key tensor with
      * rotary embeddings.
      */

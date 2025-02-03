@@ -22,6 +22,7 @@ package smile.llm;
  * @param content the generated text completion.
  * @param promptTokens the list of prompt tokens.
  * @param completionTokens the list of generated tokens.
+ * @param reason the finish reason.
  * @param logprobs the optional list of log probabilities of generated tokens.
  */
 public record CompletionPrediction(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
