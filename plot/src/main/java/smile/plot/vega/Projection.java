@@ -103,7 +103,7 @@ public class Projection {
      * For conic projections, sets the two standard parallels that define the map layout.
      * @param parallels two standard parallels.
      * @return this object.
-     * @link <a href="https://en.wikipedia.org/wiki/Map_projection#Conic">Conic</a>
+     * @see <a href="https://en.wikipedia.org/wiki/Map_projection#Conic">Conic</a>
      */
     public Projection parallels(double... parallels) {
         ArrayNode node = spec.putArray("parallels");
