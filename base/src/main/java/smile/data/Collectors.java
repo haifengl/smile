@@ -73,6 +73,7 @@ public interface Collectors {
     /**
      * Returns a stream collector that accumulates tuples into a DataFrame.
      *
+     * @param schema the schema of data frame.
      * @return the stream collector.
      */
     static Collector<Tuple, List<Tuple>, DataFrame> toDataFrame(StructType schema) {

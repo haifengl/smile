@@ -234,6 +234,7 @@ public abstract class Graph {
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
+     * @return this graph.
      */
     public Graph addEdge(int source, int target) {
         return addEdge(source, target, 1.0);
@@ -246,6 +247,7 @@ public abstract class Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      * @param weight the weight of edge.
+     * @return this graph.
      */
     public Graph addEdge(int source, int target, double weight) {
         return setWeight(source, target, weight);
@@ -255,6 +257,7 @@ public abstract class Graph {
      * Adds a set of edges to the graph.
      *
      * @param edges edges to be added to this graph.
+     * @return this graph.
      */
     public Graph addEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
@@ -267,6 +270,7 @@ public abstract class Graph {
      * Removes a set of edges from the graph.
      *
      * @param edges edges to be removed from this graph.
+     * @return this graph.
      */
     public Graph removeEdges(Collection<Edge> edges) {
         for (Edge edge : edges) {
@@ -281,6 +285,7 @@ public abstract class Graph {
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
+     * @return this graph.
      */
     public Graph removeEdge(int source, int target) {
         return setWeight(source, target, 0.0);

@@ -35,6 +35,7 @@ public class NullableByteVector extends NullablePrimitiveVector {
      * Constructor.
      * @param name the name of vector.
      * @param vector the elements of vector.
+     * @param nullMask The null bitmap. The bit is 1 if the value is null.
      */
     public NullableByteVector(String name, byte[] vector, BitSet nullMask) {
         this(new StructField(name, DataTypes.NullableByteType), vector, nullMask);

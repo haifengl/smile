@@ -31,6 +31,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
 public record GaussianMixture(double[][] x, int[] y) {
     /**
      * Generates 10000 samples from four 3-dimensional Gaussian distributions.
+     * @return the synthetic Gaussian mixture dataset.
      */
     public static GaussianMixture generate() {
         MathEx.setSeed(19650218); // to get repeatable results.

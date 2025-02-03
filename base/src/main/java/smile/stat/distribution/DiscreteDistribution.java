@@ -27,6 +27,11 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public abstract class DiscreteDistribution implements Distribution {
+    /** Constructor. */
+    public DiscreteDistribution() {
+
+    }
+
     /**
      * Generates an integer random number following this discrete distribution.
      * @return an integer random number.

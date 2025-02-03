@@ -30,18 +30,16 @@ import smile.data.measure.NominalScale;
 /**
  * A field in a Struct data type.
  *
+ * @param name the field name.
+ * @param dtype the field data type.
+ * @param measure the level of measurement.
  * @author Haifeng Li
  */
 public record StructField(String name, DataType dtype, Measure measure) implements Serializable {
     @Serial
     private static final long serialVersionUID = 3L;
 
-    /**
-     * Constructor.
-     * @param name the field name.
-     * @param dtype the field data type.
-     * @param measure the level of measurement.
-     */
+    /** Constructor. */
     public StructField {
         if (measure instanceof NumericalMeasure && (dtype.isBoolean() || dtype.isChar() || dtype.isString())) {
             throw new IllegalArgumentException(String.format("%s values cannot be of measure %s", dtype, measure));

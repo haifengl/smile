@@ -24,6 +24,8 @@ import smile.util.Paths;
 /**
  * Protein sequence dataset.
  *
+ * @param train training data.
+ * @param test testing data.
  * @author Haifeng Li
  */
 public record Protein(BinarySparseSequenceDataset train, BinarySparseSequenceDataset test) {

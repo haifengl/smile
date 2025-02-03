@@ -41,6 +41,11 @@ public class OpenBLAS implements BLAS, LAPACK {
         }
     }
 
+    /** Constructor. */
+    public OpenBLAS() {
+
+    }
+
     @Override
     public double asum(int n, double[] x, int incx) {
         return cblas_dasum(n, x, incx);

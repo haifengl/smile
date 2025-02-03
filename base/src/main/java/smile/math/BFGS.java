@@ -87,6 +87,11 @@ public class BFGS {
     /** The scaled maximum step length allowed in line searches. */
     private static final double STPMX = 100.0;
 
+    /** Private constructor to prevent object creation. */
+    private BFGS() {
+
+    }
+
     /**
      * This method solves the unconstrained minimization problem
      * <pre>

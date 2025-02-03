@@ -25,6 +25,10 @@ import smile.math.DifferentiableFunction;
  * @author Haifeng Li
  */
 public class Kurtosis implements DifferentiableFunction {
+    /** Constructor. */
+    public Kurtosis() {
+
+    }
 
     @Override
     public double f(double x) {

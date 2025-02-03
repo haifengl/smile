@@ -24,7 +24,8 @@ import java.util.*;
   * heaps are heap-ordered multiway tree structures, and can be considered
   * simplified Fibonacci heaps. They are considered a robust choice for
   * implementing such algorithms as Prim's MST algorithm.
-  * 
+  *
+  * @param <E> the type of the heap elements.
   * @author Karl Li
   */
 public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
@@ -70,9 +71,15 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     /** The root of multiway tree. */
-    private Node root = null;
+    private Node root;
     /** The number of elements. */
-    private int size = 0;
+    private int size;
+
+    /** Constructor. */
+    public PairingHeap() {
+        root = null;
+        size = 0;
+    }
 
     @Override
     public int size() {

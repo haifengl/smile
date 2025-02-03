@@ -24,6 +24,10 @@ import smile.math.DifferentiableFunction;
  * @author Haifeng Li
  */
 public class LogCosh implements DifferentiableFunction {
+    /** Constructor. */
+    public LogCosh() {
+
+    }
 
     @Override
     public double f(double x) {

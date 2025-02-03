@@ -29,7 +29,7 @@
       * 
       * @param i the index of array element.
       * @param x the value of array element.
-    = * @return the function result.
+      * @return the function result.
       */
      double apply(int i, double x);
  }
