@@ -46,14 +46,14 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-public class GloVe {
+public interface GloVe {
     /**
      * Loads a GloVe model.
      * @param file the path to model file.
      * @throws IOException when fails to read the file.
      * @return the GloVe model.
      */
-    public static Word2Vec of(Path file) throws IOException {
+    static Word2Vec of(Path file) throws IOException {
         try (Stream<String> stream = Files.lines(file)) {
             List<String> words = new ArrayList<>(1000000);
             List<float[]> vectors = new ArrayList<>(1000000);
