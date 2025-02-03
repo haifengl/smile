@@ -113,7 +113,7 @@ title: Smile - Vector Quantization
         </div>
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     import smile.util.*;
     import smile.vq.*;
     var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
@@ -392,7 +392,7 @@ title: Smile - Vector Quantization
         </div>
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     var gng = new GrowingNeuralGas(x[0].length);
 
     for (int e = 0; e < epochs; e++) {
@@ -472,7 +472,7 @@ title: Smile - Vector Quantization
         </div>
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     var cortex = new NeuralMap(10, 0.01, 0.002, 50, 0.995);
 
     for (int e = 0; e < 5; e++) {

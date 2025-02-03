@@ -424,8 +424,8 @@ fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", 
 smile&gt; smile.sort.QuickSort.sort(importance, fields);
 
 smile&gt; for (int i = 0; i &lt; importance.length; i++) {
-   ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
-   ...&gt; }
+           System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
+       }
 CHAS              86870.7977
 ZN               140436.2962
 RAD              150921.6370
@@ -446,8 +446,8 @@ fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", 
 smile&gt; smile.sort.QuickSort.sort(shap, fields);
 
 smile&gt; for (int i = 0; i &lt; shap.length; i++) {
-   ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
-   ...&gt; }
+           System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
+       }
 CHAS                  0.0486
 ZN                    0.0535
 RAD                   0.0622
