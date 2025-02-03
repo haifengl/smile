@@ -74,7 +74,7 @@ public class OLS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);
 
     /** Computational methods to fit the model. */
-    enum Method {
+    public enum Method {
         QR,
         SVD
     }
