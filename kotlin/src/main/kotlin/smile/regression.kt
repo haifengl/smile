@@ -69,11 +69,11 @@ import smile.math.kernel.MercerKernel
  *
  * @param formula a symbolic description of the model to be fitted.
  * @param data the data frame of the explanatory and response variables.
- * @param method the fitting method ("svd" or "qr").
+ * @param method the fitting method (SVD or QR).
  * @param recursive if true, the return model supports recursive least squares.
  */
-fun lm(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel {
-    return OLS.fit(formula, data, method, stderr, recursive)
+fun lm(formula: Formula, data: DataFrame, method: OLS.Method = OLS.Method.QR, stderr: Boolean = true, recursive: Boolean = true): LinearModel {
+    return OLS.fit(formula, data, OLS.Options(method, stderr, recursive))
 }
 
 /**
@@ -145,7 +145,7 @@ fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel {
  * @param maxIter the maximum number of iterations.
  */
 fun lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel {
-    return LASSO.fit(formula, data, lambda, tol, maxIter)
+    return LASSO.fit(formula, data, LASSO.Options(lambda, tol, maxIter))
 }
 
 /**
@@ -165,7 +165,7 @@ fun lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3,
  * @return SVR model.
  */
 fun <T> svm(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, eps: Double, C: Double, tol: Double = 1E-3): KernelMachine<T> {
-    return SVM.fit(x, y, kernel, eps, C, tol)
+    return SVM.fit(x, y, kernel, SVM.Options(eps, C, tol))
 }
 
 /**
@@ -239,7 +239,7 @@ fun <T> svm(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, eps: Double, C
  * @return Regression tree model.
  */
 fun cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree {
-    return RegressionTree.fit(formula, data, maxDepth, if (maxNodes > 0) maxNodes else data.size() / nodeSize, nodeSize)
+    return RegressionTree.fit(formula, data, RegressionTree.Options(maxDepth, maxNodes, nodeSize))
 }
 
 /**
@@ -295,7 +295,7 @@ fun cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 
  */
 fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20,
                  maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest {
-    return RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
+    return RandomForest.fit(formula, data, RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample))
 }
 
 /**
@@ -379,7 +379,7 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
 fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500,
         maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
         subsample: Double = 0.7): GradientTreeBoost {
-    return GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
+    return GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
 }
 
 /**
@@ -433,7 +433,7 @@ fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int 
  * @param maxIter   the maximum number of iterations for HPO. No HPO if maxIter <= 0.
  */
 fun <T> gpr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true, tol: Double = 1E-5, maxIter: Int = 0): GaussianProcessRegression<T> {
-    return GaussianProcessRegression.fit(x, y, kernel, noise, normalize, tol, maxIter)
+    return GaussianProcessRegression.fit(x, y, kernel, GaussianProcessRegression.Options(noise, normalize, tol, maxIter))
 }
 
 /** Gaussian Process for Regression. */
@@ -451,7 +451,7 @@ object gpr {
      * @param normalize the option to normalize the response variable.
      */
     fun <T> approx(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true): GaussianProcessRegression<T> {
-        return GaussianProcessRegression.fit(x, y, t, kernel, noise, normalize)
+        return GaussianProcessRegression.fit(x, y, t, kernel, GaussianProcessRegression.Options(noise, normalize))
     }
 
     /**
@@ -467,7 +467,7 @@ object gpr {
      * @param normalize the option to normalize the response variable.
      */
     fun <T> nystrom(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true): GaussianProcessRegression<T> {
-        return GaussianProcessRegression.nystrom(x, y, t, kernel, noise, normalize)
+        return GaussianProcessRegression.nystrom(x, y, t, kernel, GaussianProcessRegression.Options(noise, normalize))
     }
 }
 
