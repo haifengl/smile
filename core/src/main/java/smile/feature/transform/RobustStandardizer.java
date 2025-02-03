@@ -16,7 +16,6 @@
  */
 package smile.feature.transform;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +33,7 @@ import smile.sort.IQAgent;
  *
  * @author Haifeng Li
  */
-public class RobustStandardizer {
+public interface RobustStandardizer {
     /**
      * Fits the data transformation.
      * @param data the training data.
@@ -42,7 +41,7 @@ public class RobustStandardizer {
      *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data, String... columns) {
+    static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty data frame");
         }

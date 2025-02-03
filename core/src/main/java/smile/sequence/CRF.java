@@ -228,6 +228,7 @@ public class CRF implements Serializable {
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
     public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

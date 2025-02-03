@@ -34,6 +34,11 @@ public class Fallout implements ClassificationMetric {
     /** Default instance. */
     public static final Fallout instance = new Fallout();
 
+    /** Constructor. */
+    public Fallout() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

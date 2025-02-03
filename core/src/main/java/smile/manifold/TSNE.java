@@ -76,6 +76,7 @@ public class TSNE implements Serializable {
      * @param iterations the number of iterations.
      */
     public record Options(int d, double perplexity, double eta, int iterations) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);

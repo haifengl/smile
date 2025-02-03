@@ -73,6 +73,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
      *                  larger than the given threshold will be kept.
      */
     public record Options(int d, double threshold) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);

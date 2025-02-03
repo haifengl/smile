@@ -70,6 +70,11 @@ import smile.util.Strings;
  * @author Haifeng Li
  */
 public class RidgeRegression {
+    /** Private constructor to prevent object creation. */
+    private RidgeRegression() {
+
+    }
+
     /**
      * Ridge regression hyperparameters.
      * @param lambda the shrinkage/regularization parameter. Large lambda
@@ -80,6 +85,7 @@ public class RidgeRegression {
      *              be 1 so that its value is applied to all variables.
      */
     public record Options(double[] lambda, double[] beta0) {
+        /** Constructor. */
         public Options {
             for (var value : lambda) {
                 if (value < 0.0) {

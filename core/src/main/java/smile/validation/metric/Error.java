@@ -29,6 +29,11 @@ public class Error implements ClassificationMetric {
     /** Default instance. */
     public static final Error instance = new Error();
 
+    /** Constructor. */
+    public Error() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

@@ -53,6 +53,11 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class LaplacianEigenmap {
+    /** Private constructor to prevent object creation. */
+    private LaplacianEigenmap() {
+
+    }
+
     /**
      * Laplacian Eigenmaps hyperparameters.
      * @param k k-nearest neighbor.
@@ -61,6 +66,7 @@ public class LaplacianEigenmap {
      *          Non-positive value means discrete weights.
      */
     public record Options(int k, int d, double t) {
+        /** Constructor. */
         public Options {
             if (k < 2) {
                 throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);

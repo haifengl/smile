@@ -45,6 +45,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * @param maxIter maximum number of iterations.
      */
     public record Options(int d, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);

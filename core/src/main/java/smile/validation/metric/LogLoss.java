@@ -35,6 +35,11 @@ public class LogLoss implements ProbabilisticClassificationMetric {
     /** Default instance. */
     public static final LogLoss instance = new LogLoss();
 
+    /** Constructor. */
+    public LogLoss() {
+
+    }
+
     @Override
     public double score(int[] truth, double[] probability) {
         return of(truth, probability);

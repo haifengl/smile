@@ -52,7 +52,7 @@ public class Conv2dNormActivation extends SequentialBlock {
     public record Options(int in, int out, int kernel, int stride, int padding, int dilation, int groups,
                           IntFunction<Layer> normLayer, ActivationFunction activation) {
 
-        /** Custom constructor. */
+        /** Constructor. */
         public Options {
             if (padding < 0) {
                 padding = (kernel - 1) / 2 * dilation;

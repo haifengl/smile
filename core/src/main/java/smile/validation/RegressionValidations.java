@@ -24,10 +24,11 @@ import smile.math.MathEx;
 /**
  * Regression model validation results.
  *
- * @param <M> the regression model type.
  * @param rounds The multiple round validations.
  * @param avg The average of metrics.
  * @param std The standard deviation of metrics.
+ * @param <M> The regression model type.
+ *
  * @author Haifeng Li
  */
 public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
@@ -39,6 +40,8 @@ public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
     /**
      * Factory method.
      * @param rounds the validation metrics of multiple rounds.
+     * @param <M> the regression model type.
+     * @return the validation object.
      */
     public static <M> RegressionValidations<M> of(List<RegressionValidation<M>> rounds) {
         int k = rounds.size();

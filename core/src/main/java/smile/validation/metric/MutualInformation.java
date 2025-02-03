@@ -35,6 +35,11 @@ public class MutualInformation implements ClusteringMetric {
     /** Default instance. */
     public static final MutualInformation instance = new MutualInformation();
 
+    /** Constructor. */
+    public MutualInformation() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] cluster) {
         return of(truth, cluster);

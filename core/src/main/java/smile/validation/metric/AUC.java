@@ -46,6 +46,11 @@ public class AUC implements ProbabilisticClassificationMetric {
     /** Default instance. */
     public static final AUC instance = new AUC();
 
+    /** Constructor. */
+    public AUC() {
+
+    }
+
     @Override
     public double score(int[] truth, double[] probability) {
         return of(truth, probability);

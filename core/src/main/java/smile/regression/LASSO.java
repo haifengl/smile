@@ -68,6 +68,11 @@ import smile.math.matrix.Matrix;
 public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
+    /** Private constructor to prevent object creation. */
+    private LASSO() {
+
+    }
+
     /**
      * Lasso regression hyperparameters.
      * @param lambda the shrinkage/regularization parameter.
@@ -75,6 +80,7 @@ public class LASSO {
      * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public record Options(double lambda, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (lambda < 0.0) {
                 throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);

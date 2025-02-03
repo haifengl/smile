@@ -24,10 +24,11 @@ import smile.math.MathEx;
 /**
  * Classification model validation results.
  *
- * @param <M> the model type.
  * @param rounds The multiple round validations.
  * @param avg The average of metrics.
  * @param std The standard deviation of metrics.
+ * @param <M> The model type.
+ *
  * @author Haifeng Li
  */
 public record ClassificationValidations<M>(List<ClassificationValidation<M>> rounds,
@@ -39,6 +40,8 @@ public record ClassificationValidations<M>(List<ClassificationValidation<M>> rou
     /**
      * Factory method.
      * @param rounds the validation metrics of multiple rounds.
+     * @param <M> the model type.
+     * @return the validation object.
      */
     public static <M> ClassificationValidations<M> of(List<ClassificationValidation<M>> rounds) {
         int k = rounds.size();

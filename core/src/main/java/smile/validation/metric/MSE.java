@@ -31,6 +31,11 @@ public class MSE implements RegressionMetric {
     /** Default instance. */
     public static final MSE instance = new MSE();
 
+    /** Constructor. */
+    public MSE() {
+
+    }
+
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);

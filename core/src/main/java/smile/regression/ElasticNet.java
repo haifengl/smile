@@ -44,6 +44,11 @@ import smile.math.matrix.Matrix;
  * @author rayeaster
  */
 public class ElasticNet {
+    /** Private constructor to prevent object creation. */
+    private ElasticNet() {
+
+    }
+
     /**
      * Elastic Net hyperparameters.
      * @param lambda1 the L1 shrinkage/regularization parameter
@@ -52,6 +57,7 @@ public class ElasticNet {
      * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public record Options(double lambda1, double lambda2, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (lambda1 <= 0) {
                 throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
@@ -67,7 +73,11 @@ public class ElasticNet {
             }
         }
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param lambda1 the L1 shrinkage/regularization parameter
+         * @param lambda2 the L2 shrinkage/regularization parameter
+         */
         public Options(double lambda1, double lambda2) {
             this(lambda1, lambda2, 1E-4, 1000);
         }

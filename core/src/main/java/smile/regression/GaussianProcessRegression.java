@@ -309,6 +309,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
      */
     public record Options(double noise, boolean normalize, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (noise < 0.0) {
                 throw new IllegalArgumentException("Invalid noise variance = " + noise);

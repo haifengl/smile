@@ -249,6 +249,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * @param maxIter the maximum number of iterations.
      */
     public record Options(double lambda, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (lambda < 0.0) {
                 throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
