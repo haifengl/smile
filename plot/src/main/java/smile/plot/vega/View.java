@@ -122,7 +122,7 @@ public class View extends VegaLite {
      * applied to shape path for "geoshape" marks and to latitude and
      * "longitude" channels for other marks.
      * @param type The cartographic projection to use.
-     * @link <a href="https://vega.github.io/vega-lite/docs/projection.html#projection-types">projection types</a>
+     * @see <a href="https://vega.github.io/vega-lite/docs/projection.html#projection-types">projection types</a>
      */
     public Projection projection(String type) {
         ObjectNode node = spec.putObject("projection");
