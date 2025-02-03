@@ -140,6 +140,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @param nodeSize the minimum size of leaf nodes.
      */
     public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

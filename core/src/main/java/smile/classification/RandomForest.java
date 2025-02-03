@@ -186,6 +186,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *                    1 is of positive).
      */
     public record Options(int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

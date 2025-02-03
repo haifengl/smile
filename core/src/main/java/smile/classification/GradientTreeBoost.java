@@ -219,6 +219,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
     public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

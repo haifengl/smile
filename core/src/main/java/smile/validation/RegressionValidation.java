@@ -31,11 +31,12 @@ import smile.util.Index;
 /**
  * Regression model validation results.
  *
- * @param <M> the regression model type.
  * @param model The regression model.
  * @param truth The ground true of validation data.
  * @param prediction The model prediction.
  * @param metrics The regression metrics.
+ * @param <M> The regression model type.
+ *
  * @author Haifeng Li
  */
 public record RegressionValidation<M>(M model, double[] truth, double[] prediction,

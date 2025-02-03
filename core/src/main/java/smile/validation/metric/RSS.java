@@ -29,6 +29,11 @@ public class RSS implements RegressionMetric {
     /** Default instance. */
     public static final RSS instance = new RSS();
 
+    /** Constructor. */
+    public RSS() {
+
+    }
+
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);

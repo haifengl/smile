@@ -149,6 +149,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *                  replacement. {@code < 1.0} means sampling without replacement.
      */
     public record Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

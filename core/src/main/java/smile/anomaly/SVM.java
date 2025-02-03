@@ -47,6 +47,7 @@ public class SVM<T> extends KernelMachine<T>  {
      * @param tol the tolerance of convergence test.
      */
     public record Options(double nu, double tol) {
+        /** Constructor. */
         public Options {
             if (nu <= 0 || nu > 1) {
                 throw new IllegalArgumentException("Invalid nu: " + nu);

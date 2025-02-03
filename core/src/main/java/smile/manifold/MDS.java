@@ -56,6 +56,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * representing the objects.
      */
     public record Options(int d, boolean positive) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);

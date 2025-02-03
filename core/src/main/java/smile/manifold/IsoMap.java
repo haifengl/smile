@@ -72,6 +72,11 @@ import smile.math.matrix.Matrix;
 public class IsoMap {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
 
+    /** Private constructor to prevent object creation. */
+    private IsoMap() {
+
+    }
+
     /**
      * IsoMap hyperparameters.
      * @param k k-nearest neighbor.
@@ -79,6 +84,7 @@ public class IsoMap {
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
     public record Options(int k, int d, boolean conformal) {
+        /** Constructor. */
         public Options {
             if (k < 2) {
                 throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);

@@ -55,12 +55,18 @@ import smile.math.matrix.SparseMatrix;
 public class LLE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
+    /** Private constructor to prevent object creation. */
+    private LLE() {
+
+    }
+
     /**
      * LLE hyperparameters.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      */
     public record Options(int k, int d) {
+        /** Constructor. */
         public Options {
             if (k < 2) {
                 throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);

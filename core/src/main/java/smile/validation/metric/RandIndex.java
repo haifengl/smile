@@ -42,6 +42,11 @@ public class RandIndex implements ClusteringMetric {
     /** Default instance. */
     public static final RandIndex instance = new RandIndex();
 
+    /** Constructor. */
+    public RandIndex() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] cluster) {
         return of(truth, cluster);

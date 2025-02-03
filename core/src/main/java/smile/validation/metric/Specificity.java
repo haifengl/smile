@@ -40,6 +40,11 @@ public class Specificity implements ClassificationMetric {
     /** Default instance. */
     public static final Specificity instance = new Specificity();
 
+    /** Constructor. */
+    public Specificity() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

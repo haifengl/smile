@@ -61,6 +61,11 @@ public class UMAP {
     /** Large data size threshold. */
     private static final int LARGE_DATA_SIZE = 10000;
 
+    /** Private constructor to prevent object creation. */
+    private UMAP() {
+
+    }
+
     /**
      * The UMAP hyperparameters.
      * @param k       k-nearest neighbors. Larger values result in more global views
@@ -74,29 +79,36 @@ public class UMAP {
      *                accurate embedding. Muse be at least 10. Choose wise value
      *                based on the size of the input data, e.g, 200 for large
      *                data (1000+ samples), 500 for small.
-     * @param learningRate       The initial learning rate for the embedding optimization,
-     *                           default 1.
-     * @param minDist            The desired separation between close points in the embedding
-     *                           space. Smaller values will result in a more clustered/clumped
-     *                           embedding where nearby points on the manifold are drawn closer
-     *                           together, while larger values will result on a more even
-     *                           disperse of points. The value should be set no-greater than
-     *                           and relative to the spread value, which determines the scale
-     *                           at which embedded points will be spread out. default 0.1.
-     * @param spread             The effective scale of embedded points. In combination with
-     *                           minDist, this determines how clustered/clumped the embedded
-     *                           points are. default 1.0.
-     * @param negativeSamples    The number of negative samples to select per positive sample
-     *                           in the optimization process. Increasing this value will result
-     *                           in greater repulsive force being applied, greater optimization
-     *                           cost, but slightly more accuracy, default 5.
-     * @param repulsionStrength  Weighting applied to negative samples in low dimensional
-     *                           embedding optimization. Values higher than one will result in
-     *                           greater weight being given to negative samples, default 1.0.
+     * @param learningRate      The initial learning rate for the embedding optimization,
+     *                          default 1.
+     * @param minDist           The desired separation between close points in the embedding
+     *                          space. Smaller values will result in a more clustered/clumped
+     *                          embedding where nearby points on the manifold are drawn closer
+     *                          together, while larger values will result on a more even
+     *                          disperse of points. The value should be set no-greater than
+     *                          and relative to the spread value, which determines the scale
+     *                          at which embedded points will be spread out. default 0.1.
+     * @param spread            The effective scale of embedded points. In combination with
+     *                          minDist, this determines how clustered/clumped the embedded
+     *                          points are. default 1.0.
+     * @param negativeSamples   The number of negative samples to select per positive sample
+     *                          in the optimization process. Increasing this value will result
+     *                          in greater repulsive force being applied, greater optimization
+     *                          cost, but slightly more accuracy, default 5.
+     * @param repulsionStrength Weighting applied to negative samples in low dimensional
+     *                          embedding optimization. Values higher than one will result in
+     *                          greater weight being given to negative samples, default 1.0.
+     * @param localConnectivity The local connectivity required. That is, the
+     *                          number of nearest neighbors that should be assumed
+     *                          to be connected at a local level. The higher this
+     *                          value the more connected the manifold becomes locally.
+     *                          In practice this should be not more than the local
+     *                          intrinsic dimension of the manifold.
      */
     public record Options(int k, int d, int epochs, double learningRate,
                           double minDist, double spread, int negativeSamples,
                           double repulsionStrength, double localConnectivity) {
+        /** Constructor. */
         public Options {
             if (k < 2) {
                 throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
@@ -261,7 +273,6 @@ public class UMAP {
 
     /**
      * The curve function:
-     * <p>
      * <pre>
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>

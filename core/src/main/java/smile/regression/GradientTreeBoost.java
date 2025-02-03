@@ -167,6 +167,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
     public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

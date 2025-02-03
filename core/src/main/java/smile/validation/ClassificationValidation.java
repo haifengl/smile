@@ -32,13 +32,13 @@ import smile.validation.metric.ConfusionMatrix;
 /**
  * Classification model validation results.
  *
- * @param <M> the model type.
  * @param model The classification model.
  * @param truth The ground true of validation data.
  * @param prediction The model prediction.
  * @param posteriori The posteriori probability of prediction if the model is a soft classifier.
  * @param confusion The confusion matrix.
  * @param metrics The classification metrics.
+ * @param <M> The model type.
  *
  * @author Haifeng Li
  */
