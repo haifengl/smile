@@ -21,4 +21,3 @@ tasks.withType<Test>().all {
 tasks.withType<Jar>().all {
     archiveBaseName.set("${rootProject.name}-${project.name}")
 }
-

@@ -11,4 +11,3 @@ repositories {
 dependencies {
     implementation("org.bytedeco.gradle-javacpp-platform:org.bytedeco.gradle-javacpp-platform.gradle.plugin:1.5.10")
 }
-
