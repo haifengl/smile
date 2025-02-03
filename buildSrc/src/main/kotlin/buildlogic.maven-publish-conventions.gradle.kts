@@ -18,26 +18,26 @@ publishing {
                 }
             }
             pom {
-                name.set("${rootProject.name}-${project.name}")
-                description.set("Statistical Machine Intelligence and Learning Engine")
-                url.set("https://haifengl.github.io//")
+                name = "${rootProject.name}-${project.name}"
+                description = "Statistical Machine Intelligence and Learning Engine"
+                url = "https://haifengl.github.io//"
                 licenses {
                     license {
-                        name.set("GNU General Public License, Version 3")
-                        url.set("https://opensource.org/licenses/GPL-3.0")
+                        name = "GNU General Public License, Version 3"
+                        url = "https://opensource.org/licenses/GPL-3.0"
                     }
                 }
                 developers {
                     developer {
-                        id.set("haifengl")
-                        name.set("Haifeng Li")
-                        url.set("https://haifengl.github.io/")
+                        id = "haifengl"
+                        name = "Haifeng Li"
+                        url = "https://haifengl.github.io/"
                     }
                 }
                 scm {
-                    connection.set("git@github.com:haifengl/smile.git")
-                    developerConnection.set("scm:git:git@github.com:haifengl/smile.git")
-                    url.set("https://github.com/haifengl/smile")
+                    connection = "git@github.com:haifengl/smile.git"
+                    developerConnection = "scm:git:git@github.com:haifengl/smile.git"
+                    url = "https://github.com/haifengl/smile"
                 }
             }
         }
