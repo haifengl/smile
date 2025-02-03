@@ -19,7 +19,6 @@ package smile.ica;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
 import smile.math.MathEx;
@@ -72,6 +71,7 @@ public record ICA(double[][] components) implements Serializable {
      * @param maxIter the maximum number of iterations.
      */
     public record Options(DifferentiableFunction contrast, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (tol <= 0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
@@ -100,6 +100,7 @@ public record ICA(double[][] components) implements Serializable {
             this(switch (contrast) {
                 case "LogCosh" -> new LogCosh();
                 case "Gaussian" -> new Exp();
+                case "Kurtosis" -> new Kurtosis();
                 default -> throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
             });
         }
@@ -116,6 +117,7 @@ public record ICA(double[][] components) implements Serializable {
             String name = switch (contrast) {
                 case LogCosh cosh -> "LogCosh";
                 case Exp exp -> "Gaussian";
+                case Kurtosis kurtosis -> "Kurtosis";
                 default -> getClass().getName();
             };
             props.setProperty("smile.ica.contrast", name);
@@ -126,14 +128,15 @@ public record ICA(double[][] components) implements Serializable {
          * Returns the options from properties.
          *
          * @param props the hyperparameters.
+         * @throws ReflectiveOperationException if fail to create contrast function.
          * @return the options.
          */
-        public static Options of(Properties props) throws InvocationTargetException, InstantiationException,
-                IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
+        public static Options of(Properties props) throws ReflectiveOperationException {
             String name = props.getProperty("smile.ica.contrast", "LogCosh");
             DifferentiableFunction contrast = switch (name) {
                 case "LogCosh" -> new LogCosh();
                 case "Gaussian" -> new Exp();
+                case "Kurtosis" -> new Kurtosis();
                 default -> {
                     Class<?> clazz = Class.forName(name);
                     Constructor<?> constructor = clazz.getDeclaredConstructor();

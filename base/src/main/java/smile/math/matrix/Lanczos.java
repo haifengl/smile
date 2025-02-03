@@ -34,6 +34,11 @@ import smile.math.MathEx;
 public class Lanczos {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);
 
+    /** Private constructor to prevent object creation. */
+    private Lanczos() {
+
+    }
+
     /**
      * Find k-largest approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.

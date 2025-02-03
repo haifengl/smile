@@ -40,6 +40,7 @@ import smile.util.Paths;
 public record ColonCancer(double[][] x, int[] y) {
     /**
      * Load built-in data.
+     * @return the data.
      * @throws IOException when fails to read the file.
      */
     public static ColonCancer load() throws IOException {
@@ -49,6 +50,7 @@ public record ColonCancer(double[][] x, int[] y) {
     /**
      * Load data from the given path.
      * @param path the data path.
+     * @return the data.
      * @throws IOException when fails to read the file.
      */
     public static ColonCancer load(Path path) throws IOException {

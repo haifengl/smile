@@ -25,6 +25,10 @@ import smile.math.DifferentiableFunction;
  * @author Haifeng Li
  */
 public class Exp implements DifferentiableFunction {
+    /** Constructor. */
+    public Exp() {
+
+    }
 
     @Override
     public double f(double x) {

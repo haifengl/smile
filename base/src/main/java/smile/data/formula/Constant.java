@@ -25,6 +25,11 @@ import java.util.Set;
  * @author Haifeng Li
  */
 public abstract class Constant implements Term {
+    /** Constructor. */
+    public Constant() {
+
+    }
+
     @Override
     public Set<String> variables() {
         return Collections.emptySet();
