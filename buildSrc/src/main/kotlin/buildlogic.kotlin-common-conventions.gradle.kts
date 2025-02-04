@@ -1,0 +1,37 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
+plugins {
+    kotlin("jvm")
+    id("buildlogic.common-conventions")
+    // Generates HTML documentation
+    id("org.jetbrains.dokka")
+}
+
+dependencies {
+    implementation(kotlin("stdlib"))
+}
+
+// Compile bytecode to Java 21
+tasks.withType<KotlinJvmCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+        freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+    }
+}
+
+// Configure existing Dokka task to output HTML
+dokka {
+    pluginsConfiguration.html {
+        footerMessage.set("Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms.")
+    }
+}
+
+// Build javadoc.jar from dokka task output
+/*
+tasks.register<Jar>("dokkaHtmlJar") {
+    dependsOn(tasks.dokkaGenerate)
+    from(tasks.dokkaGenerate.flatMap { it.outputDirectory })
+    archiveClassifier.set("html-docs")
+}
+*/
