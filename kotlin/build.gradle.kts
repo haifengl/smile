@@ -62,5 +62,5 @@ tasks.register<Jar>("dokkaHtmlJar") {
 }
 */
 signing {
-    useGpgCmd()
+    // useGpgCmd()
 }
