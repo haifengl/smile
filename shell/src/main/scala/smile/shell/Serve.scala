@@ -31,7 +31,6 @@ import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import spray.json._
-import spray.json.DefaultJsonProtocol._
 import smile.data._
 import smile.data.`type`.StructType
 import smile.model.{ClassificationModel, RegressionModel}
@@ -44,7 +43,7 @@ import smile.model.{ClassificationModel, RegressionModel}
 case class ServeConfig(model: String,
                        probability: Boolean = false,
                        host: String = "localhost",
-                       port: Int = 6657)
+                       port: Int = 8728)
 
 /**
   * Online prediction.
@@ -83,11 +82,11 @@ object Serve extends LazyLogging {
         opt[String]("host")
           .optional()
           .action((x, c) => c.copy(host = x))
-          .text("The IP address the server should listen on. Use 0.0.0.0 to listen on all addresses."),
+          .text("The IP address to listen on (0.0.0.0 for all available addresses)"),
         opt[Int]("port")
           .optional()
           .action((x, c) => c.copy(port = x))
-          .text("The port the server should listen on"),
+          .text("The port number")
       )
     }
 
@@ -105,26 +104,15 @@ object Serve extends LazyLogging {
       case model: ClassificationModel =>
         val schema = model.schema
         val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { x =>
-            if (config.probability && model.classifier.soft()) {
-              val prob = Array.ofDim[Double](model.classifier.numClasses())
-              val y = model.classifier.predict(x, prob)
-              JsObject(
-                "class" -> y.toJson,
-                "probability" -> prob.toJson
-              )
-            } else {
-              JsNumber.apply(model.classifier.predict(x))
-            }
-          }.getOrElse(JsString("Invalid instance"))
+          tuple => tuple.map { model.predict(_, config.probability) }
+            .getOrElse(JsString("Invalid instance"))
         (schema, predict)
 
       case model: RegressionModel =>
         val schema = model.schema
         val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { x =>
-            JsNumber.apply(model.regression.predict(x))
-          }.getOrElse(JsString("Invalid instance"))
+          tuple => tuple.map { model(_) }
+            .getOrElse(JsString("Invalid instance"))
         (schema, predict)
 
       case _ =>

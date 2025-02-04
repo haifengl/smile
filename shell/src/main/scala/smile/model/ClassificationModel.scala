@@ -18,11 +18,13 @@ package smile.model
 
 import java.util.Properties
 import scala.jdk.CollectionConverters._
-import smile.data.DataFrame
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
 import smile.classification._
 import smile.validation.{ClassificationMetrics, CrossValidation}
+import spray.json._
+import spray.json.DefaultJsonProtocol._
 
 /**
   * The classification model.
@@ -40,7 +42,23 @@ case class ClassificationModel(override val algorithm: String,
                                classifier: DataFrameClassifier,
                                train: ClassificationMetrics,
                                validation: Option[ClassificationMetrics],
-                               test: Option[ClassificationMetrics]) extends DataFrameModel
+                               test: Option[ClassificationMetrics]) extends SmileModel {
+  // cache isSoft as it is an expensive call
+  private val isSoft: Boolean = classifier.soft
+
+  override def predict(x: Tuple, soft: Boolean): JsValue = {
+    if (soft && isSoft) {
+      val prob = Array.ofDim[Double](classifier.numClasses())
+      val y = classifier.predict(x, prob)
+      JsObject(
+        "class" -> y.toJson,
+        "probability" -> prob.toJson
+      )
+    } else {
+      JsNumber.apply(classifier.predict(x))
+    }
+  }
+}
 
 object ClassificationModel {
   /**

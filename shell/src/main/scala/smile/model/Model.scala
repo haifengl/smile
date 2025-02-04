@@ -16,13 +16,35 @@
  */
 package smile.model
 
+import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
+import spray.json.JsValue
 
 /**
   * The machine learning model applicable on a data frame.
   */
-trait DataFrameModel {
+trait Model {
+  /**
+    * Applies the model.
+    * @param x the input tuple.
+    * @return the prediction.
+    */
+  def apply(x: Tuple): JsValue = predict(x, probability = false)
+
+  /**
+    * Applies the model.
+    * @param x the input tuple.
+    * @param probability true to calculate posterior probability.
+    * @return the prediction.
+    */
+  def predict(x: Tuple, probability: Boolean): JsValue
+}
+
+/**
+  * The machine learning model applicable on a data frame.
+  */
+trait SmileModel extends Model {
   /** The algorithm name. */
   val algorithm: String
   /** The schema of input data (without response variable). */
