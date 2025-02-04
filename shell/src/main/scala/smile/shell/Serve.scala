@@ -29,7 +29,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Source
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import spray.json._
 import spray.json.DefaultJsonProtocol._
@@ -43,7 +42,9 @@ import smile.model.{ClassificationModel, RegressionModel}
   * @param probability the flag if output posteriori probabilities for soft classifiers.
   */
 case class ServeConfig(model: String,
-                       probability: Boolean = false)
+                       probability: Boolean = false,
+                       host: String = "localhost",
+                       port: Int = 6657)
 
 /**
   * Online prediction.
@@ -79,6 +80,14 @@ object Serve extends LazyLogging {
           .optional()
           .action((_, c) => c.copy(probability = true))
           .text("Output the posteriori probabilities for soft classifier"),
+        opt[String]("host")
+          .optional()
+          .action((x, c) => c.copy(host = x))
+          .text("The IP address the server should listen on. Use 0.0.0.0 to listen on all addresses."),
+        opt[Int]("port")
+          .optional()
+          .action((x, c) => c.copy(port = x))
+          .text("The port the server should listen on"),
       )
     }
 
@@ -148,14 +157,11 @@ object Serve extends LazyLogging {
       }
     }
 
-    val conf = ConfigFactory.load()
-    val addr = conf.getString("akka.http.server.interface")
-    val port = conf.getInt("akka.http.server.port")
-    val bindingFuture = Http().newServerAt(addr, port).bind(route)
+    val bindingFuture = Http().newServerAt(config.host, config.port).bind(route)
       .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     bindingFuture.onComplete {
       case Success(_) =>
-        system.log.info("Smile online at http://{}:{}/v1/infer", addr, port)
+        system.log.info("Smile online at http://{}:{}/v1/infer", config.host, config.port)
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()
