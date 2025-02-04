@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    kotlin("jvm")
     id("buildlogic.common-conventions")
+    kotlin("jvm")
     // Generates HTML documentation
     id("org.jetbrains.dokka")
 }
@@ -23,7 +23,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 // Configure existing Dokka task to output HTML
 dokka {
     pluginsConfiguration.html {
-        footerMessage.set("Copyright © 2010-2024 Haifeng Li. All rights reserved. Use is subject to license terms.")
+        footerMessage.set("Copyright © 2010-2025 Haifeng Li. All rights reserved. Use is subject to license terms.")
     }
 }
 
