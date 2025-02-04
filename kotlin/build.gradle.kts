@@ -36,7 +36,7 @@ tasks.build {
 
 // Configure existing Dokka task to output HTML
 dokka {
-    moduleName.set("Smile Kotlin")
+    moduleName.set("smile-kotlin")
     dokkaSourceSets.main {
         includes.from("packages.md")
         sourceLink {
