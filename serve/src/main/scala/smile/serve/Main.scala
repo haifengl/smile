@@ -31,7 +31,9 @@ case class ServeConfig(model: String,
                        tokenizer: String,
                        maxSeqLen: Int = 4096,
                        maxBatchSize: Int = 1,
-                       device: Int = 0)
+                       device: Int = 0,
+                       host: String = "localhost",
+                       port: Int = 3801)
 
 /** The main entry to start SmileServe service.
   *
@@ -69,6 +71,14 @@ object Main {
           .optional()
           .action((x, c) => c.copy(device = x))
           .text("The CUDA device ID"),
+        opt[String]("host")
+          .optional()
+          .action((x, c) => c.copy(host = x))
+          .text("The IP address to listen on (0.0.0.0 for all available addresses)"),
+        opt[Int]("port")
+          .optional()
+          .action((x, c) => c.copy(port = x))
+          .text("The port number"),
         help("help").text("Display the usage information")
       )
     }
