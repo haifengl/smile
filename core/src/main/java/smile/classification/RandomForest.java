@@ -258,11 +258,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             int maxNodes = Integer.parseInt(props.getProperty("smile.random_forest.max_nodes", "0"));
             int nodeSize = Integer.parseInt(props.getProperty("smile.random_forest.node_size", "5"));
             double subsample = Double.parseDouble(props.getProperty("smile.random_forest.sampling_rate", "1.0"));
-            int[] classWeight = null;
-            String weight = props.getProperty("smile.random_forest.class_weight");
-            if (weight != null) {
-                classWeight = Strings.parseIntArray(weight);
-            }
+            int[] classWeight = Strings.parseIntArray(props.getProperty("smile.random_forest.class_weight"));
             return new Options(ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight);
         }
     }
