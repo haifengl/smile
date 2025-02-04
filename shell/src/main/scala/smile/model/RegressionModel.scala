@@ -18,11 +18,12 @@ package smile.model
 
 import java.util.Properties
 import scala.jdk.CollectionConverters._
-import smile.data.DataFrame
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
 import smile.regression._
 import smile.validation.{CrossValidation, RegressionMetrics}
+import spray.json.{JsNumber, JsValue}
 
 /**
   * The regression model.
@@ -40,7 +41,11 @@ case class RegressionModel(override val algorithm: String,
                            regression: DataFrameRegression,
                            train: RegressionMetrics,
                            validation: Option[RegressionMetrics],
-                           test: Option[RegressionMetrics]) extends DataFrameModel
+                           test: Option[RegressionMetrics]) extends SmileModel {
+    override def predict(x: Tuple, soft: Boolean): JsValue = {
+        JsNumber.apply(regression.predict(x))
+    }
+}
 
 object RegressionModel {
     /**
