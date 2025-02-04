@@ -90,23 +90,23 @@ object Predict {
     */
   def predict(config: PredictConfig): Unit = {
     val data = Read.data(config.data, config.format)
-    val modelObj = smile.read(config.model)
-    if (modelObj.isInstanceOf[ClassificationModel]) {
-      val model = modelObj.asInstanceOf[ClassificationModel]
-      if (config.probability && model.classifier.soft()) {
-        val posteriori = new java.util.ArrayList[Array[Double]]()
-        val y = model.classifier.predict(data, posteriori)
-        (0 until data.size()).foreach { i =>
-          println(s"${y(i)} ${Arrays.toString(posteriori.get(i))}")
+    smile.read(config.model) match {
+      case model: ClassificationModel =>
+        if (config.probability && model.classifier.soft()) {
+          val posteriori = new java.util.ArrayList[Array[Double]]()
+          val y = model.classifier.predict(data, posteriori)
+          (0 until data.size()).foreach { i =>
+            println(s"${y(i)} ${Arrays.toString(posteriori.get(i))}")
+          }
+        } else {
+          model.classifier.predict(data).foreach(y => println(y))
         }
-      } else {
-        model.classifier.predict(data).foreach(y => println(y))
-      }
-    } else if (modelObj.isInstanceOf[RegressionModel]) {
-      val model = modelObj.asInstanceOf[RegressionModel]
-      model.regression.predict(data).foreach(y => println(Strings.format(y)))
-    } else {
-      Console.err.println(s"{config.model} doesn't contain a valid model.")
+
+      case model: RegressionModel =>
+        model.regression.predict(data).foreach(y => println(Strings.format(y)))
+
+      case _ =>
+        Console.err.println(s"{config.model} doesn't contain a valid model.")
     }
   }
 }
