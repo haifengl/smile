@@ -41,7 +41,7 @@ dokka {
         includes.from("packages.md")
         sourceLink {
             localDirectory.set(file("src/main/kotlin"))
-            remoteUrl("https://github.com/haifengl/smile")
+            remoteUrl("https://github.com/haifengl/smile/tree/master/kotlin/src/main/kotlin")
             remoteLineSuffix.set("#L")
         }
     }
