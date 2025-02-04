@@ -686,7 +686,7 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
     <pre class="prettyprint lang-shell"><code>
 $ bin/smile serve --model iris_random_forest.model --probability
 [smile-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-Smile online at http://localhost:8080/v1/infer
+Smile online at http://localhost:8728/v1/infer
 Press RETURN to stop...
   </code></pre>
             </div>
@@ -701,7 +701,7 @@ Press RETURN to stop...
         <div class="tab-pane active" id="serve_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json" \
+$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
         -d '{
           "sepallength": 5.1,
           "sepalwidth": 3.5,
@@ -724,7 +724,7 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
         <div class="tab-pane active" id="serve_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json" \
+$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
         -d '{"sepallength": 5.1, "sepalwidth": 3.5, "petallength": 1.4,"petalwidth": 0.2}
           {"sepallength": 6.3, "sepalwidth": 3.3, "petallength": 6.0,"petalwidth": 2.5}'
 [{"class":0,"probability":[0.9599005925578108,0.0205362892965633,0.01956311814562593]},
@@ -749,16 +749,15 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
 $ for i in {1..1000}; do tail -n 153 data/weka/iris.arff | head -n 150 >> iris.txt; done
-$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8080/v1/infer?format=csv
+$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8728/v1/infer?format=csv
   </code></pre>
             </div>
         </div>
     </div>
 
-    <p>By default, SmileServe binds at localhost:8080. If you prefer a different port and/or
+    <p>By default, SmileServe binds at localhost:8728. If you prefer a different port and/or
         want to expose the server to other hosts, you may set the binding interface and port
-        with <code>-J-Dakka.http.server.interface=0.0.0.0</code> and
-        <code>-J-Dakka.http.server.port=8000</code>, for example.</p>
+        with <code>--host=0.0.0.0</code> and <code>--port=8000</code>, for example.</p>
 
     <h2 id="notebook">Notebooks</h2>
 
