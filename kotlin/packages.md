@@ -1,4 +1,4 @@
-# Module Smile Kotlin
+# Module smile-kotlin
 
 [Smile (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
 is a fast and comprehensive machine learning, NLP, linear algebra,
