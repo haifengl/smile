@@ -65,6 +65,7 @@ signing {
     setRequired({
         (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
     })
+    // useGpgCmd()
     sign(configurations.archives.get())
     sign(publishing.publications["mavenJava"])
 }
