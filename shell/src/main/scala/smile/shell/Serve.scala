@@ -98,9 +98,8 @@ object Serve extends LazyLogging {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val props = new Properties()
-    props.setProperty("probability", "true")
-    val options = if (config.probability) Some(props) else None
+    val options = new Properties()
+    if (config.probability) options.setProperty("probability", "true")
     val model = smile.read(config.model) match {
       case model: SmileModel => model
 
@@ -145,7 +144,7 @@ object Serve extends LazyLogging {
     }
   }
 
-  def processJSON(stream: Source[JsValue, Any], model: SmileModel, options: Option[Properties]): Source[JsValue, Any]  = {
+  def processJSON(stream: Source[JsValue, Any], model: SmileModel, options: Properties): Source[JsValue, Any]  = {
     stream.map(model.schema.json(_)).map(model(_, options))
   }
 
@@ -156,7 +155,7 @@ object Serve extends LazyLogging {
     param(1).charAt(0).toByte
   }
 
-  def processCSV(bytes: Source[ByteString, Any], format: String, model: SmileModel, options: Option[Properties]): Source[JsValue, Any] = {
+  def processCSV(bytes: Source[ByteString, Any], format: String, model: SmileModel, options: Properties): Source[JsValue, Any] = {
     var delimiter = CsvParsing.Comma
     var quote = CsvParsing.DoubleQuote
     var escape = CsvParsing.Backslash

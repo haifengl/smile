@@ -42,7 +42,7 @@ case class RegressionModel(override val algorithm: String,
                            train: RegressionMetrics,
                            validation: Option[RegressionMetrics],
                            test: Option[RegressionMetrics]) extends SmileModel {
-    override def predict(x: Tuple, options: Option[Properties] = None): JsValue = {
+    override def predict(x: Tuple, options: Properties): JsValue = {
         JsNumber.apply(regression.predict(x))
     }
 }
