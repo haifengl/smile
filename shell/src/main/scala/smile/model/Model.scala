@@ -32,7 +32,7 @@ trait Model {
     * @param options the inference options.
     * @return the prediction.
     */
-  def apply(x: Option[Tuple], options: Option[Properties] = None): JsValue = {
+  def apply(x: Option[Tuple], options: Properties): JsValue = {
     x.map(predict(_, options)).getOrElse(JsString("Invalid instance"))
   }
 
@@ -42,7 +42,7 @@ trait Model {
     * @param options the inference options.
     * @return the prediction.
     */
-  def predict(x: Tuple, options: Option[Properties] = None): JsValue
+  def predict(x: Tuple, options: Properties): JsValue
 }
 
 /**
