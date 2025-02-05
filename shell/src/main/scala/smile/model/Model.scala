@@ -16,29 +16,33 @@
  */
 package smile.model
 
+import java.util.Properties
 import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import spray.json.JsValue
+import spray.json._
 
 /**
-  * The machine learning model applicable on a data frame.
+  * The machine learning model for inference.
   */
 trait Model {
   /**
     * Applies the model.
     * @param x the input tuple.
+    * @param options the inference options.
     * @return the prediction.
     */
-  def apply(x: Tuple): JsValue = predict(x, probability = false)
+  def apply(x: Option[Tuple], options: Option[Properties] = None): JsValue = {
+    x.map(predict(_, options)).getOrElse(JsString("Invalid instance"))
+  }
 
   /**
     * Applies the model.
     * @param x the input tuple.
-    * @param probability true to calculate posterior probability.
+    * @param options the inference options.
     * @return the prediction.
     */
-  def predict(x: Tuple, probability: Boolean): JsValue
+  def predict(x: Tuple, options: Option[Properties] = None): JsValue
 }
 
 /**

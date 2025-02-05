@@ -46,8 +46,8 @@ case class ClassificationModel(override val algorithm: String,
   // cache isSoft as it is an expensive call
   private val isSoft: Boolean = classifier.soft
 
-  override def predict(x: Tuple, soft: Boolean): JsValue = {
-    if (soft && isSoft) {
+  override def predict(x: Tuple, options: Option[Properties] = None): JsValue = {
+    if (options.isDefined && isSoft) {
       val prob = Array.ofDim[Double](classifier.numClasses())
       val y = classifier.predict(x, prob)
       JsObject(
