@@ -16,6 +16,7 @@
  */
 package smile.shell
 
+import java.util.Properties
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import scopt.OParser
@@ -31,9 +32,7 @@ import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import spray.json._
-import smile.data._
-import smile.data.`type`.StructType
-import smile.model.{ClassificationModel, RegressionModel}
+import smile.model.SmileModel
 
 /**
   * Serve command options.
@@ -99,21 +98,11 @@ object Serve extends LazyLogging {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val model = smile.read(config.model)
-    val (schema, predictor) = model match {
-      case model: ClassificationModel =>
-        val schema = model.schema
-        val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { model.predict(_, config.probability) }
-            .getOrElse(JsString("Invalid instance"))
-        (schema, predict)
-
-      case model: RegressionModel =>
-        val schema = model.schema
-        val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { model(_) }
-            .getOrElse(JsString("Invalid instance"))
-        (schema, predict)
+    val props = new Properties()
+    props.setProperty("probability", "true")
+    val options = if (config.probability) Some(props) else None
+    val model = smile.read(config.model) match {
+      case model: SmileModel => model
 
       case _ =>
         Console.err.println(s"{config.model} doesn't contain a valid model.")
@@ -128,15 +117,15 @@ object Serve extends LazyLogging {
 
     val route = path("v1" / "infer") {
       post {
-        parameters("format".?) { case format =>
+        parameters("format".?) { format =>
           format.getOrElse("json") match {
             case "json" =>
               entity(asSourceOf[JsValue]) { json =>
-                complete(processJSON(schema, json)(predictor))
+                complete(processJSON(json, model, options))
               }
-            case csvFormat if csvFormat.startsWith("csv") =>
+            case format if format.startsWith("csv") =>
               extractDataBytes { bytes =>
-                complete(processCSV(schema, bytes, csvFormat)(predictor))
+                complete(processCSV(bytes, format, model, options))
               }
             case _ =>
               complete(StatusCodes.UnsupportedMediaType)
@@ -156,9 +145,8 @@ object Serve extends LazyLogging {
     }
   }
 
-  def processJSON[T](schema: StructType, stream: Source[JsValue, Any])
-                    (processor: Option[Tuple] => T): Source[T, Any]  = {
-    stream.map(schema.json(_)).map(processor)
+  def processJSON(stream: Source[JsValue, Any], model: SmileModel, options: Option[Properties]): Source[JsValue, Any]  = {
+    stream.map(model.schema.json(_)).map(model(_, options))
   }
 
   def getCsvFormatByte(format: String, param: Array[String]): Byte = {
@@ -168,8 +156,7 @@ object Serve extends LazyLogging {
     param(1).charAt(0).toByte
   }
 
-  def processCSV[T](schema: StructType, bytes: Source[ByteString, Any], format: String)
-                   (processor: Option[Tuple] => T): Source[T, Any] = {
+  def processCSV(bytes: Source[ByteString, Any], format: String, model: SmileModel, options: Option[Properties]): Source[JsValue, Any] = {
     var delimiter = CsvParsing.Comma
     var quote = CsvParsing.DoubleQuote
     var escape = CsvParsing.Backslash
@@ -193,12 +180,12 @@ object Serve extends LazyLogging {
 
     if (header) {
       lines.via(CsvToMap.toMapAsStrings())
-        .map(schema.csv(_))
-        .map(processor)
+        .map(model.schema.csv(_))
+        .map(model(_, options))
     } else {
       lines.map(_.map(_.utf8String))
-        .map(schema.csv(_))
-        .map(processor)
+        .map(model.schema.csv(_))
+        .map(model(_, options))
     }
   }
 }

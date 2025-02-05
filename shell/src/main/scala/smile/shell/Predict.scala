@@ -16,7 +16,6 @@
  */
 package smile.shell
 
-import java.util.Arrays
 import scopt.OParser
 import smile.io.Read
 import smile.model._
@@ -95,8 +94,10 @@ object Predict {
         if (config.probability && model.classifier.soft()) {
           val posteriori = new java.util.ArrayList[Array[Double]]()
           val y = model.classifier.predict(data, posteriori)
-          (0 until data.size()).foreach { i =>
-            println(s"${y(i)} ${Arrays.toString(posteriori.get(i))}")
+          (0 until y.length).foreach { i =>
+            print(y(i))
+            posteriori.get(i).foreach { prob => print(" %.4f" format prob) }
+            println()
           }
         } else {
           model.classifier.predict(data).foreach(y => println(y))
