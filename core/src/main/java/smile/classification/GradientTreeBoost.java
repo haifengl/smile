@@ -124,11 +124,11 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     /**
      * Forest of regression trees for binary classification.
      */
-    private RegressionTree[] trees;
+    private final RegressionTree[] trees;
     /**
      * Forest of regression trees for multi-class classification.
      */
-    private RegressionTree[][] forest;
+    private final RegressionTree[][] forest;
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the impurity criterion for the two descendent nodes is less than the
@@ -139,7 +139,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     /**
      * The intercept for binary classification.
      */
-    private double b = 0.0;
+    private final double b;
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
@@ -151,7 +151,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
-     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
+     * @param shrinkage  the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
@@ -164,7 +164,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
-     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
+     * @param shrinkage  the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      * @param labels     class labels
      */
@@ -174,6 +174,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         this.k = 2;
         this.trees = trees;
         this.b = b;
+        this.forest = null;
         this.shrinkage = shrinkage;
         this.importance = importance;
     }
@@ -183,7 +184,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
-     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
+     * @param shrinkage  the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance) {
@@ -195,7 +196,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
-     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
+     * @param shrinkage  the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      * @param labels     the class label encoder.
      */
@@ -204,6 +205,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         this.formula = formula;
         this.k = forest.length;
         this.forest = forest;
+        this.trees = null;
+        this.b = 0.0;
         this.shrinkage = shrinkage;
         this.importance = importance;
     }
@@ -497,8 +500,9 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * prediction.
      *
      * @param ntrees the new (smaller) size of tree model set.
+     * @return the trimmed model.
      */
-    public void trim(int ntrees) {
+    public GradientTreeBoost trim(int ntrees) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
@@ -508,19 +512,17 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
                 throw new IllegalArgumentException("The new model size is larger than the current size.");
             }
 
-            if (ntrees < trees.length) {
-                trees = Arrays.copyOf(trees, ntrees);
-            }
+            return new GradientTreeBoost(formula, Arrays.copyOf(trees, ntrees), b, shrinkage, importance, classes);
         } else {
             if (ntrees > forest[0].length) {
                 throw new IllegalArgumentException("The new model size is larger than the current one.");
             }
 
-            if (ntrees < forest[0].length) {
-                for (int i = 0; i < forest.length; i++) {
-                    forest[i] = Arrays.copyOf(forest[i], ntrees);
-                }
+            RegressionTree[][] forest = new RegressionTree[k][];
+            for (int i = 0; i < k; i++) {
+                forest[i] = Arrays.copyOf(this.forest[i], ntrees);
             }
+            return new GradientTreeBoost(formula, forest, shrinkage, importance, classes);
         }
     }
 

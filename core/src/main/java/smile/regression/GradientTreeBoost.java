@@ -117,7 +117,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     /**
      * Forest of regression trees.
      */
-    private RegressionTree[] trees;
+    private final RegressionTree[] trees;
 
     /**
      * The intercept.
@@ -343,17 +343,18 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * prediction.
      * 
      * @param ntrees the new (smaller) size of tree model set.
+     * @return the trimmed model.
      */
-    public void trim(int ntrees) {
-        if (ntrees > trees.length) {
-            throw new IllegalArgumentException("The new model size is larger than the current size.");
-        }
-        
+    public GradientTreeBoost trim(int ntrees) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
-        
-        trees = Arrays.copyOf(trees, ntrees);
+
+        if (ntrees > trees.length) {
+            throw new IllegalArgumentException("The new model size is larger than the current size.");
+        }
+
+        return new GradientTreeBoost(formula, Arrays.copyOf(trees, ntrees), b, shrinkage, importance);
     }
     
     @Override
