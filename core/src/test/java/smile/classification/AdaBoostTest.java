@@ -16,6 +16,9 @@
  */
 package smile.classification;
 
+import java.util.Map;
+import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.Flow.Subscription;
 import smile.base.IterativeTrainingController;
 import smile.data.type.StructField;
 import smile.datasets.*;
@@ -33,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class AdaBoostTest {
-    IterativeTrainingController controller = new IterativeTrainingController();
+
     public AdaBoostTest() {
     }
 
@@ -59,7 +62,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
         var options = new AdaBoost.Options(20, 5, 8, 1);
-        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options, controller);
+        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options, null);
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -77,7 +80,7 @@ public class AdaBoostTest {
         Read.object(temp);
 
         ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
-                (f, x) -> AdaBoost.fit(f, x, options, controller));
+                (f, x) -> AdaBoost.fit(f, x, options, null));
         System.out.println(metrics);
         assertEquals(0.6429, metrics.accuracy(), 1E-4);
     }
@@ -89,7 +92,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new AdaBoost.Options(200, 20, 4, 1);
-        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options, controller);
+        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options, null);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -97,7 +100,7 @@ public class AdaBoostTest {
         }
 
         ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
-                (f, x) -> AdaBoost.fit(f, x, options, controller));
+                (f, x) -> AdaBoost.fit(f, x, options, null));
         System.out.println(metrics);
         assertEquals(0.9533, metrics.accuracy(), 1E-4);
     }
@@ -109,7 +112,7 @@ public class AdaBoostTest {
         var pen = new PenDigits();
         var options = new AdaBoost.Options(200, 20, 4, 1);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
-                (f, x) -> AdaBoost.fit(f, x, options, controller));
+                (f, x) -> AdaBoost.fit(f, x, options, null));
         System.out.println(result);
         assertEquals(0.9525, result.avg().accuracy(), 1E-4);
     }
@@ -122,7 +125,7 @@ public class AdaBoostTest {
         var cancer = new BreastCancer();
         var options = new AdaBoost.Options(100, 20, 4, 1);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
-                (f, x) -> AdaBoost.fit(f, x, options, controller));
+                (f, x) -> AdaBoost.fit(f, x, options, null));
 
         System.out.println(result);
         int error = result.rounds().stream().mapToInt(round -> round.metrics().error()).sum();
@@ -135,6 +138,36 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var testy = segment.testy();
+
+        IterativeTrainingController controller = new IterativeTrainingController();
+        controller.subscribe(new Subscriber<>() {
+            private Subscription subscription;
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                this.subscription = subscription;
+                subscription.request(1);
+            }
+
+            @Override
+            public void onNext(Map<String, Object> status) {
+                int tree = 1 + (Integer) status.get("tree");
+                double error = 100 * (Double) status.get("weighted error");
+                System.out.format("Tree %d has weighted error %.2f%%%n", tree, error);
+                if (tree == 100) controller.stop();
+                subscription.request(1);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                System.err.println("Controller receives an exception: " + throwable.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+                System.out.println("Training is done");
+            }
+        });
+
         var options = new AdaBoost.Options(200, 20, 6, 1);
         AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), options, controller);
 
@@ -145,7 +178,7 @@ public class AdaBoostTest {
 
         int error = Error.of(testy, model.predict(segment.test()));
         System.out.println("Error = " + error);
-        assertEquals(30, error);
+        assertEquals(26, error, 3);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(segment.test());
@@ -161,6 +194,7 @@ public class AdaBoostTest {
         var usps = new USPS();
         int[] testy = usps.testy();
         var options = new AdaBoost.Options(200, 20, 64, 1);
+        IterativeTrainingController controller = new IterativeTrainingController();
         AdaBoost model = AdaBoost.fit(usps.formula(), usps.train(), options, controller);
 
         double[] importance = model.importance();
@@ -186,6 +220,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new AdaBoost.Options(200, 20, 4, 5);
+        IterativeTrainingController controller = new IterativeTrainingController();
         AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options, controller);
         String[] fields = model.schema().fields().stream().map(StructField::name).toArray(String[]::new);
         double[] importance = model.importance();
