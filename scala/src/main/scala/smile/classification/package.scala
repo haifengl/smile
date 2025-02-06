@@ -779,7 +779,7 @@ package object classification {
     */
   def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
                maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
-    AdaBoost.fit(formula, data, new AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize))
+    AdaBoost.fit(formula, data, new AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, null, null))
   }
 
   /** Fisher's linear discriminant. Fisher defined the separation between two
