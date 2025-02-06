@@ -16,6 +16,7 @@
  */
 package smile.classification;
 
+import smile.base.IterativeTrainingController;
 import smile.data.type.StructField;
 import smile.datasets.*;
 import smile.io.Read;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class AdaBoostTest {
-    
+    IterativeTrainingController controller = new IterativeTrainingController();
     public AdaBoostTest() {
     }
 
@@ -58,7 +59,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
         var options = new AdaBoost.Options(20, 5, 8, 1);
-        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options);
+        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options, controller);
         String[] fields = model.schema().names();
 
         double[] importance = model.importance();
@@ -76,7 +77,7 @@ public class AdaBoostTest {
         Read.object(temp);
 
         ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
-                (f, x) -> AdaBoost.fit(f, x, options));
+                (f, x) -> AdaBoost.fit(f, x, options, controller));
         System.out.println(metrics);
         assertEquals(0.6429, metrics.accuracy(), 1E-4);
     }
@@ -87,17 +88,16 @@ public class AdaBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
-        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(),
-                new AdaBoost.Options(200, 20, 4, 5));
+        var options = new AdaBoost.Options(200, 20, 4, 1);
+        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options, controller);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        var options = new AdaBoost.Options(200, 20, 4, 1);
         ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
-                (f, x) -> AdaBoost.fit(f, x, options));
+                (f, x) -> AdaBoost.fit(f, x, options, controller));
         System.out.println(metrics);
         assertEquals(0.9533, metrics.accuracy(), 1E-4);
     }
@@ -109,7 +109,7 @@ public class AdaBoostTest {
         var pen = new PenDigits();
         var options = new AdaBoost.Options(200, 20, 4, 1);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
-                (f, x) -> AdaBoost.fit(f, x, options));
+                (f, x) -> AdaBoost.fit(f, x, options, controller));
         System.out.println(result);
         assertEquals(0.9525, result.avg().accuracy(), 1E-4);
     }
@@ -122,7 +122,7 @@ public class AdaBoostTest {
         var cancer = new BreastCancer();
         var options = new AdaBoost.Options(100, 20, 4, 1);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
-                (f, x) -> AdaBoost.fit(f, x, options));
+                (f, x) -> AdaBoost.fit(f, x, options, controller));
 
         System.out.println(result);
         int error = result.rounds().stream().mapToInt(round -> round.metrics().error()).sum();
@@ -136,7 +136,7 @@ public class AdaBoostTest {
         var segment = new ImageSegmentation();
         var testy = segment.testy();
         var options = new AdaBoost.Options(200, 20, 6, 1);
-        AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), options);
+        AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), options, controller);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -161,7 +161,7 @@ public class AdaBoostTest {
         var usps = new USPS();
         int[] testy = usps.testy();
         var options = new AdaBoost.Options(200, 20, 64, 1);
-        AdaBoost model = AdaBoost.fit(usps.formula(), usps.train(), options);
+        AdaBoost model = AdaBoost.fit(usps.formula(), usps.train(), options, controller);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -186,7 +186,7 @@ public class AdaBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new AdaBoost.Options(200, 20, 4, 5);
-        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options);
+        AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options, controller);
         String[] fields = model.schema().fields().stream().map(StructField::name).toArray(String[]::new);
         double[] importance = model.importance();
         double[] shap = model.shap(iris.data());

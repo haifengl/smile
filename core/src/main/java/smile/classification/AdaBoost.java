@@ -17,8 +17,8 @@
 package smile.classification;
 
 import java.io.Serial;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.*;
+import smile.base.IterativeTrainingController;
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -196,7 +196,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(), null);
     }
 
     /**
@@ -205,9 +205,10 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param options the hyperparameters.
+     * @param controller the training controller.
      * @return the model.
      */
-    public static AdaBoost fit(Formula formula, DataFrame data, Options options) {
+    public static AdaBoost fit(Formula formula, DataFrame data, Options options, IterativeTrainingController controller) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
@@ -225,6 +226,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         double guess = 1.0 / k; // accuracy of random guess.
         double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
         int failures = 0; // the number of weak classifiers less accurate than guess.
+        Map<String, Object> update = new HashMap<>();
 
         int ntrees = options.ntrees;
         DecisionTree[] trees = new DecisionTree[ntrees];
@@ -242,7 +244,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 samples[s]++;
             }
 
-            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, options.maxDepth, options.maxNodes, options.nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, options.maxDepth, options.maxNodes, options.nodeSize, x.ncol(), samples, order);
             
             for (int i = 0; i < n; i++) {
                 wrong[i] = trees[t].predict(x.get(i)) != codec.y[i];
@@ -255,7 +257,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 }
             }
 
-            logger.info("Training {} tree, weighted error = {}%", Strings.ordinal(t+1), 100*e);
+            logger.info("Training {} tree, weighted error = {}%", Strings.ordinal(t+1), String.format("%.2f", 100*e));
 
             if (1 - e > guess) {
                 failures = 0;
@@ -279,6 +281,19 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             for (int i = 0; i < n; i++) {
                 if (wrong[i]) {
                     w[i] *= a;
+                }
+            }
+
+            if (controller != null) {
+                update.put("tree", t);
+                update.put("weighted error", e);
+                controller.submit(update);
+
+                if (controller.isInterrupted()) {
+                    trees = Arrays.copyOf(trees, t);
+                    alpha = Arrays.copyOf(alpha, t);
+                    error = Arrays.copyOf(error, t);
+                    break;
                 }
             }
         }
