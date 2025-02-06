@@ -238,10 +238,10 @@ public class RandomForestTest {
         assertEquals(40, trimmed.size());
 
         double rmse1 = Arrays.stream(model.models())
-                .mapToDouble(m -> m.metrics.rmse())
+                .mapToDouble(m -> m.metrics().rmse())
                 .max().orElseThrow();
         double rmse2 = Arrays.stream(trimmed.models())
-                .mapToDouble(m -> m.metrics.rmse())
+                .mapToDouble(m -> m.metrics().rmse())
                 .max().orElseThrow();
         assertTrue(rmse1 > rmse2);
 

@@ -242,8 +242,8 @@ public class RandomForestTest {
         assertEquals(200, model.size());
         assertEquals(100, trimmed.size());
 
-        double weight1 = Arrays.stream(model.models()).mapToDouble(m -> m.weight).min().orElse(0);
-        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.weight).min().orElse(0);
+        double weight1 = Arrays.stream(model.models()).mapToDouble(RandomForest.Model::weight).min().orElse(0);
+        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(RandomForest.Model::weight).min().orElse(0);
         assertTrue(weight2 > weight1);
 
         prediction = trimmed.predict(segment.test());

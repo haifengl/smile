@@ -82,20 +82,23 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
     /**
      * The base model.
+     * @param tree The decision tree.
+     * @param metrics The performance metrics on out-of-bag samples.
+     * @param weight The weight of tree, which is used for aggregating tree votes.
      */
-    public static class Model implements Serializable {
-        /** The decision tree. */
-        public final DecisionTree tree;
-        /** The performance metrics on out-of-bag samples. */
-        public final ClassificationMetrics metrics;
-        /** The weight of tree, which can be used when aggregating tree votes. */
-        public final double weight;
+    public record Model(DecisionTree tree, ClassificationMetrics metrics, double weight) implements Serializable, Comparable<Model> {
+        /**
+         * Constructor. OOB accuracy will be used as weight.
+         * @param tree The decision tree.
+         * @param metrics The performance metrics on out-of-bag samples.
+         */
+        public Model(DecisionTree tree, ClassificationMetrics metrics) {
+            this(tree, metrics, metrics.accuracy());
+        }
 
-        /** Constructor. */
-        Model(DecisionTree tree, ClassificationMetrics metrics) {
-            this.tree = tree;
-            this.metrics = metrics;
-            this.weight = metrics.accuracy();
+        @Override
+        public int compareTo(Model o) {
+            return Double.compare(o.weight, weight);
         }
     }
 
@@ -105,9 +108,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     private final Formula formula;
 
     /**
-     * Forest of decision trees. The second value is the accuracy of
-     * tree on the OOB samples, which can be used a weight when aggregating
-     * tree votes.
+     * Forest of decision trees.
      */
     private final Model[] models;
 
@@ -543,7 +544,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        Arrays.sort(models, Comparator.comparingDouble(model -> -model.weight));
+        Arrays.sort(models);
 
         // The OOB metrics are still the old one
         // as we don't access to the training data here.
