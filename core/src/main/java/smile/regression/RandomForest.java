@@ -19,7 +19,6 @@ package smile.regression;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Properties;
 import java.util.stream.LongStream;
 import smile.base.cart.CART;
@@ -81,17 +80,14 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
     /**
      * The base model.
+     * @param tree The regression tree.
+     * @param metrics The performance metrics on out-of-bag samples.
      */
-    public static class Model implements Serializable {
-        /** The decision tree. */
-        public final RegressionTree tree;
-        /** The performance metrics on out-of-bag samples. */
-        public final RegressionMetrics metrics;
+    public record Model(RegressionTree tree, RegressionMetrics metrics) implements Serializable, Comparable<Model> {
 
-        /** Constructor. */
-        Model(RegressionTree tree, RegressionMetrics metrics) {
-            this.tree = tree;
-            this.metrics = metrics;
+        @Override
+        public int compareTo(Model o) {
+            return Double.compare(metrics.rmse(), o.metrics.rmse());
         }
     }
 
@@ -441,7 +437,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        Arrays.sort(models, Comparator.comparingDouble(model -> model.metrics.rmse()));
+        Arrays.sort(models);
         return new RandomForest(formula, Arrays.copyOf(models, ntrees), metrics, importance);
     }
 
