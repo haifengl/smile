@@ -35,7 +35,38 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class AdaBoostTest {
+    static class TrainingStatusSubscriber implements Subscriber<AdaBoost.TrainingStatus> {
+        private final IterativeTrainingController<AdaBoost.TrainingStatus> controller;
+        private Subscription subscription;
 
+        TrainingStatusSubscriber(IterativeTrainingController<AdaBoost.TrainingStatus> controller) {
+            this.controller = controller;
+        }
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            this.subscription = subscription;
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(AdaBoost.TrainingStatus status) {
+            System.out.format("Tree %d, weighted error = %.2f%%, validation metrics = %s%n",
+                    status.tree(), 100 * status.weightedError(), status.metrics());
+            if (status.tree() == 100) controller.stop();
+            subscription.request(1);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            System.err.println("Controller receives an exception: " + throwable.getMessage());
+        }
+
+        @Override
+        public void onComplete() {
+            System.out.println("Training is done");
+        }
+    }
     public AdaBoostTest() {
     }
 
@@ -60,24 +91,28 @@ public class AdaBoostTest {
         System.out.println("Weather");
         MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
+        try (var controller = new IterativeTrainingController<AdaBoost.TrainingStatus>()) {
+            controller.subscribe(new TrainingStatusSubscriber(controller));
+            var options = new AdaBoost.Options(20, 5, 8, 1, weather.data(), controller);
+            AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options);
+            String[] fields = model.schema().names();
+
+            double[] importance = model.importance();
+            for (int i = 0; i < importance.length; i++) {
+                System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+            }
+
+            double[] shap = model.shap(weather.data());
+            System.out.println("----- SHAP -----");
+            for (int i = 0; i < fields.length; i++) {
+                System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2 * i], shap[2 * i + 1]);
+            }
+
+            java.nio.file.Path temp = Write.object(model);
+            Read.object(temp);
+        }
+
         var options = new AdaBoost.Options(20, 5, 8, 1, null, null);
-        AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options);
-        String[] fields = model.schema().names();
-
-        double[] importance = model.importance();
-        for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
-        }
-
-        double[] shap = model.shap(weather.data());
-        System.out.println("----- SHAP -----");
-        for (int i = 0; i < fields.length; i++) {
-            System.out.format("%-15s %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1]);
-        }
-
-        java.nio.file.Path temp = Write.object(model);
-        Read.object(temp);
-
         ClassificationMetrics metrics = LOOCV.classification(weather.formula(), weather.data(),
                 (f, x) -> AdaBoost.fit(f, x, options));
         System.out.println(metrics);
@@ -139,34 +174,7 @@ public class AdaBoostTest {
         var testy = segment.testy();
 
         try (var controller = new IterativeTrainingController<AdaBoost.TrainingStatus>()) {
-            controller.subscribe(new Subscriber<>() {
-                private Subscription subscription;
-
-                @Override
-                public void onSubscribe(Subscription subscription) {
-                    this.subscription = subscription;
-                    subscription.request(1);
-                }
-
-                @Override
-                public void onNext(AdaBoost.TrainingStatus status) {
-                    System.out.format("Tree %d, weighted error = %.2f%%, validation metrics = %s%n",
-                            status.tree(), 100 * status.weightedError(), status.metrics());
-                    if (status.tree() == 100) controller.stop();
-                    subscription.request(1);
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                    System.err.println("Controller receives an exception: " + throwable.getMessage());
-                }
-
-                @Override
-                public void onComplete() {
-                    System.out.println("Training is done");
-                }
-            });
-
+            controller.subscribe(new TrainingStatusSubscriber(controller));
             var options = new AdaBoost.Options(200, 20, 6, 1, segment.test(), controller);
             AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), options);
 

@@ -329,6 +329,8 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                         }
                         prediction[j] = base > 0 ? 1 : 0;
                     }
+                    double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                    metrics = ClassificationMetrics.binary(fitTime, scoreTime, testy, prediction);
                 } else {
                     for (int j = 0; j < testy.length; j++) {
                         Tuple xj = testx.get(j);
@@ -338,9 +340,9 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                         }
                         prediction[j] = MathEx.whichMax(p);
                     }
+                    double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                    metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
                 }
-                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
-                metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
                 logger.info("Validation metrics = {} ", metrics);
             }
 
