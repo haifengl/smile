@@ -306,6 +306,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             }
         }
 
+        if (controller != null) controller.close();
         return new AdaBoost(formula, k, trees, alpha, error, importance, codec.classes);
     }
 

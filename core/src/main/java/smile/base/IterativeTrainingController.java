@@ -23,7 +23,7 @@ import java.util.concurrent.SubmissionPublisher;
 /**
  * A controller for iterative training algorithms.
  */
-public class IterativeTrainingController {
+public class IterativeTrainingController implements AutoCloseable {
     /** Flag if early stopping the training. */
     private boolean interrupted;
     /** Training progress publisher. */
@@ -35,6 +35,11 @@ public class IterativeTrainingController {
     public IterativeTrainingController() {
         interrupted = false;
         publisher = new SubmissionPublisher<>();
+    }
+
+    @Override
+    public void close() {
+        publisher.close();
     }
 
     /**
