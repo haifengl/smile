@@ -140,7 +140,7 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
     }
 
     /**
-     * Computes the classification metrics.
+     * Computes the basic classification metrics.
      * @param fitTime the time in milliseconds of fitting the model.
      * @param scoreTime the time in milliseconds of scoring the validation data.
      * @param truth the ground truth.
@@ -148,20 +148,28 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
      * @return the classification metrics.
      */
     public static ClassificationMetrics of(double fitTime, double scoreTime, int[] truth, int[] prediction) {
-        if (MathEx.unique(truth).length == 2) {
-            return new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                    Error.of(truth, prediction),
-                    Accuracy.of(truth, prediction),
-                    Sensitivity.of(truth, prediction),
-                    Specificity.of(truth, prediction),
-                    Precision.of(truth, prediction),
-                    FScore.F1.score(truth, prediction),
-                    MatthewsCorrelation.of(truth, prediction));
-        } else {
-            return new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                    Error.of(truth, prediction),
-                    Accuracy.of(truth, prediction));
-        }
+        return new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                Error.of(truth, prediction),
+                Accuracy.of(truth, prediction));
+    }
+
+    /**
+     * Computes the binary classification metrics.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     * @return the classification metrics.
+     */
+    public static ClassificationMetrics binary(double fitTime, double scoreTime, int[] truth, int[] prediction) {
+        return new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                Error.of(truth, prediction),
+                Accuracy.of(truth, prediction),
+                Sensitivity.of(truth, prediction),
+                Specificity.of(truth, prediction),
+                Precision.of(truth, prediction),
+                FScore.F1.score(truth, prediction),
+                MatthewsCorrelation.of(truth, prediction));
     }
 
     /**
@@ -192,6 +200,28 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
                     Accuracy.of(truth, prediction),
                     CrossEntropy.of(truth, posteriori));
         }
+    }
+
+    /**
+     * Computes the binary soft classification metrics.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     * @param probability the probabilities of positive predictions.
+     * @return the classification metrics.
+     */
+    public static ClassificationMetrics binary(double fitTime, double scoreTime, int[] truth, int[] prediction, double[] probability) {
+        return new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                Error.of(truth, prediction),
+                Accuracy.of(truth, prediction),
+                Sensitivity.of(truth, prediction),
+                Specificity.of(truth, prediction),
+                Precision.of(truth, prediction),
+                FScore.F1.score(truth, prediction),
+                MatthewsCorrelation.of(truth, prediction),
+                AUC.of(truth, probability),
+                LogLoss.of(truth, probability));
     }
 
     /**
