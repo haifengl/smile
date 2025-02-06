@@ -16,25 +16,34 @@
  */
 package smile.base;
 
-import java.util.Map;
-import java.util.concurrent.Flow;
-import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.*;
 
 /**
  * A controller for iterative training algorithms.
+ * @param <T> the type of training status objects.
  */
-public class IterativeTrainingController implements AutoCloseable {
+public class IterativeTrainingController<T> implements AutoCloseable {
     /** Flag if early stopping the training. */
     private boolean interrupted;
     /** Training progress publisher. */
-    private final SubmissionPublisher<Map<String, Object>> publisher;
+    private final SubmissionPublisher<T> publisher;
 
     /**
      * Constructor.
      */
     public IterativeTrainingController() {
+        this(Executors.newFixedThreadPool(1), 2048);
+    }
+
+    /**
+     * Constructor.
+     * @param executor the executor to use for async delivery, supporting
+     *                 creation of at least one independent thread.
+     * @param maxBufferCapacity the maximum capacity for each subscriber's buffer.
+     */
+    public IterativeTrainingController(Executor executor, int maxBufferCapacity) {
         interrupted = false;
-        publisher = new SubmissionPublisher<>();
+        publisher = new SubmissionPublisher<>(executor, maxBufferCapacity);
     }
 
     @Override
@@ -61,7 +70,7 @@ public class IterativeTrainingController implements AutoCloseable {
      * Adds the given Subscriber for training progress.
      * @param subscriber the subscriber.
      */
-    public void subscribe(Flow.Subscriber<Map<String, Object>> subscriber) {
+    public void subscribe(Flow.Subscriber<T> subscriber) {
         publisher.subscribe(subscriber);
     }
 
@@ -69,7 +78,7 @@ public class IterativeTrainingController implements AutoCloseable {
      * Publishes the training status to each current subscriber asynchronously.
      * @param status the training progress information.
      */
-    public void submit(Map<String, Object> status) {
+    public void submit(T status) {
         publisher.submit(status);
     }
 }
