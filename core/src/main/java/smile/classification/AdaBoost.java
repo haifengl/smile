@@ -262,6 +262,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             } else {
                 logger.error("Skip the weak classifier");
                 if (++failures > 3) {
+                    logger.error("Cannot make progress. Early stopping...");
                     trees = Arrays.copyOf(trees, t);
                     alpha = Arrays.copyOf(alpha, t);
                     error = Arrays.copyOf(error, t);
