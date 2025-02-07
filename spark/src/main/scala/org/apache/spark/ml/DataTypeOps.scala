@@ -33,7 +33,7 @@ object DataTypeOps {
     * @return Smile schema
     */
   def toSmileSchema(schema: org.apache.spark.sql.types.StructType): StructType = {
-    new StructType(schema.map(toSmileField): _*)
+    new StructType(schema.map(toSmileField)*)
   }
 
   /**
@@ -68,10 +68,10 @@ object DataTypeOps {
       case TimestampType => DataTypes.DateTimeType
       case DateType => DataTypes.DateType
       case ArrayType(elementType, nullable) => DataTypes.array(toSmileType(elementType, nullable))
-      case org.apache.spark.sql.types.StructType(fields) => new StructType(fields.map(toSmileField): _*)
+      case org.apache.spark.sql.types.StructType(fields) => new StructType(fields.map(toSmileField)*)
       case MapType(keyType, valueType, nullable) => DataTypes.array(new StructType(Seq(
           new StructField("key", toSmileType(keyType, nullable)),
-          new StructField("value", toSmileType(valueType, nullable))): _*))
+          new StructField("value", toSmileType(valueType, nullable)))*))
       case ObjectType(cls) => DataTypes.`object`(cls)
       case _: NullType => DataTypes.StringType
       case _: VectorUDT => DataTypes.array(DataTypes.DoubleType)
