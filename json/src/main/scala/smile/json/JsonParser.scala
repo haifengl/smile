@@ -118,7 +118,7 @@ class JsonParser(input: ParserInput) {
       }
       values()
       require(']')
-      JsArray(list.result(): _*)
+      JsArray(list.result()*)
     } else {
       advance()
       JsArray()

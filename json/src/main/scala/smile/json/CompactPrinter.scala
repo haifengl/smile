@@ -16,7 +16,7 @@
  */
 package smile.json
 
-import java.lang.StringBuilder
+import java.lang.StringBuilder as JStringBuilder
 
 /**
  * A JsonPrinter that produces compact JSON source without any superfluous whitespace.
@@ -24,7 +24,7 @@ import java.lang.StringBuilder
  */
 trait CompactPrinter extends JsonPrinter {
 
-  def print(x: JsValue, sb: StringBuilder): Unit = {
+  def print(x: JsValue, sb: JStringBuilder): Unit = {
     x match {
       case JsObject(x) => printObject(x, sb)
       case JsArray(x)  => printArray(x, sb)
@@ -32,7 +32,7 @@ trait CompactPrinter extends JsonPrinter {
     }
   }
 
-  protected def printObject(members: Iterable[(String, JsValue)], sb: StringBuilder): Unit = {
+  protected def printObject(members: Iterable[(String, JsValue)], sb: JStringBuilder): Unit = {
     sb.append('{')
     printSeq(members, sb.append(',')) { m =>
       printString(m._1, sb)
@@ -42,7 +42,7 @@ trait CompactPrinter extends JsonPrinter {
     sb.append('}')
   }
 
-  protected def printArray(elements: Iterable[JsValue], sb: StringBuilder): Unit = {
+  protected def printArray(elements: Iterable[JsValue], sb: JStringBuilder): Unit = {
     sb.append('[')
     printSeq(elements, sb.append(','))(print(_, sb))
     sb.append(']')
