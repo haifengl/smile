@@ -52,7 +52,7 @@ case class ClassificationModel(override val algorithm: String,
       val y = classifier.predict(x, prob)
       JsObject(
         "class" -> y.toJson,
-        "probability" -> prob.toJson
+        "probability" -> JsArray(prob.toSeq.map(p => JsNumber(BigDecimal(p).setScale(4, BigDecimal.RoundingMode.HALF_UP)))*)
       )
     } else {
       JsNumber.apply(classifier.predict(x))
@@ -84,7 +84,7 @@ object ClassificationModel {
       val cv = CrossValidation.stratify(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, params))
       val models = cv.rounds.asScala.map(round => round.model).toArray
       val model = if (ensemble)
-        DataFrameClassifier.ensemble(models: _*)
+        DataFrameClassifier.ensemble(models*)
       else
         fit(algorithm, formula, data, params)
 
