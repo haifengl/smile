@@ -18,6 +18,7 @@ package smile.shell
 
 import java.util.Properties
 import scala.concurrent.duration.*
+import scala.language.implicitConversions
 import scala.util.{Failure, Success}
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
@@ -31,8 +32,9 @@ import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import scopt.OParser
+import smile.data.StructTypeOps
+import smile.data.`type`.StructType
 import spray.json.*
-import smile.data.pimpStructType
 import smile.model.SmileModel
 
 /**
@@ -93,6 +95,8 @@ object Serve extends LazyLogging {
     OParser.parse(parser, args, ServeConfig(""))
     // If arguments be bad, the error message would have been displayed.
   }
+
+  implicit def pimpStructType(schema: StructType): StructTypeOps = new StructTypeOps(schema)
 
   /**
     * Online prediction.
