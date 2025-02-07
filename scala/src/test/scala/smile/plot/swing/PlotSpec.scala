@@ -133,9 +133,9 @@ class PlotSpec extends Specification {
       val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
 
       val controls = Array.ofDim[Double](x.length, 2)
-      for (i <- 0 until x.length) {
-        controls(i)(0) = x(i);
-        controls(i)(1) = y(i);
+      for (i <- x.indices) {
+        controls(i)(0) = x(i)
+        controls(i)(1) = y(i)
       }
 
       val linear = new LinearInterpolation(x, y)

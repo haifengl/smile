@@ -29,13 +29,13 @@ import smile.util.Index
   */
 case class DataFrameOps(data: DataFrame) {
   /** Selects a new DataFrame with given column indices. */
-  def select(range: Range): DataFrame = data.select(range.toArray: _*)
+  def select(range: Range): DataFrame = data.select(range.toArray*)
 
   /** Returns a new DataFrame without given column indices. */
-  def drop(range: Range): DataFrame = data.drop(range.toArray: _*)
+  def drop(range: Range): DataFrame = data.drop(range.toArray*)
 
   /** Returns a new data frame with row indexing. */
-  def of(range: Range): DataFrame = data.get(Index.of(range.toArray: _*))
+  def of(range: Range): DataFrame = data.get(Index.of(range.toArray*))
 
   /** Finds the first row satisfying a predicate. */
   def find(p: Tuple => Boolean): Optional[Row] = data.stream().filter(t => p(t)).findAny()
@@ -52,7 +52,7 @@ case class DataFrameOps(data: DataFrame) {
   /** Selects all rows which satisfy a predicate. */
   def filter(p: Tuple => Boolean): DataFrame = {
     val index = IntStream.range(0, data.size).filter(i => p(data(i))).toArray
-    data.get(Index.of(index: _*))
+    data.get(Index.of(index*))
   }
 
   /** Partitions this DataFrame in two according to a predicate.
@@ -69,7 +69,7 @@ case class DataFrameOps(data: DataFrame) {
     IntStream.range(0, data.size).forEach { i =>
       if (p(data(i))) l += i else r += i
     }
-    (data.get(Index.of(l.toArray: _*)), data.get(Index.of(r.toArray: _*)))
+    (data.get(Index.of(l.toArray*)), data.get(Index.of(r.toArray*)))
   }
 
   /** Partitions the DataFrame into a map of DataFrames according to
@@ -81,13 +81,13 @@ case class DataFrameOps(data: DataFrame) {
     */
   def groupBy[K](f: Tuple => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
-    groups.view.mapValues(index => data.get(Index.of(index: _*))).toMap
+    groups.view.mapValues(index => data.get(Index.of(index*))).toMap
   }
 
   /** Converts the tuple to a JSON array. */
   def toJSON: JsArray = {
     JsArray(
-      (0 until data.size).map(i => data(i).toJSON): _*
+      (0 until data.size).map(i => data(i).toJSON)*
     )
   }
 }
@@ -99,7 +99,7 @@ case class DataFrameOps(data: DataFrame) {
 case class TupleOps(t: Tuple) {
   /** Converts the tuple to a JSON object. */
   def toJSON: JsObject = {
-    JsObject((0 until t.length()).map(valueOf): _*)
+    JsObject((0 until t.length()).map(valueOf)*)
   }
 
   /** Returns the name value pair of a field. */

@@ -139,7 +139,7 @@ trait VegaLite extends LazyLogging {
   /** Sets an array of objects describing the data source.
     */
   def data(rows: JsObject*): this.type = {
-    data(JsArray(rows: _*))
+    data(JsArray(rows*))
   }
 
   /** Sets a data frame describing the data source.
@@ -194,7 +194,7 @@ trait VegaLite extends LazyLogging {
     * bin, timeUnit, aggregate, sort, and stack.
     */
   def transform(transforms: JsObject*): this.type = {
-    spec.transform = JsArray(transforms: _*)
+    spec.transform = JsArray(transforms*)
     this
   }
 
@@ -297,7 +297,7 @@ object VegaLite {
     val layer = new Layer {
       override val spec: JsObject = VegaLite.spec()
     }
-    layer.layer(layers: _*)
+    layer.layer(layers*)
     layer
   }
 
@@ -305,7 +305,7 @@ object VegaLite {
   def hconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = VegaLite.spec()
-      spec.hconcat = JsArray(views.map(_.spec): _*)
+      spec.hconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -313,7 +313,7 @@ object VegaLite {
   def vconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = VegaLite.spec()
-      spec.vconcat = JsArray(views.map(_.spec): _*)
+      spec.vconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -324,7 +324,7 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = VegaLite.spec()
       spec.columns = columns
-      spec.concat = JsArray(views.map(_.spec): _*)
+      spec.concat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -337,7 +337,7 @@ object VegaLite {
   def repeat(view: VegaLite, fields: String*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = VegaLite.spec()
-      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
+      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_))*))
       spec.spec = view.spec
     }
   }
@@ -353,8 +353,8 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = VegaLite.spec()
       spec.repeat = JsObject(
-        "row" -> JsArray(row.map(JsString(_)): _*),
-        "column" -> JsArray(column.map(JsString(_)): _*)
+        "row" -> JsArray(row.map(JsString(_))*),
+        "column" -> JsArray(column.map(JsString(_))*)
       )
       spec.spec = view.spec
     }

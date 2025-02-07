@@ -27,7 +27,7 @@ trait Layer extends View with ViewComposition {
     * Instead, use the facet operator and place a layer inside a facet.
     */
   def layer(layers: View*): this.type = {
-    spec.layer = JsArray(layers.map(_.spec): _*)
+    spec.layer = JsArray(layers.map(_.spec)*)
     this
   }
 }

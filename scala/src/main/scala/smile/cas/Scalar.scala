@@ -24,14 +24,14 @@ trait Scalar extends Tensor {
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Scalar
   /** Applies the expression. */
-  def apply(env: (String, Tensor)*): Scalar = apply(Map(env: _*))
+  def apply(env: (String, Tensor)*): Scalar = apply(Map(env*))
   /** Simplify the expression. */
   def simplify: Scalar = this
 
   /** Returns the derivative. */
   def d(dx: Var): Scalar
   /** Returns the gradient vector. */
-  def d(dx: Var*): Vector = Vars(dx.map(d): _*).simplify
+  def d(dx: Var*): Vector = Vars(dx.map(d)).simplify
   /** Returns the gradient vector. */
   def d(dx: VectorVar): Vector
 
@@ -57,7 +57,7 @@ trait IntScalar extends Tensor {
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): IntScalar
   /** Applies the expression. */
-  def apply(env: (String, Tensor)*): IntScalar = apply(Map(env: _*))
+  def apply(env: (String, Tensor)*): IntScalar = apply(Map(env*))
   /** Simplify the expression. */
   def simplify: IntScalar = this
 
