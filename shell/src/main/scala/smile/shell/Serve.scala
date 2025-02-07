@@ -27,7 +27,7 @@ import akka.http.scaladsl.common.*
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
 import akka.http.scaladsl.model.*
 import akka.http.scaladsl.server.Directives.*
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Flow, Source}
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
@@ -117,7 +117,10 @@ object Serve extends LazyLogging {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
     // Source rendering support trait
+    // Render multiple JSON objects in a line-by-line fashion
+    val newline = ByteString("\n")
     implicit val jsonStreamingSupport = EntityStreamingSupport.json()
+      .withFramingRenderer(Flow[ByteString].map(bs => bs ++ newline))
 
     val route = path("v1" / "infer") {
       post {
@@ -178,10 +181,7 @@ object Serve extends LazyLogging {
       }
     }
 
-    implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
-    implicit val csvStreamingSupport = EntityStreamingSupport.csv()
     val lines = bytes.via(CsvParsing.lineScanner(delimiter, quote, escape))
-
     if (header) {
       lines.via(CsvToMap.toMapAsStrings())
         .map(model.schema.csv(_))
