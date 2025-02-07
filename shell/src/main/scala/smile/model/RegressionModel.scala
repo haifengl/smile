@@ -71,7 +71,7 @@ object RegressionModel {
             val cv = CrossValidation.regression(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, params))
             val models = cv.rounds.asScala.map(round => round.model).toArray
             val model = if (ensemble)
-                DataFrameRegression.ensemble(models: _*)
+                DataFrameRegression.ensemble(models*)
             else
                 fit(algorithm, formula, data, params)
 

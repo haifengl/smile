@@ -80,18 +80,18 @@ object Train {
         if (config.classification) {
           val model = ClassificationModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
+          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
           smile.write(model, config.model)
         } else {
           val model = RegressionModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
+          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
           smile.write(model, config.model)
           if (test.isDefined) {
             val metrics = RegressionMetrics.of(model.regression, formula, test.get)
-            println(s"Validation metrics: ${metrics}")
+            println(s"Validation metrics: $metrics")
           }
         }
       case _ => ()
