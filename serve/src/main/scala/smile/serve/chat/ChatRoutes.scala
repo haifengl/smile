@@ -19,24 +19,24 @@ package smile.serve.chat
 import java.util.concurrent.SubmissionPublisher
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.scaladsl.AskPattern.*
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.JavaFlowSupport
 import akka.util.Timeout
-import smile.serve.chat.JsonSupport._
+import smile.serve.chat.JsonSupport.*
 
 class ChatRoutes(generator: ActorRef[Generator.Command], dao: ChatDB)
-                (implicit val system: ActorSystem[_], val timeout: Timeout) {
+                (implicit val system: ActorSystem[?], val timeout: Timeout) {
   private implicit val ec: ExecutionContext = system.executionContext
   private val log = system.log
 
   val routes: Route = concat(
     path("chat" / "completions") {
       post {
-        import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+        import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling.*
         entity(as[CompletionRequest]) { request =>
           log.info("Receive {}", request)
           if (request.stream.getOrElse(false)) {

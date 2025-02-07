@@ -18,9 +18,9 @@ package smile.spark
 
 import java.util.Properties
 import java.util.stream.Collectors
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import org.apache.spark.sql.SparkSession
-import org.specs2.mutable._
+import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.classification.RandomForest
 import smile.data.DataFrame

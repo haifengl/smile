@@ -17,7 +17,7 @@
 package smile.data.formula
 
 import scala.collection.mutable.ListBuffer
-import Terms._
+import Terms.*
 
 /** DSL to build a formula in R style. */
 case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {

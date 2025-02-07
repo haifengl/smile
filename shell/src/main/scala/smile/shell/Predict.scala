@@ -18,7 +18,7 @@ package smile.shell
 
 import scopt.OParser
 import smile.io.Read
-import smile.model._
+import smile.model.*
 import smile.util.Strings
 
 /**
@@ -56,7 +56,7 @@ object Predict {
   def parse(args: Array[String]): Option[PredictConfig] = {
     val builder = OParser.builder[PredictConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile predict"),
         head("Smile", BuildInfo.version),

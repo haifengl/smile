@@ -16,7 +16,7 @@
  */
 package smile.json
 
-import java.lang.{StringBuilder => JStringBuilder}
+import java.lang.StringBuilder as JStringBuilder
 import scala.annotation.tailrec
 
 /**
@@ -62,7 +62,7 @@ trait JsonPrinter extends (JsValue => String) {
   }
 
   protected def printString(s: String, sb: JStringBuilder): Unit = {
-    import JsonPrinter._
+    import JsonPrinter.*
     @tailrec def firstToBeEncoded(ix: Int = 0): Int =
       if (ix == s.length) -1 else if (requiresEncoding(s.charAt(ix))) ix else firstToBeEncoded(ix + 1)
 

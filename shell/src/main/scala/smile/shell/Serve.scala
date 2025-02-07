@@ -17,21 +17,22 @@
 package smile.shell
 
 import java.util.Properties
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.{Failure, Success}
-import scopt.OParser
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.common._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.common.*
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
 import akka.stream.scaladsl.Source
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
-import spray.json._
+import scopt.OParser
+import spray.json.*
+import smile.data.pimpStructType
 import smile.model.SmileModel
 
 /**
@@ -66,7 +67,7 @@ object Serve extends LazyLogging {
   def parse(args: Array[String]): Option[ServeConfig] = {
     val builder = OParser.builder[ServeConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile serve"),
         head("Smile", BuildInfo.version),

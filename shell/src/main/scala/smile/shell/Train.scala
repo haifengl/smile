@@ -18,11 +18,11 @@ package smile.shell
 
 import java.util.Properties
 import scopt.OParser
-import smile.data.formula._
+import smile.data.formula.*
 import smile.io.Read
 import smile.math.MathEx
-import smile.model._
-import smile.validation._
+import smile.model.*
+import smile.validation.*
 
 /**
   * Train command options.
@@ -106,7 +106,7 @@ object Train {
   def parse(args: Array[String]): Option[TrainConfig] = {
     val builder = OParser.builder[TrainConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile train"),
         head("Smile", BuildInfo.version),

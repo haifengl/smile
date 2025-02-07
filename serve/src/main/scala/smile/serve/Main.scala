@@ -47,7 +47,7 @@ object Main {
   def parse(args: Array[String]): Option[ServeConfig] = {
     val builder = OParser.builder[ServeConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile-serve"),
         head("SmileServe", "- Large Language Model (LLM) Inference Server"),

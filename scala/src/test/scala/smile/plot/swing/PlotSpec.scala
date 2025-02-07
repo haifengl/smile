@@ -17,15 +17,14 @@
 package smile.plot.swing
 
 import java.awt.Color.{BLUE, RED}
-import java.lang.Math._
-import org.specs2.mutable._
+import java.lang.Math.*
+import org.specs2.mutable.*
 import smile.read
-import smile.interpolation._
-import smile.math.matrix._
-import smile.stat.distribution._
-import smile.plot.swing._
+import smile.interpolation.*
+import smile.math.matrix.*
+import smile.stat.distribution.*
 import smile.plot.show
-import smile.plot.Render._
+import smile.plot.Render.*
 import smile.util.Paths
 
 class PlotSpec extends Specification {
@@ -93,13 +92,13 @@ class PlotSpec extends Specification {
     }
     "Histogram 3D" in {
       val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
-      val data = (0 until 10000) map { i: Int => gauss.rand }
+      val data = (0 until 10000) map { _ => gauss.rand }
       show(hist3(data.toArray, 50, 50))
       1 mustEqual 1
     }
     "QQ" in {
       val gauss = new GaussianDistribution(0.0, 1.0)
-      val data = (0 until 1000) map { i: Int => gauss.rand }
+      val data = (0 until 1000) map { _ => gauss.rand }
       show(qqplot(data.toArray))
       1 mustEqual 1
     }

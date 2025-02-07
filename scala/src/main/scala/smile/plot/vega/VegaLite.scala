@@ -17,8 +17,8 @@
 package smile.plot.vega
 
 import com.typesafe.scalalogging.LazyLogging
-import smile.data._
-import smile.json._
+import smile.data.*
+import smile.json.*
 
 /** Vega-Lite specifications are JSON objects that describe a diverse range
   * of interactive visualizations. Besides using a single view specification

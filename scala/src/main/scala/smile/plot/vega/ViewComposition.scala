@@ -16,7 +16,7 @@
  */
 package smile.plot.vega
 
-import smile.json._
+import smile.json.*
 
 /** All view composition specifications (layer, facet, concat, and repeat)
   * can have the resolve property for scale, axes, and legend resolution.

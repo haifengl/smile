@@ -16,7 +16,7 @@
  */
 package smile.plot.vega
 
-import smile.json._
+import smile.json.*
 
 /** A facet is a trellis plot (or small multiple) of a series of similar
   * plots that displays different subsets of the same data, facilitating

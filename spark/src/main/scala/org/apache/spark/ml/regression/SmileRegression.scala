@@ -20,15 +20,15 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation._
-import org.apache.spark.ml.util.{Identifiable, _}
+import org.apache.spark.ml.param.*
+import org.apache.spark.ml.util.*
+import org.apache.spark.ml.util.Instrumentation.*
 import org.apache.spark.ml.{Predictor, PredictorParams}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.storage.StorageLevel
-import org.json4s.JObject
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
+import org.json4s.*
+import org.json4s.JsonDSL.*
+import org.json4s.jackson.JsonMethods.*
 
 /**
   * Params for SmileRegression
@@ -84,7 +84,7 @@ class SmileRegression(override val uid: String)
   def setTrainer(value: (Array[Array[Double]], Array[Double]) => smile.regression.Regression[Array[Double]]): this.type =
     set(trainer, value)
 
-  override protected def train(dataset: Dataset[_]): SmileRegressionModel =
+  override protected def train(dataset: Dataset[?]): SmileRegressionModel =
     instrumented { instr =>
       instr.logPipelineStage(this)
       instr.logDataset(dataset)
