@@ -41,9 +41,13 @@ import smile.model.SmileModel
   * Serve command options.
   * @param model the model file path.
   * @param probability the flag if output posteriori probabilities for soft classifiers.
+  * @param line the flag if render multiple JSON objects in a line-by-line fashion.
+  * @param host the IP address to listen on (0.0.0.0 for all available addresses).
+  * @param port the port number.
   */
 case class ServeConfig(model: String,
                        probability: Boolean = false,
+                       line: Boolean = false,
                        host: String = "localhost",
                        port: Int = 8728)
 
@@ -81,6 +85,10 @@ object Serve extends LazyLogging {
           .optional()
           .action((_, c) => c.copy(probability = true))
           .text("Output the posteriori probabilities for soft classifier"),
+        opt[Unit]("line")
+          .optional()
+          .action((_, c) => c.copy(line = true))
+          .text("Render multiple JSON objects in a line-by-line fashion"),
         opt[String]("host")
           .optional()
           .action((x, c) => c.copy(host = x))
@@ -119,8 +127,9 @@ object Serve extends LazyLogging {
     // Source rendering support trait
     // Render multiple JSON objects in a line-by-line fashion
     val newline = ByteString("\n")
-    implicit val jsonStreamingSupport = EntityStreamingSupport.json()
-      .withFramingRenderer(Flow[ByteString].map(bs => bs ++ newline))
+    val streaming = EntityStreamingSupport.json()
+    val jsonl = streaming.withFramingRenderer(Flow[ByteString].map(bs => bs ++ newline))
+    implicit val jsonStreamingSupport = if (config.line) jsonl else streaming
 
     val route = path("v1" / "infer") {
       post {

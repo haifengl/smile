@@ -31,7 +31,7 @@ trait Scalar extends Tensor {
   /** Returns the derivative. */
   def d(dx: Var): Scalar
   /** Returns the gradient vector. */
-  def d(dx: Var*): Vector = Vars(dx.map(d)).simplify
+  def d(dx: Var*): Vector = Vars(dx.map(d)*).simplify
   /** Returns the gradient vector. */
   def d(dx: VectorVar): Vector
 
