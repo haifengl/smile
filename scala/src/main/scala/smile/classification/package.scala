@@ -396,7 +396,7 @@ package object classification {
           learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
           momentum: TimeFunction = TimeFunction.constant(0.0),
           weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP = time("Multi-layer Perceptron Neural Network") {
-    val net = new MLP(builders: _*)
+    val net = new MLP(builders*)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
     net.setWeightDecay(weightDecay)

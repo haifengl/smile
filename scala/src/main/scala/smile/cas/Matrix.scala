@@ -28,7 +28,7 @@ trait Matrix extends Tensor {
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Matrix
   /** Applies the expression. */
-  def apply(env: (String, Tensor)*): Matrix = apply(Map(env: _*))
+  def apply(env: (String, Tensor)*): Matrix = apply(Map(env*))
   /** Simplify the expression. */
   def simplify: Matrix = this
 
@@ -110,10 +110,10 @@ case class DiagonalMatrix(x: Scalar*) extends Matrix {
   override def size: (IntScalar, IntScalar) = (IntVal(x.length), IntVal(x.length))
 
   override def d(dx: Var): Matrix = {
-    DiagonalMatrix(x.map(_.d(dx)): _*).simplify
+    DiagonalMatrix(x.map(_.d(dx))*).simplify
   }
 
-  override def apply(env: Map[String, Tensor]): Matrix = DiagonalMatrix(x.map(_(env)): _*).simplify
+  override def apply(env: Map[String, Tensor]): Matrix = DiagonalMatrix(x.map(_(env))*).simplify
 
   override def simplify: Matrix = {
     if (x.forall(_ == Val(1))) IdentityMatrix(size)
@@ -129,10 +129,10 @@ case class RowMatrix(x: Vector*) extends Matrix {
   override def size: (IntScalar, IntScalar) = (IntVal(x.length), IntVal(x.length))
 
   override def d(dx: Var): Matrix = {
-    RowMatrix(x.map(_.d(dx)): _*).simplify
+    RowMatrix(x.map(_.d(dx))*).simplify
   }
 
-  override def apply(env: Map[String, Tensor]): Matrix = RowMatrix(x.map(_(env)): _*).simplify
+  override def apply(env: Map[String, Tensor]): Matrix = RowMatrix(x.map(_(env))*).simplify
 
   override def simplify: Matrix = {
     if (x.forall(_ == OneVector(x.length))) OneMatrix(size)

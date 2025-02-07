@@ -45,12 +45,12 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {
   def toFormula: Formula = y match {
     case None => x.toList match {
       case Nil => Formula.rhs(dot)
-      case x => Formula.rhs(x: _*)
+      case x => Formula.rhs(x*)
     }
 
     case Some(y) => x.toList match {
       case Nil => Formula.lhs(y)
-      case x => Formula.of(y, x: _*)
+      case x => Formula.of(y, x*)
     }
   }
 }
@@ -77,7 +77,7 @@ private[formula] case class FactorInteractionBuilder(x: ListBuffer[String]) {
     this
   }
 
-  def toFactorInteraction: FactorInteraction = interact(x.reverse.toList: _*)
+  def toFactorInteraction: FactorInteraction = interact(x.reverse.toList*)
 }
 
 private[formula] case class FactorCrossingBuilder(x: ListBuffer[String]) {
@@ -87,9 +87,9 @@ private[formula] case class FactorCrossingBuilder(x: ListBuffer[String]) {
   }
 
   /** Customized degree. */
-  def ^ (degree: Int): FactorCrossing = cross(degree, x.toList: _*)
+  def ^ (degree: Int): FactorCrossing = cross(degree, x.toList*)
 
-  def toFactorCrossing: FactorCrossing = cross(x.toList: _*)
+  def toFactorCrossing: FactorCrossing = cross(x.toList*)
 }
 
 private[formula] case class PimpedHyperTerm(a: Term) {
