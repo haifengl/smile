@@ -52,7 +52,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
         (formula: Formula, data: DataFrame, params: Properties) => RandomForest.fit(formula, data, RandomForest.Options.of(params))
       }
 
-      (0 until configurations.length) foreach { i =>
+      configurations.indices foreach { i =>
         print(configurations(i))
         println(scores(i))
       }

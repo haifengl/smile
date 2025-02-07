@@ -39,7 +39,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val smileMushrooms = SparkDataFrame(sparkMushrooms)
       val smileSchema = new smile.data.`type`.StructType(
         Seq(new StructField("label", DataTypes.NullableDoubleType),
-            new StructField("features", DataTypes.DoubleArrayType)):_*)
+            new StructField("features", DataTypes.DoubleArrayType))*)
 
       smileMushrooms.schema() mustEqual smileSchema
     }
@@ -56,7 +56,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val smileSchema = new smile.data.`type`.StructType(
         Seq(new StructField("name", DataTypes.StringType),
             new StructField("age", DataTypes.IntType),
-            new StructField("friends", DataTypes.array(DataTypes.StringType))):_*)
+            new StructField("friends", DataTypes.array(DataTypes.StringType)))*)
 
       smilePersons.schema() mustEqual smileSchema
     }
