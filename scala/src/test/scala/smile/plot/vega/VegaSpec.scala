@@ -17,8 +17,8 @@
 package smile.plot.vega
 
 import scala.language.existentials
-import smile.json._
-import org.specs2.mutable._
+import smile.json.*
+import org.specs2.mutable.*
 
 class VegaSpec extends Specification {
 

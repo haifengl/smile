@@ -16,7 +16,7 @@
  */
 package smile.spark
 
-import org.specs2.mutable._
+import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import org.apache.spark.sql.SparkSession
 import smile.data.`type`.{StructField, StructType}

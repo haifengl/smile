@@ -16,7 +16,7 @@
  */
 package smile.plot.vega
 
-import smile.json._
+import smile.json.*
 
 /** To superimpose one chart on top of another. */
 trait Layer extends View with ViewComposition {

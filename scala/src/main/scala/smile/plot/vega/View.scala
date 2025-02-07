@@ -16,7 +16,7 @@
   */
 package smile.plot.vega
 
-import smile.json._
+import smile.json.*
 
 /** Single view specification, which describes a view that uses a single
   * mark type to visualize the data.

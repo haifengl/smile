@@ -17,14 +17,14 @@
 package smile.model
 
 import java.util.Properties
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.classification._
+import smile.classification.*
 import smile.validation.{ClassificationMetrics, CrossValidation}
-import spray.json._
-import spray.json.DefaultJsonProtocol._
+import spray.json.*
+import spray.json.DefaultJsonProtocol.*
 
 /**
   * The classification model.

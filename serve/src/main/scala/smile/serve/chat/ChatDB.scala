@@ -25,7 +25,7 @@ import smile.llm.Message
 
 /** Data access object. */
 trait ChatDB extends Schema {
-  import config.profile.api._
+  import config.profile.api.*
   val db = config.db
 
   // insert and return with generated id

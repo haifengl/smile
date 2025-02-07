@@ -16,9 +16,9 @@
  */
 package org.apache.spark.ml
 
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.*
 import org.apache.spark.ml.linalg.VectorUDT
-import org.apache.spark.mllib.linalg.{VectorUDT => OldVectorUDT}
+import org.apache.spark.mllib.linalg.VectorUDT as OldVectorUDT
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 
@@ -76,7 +76,7 @@ object DataTypeOps {
       case _: NullType => DataTypes.StringType
       case _: VectorUDT => DataTypes.array(DataTypes.DoubleType)
       case _: OldVectorUDT => DataTypes.array(DataTypes.DoubleType)
-      case definedType: UserDefinedType[_] => DataTypes.`object`(definedType.userClass)
+      case definedType: UserDefinedType[?] => DataTypes.`object`(definedType.userClass)
     }
   }
 

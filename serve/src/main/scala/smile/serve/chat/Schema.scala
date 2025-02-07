@@ -23,7 +23,7 @@ import slick.jdbc.JdbcProfile
 /** Database schema. */
 trait Schema {
   val config: DatabaseConfig[JdbcProfile]
-  import config.profile.api._
+  import config.profile.api.*
 
   class Threads(tag: Tag) extends Table[Thread](tag, "THREAD") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)

@@ -17,11 +17,11 @@
 package smile.model
 
 import java.util.Properties
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.regression._
+import smile.regression.*
 import smile.validation.{CrossValidation, RegressionMetrics}
 import spray.json.{JsNumber, JsValue}
 

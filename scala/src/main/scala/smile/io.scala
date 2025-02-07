@@ -16,7 +16,7 @@
  */
 package smile
 
-import java.io._
+import java.io.*
 import java.nio.file.{Path, Paths}
 import java.sql.ResultSet
 import scala.io.Source

@@ -17,7 +17,7 @@
 package smile.spark
 
 import org.apache.spark.sql.{DataFrame, Encoder, Encoders, SparkSession}
-import org.specs2.mutable._
+import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.data.`type`.{DataTypes, StructField}
 import smile.util.Paths

@@ -17,7 +17,7 @@
 package smile
 
 import scala.language.implicitConversions
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import smile.math.MathEx
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}

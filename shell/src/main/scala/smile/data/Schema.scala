@@ -16,7 +16,7 @@
  */
 package smile.data
 
-import spray.json._
+import spray.json.*
 import smile.data.`type`.StructType
 
 final class StructTypeOps(schema: StructType) {

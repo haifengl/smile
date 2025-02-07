@@ -20,7 +20,7 @@ import java.util.Properties
 import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import spray.json._
+import spray.json.*
 
 /**
   * The machine learning model for inference.

@@ -17,14 +17,14 @@
 package smile.serve
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.{Failure, Success}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.{ActorSystem, Terminated}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory

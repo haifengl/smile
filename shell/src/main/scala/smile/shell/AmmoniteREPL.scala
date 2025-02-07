@@ -21,7 +21,7 @@ package smile.shell
   * @author Haifeng Li
   */
 object AmmoniteREPL {
-  def main0(clazz: Class[_], args0: Array[String]): Unit = {
+  def main0(clazz: Class[?], args0: Array[String]): Unit = {
     val home = System.getProperty("user.home") + "/.smile"
     val code =
       """

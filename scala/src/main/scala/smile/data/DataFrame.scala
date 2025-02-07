@@ -19,7 +19,7 @@ package smile.data
 import java.util.Optional
 import java.util.stream.IntStream
 import smile.data.measure.CategoricalMeasure
-import smile.json._
+import smile.json.*
 import smile.util.Index
 
 /**

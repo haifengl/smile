@@ -2,7 +2,7 @@ name := "smile-serve"
 
 // SprayJsonSupport not working for Future[Seq[Obj]] with Scala 3
 // https://github.com/akka/akka-http/issues/3962
-scalaVersion := "3.3.3"
+scalaVersion := "3.3.4"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.serve")
 
