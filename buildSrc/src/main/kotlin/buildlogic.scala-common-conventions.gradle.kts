@@ -6,17 +6,15 @@ plugins {
 }
 
 dependencies {
-    val scalaBinVersion = "2.13"
-    implementation("org.scala-lang:scala-library:2.13.16")
-    implementation("com.typesafe.scala-logging:scala-logging_$scalaBinVersion:3.9.5")
+    implementation("org.scala-lang:scala3-library_3:3.3.5")
+    implementation("com.typesafe.scala-logging:scala-logging_3:3.9.5")
 
     // Use Specs2 for testing.
-    testImplementation("org.specs2:specs2-core_$scalaBinVersion:4.20.9")
+    testImplementation("org.specs2:specs2-core_3:4.20.9")
     testRuntimeOnly("org.slf4j:slf4j-simple:2.0.16")
 }
 
 tasks.withType<ScalaCompile> {
-    options.compilerArgs.add("-Xsource:3")
     options.compilerArgs.add("-release:21")
     options.compilerArgs.add("-encoding:utf8")
     options.compilerArgs.add("-feature")
