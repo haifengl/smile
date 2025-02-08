@@ -18,6 +18,7 @@ package smile.manifold;
 
 import java.util.Arrays;
 import java.util.Properties;
+import smile.base.IterativeTrainingController;
 import smile.math.MathEx;
 
 /**
@@ -60,14 +61,25 @@ public record SammonMapping(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);
 
     /**
+     * Training status per epoch.
+     * @param epoch the iteration index, starting at 0.
+     * @param lambda the step size in diagonal Newton method.
+     * @param stress the objective function value.
+     */
+    public record TrainingStatus(int epoch, double lambda, double stress) {
+
+    }
+
+    /**
      * Sammon's mapping hyperparameters.
      * @param d the dimension of the projection.
-     * @param lambda initial value of the step size constant in diagonal Newton method.
+     * @param lambda the initial step size in diagonal Newton method.
      * @param tol the tolerance on objective function for stopping iterations.
      * @param stepTol the tolerance on step size.
-     * @param maxIter maximum number of iterations.
+     * @param maxIter the maximum number of iterations.
      */
-    public record Options(int d, double lambda, double tol, double stepTol, int maxIter) {
+    public record Options(int d, double lambda, double tol, double stepTol, int maxIter,
+                          IterativeTrainingController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (d < 2) {
@@ -83,9 +95,12 @@ public record SammonMapping(double stress, double[][] coordinates) {
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(2, 0.2, 1E-4, 1E-3, 100);
+        /**
+         * Constructor.
+         * @param maxIter maximum number of iterations.
+         */
+        public Options(int maxIter) {
+            this(2, 0.2, 1E-4, 1E-3, maxIter, null);
         }
 
         /**
@@ -114,7 +129,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
             double tol = Double.parseDouble(props.getProperty("smile.sammon.tolerance", "1E-4"));
             double stepTol = Double.parseDouble(props.getProperty("smile.sammon.step_tolerance", "1E-3"));
             int maxIter = Integer.parseInt(props.getProperty("smile.sammon.iterations", "100"));
-            return new Options(d, lambda, tol, stepTol, maxIter);
+            return new Options(d, lambda, tol, stepTol, maxIter, null);
         }
     }
 
@@ -125,7 +140,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * @return the model.
      */
     public static SammonMapping fit(double[][] proximity) {
-        return fit(proximity, new Options());
+        return fit(proximity, new Options(100));
     }
 
     /**
@@ -145,23 +160,21 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * @param proximity the non-negative proximity matrix of dissimilarities.
      *                  The diagonal should be zero and all other elements
      *                  should be positive and symmetric.
-     * @param init the initial projected coordinates, of which the column
+     * @param coordinates the initial projected coordinates, of which the column
      *             size is the projection dimension. It will be modified.
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static SammonMapping fit(double[][] proximity, double[][] init, Options options) {
+    public static SammonMapping fit(double[][] proximity, double[][] coordinates, Options options) {
         if (proximity.length != proximity[0].length) {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }
 
-        if (proximity.length != init.length) {
+        if (proximity.length != coordinates.length) {
             throw new IllegalArgumentException("The proximity matrix and the initial coordinates are of different size.");
         }
 
         int n = proximity.length;
-        double[][] coordinates = init;
-        
         double c = 0.0;
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
@@ -172,20 +185,11 @@ public record SammonMapping(double stress, double[][] coordinates) {
         int d = options.d;
         double[][] xu = new double[n][d];
 
-        double stress = 0.0;
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                double dij = proximity[i][j];
-                if (dij == 0.0) dij = 1.0E-10;
-                double rij = MathEx.distance(coordinates[i], coordinates[j]);
-                stress += MathEx.pow2(dij - rij) / dij;
-            }
-        }
+        double stress = stress(proximity, coordinates);
         stress /= c;
+
         double epast = stress;
         double eprev = stress;
-        logger.info("Sammon's Mapping initial stress: {}", stress);
-
         double[] xv = new double[d];
         double[] e1 = new double[d];
         double[] e2 = new double[d];
@@ -194,10 +198,15 @@ public record SammonMapping(double stress, double[][] coordinates) {
         double tol = options.tol;
         double stepTol = options.stepTol;
         int maxIter = options.maxIter;
+
+        logger.info("Sammon's Mapping initial stress: {}", stress);
+        if (options.controller != null) {
+            options.controller.submit(new TrainingStatus(0, lambda, stress));
+        }
+
         for (int iter = 1; iter <= maxIter; iter++) {
             for (int i = 0; i < n; i++) {
                 double[] ri = coordinates[i];
-
                 Arrays.fill(e1, 0.0);
                 Arrays.fill(e2, 0.0);
 
@@ -207,7 +216,6 @@ public record SammonMapping(double stress, double[][] coordinates) {
                     }
 
                     double[] rj = coordinates[j];
-
                     double dij = proximity[i][j];
                     if (dij == 0.0) dij = 1.0E-10;
 
@@ -234,30 +242,23 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 }
             }
 
-            stress = 0.0;
-            for (int i = 0; i < n; i++) {
-                for (int j = i + 1; j < n; j++) {
-                    double dij = proximity[i][j];
-                    if (dij == 0.0) dij = 1.0E-10;
-                    double rij = MathEx.distance(xu[i], xu[j]);
-                    stress += MathEx.pow2(dij - rij) / dij;
-                }
-            }
+            stress = stress(proximity, xu);
             stress /= c;
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(iter, lambda, stress));
+            }
 
             if (stress > eprev) {
                 stress = eprev;
                 lambda = lambda * 0.2;
                 if (lambda < stepTol) {
-                    logger.info("Sammon's Mapping stops early as stress = {} after {} iterations", stress, iter-1);
+                    logger.info("Sammon's Mapping stops early as stress = {} after {} iterations", stress, iter);
                     break;
                 }
                 iter--;
             } else {
-                lambda *= 1.5;
-                if (lambda > 0.5) {
-                    lambda = 0.5;
-                }
+                lambda = Math.min(0.5, lambda * 1.5);
                 eprev = stress;
 
                 // Move the centroid to origin and update
@@ -269,7 +270,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 }
 
                 if (iter % 10 == 0) {
-                    logger.info("Sammon's Mapping stress after {} iterations: {}, magic = {}", iter, stress, lambda);
+                    logger.info("Sammon's Mapping stress after {} iterations: {}, step = {}", iter, stress, lambda);
                     if (stress > epast - tol) {
                         break;
                     }
@@ -279,5 +280,25 @@ public record SammonMapping(double stress, double[][] coordinates) {
         }
 
         return new SammonMapping(stress, coordinates);
+    }
+
+    /**
+     * Computes the unnormalized objective function.
+     * @param proximity the non-negative proximity matrix of dissimilarities.
+     * @param coordinates the projected coordinates.
+     * @return the stress value.
+     */
+    private static double stress(double[][] proximity, double[][] coordinates) {
+        double stress = 0.0;
+        int n = proximity.length;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                double dij = proximity[i][j];
+                if (dij == 0.0) dij = 1.0E-10;
+                double rij = MathEx.distance(coordinates[i], coordinates[j]);
+                stress += MathEx.pow2(dij - rij) / dij;
+            }
+        }
+        return stress;
     }
 }

@@ -169,11 +169,6 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(500);
-        }
-
         /**
          * Constructor.
          * @param ntrees the number of trees.
@@ -218,7 +213,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(500));
     }
 
     /**
