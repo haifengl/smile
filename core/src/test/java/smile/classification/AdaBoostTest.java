@@ -95,8 +95,11 @@ public class AdaBoostTest {
             controller.subscribe(new TrainingStatusSubscriber(controller));
             var options = new AdaBoost.Options(20, 5, 8, 1, weather.data(), controller);
             AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options);
-            String[] fields = model.schema().names();
+            int error = Error.of(weather.y(), model.predict(weather.data()));
+            System.out.println("Training Error = " + error);
+            assertEquals(0, error);
 
+            String[] fields = model.schema().names();
             double[] importance = model.importance();
             for (int i = 0; i < importance.length; i++) {
                 System.out.format("%-15s %.4f%n", fields[i], importance[i]);

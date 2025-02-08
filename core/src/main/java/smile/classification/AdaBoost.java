@@ -320,29 +320,14 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             ClassificationMetrics metrics = null;
             if (options.test != null) {
                 long testStartTime = System.nanoTime();
-                if (k == 2) {
-                    for (int j = 0; j < testy.length; j++) {
-                        Tuple xj = testx.get(j);
-                        double base = 0;
-                        for (int i = 0; i <= t; i++) {
-                            base += alpha[i] * trees[i].predict(xj);
-                        }
-                        prediction[j] = base > 0 ? 1 : 0;
-                    }
-                    double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
-                    metrics = ClassificationMetrics.binary(fitTime, scoreTime, testy, prediction);
-                } else {
-                    for (int j = 0; j < testy.length; j++) {
-                        Tuple xj = testx.get(j);
-                        var p = posteriors[j];
-                        for (int i = 0; i <= t; i++) {
-                            p[trees[i].predict(xj)] += alpha[i];
-                        }
-                        prediction[j] = MathEx.whichMax(p);
-                    }
-                    double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
-                    metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
+                for (int j = 0; j < testy.length; j++) {
+                    Tuple xj = testx.get(j);
+                    var p = posteriors[j];
+                    p[trees[t].predict(xj)] += alpha[t];
+                    prediction[j] = MathEx.whichMax(p);
                 }
+                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
                 logger.info("Validation metrics = {} ", metrics);
             }
 
@@ -452,7 +437,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
 
     /**
      * Predicts the class label of an instance and also calculate a posteriori
-     * probabilities. Binary classification is not supported.
+     * probabilities.
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
@@ -482,29 +467,17 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         int n = x.size();
         int ntrees = trees.length;
         int[][] prediction = new int[ntrees][n];
+        double[] p = new double[k];
 
-        if (k == 2) {
-            for (int j = 0; j < n; j++) {
-                Tuple xj = x.get(j);
-                double base = 0;
-                for (int i = 0; i < ntrees; i++) {
-                    base += alpha[i] * trees[i].predict(xj);
-                    prediction[i][j] = base > 0 ? 1 : 0;
-                }
-            }
-        } else {
-            double[] p = new double[k];
-            for (int j = 0; j < n; j++) {
-                Tuple xj = x.get(j);
-                Arrays.fill(p, 0);
-                for (int i = 0; i < ntrees; i++) {
-                    p[trees[i].predict(xj)] += alpha[i];
-                    prediction[i][j] = MathEx.whichMax(p);
-                }
+        for (int j = 0; j < n; j++) {
+            Tuple xj = x.get(j);
+            Arrays.fill(p, 0);
+            for (int i = 0; i < ntrees; i++) {
+                p[trees[i].predict(xj)] += alpha[i];
+                prediction[i][j] = MathEx.whichMax(p);
             }
         }
-        
+
         return prediction;
     }
 }
-
