@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.util;
+package smile.io;
 
 import java.io.File;
 import java.io.IOException;
