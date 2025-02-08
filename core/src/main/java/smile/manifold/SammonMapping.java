@@ -63,22 +63,22 @@ public record SammonMapping(double stress, double[][] coordinates) {
     /**
      * Training status per epoch.
      * @param epoch the iteration index, starting at 0.
-     * @param lambda the step size in diagonal Newton method.
      * @param stress the objective function value.
+     * @param step the step size in diagonal Newton method.
      */
-    public record TrainingStatus(int epoch, double lambda, double stress) {
+    public record TrainingStatus(int epoch, double stress, double step) {
 
     }
 
     /**
      * Sammon's mapping hyperparameters.
      * @param d the dimension of the projection.
-     * @param lambda the initial step size in diagonal Newton method.
-     * @param tol the tolerance on objective function for stopping iterations.
-     * @param stepTol the tolerance on step size.
      * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance on objective function for stopping iterations.
+     * @param step the initial step size in diagonal Newton method.
+     * @param stepTol the tolerance on step size.
      */
-    public record Options(int d, double lambda, double tol, double stepTol, int maxIter,
+    public record Options(int d, int maxIter, double tol, double step, double stepTol,
                           IterativeTrainingController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
@@ -86,21 +86,30 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
             }
 
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
 
-            if (maxIter <= 0) {
-                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            if (step < 0.0) {
+                throw new IllegalArgumentException("Invalid step size: " + step);
+            }
+
+            if (stepTol <= 0.0) {
+                throw new IllegalArgumentException("Invalid step size tolerance: " + stepTol);
             }
         }
 
         /**
          * Constructor.
+         * @param d the dimension of the projection.
          * @param maxIter maximum number of iterations.
          */
-        public Options(int maxIter) {
-            this(2, 0.2, 1E-4, 1E-3, maxIter, null);
+        public Options(int d, int maxIter) {
+            this(d, maxIter, 1E-4, 0.2, 1E-3, null);
         }
 
         /**
@@ -110,10 +119,10 @@ public record SammonMapping(double stress, double[][] coordinates) {
         public Properties toProperties() {
             Properties props = new Properties();
             props.setProperty("smile.sammon.d", Integer.toString(d));
-            props.setProperty("smile.sammon.lambda", Double.toString(lambda));
-            props.setProperty("smile.sammon.tolerance", Double.toString(tol));
-            props.setProperty("smile.sammon.step_tolerance", Double.toString(stepTol));
             props.setProperty("smile.sammon.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.sammon.tolerance", Double.toString(tol));
+            props.setProperty("smile.sammon.step", Double.toString(step));
+            props.setProperty("smile.sammon.step_tolerance", Double.toString(stepTol));
             return props;
         }
 
@@ -125,22 +134,22 @@ public record SammonMapping(double stress, double[][] coordinates) {
          */
         public static Options of(Properties props) {
             int d = Integer.parseInt(props.getProperty("smile.sammon.d", "2"));
-            double lambda = Double.parseDouble(props.getProperty("smile.sammon.lambda", "0.2"));
-            double tol = Double.parseDouble(props.getProperty("smile.sammon.tolerance", "1E-4"));
-            double stepTol = Double.parseDouble(props.getProperty("smile.sammon.step_tolerance", "1E-3"));
             int maxIter = Integer.parseInt(props.getProperty("smile.sammon.iterations", "100"));
-            return new Options(d, lambda, tol, stepTol, maxIter, null);
+            double tol = Double.parseDouble(props.getProperty("smile.sammon.tolerance", "1E-4"));
+            double step = Double.parseDouble(props.getProperty("smile.sammon.step", "0.2"));
+            double stepTol = Double.parseDouble(props.getProperty("smile.sammon.step_tolerance", "1E-3"));
+            return new Options(d, maxIter, tol, step, stepTol, null);
         }
     }
 
     /**
-     * Fits Sammon's mapping with default d = 2, lambda = 0.2, tolerance = 1E-4 and maxIter = 100.
+     * Fits Sammon's mapping with default d = 2, step = 0.2, tolerance = 1E-4 and maxIter = 100.
      * @param proximity the non-negative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @return the model.
      */
     public static SammonMapping fit(double[][] proximity) {
-        return fit(proximity, new Options(100));
+        return fit(proximity, new Options(2, 100));
     }
 
     /**
@@ -194,14 +203,14 @@ public record SammonMapping(double stress, double[][] coordinates) {
         double[] e1 = new double[d];
         double[] e2 = new double[d];
 
-        double lambda = options.lambda;
+        double step = options.step;
         double tol = options.tol;
         double stepTol = options.stepTol;
         int maxIter = options.maxIter;
 
-        logger.info("Sammon's Mapping initial stress: {}", stress);
+        logger.info("Initial stress: {}", stress);
         if (options.controller != null) {
-            options.controller.submit(new TrainingStatus(0, lambda, stress));
+            options.controller.submit(new TrainingStatus(0, stress, step));
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
@@ -238,44 +247,46 @@ public record SammonMapping(double stress, double[][] coordinates) {
 
                 // Correction
                 for (int l = 0; l < d; l++) {
-                    xu[i][l] = ri[l] + lambda * e1[l] / Math.abs(e2[l]);
+                    xu[i][l] = ri[l] + step * e1[l] / Math.abs(e2[l]);
                 }
             }
 
             stress = stress(proximity, xu);
             stress /= c;
 
-            if (options.controller != null) {
-                options.controller.submit(new TrainingStatus(iter, lambda, stress));
-            }
-
             if (stress > eprev) {
                 stress = eprev;
-                lambda = lambda * 0.2;
-                if (lambda < stepTol) {
-                    logger.info("Sammon's Mapping stops early as stress = {} after {} iterations", stress, iter);
+                step = step * 0.2;
+                if (step < stepTol) {
+                    logger.info("Early stops after {} iterations: {}, step = {}", iter, stress, step);
                     break;
+                } else {
+                    logger.info("Decreases step size = {}", step);
+                    iter--;
+                    continue;
                 }
-                iter--;
-            } else {
-                lambda = Math.min(0.5, lambda * 1.5);
-                eprev = stress;
+            }
 
-                // Move the centroid to origin and update
-                double[] mu = MathEx.colMeans(xu);
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < d; j++) {
-                        coordinates[i][j] = xu[i][j] - mu[j];
-                    }
-                }
+            step = Math.min(0.5, step * 1.5);
+            eprev = stress;
 
-                if (iter % 10 == 0) {
-                    logger.info("Sammon's Mapping stress after {} iterations: {}, step = {}", iter, stress, lambda);
-                    if (stress > epast - tol) {
-                        break;
-                    }
-                    epast = stress;
+            // Move the centroid to origin and update
+            double[] mu = MathEx.colMeans(xu);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < d; j++) {
+                    coordinates[i][j] = xu[i][j] - mu[j];
                 }
+            }
+
+            if (iter % 10 == 0) {
+                logger.info("Stress after {} iterations: {}, step = {}", iter, stress, step);
+                if (stress > epast - tol) break;
+                epast = stress;
+            }
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(iter, stress, step));
+                if (options.controller.isInterrupted()) break;
             }
         }
 
