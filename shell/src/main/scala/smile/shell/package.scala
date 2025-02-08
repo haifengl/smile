@@ -21,6 +21,7 @@ package smile
   * @author Haifeng Li
   */
 package object shell {
+  val version: String = getClass.getPackage.getImplementationVersion
   def welcome(exit: String): String =
     s"""
        |                                                       ..::''''::..
@@ -33,8 +34,7 @@ package object shell {
        |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
        |                                                       ``::,,,,::''
        |
-       |  Welcome to Smile Shell! Type "$exit<RETURN>" to leave the Smile Shell.
-       |  Version ${BuildInfo.version} (Scala ${BuildInfo.scalaVersion}), built at ${BuildInfo.builtAtString}
+       |  Welcome to Smile $version! Type "$exit<RETURN>" to leave the Smile Shell.
        |===============================================================================
      """.stripMargin
 }

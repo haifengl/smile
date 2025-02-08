@@ -101,7 +101,7 @@ object Main {
           |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
           |                                                       ``::,,,,::''
           |
-          |  Welcome to Smile Serve ${BuildInfo.version}! Built at ${BuildInfo.builtAtString}
+          |  Welcome to Smile Serve ${getClass.getPackage.getImplementationVersion}!
           |===============================================================================
         """.stripMargin)
         Serve(config)

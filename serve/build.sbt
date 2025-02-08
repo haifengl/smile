@@ -37,12 +37,6 @@ batScriptExtraDefines ++= Seq(
   """set PATH=!PATH!;%~dp0"""
 )
 
-// BuildInfo
-enablePlugins(BuildInfoPlugin)
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-buildInfoPackage := "smile.serve"
-buildInfoOptions += BuildInfoOption.BuildTime
-
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.2",

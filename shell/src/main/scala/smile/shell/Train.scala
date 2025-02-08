@@ -109,7 +109,7 @@ object Train {
       import builder.*
       OParser.sequence(
         programName("smile train"),
-        head("Smile", BuildInfo.version),
+        head("Smile", smile.shell.version),
         opt[String]("formula")
           .optional()
           .valueName("<class ~ .>")
