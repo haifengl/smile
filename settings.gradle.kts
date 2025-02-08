@@ -4,5 +4,4 @@ plugins {
 }
 
 rootProject.name = "smile"
-include("base", "core", "deep", "nlp", "plot", "json", "scala", "kotlin")
-
+include("base", "core", "deep", "nlp", "plot", "kotlin", "json", "scala")
