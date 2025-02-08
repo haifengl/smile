@@ -14,24 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.base;
+package smile.util;
 
 import java.util.concurrent.*;
 
 /**
- * A controller for iterative training algorithms.
- * @param <T> the type of training status objects.
+ * A controller for iterative algorithms.
+ * @param <T> the type of algorithm progress status objects.
  */
-public class IterativeTrainingController<T> implements AutoCloseable {
-    /** Flag if early stopping the training. */
+public class IterativeAlgorithmController<T> implements AutoCloseable {
+    /** Flag if early stopping the algorithm. */
     private boolean interrupted;
-    /** Training progress publisher. */
+    /** Algorithm progress publisher. */
     private final SubmissionPublisher<T> publisher;
 
     /**
      * Constructor.
      */
-    public IterativeTrainingController() {
+    public IterativeAlgorithmController() {
         this(Executors.newFixedThreadPool(1), 2048);
     }
 
@@ -41,7 +41,7 @@ public class IterativeTrainingController<T> implements AutoCloseable {
      *                 creation of at least one independent thread.
      * @param maxBufferCapacity the maximum capacity for each subscriber's buffer.
      */
-    public IterativeTrainingController(Executor executor, int maxBufferCapacity) {
+    public IterativeAlgorithmController(Executor executor, int maxBufferCapacity) {
         interrupted = false;
         publisher = new SubmissionPublisher<>(executor, maxBufferCapacity);
     }
@@ -52,22 +52,22 @@ public class IterativeTrainingController<T> implements AutoCloseable {
     }
 
     /**
-     * Checks if keep training going.
-     * @return true if keep training going; false to early stop.
+     * Checks if keep algorithm going.
+     * @return true if keep algorithm going; false to early stop.
      */
     public final boolean isInterrupted() {
         return interrupted;
     }
 
     /**
-     * Early stops the training.
+     * Early stops the algorithm.
      */
     public void stop() {
         interrupted = true;
     }
 
     /**
-     * Adds the given Subscriber for training progress.
+     * Adds the given subscriber for algorithm progress.
      * @param subscriber the subscriber.
      */
     public void subscribe(Flow.Subscriber<T> subscriber) {
@@ -75,8 +75,8 @@ public class IterativeTrainingController<T> implements AutoCloseable {
     }
 
     /**
-     * Publishes the training status to each current subscriber asynchronously.
-     * @param status the training progress information.
+     * Publishes the algorithm status to each current subscriber asynchronously.
+     * @param status the algorithm progress information.
      */
     public void submit(T status) {
         publisher.submit(status);

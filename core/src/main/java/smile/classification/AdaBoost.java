@@ -18,7 +18,6 @@ package smile.classification;
 
 import java.io.Serial;
 import java.util.*;
-import smile.base.IterativeTrainingController;
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -29,6 +28,7 @@ import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
+import smile.util.IterativeAlgorithmController;
 import smile.util.Strings;
 import smile.validation.ClassificationMetrics;
 
@@ -153,7 +153,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @param controller the optional training controller.
      */
     public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize,
-            DataFrame test, IterativeTrainingController<TrainingStatus> controller) {
+            DataFrame test, IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (ntrees < 1) {
