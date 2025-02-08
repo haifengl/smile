@@ -7,11 +7,7 @@ plugins {
 
 dependencies {
     val scalaBinVersion = "2.13"
-    constraints {
-        compileOnly("org.scala-lang:scala-library:2.13.16")
-    }
-
-    compileOnly("org.scala-lang:scala-library")
+    implementation("org.scala-lang:scala-library:2.13.16")
     implementation("com.typesafe.scala-logging:scala-logging_$scalaBinVersion:3.9.5")
 
     // Use Specs2 for testing.
@@ -20,6 +16,7 @@ dependencies {
 }
 
 tasks.withType<ScalaCompile> {
+    options.compilerArgs.add("-Xsource:3")
     options.compilerArgs.add("-release:21")
     options.compilerArgs.add("-encoding:utf8")
     options.compilerArgs.add("-feature")

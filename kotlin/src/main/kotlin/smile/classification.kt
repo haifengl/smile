@@ -678,7 +678,7 @@ fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20
  */
 fun adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
              maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost {
-    return AdaBoost.fit(formula, data, AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize))
+    return AdaBoost.fit(formula, data, AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, null, null))
 }
 
 /**

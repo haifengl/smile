@@ -61,7 +61,7 @@ import smile.math.distance.Metric
  * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
  */
 fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true): Array<DoubleArray> {
-    return IsoMap.of(data, IsoMap.Options(k, d, CIsomap))
+    return IsoMap.fit(data, IsoMap.Options(k, d, CIsomap))
 }
 
 /**
@@ -86,7 +86,7 @@ fun isomap(data: Array<DoubleArray>, k: Int, d: Int = 2, CIsomap: Boolean = true
  */
 fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): Array<DoubleArray> {
     val nng = NearestNeighborGraph.of(data, k);
-    return LLE.of(data, nng.largest(false), d)
+    return LLE.fit(data, nng.largest(false), d)
 }
 
 /**
@@ -111,7 +111,7 @@ fun lle(data: Array<DoubleArray>, k: Int, d: Int = 2): Array<DoubleArray> {
  *          Non-positive value means discrete weights.
  */
 fun laplacian(data: Array<DoubleArray>, k: Int, d: Int = 2, t: Double = -1.0): Array<DoubleArray> {
-    return LaplacianEigenmap.of(data, LaplacianEigenmap.Options(k, d, t))
+    return LaplacianEigenmap.fit(data, LaplacianEigenmap.Options(k, d, t))
 }
 
 /**
@@ -190,8 +190,8 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
 fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
          learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
          repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
-                   repulsionStrength, localConnectivity))
+    return UMAP.fit(data, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                    repulsionStrength, localConnectivity))
 }
 
 /**
@@ -246,8 +246,8 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, epochs: Int = 0,
 fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epochs: Int = 0,
              learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5,
              repulsionStrength: Double = 1.0, localConnectivity: Double = 1.0): Array<DoubleArray> {
-    return UMAP.of(data, distance, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
-                   repulsionStrength, localConnectivity))
+    return UMAP.fit(data, distance, UMAP.Options(k, d, epochs, learningRate, minDist, spread, negativeSamples,
+                    repulsionStrength, localConnectivity))
 }
 
 /**
@@ -275,7 +275,7 @@ fun <T> umap(data: Array<T>, distance: Metric<T>, k: Int = 15, d: Int = 2, epoch
  *            representing the objects.
  */
 fun mds(proximity: Array<DoubleArray>, d: Int, positive: Boolean = false): MDS {
-    return MDS.of(proximity, MDS.Options(d, positive))
+    return MDS.fit(proximity, MDS.Options(d, positive))
 }
 
 /**
@@ -294,7 +294,7 @@ fun mds(proximity: Array<DoubleArray>, d: Int, positive: Boolean = false): MDS {
  * @param maxIter maximum number of iterations.
  */
 fun isomds(proximity: Array<DoubleArray>, d: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS {
-    return IsotonicMDS.of(proximity, IsotonicMDS.Options(d, tol, maxIter))
+    return IsotonicMDS.fit(proximity, IsotonicMDS.Options(d, tol, maxIter))
 }
 
 /**
@@ -335,5 +335,5 @@ fun isomds(proximity: Array<DoubleArray>, d: Int, tol: Double = 0.0001, maxIter:
  * @param maxIter   maximum number of iterations.
  */
 fun sammon(proximity: Array<DoubleArray>, d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping {
-    return SammonMapping.of(proximity, SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
+    return SammonMapping.fit(proximity, SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
 }

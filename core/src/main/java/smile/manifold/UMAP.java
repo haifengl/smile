@@ -187,11 +187,11 @@ public class UMAP {
      * @param options the hyperparameters.
      * @return The embedding coordinates.
      */
-    public static double[][] of(double[][] data, Options options) {
+    public static double[][] fit(double[][] data, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, options.k) :
                 NearestNeighborGraph.descent(data, options.k);
-        return of(data, nng, options);
+        return fit(data, nng, options);
     }
 
     /**
@@ -203,11 +203,11 @@ public class UMAP {
      * @param <T> The data type of points.
      * @return The embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Metric<T> distance, Options options) {
+    public static <T> double[][] fit(T[] data, Metric<T> distance, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE ?
                 NearestNeighborGraph.of(data, distance, options.k) :
                 NearestNeighborGraph.descent(data, distance, options.k);
-        return of(data, nng, options);
+        return fit(data, nng, options);
     }
 
     /**
@@ -219,7 +219,7 @@ public class UMAP {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, NearestNeighborGraph nng, Options options) {
+    public static <T> double[][] fit(T[] data, NearestNeighborGraph nng, Options options) {
         int d = options.d;
         int epochs = options.epochs;
         if (epochs < 10) {
