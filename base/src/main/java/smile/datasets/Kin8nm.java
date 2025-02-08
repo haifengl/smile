@@ -23,7 +23,7 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Robot arm simulation dataset. It is a realistic simulation of the forward

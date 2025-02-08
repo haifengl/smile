@@ -51,7 +51,7 @@ public class HashEncoderTest {
     @Test
     public void testFeature() throws IOException {
         System.out.println("feature");
-        String[][] text = smile.util.Paths.getTestDataLines("text/movie.txt")
+        String[][] text = smile.io.Paths.getTestDataLines("text/movie.txt")
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
                 .map(line -> line.split("\\s+", 2))

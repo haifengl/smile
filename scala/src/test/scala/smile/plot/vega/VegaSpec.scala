@@ -472,7 +472,7 @@ class VegaSpec extends Specification {
       1 mustEqual 1
     }
     "Scatter Plot Matrix (SPLOM)" in {
-      val iris = smile.read.arff(smile.util.Paths.getTestData("weka/iris.arff"))
+      val iris = smile.read.arff(smile.io.Paths.getTestData("weka/iris.arff"))
       val splom = VegaLite.splom(iris, "class").title("Scatter Plot Matrix")
       splom.show(true)
       1 mustEqual 1

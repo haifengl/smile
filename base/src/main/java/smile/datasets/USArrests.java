@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Violent crime rates by US state. This dataset contains statistics,

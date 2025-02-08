@@ -23,7 +23,7 @@ import smile.data.DataFrame
 import smile.data.formula.*
 import smile.feature.transform.{Standardizer, WinsorScaler}
 import smile.math.MathEx
-import smile.util.Paths
+import smile.io.Paths
 
 class ClassificationModelSpec extends Specification {
   val train: DataFrame = read.arff(Paths.getTestData("weka/segment-challenge.arff"))

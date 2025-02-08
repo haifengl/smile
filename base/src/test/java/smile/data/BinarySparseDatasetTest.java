@@ -50,7 +50,7 @@ public class BinarySparseDatasetTest {
     public void testParse() {
         System.out.println("from");
         try {
-            BinarySparseDataset data = BinarySparseDataset.from(smile.util.Paths.getTestData("transaction/kosarak.dat"));
+            BinarySparseDataset data = BinarySparseDataset.from(smile.io.Paths.getTestData("transaction/kosarak.dat"));
             assertEquals(990002, data.size());
             assertEquals(41271, data.ncol());
             assertEquals(8018988, data.length());

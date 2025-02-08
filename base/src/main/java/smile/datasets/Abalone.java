@@ -27,7 +27,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Predicting the age of abalone from physical measurements. The age of

@@ -17,7 +17,7 @@
 package smile.data;
 
 import java.sql.SQLException;
-import smile.util.Paths;
+import smile.io.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import smile.math.MathEx;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Part-of-speech tagging with hidden Markov model.

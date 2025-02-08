@@ -33,7 +33,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * MNIST dataset. This is a large dataset of handwritten digits normalized to

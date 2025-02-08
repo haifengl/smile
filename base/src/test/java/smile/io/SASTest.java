@@ -19,7 +19,7 @@ package smile.io;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.util.Paths;
+import smile.io.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

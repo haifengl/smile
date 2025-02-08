@@ -62,8 +62,8 @@ public class SVMTest {
         System.out.println("svmguide1");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
-        SparseDataset<Integer> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1"));
+        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.t"));
 
         int n = train.size();
         double[][] x = new double[n][4];
@@ -102,8 +102,8 @@ public class SVMTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         // Adult is not in standard format as its index start with 0.
-        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
-        SparseDataset<Integer> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
+        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
 
         int n = Math.min(20000, train.size()); // to avoid OOM
         int[][] x = new int[n][];
