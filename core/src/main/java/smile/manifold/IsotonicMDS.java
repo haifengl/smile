@@ -89,8 +89,8 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity) {
-        return of(proximity, new Options());
+    public static IsotonicMDS fit(double[][] proximity) {
+        return fit(proximity, new Options());
     }
 
     /**
@@ -100,9 +100,9 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity, Options options) {
-        MDS mds = MDS.of(proximity, new MDS.Options(options.d, false));
-        return of(proximity, mds.coordinates(), options);
+    public static IsotonicMDS fit(double[][] proximity, Options options) {
+        MDS mds = MDS.fit(proximity, new MDS.Options(options.d, false));
+        return fit(proximity, mds.coordinates(), options);
     }
 
     /**
@@ -114,7 +114,7 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static IsotonicMDS of(double[][] proximity, double[][] init, Options options) {
+    public static IsotonicMDS fit(double[][] proximity, double[][] init, Options options) {
         if (proximity.length != proximity[0].length) {
             throw new IllegalArgumentException("The proximity matrix is not square.");
         }

@@ -95,7 +95,7 @@ package object manifold {
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
   def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]] = time("IsoMap") {
-    IsoMap.of(data, new IsoMap.Options(k, d, CIsomap))
+    IsoMap.fit(data, new IsoMap.Options(k, d, CIsomap))
   }
 
   /** Locally Linear Embedding. It has several advantages over Isomap, including
@@ -119,7 +119,7 @@ package object manifold {
     */
   def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]] = time("LLE") {
     val nng = NearestNeighborGraph.of(data, k)
-    LLE.of(data, nng, d)
+    LLE.fit(data, nng, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -143,7 +143,7 @@ package object manifold {
     *          Non-positive value means discrete weights.
     */
   def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]] = time("Laplacian Eigen Map") {
-    LaplacianEigenmap.of(data, new LaplacianEigenmap.Options(k, d, t))
+    LaplacianEigenmap.fit(data, new LaplacianEigenmap.Options(k, d, t))
   }
 
   /** t-distributed stochastic neighbor embedding. t-SNE is a nonlinear
@@ -221,7 +221,7 @@ package object manifold {
   def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, epochs: Int = 0, learningRate: Double = 1.0,
            minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0,
            localConnectivity: Double = 1.0): Array[Array[Double]] = time("UMAP") {
-    UMAP.of(data, new UMAP.Options(k, d, epochs, learningRate, minDist, spread,
+    UMAP.fit(data, new UMAP.Options(k, d, epochs, learningRate, minDist, spread,
                                    negativeSamples, repulsionStrength, localConnectivity))
   }
 
@@ -249,7 +249,7 @@ package object manifold {
     *            representing the objects.
     */
   def mds(proximity: Array[Array[Double]], d: Int, positive: Boolean = false): MDS = time("MDS") {
-    MDS.of(proximity, new MDS.Options(d, positive))
+    MDS.fit(proximity, new MDS.Options(d, positive))
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -267,7 +267,7 @@ package object manifold {
     * @param maxIter maximum number of iterations.
     */
   def isomds(proximity: Array[Array[Double]], d: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
-    IsotonicMDS.of(proximity, new IsotonicMDS.Options(d, tol, maxIter))
+    IsotonicMDS.fit(proximity, new IsotonicMDS.Options(d, tol, maxIter))
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -307,7 +307,7 @@ package object manifold {
     * @param maxIter   maximum number of iterations.
     */
   def sammon(proximity: Array[Array[Double]], d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
-    SammonMapping.of(proximity, new SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
+    SammonMapping.fit(proximity, new SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].

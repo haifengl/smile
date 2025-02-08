@@ -114,10 +114,10 @@ public class LLE {
      * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, Options options) {
+    public static double[][] fit(double[][] data, Options options) {
         // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.of(data, options.k);
-        return of(data, nng.largest(false), options.d);
+        return fit(data, nng.largest(false), options.d);
     }
 
     /**
@@ -127,7 +127,7 @@ public class LLE {
      * @param d the dimension of the manifold.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, NearestNeighborGraph nng, int d) {
+    public static double[][] fit(double[][] data, NearestNeighborGraph nng, int d) {
         int k = nng.k();
         int D = data[0].length;
 

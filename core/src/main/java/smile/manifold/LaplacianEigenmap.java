@@ -116,8 +116,8 @@ public class LaplacianEigenmap {
      * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, Options options) {
-        return of(data, MathEx::distance, options);
+    public static double[][] fit(double[][] data, Options options) {
+        return fit(data, MathEx::distance, options);
     }
 
     /**
@@ -128,10 +128,10 @@ public class LaplacianEigenmap {
      * @param <T> the data type of points.
      * @return the embedding coordinates.
      */
-    public static <T> double[][] of(T[] data, Distance<T> distance, Options options) {
+    public static <T> double[][] fit(T[] data, Distance<T> distance, Options options) {
         // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.of(data, distance, options.k);
-        return of(nng.largest(false), options);
+        return fit(nng.largest(false), options);
     }
 
     /**
@@ -140,7 +140,7 @@ public class LaplacianEigenmap {
      * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(NearestNeighborGraph nng, Options options) {
+    public static double[][] fit(NearestNeighborGraph nng, Options options) {
         AdjacencyList graph = nng.graph(false);
         int n = graph.getVertexCount();
         int d = options.d;

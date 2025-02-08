@@ -76,7 +76,7 @@ public class MDSTest {
             {  911.230500,   205.93020}
         };
 
-        MDS mds = MDS.of(x);
+        MDS mds = MDS.fit(x);
         assertArrayEquals(eig, mds.scores(), 1E-4);
 
         double[][] coordinates = mds.coordinates();
@@ -118,7 +118,7 @@ public class MDSTest {
             {-1319.918808,  -295.010834}
         };
 
-        MDS mds = MDS.of(x, new MDS.Options(2, true));
+        MDS mds = MDS.fit(x, new MDS.Options(2, true));
         assertArrayEquals(eigs, mds.scores(), 1E-2);
 
         double[][] coordinates = mds.coordinates();

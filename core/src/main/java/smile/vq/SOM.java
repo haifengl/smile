@@ -177,7 +177,7 @@ public class SOM implements VectorQuantizer {
         // Pair-wise distance matrix.
         double[][] pdist = new double[k][k];
         MathEx.pdist(medoids, pdist, MathEx::distance);
-        MDS mds = MDS.of(pdist);
+        MDS mds = MDS.fit(pdist);
         double[][] coordinates = mds.coordinates();
 
         double[] x = Arrays.stream(coordinates).mapToDouble(point -> point[0]).toArray();
