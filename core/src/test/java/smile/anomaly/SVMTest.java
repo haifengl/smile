@@ -21,7 +21,7 @@ import org.junit.jupiter.api.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  *

@@ -27,7 +27,7 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.hpo.Hyperparameters
 import smile.io.Read
-import smile.util.Paths
+import smile.io.Paths
 
 class HpoSpec extends Specification with BeforeAll with AfterAll{
 

@@ -100,7 +100,7 @@ public class SparseDatasetTest {
     @Test
     public void testParse() throws Exception {
         System.out.println("from");
-        SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("sparse/kos.txt"), 1);
+        SparseDataset data = SparseDataset.from(smile.io.Paths.getTestData("sparse/kos.txt"), 1);
         assertEquals(3430, data.size());
         assertEquals(6906, data.ncol());
         assertEquals(353160, data.nz());

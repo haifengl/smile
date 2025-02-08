@@ -23,7 +23,7 @@ import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.base.rbf.RBF
 import smile.regression.RBFNetwork
-import smile.util.Paths
+import smile.io.Paths
 
 class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
 

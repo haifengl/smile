@@ -20,7 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Words in WordNet datasets. WordNet is a lexical database of semantic

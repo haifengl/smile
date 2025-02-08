@@ -23,7 +23,7 @@ import smile.data.DataFrame
 import smile.data.formula.*
 import smile.feature.transform.WinsorScaler
 import smile.math.MathEx
-import smile.util.Paths
+import smile.io.Paths
 
 class RegressionModelSpec extends Specification {
   val train: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = "\t")

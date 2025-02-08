@@ -25,7 +25,7 @@ import smile.math.matrix.*
 import smile.stat.distribution.*
 import smile.plot.show
 import smile.plot.Render.*
-import smile.util.Paths
+import smile.io.Paths
 
 class PlotSpec extends Specification {
   val iris = read.arff(Paths.getTestData("weka/iris.arff"))

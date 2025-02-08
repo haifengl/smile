@@ -29,7 +29,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 import smile.stat.distribution.GaussianDistribution;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.util.Paths;
+import smile.io.Paths;
 import static java.lang.Math.*;
 import static java.awt.Color.*;
 

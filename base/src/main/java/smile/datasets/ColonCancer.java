@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Colon cancer dataset. This dataset has gene expression samples that

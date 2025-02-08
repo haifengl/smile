@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import smile.math.MathEx;
-import smile.util.Paths;
+import smile.io.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.Bag;
 

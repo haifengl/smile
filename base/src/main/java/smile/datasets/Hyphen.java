@@ -19,7 +19,7 @@ package smile.datasets;
 import java.io.IOException;
 import java.nio.file.Path;
 import smile.data.BinarySparseSequenceDataset;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Hyphen sequence dataset.

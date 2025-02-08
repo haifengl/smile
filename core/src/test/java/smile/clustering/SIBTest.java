@@ -57,8 +57,8 @@ public class SIBTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        SparseDataset<Integer> test = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.dat"));
+        SparseDataset<Integer> test = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.t.dat"));
 
         SparseArray[] trainx = train.stream().map(SampleInstance::x).toArray(SparseArray[]::new);
         int[] y = train.stream().mapToInt(SampleInstance::y).toArray();

@@ -20,7 +20,7 @@ import org.apache.spark.sql.{DataFrame, Encoder, Encoders, SparkSession}
 import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.data.`type`.{DataTypes, StructField}
-import smile.util.Paths
+import smile.io.Paths
 
 case class Person(name: String, age: Int, friends: Array[String])
 

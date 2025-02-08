@@ -23,7 +23,7 @@ import smile.datasets.SyntheticControl;
 import smile.datasets.USArrests;
 import smile.io.Read;
 import smile.math.MathEx;
-import smile.util.Paths;
+import smile.io.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

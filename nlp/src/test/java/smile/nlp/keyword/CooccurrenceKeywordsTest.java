@@ -50,7 +50,7 @@ public class CooccurrenceKeywordsTest {
     @Test
     public void testExtract() throws IOException {
         System.out.println("keywords");
-        String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         NGram[] result = CooccurrenceKeywords.of(text);
         

@@ -21,7 +21,7 @@ import org.specs2.specification.{AfterAll, BeforeAll}
 import org.apache.spark.sql.SparkSession
 import smile.data.`type`.{StructField, StructType}
 import smile.io.Read
-import smile.util.Paths
+import smile.io.Paths
 
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 

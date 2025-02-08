@@ -28,7 +28,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.Read;
 import smile.math.matrix.Matrix;
-import smile.util.Paths;
+import smile.io.Paths;
 import static smile.data.formula.Terms.*;
 import static org.junit.jupiter.api.Assertions.*;
 

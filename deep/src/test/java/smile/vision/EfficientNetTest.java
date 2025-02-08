@@ -26,7 +26,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
 import smile.math.TimeFunction;
-import smile.util.Paths;
+import smile.io.Paths;
 import smile.vision.transform.Transform;
 import static org.junit.jupiter.api.Assertions.*;
 

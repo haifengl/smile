@@ -56,7 +56,7 @@ public class DiscreteNaiveBayesTest {
 
     @BeforeAll
     public static void setUpClass() throws Exception {
-        try (BufferedReader input = smile.util.Paths.getTestDataReader("text/movie.txt")) {
+        try (BufferedReader input = smile.io.Paths.getTestDataReader("text/movie.txt")) {
             for (int i = 0; i < x.length; i++) {
                 String[] words = input.readLine().trim().split("\\s+", 2);
 

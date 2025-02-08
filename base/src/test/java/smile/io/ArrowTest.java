@@ -21,7 +21,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
-import smile.util.Paths;
+import smile.io.Paths;
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.*;

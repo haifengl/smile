@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Bitcoin Price history on a daily basis from April-28th, 2013 to Feb-20th,

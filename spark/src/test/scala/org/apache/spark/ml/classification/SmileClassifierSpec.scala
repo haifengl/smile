@@ -24,7 +24,7 @@ import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.base.rbf.RBF
 import smile.classification.RBFNetwork
-import smile.util.Paths
+import smile.io.Paths
 
 class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
 
