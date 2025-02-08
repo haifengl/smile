@@ -18,8 +18,8 @@ package smile.manifold;
 
 import java.util.Arrays;
 import java.util.Properties;
-import smile.base.IterativeTrainingController;
 import smile.math.MathEx;
+import smile.util.IterativeAlgorithmController;
 
 /**
  * The Sammon's mapping is an iterative technique for making interpoint
@@ -79,7 +79,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * @param stepTol the tolerance on step size.
      */
     public record Options(int d, int maxIter, double tol, double step, double stepTol,
-                          IterativeTrainingController<TrainingStatus> controller) {
+                          IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (d < 2) {

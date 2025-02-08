@@ -18,12 +18,12 @@ package smile.classification;
 
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
-import smile.base.IterativeTrainingController;
 import smile.data.type.StructField;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.util.IterativeAlgorithmController;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;
 import smile.validation.metric.Error;
@@ -36,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AdaBoostTest {
     static class TrainingStatusSubscriber implements Subscriber<AdaBoost.TrainingStatus> {
-        private final IterativeTrainingController<AdaBoost.TrainingStatus> controller;
+        private final IterativeAlgorithmController<AdaBoost.TrainingStatus> controller;
         private Subscription subscription;
 
-        TrainingStatusSubscriber(IterativeTrainingController<AdaBoost.TrainingStatus> controller) {
+        TrainingStatusSubscriber(IterativeAlgorithmController<AdaBoost.TrainingStatus> controller) {
             this.controller = controller;
         }
 
@@ -67,6 +67,7 @@ public class AdaBoostTest {
             System.out.println("Training is done");
         }
     }
+
     public AdaBoostTest() {
     }
 
@@ -91,7 +92,7 @@ public class AdaBoostTest {
         System.out.println("Weather");
         MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
-        try (var controller = new IterativeTrainingController<AdaBoost.TrainingStatus>()) {
+        try (var controller = new IterativeAlgorithmController<AdaBoost.TrainingStatus>()) {
             controller.subscribe(new TrainingStatusSubscriber(controller));
             var options = new AdaBoost.Options(20, 5, 8, 1, weather.data(), controller);
             AdaBoost model = AdaBoost.fit(weather.formula(), weather.data(), options);
@@ -176,7 +177,7 @@ public class AdaBoostTest {
         var segment = new ImageSegmentation();
         var testy = segment.testy();
 
-        try (var controller = new IterativeTrainingController<AdaBoost.TrainingStatus>()) {
+        try (var controller = new IterativeAlgorithmController<AdaBoost.TrainingStatus>()) {
             controller.subscribe(new TrainingStatusSubscriber(controller));
             var options = new AdaBoost.Options(200, 20, 6, 1, segment.test(), controller);
             AdaBoost model = AdaBoost.fit(segment.formula(), segment.train(), options);

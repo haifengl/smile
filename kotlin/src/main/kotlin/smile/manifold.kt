@@ -329,11 +329,11 @@ fun isomds(proximity: Array<DoubleArray>, d: Int, tol: Double = 0.0001, maxIter:
  * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and symmetric.
  * @param d         the dimension of the projection.
- * @param lambda    initial value of the step size constant in diagonal Newton method.
- * @param tol       tolerance for stopping iterations.
- * @param stepTol   tolerance on step size.
- * @param maxIter   maximum number of iterations.
+ * @param maxIter   the maximum number of iterations.
+ * @param tol       the tolerance on objective function for stopping iterations.
+ * @param step      the initial step size in diagonal Newton method.
+ * @param stepTol   the tolerance on step size.
  */
-fun sammon(proximity: Array<DoubleArray>, d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping {
-    return SammonMapping.fit(proximity, SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
+fun sammon(proximity: Array<DoubleArray>, d: Int = 2, maxIter: Int = 100, tol: Double = 0.0001, step: Double = 0.2, stepTol: Double = 0.001): SammonMapping {
+    return SammonMapping.fit(proximity, SammonMapping.Options(d, maxIter, tol, step, stepTol, null))
 }
