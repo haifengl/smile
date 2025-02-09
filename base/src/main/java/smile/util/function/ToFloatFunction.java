@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -14,22 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
+package smile.util.function;
 
- package smile.util;
- 
- /**
-  * Represents a function that accepts an array element of double value
-  * and produces a result.
-  * 
-  * @author Karl Li
-  */
- public interface ArrayElementFunction {
-     /**
-      * Performs this operation on the given element.
-      * 
-      * @param i the index of array element.
-      * @param x the value of array element.
-      * @return the function result.
-      */
-     double apply(int i, double x);
- }
+/**
+ * Represents a function that produces a float-valued result.
+ * This is the float-producing primitive specialization for Function.
+ * <p>
+ * There is no ToFloatFunction interface in java.util.function.
+ *
+ * @param <T> the type of the input to the function.
+ *
+ * @author Haifeng Li
+ */
+public interface ToFloatFunction<T> {
+    /**
+     * Applies this function to the given argument.
+     * @param o the input object.
+     * @return the function value.
+     */
+    float applyAsFloat(T o);
+}
+

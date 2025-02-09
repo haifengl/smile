@@ -21,8 +21,8 @@ import java.util.stream.DoubleStream;
 import smile.math.MathEx;
 import smile.math.matrix.IMatrix;
 import smile.sort.Sort;
-import smile.util.ArrayElementConsumer;
-import smile.util.ArrayElementFunction;
+import smile.util.function.ArrayElementConsumer;
+import smile.util.function.ArrayElementFunction;
 import smile.util.PriorityQueue;
 import smile.util.Strings;
 

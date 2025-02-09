@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.stream.DoubleStream;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
-import smile.util.ArrayElementConsumer;
-import smile.util.ArrayElementFunction;
+import smile.util.function.ArrayElementConsumer;
+import smile.util.function.ArrayElementFunction;
 import smile.util.SparseArray;
 
 /**

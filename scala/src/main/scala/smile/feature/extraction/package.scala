@@ -18,8 +18,8 @@ package smile.feature
 
 import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
-import smile.math.TimeFunction
 import smile.util.time
+import smile.util.function.TimeFunction
 
 /** Feature extraction. Feature extraction transforms the data in the
   * high-dimensional space to a space of fewer dimensions. The data
