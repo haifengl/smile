@@ -31,7 +31,7 @@ import smile.data.type.StructType;
  */
 public class DoubleFunction extends AbstractFunction {
     /** The function on a double. */
-    private final smile.math.Function lambda;
+    private final smile.util.function.Function lambda;
 
     /**
      * Constructor.
@@ -40,7 +40,7 @@ public class DoubleFunction extends AbstractFunction {
      * @param x the term that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public DoubleFunction(String name, Term x, smile.math.Function lambda) {
+    public DoubleFunction(String name, Term x, smile.util.function.Function lambda) {
         super(name, x);
         this.lambda = lambda;
     }

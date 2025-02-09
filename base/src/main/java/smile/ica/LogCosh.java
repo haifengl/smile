@@ -16,7 +16,7 @@
  */
 package smile.ica;
 
-import smile.math.DifferentiableFunction;
+import smile.util.function.DifferentiableFunction;
 
 /**
  * A good general-purpose contrast function for ICA.

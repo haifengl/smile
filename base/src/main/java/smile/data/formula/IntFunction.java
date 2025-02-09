@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class IntFunction extends AbstractFunction {
     /** The function on an integer. */
-    private final smile.math.IntFunction lambda;
+    private final smile.util.function.IntFunction lambda;
 
     /**
      * Constructor.
@@ -41,7 +41,7 @@ public class IntFunction extends AbstractFunction {
      * @param x the term that the function is applied to.
      * @param lambda the function/lambda.
      */
-    public IntFunction(String name, Term x, smile.math.IntFunction lambda) {
+    public IntFunction(String name, Term x, smile.util.function.IntFunction lambda) {
         super(name, x);
         this.lambda = lambda;
     }

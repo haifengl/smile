@@ -16,7 +16,7 @@
  */
 package smile.ica;
 
-import smile.math.DifferentiableFunction;
+import smile.util.function.DifferentiableFunction;
 
 /**
  * The kurtosis of the probability density function of a signal.

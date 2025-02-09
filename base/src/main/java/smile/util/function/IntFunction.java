@@ -14,43 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math;
+package smile.util.function;
 
 import java.io.Serializable;
 
 /**
- * An interface representing a univariate real function.
+ * An interface representing a univariate int function.
  *
  * @author Haifeng Li
  */
-public interface Function extends Serializable {
+public interface IntFunction extends Serializable {
     /**
      * Computes the value of the function at x.
-     *
-     * @param x a real number.
+     * @param x an integer value.
      * @return the function value.
      */
-    double f(double x);
-
-    /**
-     * Computes the value of the inverse function at x.
-     *
-     * @param x a real number.
-     * @return the inverse function value.
-     */
-    default double inv(double x) {
-        throw new UnsupportedOperationException();
-    }
+    int f(int x);
 
     /**
      * Computes the value of the function at x.
      * It delegates the computation to f().
      * This is simply for Scala convenience.
-     *
-     * @param x a real number.
+     * @param x an integer value.
      * @return the function value.
      */
-    default double apply(double x) {
+    default int apply(int x) {
         return f(x);
     }
 }

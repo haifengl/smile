@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math;
+package smile.util.function;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,7 +47,8 @@ public class RootTest {
     @Test
     public void testBrent() {
         System.out.println("Brent");
-        double result = Root.find(x -> x * x * x + x * x - 5 * x + 3, -4, -2, 1E-7, 500);
+        Function func = x -> x * x * x + x * x - 5 * x + 3;
+        double result = func.root(-4, -2, 1E-7, 500);
         assertEquals(-3, result, 1E-7);
     }
 
@@ -55,7 +56,6 @@ public class RootTest {
     public void testNewton() {
         System.out.println("Newton");
         Function func = new DifferentiableFunction() {
-
             @Override
             public double f(double x) {
                 return x * x * x + x * x - 5 * x + 3;
@@ -66,7 +66,7 @@ public class RootTest {
                 return 3 * x * x + 2 * x - 5;
             }
         };
-        double result = Root.find(func, -4, -2, 1E-7, 500);
+        double result = func.root(-4, -2, 1E-7, 500);
         assertEquals(-3, result, 1E-7);
     }
 }

@@ -16,7 +16,7 @@
  */
 package smile.ica;
 
-import smile.math.DifferentiableFunction;
+import smile.util.function.DifferentiableFunction;
 
 /**
  * The contrast function when the independent components are highly

@@ -18,6 +18,7 @@ package smile.math;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.*;
+import smile.util.function.DifferentiableMultivariateFunction;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

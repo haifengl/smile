@@ -25,7 +25,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 import smile.data.vector.ValueVector;
-import smile.math.Function;
+import smile.util.function.Function;
 
 /**
  * Invertible column-wise transformation.
