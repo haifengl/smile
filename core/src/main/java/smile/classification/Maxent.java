@@ -22,8 +22,8 @@ import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.BFGS;
 import smile.math.MathEx;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.util.IntSet;
+import smile.util.function.DifferentiableMultivariateFunction;
 import smile.validation.ModelSelection;
 
 /**

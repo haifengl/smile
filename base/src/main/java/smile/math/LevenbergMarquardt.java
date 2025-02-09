@@ -18,6 +18,7 @@ package smile.math;
 
 import java.util.Arrays;
 import smile.math.matrix.Matrix;
+import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
  * The Levenberg–Marquardt algorithm.

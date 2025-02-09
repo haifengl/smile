@@ -20,11 +20,11 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.math.BFGS;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.MultivariateGaussianDistribution;
+import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process

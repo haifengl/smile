@@ -21,6 +21,8 @@ import java.util.Arrays;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
+import smile.util.function.DifferentiableMultivariateFunction;
+import smile.util.function.MultivariateFunction;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;

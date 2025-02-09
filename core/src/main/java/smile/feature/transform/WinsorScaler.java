@@ -18,14 +18,13 @@ package smile.feature.transform;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
-import smile.math.Function;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
 import smile.sort.IQAgent;
+import smile.util.function.Function;
 
 /**
  * Scales all numeric variables into the range [0, 1].

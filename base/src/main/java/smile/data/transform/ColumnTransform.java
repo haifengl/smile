@@ -31,7 +31,7 @@ import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 import smile.data.vector.NullableDoubleVector;
 import smile.data.vector.ValueVector;
-import smile.math.Function;
+import smile.util.function.Function;
 
 /**
  * Column-wise data transformation.

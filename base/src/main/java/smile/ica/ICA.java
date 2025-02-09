@@ -20,10 +20,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
-import smile.math.DifferentiableFunction;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.function.DifferentiableFunction;
 
 /**
  * Independent Component Analysis (ICA) is a computational method for separating

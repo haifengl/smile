@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math;
+package smile.util.function;
 
 /**
  * A differentiable function is a function whose derivative exists at each point

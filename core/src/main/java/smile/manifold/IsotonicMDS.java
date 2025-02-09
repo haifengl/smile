@@ -19,8 +19,8 @@ package smile.manifold;
 import java.util.Properties;
 import smile.math.BFGS;
 import smile.math.MathEx;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
+import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
  * Kruskal's non-metric MDS. In non-metric MDS, only the rank order of entries

@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
@@ -30,6 +29,7 @@ import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
  * Uniform Manifold Approximation and Projection.
