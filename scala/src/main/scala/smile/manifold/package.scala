@@ -164,10 +164,10 @@ package object manifold {
     * @param d the dimension of the manifold.
     * @param perplexity the perplexity of the conditional distribution.
     * @param eta        the learning rate.
-    * @param iterations the number of iterations.
+    * @param maxIter the number of iterations.
     */
-  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = time("t-SNE") {
-    new TSNE(X, new TSNE.Options(d, perplexity, eta, iterations))
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, maxIter: Int = 1000): TSNE = time("t-SNE") {
+    TSNE.fit(X, new TSNE.Options(d, perplexity, eta, maxIter))
   }
 
   /**
@@ -301,13 +301,13 @@ package object manifold {
     * @param proximity the non-negative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
     * @param d         the dimension of the projection.
-    * @param maxIter   the maximum number of iterations.
-    * @param tol       the tolerance on objective function for stopping iterations.
     * @param step      the initial step size in diagonal Newton method.
+    * @param maxIter   the maximum number of iterations.
+    * @param tol       the tolerance of convergence test.
     * @param stepTol   the tolerance on step size.
     */
-  def sammon(proximity: Array[Array[Double]], d: Int = 2, maxIter: Int = 100, tol: Double = 0.0001, step: Double = 0.2, stepTol: Double = 0.001): SammonMapping = time("Sammon's Mapping") {
-    SammonMapping.fit(proximity, new SammonMapping.Options(d, maxIter, tol, step, stepTol, null))
+  def sammon(proximity: Array[Array[Double]], d: Int = 2, step: Double = 0.2, maxIter: Int = 100, tol: Double = 0.0001, stepTol: Double = 0.001): SammonMapping = time("Sammon's Mapping") {
+    SammonMapping.fit(proximity, new SammonMapping.Options(d, step, maxIter, tol, stepTol, null))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
