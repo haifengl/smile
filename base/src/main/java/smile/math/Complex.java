@@ -23,30 +23,13 @@ import java.io.Serializable;
  * Complex number. The object is immutable so once you create and initialize
  * a Complex object, you cannot modify it.
  *
+ * @param re the real part.
+ * @param im the imaginary part.
  * @author Haifeng Li
  */
-public class Complex implements Serializable {
+public record Complex(double re, double im) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The real part.
-     */
-    public final double re;
-    /**
-     * The imaginary part.
-     */
-    public final double im;
-
-    /**
-     * Constructor.
-     * @param real the real part.
-     * @param imag the imaginary part.
-     */
-    public Complex(double real, double imag) {
-        re = real;
-        im = imag;
-    }
+    private static final long serialVersionUID = 2L;
 
     /**
      * Returns a Complex instance representing the specified value.
@@ -82,23 +65,6 @@ public class Complex implements Serializable {
         }
 
         return String.format("%.4f + %.4fi", re, im);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof Complex c) {
-            return re == c.re && im == c.im;
-        }
-        
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 47 * hash + Long.hashCode(Double.doubleToLongBits(re));
-        hash = 47 * hash + Long.hashCode(Double.doubleToLongBits(im));
-        return hash;
     }
 
     /**
