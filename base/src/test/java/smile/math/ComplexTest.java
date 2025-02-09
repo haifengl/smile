@@ -51,17 +51,17 @@ public class ComplexTest {
         System.out.println("Complex");
         System.out.println("a = " + a);
         System.out.println("b = " + b);
-        assertEquals(a.re, 5.0, 1E-15);
-        assertEquals(a.im, 6.0, 1E-15);
-        assertEquals(a.abs(), 7.810249675906654, 1E-15);
-        assertEquals(a.add(b), Complex.of(2.0, 10.0));
-        assertEquals(a.sub(b), Complex.of(8.0, 2.0));
-        assertEquals(a.mul(b), Complex.of(-39.0, 2.0));
-        assertEquals(a.div(b), Complex.of(0.36, -1.52));
+        assertEquals(5.0, a.re(), 1E-15);
+        assertEquals(6.0, a.im(), 1E-15);
+        assertEquals(7.810249675906654, a.abs(), 1E-15);
+        assertEquals(Complex.of(2.0, 10.0), a.add(b));
+        assertEquals(Complex.of(8.0, 2.0), a.sub(b));
+        assertEquals(Complex.of(-39.0, 2.0), a.mul(b));
+        assertEquals(Complex.of(0.36, -1.52), a.div(b));
         System.out.println("a / b = " + a.div(b));
-        assertEquals(a.div(b).mul(b), Complex.of(5.0, 6.0));
-        assertEquals(a.conjugate(), Complex.of(5.0, -6.0));
-        assertEquals(a.tan(), Complex.of(-6.685231390243073E-6, 1.00001031089812));
+        assertEquals(Complex.of(5.0, 6.0), a.div(b).mul(b));
+        assertEquals(Complex.of(5.0, -6.0), a.conjugate());
+        assertEquals(Complex.of(-6.685231390243073E-6, 1.00001031089812), a.tan());
     }
 
     /**
@@ -73,16 +73,16 @@ public class ComplexTest {
         Complex.Array array = Complex.Array.of(a, b);
         System.out.println("a = " + a);
         System.out.println("b = " + b);
-        assertEquals(a.re, array.get(0).re, 1E-15);
-        assertEquals(a.im, array.get(0).im, 1E-15);
-        assertEquals(b.re, array.get(1).re, 1E-15);
-        assertEquals(b.im, array.get(1).im, 1E-15);
+        assertEquals(a.re(), array.get(0).re(), 1E-15);
+        assertEquals(a.im(), array.get(0).im(), 1E-15);
+        assertEquals(b.re(), array.get(1).re(), 1E-15);
+        assertEquals(b.im(), array.get(1).im(), 1E-15);
 
         Complex c = Complex.of(3.0);
         array.set(1, c);
-        assertEquals(a.re, array.get(0).re, 1E-15);
-        assertEquals(a.im, array.get(0).im, 1E-15);
-        assertEquals(c.re, array.get(1).re, 1E-15);
-        assertEquals(c.im, array.get(1).im, 1E-15);
+        assertEquals(a.re(), array.get(0).re(), 1E-15);
+        assertEquals(a.im(), array.get(0).im(), 1E-15);
+        assertEquals(c.re(), array.get(1).re(), 1E-15);
+        assertEquals(c.im(), array.get(1).im(), 1E-15);
     }
 }

@@ -73,17 +73,22 @@ public record SammonMapping(double stress, double[][] coordinates) {
     /**
      * Sammon's mapping hyperparameters.
      * @param d the dimension of the projection.
-     * @param maxIter the maximum number of iterations.
-     * @param tol the tolerance on objective function for stopping iterations.
      * @param step the initial step size in diagonal Newton method.
-     * @param stepTol the tolerance on step size.
+     * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance of convergence test.
+     * @param stepTol the tolerance of step size.
+     * @param controller the optional training controller.
      */
-    public record Options(int d, int maxIter, double tol, double step, double stepTol,
+    public record Options(int d, double step, int maxIter, double tol, double stepTol,
                           IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
+            }
+
+            if (step < 0.0) {
+                throw new IllegalArgumentException("Invalid step size: " + step);
             }
 
             if (maxIter <= 0) {
@@ -94,10 +99,6 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
 
-            if (step < 0.0) {
-                throw new IllegalArgumentException("Invalid step size: " + step);
-            }
-
             if (stepTol <= 0.0) {
                 throw new IllegalArgumentException("Invalid step size tolerance: " + stepTol);
             }
@@ -106,10 +107,11 @@ public record SammonMapping(double stress, double[][] coordinates) {
         /**
          * Constructor.
          * @param d the dimension of the projection.
+         * @param step the initial step size in diagonal Newton method.
          * @param maxIter maximum number of iterations.
          */
-        public Options(int d, int maxIter) {
-            this(d, maxIter, 1E-4, 0.2, 1E-3, null);
+        public Options(int d, double step, int maxIter) {
+            this(d, step, maxIter, 1E-4, 1E-3, null);
         }
 
         /**
@@ -119,9 +121,9 @@ public record SammonMapping(double stress, double[][] coordinates) {
         public Properties toProperties() {
             Properties props = new Properties();
             props.setProperty("smile.sammon.d", Integer.toString(d));
+            props.setProperty("smile.sammon.step", Double.toString(step));
             props.setProperty("smile.sammon.iterations", Integer.toString(maxIter));
             props.setProperty("smile.sammon.tolerance", Double.toString(tol));
-            props.setProperty("smile.sammon.step", Double.toString(step));
             props.setProperty("smile.sammon.step_tolerance", Double.toString(stepTol));
             return props;
         }
@@ -134,11 +136,11 @@ public record SammonMapping(double stress, double[][] coordinates) {
          */
         public static Options of(Properties props) {
             int d = Integer.parseInt(props.getProperty("smile.sammon.d", "2"));
+            double step = Double.parseDouble(props.getProperty("smile.sammon.step", "0.2"));
             int maxIter = Integer.parseInt(props.getProperty("smile.sammon.iterations", "100"));
             double tol = Double.parseDouble(props.getProperty("smile.sammon.tolerance", "1E-4"));
-            double step = Double.parseDouble(props.getProperty("smile.sammon.step", "0.2"));
             double stepTol = Double.parseDouble(props.getProperty("smile.sammon.step_tolerance", "1E-3"));
-            return new Options(d, maxIter, tol, step, stepTol, null);
+            return new Options(d, step, maxIter, tol, stepTol, null);
         }
     }
 
@@ -149,7 +151,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * @return the model.
      */
     public static SammonMapping fit(double[][] proximity) {
-        return fit(proximity, new Options(2, 100));
+        return fit(proximity, new Options(2, 0.2, 100));
     }
 
     /**

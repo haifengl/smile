@@ -67,10 +67,10 @@ public record ICA(double[][] components) implements Serializable {
      *                 extracting independent sources from a linear mixture.
      *                 It must be a non-quadratic non-linear function that
      *                 has second-order derivative.
-     * @param tol the tolerance of convergence test.
      * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance of convergence test.
      */
-    public record Options(DifferentiableFunction contrast, double tol, int maxIter) {
+    public record Options(DifferentiableFunction contrast, int maxIter, double tol) {
         /** Constructor. */
         public Options {
             if (tol <= 0) {
@@ -87,22 +87,24 @@ public record ICA(double[][] components) implements Serializable {
          *                 extracting independent sources from a linear mixture.
          *                 It must be a non-quadratic non-linear function that
          *                 has second-order derivative.
+         * @param maxIter the maximum number of iterations.
          */
-        public Options(DifferentiableFunction contrast) {
-            this(contrast, 1E-4, 100);
+        public Options(DifferentiableFunction contrast, int maxIter) {
+            this(contrast, maxIter, 1E-4);
         }
 
         /**
          * Constructor.
          * @param contrast the name of contrast function, "LogCosh" or "Gaussian".
+         * @param maxIter the maximum number of iterations.
          */
-        public Options(String contrast) {
+        public Options(String contrast, int maxIter) {
             this(switch (contrast) {
                 case "LogCosh" -> new LogCosh();
                 case "Gaussian" -> new Exp();
                 case "Kurtosis" -> new Kurtosis();
                 default -> throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
-            });
+            }, maxIter);
         }
 
         /**
@@ -111,8 +113,8 @@ public record ICA(double[][] components) implements Serializable {
          */
         public Properties toProperties() {
             Properties props = new Properties();
-            props.setProperty("smile.ica.tolerance", Double.toString(tol));
             props.setProperty("smile.ica.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.ica.tolerance", Double.toString(tol));
 
             String name = switch (contrast) {
                 case LogCosh cosh -> "LogCosh";
@@ -143,14 +145,14 @@ public record ICA(double[][] components) implements Serializable {
                     yield (DifferentiableFunction) constructor.newInstance();
                 }
             };
-            double tol = Double.parseDouble(props.getProperty("smile.ica.tolerance", "1E-4"));
             int maxIter = Integer.parseInt(props.getProperty("smile.ica.iterations", "100"));
-            return new Options(contrast, tol, maxIter);
+            double tol = Double.parseDouble(props.getProperty("smile.ica.tolerance", "1E-4"));
+            return new Options(contrast, maxIter, tol);
         }
     }
 
     /**
-     * Fits independent component analysis.
+     * Fits independent component analysis with LogCosh contrast function.
      *
      * @param data training data. The number of columns corresponding with the
      *             number of samples of mixed signals and the number of rows
@@ -159,7 +161,7 @@ public record ICA(double[][] components) implements Serializable {
      * @return the model.
      */
     public static ICA fit(double[][] data, int p) {
-        return fit(data, p, new Options(new LogCosh()));
+        return fit(data, p, new Options(new LogCosh(), 100));
     }
 
     /**
@@ -178,8 +180,8 @@ public record ICA(double[][] components) implements Serializable {
         }
 
         var contrast = options.contrast;
-        var tol = options.tol;
         var maxIter = options.maxIter;
+        var tol = options.tol;
         GaussianDistribution g = new GaussianDistribution(0, 1);
         double[][] W = new double[p][n];
         for (int i = 0; i < p; i++) {
@@ -199,7 +201,7 @@ public record ICA(double[][] components) implements Serializable {
             double[] w = W[i];
 
             double diff = Double.MAX_VALUE;
-            for (int iter = 0; iter < maxIter && diff > tol; iter++) {
+            for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
                 System.arraycopy(w, 0, wold, 0, n);
 
                 // Calculate derivative of projection
