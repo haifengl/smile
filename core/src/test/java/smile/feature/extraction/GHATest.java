@@ -18,7 +18,7 @@ package smile.feature.extraction;
 
 import smile.datasets.USArrests;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import smile.math.matrix.Matrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;

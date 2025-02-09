@@ -25,7 +25,7 @@ import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 
 /**
  * The deep learning models.

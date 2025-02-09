@@ -19,7 +19,7 @@ package smile.feature.extraction
 import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
 import smile.manifold.KPCA
-import smile.math.TimeFunction
+import smile.util.function.TimeFunction
 
 /**
  * Principal component analysis. PCA is an orthogonal

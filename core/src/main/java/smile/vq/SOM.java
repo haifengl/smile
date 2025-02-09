@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import smile.manifold.MDS;
 import smile.sort.QuickSort;
 

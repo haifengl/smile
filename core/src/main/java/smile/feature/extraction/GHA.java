@@ -19,7 +19,7 @@ package smile.feature.extraction;
 import smile.data.Tuple;
 import smile.data.DataFrame;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import smile.math.matrix.Matrix;
 
 import java.io.Serial;

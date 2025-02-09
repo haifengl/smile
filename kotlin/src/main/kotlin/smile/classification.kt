@@ -24,11 +24,11 @@ import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.MathEx
-import smile.math.TimeFunction
 import smile.math.distance.Distance
 import smile.math.kernel.MercerKernel
 import smile.neighbor.KNNSearch
 import smile.stat.distribution.Distribution
+import smile.util.function.TimeFunction
 
 /**
  * K-nearest neighbor classifier.

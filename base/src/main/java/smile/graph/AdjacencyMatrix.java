@@ -25,8 +25,8 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.util.ArrayElementConsumer;
-import smile.util.ArrayElementFunction;
+import smile.util.function.ArrayElementConsumer;
+import smile.util.function.ArrayElementFunction;
 
 /**
  * An adjacency matrix representation of a graph. Only simple graph is supported.

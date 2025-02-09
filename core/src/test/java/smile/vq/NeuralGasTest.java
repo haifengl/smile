@@ -18,7 +18,7 @@ package smile.vq;
 
 import smile.datasets.USPS;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
