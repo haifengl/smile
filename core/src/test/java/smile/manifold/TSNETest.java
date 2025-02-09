@@ -57,10 +57,10 @@ public class TSNETest {
         double[][] X = pca.apply(x);
 
         long start = System.currentTimeMillis();
-        TSNE tsne = TSNE.fit(X, new TSNE.Options(2,20,200, 550));
+        TSNE tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 
-        assertEquals(1.3872256, tsne.cost(), 0.1);
+        assertEquals(1.3927, tsne.cost(), 1E-3);
     }
 }

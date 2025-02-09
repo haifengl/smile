@@ -163,11 +163,19 @@ package object manifold {
     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
     * @param d the dimension of the manifold.
     * @param perplexity the perplexity of the conditional distribution.
-    * @param eta        the learning rate.
+    * @param eta the learning rate.
+    * @param earlyExaggeration Controls how tight natural clusters in the original
+    *                          space are in the embedded space and how much space
+    *                          will be between them. For larger values, the space
+    *                          between natural clusters will be larger in the
+    *                          embedded space. The choice of this parameter is not
+    *                          very critical. If the cost function increases during
+    *                          initial optimization, the early exaggeration factor
+    *                          or the learning rate might be too high.
     * @param maxIter the number of iterations.
     */
-  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, maxIter: Int = 1000): TSNE = time("t-SNE") {
-    TSNE.fit(X, new TSNE.Options(d, perplexity, eta, maxIter))
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, earlyExaggeration: Double = 12.0, maxIter: Int = 1000): TSNE = time("t-SNE") {
+    TSNE.fit(X, new TSNE.Options(d, perplexity, eta, earlyExaggeration, maxIter))
   }
 
   /**
