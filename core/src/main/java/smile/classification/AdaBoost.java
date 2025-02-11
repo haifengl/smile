@@ -284,7 +284,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 }
             }
 
-            logger.info("Training {} tree, weighted error = {}%", Strings.ordinal(t+1), String.format("%.2f", 100*e));
+            logger.info("Tree {}: weighted error = {}%", t+1, String.format("%.2f", 100*e));
 
             if (1 - e > guess) {
                 failures = 0;
@@ -316,9 +316,8 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             if (options.test != null) {
                 long testStartTime = System.nanoTime();
                 for (int j = 0; j < testy.length; j++) {
-                    Tuple xj = testx.get(j);
                     var p = posteriors[j];
-                    p[trees[t].predict(xj)] += alpha[t];
+                    p[trees[t].predict(testx.get(j))] += alpha[t];
                     prediction[j] = MathEx.whichMax(p);
                 }
                 double scoreTime = (System.nanoTime() - testStartTime) / 1E6;

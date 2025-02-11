@@ -51,7 +51,7 @@ public class AdaBoostTest {
 
         @Override
         public void onNext(AdaBoost.TrainingStatus status) {
-            System.out.format("Tree %d, weighted error = %.2f%%, validation metrics = %s%n",
+            System.out.format("Tree %d: weighted error = %.2f%%, validation metrics = %s%n",
                     status.tree(), 100 * status.weightedError(), status.metrics());
             if (status.tree() == 100) controller.stop();
             subscription.request(1);
