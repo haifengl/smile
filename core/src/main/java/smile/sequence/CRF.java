@@ -402,6 +402,11 @@ public class CRF implements Serializable {
      */
     record PotentialLoss(double[] response) implements Loss {
         @Override
+        public double value() {
+            return Double.NaN;
+        }
+
+        @Override
         public double output(int[] nodeSamples, int[] sampleCount) {
             int n = 0;
             double output = 0.0;
@@ -414,7 +419,7 @@ public class CRF implements Serializable {
         }
 
         @Override
-        public double intercept(double[] $y) {
+        public double intercept(double[] y) {
             return 0;
         }
 
