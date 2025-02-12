@@ -16,6 +16,7 @@
  */
 package smile.classification;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 import smile.data.type.StructField;
@@ -36,11 +37,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AdaBoostTest {
     static class TrainingStatusSubscriber implements Subscriber<AdaBoost.TrainingStatus> {
-        private final IterativeAlgorithmController<AdaBoost.TrainingStatus> controller;
+        private WeakReference<IterativeAlgorithmController<AdaBoost.TrainingStatus>> controller;
         private Subscription subscription;
 
         TrainingStatusSubscriber(IterativeAlgorithmController<AdaBoost.TrainingStatus> controller) {
-            this.controller = controller;
+            this.controller = new WeakReference<>(controller);
         }
 
         @Override
@@ -53,7 +54,7 @@ public class AdaBoostTest {
         public void onNext(AdaBoost.TrainingStatus status) {
             System.out.format("Tree %d: weighted error = %.2f%%, validation metrics = %s%n",
                     status.tree(), 100 * status.weightedError(), status.metrics());
-            if (status.tree() == 100) controller.stop();
+            if (status.tree() == 100) controller.get().stop();
             subscription.request(1);
         }
 
@@ -65,6 +66,8 @@ public class AdaBoostTest {
         @Override
         public void onComplete() {
             System.out.println("Training is done");
+            controller.clear();
+            controller = null;
         }
     }
 
