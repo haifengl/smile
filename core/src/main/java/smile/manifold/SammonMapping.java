@@ -260,7 +260,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
                 stress = eprev;
                 step = step * 0.2;
                 if (step < stepTol) {
-                    logger.info("Early stops after {} iterations: {}, step = {}", iter, stress, step);
+                    logger.info("Iteration {}: early stop with stress = {}, step = {}", iter, stress, step);
                     break;
                 } else {
                     logger.info("Decreases step size = {}", step);
@@ -281,7 +281,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
             }
 
             if (iter % 10 == 0) {
-                logger.info("Stress after {} iterations: {}, step = {}", iter, stress, step);
+                logger.info("Iteration {}: stress = {}, step = {}", iter, stress, step);
                 if (stress > epast - tol) break;
                 epast = stress;
             }
