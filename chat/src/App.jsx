@@ -173,11 +173,24 @@ function App() {
         })
         .then(response => {
           let msg = response.message.content;
-          let pos = msg.indexOf('</think>');
-          if (pos !== -1) {
-            console.log(msg.substring(0, pos + 8));
-            msg = msg.substring(pos + 8);
+          let start = msg.indexOf('<think>');
+          let end = msg.indexOf('</think>');
+          if (start !== -1 && end !== -1) {
+            let think = msg.substring(start + 7, end).trimEnd();
+            // think is not empty
+            if (think) {
+              // block quote
+              think = think.replaceAll('\n', '\n> ');
+              if (!think.startsWith('\n> ')) {
+                think = '> ' + think;
+              }
+              think += '\n';
+            }
+
+            let answer = msg.substring(end + 8);
+            msg = think + answer;
           }
+
           messages.push({
             text: msg,
             user: bot,

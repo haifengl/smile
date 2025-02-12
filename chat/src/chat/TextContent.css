@@ -15,7 +15,7 @@
   word-wrap: break-word;
   width: 100%;
   a {
-    color: 'blue';
+    color: blue;
   }
 }
 
@@ -35,4 +35,11 @@
   -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0);
   box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0);
   position: relative;
+}
+
+blockquote {
+  background: #f9f9f9;
+  border-left: 10px solid #ccc;
+  margin: 1.5em 0px;
+  padding: 4px 10px;
 }
