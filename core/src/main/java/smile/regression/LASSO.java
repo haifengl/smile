@@ -76,10 +76,17 @@ public class LASSO {
     /**
      * Lasso regression hyperparameters.
      * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance to stop iterations (relative target duality gap).
+     * @param tol the tolerance of convergence test (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @param alpha the minimum fraction of decrease in the objective function.
+     * @param beta the step size decrease factor
+     * @param eta the tolerance for PCG termination.
+     * @param lsMaxIter the maximum number of backtracking line search iterations.
+     * @param pcgMaxIter the maximum number of PCG iterations.
      */
-    public record Options(double lambda, double tol, int maxIter) {
+    public record Options(double lambda, double tol, int maxIter, double alpha, double beta,
+                          double eta, int lsMaxIter, int pcgMaxIter) {
+
         /** Constructor. */
         public Options {
             if (lambda < 0.0) {
@@ -93,6 +100,26 @@ public class LASSO {
             if (maxIter <= 0) {
                 throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
             }
+
+            if (alpha <= 0.0) {
+                throw new IllegalArgumentException("Invalid alpha: " + alpha);
+            }
+
+            if (beta <= 0.0) {
+                throw new IllegalArgumentException("Invalid beta: " + beta);
+            }
+
+            if (eta <= 0.0) {
+                throw new IllegalArgumentException("Invalid eta: " + eta);
+            }
+
+            if (lsMaxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of line search iterations: " + lsMaxIter);
+            }
+
+            if (pcgMaxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of PCG iterations: " + pcgMaxIter);
+            }
         }
 
         /**
@@ -101,6 +128,16 @@ public class LASSO {
          */
         public Options(double lambda) {
             this(lambda, 1E-4, 1000);
+        }
+
+        /**
+         * Constructor.
+         * @param lambda the shrinkage/regularization parameter.
+         * @param tol the tolerance of convergence test (relative target duality gap).
+         * @param maxIter the maximum number of IPM (Newton) iterations.
+         */
+        public Options(double lambda, double tol, int maxIter) {
+            this(lambda, tol, maxIter, 0.01, 0.5, 1E-3, 100, 5000);
         }
 
         /**
@@ -118,6 +155,11 @@ public class LASSO {
             props.setProperty("smile.lasso.lambda", Double.toString(lambda));
             props.setProperty("smile.lasso.tolerance", Double.toString(tol));
             props.setProperty("smile.lasso.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.lasso.alpha", Double.toString(alpha));
+            props.setProperty("smile.lasso.beta", Double.toString(beta));
+            props.setProperty("smile.lasso.eta", Double.toString(eta));
+            props.setProperty("smile.lasso.line_search_iterations", Integer.toString(lsMaxIter));
+            props.setProperty("smile.lasso.pcg_iterations", Integer.toString(pcgMaxIter));
             return props;
         }
 
@@ -131,7 +173,12 @@ public class LASSO {
             double lambda = Double.parseDouble(props.getProperty("smile.lasso.lambda", "1"));
             double tol = Double.parseDouble(props.getProperty("smile.lasso.tolerance", "1E-4"));
             int maxIter = Integer.parseInt(props.getProperty("smile.lasso.iterations", "1000"));
-            return new Options(lambda, tol, maxIter);
+            double alpha = Double.parseDouble(props.getProperty("smile.lasso.alpha", "0.01"));
+            double beta = Double.parseDouble(props.getProperty("smile.lasso.beta", "0.5"));
+            double eta = Double.parseDouble(props.getProperty("smile.lasso.eta", "1E-3"));
+            int lsMaxIter = Integer.parseInt(props.getProperty("smile.lasso.line_search_iterations", "100"));
+            int pcgMaxIter = Integer.parseInt(props.getProperty("smile.lasso.pcg_iterations", "5000"));
+            return new Options(lambda, tol, maxIter, alpha, beta, eta, lsMaxIter, pcgMaxIter);
         }
     }
 
@@ -172,7 +219,7 @@ public class LASSO {
 
         Matrix scaledX = X.scale(center, scale);
 
-        double[] w = train(scaledX, y, options.lambda, options.tol, options.maxIter);
+        double[] w = train(scaledX, y, options);
 
         int p = w.length;
         for (int j = 0; j < p; j++) {
@@ -187,22 +234,23 @@ public class LASSO {
      * Fits the LASSO model.
      * @param x the design matrix.
      * @param y the responsible variable.
-     * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
-     * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    static double[] train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
-        // INITIALIZE
-        // IPM PARAMETERS
-        final int MU = 2;             // updating parameter of t
+    static double[] train(Matrix x, double[] y, Options options) {
+        // IPM parameters
+        final double tol = options.tol;
+        final double lambda = options.lambda;
+        final int maxIter = options.maxIter;
+        final int MU = 2; // updating parameter of t
 
-        // LINE SEARCH PARAMETERS
-        final double ALPHA = 0.01;    // minimum fraction of decrease in the objective
-        final double BETA = 0.5;      // stepsize decrease factor
-        final int MAX_LS_ITER = 100;  // maximum backtracking line search iteration
-        final int pcgmaxi = 5000; // maximum number of maximum PCG iterations
-        final double eta = 1E-3;  // tolerance for PCG termination
+        // Linear search parameters
+        final double alpha = options.alpha;
+        final double beta = options.beta;
+        final double eta = options.eta;
+        final int lsMaxIter = options.lsMaxIter;
+        final int pcgMaxIter = options.pcgMaxIter;
+
 
         int pitr = 0;
         int n = x.nrow();
@@ -256,12 +304,11 @@ public class LASSO {
         double[][] gradphi = new double[2][p];
         double[] prb = new double[p];
         double[] prs = new double[p];
-
         PCG pcg = new PCG(x, d1, d2, prb, prs);
 
         // MAIN LOOP
-        int ntiter = 0;
-        for (; ntiter <= maxIter; ntiter++) {
+        int iter = 1;
+        for (; iter <= maxIter; iter++) {
             x.mv(w, z);
             for (int i = 0; i < n; i++) {
                 z[i] -= Y[i];
@@ -283,8 +330,8 @@ public class LASSO {
             dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
 
             double gap = pobj - dobj;
-            if (ntiter % 10 == 0 || gap / dobj < tol) {
-                logger.info("LASSO: primal and dual objective function value after {} iterations: {}\t{}", ntiter, pobj, dobj);
+            if (iter % 10 == 0 || gap / dobj < tol) {
+                logger.info("Iteration {}: primal objective = {}, dual objective = {}", iter, pobj, dobj);
             }
 
             // STOPPING CRITERION
@@ -325,14 +372,14 @@ public class LASSO {
             // set pcg tolerance (relative)
             double normg = MathEx.norm(grad);
             double pcgtol = Math.min(0.1, eta * gap / Math.min(1.0, normg));
-            if (ntiter != 0 && pitr == 0) {
+            if (iter != 0 && pitr == 0) {
                 pcgtol = pcgtol * 0.1;
             }
 
             // preconditioned conjugate gradient
-            double error = pcg.solve(grad, dxu, pcg, pcgtol, 1, pcgmaxi);
+            double error = pcg.solve(grad, dxu, pcg, pcgtol, 1, pcgMaxIter);
             if (error > pcgtol) {
-                pitr = pcgmaxi;
+                pitr = pcgMaxIter;
             }
 
             for (int i = 0; i < p; i++) {
@@ -346,7 +393,7 @@ public class LASSO {
             double gdx = MathEx.dot(grad, dxu);
 
             int lsiter = 0;
-            for (; lsiter < MAX_LS_ITER; lsiter++) {
+            for (; lsiter < lsMaxIter; lsiter++) {
                 for (int i = 0; i < p; i++) {
                     neww[i] = w[i] + s * dx[i];
                     newu[i] = u[i] + s * du[i];
@@ -361,15 +408,15 @@ public class LASSO {
                     }
 
                     double newphi = MathEx.dot(newz, newz) + lambda * MathEx.sum(newu) - sumlogneg(newf) / t;
-                    if (newphi - phi <= ALPHA * s * gdx) {
+                    if (newphi - phi <= alpha * s * gdx) {
                         break;
                     }
                 }
-                s = BETA * s;
+                s = beta * s;
             }
 
-            if (lsiter == MAX_LS_ITER) {
-                logger.error("LASSO: Too many iterations of line search.");
+            if (lsiter == lsMaxIter) {
+                logger.warn("Linear search reaches maximum number of iterations: {}", lsMaxIter);
                 break;
             }
 
@@ -379,8 +426,8 @@ public class LASSO {
             System.arraycopy(newf[1], 0, f[1], 0, p);
         }
 
-        if (ntiter == maxIter) {
-            logger.error("LASSO: Too many iterations.");
+        if (iter == maxIter) {
+            logger.warn("IPM reaches maximum number of iterations: {}", maxIter);
         }
 
         return w;
