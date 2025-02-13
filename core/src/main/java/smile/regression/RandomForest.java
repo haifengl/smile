@@ -20,7 +20,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.stream.LongStream;
+import java.util.stream.IntStream;
 import smile.base.cart.CART;
 import smile.base.cart.Loss;
 import smile.data.DataFrame;
@@ -31,8 +31,8 @@ import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
+import smile.util.IterativeAlgorithmController;
 import smile.validation.RegressionMetrics;
-import smile.validation.metric.*;
 
 /**
  * Random forest for regression. Random forest is an ensemble method that
@@ -132,6 +132,15 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
+     * Training status per tree.
+     * @param tree the tree index, starting at 1.
+     * @param metrics the optional validation metrics if test data is provided.
+     */
+    public record TrainingStatus(int tree, RegressionMetrics metrics) {
+
+    }
+
+    /**
      * Random forest hyperparameters.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the
@@ -143,8 +152,11 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *                 Setting nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
      *                  replacement. {@code < 1.0} means sampling without replacement.
+     * @param seeds optional RNG seeds for each regression tree.
+     * @param controller the optional training controller.
      */
-    public record Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+    public record Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample,
+                          long[] seeds, IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (ntrees < 1) {
@@ -162,11 +174,29 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             if (subsample <= 0 || subsample > 1) {
                 throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
             }
+
+            if (seeds != null && seeds.length < ntrees) {
+                throw new IllegalArgumentException("The number of RNG seeds is fewer than that of trees: " + seeds.length);
+            }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(500, 0, 20, 0, 5, 1.0);
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         */
+        public Options(int ntrees) {
+            this(ntrees, 0);
+        }
+
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         * @param mtry the number of input variables to be used to determine the
+         *             decision at a node of the tree. p/3 generally give good
+         *             performance, where p is the number of variables.
+         */
+        public Options(int ntrees, int mtry) {
+            this(ntrees, mtry, 20, 0, 5, 1.0, null, null);
         }
 
         /**
@@ -197,7 +227,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             int maxNodes = Integer.parseInt(props.getProperty("smile.random_forest.max_nodes", "0"));
             int nodeSize = Integer.parseInt(props.getProperty("smile.random_forest.node_size", "5"));
             double subsample = Double.parseDouble(props.getProperty("smile.random_forest.sampling_rate", "1.0"));
-            return new Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
+            return new Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null, null);
         }
     }
 
@@ -209,7 +239,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(500));
     }
 
     /**
@@ -221,19 +251,6 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Options options) {
-        return fit(formula, data, options, null);
-    }
-
-    /**
-     * Fits a random forest for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param options the hyperparameters.
-     * @param seeds optional RNG seeds for each regression tree.
-     * @return the model.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, Options options, LongStream seeds) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector response = formula.y(data);
@@ -254,16 +271,10 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
         int[] oob = new int[n];
         final int[][] order = CART.order(x);
 
-        // generate seeds with sequential stream
-        long[] seedArray = (seeds != null ? seeds : LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
-        if (seedArray.length != ntrees) {
-            throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
-        }
-
         // train trees with parallel stream
-        Model[] models = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
+        Model[] models = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
             // set RNG seed for the tree
-            if (seed > 1) MathEx.setSeed(seed);
+            if (options.seeds != null) MathEx.setSeed(options.seeds[t]);
 
             final int[] samples = new int[n];
             if (subsample == 1.0) {
@@ -307,19 +318,10 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            RegressionMetrics metrics = new RegressionMetrics(
-                    fitTime, scoreTime, noob,
-                    RSS.of(truth, predict),
-                    MSE.of(truth, predict),
-                    RMSE.of(truth, predict),
-                    MAD.of(truth, predict),
-                    R2.of(truth, predict)
-            );
-
-            if (noob != 0) {
-                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2()));
-            } else {
-                logger.error("Regression tree trained without OOB samples.");
+            var metrics = RegressionMetrics.of(fitTime, scoreTime, truth, predict);
+            logger.info("Tree {}: OOB = {}, R2 = {}%", t+1, noob, String.format("%.2f", 100*metrics.r2()));
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, metrics));
             }
 
             return new Model(tree, metrics);
@@ -337,15 +339,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
             }
         }
 
-        RegressionMetrics metrics = new RegressionMetrics(
-                fitTime, scoreTime, n,
-                RSS.of(y, prediction),
-                MSE.of(y, prediction),
-                RMSE.of(y, prediction),
-                MAD.of(y, prediction),
-                R2.of(y, prediction)
-        );
-
+        var metrics = RegressionMetrics.of(fitTime, scoreTime, y, prediction);
         double[] importance = calculateImportance(models);
         return new RandomForest(formula, models, metrics, importance);
     }

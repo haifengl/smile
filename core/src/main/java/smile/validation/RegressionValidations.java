@@ -94,7 +94,7 @@ public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()));
         sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()));
-        sb.append(String.format("  validation data size:: %d ± %d,\n", avg.size(), std.size()));
+        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size(), std.size()));
         sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), std.rss()));
         sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), std.mse()));
         sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), std.rmse()));

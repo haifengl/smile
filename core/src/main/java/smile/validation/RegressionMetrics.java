@@ -47,7 +47,7 @@ public record RegressionMetrics(double fitTime, double scoreTime, int size, doub
         StringBuilder sb = new StringBuilder("{\n");
         if (!Double.isNaN(fitTime)) sb.append(String.format("  fit time: %.3f ms,\n", fitTime));
         sb.append(String.format("  score time: %.3f ms,\n", scoreTime));
-        sb.append(String.format("  validation data size:: %d,\n", size));
+        sb.append(String.format("  validation data size: %d,\n", size));
         sb.append(String.format("  RSS: %.4f,\n", rss));
         sb.append(String.format("  MSE: %.4f,\n", mse));
         sb.append(String.format("  RMSE: %.4f,\n", rmse));
