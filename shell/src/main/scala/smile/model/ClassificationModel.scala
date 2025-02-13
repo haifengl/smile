@@ -36,6 +36,7 @@ import spray.json.DefaultJsonProtocol.*
   * @param validation the cross-validation metrics.
   * @param test the test metrics.
   */
+@SerialVersionUID(1L)
 case class ClassificationModel(override val algorithm: String,
                                override val schema: StructType,
                                override val formula: Formula,
