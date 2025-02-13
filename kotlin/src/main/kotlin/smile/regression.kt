@@ -290,12 +290,14 @@ fun cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 
  * @param nodeSize the minimum size of leaf nodes.
  * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement.
  *                  < 1.0 means sampling without replacement.
+ * @param seeds optional RNG seeds for each decision tree.
  *
  * @return Random forest regression model.
  */
 fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20,
-                 maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest {
-    return RandomForest.fit(formula, data, RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample))
+                 maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0, seeds: LongArray? = null): RandomForest {
+    return RandomForest.fit(formula, data,
+        RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, seeds, null))
 }
 
 /**
@@ -379,7 +381,8 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
 fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500,
         maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
         subsample: Double = 0.7): GradientTreeBoost {
-    return GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
+    return GradientTreeBoost.fit(formula, data,
+        GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample, null, null))
 }
 
 /**
