@@ -176,6 +176,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *                 Setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @param test the optional test data for validation per epoch.
      * @param controller the optional training controller.
      */
     public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample,
