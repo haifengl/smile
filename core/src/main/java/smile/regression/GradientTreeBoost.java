@@ -30,7 +30,6 @@ import smile.data.type.StructType;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IterativeAlgorithmController;
-import smile.util.Strings;
 import smile.validation.RegressionMetrics;
 
 /**
@@ -177,6 +176,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *                 Setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @param controller the optional training controller.
      */
     public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample,
                           DataFrame test, IterativeAlgorithmController<TrainingStatus> controller) {
