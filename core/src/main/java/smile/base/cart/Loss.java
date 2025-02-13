@@ -456,7 +456,7 @@ public interface Loss {
             public double value() {
                 double value = 0;
                 for (int i = 0; i < n; i++) {
-                    double prob = 2.0 * y[i] / (1 + Math.exp(2 * y[i] * residual[i]));
+                    double prob = 1 - 1.0 / (1.0 + Math.exp(2 * residual[i]));
                     value -= y[i] == 1 ? Math.log(prob) : Math.log(1 - prob);
                 }
                 return value / residual.length;
