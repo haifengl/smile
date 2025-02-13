@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-
 import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -33,7 +32,8 @@ import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.IntSet;
-import smile.util.Strings;
+import smile.util.IterativeAlgorithmController;
+import smile.validation.ClassificationMetrics;
 
 /**
  * Gradient boosting for classification. Gradient boosting is typically used
@@ -207,6 +207,16 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     /**
+     * Training status per tree.
+     * @param tree the tree index, starting at 1.
+     * @param loss the current loss function value.
+     * @param metrics the optional validation metrics if test data is provided.
+     */
+    public record TrainingStatus(int tree, double loss, ClassificationMetrics metrics) {
+
+    }
+
+    /**
      * Gradient tree boosting hyperparameters.
      * @param ntrees the number of iterations (trees).
      * @param maxDepth the maximum depth of the tree.
@@ -215,8 +225,11 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      *                 Setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @param test the optional test data for validation per epoch.
+     * @param controller the optional training controller.
      */
-    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample,
+                          DataFrame test, IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (ntrees < 1) {
@@ -244,9 +257,12 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(500, 20, 6, 5, 0.05, 0.7);
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         */
+        public Options(int ntrees) {
+            this(ntrees, 20, 6, 5, 0.05, 0.7, null, null);
         }
 
         /**
@@ -277,7 +293,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             int nodeSize = Integer.parseInt(props.getProperty("smile.gradient_boost.node_size", "5"));
             double shrinkage = Double.parseDouble(props.getProperty("smile.gradient_boost.shrinkage", "0.05"));
             double subsample = Double.parseDouble(props.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
-            return new Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+            return new Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample, null, null);
         }
     }
 
@@ -289,7 +305,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(500));
     }
 
     /**
@@ -309,9 +325,9 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k == 2) {
-            return train2(formula, x, codec, order, options.ntrees, options.maxDepth, options.maxNodes, options.nodeSize, options.shrinkage, options.subsample);
+            return train2(formula, x, codec, order, options);
         } else {
-            return traink(formula, x, codec, order, options.ntrees, options.maxDepth, options.maxNodes, options.nodeSize, options.shrinkage, options.subsample);
+            return traink(formula, x, codec, order, options);
         }
     }
 
@@ -341,7 +357,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     /**
      * Train L2 tree boost.
      */
-    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, Options options) {
+        long startTime = System.nanoTime();
         int n = x.nrow();
         int p = x.ncol();
         int k = codec.k;
@@ -355,20 +372,60 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         double[] h = loss.residual(); // this is actually the output of boost trees.
         StructField field = new StructField("residual", DataTypes.DoubleType);
 
-        RegressionTree[] trees = new RegressionTree[ntrees];
+        DataFrame testx = null;
+        int[] testy = null;
+        int[] prediction = null;
+        double[] logit = null;
+        double[] probability = null;
+        if (options.test != null) {
+            testx = formula.x(options.test);
+            testy = codec.indexOf(formula.y(options.test).toIntArray());
+            prediction = new int[testy.length];
+            logit = new double[testy.length];
+            probability = new double[testy.length];
+            Arrays.fill(logit, b);
+        }
 
+        int ntrees = options.ntrees;
+        double shrinkage = options.shrinkage;
+        RegressionTree[] trees = new RegressionTree[ntrees];
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
         for (int t = 0; t < ntrees; t++) {
-            sampling(samples, permutation, nc, y, subsample);
+            sampling(samples, permutation, nc, y, options.subsample);
 
-            logger.info("Training {} binary trees", Strings.ordinal(t+1));
-            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, p, samples, order);
+            RegressionTree tree = new RegressionTree(x, loss, field, options.maxDepth, options.maxNodes, options.nodeSize, p, samples, order);
             trees[t] = tree;
 
             for (int i = 0; i < n; i++) {
                 h[i] += shrinkage * tree.predict(x.get(i));
+            }
+
+            double lossValue = loss.value();
+            logger.info("Tree {}: loss = {}", t+1, lossValue);
+
+            double fitTime = (System.nanoTime() - startTime) / 1E6;
+            ClassificationMetrics metrics = null;
+            if (options.test != null) {
+                long testStartTime = System.nanoTime();
+                for (int i = 0; i < testy.length; i++) {
+                    logit[i] += shrinkage * tree.predict(testx.get(i));
+                    prediction[i] = logit[i] > 0 ? 1 : 0;
+                    probability[i] = 1 - 1.0 / (1.0 + Math.exp(2 * logit[i]));
+                }
+                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                metrics = ClassificationMetrics.binary(fitTime, scoreTime, testy, prediction, probability);
+                logger.info("Validation metrics = {} ", metrics);
+            }
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, lossValue, metrics));
+
+                if (options.controller.isInterrupted()) {
+                    trees = Arrays.copyOf(trees, t);
+                    break;
+                }
             }
         }
 
@@ -386,9 +443,8 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     /**
      * Train L-k tree boost.
      */
-    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order,
-                                            int ntrees, int maxDepth, int maxNodes, int nodeSize,
-                                            double shrinkage, double subsample) {
+    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order, Options options) {
+        long startTime = System.nanoTime();
         int n = x.size();
         int p = x.ncol();
         int k = codec.k;
@@ -397,6 +453,21 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         int[] nc = new int[k];
         for (int i = 0; i < n; i++) nc[y[i]]++;
 
+        DataFrame testx = null;
+        int[] testy = null;
+        int[] prediction = null;
+        double[][] logit = null;
+        double[][] probability = null;
+        if (options.test != null) {
+            testx = formula.x(options.test);
+            testy = codec.indexOf(formula.y(options.test).toIntArray());
+            prediction = new int[testy.length];
+            logit = new double[testy.length][k];
+            probability = new double[testy.length][k];
+        }
+
+        int ntrees = options.ntrees;
+        double shrinkage = options.shrinkage;
         StructField field = new StructField("residual", DataTypes.DoubleType);
         RegressionTree[][] forest = new RegressionTree[k][ntrees];
 
@@ -412,7 +483,6 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
         int[] samples = new int[n];
 
         for (int t = 0; t < ntrees; t++) {
-            logger.info("Training {} multiclass trees", Strings.ordinal(t+1));
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < k; j++) {
                     prob[i][j] = h[j][i];
@@ -421,14 +491,55 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
 
             for (int j = 0; j < k; j++) {
-                sampling(samples, permutation, nc, y, subsample);
+                sampling(samples, permutation, nc, y, options.subsample);
 
-                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, p, samples, order);
+                RegressionTree tree = new RegressionTree(x, loss[j], field, options.maxDepth, options.maxNodes, options.nodeSize, p, samples, order);
                 forest[j][t] = tree;
 
                 double[] hj = h[j];
                 for (int i = 0; i < n; i++) {
                     hj[i] += shrinkage * tree.predict(x.get(i));
+                }
+            }
+
+            double lossValue = loss[0].value();
+            logger.info("Tree {}: loss = {}", t+1, lossValue);
+
+            double fitTime = (System.nanoTime() - startTime) / 1E6;
+            ClassificationMetrics metrics = null;
+            if (options.test != null) {
+                long testStartTime = System.nanoTime();
+                for (int i = 0; i < testy.length; i++) {
+                    var xt = testx.get(i);
+                    for (int j = 0; j < k; j++) {
+                        logit[i][j] += shrinkage * forest[j][t].predict(xt);
+                    }
+                    prediction[i] = MathEx.whichMax(logit[i]);
+
+                    double max = logit[i][prediction[i]];
+                    double Z = 0.0;
+                    for (int j = 0; j < k; j++) {
+                        probability[i][j] = Math.exp(logit[i][j] - max);
+                        Z += probability[i][j];
+                    }
+
+                    for (int j = 0; j < k; j++) {
+                        probability[i][j] /= Z;
+                    }
+                }
+                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, probability);
+                logger.info("Validation metrics = {} ", metrics);
+            }
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, lossValue, metrics));
+
+                if (options.controller.isInterrupted()) {
+                    for (int j = 0; j < k; j++) {
+                        forest[j] = Arrays.copyOf(forest[j], t);
+                    }
+                    break;
                 }
             }
         }

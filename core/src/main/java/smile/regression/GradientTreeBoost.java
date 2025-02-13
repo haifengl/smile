@@ -328,8 +328,8 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
             if (options.test != null) {
                 long testStartTime = System.nanoTime();
                 var tree = trees[t];
-                for (int j = 0; j < testy.length; j++) {
-                    prediction[j] += shrinkage * tree.predict(testx.get(j));
+                for (int i = 0; i < testy.length; i++) {
+                    prediction[i] += shrinkage * tree.predict(testx.get(i));
                 }
                 double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
                 metrics = RegressionMetrics.of(fitTime, scoreTime, testy, prediction);

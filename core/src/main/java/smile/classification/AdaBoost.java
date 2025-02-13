@@ -29,7 +29,6 @@ import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.IterativeAlgorithmController;
-import smile.util.Strings;
 import smile.validation.ClassificationMetrics;
 
 /**
@@ -152,8 +151,8 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @param test the optional test data for validation per epoch.
      * @param controller the optional training controller.
      */
-    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize,
-            DataFrame test, IterativeAlgorithmController<TrainingStatus> controller) {
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, DataFrame test,
+                          IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (ntrees < 1) {
@@ -315,10 +314,10 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             ClassificationMetrics metrics = null;
             if (options.test != null) {
                 long testStartTime = System.nanoTime();
-                for (int j = 0; j < testy.length; j++) {
-                    var p = posteriors[j];
-                    p[trees[t].predict(testx.get(j))] += alpha[t];
-                    prediction[j] = MathEx.whichMax(p);
+                for (int i = 0; i < testy.length; i++) {
+                    var p = posteriors[i];
+                    p[trees[t].predict(testx.get(i))] += alpha[t];
+                    prediction[i] = MathEx.whichMax(p);
                 }
                 double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
                 metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
