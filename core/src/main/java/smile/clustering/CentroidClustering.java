@@ -43,7 +43,7 @@ import java.util.stream.IntStream;
  * optimizes cluster centers, not cluster borders).
  *
  * @param <T> the type of centroids.
- * @param <U> the tpe of observations. Usually, T and U are the same.
+ * @param <U> the type of observations. Usually, T and U are the same.
  *            But in case of SIB, they are different.
  *
  * @author Haifeng Li

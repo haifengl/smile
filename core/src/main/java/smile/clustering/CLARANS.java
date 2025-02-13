@@ -97,10 +97,10 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * Constructor. Clustering data into k clusters.
      *
      * @param data        the observations.
+     * @param distance    the lambda of distance measure.
      * @param k           the number of clusters.
      * @param maxNeighbor the maximum number of neighbors examined during
      *                    the random search of local minima.
-     * @param distance    the lambda of distance measure.
      * @param <T> the data type.
      * @return the model.
      */

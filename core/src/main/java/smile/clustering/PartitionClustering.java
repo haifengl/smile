@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
 import smile.math.MathEx;
 
 /**
- * Partition clustering. Partition methods classify the observations
+ * Partitioning clustering. Partitioning methods classify the observations
  * into distinct non-overlapping groups.
  * 
  * @author Haifeng Li
@@ -117,11 +117,11 @@ public abstract class PartitionClustering implements Serializable {
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
      * </ol>
      * 
-     * @param <T> the type of input object.
      * @param data data objects array of size n.
      * @param medoids an array of size k to store cluster medoids on output.
      * @param y an array of size n to store cluster labels on output.
      * @param distance the distance function.
+     * @param <T> the type of input object.
      * @return an array of size n to store the distance of each observation to nearest medoid.
      */
     public static <T> double[] seed(T[] data, T[] medoids, int[] y, ToDoubleBiFunction<T, T> distance) {
