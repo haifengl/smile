@@ -81,7 +81,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     /**
      * The base model.
      * @param tree The regression tree.
-     * @param metrics The performance metrics on out-of-bag samples.
+     * @param metrics The validation metrics on out-of-bag samples.
      */
     public record Model(RegressionTree tree, RegressionMetrics metrics) implements Serializable, Comparable<Model> {
 
@@ -134,7 +134,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     /**
      * Training status per tree.
      * @param tree the tree index, starting at 1.
-     * @param metrics the optional validation metrics if test data is provided.
+     * @param metrics the validation metrics on out-of-bag samples.
      */
     public record TrainingStatus(int tree, RegressionMetrics metrics) {
 

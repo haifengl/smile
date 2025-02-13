@@ -19,7 +19,7 @@ package smile.classification;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.LongStream;
+import java.util.stream.IntStream;
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -30,6 +30,7 @@ import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
+import smile.util.IterativeAlgorithmController;
 import smile.util.Strings;
 import smile.validation.ClassificationMetrics;
 import smile.validation.metric.*;
@@ -83,14 +84,14 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     /**
      * The base model.
      * @param tree The decision tree.
-     * @param metrics The performance metrics on out-of-bag samples.
+     * @param metrics The validation metrics on out-of-bag samples.
      * @param weight The weight of tree, which is used for aggregating tree votes.
      */
     public record Model(DecisionTree tree, ClassificationMetrics metrics, double weight) implements Serializable, Comparable<Model> {
         /**
          * Constructor. OOB accuracy will be used as weight.
          * @param tree The decision tree.
-         * @param metrics The performance metrics on out-of-bag samples.
+         * @param metrics The validation metrics on out-of-bag samples.
          */
         public Model(DecisionTree tree, ClassificationMetrics metrics) {
             this(tree, metrics, metrics.accuracy());
@@ -167,6 +168,15 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     }
 
     /**
+     * Training status per tree.
+     * @param tree the tree index, starting at 1.
+     * @param metrics the validation metrics on out-of-bag samples.
+     */
+    public record TrainingStatus(int tree, ClassificationMetrics metrics) {
+
+    }
+
+    /**
      * Random forest hyperparameters.
      * @param ntrees the number of trees.
      * @param mtry the number of input variables to be used to determine the
@@ -185,8 +195,11 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      *                    and 100 negative samples, the classWeight should
      *                    be [1, 4] (assuming label 0 is of negative, label
      *                    1 is of positive).
+     * @param seeds optional RNG seeds for each decision tree.
+     * @param controller the optional training controller.
      */
-    public record Options(int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
+    public record Options(int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample,
+                          int[] classWeight, long[] seeds, IterativeAlgorithmController<TrainingStatus> controller) {
         /** Constructor. */
         public Options {
             if (ntrees < 1) {
@@ -204,11 +217,18 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             if (subsample <= 0 || subsample > 1) {
                 throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
             }
+
+            if (seeds != null && seeds.length < ntrees) {
+                throw new IllegalArgumentException("The number of RNG seeds is fewer than that of trees: " + seeds.length);
+            }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(500, 0, SplitRule.GINI, 20, 0, 5, 1.0, null);
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         */
+        public Options(int ntrees) {
+            this(ntrees, 0, 20, 0, 5);
         }
 
         /**
@@ -223,7 +243,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
          *                 Setting nodeSize = 5 generally gives good results.
          */
         public Options(int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize) {
-            this(ntrees, mtry, SplitRule.GINI, maxDepth, maxNodes, nodeSize, 1.0, null);
+            this(ntrees, mtry, SplitRule.GINI, maxDepth, maxNodes, nodeSize, 1.0, null, null, null);
         }
 
         /**
@@ -260,7 +280,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             int nodeSize = Integer.parseInt(props.getProperty("smile.random_forest.node_size", "5"));
             double subsample = Double.parseDouble(props.getProperty("smile.random_forest.sampling_rate", "1.0"));
             int[] classWeight = Strings.parseIntArray(props.getProperty("smile.random_forest.class_weight"));
-            return new Options(ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight);
+            return new Options(ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, null, null);
         }
     }
 
@@ -272,19 +292,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
-    }
-
-    /**
-     * Fits a random forest for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param options the hyperparameters.
-     * @return the model.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, Options options) {
-        return fit(formula, data, options, null);
+        return fit(formula, data, new Options(500));
     }
 
     /**
@@ -293,10 +301,9 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param options the hyperparameters.
-     * @param seeds optional RNG seeds for each regression tree.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Options options, LongStream seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, Options options) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
@@ -320,12 +327,6 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
         final int[][] order = CART.order(x);
         final int[][] prediction = new int[n][k]; // out-of-bag prediction
 
-        // generate seeds with sequential stream
-        long[] seedArray = (seeds != null ? seeds : LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
-        if (seedArray.length != ntrees) {
-            throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
-        }
-
         // # of samples in each class
         int[] count = new int[k];
         for (int i = 0; i < n; i++) {
@@ -342,9 +343,9 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             yi[j][idx[j]++] = i;
         }
 
-        Model[] models = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
+        Model[] models = IntStream.range(0, ntrees).parallel().mapToObj(t -> {
             // set RNG seed for the tree
-            if (seed > 1) MathEx.setSeed(seed);
+            if (options.seeds != null) MathEx.setSeed(options.seeds[t]);
 
             final int[] samples = new int[n];
             // Stratified sampling in case that class is unbalanced.
@@ -409,29 +410,14 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             ClassificationMetrics metrics;
             if (oobk == 2) {
                 double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
-                metrics = new ClassificationMetrics(fitTime, scoreTime, noob,
-                            Error.of(truth, oob),
-                            Accuracy.of(truth, oob),
-                            Sensitivity.of(truth, oob),
-                            Specificity.of(truth, oob),
-                            Precision.of(truth, oob),
-                            FScore.F1.score(truth, oob),
-                            MatthewsCorrelation.of(truth, oob),
-                            AUC.of(truth, probability),
-                            LogLoss.of(truth, probability)
-                    );
+                metrics = ClassificationMetrics.binary(fitTime, scoreTime, truth, oob, probability);
             } else {
-                metrics = new ClassificationMetrics(fitTime, scoreTime, noob,
-                            Error.of(truth, oob),
-                            Accuracy.of(truth, oob),
-                            CrossEntropy.of(truth, posteriori)
-                );
+                metrics = ClassificationMetrics.of(fitTime, scoreTime, truth, oob);
             }
 
-            if (noob != 0) {
-                logger.info("Decision tree OOB accuracy: {}", String.format("%.2f%%", 100*metrics.accuracy()));
-            } else {
-                logger.error("Decision tree trained without OOB samples.");
+            logger.info("Tree {}: OOB = {}, accuracy = {}%", t+1, noob, String.format("%.2f", 100*metrics.accuracy()));
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, metrics));
             }
 
             return new Model(tree, metrics);
