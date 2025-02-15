@@ -21,6 +21,8 @@ import java.util.concurrent.*;
 /**
  * A controller for iterative algorithms.
  * @param <T> the type of algorithm progress status objects.
+ *
+ * @author Karl Li
  */
 public class IterativeAlgorithmController<T> implements AutoCloseable {
     /** Flag if early stopping the algorithm. */

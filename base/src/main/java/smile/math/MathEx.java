@@ -1082,9 +1082,7 @@ public class MathEx {
      */
     public static <E> E[] slice(E[] data, int[] index) {
         int n = index.length;
-
-        @SuppressWarnings("unchecked")
-        E[] x = (E[]) java.lang.reflect.Array.newInstance(data.getClass().getComponentType(), n);
+        E[] x = Arrays.copyOf(data, n);
 
         for (int i = 0; i < n; i++) {
             x[i] = data[index[i]];

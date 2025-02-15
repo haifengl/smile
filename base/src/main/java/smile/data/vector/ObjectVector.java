@@ -173,8 +173,7 @@ public class ObjectVector<T> extends AbstractVector {
 
     @Override
     public ObjectVector<T> get(Index index) {
-        @SuppressWarnings("unchecked")
-        T[] data = (T[]) java.lang.reflect.Array.newInstance(vector.getClass().getComponentType(), index.size());
+        T[] data = Arrays.copyOf(vector, index.size());
         for (int i = 0; i < data.length; i++) {
             data[i] = vector[index.apply(i)];
         }
