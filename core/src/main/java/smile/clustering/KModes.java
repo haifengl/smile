@@ -18,7 +18,6 @@ package smile.clustering;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
-import smile.clustering.Clustering.Options;
 import smile.math.MathEx;
 import smile.math.distance.HammingDistance;
 import smile.util.AlgoStatus;
@@ -49,7 +48,7 @@ public class KModes {
      * @return the model.
      */
     public static CentroidClustering<int[], int[]> fit(int[][] data, int k, int maxIter) {
-        return fit(data, new Options(k, maxIter));
+        return fit(data, new Clustering.Options(k, maxIter));
     }
 
     /**
@@ -58,7 +57,7 @@ public class KModes {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static CentroidClustering<int[], int[]> fit(int[][] data, Options options) {
+    public static CentroidClustering<int[], int[]> fit(int[][] data, Clustering.Options options) {
         int k = options.k();
         int maxIter = options.maxIter();
         var controller = options.controller();
@@ -72,20 +71,18 @@ public class KModes {
         }).toArray(Codec[]::new);
 
         int[][] medoids = new int[k][];
-        var clustering = CentroidClustering.seed(data, medoids, HammingDistance::d);
+        var clustering = CentroidClustering.init(data, medoids, HammingDistance::d);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 
         double diff = Integer.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > 0; iter++) {
             updateCentroids(clustering, data, codec);
-
             clustering = clustering.assign(data);
-            logger.info("Iteration {}: distortion = {}", iter, clustering.distortion());
-
             diff = distortion - clustering.distortion();
             distortion = clustering.distortion();
 
+            logger.info("Iteration {}: distortion = {}", iter, clustering.distortion());
             if (controller != null) {
                 controller.submit(new AlgoStatus(iter, distortion));
                 if (controller.isInterrupted()) break;
@@ -142,7 +139,7 @@ public class KModes {
         int d = centroids[0].length;
 
         IntStream.range(0, k).parallel().forEach(cluster -> {
-            int[] centroid = centroids[cluster];
+            int[] centroid = new int[d];
             for (int j = 0; j < d; j++) {
                 // constant column
                 if (codec[j].k <= 1) continue;
@@ -156,6 +153,7 @@ public class KModes {
                 }
                 centroid[j] = codec[j].valueOf(MathEx.whichMax(count));
             }
+            centroids[cluster] = centroid;
         });
     }
 }
