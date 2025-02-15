@@ -134,8 +134,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
             int i = index + j + 1 - k*(k-1)/2 + (k-j)*((k-j)-1)/2;
             int n = ni[i] + ni[j];
 
-            @SuppressWarnings("unchecked")
-            T[] xij = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
+            T[] xij = Arrays.copyOf(x, n);
             int[] yij = new int[n];
 
             for (int l = 0, q = 0; l < labels.length; l++) {
