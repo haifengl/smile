@@ -288,6 +288,23 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
     }
 
     /**
+     * Selects random samples as seeds for various algorithms.
+     * @param data samples to select seeds from.
+     * @param k the number of seeds.
+     * @return the seeds.
+     */
+    public static double[][] seeds(double[][] data, int k) {
+        double[][] medoids = new double[k][];
+        init(data, medoids, MathEx::distance);
+        // Make a copy so that further processing won't modify samples.
+        double[][] neurons = new double[k][];
+        for (int i = 0; i < k; i++) {
+            neurons[i] = medoids[i].clone();
+        }
+        return neurons;
+    }
+
+    /**
      * Returns true if the array contains the object.
      */
     static <T> boolean contains(T medoid, T[] medoids) {
