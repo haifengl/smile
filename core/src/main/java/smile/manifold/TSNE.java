@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 
 /**
@@ -72,15 +73,6 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * Training status per epoch.
-     * @param epoch the iteration index, starting at 1.
-     * @param cost the objective function value.
-     */
-    public record TrainingStatus(int epoch, double cost) {
-
-    }
-
-    /**
      * The t-SNE hyperparameters.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
@@ -117,7 +109,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
     public record Options(int d, double perplexity, double eta, double earlyExaggeration,
                           int maxIter, int maxIterWithoutProgress, double tol,
                           double momentum, double finalMomentum, int momentumSwitchIter,
-                          double minGain, IterativeAlgorithmController<TrainingStatus> controller) {
+                          double minGain, IterativeAlgorithmController<AlgoStatus> controller) {
         /** Constructor. */
         public Options {
             if (d < 2) {
@@ -345,7 +337,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
                 }
 
                 if (options.controller != null) {
-                    options.controller.submit(new TrainingStatus(iter, cost));
+                    options.controller.submit(new AlgoStatus(iter, cost));
                     if (options.controller.isInterrupted()) break;
                 }
             }
