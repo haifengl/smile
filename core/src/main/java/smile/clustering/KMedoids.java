@@ -65,12 +65,10 @@ public class KMedoids<T> {
      * Fits k-medoids clustering.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
-     * @param numLocal the maximum number of iterations, i.e. the number of
-     *                 local minima obtained.
      * @return the model.
      */
-    public static <T> CentroidClustering<T, T> fit(T[] data, Distance<T> distance, int k, int numLocal) {
-        return fit(data, distance, new Clustering.Options(k, numLocal, 0.0125, null));
+    public static <T> CentroidClustering<T, T> fit(T[] data, Distance<T> distance, int k) {
+        return fit(data, distance, new Clustering.Options(k, 2, 0.0125, null));
     }
 
     /**
@@ -97,11 +95,11 @@ public class KMedoids<T> {
             throw new IllegalArgumentException("Too large maxNeighbor: " + maxNeighbor);
         }
 
-        double best = Double.POSITIVE_INFINITY;
+        double best = Double.MAX_VALUE;
         CentroidClustering<T, T> result = null;
         for (int iter = 1; iter <= numLocal; iter++) {
             T[] medoids = Arrays.copyOf(data, k);
-            var clustering = CentroidClustering.seed(data, medoids, distance);
+            var clustering = CentroidClustering.init(data, medoids, distance);
             double distortion = clustering.distortion();
             int[] group = clustering.group();
             double[] proximity = clustering.proximity();
@@ -179,22 +177,11 @@ public class KMedoids<T> {
      */
     private static <T> T getRandomMedoid(T[] data, T[] medoids) {
         int n = data.length;
-
         T medoid = data[MathEx.randomInt(n)];
-        while (contains(medoids, medoid)) {
+        while (CentroidClustering.contains(medoid, medoids)) {
             medoid = data[MathEx.randomInt(n)];
         }
 
         return medoid;
-    }
-
-    /**
-     * Returns true if the array contains the object.
-     */
-    private static <T> boolean contains(T[] medoids, T medoid) {
-        for (T m : medoids) {
-            if (m == medoid) return true;
-        }
-        return false;
     }
 }
