@@ -73,7 +73,7 @@ public class KMedoidsImputer implements Transform {
             tuples[i] = data.get(i);
         }
 
-        var kmedoids = KMedoids.fit(tuples, distance, k, 2);
+        var kmedoids = KMedoids.fit(tuples, distance, k);
         return new KMedoidsImputer(kmedoids);
     }
 }
