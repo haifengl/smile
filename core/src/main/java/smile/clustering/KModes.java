@@ -16,11 +16,12 @@
  */
 package smile.clustering;
 
-import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import smile.clustering.Clustering.Options;
 import smile.math.MathEx;
 import smile.math.distance.HammingDistance;
+import smile.util.AlgoStatus;
 import smile.util.IntSet;
 
 /**
@@ -37,35 +38,8 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class KModes extends CentroidClustering<int[], int[]> {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class KModes {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KModes.class);
-
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     */
-    public KModes(double distortion, int[][] centroids, int[] y) {
-        super(distortion, centroids, y);
-    }
-
-    @Override
-    protected double distance(int[] x, int[] y) {
-        return HammingDistance.d(x, y);
-    }
-
-    /**
-     * Fits k-modes clustering.
-     * @param data the input data of which each row is an observation.
-     * @param k the number of clusters.
-     * @return the model.
-     */
-    public static KModes fit(int[][] data, int k) {
-        return fit(data, k, 100);
-    }
 
     /**
      * Fits k-modes clustering.
@@ -74,15 +48,20 @@ public class KModes extends CentroidClustering<int[], int[]> {
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
-    public static KModes fit(int[][] data, int k, int maxIter) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
+    public static CentroidClustering<int[], int[]> fit(int[][] data, int k, int maxIter) {
+        return fit(data, new Options(k, maxIter));
+    }
 
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    /**
+     * Fits k-modes clustering.
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<int[], int[]> fit(int[][] data, Options options) {
+        int k = options.k();
+        int maxIter = options.maxIter();
+        var controller = options.controller();
         int n = data.length;
         int d = data[0].length;
 
@@ -92,30 +71,33 @@ public class KModes extends CentroidClustering<int[], int[]> {
             return new Codec(x);
         }).toArray(Codec[]::new);
 
-        int[] y = new int[n];
         int[][] medoids = new int[k][];
-        int[][] centroids = new int[k][d];
-
-        double distortion = MathEx.sum(seed(data, medoids, y, HammingDistance::d));
-        logger.info("Distortion after initialization: {}", (int) distortion);
+        var clustering = CentroidClustering.seed(data, medoids, HammingDistance::d);
+        double distortion = clustering.distortion();
+        logger.info("Initial distortion = {}", distortion);
 
         double diff = Integer.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > 0; iter++) {
-            updateCentroids(centroids, data, y, codec);
+            updateCentroids(clustering, data, codec);
 
-            double wcss = assign(y, data, centroids, HammingDistance::d);
-            logger.info("Distortion after {} iterations: {}", iter, (int) wcss);
+            clustering = clustering.assign(data);
+            logger.info("Iteration {}: distortion = {}", iter, clustering.distortion());
 
-            diff = distortion - wcss;
-            distortion = wcss;
+            diff = distortion - clustering.distortion();
+            distortion = clustering.distortion();
+
+            if (controller != null) {
+                controller.submit(new AlgoStatus(iter, distortion));
+                if (controller.isInterrupted()) break;
+            }
         }
 
         // In case of early stop, we should recalculate centroids.
         if (diff > 0) {
-            updateCentroids(centroids, data, y, codec);
+            updateCentroids(clustering, data, codec);
         }
 
-        return new KModes(distortion, centroids, y);
+        return clustering;
     }
 
     /** Maps column values to compact range. */
@@ -152,8 +134,10 @@ public class KModes extends CentroidClustering<int[], int[]> {
     /**
      * Calculates the new centroids in the new clusters.
      */
-    private static void updateCentroids(int[][] centroids, int[][] data, int[] y, Codec[] codec) {
+    private static void updateCentroids(CentroidClustering<int[], int[]> clustering, int[][] data, Codec[] codec) {
         int n = data.length;
+        int[] group = clustering.group();
+        int[][] centroids = clustering.centers();
         int k = centroids.length;
         int d = centroids[0].length;
 
@@ -166,7 +150,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
                 int[] count = new int[codec[j].k];
                 int[] x = codec[j].x;
                 for (int i = 0; i < n; i++) {
-                    if (y[i] == cluster) {
+                    if (group[i] == cluster) {
                         count[x[i]]++;
                     }
                 }
