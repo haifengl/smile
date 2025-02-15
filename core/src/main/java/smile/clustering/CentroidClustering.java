@@ -183,7 +183,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      * @param data the data points.
      * @return the updated clustering.
      */
-    public CentroidClustering<T, U> assign(U[] data) {
+    CentroidClustering<T, U> assign(U[] data) {
         int k = centers.length;
         Arrays.fill(size, 0);
         Arrays.fill(radius, 0);
@@ -212,63 +212,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
     }
 
     /**
-     * Calculates the new centroids in the new clusters.
-     */
-    static void updateCentroids(double[][] centroids, double[][] data, int[] y, int[] size) {
-        int n = data.length;
-        int k = centroids.length;
-        int d = centroids[0].length;
-
-        Arrays.fill(size, 0);
-        IntStream.range(0, k).parallel().forEach(cluster -> {
-            Arrays.fill(centroids[cluster], 0.0);
-            for (int i = 0; i < n; i++) {
-                if (y[i] == cluster) {
-                    size[cluster]++;
-                    for (int j = 0; j < d; j++) {
-                        centroids[cluster][j] += data[i][j];
-                    }
-                }
-            }
-
-            for (int j = 0; j < d; j++) {
-                centroids[cluster][j] /= size[cluster];
-            }
-        });
-    }
-
-    /**
-     * Calculates the new centroids in the new clusters with missing values.
-     * @param notNaN the number of non-missing values per cluster per variable.
-     */
-    static void updateCentroidsWithMissingValues(double[][] centroids, double[][] data, int[] y, int[] size, int[][] notNaN) {
-        int n = data.length;
-        int k = centroids.length;
-        int d = centroids[0].length;
-
-        IntStream.range(0, k).parallel().forEach(cluster -> {
-            Arrays.fill(centroids[cluster], 0);
-            Arrays.fill(notNaN[cluster], 0);
-            for (int i = 0; i < n; i++) {
-                if (y[i] == cluster) {
-                    size[cluster]++;
-                    for (int j = 0; j < d; j++) {
-                        if (!Double.isNaN(data[i][j])) {
-                            centroids[cluster][j] += data[i][j];
-                            notNaN[cluster][j]++;
-                        }
-                    }
-                }
-            }
-
-            for (int j = 0; j < d; j++) {
-                centroids[cluster][j] /= notNaN[cluster][j];
-            }
-        });
-    }
-
-    /**
-     * Initialize cluster membership of input objects with K-Means++ algorithm.
+     * Returns a random clustering based on K-Means++ algorithm.
      * Many clustering methods, e.g. k-means, need an initial clustering
      * configuration as a seed.
      * <p>
@@ -303,11 +247,12 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      * @param <T> the type of input object.
      * @return the initial clustering.
      */
-    public static <T> CentroidClustering<T, T> seed(T[] data, T[] medoids, ToDoubleBiFunction<T, T> distance) {
+    public static <T> CentroidClustering<T, T> init(T[] data, T[] medoids, ToDoubleBiFunction<T, T> distance) {
         int n = data.length;
         int k = medoids.length;
         int[] group = new int[n];
         double[] proximity = new double[n];
+        double[] probability = new double[n];
         Arrays.fill(proximity, Double.MAX_VALUE);
         medoids[0] = data[MathEx.randomInt(n)];
 
@@ -327,18 +272,35 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
             });
 
             if (j < k) {
-                double cost = 0.0;
-                double cutoff = MathEx.random() * MathEx.sum(proximity);
-                for (int index = 0; index < n; index++) {
-                    cost += proximity[index];
-                    if (cost >= cutoff) {
-                        medoids[j] = data[index];
-                        break;
-                    }
+                for (int i = 0; i < n; i++) {
+                    proximity[i] = proximity[i] * proximity[i];
                 }
+                MathEx.unitize1(probability);
+                T center = data[MathEx.random(probability)];
+                while (contains(center, medoids, j)) {
+                    center = data[MathEx.random(probability)];
+                }
+                medoids[j] = center;
             }
         }
 
         return new CentroidClustering<>(medoids, distance, group, proximity);
+    }
+
+    /**
+     * Returns true if the array contains the object.
+     */
+    static <T> boolean contains(T medoid, T[] medoids) {
+        return contains(medoid, medoids, medoids.length);
+    }
+
+    /**
+     * Returns true if the array contains the object.
+     */
+    static <T> boolean contains(T medoid, T[] medoids, int length) {
+        for (int i = 0; i < length; i++) {
+            if (medoids[i] == medoid) return true;
+        }
+        return false;
     }
 }
