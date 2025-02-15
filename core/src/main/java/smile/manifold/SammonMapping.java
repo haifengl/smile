@@ -19,6 +19,7 @@ package smile.manifold;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.math.MathEx;
+import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 
 /**
@@ -61,16 +62,6 @@ public record SammonMapping(double stress, double[][] coordinates) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);
 
     /**
-     * Training status per epoch.
-     * @param epoch the iteration index, starting at 0.
-     * @param stress the objective function value.
-     * @param step the step size in diagonal Newton method.
-     */
-    public record TrainingStatus(int epoch, double stress, double step) {
-
-    }
-
-    /**
      * Sammon's mapping hyperparameters.
      * @param d the dimension of the projection.
      * @param step the initial step size in diagonal Newton method.
@@ -80,7 +71,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
      * @param controller the optional training controller.
      */
     public record Options(int d, double step, int maxIter, double tol, double stepTol,
-                          IterativeAlgorithmController<TrainingStatus> controller) {
+                          IterativeAlgorithmController<AlgoStatus> controller) {
         /** Constructor. */
         public Options {
             if (d < 2) {
@@ -212,7 +203,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
 
         logger.info("Initial stress: {}", stress);
         if (options.controller != null) {
-            options.controller.submit(new TrainingStatus(0, stress, step));
+            options.controller.submit(new AlgoStatus(0, stress, step));
         }
 
         for (int iter = 1; iter <= maxIter; iter++) {
@@ -287,7 +278,7 @@ public record SammonMapping(double stress, double[][] coordinates) {
             }
 
             if (options.controller != null) {
-                options.controller.submit(new TrainingStatus(iter, stress, step));
+                options.controller.submit(new AlgoStatus(iter, stress, step));
                 if (options.controller.isInterrupted()) break;
             }
         }
