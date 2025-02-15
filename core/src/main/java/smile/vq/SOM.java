@@ -167,16 +167,13 @@ public class SOM implements VectorQuantizer {
      * @return the lattice.
      */
     public static double[][][] lattice(int nrow, int ncol, double[][] samples) {
-        int k = nrow * ncol;
         int n = samples.length;
-
-        int[] clusters = new int[n];
-        double[][] medoids = new double[k][];
-        CentroidClustering.seed(samples, medoids, clusters, MathEx::squaredDistance);
+        int k = nrow * ncol;
+        double[][] seeds = CentroidClustering.seeds(samples, k);
 
         // Pair-wise distance matrix.
         double[][] pdist = new double[k][k];
-        MathEx.pdist(medoids, pdist, MathEx::distance);
+        MathEx.pdist(seeds, pdist, MathEx::distance);
         MDS mds = MDS.fit(pdist);
         double[][] coordinates = mds.coordinates();
 
@@ -194,9 +191,8 @@ public class SOM implements VectorQuantizer {
             }
 
             QuickSort.sort(y, row);
-
             for (int j = 0; j < ncol; j++) {
-                neurons[i][j] = medoids[row[j]];
+                neurons[i][j] = seeds[row[j]];
             }
         }
 
