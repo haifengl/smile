@@ -41,6 +41,13 @@ import smile.util.AlgoStatus;
  * higher the value of maxNeighbor, the closer is CLARANS to PAM, and the
  * longer is each search of a local minima. But the quality of such a local
  * minima is higher and fewer local minima needs to be obtained.
+ * <p>
+ * The runtime is proportional to numLocal. As for the relative quality,
+ * there is an improvement from numLocal = 1 to numLocal = 2. Performing
+ * a second search for a local minimum seems to reduce the impact of
+ * "unlucky" randomness that may occur in just one search. However,
+ * setting numLocal larger than 2 is not cost-effective, as there is
+ * little increase in quality.
  *
  * <h2>References</h2>
  * <ol>
@@ -82,7 +89,7 @@ public class KMedoids<T> {
         }
 
         var controller = options.controller();
-        int numLocal = options.maxIter();
+        int numLocal = Math.max(3, options.maxIter());
         int maxNeighbor = (int) Math.round(options.tol() * k * (n - k));
         int minmax = Math.min(100, k * (n - k));
         maxNeighbor = Math.max(minmax, maxNeighbor);
