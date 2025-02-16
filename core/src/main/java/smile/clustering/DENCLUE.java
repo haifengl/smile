@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
@@ -40,7 +41,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class DENCLUE extends PartitionClustering {
+public class DENCLUE extends Partitioning {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
@@ -130,8 +131,8 @@ public class DENCLUE extends PartitionClustering {
         }
 
         logger.info("Select {} samples by k-means", m);
-        KMeans kmeans = KMeans.fit(data, m);
-        double[][] samples = kmeans.centroids;
+        var kmeans = KMeans.fit(data, m, 100);
+        double[][] samples = kmeans.centers();
 
         int n = data.length;
         int d = data[0].length;
@@ -157,13 +158,13 @@ public class DENCLUE extends PartitionClustering {
         logger.info("Clustering attractors with DBSCAN (radius = {})", r);
         DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
 
-        return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.y, tol);
+        return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.group, tol);
     }
 
     /**
      * Classifies a new observation.
      * @param x a new observation.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(double[] x) {
         int d = attractors[0].length;
@@ -178,7 +179,7 @@ public class DENCLUE extends PartitionClustering {
         double r = step[0] + step[1];
         for (int i = 0; i < attractors.length; i++) {
             if (MathEx.distance(attractors[i], attractor) < radius[i] + r) {
-                return y[i];
+                return group[i];
             }
         }
 
