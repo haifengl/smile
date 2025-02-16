@@ -27,6 +27,7 @@ import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 import smile.neighbor.RNNSearch;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * Non-parametric Minimum Conditional Entropy Clustering. This method performs
@@ -57,7 +58,7 @@ import smile.neighbor.RNNSearch;
  *
  * @author Haifeng Li
  */
-public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
+public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MEC.class);
@@ -117,11 +118,11 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         // Initialize clusters with KMeans/CLARANS.
         int[] y;
         if (data instanceof double[][] matrix && distance instanceof EuclideanDistance) {
-            KMeans kmeans = KMeans.fit(matrix, k);
-            y = kmeans.y;
+            var kmeans = KMeans.fit(matrix, k, 100);
+            y = kmeans.group();
         } else {
-            CLARANS<T> clarans = CLARANS.fit(data, distance, k);
-            y = clarans.y;
+            var clarans = KMedoids.fit(data, distance, k);
+            y = clarans.group();
         }
 
         return fit(data, LinearSearch.of(data, distance), k, radius, y, 1E-4);
@@ -280,7 +281,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * Cluster a new instance.
      * @param x a new instance.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
@@ -292,8 +293,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         int[] label = new int[k];
         for (Neighbor<T,T> neighbor : neighbors) {
-            int yi = y[neighbor.index()];
-            label[yi]++;
+            int y = group[neighbor.index()];
+            label[y]++;
         }
 
         return MathEx.whichMax(label);

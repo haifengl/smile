@@ -26,6 +26,7 @@ import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.RNNSearch;
 import smile.math.distance.Distance;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * Density-Based Spatial Clustering of Applications with Noise.
@@ -88,7 +89,7 @@ import smile.math.distance.Distance;
  * 
  * @author Haifeng Li
  */
-public class DBSCAN<T> extends PartitionClustering {
+public class DBSCAN<T> extends Partitioning {
     @Serial
     private static final long serialVersionUID = 2L;
 
@@ -238,7 +239,7 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Classifies a new observation.
      * @param x a new observation.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
@@ -247,7 +248,7 @@ public class DBSCAN<T> extends PartitionClustering {
         Collections.sort(neighbors);
         for (Neighbor<T, T> neighbor : neighbors) {
             if (core[neighbor.index()]) {
-                return y[neighbor.index()];
+                return group[neighbor.index()];
             }
         }
 
