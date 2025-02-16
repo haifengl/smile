@@ -152,6 +152,7 @@ public class KMedoids<T> {
 
         IntStream.range(0, n).parallel().forEach(i -> {
             double dist = distance.applyAsDouble(data[i], medoid);
+            dist *= dist;
             if (d[i] > dist) {
                 y[i] = cluster;
                 d[i] = dist;
@@ -160,6 +161,7 @@ public class KMedoids<T> {
                 for (int j = 0; j < k; j++) {
                     if (j != cluster) {
                         dist = distance.applyAsDouble(data[i], medoids[j]);
+                        dist *= dist;
                         if (d[i] > dist) {
                             d[i] = dist;
                             y[i] = j;
@@ -169,7 +171,7 @@ public class KMedoids<T> {
             }
         });
 
-        return MathEx.sum(d) / data.length;
+        return MathEx.mean(d);
     }
 
     /**
