@@ -60,7 +60,7 @@ public class KMedoidsImputerTest {
         Distance<Tuple> distance = (x, y) -> {
             double[] xd = x.toArray();
             double[] yd = y.toArray();
-            return MathEx.squaredDistanceWithMissingValues(xd, yd);
+            return MathEx.distanceWithMissingValues(xd, yd);
         };
         KMedoidsImputer kmedoidsImputer = KMedoidsImputer.fit(df, distance,20);
         Function<double[][], double[][]> imputer = x -> kmedoidsImputer.apply(DataFrame.of(x)).toArray();
