@@ -16,14 +16,14 @@
  */
 package smile.clustering;
 
-import java.io.Serial;
-import java.io.Serializable;
+import java.util.Properties;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
+import smile.util.AlgoStatus;
+import smile.util.IterativeAlgorithmController;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -45,35 +45,93 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public class SpectralClustering extends PartitionClustering implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class SpectralClustering {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpectralClustering.class);
 
     /**
-     * The distortion in feature space.
-     */
-    public final double distortion;
-
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
+     * Spectral clustering hyperparameters.
      * @param k the number of clusters.
-     * @param y the cluster labels.
+     * @param l the number of random samples for Nystrom approximation.
+     *          Uses 0 to disable approximation.
+     * @param sigma the smooth/width parameter of Gaussian kernel, which is
+     *              a somewhat sensitive parameter. To search for the best
+     *              setting, one may pick the value that gives the tightest
+     *              clusters (smallest distortion) in feature space.
+     * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance of convergence test.
+     * @param controller the optional training controller.
      */
-    public SpectralClustering(double distortion, int k, int[] y) {
-        super(k, y);
-        this.distortion = distortion;
-    }
+    public record Options(int k, int l, double sigma, int maxIter, double tol,
+                          IterativeAlgorithmController<AlgoStatus> controller) {
+        /** Constructor. */
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid number of clusters: " + k);
+            }
 
-    /**
-     * Spectral graph clustering.
-     * @param W the adjacency matrix of graph, which will be modified.
-     * @param k the number of clusters.
-     * @return the model.
-     */
-    public static SpectralClustering fit(Matrix W, int k) {
-        return fit(W, k, 100, 1E-4);
+            if (l < k && l > 0) {
+                throw new IllegalArgumentException("Invalid number of random samples: " + l);
+            }
+
+            if (sigma <= 0.0) {
+                throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+
+            if (tol < 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k the number of clusters.
+         * @param sigma the smooth/width parameter of Gaussian kernel.
+         * @param maxIter the maximum number of iterations.
+         */
+        public Options(int k, double sigma, int maxIter) {
+            this(k, 0, sigma, maxIter);
+        }
+
+        /**
+         * Constructor.
+         * @param k the number of clusters.
+         * @param l the number of random samples for Nystrom approximation.
+         *          Uses 0 to disable approximation.
+         * @param sigma the smooth/width parameter of Gaussian kernel.
+         * @param maxIter the maximum number of iterations.
+         */
+        public Options(int k, int l, double sigma, int maxIter) {
+            this(k, l, sigma, maxIter, 1E-4, null);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.clustering.k", Integer.toString(k));
+            props.setProperty("smile.clustering.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.clustering.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Clustering.Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.clustering.k", "2"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.clustering.iterations", "100"));
+            double tol = Double.parseDouble(props.getProperty("smile.clustering.tolerance", "1E-4"));
+            return new Clustering.Options(k, maxIter, tol, null);
+        }
     }
 
     /**
@@ -81,14 +139,19 @@ public class SpectralClustering extends PartitionClustering implements Serializa
      * @param W the adjacency matrix of graph, which will be modified.
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
-     * @param tol the tolerance of k-means convergence test.
      * @return the model.
      */
-    public static SpectralClustering fit(Matrix W, int k, int maxIter, double tol) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
+    public static CentroidClustering<double[], double[]> fit(Matrix W, int k, int maxIter) {
+        return fit(W, new Clustering.Options(k, maxIter));
+    }
 
+    /**
+     * Spectral graph clustering.
+     * @param W the adjacency matrix of graph, which will be modified.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(Matrix W, Clustering.Options options) {
         int n = W.nrow();
         double[] D = W.colSums();
         for (int i = 0; i < n; i++) {
@@ -108,51 +171,27 @@ public class SpectralClustering extends PartitionClustering implements Serializa
         }
 
         W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, options.k());
         double[][] Y = eigen.Vr.toArray();
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
 
-        KMeans kmeans = KMeans.fit(Y, k, maxIter, tol);
-        return new SpectralClustering(kmeans.distortion, k, kmeans.y);
+        return KMeans.fit(Y, options);
     }
 
     /**
      * Spectral clustering the data.
      * @param data the input data of which each row is an observation.
-     * @param k the number of clusters.
-     * @param sigma the smooth/width parameter of Gaussian kernel, which is
-     *              a somewhat sensitive parameter. To search for the best
-     *              setting, one may pick the value that gives the tightest
-     *              clusters (smallest distortion) in feature space.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static SpectralClustering fit(double[][] data, int k, double sigma) {
-        return fit(data, k, sigma, 100, 1E-4);
-    }
-
-    /**
-     * Spectral clustering the data.
-     * @param data the input data of which each row is an observation.
-     * @param k the number of clusters.
-     * @param sigma the smooth/width parameter of Gaussian kernel, which is
-     *              a somewhat sensitive parameter. To search for the best
-     *              setting, one may pick the value that gives the tightest
-     *              clusters (smallest distortion) in feature space.
-     * @param maxIter the maximum number of iterations for k-means.
-     * @param tol the tolerance of k-means convergence test.
-     * @return the model.
-     */
-    public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
+    public static CentroidClustering<double[], double[]> fit(double[][] data, Options options) {
+        if (options.l >= options.k) {
+            return nystrom(data, options);
         }
 
-        if (sigma <= 0.0) {
-            throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
-        }
-
+        double sigma = options.sigma;
         int n = data.length;
         double gamma = -0.5 / (sigma * sigma);
 
@@ -165,52 +204,25 @@ public class SpectralClustering extends PartitionClustering implements Serializa
             }
         }
 
-        return fit(W, k, maxIter, tol);
+        return fit(W, new Clustering.Options(options.k, options.maxIter, options.tol, options.controller));
     }
 
     /**
      * Spectral clustering with Nystrom approximation.
      * @param data the input data of which each row is an observation.
-     * @param k the number of clusters.
-     * @param l the number of random samples for Nystrom approximation.
-     * @param sigma the smooth/width parameter of Gaussian kernel, which is
-     *              a somewhat sensitive parameter. To search for the best
-     *              setting, one may pick the value that gives the tightest
-     *              clusters (smallest distortion) in feature space.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static SpectralClustering fit(double[][] data, int k, int l, double sigma) {
-        return fit(data, k, l, sigma, 100, 1E-4);
-    }
+    public static CentroidClustering<double[], double[]> nystrom(double[][] data, Options options) {
+        int n = data.length;
+        int k = options.k;
+        int l = options.l;
+        double sigma = options.sigma;
+        double gamma = -0.5 / (sigma * sigma);
 
-    /**
-     * Spectral clustering with Nystrom approximation.
-     * @param data the input data of which each row is an observation.
-     * @param k the number of clusters.
-     * @param l the number of random samples for Nystrom approximation.
-     * @param sigma the smooth/width parameter of Gaussian kernel, which is
-     *              a somewhat sensitive parameter. To search for the best
-     *              setting, one may pick the value that gives the tightest
-     *              clusters (smallest distortion) in feature space.
-     * @param maxIter the maximum number of iterations for k-means.
-     * @param tol the tolerance of k-means convergence test.
-     * @return the model.
-     */
-    public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol) {
-        if (l < k || l >= data.length) {
+        if (l < k || l >= n) {
             throw new IllegalArgumentException("Invalid number of random samples: " + l);
         }
-        
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
-
-        if (sigma <= 0.0) {
-            throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
-        }
-        
-        int n = data.length;
-        double gamma = -0.5 / (sigma * sigma);
 
         int[] index = MathEx.permutate(n);
         double[][] x = new double[n][];
@@ -272,12 +284,10 @@ public class SpectralClustering extends PartitionClustering implements Serializa
             MathEx.unitize2(Y[i]);
         }
 
-        KMeans kmeans = KMeans.fit(Y, k, maxIter, tol);
-        int[] y = new int[n];
+        double[][] features = new double[n][];
         for (int i = 0; i < n; i++) {
-            y[index[i]] = kmeans.y[i];
+            features[index[i]] = Y[i];
         }
-
-        return new SpectralClustering(kmeans.distortion, k, y);
+        return KMeans.fit(features, new Clustering.Options(k, options.maxIter, options.tol, options.controller));
     }
 }
