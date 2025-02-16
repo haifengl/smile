@@ -59,10 +59,10 @@ public class SOMTest {
         System.out.println("K-Means as a benchmark");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        KMeans model = KMeans.fit(x, 400);
+        var model = KMeans.fit(x, 400, 100);
         double error = 0.0;
         for (double[] xi : x) {
-            double[] yi = model.centroids[model.predict(xi)];
+            double[] yi = model.center(model.predict(xi));
             error += MathEx.distance(xi, yi);
         }
         error /= x.length;
@@ -71,7 +71,7 @@ public class SOMTest {
 
         error = 0.0;
         for (double[] xi : testx) {
-            double[] yi = model.centroids[model.predict(xi)];
+            double[] yi = model.center(model.predict(xi));
             error += MathEx.distance(xi, yi);
         }
         error /= testx.length;
