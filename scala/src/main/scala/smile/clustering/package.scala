@@ -16,9 +16,8 @@
  */
 package smile
 
-import smile.clustering.linkage.{CompleteLinkage, SingleLinkage, UPGMALinkage, UPGMCLinkage, WPGMALinkage, WPGMCLinkage, WardLinkage}
+import smile.clustering.linkage.*
 import smile.math.distance.{Distance, EuclideanDistance, Metric}
-import smile.math.matrix.Matrix
 import smile.neighbor.RNNSearch
 import smile.util.{SparseArray, time}
 
@@ -497,19 +496,6 @@ package object clustering {
     */
   def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]] = time("MEC") {
     MEC.fit(data, new EuclideanDistance, k, radius)
-  }
-
-  /** Nonparametric Minimum Conditional Entropy Clustering.
-    *
-    * @param data   the data set.
-    * @param nns    the data structure for neighborhood search.
-    * @param k      the number of clusters. Note that this is just a hint. The final
-    *               number of clusters may be less.
-    * @param radius the neighborhood radius.
-    * @param tol    the tolerance of convergence test.
-    */
-  def mec[T <: AnyRef](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
-    MEC.fit(data, nns, k, radius, y, tol)
   }
 
   /** Spectral Clustering. Given a set of data points, the similarity matrix may
