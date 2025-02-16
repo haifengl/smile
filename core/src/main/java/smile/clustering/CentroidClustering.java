@@ -47,10 +47,10 @@ import smile.math.MathEx;
  * @param centers The cluster centroids or medoids.
  * @param distance The distance function.
  * @param group The cluster labels of data.
- * @param proximity The distance of each data point to its nearest cluster center.
+ * @param proximity The squared distance between data points and their
+ *                  respective cluster centers.
  * @param size The number of data points in each cluster.
- * @param radius The average distance between points in a cluster and its center.
- * @param distortion The average distance of each sample to its nearest cluster center.
+ * @param distortions The average squared distance of data points within each cluster.
  * @param <T> the type of centroids.
  * @param <U> the type of observations. Usually, T and U are the same.
  *            But in case of SIB, they are different.
@@ -58,7 +58,7 @@ import smile.math.MathEx;
  */
 public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> distance,
                                        int[] group, double[] proximity, int[] size,
-                                       double[] radius, double distortion)
+                                       double[] distortions)
         implements Comparable<CentroidClustering<T, U>>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -68,40 +68,61 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      * @param centers The cluster centroids or medoids.
      * @param distance The distance function.
      * @param group The cluster labels of data.
-     * @param proximity The distance of each data point to its nearest cluster center.
+     * @param proximity The squared distance of each data point to its nearest cluster center.
      */
     public CentroidClustering(T[] centers, ToDoubleBiFunction<T, U> distance, int[] group, double[] proximity) {
-        this(centers, distance, group, proximity, new int[centers.length+1], new double[centers.length+1], MathEx.mean(proximity));
+        this(centers, distance, group, proximity, new int[centers.length+1], new double[centers.length+1]);
+
         int k = centers.length;
-        radius[k] = Double.NaN;
+        distortions[k] = 0;
         for (int i = 0; i < group.length; i++) {
             int y = group[i];
             if (y == Clustering.OUTLIER) {
                 size[k]++;
             } else {
                 size[y]++;
-                radius[y] += proximity[i];
+                distortions[y] += proximity[i];
+                distortions[k] += proximity[i];
             }
         }
 
+        distortions[k] /= (group.length - size[k]);
         for (int i = 0; i < k; i++) {
-            radius[i] /= size[i];
+            distortions[i] /= size[i];
         }
+    }
+
+    /**
+     * Returns the number of clusters.
+     * @return the number of clusters.
+     */
+    public int k() {
+        return centers.length;
+    }
+
+    /**
+     * Returns the average squared distance between data points and their
+     * respective cluster centers. This is also known as the within-cluster
+     * sum-of-squares (WCSS).
+     * @return the distortion.
+     */
+    public double distortion() {
+        return distortions[centers.length];
     }
 
     @Override
     public int compareTo(CentroidClustering<T, U> o) {
-        return Double.compare(distortion, o.distortion);
+        return Double.compare(distortion(), o.distortion());
     }
 
     @Override
     public String toString() {
         int k = centers.length;
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Cluster     Size        Radius%n"));
+        sb.append(String.format("Cluster     Size        Distortion%n"));
         for (int i = 0; i < k; i++) {
             double percent = 100.0 * size[i] / group.length;
-            sb.append(String.format("Cluster %-4d %6d (%4.1f%%) %8.2f%n", i+1, size[i], percent, radius[i]));
+            sb.append(String.format("Cluster %-4d %6d (%4.1f%%) %8.2f%n", i+1, size[i], percent, distortions[i]));
         }
 
         if (size[k] != 0) {
@@ -109,7 +130,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
             sb.append(String.format("Outliers     %6d (%4.1f%%)%n", size[k], percent));
         }
 
-        sb.append(String.format("Total        %6d (%4.1f%%) %8.2f%n", group.length, 1.0, distortion));
+        sb.append(String.format("Total        %6d (%4.1f%%) %8.2f%n", group.length, 1.0, distortion()));
         return sb.toString();
     }
 
@@ -186,7 +207,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
     CentroidClustering<T, U> assign(U[] data) {
         int k = centers.length;
         Arrays.fill(size, 0);
-        Arrays.fill(radius, 0);
+        Arrays.fill(distortions, 0);
         double distortion = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
             int cluster = -1;
             double nearest = Double.MAX_VALUE;
@@ -197,18 +218,19 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
                     cluster = j;
                 }
             }
-            proximity[i] = nearest;
+            double squared = nearest * nearest;
+            proximity[i] = squared;
             group[i] = cluster;
             size[cluster]++;
-            radius[cluster] += nearest;
-            return nearest;
+            distortions[cluster] += squared;
+            return squared;
         }).sum();
 
-        distortion /= data.length;
         for (int i = 0; i < k; i++) {
-            radius[i] /= size[i];
+            distortions[i] /= size[i];
         }
-        return new CentroidClustering<>(centers, distance, group, proximity, size, radius, distortion);
+        distortions[k] = MathEx.mean(proximity);
+        return new CentroidClustering<>(centers, distance, group, proximity, size, distortions);
     }
 
     /**
