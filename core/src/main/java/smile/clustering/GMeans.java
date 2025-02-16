@@ -16,9 +16,11 @@
  */
 package smile.clustering;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.ToDoubleBiFunction;
+import java.util.stream.IntStream;
+
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
@@ -41,36 +43,9 @@ import smile.stat.distribution.GaussianDistribution;
  * 
  * @author Haifeng Li
  */
-public class GMeans extends CentroidClustering<double[], double[]> {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class GMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
-
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     */
-    public GMeans(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y);
-    }
-
-    @Override
-    protected double distance(double[] x, double[] y) {
-        return MathEx.squaredDistance(x, y);
-    }
-
-    /**
-     * Clustering data with the number of clusters
-     * determined by G-Means algorithm automatically.
-     * @param data the input data of which each row is an observation.
-     * @param kmax the maximum number of clusters.
-     * @return the model.
-     */
-    public static GMeans fit(double[][] data, int kmax) {
-        return fit(data, kmax, 100, 1E-4);
-    }
+    private static double CRITICAL_VALUE = 1.8692;
 
     /**
      * Clustering data with the number of clusters
@@ -78,33 +53,40 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
-     * @param tol the tolerance of k-means convergence test.
      * @return the model.
      */
-    public static GMeans fit(double[][] data, int kmax, int maxIter, double tol) {
-        if (kmax < 2) {
-            throw new IllegalArgumentException("Invalid parameter kmax = " + kmax);
-        }
+    public static CentroidClustering<double[], double[]> fit(double[][] data, int kmax, int maxIter) {
+        return fit(data, new Clustering.Options(kmax, maxIter));
+    }
 
+    /**
+     * Clustering data with the number of clusters
+     * determined by G-Means algorithm automatically.
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(double[][] data, Clustering.Options options) {
+        int kmax = options.k();
+        int maxIter = options.maxIter();
+        double tol = options.tol();
+        var controller = options.controller();
         int n = data.length;
         int d = data[0].length;
-        int k = 1;
 
+        int[] group = new int[n];
+        double[][] sum = new double[kmax][d];
+        double[] mean = MathEx.colMeans(data);
+        double[][] centroids = new double[kmax][];
         int[] size = new int[kmax];
+        centroids[0] = mean;
         size[0] = n;
 
-        int[] y = new int[n];
-        double[][] sum = new double[kmax][d];
-
-        double[] mean = MathEx.colMeans(data);
-        double[][] centroids = {mean};
-
-        double distortion = Arrays.stream(data).parallel().mapToDouble(x -> MathEx.squaredDistance(x, mean)).sum();
-
         BBDTree bbd = new BBDTree(data);
-        KMeans[] kmeans = new KMeans[kmax];
+        var kmeans = new ArrayList<CentroidClustering<double[], double[]>>(kmax);
         ArrayList<double[]> centers = new ArrayList<>();
 
+        int k = 1;
         while (k < kmax) {
             centers.clear();
             double[] score = new double[k];
@@ -115,22 +97,23 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                 if (ni < 25) {
                     logger.info("Cluster {} too small to split: {} observations", i, ni);
                     score[i] = 0.0;
-                    kmeans[i] = null;
+                    kmeans.set(i, null);
                     continue;
                 }
                 
                 double[][] subset = new double[ni][];
                 for (int j = 0, l = 0; j < n; j++) {
-                    if (y[j] == i) {
+                    if (group[j] == i) {
                         subset[l++] = data[j];
                     }
                 }
 
-                kmeans[i] = KMeans.fit(subset, 2, maxIter, tol);
+                var clustering = KMeans.fit(subset, new Clustering.Options(2, maxIter, tol, null));
+                kmeans.set(i, clustering);
                 
                 double[] v = new double[d];
                 for (int j = 0; j < d; j++) {
-                    v[j] = kmeans[i].centroids[0][j] - kmeans[i].centroids[1][j];
+                    v[j] = clustering.center(0)[j] - clustering.center(1)[j];
                 }
                 double vp = MathEx.dot(v, v);
                 double[] x = new double[ni];
@@ -140,25 +123,24 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                 
                 // normalize to mean 0 and variance 1.
                 MathEx.standardize(x);
-
                 score[i] = AndersonDarling(x);
                 logger.info("Cluster {} Anderson-Darling adjusted test statistic: {}", i, score[i]);
             }
 
             int[] index = QuickSort.sort(score);
             for (int i = 0; i < k; i++) {
-                if (score[i] <= 1.8692) {
+                if (score[i] <= CRITICAL_VALUE) {
                     centers.add(centroids[index[i]]);
                 }
             }
 
             int m = centers.size();
             for (int i = k; --i >= 0;) {
-                if (score[i] > 1.8692) {
+                if (score[i] > CRITICAL_VALUE) {
                     if (centers.size() + i - m + 1 < kmax) {
                         logger.info("Split cluster {}", index[i]);
-                        centers.add(kmeans[index[i]].centroids[0]);
-                        centers.add(kmeans[index[i]].centroids[1]);
+                        centers.add(kmeans.get(index[i]).center(0));
+                        centers.add(kmeans.get(index[i]).center(1));
                     } else {
                         centers.add(centroids[index[i]]);
                     }
@@ -172,12 +154,12 @@ public class GMeans extends CentroidClustering<double[], double[]> {
             }
 
             k = centers.size();
-            centroids = centers.toArray(new double[k][]);
+            centers.toArray(centroids);
 
+            double distortion = Double.MAX_VALUE;
             double diff = Double.MAX_VALUE;
             for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-                double wcss = bbd.clustering(centroids, sum, size, y);
-
+                double wcss = bbd.clustering(k, centroids, sum, size, group) / n;
                 diff = distortion - wcss;
                 distortion = wcss;
             }
@@ -185,7 +167,20 @@ public class GMeans extends CentroidClustering<double[], double[]> {
             logger.info("Distortion with {} clusters: {}", k, distortion);
         }
 
-        return new GMeans(distortion, centroids, y);
+        double[] proximity = new double[n];
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            double[] centroid = centroids[cluster];
+            for (int i = 0; i < n; i++) {
+                if (group[i] == cluster) {
+                    double dist = MathEx.distance(data[i], centroid);
+                    dist *= dist;
+                    proximity[i] = dist;
+                }
+            }
+        });
+
+        ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
+        return new CentroidClustering<>(centroids, distance, group, proximity);
     }
     
     /**

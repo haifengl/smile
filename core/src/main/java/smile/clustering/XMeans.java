@@ -16,11 +16,10 @@
  */
 package smile.clustering;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
@@ -43,37 +42,9 @@ import smile.sort.QuickSort;
  * 
  * @author Haifeng Li
  */
-public class XMeans extends CentroidClustering<double[], double[]> {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class XMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMeans.class);
     private static final double LOG2PI = Math.log(Math.PI * 2.0);
-
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     */
-    public XMeans(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y);
-    }
-
-    @Override
-    protected double distance(double[] x, double[] y) {
-        return MathEx.squaredDistance(x, y);
-    }
-
-    /**
-     * Clustering data with the number of clusters
-     * determined by X-Means algorithm automatically.
-     * @param data the input data of which each row is an observation.
-     * @param kmax the maximum number of clusters.
-     * @return the model.
-     */
-    public static XMeans fit(double[][] data, int kmax) {
-        return fit(data, kmax, 100, 1E-4);
-    }
 
     /**
      * Clustering data with the number of clusters
@@ -81,35 +52,47 @@ public class XMeans extends CentroidClustering<double[], double[]> {
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
-     * @param tol the tolerance of k-means convergence test.
      * @return the model.
      */
-    public static XMeans fit(double[][] data, int kmax, int maxIter, double tol) {
-        if (kmax < 2) {
-            throw new IllegalArgumentException("Invalid parameter kmax = " + kmax);
-        }
+    public static CentroidClustering<double[], double[]> fit(double[][] data, int kmax, int maxIter) {
+        return fit(data, new Clustering.Options(kmax, maxIter));
+    }
 
+    /**
+     * Clustering data with the number of clusters
+     * determined by X-Means algorithm automatically.
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(double[][] data, Clustering.Options options) {
+        int kmax = options.k();
+        int maxIter = options.maxIter();
+        double tol = options.tol();
+        var controller = options.controller();
         int n = data.length;
         int d = data[0].length;
-        int k = 1;
 
+        int[] group = new int[n];
+        double[] proximity = new double[n];
+        double[][] sum = new double[kmax][d];
+        double[] mean = MathEx.colMeans(data);
+        double[][] centroids = new double[kmax][];
         int[] size = new int[kmax];
+        centroids[0] = mean;
         size[0] = n;
 
-        int[] y = new int[n];
-        double[][] sum = new double[kmax][d];
-
-        double[] mean = MathEx.colMeans(data);
-        double[][] centroids = {mean};
-
-        double distortion = Arrays.stream(data).parallel().mapToDouble(x -> MathEx.squaredDistance(x, mean)).sum();
+        double distortion = Arrays.stream(data).parallel()
+                .mapToDouble(x -> MathEx.squaredDistance(x, mean))
+                .sum() / n;
         double[] distortions = new double[kmax];
         distortions[0] = distortion;
 
         BBDTree bbd = new BBDTree(data);
-        KMeans[] kmeans = new KMeans[kmax];
+        var kmeans = new ArrayList<CentroidClustering<double[], double[]>>(kmax);
         ArrayList<double[]> centers = new ArrayList<>();
 
+        int k = 1;
         while (k < kmax) {
             centers.clear();
             double[] score = new double[k];
@@ -121,19 +104,20 @@ public class XMeans extends CentroidClustering<double[], double[]> {
                 if (ni < 25) {
                     logger.info("Cluster {} too small to split: {} observations", i, ni);
                     score[i] = 0.0;
-                    kmeans[i] = null;
+                    kmeans.set(i, null);
                     continue;
                 }
 
                 double[][] subset = new double[ni][];
                 for (int j = 0, l = 0; j < n; j++) {
-                    if (y[j] == i) {
+                    if (group[j] == i) {
                         subset[l++] = data[j];
                     }
                 }
 
-                kmeans[i] = KMeans.fit(subset, 2, maxIter, tol);
-                double newBIC = bic(2, ni, d, kmeans[i].distortion, kmeans[i].size);
+                var clustering = KMeans.fit(subset, new Clustering.Options(2, maxIter, tol, null));
+                kmeans.set(i, clustering);
+                double newBIC = bic(2, ni, d, clustering.distortion(), clustering.size());
                 double oldBIC = bic(ni, d, distortions[i]);
                 score[i] = newBIC - oldBIC;
                 logger.info("Cluster {} BIC: {}, BIC after split: {}, improvement: {}", i, oldBIC, newBIC, score[i]);
@@ -151,8 +135,8 @@ public class XMeans extends CentroidClustering<double[], double[]> {
                 if (score[i] > 0) {
                     if (centers.size() + i - m + 1 < kmax) {
                         logger.info("Split cluster {}", index[i]);
-                        centers.add(kmeans[index[i]].centroids[0]);
-                        centers.add(kmeans[index[i]].centroids[1]);
+                        centers.add(kmeans.get(index[i]).center(0));
+                        centers.add(kmeans.get(index[i]).center(1));
                     } else {
                         centers.add(centroids[index[i]]);
                     }
@@ -166,30 +150,36 @@ public class XMeans extends CentroidClustering<double[], double[]> {
             }
 
             k = centers.size();
-            centroids = centers.toArray(new double[k][]);
+            centers.toArray(centroids);
 
             double diff = Double.MAX_VALUE;
             for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-                double wcss = bbd.clustering(centroids, sum, size, y);
-
+                double wcss = bbd.clustering(k, centroids, sum, size, group) / n;
                 diff = distortion - wcss;
                 distortion = wcss;
             }
+            logger.info("Distortion with {} clusters: {}", k, distortion);
 
             Arrays.fill(distortions, 0.0);
             IntStream.range(0, k).parallel().forEach(cluster -> {
-                double[] centroid = centers.get(cluster);
+                double[] centroid = centroids[cluster];
                 for (int i = 0; i < n; i++) {
-                    if (y[i] == cluster) {
-                        distortions[cluster] += MathEx.squaredDistance(data[i], centroid);
+                    if (group[i] == cluster) {
+                        double dist = MathEx.distance(data[i], centroid);
+                        dist *= dist;
+                        proximity[i] = dist;
+                        distortions[cluster] += dist;
                     }
                 }
             });
 
-            logger.info("Distortion with {} clusters: {}", k, distortion);
+            for (int i = 0; i < k; i++) {
+                distortions[i] /= size[i];
+            }
         }
 
-        return new XMeans(distortion, centroids, y);
+        ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
+        return new CentroidClustering<>(Arrays.copyOf(centroids, k), distance, group, proximity);
     }
 
     /**
@@ -200,7 +190,7 @@ public class XMeans extends CentroidClustering<double[], double[]> {
      * @return the BIC score.
      */
     private static double bic(int n, int d, double distortion) {
-        double variance = distortion / (n - 1);
+        double variance = n * distortion / (n - 1);
 
         double p1 = -n * LOG2PI;
         double p2 = -n * d * Math.log(variance);
@@ -217,15 +207,15 @@ public class XMeans extends CentroidClustering<double[], double[]> {
      * @param n the total number of observations.
      * @param d the dimensionality of data.
      * @param distortion the distortion of clusters.
-     * @param clusterSize the number of observations in each cluster.
+     * @param size the number of observations in each cluster.
      * @return the BIC score.
      */
-    private static double bic(int k, int n, int d, double distortion, int[] clusterSize) {
-        double variance = distortion / (n - k);
+    private static double bic(int k, int n, int d, double distortion, int[] size) {
+        double variance = n * distortion / (n - k);
 
         double L = 0.0;
         for (int i = 0; i < k; i++) {
-            L += logLikelihood(k, n, clusterSize[i], d, variance);
+            L += logLikelihood(k, n, size[i], d, variance);
         }
 
         int numParameters = k + k * d;
