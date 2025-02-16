@@ -16,11 +16,13 @@
  */
 package smile.clustering;
 
-import java.io.Serial;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
+import smile.util.AlgoStatus;
+import smile.util.IterativeAlgorithmController;
 
 /**
  * Deterministic annealing clustering. Deterministic annealing extends
@@ -42,65 +44,118 @@ import smile.math.matrix.Matrix;
  * 
  * @author Haifeng Li
  */
-public class DeterministicAnnealing extends CentroidClustering<double[], double[]> {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class DeterministicAnnealing {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeterministicAnnealing.class);
 
     /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     */
-    public DeterministicAnnealing(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y);
-    }
-
-    @Override
-    protected double distance(double[] x, double[] y) {
-        return MathEx.squaredDistance(x, y);
-    }
-
-    /**
-     * Clustering data into k clusters.
-     * @param data the input data of which each row is an observation.
-     * @param Kmax the maximum number of clusters.
-     * @return the model.
-     */
-    public static DeterministicAnnealing fit(double[][] data, int Kmax) {
-        return fit(data, Kmax, 0.9, 100, 1E-4, 1E-2);
-    }
-
-    /**
-     * Clustering data into k clusters.
-     * @param data the input data of which each row is an observation.
-     * @param Kmax the maximum number of clusters.
+     * Deterministic annealing hyperparameters.
+     * @param kmax the maximum number of clusters.
      * @param alpha the temperature T is decreasing as T = T * alpha.
      *              alpha has to be in (0, 1).
      * @param maxIter the maximum number of iterations at each temperature.
      * @param tol the tolerance of convergence test.
      * @param splitTol the tolerance to split a cluster.
-     * @return the model.
+     * @param controller the optional training controller.
      */
-    public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol) {
-        if (alpha <= 0 || alpha >= 1.0) {
-            throw new IllegalArgumentException("Invalid alpha: " + alpha);
+    public record Options(int kmax, double alpha, int maxIter, double tol, double splitTol,
+                          IterativeAlgorithmController<AlgoStatus> controller) {
+        /** Constructor. */
+        public Options {
+            if (kmax < 2) {
+                throw new IllegalArgumentException("Invalid number of clusters: " + kmax);
+            }
+
+            if (alpha <= 0 || alpha >= 1.0) {
+                throw new IllegalArgumentException("Invalid alpha: " + alpha);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+
+            if (tol < 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+
+            if (splitTol < 0) {
+                throw new IllegalArgumentException("Invalid split tolerance: " + splitTol);
+            }
         }
 
+        /**
+         * Constructor.
+         * @param kmax the maximum number of clusters.
+         * @param alpha the temperature T is decreasing as T = T * alpha.
+         *              alpha has to be in (0, 1).
+         * @param maxIter the maximum number of iterations at each temperature.
+         */
+        public Options(int kmax, double alpha, int maxIter) {
+            this(kmax, alpha, maxIter, 1E-4, 1E-2, null);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.deterministic_annealing.k", Integer.toString(kmax));
+            props.setProperty("smile.deterministic_annealing.alpha", Double.toString(alpha));
+            props.setProperty("smile.deterministic_annealing.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.deterministic_annealing.tolerance", Double.toString(tol));
+            props.setProperty("smile.deterministic_annealing.split_tolerance", Double.toString(splitTol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int kmax = Integer.parseInt(props.getProperty("smile.deterministic_annealing.k", "2"));
+            double alpha = Double.parseDouble(props.getProperty("smile.deterministic_annealing.alpha", "0.9"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.deterministic_annealing.iterations", "100"));
+            double tol = Double.parseDouble(props.getProperty("smile.deterministic_annealing.tolerance", "1E-4"));
+            double splitTol = Double.parseDouble(props.getProperty("smile.deterministic_annealing.split_tolerance", "1E-2"));
+            return new Options(kmax, alpha, maxIter, tol, splitTol, null);
+        }
+    }
+
+    /**
+     * Clustering data into k clusters.
+     * @param data the input data of which each row is an observation.
+     * @param kmax the maximum number of clusters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(double[][] data, int kmax, double alpha, int maxIter) {
+        return fit(data, new Options(kmax, alpha, maxIter));
+    }
+
+    /**
+     * Clustering data into k clusters.
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(double[][] data, Options options) {
+        int kmax = options.kmax;
+        double alpha = options.alpha;
+        double splitTol = options.splitTol;
+        var controller = options.controller();
         int n = data.length;
         int d = data[0].length;
 
-        double[][] centroids = new double[2 * Kmax][d];
-        double[][] posteriori = new double[n][2 * Kmax];
-        double[] priori = new double[2 * Kmax];
+        double[][] centroids = new double[2 * kmax][d];
+        double[][] posteriori = new double[n][2 * kmax];
+        double[] priori = new double[2 * kmax];
+        priori[0] = priori[1] = 0.5;
 
         centroids[0] = MathEx.colMeans(data);
         for (int i = 0; i < d; i++) {
             centroids[1][i] = centroids[0][i] * 1.01;
         }
-
-        priori[0] = priori[1] = 0.5;
 
         Matrix cov = Matrix.of(MathEx.cov(data, centroids[0]));
         double[] ev = new double[d];
@@ -109,14 +164,18 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
         double T = 2.0 * lambda + 0.01;
         
         int k = 2;
-
         boolean stop = false;
         boolean split = false;
         while (!stop) {
-            update(data, T, k, centroids, posteriori, priori, maxIter, tol);
+            double distortion = update(data, T, k, centroids, posteriori, priori, options.maxIter, options.tol);
 
-            if (k >= 2 * Kmax && split) {
+            if (k >= 2 * kmax && split) {
                 stop = true;
+            }
+
+            if (controller != null) {
+                controller.submit(new AlgoStatus(k/2, distortion, T));
+                if (controller.isInterrupted()) stop = true;
             }
 
             int currentK = k;
@@ -128,7 +187,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
                 }
 
                 if (norm > splitTol) {
-                    if (k < 2 * Kmax) {
+                    if (k < 2 * kmax) {
                         // split the cluster to two.
                         for (int j = 0; j < d; j++) {
                             centroids[k][j] = centroids[i + 1][j];
@@ -144,7 +203,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
                         k += 2;
                     }
 
-                    if (currentK >= 2 * Kmax) {
+                    if (currentK >= 2 * kmax) {
                         split = true;
                     }
                 }
@@ -164,7 +223,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
                 alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
             } else {
                 // be careful since we are close to the final Kmax.
-                if (k > currentK && k == 2 * Kmax - 2) {
+                if (k > currentK && k == 2 * kmax - 2) {
                     alpha += 5 * Math.pow(10, Math.log10(1 - alpha) - 1);
                 }
 
@@ -177,46 +236,64 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
             }
         }
 
-        // Finish the annealing process and run the system at T = 0, i.e.
-        // hard clustering.
+        // Finish the annealing process and run the system at T = 0,
+        // i.e. hard clustering.
         k = k / 2;
         double[][] centers = new double[k][];
         for (int i = 0; i < k; i++) {
             centers[i] = centroids[2*i];
         }
 
-        int[] y = new int[n];
-        double distortion = assign(y, data, centers, MathEx::squaredDistance);
-
         int[] size = new int[k];
-        centroids = new double[k][d];
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-            for (int j = 0; j < d; j++) {
-                centroids[y[i]][j] += data[i][j];
+        int[] group = new int[n];
+        final int numClusters = k;
+        IntStream.range(0, n).parallel().forEach(i -> {
+            int cluster = -1;
+            double nearest = Double.MAX_VALUE;
+            for (int j = 0; j < numClusters; j++) {
+                double dist = MathEx.squaredDistance(centers[j], data[i]);
+                if (nearest > dist) {
+                    nearest = dist;
+                    cluster = j;
+                }
             }
-        }
+
+            group[i] = cluster;
+            size[cluster]++;
+        });
 
         for (int i = 0; i < k; i++) {
+            Arrays.fill(centers[i], 0.0);
+        }
+        IntStream.range(0, k).parallel().forEach(i -> {
             for (int j = 0; j < d; j++) {
-                centroids[i][j] /= size[i];
+                centers[group[i]][j] += data[i][j];
+            }
+        });
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < d; j++) {
+                centers[i][j] /= size[i];
             }
         }
+        double[] proximity = new double[n];
+        IntStream.range(0, n).parallel().forEach(i -> {
+            proximity[i] = MathEx.squaredDistance(centers[group[i]], data[i]);
+        });
 
-        return new DeterministicAnnealing(distortion, centroids, y);
+        return new CentroidClustering<>(centroids, MathEx::distance, group, proximity);
     }
 
     /**
      *  Update the system at a given temperature until convergence.
      */
-    private static double update(double[][] data, double T, int k, double[][] centroids, double[][] posteriori, double[] priori, int maxIter, double tol) {
+    private static double update(double[][] data, double T, int k, double[][] centroids,
+                                 double[][] posteriori, double[] priori, int maxIter, double tol) {
         int n = data.length;
         int d = data[0].length;
 
         double distortion = Double.MAX_VALUE;
         double diff = Double.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-
             double D = IntStream.range(0, n).parallel().mapToDouble(i -> {
                 double Z = 0.0;
                 double[] p = posteriori[i];
@@ -271,7 +348,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
             diff = distortion - DTH;
             distortion = DTH;
 
-            logger.info("Entropy after {} iterations at temperature {} and k = {}: {} (soft distortion = {})", iter, T, k / 2, H, D);
+            logger.info("Iterations {}: k = {}, temperature = {}, entry = {}, soft distortion = {}", iter, T, k/2, H, D);
         }
 
         return distortion;
