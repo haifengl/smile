@@ -258,15 +258,14 @@ public class BBDTree {
      * not null, it should be an array of size n that will be filled with the
      * index of the cluster [0, k) that each data point is assigned to.
      *
+     * @param k the number of clusters.
      * @param centroids the current centroids of clusters.
      * @param sum the workspace storing the sum of data in each cluster.
      * @param size the number of samples in each cluster.
      * @param y the class labels.
      * @return the within cluster sum of the squared distance.
      */
-    public double clustering(double[][] centroids, double[][] sum, int[] size, int[] y) {
-        int k = centroids.length;
-
+    public double clustering(int k, double[][] centroids, double[][] sum, int[] size, int[] y) {
         Arrays.fill(size, 0);
         int[] candidates = new int[k];
         for (int i = 0; i < k; i++) {
