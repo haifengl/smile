@@ -100,17 +100,16 @@ public class Partitioning implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        sb.append(String.format("%-8s %15s%n", "Cluster", "Size (%)"));
         for (int i = 0; i < k; i++) {
-            double r = 100.0 * size[i] / group.length;
-            sb.append(String.format("Cluster %4d %6d (%4.1f%%)%n", i+1, size[i], r));
+            double percent = 100.0 * size[i] / group.length;
+            sb.append(String.format("%-8d %7d (%4.1f%%)%n", i+1, size[i], percent));
         }
-
         if (size[k] != 0) {
             double r = 100.0 * size[k] / group.length;
-            sb.append(String.format("Outliers     %6d (%4.1f%%)%n", size[k], r));
+            sb.append(String.format("%-8s %7d (%4.1f%%)%n", "Outliers", size[k], r));
         }
-
-        sb.append(String.format("Total        %6d%n", group.length));
+        sb.append(String.format("%-8s %7d (100.%%)%n", "Total", group.length));
         return sb.toString();
     }
 }

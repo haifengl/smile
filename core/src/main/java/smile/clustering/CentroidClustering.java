@@ -77,17 +77,13 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
         distortions[k] = 0;
         for (int i = 0; i < group.length; i++) {
             int y = group[i];
-            if (y == Clustering.OUTLIER) {
-                size[k]++;
-            } else {
-                size[y]++;
-                distortions[y] += proximity[i];
-                distortions[k] += proximity[i];
-            }
+            size[y]++;
+            distortions[y] += proximity[i];
+            distortions[k] += proximity[i];
         }
 
-        distortions[k] /= (group.length - size[k]);
-        for (int i = 0; i < k; i++) {
+        size[k] = group.length;
+        for (int i = 0; i <= k; i++) {
             distortions[i] /= size[i];
         }
     }
@@ -119,18 +115,12 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
     public String toString() {
         int k = centers.length;
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Cluster     Size        Distortion%n"));
+        sb.append(String.format("%-7s %15s %12s%n", "Cluster", "Size (%)", "Distortion"));
         for (int i = 0; i < k; i++) {
             double percent = 100.0 * size[i] / group.length;
-            sb.append(String.format("Cluster %-4d %6d (%4.1f%%) %8.2f%n", i+1, size[i], percent, distortions[i]));
+            sb.append(String.format("%-7d %7d (%4.1f%%) %12.4f%n", i+1, size[i], percent, distortions[i]));
         }
-
-        if (size[k] != 0) {
-            double percent = 100.0 * size[k] / group.length;
-            sb.append(String.format("Outliers     %6d (%4.1f%%)%n", size[k], percent));
-        }
-
-        sb.append(String.format("Total        %6d (%4.1f%%) %8.2f%n", group.length, 1.0, distortion()));
+        sb.append(String.format("%-7s %7d (100.%%) %12.4f%n", "Total", group.length, distortions[k]));
         return sb.toString();
     }
 

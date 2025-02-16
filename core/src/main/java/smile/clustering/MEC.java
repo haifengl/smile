@@ -281,7 +281,7 @@ public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
         });
 
         double entropy = entropy(k, neighbors, size, px);
-        logger.info("Entropy after initialization: {}", entropy);
+        logger.info("Initial entropy = {}", entropy);
 
         double diff = Double.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
