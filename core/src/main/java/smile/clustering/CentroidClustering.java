@@ -205,10 +205,11 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      * @return the updated clustering.
      */
     CentroidClustering<T, U> assign(U[] data) {
+        int n = data.length;
         int k = centers.length;
         Arrays.fill(size, 0);
         Arrays.fill(distortions, 0);
-        double distortion = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
+        double distortion = IntStream.range(0, n).parallel().mapToDouble(i -> {
             int cluster = -1;
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j++) {

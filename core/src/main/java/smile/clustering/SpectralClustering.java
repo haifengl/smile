@@ -114,9 +114,11 @@ public class SpectralClustering {
          */
         public Properties toProperties() {
             Properties props = new Properties();
-            props.setProperty("smile.clustering.k", Integer.toString(k));
-            props.setProperty("smile.clustering.iterations", Integer.toString(maxIter));
-            props.setProperty("smile.clustering.tolerance", Double.toString(tol));
+            props.setProperty("smile.spectral_clustering.k", Integer.toString(k));
+            props.setProperty("smile.spectral_clustering.l", Integer.toString(l));
+            props.setProperty("smile.spectral_clustering.sigma", Double.toString(sigma));
+            props.setProperty("smile.spectral_clustering.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.spectral_clustering.tolerance", Double.toString(tol));
             return props;
         }
 
@@ -126,11 +128,13 @@ public class SpectralClustering {
          * @param props the hyperparameters.
          * @return the options.
          */
-        public static Clustering.Options of(Properties props) {
-            int k = Integer.parseInt(props.getProperty("smile.clustering.k", "2"));
-            int maxIter = Integer.parseInt(props.getProperty("smile.clustering.iterations", "100"));
-            double tol = Double.parseDouble(props.getProperty("smile.clustering.tolerance", "1E-4"));
-            return new Clustering.Options(k, maxIter, tol, null);
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.spectral_clustering.k", "2"));
+            int l = Integer.parseInt(props.getProperty("smile.spectral_clustering.l", "0"));
+            double sigma = Double.parseDouble(props.getProperty("smile.spectral_clustering.sigma", "1.0"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.spectral_clustering.iterations", "100"));
+            double tol = Double.parseDouble(props.getProperty("smile.spectral_clustering.tolerance", "1E-4"));
+            return new Options(k, l, sigma, maxIter, tol, null);
         }
     }
 

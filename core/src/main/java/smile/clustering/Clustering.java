@@ -54,7 +54,7 @@ public interface Clustering {
                 throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
             }
 
-            if (tol < 1) {
+            if (tol < 0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
         }

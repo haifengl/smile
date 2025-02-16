@@ -149,7 +149,8 @@ public class KMeans {
 
         var proximity = clustering.proximity();
         IntStream.range(0, n).parallel().forEach(i -> {
-            proximity[i] = distance.applyAsDouble(data[i], centroids[group[i]]);
+            double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
+            proximity[i] = dist * dist;
         });
         return new CentroidClustering<>(centroids, distance, group, proximity);
     }

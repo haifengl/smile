@@ -60,6 +60,7 @@ public class KModes {
     public static CentroidClustering<int[], int[]> fit(int[][] data, Clustering.Options options) {
         int k = options.k();
         int maxIter = options.maxIter();
+        double tol = options.tol();
         var controller = options.controller();
         int n = data.length;
         int d = data[0].length;
@@ -76,7 +77,7 @@ public class KModes {
         logger.info("Initial distortion = {}", distortion);
 
         double diff = Integer.MAX_VALUE;
-        for (int iter = 1; iter <= maxIter && diff > 0; iter++) {
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
             updateCentroids(clustering, data, codec);
             clustering = clustering.assign(data);
             diff = distortion - clustering.distortion();
