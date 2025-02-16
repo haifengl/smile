@@ -55,9 +55,9 @@ public class DENCLUE extends Partitioning {
      */
     private final double sigma;
     /**
-     * The density attractor of each observation.
+     * The density attractor of each data point.
      */
-    public final double[][] attractors;
+    private final double[][] attractors;
     /**
      * The radius of density attractor.
      */
@@ -70,22 +70,54 @@ public class DENCLUE extends Partitioning {
     /**
      * Constructor.
      * @param k the number of clusters.
-     * @param attractors the density attractor of each observation.
+     * @param group the cluster labels.
+     * @param attractors the density attractor of each data point.
      * @param radius the radius of density attractor.
      * @param samples the samples in the iterations of hill climbing.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
      *              choose sigma such that number of density attractors is
      *              constant for a long interval of sigma.
-     * @param y the cluster labels.
      * @param tol the tolerance of hill-climbing procedure.
      */
-    public DENCLUE(int k, double[][] attractors, double[] radius, double[][] samples, double sigma, int[] y, double tol) {
-        super(k, y);
+    public DENCLUE(int k, int[] group, double[][] attractors, double[] radius, double[][] samples, double sigma, double tol) {
+        super(k, group);
         this.attractors = attractors;
         this.radius = radius;
         this.samples = samples;
         this.sigma = sigma;
         this.tol = tol;
+    }
+
+    /**
+     * Returns the smooth parameter in the Gaussian kernel.
+     * @return the smooth parameter in the Gaussian kernel.
+     */
+    public double sigma() {
+        return sigma;
+    }
+
+    /**
+     * Returns the tolerance of hill-climbing procedure.
+     * @return the tolerance of hill-climbing procedure.
+     */
+    public double tolerance() {
+        return tol;
+    }
+
+    /**
+     * Returns the radius of density attractor.
+     * @return the radius of density attractor.
+     */
+    public double[] radius() {
+        return radius;
+    }
+
+    /**
+     * Returns the density attractor of each data point.
+     * @return the density attractor of each data point.
+     */
+    public double[][] attractors() {
+        return attractors;
     }
 
     /**
@@ -158,7 +190,7 @@ public class DENCLUE extends Partitioning {
         logger.info("Clustering attractors with DBSCAN (radius = {})", r);
         DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
 
-        return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.group, tol);
+        return new DENCLUE(dbscan.k, dbscan.group, attractors, radius, samples, sigma, tol);
     }
 
     /**

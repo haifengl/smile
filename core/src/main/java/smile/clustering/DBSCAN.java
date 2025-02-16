@@ -96,11 +96,11 @@ public class DBSCAN<T> extends Partitioning {
     /**
      * The minimum number of points required to form a cluster
      */
-    public final double minPts;
+    private final int minPoints;
     /**
      * The neighborhood radius.
      */
-    public final double radius;
+    private final double radius;
     /**
      * Data structure for neighborhood search.
      */
@@ -112,19 +112,35 @@ public class DBSCAN<T> extends Partitioning {
 
     /**
      * Constructor.
-     * @param minPts the minimum number of neighbors for a core data point.
+     * @param k the number of clusters.
+     * @param group the cluster labels.
+     * @param core the flag if the point is a core point.
+     * @param minPoints the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      * @param nns the data structure for neighborhood search.
-     * @param k the number of clusters.
-     * @param y the cluster labels.
-     * @param core the flag if the point is a core point.
      */
-    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y, boolean[] core) {
-        super(k, y);
-        this.minPts = minPts;
+    public DBSCAN(int k, int[] group, boolean[] core, int minPoints, double radius, RNNSearch<T,T> nns) {
+        super(k, group);
+        this.minPoints = minPoints;
         this.radius = radius;
         this.nns = nns;
         this.core = core;
+    }
+
+    /**
+     * Returns the minimum number of neighbors for a core data point.
+     * @return the minimum number of neighbors for a core data point.
+     */
+    public int minPoints() {
+        return minPoints;
+    }
+
+    /**
+     * Returns the neighborhood radius.
+     * @return the neighborhood radius.
+     */
+    public double radius() {
+        return radius;
     }
 
     /**
@@ -179,22 +195,22 @@ public class DBSCAN<T> extends Partitioning {
         int k = 0;
         int n = data.length;
         boolean[] core = new boolean[n];
-        int[] y = new int[n];
-        Arrays.fill(y, UNDEFINED);
+        int[] group = new int[n];
+        Arrays.fill(group, UNDEFINED);
 
         for (int i = 0; i < data.length; i++) {
-            if (y[i] == UNDEFINED) {
+            if (group[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
                 nns.search(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
-                    y[i] = OUTLIER;
+                    group[i] = OUTLIER;
                 } else {
-                    y[i] = k;
+                    group[i] = k;
                     core[i] = true;
 
                     for (Neighbor<T, T> neighbor : neighbors) {
-                        if (y[neighbor.index()] == UNDEFINED) {
-                            y[neighbor.index()] = QUEUED;
+                        if (group[neighbor.index()] == UNDEFINED) {
+                            group[neighbor.index()] = QUEUED;
                         }
                     }
 
@@ -202,12 +218,12 @@ public class DBSCAN<T> extends Partitioning {
                         Neighbor<T,T> neighbor = neighbors.get(j);
                         int index = neighbor.index();
 
-                        if (y[index] == OUTLIER) {
-                            y[index] = k;
+                        if (group[index] == OUTLIER) {
+                            group[index] = k;
                         }
 
-                        if (y[index] == UNDEFINED || y[index] == QUEUED) {
-                            y[index] = k;
+                        if (group[index] == UNDEFINED || group[index] == QUEUED) {
+                            group[index] = k;
 
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
                             nns.search(neighbor.key(), radius, secondaryNeighbors);
@@ -215,9 +231,9 @@ public class DBSCAN<T> extends Partitioning {
                             if (secondaryNeighbors.size() >= minPts) {
                                 core[neighbor.index()] = true;
                                 for (var secondaryNeighbor : secondaryNeighbors) {
-                                    int label = y[secondaryNeighbor.index()];
+                                    int label = group[secondaryNeighbor.index()];
                                     if (label == UNDEFINED) {
-                                        y[secondaryNeighbor.index()] = QUEUED;
+                                        group[secondaryNeighbor.index()] = QUEUED;
                                     }
 
                                     if (label == UNDEFINED || label == OUTLIER) {
@@ -233,7 +249,7 @@ public class DBSCAN<T> extends Partitioning {
             }
         }
 
-        return new DBSCAN<>(minPts, radius, nns, k, y, core);
+        return new DBSCAN<>(k, group, core, minPts, radius, nns);
     }
 
     /**
