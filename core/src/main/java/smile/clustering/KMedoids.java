@@ -87,7 +87,7 @@ public class KMedoids<T> {
         }
 
         var controller = options.controller();
-        int numLocal = Math.max(3, options.maxIter());
+        int numLocal = Math.min(3, options.maxIter());
         int maxNeighbor = (int) Math.round(options.tol() * k * (n - k));
         int minmax = Math.min(100, k * (n - k));
         maxNeighbor = Math.max(minmax, maxNeighbor);

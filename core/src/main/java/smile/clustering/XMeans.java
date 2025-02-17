@@ -104,7 +104,7 @@ public class XMeans {
                 if (ni < 25) {
                     logger.info("Cluster {} too small to split: {} observations", i, ni);
                     score[i] = 0.0;
-                    kmeans.set(i, null);
+                    kmeans.add(null);
                     continue;
                 }
 
@@ -116,7 +116,7 @@ public class XMeans {
                 }
 
                 var clustering = KMeans.fit(subset, new Clustering.Options(2, maxIter, tol, null));
-                kmeans.set(i, clustering);
+                kmeans.add(clustering);
                 double newBIC = bic(2, ni, d, clustering.distortion(), clustering.size());
                 double oldBIC = bic(ni, d, distortions[i]);
                 score[i] = newBIC - oldBIC;
