@@ -22,8 +22,10 @@ import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 
 import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.AlgoStatus;
 
 /**
  * G-Means clustering algorithm, an extended K-Means which tries to
@@ -81,8 +83,8 @@ public class GMeans {
 
         int[] group = new int[n];
         double[][] sum = new double[kmax][d];
-        double[] mean = MathEx.colMeans(data);
         double[][] centroids = new double[kmax][];
+        double[] mean = MathEx.colMeans(data);
         int[] size = new int[kmax];
         centroids[0] = mean;
         size[0] = n;
@@ -93,6 +95,7 @@ public class GMeans {
 
         int k = 1;
         while (k < kmax) {
+            kmeans.clear();
             centers.clear();
             double[] score = new double[k];
 
@@ -122,7 +125,7 @@ public class GMeans {
                 }
                 double vp = MathEx.dot(v, v);
                 double[] x = new double[ni];
-                for (int j = 0; j < x.length; j++) {
+                for (int j = 0; j < ni; j++) {
                     x[j] = MathEx.dot(subset[j], v) / vp;
                 }
                 
@@ -161,15 +164,19 @@ public class GMeans {
             k = centers.size();
             centers.toArray(centroids);
 
-            double distortion = Double.MAX_VALUE;
             double diff = Double.MAX_VALUE;
+            double distortion = Double.MAX_VALUE;
             for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-                double wcss = bbd.clustering(k, centroids, sum, size, group) / n;
+                double wcss = bbd.clustering(k, centroids, sum, size, group);
                 diff = distortion - wcss;
                 distortion = wcss;
+                logger.info("Iteration {}: {}-cluster distortion = {}", iter, k, distortion);
             }
 
-            logger.info("Distortion with {} clusters: {}", k, distortion);
+            if (controller != null) {
+                controller.submit(new AlgoStatus(k, distortion));
+                if (controller.isInterrupted()) break;
+            }
         }
 
         double[] proximity = new double[n];
@@ -177,15 +184,14 @@ public class GMeans {
             double[] centroid = centroids[cluster];
             for (int i = 0; i < n; i++) {
                 if (group[i] == cluster) {
-                    double dist = MathEx.distance(data[i], centroid);
-                    dist *= dist;
+                    double dist = MathEx.squaredDistance(data[i], centroid);
                     proximity[i] = dist;
                 }
             }
         });
 
-        ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
-        return new CentroidClustering<>("G-Means", centroids, distance, group, proximity);
+        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        return new CentroidClustering<>("G-Means", Arrays.copyOf(centroids, k), distance, group, proximity);
     }
     
     /**

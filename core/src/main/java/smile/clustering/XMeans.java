@@ -21,7 +21,9 @@ import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
 import smile.sort.QuickSort;
+import smile.util.AlgoStatus;
 
 /**
  * X-Means clustering algorithm, an extended K-Means which tries to
@@ -87,11 +89,10 @@ public class XMeans {
         centroids[0] = mean;
         size[0] = n;
 
-        double distortion = Arrays.stream(data).parallel()
+        double[] distortions = new double[kmax];
+        distortions[0] = Arrays.stream(data).parallel()
                 .mapToDouble(x -> MathEx.squaredDistance(x, mean))
                 .sum() / n;
-        double[] distortions = new double[kmax];
-        distortions[0] = distortion;
 
         BBDTree bbd = new BBDTree(data);
         var kmeans = new ArrayList<CentroidClustering<double[], double[]>>(kmax);
@@ -99,6 +100,7 @@ public class XMeans {
 
         int k = 1;
         while (k < kmax) {
+            kmeans.clear();
             centers.clear();
             double[] score = new double[k];
 
@@ -158,20 +160,20 @@ public class XMeans {
             centers.toArray(centroids);
 
             double diff = Double.MAX_VALUE;
+            double distortion = Double.MAX_VALUE;
             for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-                double wcss = bbd.clustering(k, centroids, sum, size, group) / n;
+                double wcss = bbd.clustering(k, centroids, sum, size, group);
                 diff = distortion - wcss;
                 distortion = wcss;
+                logger.info("Iteration {}: {}-cluster distortion = {}", iter, k, distortion);
             }
-            logger.info("Distortion with {} clusters: {}", k, distortion);
 
             Arrays.fill(distortions, 0.0);
             IntStream.range(0, k).parallel().forEach(cluster -> {
                 double[] centroid = centroids[cluster];
                 for (int i = 0; i < n; i++) {
                     if (group[i] == cluster) {
-                        double dist = MathEx.distance(data[i], centroid);
-                        dist *= dist;
+                        double dist = MathEx.squaredDistance(data[i], centroid);
                         proximity[i] = dist;
                         distortions[cluster] += dist;
                     }
@@ -181,9 +183,14 @@ public class XMeans {
             for (int i = 0; i < k; i++) {
                 distortions[i] /= size[i];
             }
+
+            if (controller != null) {
+                controller.submit(new AlgoStatus(k, distortion));
+                if (controller.isInterrupted()) break;
+            }
         }
 
-        ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
+        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
         return new CentroidClustering<>("X-Means", Arrays.copyOf(centroids, k), distance, group, proximity);
     }
 
