@@ -384,7 +384,7 @@ public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
 
     @Override
     public String toString() {
-        return String.format("Cluster entropy: %.5f%n", entropy) + super.toString();
+        return String.format("%sEntropy %11.5f%n", super.toString(), entropy);
     }
 
     /** Calculates the entropy. */
