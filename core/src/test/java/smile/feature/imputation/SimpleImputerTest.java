@@ -121,9 +121,9 @@ public class SimpleImputerTest {
         SimpleImputer simpleImputer = SimpleImputer.fit(df);
         Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
 
-        assertEquals(38.88, impute(SimpleImputer::impute, data, 0.01), 1E-2);
-        assertEquals(48.80, impute(SimpleImputer::impute, data, 0.05), 1E-2);
-        assertEquals(45.04, impute(SimpleImputer::impute, data, 0.10), 1E-2);
+        assertEquals(38.88, impute(imputer, data, 0.01), 1E-2);
+        assertEquals(48.80, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(45.04, impute(imputer, data, 0.10), 1E-2);
     }
 
     @Test

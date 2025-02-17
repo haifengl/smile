@@ -137,7 +137,7 @@ public class KMeans {
         double[][] sum = new double[k][d];
         double diff = Double.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-            double wcss = bbd.clustering(k, centroids, sum, size, group) / n;
+            double wcss = bbd.clustering(k, centroids, sum, size, group);
             diff = distortion - wcss;
             distortion = wcss;
 

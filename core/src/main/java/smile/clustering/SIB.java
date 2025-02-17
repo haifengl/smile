@@ -86,6 +86,7 @@ public class SIB {
     public static CentroidClustering<double[], SparseArray> fit(SparseArray[] data, Clustering.Options options) {
         int k = options.k();
         int maxIter = options.maxIter();
+        double tol = options.tol();
         int n = data.length;
         int d = 1 + Arrays.stream(data).flatMapToInt(SparseArray::indexStream).max().orElse(0);
 
@@ -111,7 +112,7 @@ public class SIB {
             }
         });
 
-        for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > 0; iter++) {
+        for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > tol; iter++) {
             reassignment = 0;
 
             for (int i = 0; i < n; i++) {
@@ -170,6 +171,7 @@ public class SIB {
             return dist;
         }).sum() / n;
         logger.info("Final distortion: {}", distortion);
+
         return new CentroidClustering<>("SIB", centroids, MathEx::JensenShannonDivergence, group, proximity);
     }
 }
