@@ -64,8 +64,8 @@ public class SpectralClusteringTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9128, r, 1E-4);
-        assertEquals(0.5371, r2, 1E-4);
+        assertEquals(0.9129, r, 1E-4);
+        assertEquals(0.5382, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -80,14 +80,14 @@ public class SpectralClusteringTest {
         System.out.println("USPS Nystrom approximation");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 8.0, 100));
+        var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 100, 8.0, 100));
         System.out.println(model);
 
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8995, r, 1E-4);
-        assertEquals(0.4757, r2, 1E-4);
+        assertEquals(0.8994, r, 1E-4);
+        assertEquals(0.4752, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));

@@ -84,9 +84,8 @@ public class SIB {
         int n = data.length;
         int d = 1 + Arrays.stream(data).flatMapToInt(SparseArray::indexStream).max().orElse(0);
 
-        SparseArray[] medoids = new SparseArray[k];
         ToDoubleBiFunction<SparseArray, SparseArray> distance = MathEx::JensenShannonDivergence;
-        var clustering = CentroidClustering.init("SIB", data, medoids, distance);
+        var clustering = CentroidClustering.init("SIB", data, k, distance);
         logger.info("Initial distortion = {}", clustering.distortion());
 
         int[] size = clustering.size();

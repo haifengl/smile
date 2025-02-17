@@ -71,8 +71,7 @@ public class KModes {
             return new Codec(x);
         }).toArray(Codec[]::new);
 
-        int[][] medoids = new int[k][];
-        var clustering = CentroidClustering.init("K-Modes", data, medoids, HammingDistance::d);
+        var clustering = CentroidClustering.init("K-Modes", data, k, HammingDistance::d);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 

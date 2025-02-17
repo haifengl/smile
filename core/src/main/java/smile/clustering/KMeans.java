@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
 import smile.util.AlgoStatus;
 
 /**
@@ -117,15 +118,15 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        double[][] centroids = new double[k][];
-        ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
-        var clustering = CentroidClustering.init("K-Means", data, centroids, distance);
+        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 
         // Initialize the centroids
         var size = clustering.size();
         var group = clustering.group();
+        var centroids = clustering.centers();
         updateCentroids(clustering, data);
 
         double[][] sum = new double[k][d];
@@ -180,9 +181,8 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        double[][] centroids = new double[k][];
         ToDoubleBiFunction<double[], double[]> distance = MathEx::distanceWithMissingValues;
-        var clustering = CentroidClustering.init("K-Means", data, centroids, distance);
+        var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 

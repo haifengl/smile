@@ -210,12 +210,12 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
                     cluster = j;
                 }
             }
-            double squared = nearest * nearest;
-            proximity[i] = squared;
+            double dist = nearest * nearest;
+            proximity[i] = dist;
             group[i] = cluster;
             size[cluster]++;
-            distortions[cluster] += squared;
-            return squared;
+            distortions[cluster] += dist;
+            return dist;
         }).sum();
 
         for (int i = 0; i < k; i++) {
@@ -256,18 +256,19 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
      * </ol>
      *
      * @param data data objects array of size n.
-     * @param medoids an array of size k to store cluster medoids on output.
+     * @param k the number of medoids.
      * @param distance the distance function.
      * @param <T> the type of input object.
      * @return the initial clustering.
      */
-    public static <T> CentroidClustering<T, T> init(String name, T[] data, T[] medoids, ToDoubleBiFunction<T, T> distance) {
+    public static <T> CentroidClustering<T, T> init(String name, T[] data, int k, ToDoubleBiFunction<T, T> distance) {
         int n = data.length;
-        int k = medoids.length;
         int[] group = new int[n];
         double[] proximity = new double[n];
         double[] probability = new double[n];
         Arrays.fill(proximity, Double.MAX_VALUE);
+
+        T[] medoids = Arrays.copyOf(data, k);
         medoids[0] = data[MathEx.randomInt(n)];
 
         // pick the next center
@@ -307,9 +308,9 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
      * @return the seeds.
      */
     public static double[][] seeds(double[][] data, int k) {
-        double[][] medoids = new double[k][];
-        init("K-Means++", data, medoids, MathEx::distance);
+        var clustering = init("K-Means++", data, k, MathEx::distance);
         // Make a copy so that further processing won't modify samples.
+        double[][] medoids = clustering.centers();
         double[][] neurons = new double[k][];
         for (int i = 0; i < k; i++) {
             neurons[i] = medoids[i].clone();
