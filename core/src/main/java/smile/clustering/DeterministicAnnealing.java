@@ -18,8 +18,10 @@ package smile.clustering;
 
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
@@ -288,7 +290,8 @@ public class DeterministicAnnealing {
             proximity[i] = MathEx.squaredDistance(centers[group[i]], data[i]);
         });
 
-        return new CentroidClustering<>("DAnnealing", centroids, MathEx::distance, group, proximity);
+        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        return new CentroidClustering<>("DAnnealing", centers, distance, group, proximity);
     }
 
     /**
@@ -356,7 +359,7 @@ public class DeterministicAnnealing {
             diff = distortion - DTH;
             distortion = DTH;
 
-            logger.info("Iterations {}: k = {}, temperature = {}, entry = {}, soft distortion = {}", iter, T, k/2, H, D);
+            logger.info("Iterations {}: k = {}, temperature = {}, entry = {}, soft distortion = {}", iter, k/2, T, H, D);
         }
 
         return distortion;

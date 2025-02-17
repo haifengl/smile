@@ -263,10 +263,10 @@ public class BBDTree {
      * @param centroids the current centroids of clusters.
      * @param sum the workspace storing the sum of data in each cluster.
      * @param size the number of samples in each cluster.
-     * @param y the class labels.
-     * @return the within cluster sum of the squared distance.
+     * @param group the class labels.
+     * @return the distortion.
      */
-    public double clustering(int k, double[][] centroids, double[][] sum, int[] size, int[] y) {
+    public double clustering(int k, double[][] centroids, double[][] sum, int[] size, int[] group) {
         Arrays.fill(size, 0);
         int[] candidates = new int[k];
         for (int i = 0; i < k; i++) {
@@ -274,7 +274,7 @@ public class BBDTree {
             Arrays.fill(sum[i], 0.0);
         }
 
-        double wcss = filter(root, centroids, candidates, k, sum, size, y);
+        double wcss = filter(root, centroids, candidates, k, sum, size, group);
 
         int d = centroids[0].length;
         for (int i = 0; i < k; i++) {
@@ -285,7 +285,7 @@ public class BBDTree {
             }
         }
 
-        return wcss;
+        return wcss / group.length;
     }
 
     /**
@@ -294,7 +294,7 @@ public class BBDTree {
      * accordingly. Candidates maintains the set of cluster indices which
      * could possibly be the closest clusters for data in this subtree.
      */
-    private double filter(Node node, double[][] centroids, int[] candidates, int k, double[][] sum, int[] size, int[] y) {
+    private double filter(Node node, double[][] centroids, int[] candidates, int k, double[][] sum, int[] size, int[] group) {
         int d = centroids[0].length;
 
         // Determine which mean the node mean is closest to
@@ -322,7 +322,8 @@ public class BBDTree {
 
             // Recurse if there's at least two
             if (k2 > 1) {
-                return filter(node.lower, centroids, newCandidates, k2, sum, size, y) + filter(node.upper, centroids, newCandidates, k2, sum, size, y);
+                return filter(node.lower, centroids, newCandidates, k2, sum, size, group)
+                     + filter(node.upper, centroids, newCandidates, k2, sum, size, group);
             }
         }
 
@@ -335,7 +336,7 @@ public class BBDTree {
 
         int last = node.index + node.size;
         for (int i = node.index; i < last; i++) {
-            y[index[i]] = closest;
+            group[index[i]] = closest;
         }
 
         return getNodeCost(node, centroids[closest]);
