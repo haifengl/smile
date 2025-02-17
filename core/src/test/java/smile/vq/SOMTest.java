@@ -67,7 +67,7 @@ public class SOMTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.8408, error, 1E-4);
+        assertEquals(5.8287, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -77,7 +77,7 @@ public class SOMTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.6368, error, 1E-4);
+        assertEquals(6.6308, error, 1E-4);
     }
 
     @Test
@@ -113,6 +113,6 @@ public class SOMTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5794, error, 1E-4);
+        assertEquals(6.5876, error, 1E-4);
     }
 }

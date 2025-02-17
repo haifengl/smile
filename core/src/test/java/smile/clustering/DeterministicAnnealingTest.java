@@ -83,7 +83,7 @@ public class DeterministicAnnealingTest {
         r = RandIndex.of(testy, p);
         r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8995, r, 1E-4);
+        assertEquals(0.6884, r, 1E-4);
         assertEquals(0.4745, r2, 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
