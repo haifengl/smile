@@ -150,7 +150,7 @@ package object clustering {
     * a majority vote among element of each cluster.
     */
   def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): CentroidClustering[Array[Int], Array[Int]] = time("K-Modes") {
-    Clustering.run(() => KModes.fit(data, k, maxIter), runs, false)
+    Clustering.run(runs, () => KModes.fit(data, k, maxIter))
   }
 
   /** K-Means clustering. The algorithm partitions n observations into k clusters in which
@@ -191,11 +191,10 @@ package object clustering {
     * @param data    the data set.
     * @param k       the number of clusters.
     * @param maxIter the maximum number of iterations for each running.
-    * @param tol     the tolerance of convergence test.
     * @param runs    the number of runs of K-Means algorithm.
     */
-  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): CentroidClustering[Array[Double], Array[Double]] = time("K-Means") {
-    Clustering.run(() => KMeans.fit(data, new Clustering.Options(k, maxIter, tol, null)), runs, false)
+  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 16): CentroidClustering[Array[Double], Array[Double]] = time("K-Means") {
+    Clustering.run(runs, () => KMeans.fit(data, k, maxIter))
   }
 
   /** X-Means clustering algorithm, an extended K-Means which tries to
@@ -270,7 +269,7 @@ package object clustering {
     * @param runs    the number of runs of SIB algorithm.
     */
   def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 8): CentroidClustering[Array[Double], SparseArray] = time("Sequential information bottleneck") {
-    Clustering.run(() => SIB.fit(data, k, maxIter), runs, false)
+    Clustering.run(runs, () => SIB.fit(data, k, maxIter))
   }
 
   /** Deterministic annealing clustering. Deterministic annealing extends

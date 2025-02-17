@@ -95,36 +95,19 @@ public interface Clustering {
     }
 
     /**
-     * Runs a clustering algorithm 10 times and return the best one
-     * (e.g. smallest distortion).
-     * @param clustering the clustering algorithm.
-     * @param <T> the type of clustering.
-     * @return the model.
-     */
-    static <T extends Comparable<? super T>> T run(Supplier<T> clustering) {
-        return run(clustering, 10, false);
-    }
-
-    /**
      * Runs a clustering algorithm multiple times and return the best one
      * (e.g. smallest distortion).
      * @param clustering the clustering algorithm.
      * @param runs the number of runs.
-     * @param parallel true if running the algorithms in parallel.
      * @param <T> the type of clustering.
      * @return the model.
      */
-    static <T extends Comparable<? super T>> T run(Supplier<T> clustering, int runs, boolean parallel) {
+    static <T extends Comparable<? super T>> T run(int runs, Supplier<T> clustering) {
         if (runs <= 0) {
             throw new IllegalArgumentException("Invalid number of runs: " + runs);
         }
 
-        var stream = IntStream.range(0, runs);
-        if (parallel) {
-            stream = stream.parallel();
-        }
-
-        return stream.mapToObj(run -> clustering.get())
+        return IntStream.range(0, runs).mapToObj(run -> clustering.get())
                 .min(Comparator.naturalOrder())
                 .orElseThrow(NoSuchElementException::new);
     }
