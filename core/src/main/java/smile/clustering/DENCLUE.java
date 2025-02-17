@@ -18,6 +18,7 @@ package smile.clustering;
 
 import java.io.Serial;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import static smile.clustering.Clustering.OUTLIER;
@@ -121,6 +122,76 @@ public class DENCLUE extends Partitioning {
     }
 
     /**
+     * DENCLUE hyperparameters.
+     * @param sigma the smooth parameter in the Gaussian kernel. The user can
+     *              choose sigma such that number of density attractors is
+     *              constant for a long interval of sigma.
+     * @param m the number of selected samples used in the iteration.
+     *          This number should be much smaller than the number of
+     *          observations to speed up the algorithm. It should also be
+     *          large enough to capture the sufficient information of
+     *          underlying distribution.
+     * @param minPts the minimum number of neighbors for a core attractor.
+     * @param tol the tolerance of hill-climbing procedure.
+     */
+    public record Options(double sigma, int m, int minPts, double tol) {
+        /** Constructor. */
+        public Options {
+            if (sigma <= 0.0) {
+                throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
+            }
+
+            if (m <= 0) {
+                throw new IllegalArgumentException("Invalid number of selected samples: " + m);
+            }
+
+            if (minPts <= 0) {
+                throw new IllegalArgumentException("Invalid minimum number of neighbors: " + minPts);
+            }
+
+            if (tol < 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param sigma the smooth parameter in the Gaussian kernel.
+         * @param m the number of selected samples used in the iteration.
+         */
+        public Options(double sigma, int m) {
+            this(sigma, m, 10, 1E-2);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.denclue.sigma", Double.toString(sigma));
+            props.setProperty("smile.denclue.m", Integer.toString(m));
+            props.setProperty("smile.denclue.min_points", Integer.toString(minPts));
+            props.setProperty("smile.denclue.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double sigma = Double.parseDouble(props.getProperty("smile.denclue.radius", "1.0"));
+            int m = Integer.parseInt(props.getProperty("smile.denclue.m", "100"));
+            int minPts = Integer.parseInt(props.getProperty("smile.denclue.min_points", "10"));
+            double tol = Double.parseDouble(props.getProperty("smile.denclue.tolerance", "1E-2"));
+            return new Options(sigma, m, minPts, tol);
+        }
+    }
+
+    /**
      * Clustering data.
      * @param data the input data of which each row is an observation.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
@@ -135,30 +206,22 @@ public class DENCLUE extends Partitioning {
      */
     public static DENCLUE fit(double[][] data, double sigma, int m) {
         int n = data.length;
-        return fit(data, sigma, m, 1E-2, Math.max(10, n/200));
+        return fit(data, new Options(sigma, m, Math.max(10, data.length/200), 1E-2));
     }
 
     /**
      * Clustering data.
      * @param data the input data of which each row is an observation.
-     * @param sigma the smooth parameter in the Gaussian kernel. The user can
-     *              choose sigma such that number of density attractors is
-     *              constant for a long interval of sigma.
-     * @param m the number of selected samples used in the iteration.
-     *          This number should be much smaller than the number of
-     *          observations to speed up the algorithm. It should also be
-     *          large enough to capture the sufficient information of
-     *          underlying distribution.
-     * @param tol the tolerance of hill-climbing procedure.
-     * @param minPts the minimum number of neighbors for a core attractor.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts) {
-        if (sigma <= 0.0) {
-            throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
-        }
-        
-        if (m <= 0 || m > data.length) {
+    public static DENCLUE fit(double[][] data, Options options) {
+        double sigma = options.sigma;
+        int m = options.m;
+        int minPts = options.minPts;
+        double tol = options.tol;
+
+        if (m > data.length) {
             throw new IllegalArgumentException("Invalid number of selected samples: " + m);
         }
 

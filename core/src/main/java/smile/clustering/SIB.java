@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.util.AlgoStatus;
 import smile.util.SparseArray;
 
 /**
@@ -87,6 +88,7 @@ public class SIB {
         int k = options.k();
         int maxIter = options.maxIter();
         double tol = options.tol();
+        var controller = options.controller();
         int n = data.length;
         int d = 1 + Arrays.stream(data).flatMapToInt(SparseArray::indexStream).max().orElse(0);
 
@@ -160,7 +162,12 @@ public class SIB {
                     reassignment++;
                 }
             }
+
             logger.info("Iteration {}: assignments = {}", iter, reassignment);
+            if (controller != null) {
+                controller.submit(new AlgoStatus(iter, reassignment));
+                if (controller.isInterrupted()) break;
+            }
         }
 
         var proximity = clustering.proximity();
