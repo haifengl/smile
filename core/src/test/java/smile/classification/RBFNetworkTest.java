@@ -145,7 +145,7 @@ public class RBFNetworkTest {
         int[] y = usps.y();
         double[][] testx = usps.testx();
         int[] testy = usps.testy();
-        var kmeans = KMeans.fit(x, 200, 100);
+        var kmeans = KMeans.fit(x, 200, 10);
         RBF<double[]>[] neurons = RBF.of(kmeans.centers(), new GaussianRadialBasis(8.0), MathEx::distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(x, y, neurons);

@@ -59,6 +59,11 @@ import smile.util.SparseArray;
 public class SIB {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SIB.class);
 
+    /** Constructor. */
+    private SIB() {
+
+    }
+
     /**
      * Clustering data into k clusters up to 100 iterations.
      * @param data the sparse normalized co-occurrence dataset of which each

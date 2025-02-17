@@ -255,6 +255,7 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
      * </ol>
      *
+     * @param name the clustering algorithm name.
      * @param data data objects array of size n.
      * @param k the number of medoids.
      * @param distance the distance function.

@@ -48,6 +48,11 @@ import smile.util.IterativeAlgorithmController;
 public class SpectralClustering {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpectralClustering.class);
 
+    /** Constructor. */
+    private SpectralClustering() {
+
+    }
+
     /**
      * Spectral clustering hyperparameters.
      * @param k the number of clusters.

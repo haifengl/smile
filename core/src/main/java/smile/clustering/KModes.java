@@ -40,6 +40,11 @@ import smile.util.IntSet;
 public class KModes {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KModes.class);
 
+    /** Constructor. */
+    private KModes() {
+
+    }
+
     /**
      * Fits k-modes clustering.
      * @param data the input data of which each row is an observation.

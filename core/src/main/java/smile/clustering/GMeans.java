@@ -47,6 +47,11 @@ public class GMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
     private static double CRITICAL_VALUE = 1.8692;
 
+    /** Constructor. */
+    private GMeans() {
+
+    }
+
     /**
      * Clustering data with the number of clusters
      * determined by G-Means algorithm automatically.
