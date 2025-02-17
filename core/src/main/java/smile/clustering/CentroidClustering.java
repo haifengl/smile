@@ -279,6 +279,7 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
             IntStream.range(0, n).parallel().forEach(i -> {
                 // compute the distance between this observation and the current center
                 double dist = distance.applyAsDouble(data[i], medoid);
+                dist *= dist;
                 if (dist < proximity[i]) {
                     proximity[i] = dist;
                     group[i] = prev;
@@ -286,9 +287,7 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
             });
 
             if (j < k) {
-                for (int i = 0; i < n; i++) {
-                    proximity[i] = proximity[i] * proximity[i];
-                }
+                System.arraycopy(proximity, 0, probability, 0, n);
                 MathEx.unitize1(probability);
                 T center = data[MathEx.random(probability)];
                 while (contains(center, medoids, j)) {
