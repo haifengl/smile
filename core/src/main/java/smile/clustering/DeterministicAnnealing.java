@@ -280,7 +280,7 @@ public class DeterministicAnnealing {
             proximity[i] = MathEx.squaredDistance(centers[group[i]], data[i]);
         });
 
-        return new CentroidClustering<>(centroids, MathEx::distance, group, proximity);
+        return new CentroidClustering<>("DAnnealing", centroids, MathEx::distance, group, proximity);
     }
 
     /**

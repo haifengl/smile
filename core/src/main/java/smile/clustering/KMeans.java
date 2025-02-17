@@ -119,7 +119,7 @@ public class KMeans {
 
         double[][] centroids = new double[k][];
         ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
-        var clustering = CentroidClustering.init(data, centroids, distance);
+        var clustering = CentroidClustering.init("K-Means", data, centroids, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 
@@ -152,7 +152,7 @@ public class KMeans {
             double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
             proximity[i] = dist * dist;
         });
-        return new CentroidClustering<>(centroids, distance, group, proximity);
+        return new CentroidClustering<>("X-Means", centroids, distance, group, proximity);
     }
 
     /**
@@ -182,7 +182,7 @@ public class KMeans {
 
         double[][] centroids = new double[k][];
         ToDoubleBiFunction<double[], double[]> distance = MathEx::distanceWithMissingValues;
-        var clustering = CentroidClustering.init(data, centroids, distance);
+        var clustering = CentroidClustering.init("K-Means", data, centroids, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
 

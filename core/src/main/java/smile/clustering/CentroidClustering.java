@@ -44,34 +44,35 @@ import smile.math.MathEx;
  * cut borders of clusters (which is not surprising since the algorithm
  * optimizes cluster centers, not cluster borders).
  *
- * @param centers The cluster centroids or medoids.
- * @param distance The distance function.
- * @param group The cluster labels of data.
- * @param proximity The squared distance between data points and their
+ * @param name the clustering algorithm name.
+ * @param centers the cluster centroids or medoids.
+ * @param distance the distance function.
+ * @param group the cluster labels of data.
+ * @param proximity the squared distance between data points and their
  *                  respective cluster centers.
- * @param size The number of data points in each cluster.
- * @param distortions The average squared distance of data points within each cluster.
+ * @param size the number of data points in each cluster.
+ * @param distortions the average squared distance of data points within each cluster.
  * @param <T> the type of centroids.
  * @param <U> the type of observations. Usually, T and U are the same.
  *            But in case of SIB, they are different.
  * @author Haifeng Li
  */
-public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> distance,
-                                       int[] group, double[] proximity, int[] size,
-                                       double[] distortions)
+public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunction<T, U> distance,
+                                       int[] group, double[] proximity, int[] size, double[] distortions)
         implements Comparable<CentroidClustering<T, U>>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * Constructor.
-     * @param centers The cluster centroids or medoids.
-     * @param distance The distance function.
-     * @param group The cluster labels of data.
-     * @param proximity The squared distance of each data point to its nearest cluster center.
+     * @param name the clustering algorithm name.
+     * @param centers the cluster centroids or medoids.
+     * @param distance the distance function.
+     * @param group the cluster labels of data.
+     * @param proximity the squared distance of each data point to its nearest cluster center.
      */
-    public CentroidClustering(T[] centers, ToDoubleBiFunction<T, U> distance, int[] group, double[] proximity) {
-        this(centers, distance, group, proximity, new int[centers.length+1], new double[centers.length+1]);
+    public CentroidClustering(String name, T[] centers, ToDoubleBiFunction<T, U> distance, int[] group, double[] proximity) {
+        this(name, centers, distance, group, proximity, new int[centers.length+1], new double[centers.length+1]);
 
         int k = centers.length;
         distortions[k] = 0;
@@ -115,12 +116,12 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
     public String toString() {
         int k = centers.length;
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%-7s %15s %12s%n", "Cluster", "Size (%)", "Distortion"));
+        sb.append(String.format("%-11s %15s %12s%n", name, "Size (%)", "Distortion"));
         for (int i = 0; i < k; i++) {
             double percent = 100.0 * size[i] / group.length;
-            sb.append(String.format("%-7d %7d (%4.1f%%) %12.4f%n", i+1, size[i], percent, distortions[i]));
+            sb.append(String.format("Cluster %-3d %7d (%4.1f%%) %12.4f%n", i+1, size[i], percent, distortions[i]));
         }
-        sb.append(String.format("%-7s %7d (100.%%) %12.4f%n", "Total", group.length, distortions[k]));
+        sb.append(String.format("%-11s %7d (100.%%) %12.4f%n", "Total", group.length, distortions[k]));
         return sb.toString();
     }
 
@@ -221,7 +222,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
             distortions[i] /= size[i];
         }
         distortions[k] = MathEx.mean(proximity);
-        return new CentroidClustering<>(centers, distance, group, proximity, size, distortions);
+        return new CentroidClustering<>(name, centers, distance, group, proximity, size, distortions);
     }
 
     /**
@@ -260,7 +261,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      * @param <T> the type of input object.
      * @return the initial clustering.
      */
-    public static <T> CentroidClustering<T, T> init(T[] data, T[] medoids, ToDoubleBiFunction<T, T> distance) {
+    public static <T> CentroidClustering<T, T> init(String name, T[] data, T[] medoids, ToDoubleBiFunction<T, T> distance) {
         int n = data.length;
         int k = medoids.length;
         int[] group = new int[n];
@@ -297,7 +298,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
             }
         }
 
-        return new CentroidClustering<>(medoids, distance, group, proximity);
+        return new CentroidClustering<>(name, medoids, distance, group, proximity);
     }
 
     /**
@@ -308,7 +309,7 @@ public record CentroidClustering<T, U>(T[] centers, ToDoubleBiFunction<T, U> dis
      */
     public static double[][] seeds(double[][] data, int k) {
         double[][] medoids = new double[k][];
-        init(data, medoids, MathEx::distance);
+        init("K-Means++", data, medoids, MathEx::distance);
         // Make a copy so that further processing won't modify samples.
         double[][] neurons = new double[k][];
         for (int i = 0; i < k; i++) {

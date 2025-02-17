@@ -86,7 +86,7 @@ public class SIB {
 
         SparseArray[] medoids = new SparseArray[k];
         ToDoubleBiFunction<SparseArray, SparseArray> distance = MathEx::JensenShannonDivergence;
-        var clustering = CentroidClustering.init(data, medoids, distance);
+        var clustering = CentroidClustering.init("SIB", data, medoids, distance);
         logger.info("Initial distortion = {}", clustering.distortion());
 
         int[] size = clustering.size();
@@ -166,6 +166,6 @@ public class SIB {
             return dist;
         }).sum() / n;
         logger.info("Final distortion: {}", distortion);
-        return new CentroidClustering<>(centroids, MathEx::JensenShannonDivergence, group, proximity);
+        return new CentroidClustering<>("SIB", centroids, MathEx::JensenShannonDivergence, group, proximity);
     }
 }
