@@ -64,8 +64,8 @@ public class DENCLUETest {
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.println("The number of clusters: " + model.k);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.6080, r, 1E-4);
-        assertEquals(0.2460, r2, 1E-4);
+        assertEquals(0.6056, r, 1E-4);
+        assertEquals(0.2412, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));

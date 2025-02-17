@@ -163,7 +163,7 @@ public class DENCLUE extends Partitioning {
         }
 
         logger.info("Select {} samples by k-means", m);
-        var kmeans = KMeans.fit(data, m, 100);
+        var kmeans = KMeans.fit(data, m, 10);
         double[][] samples = kmeans.centers();
 
         int n = data.length;

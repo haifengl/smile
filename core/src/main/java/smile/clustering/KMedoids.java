@@ -98,8 +98,8 @@ public class KMedoids<T> {
         double best = Double.MAX_VALUE;
         CentroidClustering<T, T> result = null;
         for (int iter = 1; iter <= numLocal; iter++) {
-            T[] medoids = Arrays.copyOf(data, k);
-            var clustering = CentroidClustering.init("K-Medoids", data, medoids, distance);
+            var clustering = CentroidClustering.init("K-Medoids", data, k, distance);
+            T[] medoids = clustering.centers();
             double distortion = clustering.distortion();
             int[] group = clustering.group();
             double[] proximity = clustering.proximity();
