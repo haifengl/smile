@@ -52,7 +52,7 @@ public class SimpleImputerTest {
     public void tearDown() {
     }
 
-    static void impute(Function<double[][], double[][]> imputer, double[][] data, double rate, double expected) {
+    static double impute(Function<double[][], double[][]> imputer, double[][] data, double rate) {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         int n = 0;
@@ -79,7 +79,7 @@ public class SimpleImputerTest {
 
         error = 100 * error / n;
         System.out.format("The error of %d%% missing values = %.2f%n", (int) (100 * rate),  error);
-        assertEquals(expected, error, 1E-2);
+        return error;
     }
 
     @Test
@@ -104,12 +104,12 @@ public class SimpleImputerTest {
         var control = new SyntheticControl();
         double[][] data = control.x();
 
-        impute(SimpleImputer::impute, data, 0.01, 39.11);
-        impute(SimpleImputer::impute, data, 0.05, 48.86);
-        impute(SimpleImputer::impute, data, 0.10, 45.24);
-        impute(SimpleImputer::impute, data, 0.15, 44.59);
-        impute(SimpleImputer::impute, data, 0.20, 41.93);
-        impute(SimpleImputer::impute, data, 0.25, 44.77);
+        assertEquals(39.11, impute(SimpleImputer::impute, data, 0.01), 1E-2);
+        assertEquals(48.86, impute(SimpleImputer::impute, data, 0.05), 1E-2);
+        assertEquals(45.24, impute(SimpleImputer::impute, data, 0.10), 1E-2);
+        assertEquals(44.59, impute(SimpleImputer::impute, data, 0.15), 1E-2);
+        assertEquals(41.93, impute(SimpleImputer::impute, data, 0.20), 1E-2);
+        assertEquals(44.77, impute(SimpleImputer::impute, data, 0.25), 1E-2);
     }
 
     @Test
@@ -121,9 +121,9 @@ public class SimpleImputerTest {
         SimpleImputer simpleImputer = SimpleImputer.fit(df);
         Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
 
-        impute(imputer, data, 0.01, 38.88);
-        impute(imputer, data, 0.05, 48.80);
-        impute(imputer, data, 0.10, 45.04);
+        assertEquals(38.88, impute(SimpleImputer::impute, data, 0.01), 1E-2);
+        assertEquals(48.80, impute(SimpleImputer::impute, data, 0.05), 1E-2);
+        assertEquals(45.04, impute(SimpleImputer::impute, data, 0.10), 1E-2);
     }
 
     @Test

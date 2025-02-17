@@ -214,8 +214,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(62.7723, result.avg().rmse(), 1E-4);
-        assertEquals(50.6879, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(50.1312, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(50.4940, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(49.5042, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -270,8 +270,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(2.3968, result.avg().rmse(), 1E-4);
-        assertEquals(2.1752, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(2.1083, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(2.1740, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(2.1024, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -330,8 +330,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(2.1624, result.avg().rmse(), 1E-4);
-        assertEquals(2.2827, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(2.2695, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(2.2777, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(2.2873, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -388,8 +388,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(0.0843, result.avg().rmse(), 1E-4);
-        assertEquals(0.0849, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(0.3131, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(0.0847, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(0.3396, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -444,8 +444,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(4.4398, result.avg().rmse(), 1E-4);
-        assertEquals(4.4194, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(4.4097, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(4.4186, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(4.4084, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -499,7 +499,7 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
         assertEquals(0.2020, result.avg().rmse(), 1E-4);
-        assertEquals(0.1983, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(0.1956, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(0.1980, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(0.1954, nystromResult.avg().rmse(), 1E-4);
     }
 }

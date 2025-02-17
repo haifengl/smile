@@ -20,6 +20,8 @@ import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
 import smile.datasets.SyntheticControl;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -56,8 +58,8 @@ public class KNNImputerTest {
         KNNImputer knnImputer = new KNNImputer(df, 5);
         Function<double[][], double[][]> imputer = x -> knnImputer.apply(DataFrame.of(x)).toArray();
 
-        impute(imputer, data, 0.01, 11.08);
-        impute(imputer, data, 0.05, 12.22);
-        impute(imputer, data, 0.10, 11.63);
+        assertEquals(11.08, impute(imputer, data, 0.01), 1E-2);
+        assertEquals(12.22, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(11.63, impute(imputer, data, 0.10), 1E-2);
     }
 }
