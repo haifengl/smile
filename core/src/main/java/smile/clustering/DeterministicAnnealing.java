@@ -272,26 +272,29 @@ public class DeterministicAnnealing {
             size[cluster]++;
         });
 
-        for (int i = 0; i < k; i++) {
-            Arrays.fill(centers[i], 0.0);
-        }
-        IntStream.range(0, k).parallel().forEach(i -> {
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            var center = centers[cluster];
+            Arrays.fill(center, 0.0);
+            for (int i = 0; i < n; i++) {
+                if (group[i] == cluster) {
+                    for (int j = 0; j < d; j++) {
+                        center[j] += data[i][j];
+                    }
+                }
+            }
+
             for (int j = 0; j < d; j++) {
-                centers[group[i]][j] += data[i][j];
+                center[j] /= size[cluster];
             }
         });
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < d; j++) {
-                centers[i][j] /= size[i];
-            }
-        }
+
         double[] proximity = new double[n];
         IntStream.range(0, n).parallel().forEach(i -> {
             proximity[i] = MathEx.squaredDistance(centers[group[i]], data[i]);
         });
 
         ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
-        return new CentroidClustering<>("DAnnealing", centers, distance, group, proximity);
+        return new CentroidClustering<>("D.Annealing", centers, distance, group, proximity);
     }
 
     /**
@@ -359,7 +362,7 @@ public class DeterministicAnnealing {
             diff = distortion - DTH;
             distortion = DTH;
 
-            logger.info("Iterations {}: k = {}, temperature = {}, entry = {}, soft distortion = {}", iter, k/2, T, H, D);
+            logger.info("Iterations {}: k = {}, temperature = {}, entropy = {}, soft distortion = {}", iter, k/2, T, H, D);
         }
 
         return distortion;
