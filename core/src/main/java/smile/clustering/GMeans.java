@@ -180,7 +180,7 @@ public class GMeans {
         });
 
         ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
-        return new CentroidClustering<>(centroids, distance, group, proximity);
+        return new CentroidClustering<>("G-Means", centroids, distance, group, proximity);
     }
     
     /**

@@ -179,7 +179,7 @@ public class XMeans {
         }
 
         ToDoubleBiFunction<double[], double[]> distance = MathEx::distance;
-        return new CentroidClustering<>(Arrays.copyOf(centroids, k), distance, group, proximity);
+        return new CentroidClustering<>("X-Means", Arrays.copyOf(centroids, k), distance, group, proximity);
     }
 
     /**

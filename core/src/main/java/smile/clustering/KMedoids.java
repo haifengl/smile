@@ -99,7 +99,7 @@ public class KMedoids<T> {
         CentroidClustering<T, T> result = null;
         for (int iter = 1; iter <= numLocal; iter++) {
             T[] medoids = Arrays.copyOf(data, k);
-            var clustering = CentroidClustering.init(data, medoids, distance);
+            var clustering = CentroidClustering.init("K-Medoids", data, medoids, distance);
             double distortion = clustering.distortion();
             int[] group = clustering.group();
             double[] proximity = clustering.proximity();
@@ -127,7 +127,7 @@ public class KMedoids<T> {
 
             if (distortion < best) {
                 best = distortion;
-                result = new CentroidClustering<>(medoids, distance, group, proximity);
+                result = new CentroidClustering<>("K-Medoids", medoids, distance, group, proximity);
             }
 
             if (controller != null) {
