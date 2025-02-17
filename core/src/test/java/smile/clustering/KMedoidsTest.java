@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-public class CLARANSTest {
+public class KMedoidsTest {
     
-    public CLARANSTest() {
+    public KMedoidsTest() {
     }
 
     @BeforeAll
@@ -59,7 +59,7 @@ public class CLARANSTest {
         double[][] testx = usps.testx();
         int[] testy = usps.testy();
 
-        var model = KMedoids.fit(x, MathEx::squaredDistance,10);
+        var model = KMedoids.fit(x, MathEx::distance,10);
         System.out.println(model);
 
         double r = RandIndex.of(y, model.group());
