@@ -47,6 +47,11 @@ import smile.util.IterativeAlgorithmController;
 public class DeterministicAnnealing {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeterministicAnnealing.class);
 
+    /** Constructor. */
+    private DeterministicAnnealing() {
+
+    }
+
     /**
      * Deterministic annealing hyperparameters.
      * @param kmax the maximum number of clusters.

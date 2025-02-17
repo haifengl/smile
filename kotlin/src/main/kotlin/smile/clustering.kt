@@ -111,8 +111,8 @@ fun <T> hclust(data: Array<T>, distance: Distance<T>, method: String): Hierarchi
  * The mean update for centroids is replace by the mode one which is
  * a majority vote among element of each cluster.
  */
-fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): KModes {
-    return PartitionClustering.run(runs, { KModes.fit(data, k, maxIter) })
+fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): CentroidClustering<IntArray, IntArray> {
+    return Clustering.run(runs, { KModes.fit(data, k, maxIter) })
 }
 
 /**
@@ -154,11 +154,10 @@ fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): K
  * @param data the data set.
  * @param k the number of clusters.
  * @param maxIter the maximum number of iterations for each running.
- * @param tol the tolerance of convergence test.
  * @param runs the number of runs of K-Means algorithm.
  */
-fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans {
-    return PartitionClustering.run(runs, { KMeans.fit(data, k, maxIter, tol) })
+fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, runs: Int = 16): CentroidClustering<DoubleArray, DoubleArray> {
+    return Clustering.run(runs, { KMeans.fit(data, k, maxIter) })
 }
 
 /**
@@ -175,9 +174,10 @@ fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1
  *
  * @param data the data set.
  * @param k the maximum number of clusters.
+ * @param maxIter the maximum number of iterations for k-means.
  */
-fun xmeans(data: Array<DoubleArray>, k: Int = 100): XMeans {
-    return XMeans.fit(data, k)
+fun xmeans(data: Array<DoubleArray>, k: Int = 100, maxIter: Int = 100): CentroidClustering<DoubleArray, DoubleArray> {
+    return XMeans.fit(data, k, maxIter)
 }
 
 /**
@@ -193,9 +193,10 @@ fun xmeans(data: Array<DoubleArray>, k: Int = 100): XMeans {
  *
  * @param data the data set.
  * @param k the maximum number of clusters.
+ * @param maxIter the maximum number of iterations for k-means.
  */
-fun gmeans(data: Array<DoubleArray>, k: Int = 100): GMeans {
-    return GMeans.fit(data, k)
+fun gmeans(data: Array<DoubleArray>, k: Int = 100, maxIter: Int = 100): CentroidClustering<DoubleArray, DoubleArray> {
+    return GMeans.fit(data, k, maxIter)
 }
 
 /**
@@ -233,8 +234,8 @@ fun gmeans(data: Array<DoubleArray>, k: Int = 100): GMeans {
  * @param maxIter the maximum number of iterations.
  * @param runs the number of runs of SIB algorithm.
  */
-fun sib(data: Array<SparseArray>, k: Int, maxIter: Int = 100, runs: Int = 8): SIB {
-    return PartitionClustering.run(runs, { SIB.fit(data, k, maxIter) })
+fun sib(data: Array<SparseArray>, k: Int, maxIter: Int = 100, runs: Int = 8): CentroidClustering<DoubleArray, SparseArray> {
+    return Clustering.run(runs, { SIB.fit(data, k, maxIter) })
 }
 
 /**
@@ -260,8 +261,8 @@ fun sib(data: Array<SparseArray>, k: Int, maxIter: Int = 100, runs: Int = 8): SI
  * @param tol   the tolerance of convergence test.
  * @param splitTol the tolerance to split a cluster.
  */
-fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 100, tol: Double = 1E-4, splitTol: Double = 1E-2): DeterministicAnnealing {
-    return DeterministicAnnealing.fit(data, k, alpha, maxIter, tol, splitTol)
+fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 100, tol: Double = 1E-4, splitTol: Double = 1E-2): CentroidClustering<DoubleArray, DoubleArray> {
+    return DeterministicAnnealing.fit(data, DeterministicAnnealing.Options(k, alpha, maxIter, tol, splitTol, null))
 }
 
 /**
@@ -293,8 +294,8 @@ fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 10
  * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
  * @param numLocal the number of local minima to search for.
  */
-fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS<T> {
-    return PartitionClustering.run(numLocal, { CLARANS.fit(data, distance, k, maxNeighbor) })
+fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int): CentroidClustering<T, T> {
+    return KMedoids.fit(data, distance, k)
 }
 
 /**
@@ -473,56 +474,6 @@ fun mec(data: Array<DoubleArray>, k: Int, radius: Double): MEC<DoubleArray> {
 }
 
 /**
- * Nonparametric Minimum Conditional Entropy Clustering.
- *
- * @param data the data set.
- * @param nns the data structure for neighborhood search.
- * @param k the number of clusters. Note that this is just a hint. The final
- *          number of clusters may be less.
- * @param radius the neighborhood radius.
- * @param tol the tolerance of convergence test.
- */
-fun <T> mec(data: Array<T>, nns: RNNSearch<T, T>, k: Int, radius: Double, y: IntArray, tol: Double = 1E-4): MEC<T> {
-    return MEC.fit(data, nns, k, radius, y, tol)
-}
-
-/**
- * Spectral Clustering. Given a set of data points, the similarity matrix may
- * be defined as a matrix S where S<sub>ij</sub> represents a measure of the
- * similarity between points. Spectral clustering techniques make use of the
- * spectrum of the similarity matrix of the data to perform dimensionality
- * reduction for clustering in fewer dimensions. Then the clustering will
- * be performed in the dimension-reduce space, in which clusters of non-convex
- * shape may become tight. There are some intriguing similarities between
- * spectral clustering methods and kernel PCA, which has been empirically
- * observed to perform clustering.
- *
- * ====References:====
- *  - A.Y. Ng, M.I. Jordan, and Y. Weiss. On Spectral Clustering: Analysis and an algorithm. NIPS, 2001.
- *  - Marina Maila and Jianbo Shi. Learning segmentation by random walks. NIPS, 2000.
- *  - Deepak Verma and Marina Meila. A Comparison of Spectral Clustering Algorithms. 2003.
- *
- * @param W the adjacency matrix of graph.
- * @param k the number of clusters.
- */
-fun specc(W: Matrix, k: Int): SpectralClustering {
-    return SpectralClustering.fit(W, k)
-}
-
-/**
- * Spectral clustering.
- * @param data the dataset for clustering.
- * @param k the number of clusters.
- * @param sigma the smooth/width parameter of Gaussian kernel, which
- *              is a somewhat sensitive parameter. To search for the best setting,
- *              one may pick the value that gives the tightest clusters (smallest
- *              distortion, see { @link #distortion()}) in feature space.
- */
-fun specc(data: Array<DoubleArray>, k: Int, sigma: Double): SpectralClustering {
-    return SpectralClustering.fit(data, k, sigma)
-}
-
-/**
  * Spectral clustering with Nystrom approximation.
  * @param data the dataset for clustering.
  * @param k the number of clusters.
@@ -531,7 +482,8 @@ fun specc(data: Array<DoubleArray>, k: Int, sigma: Double): SpectralClustering {
  *              is a somewhat sensitive parameter. To search for the best setting,
  *              one may pick the value that gives the tightest clusters (smallest
  *              distortion, see { @link #distortion()}) in feature space.
+ * @param maxIter the maximum number of iterations for k-means.
  */
-fun specc(data: Array<DoubleArray>, k: Int, l: Int, sigma: Double): SpectralClustering {
-    return SpectralClustering.fit(data, k, l, sigma)
+fun specc(data: Array<DoubleArray>, k: Int, sigma: Double, l: Int = 0, maxIter: Int = 100): CentroidClustering<DoubleArray, DoubleArray> {
+    return SpectralClustering.fit(data, SpectralClustering.Options(k, l, sigma, maxIter))
 }
