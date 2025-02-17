@@ -18,12 +18,16 @@ package smile.clustering;
 
 import java.util.Properties;
 import java.util.stream.IntStream;
+import smile.data.SparseDataset;
 import smile.math.MathEx;
+import smile.math.blas.Transpose;
 import smile.math.blas.UPLO;
 import smile.math.matrix.ARPACK;
+import smile.math.matrix.IMatrix;
 import smile.math.matrix.Matrix;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
+import smile.util.SparseArray;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -41,6 +45,7 @@ import smile.util.IterativeAlgorithmController;
  * <li> A.Y. Ng, M.I. Jordan, and Y. Weiss. On Spectral Clustering: Analysis and an algorithm. NIPS, 2001. </li>
  * <li> Marina Maila and Jianbo Shi. Learning segmentation by random walks. NIPS, 2000. </li>
  * <li> Deepak Verma and Marina Meila. A Comparison of Spectral Clustering Algorithms. 2003. </li>
+ * <li> Kai Zhang, Nathan R. Zemke, Ethan J. Armand and Bing Ren. A fast, scalable and versatile tool for analysis of single-cell omics data. 2024.</li>
  * </ol>
  * 
  * @author Haifeng Li
@@ -190,6 +195,61 @@ public class SpectralClustering {
     }
 
     /**
+     * Spectral clustering the nonnegative count data with cosine similarity.
+     * @param data the nonnegative count matrix.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<double[], double[]> fit(int[][] data, Clustering.Options options) {
+        int n = data.length;
+        int d = data[0].length;
+
+        double[] idf = new double[d];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                idf[j] += data[i][j] > 0 ? 1 : 0;
+            }
+        }
+        for (int j = 0; j < d; j++) {
+            idf[j] = Math.log(n / (1 + idf[j]));
+        }
+
+        double[] x = new double[d];
+        double[] D = new double[n];
+        SparseArray[] X = new SparseArray[n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                x[j] = data[i][j] / idf[j];
+            }
+            MathEx.normalize(x);
+
+            for (int j = 0; j < d; j++) {
+                D[i] += x[j] * x[j];
+            }
+            D[i] -= 1.0;
+
+            double Di = Math.sqrt(D[i]);
+            SparseArray Xi = new SparseArray();
+            for (int j = 0; j < d; j++) {
+                if (data[i][j] > 0) {
+                    Xi.set(j, x[j] / Di);
+                }
+            }
+            X[i] = Xi;
+        }
+
+        var W = new CountMatrix(SparseDataset.of(X, n).toMatrix(), D);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, options.k());
+        double[][] Y = eigen.Vr.toArray();
+        for (int i = 0; i < n; i++) {
+            MathEx.unitize2(Y[i]);
+        }
+
+        return KMeans.fit(Y, options);
+    }
+
+
+    /**
      * Spectral clustering the data.
      * @param data the input data of which each row is an observation.
      * @param options the hyperparameters.
@@ -298,5 +358,73 @@ public class SpectralClustering {
             features[index[i]] = Y[i];
         }
         return KMeans.fit(features, new Clustering.Options(k, options.maxIter, options.tol, options.controller));
+    }
+
+    /**
+     * Normalized feature count matrix.
+     */
+    static class CountMatrix extends IMatrix {
+        /** The design matrix. */
+        final IMatrix X;
+        final double[] D;
+        final double[] ax;
+
+        /**
+         * Constructor.
+         */
+        CountMatrix(IMatrix X, double[] D) {
+            this.X = X;
+            this.D = D;
+
+            int n = X.nrow();
+            int p = X.ncol();
+            ax = new double[p];
+        }
+
+        @Override
+        public int nrow() {
+            return X.nrow();
+        }
+
+        @Override
+        public int ncol() {
+            return X.nrow();
+        }
+
+        @Override
+        public long size() {
+            return X.size();
+        }
+
+        @Override
+        public void mv(double[] x, double[] y) {
+            X.tv(x, ax);
+            X.mv(ax, y);
+
+            for (int i = 0; i < y.length; i++) {
+                y[i] -= x[i] / D[i];
+            }
+        }
+
+        @Override
+        public void tv(double[] x, double[] y) {
+            mv(x, y);
+        }
+
+        @Override
+        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mv(double[] work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
+
+
+        @Override
+        public void tv(double[] work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
     }
 }
