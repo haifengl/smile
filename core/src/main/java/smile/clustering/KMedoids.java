@@ -16,7 +16,6 @@
  */
 package smile.clustering;
 
-import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
@@ -54,17 +53,24 @@ import smile.util.AlgoStatus;
  * <li>R. Ng and J. Han. CLARANS: A Method for Clustering Objects for Spatial Data Mining. IEEE TRANS. KNOWLEDGE AND DATA ENGINEERING, 2002.</li>
  * </ol>
  * 
- * @param <T> the type of input object.
+ * @param <T> the type of input data.
  * 
  * @author Haifeng Li
  */
 public class KMedoids<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KMedoids.class);
 
+    /** Constructor. */
+    private KMedoids() {
+
+    }
+
     /**
      * Fits k-medoids clustering.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @param distance the distance measure.
+     * @param <T> the type of input data.
      * @return the model.
      */
     public static <T> CentroidClustering<T, T> fit(T[] data, Distance<T> distance, int k) {
@@ -74,9 +80,11 @@ public class KMedoids<T> {
     /**
      * Fits k-medoids clustering.
      * @param data the input data of which each row is an observation.
+     * @param distance the distance measure.
      * @param options the hyperparameters. The parameter maxIter is used as numLocal
      *                while the parameter tol will be interpreted as the ratio to
      *                calculate maxNeighbor = tol * n * (n-k).
+     * @param <T> the type of input data.
      * @return the model.
      */
     public static <T> CentroidClustering<T, T> fit(T[] data, Distance<T> distance, Clustering.Options options) {

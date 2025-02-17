@@ -203,7 +203,7 @@ public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
         // Initialize clusters with KMeans/CLARANS.
         int[] group;
         if (data instanceof double[][] matrix && distance instanceof EuclideanDistance) {
-            var kmeans = KMeans.fit(matrix, k, 100);
+            var kmeans = KMeans.fit(matrix, k, 10);
             group = kmeans.group();
         } else {
             var clarans = KMedoids.fit(data, distance, k);
@@ -217,6 +217,7 @@ public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
      * Clustering the data.
      * @param data the observations.
      * @param nns the neighborhood search data structure.
+     * @param group the initial clustering assignment.
      * @param options the hyperparameters.
      * @param <T> the data type.
      * @return the model.

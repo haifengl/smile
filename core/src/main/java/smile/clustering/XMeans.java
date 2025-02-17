@@ -46,6 +46,11 @@ public class XMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMeans.class);
     private static final double LOG2PI = Math.log(Math.PI * 2.0);
 
+    /** Constructor. */
+    private XMeans() {
+
+    }
+
     /**
      * Clustering data with the number of clusters
      * determined by X-Means algorithm automatically.

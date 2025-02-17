@@ -127,6 +127,9 @@ public class DeterministicAnnealing {
      * Clustering data into k clusters.
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
+     * @param alpha the temperature T is decreasing as T = T * alpha.
+     *              alpha has to be in (0, 1).
+     * @param maxIter the maximum number of iterations at each temperature.
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(double[][] data, int kmax, double alpha, int maxIter) {

@@ -82,6 +82,11 @@ import smile.util.AlgoStatus;
 public class KMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KMeans.class);
 
+    /** Constructor. */
+    private KMeans() {
+
+    }
+
     /**
      * Fits k-means clustering.
      * @param data the input data of which each row is an observation.
