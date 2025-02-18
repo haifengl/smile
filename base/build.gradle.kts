@@ -5,7 +5,7 @@ plugins {
 dependencies {
     api(libs.bundles.javacpp)
     api("org.apache.commons:commons-csv:1.13.0")
-    api("org.duckdb:duckdb_jdbc:1.1.3")
+    api("org.duckdb:duckdb_jdbc:1.2.0")
     implementation(libs.bundles.arrow)
     implementation("com.epam:parso:2.0.14") // SAS7BDAT
     implementation("org.apache.parquet:parquet-hadoop:1.15.0") { exclude("org.slf4j:slf4j-log4j12") }
