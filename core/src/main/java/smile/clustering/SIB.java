@@ -16,6 +16,8 @@
  */
 package smile.clustering;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
@@ -179,6 +181,17 @@ public class SIB {
         }).sum() / n;
         logger.info("Final distortion: {}", distortion);
 
-        return new CentroidClustering<>("SIB", centroids, MathEx::JensenShannonDivergence, group, proximity);
+        return new CentroidClustering<>("SIB", centroids, new JSDistance(), group, proximity);
+    }
+
+    /** Serializable distance lambda. */
+    private static class JSDistance implements ToDoubleBiFunction<double[], SparseArray>, Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public double applyAsDouble(double[] x, SparseArray y) {
+            return MathEx.JensenShannonDivergence(x, y);
+        }
     }
 }
