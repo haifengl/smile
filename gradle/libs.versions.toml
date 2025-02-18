@@ -1,5 +1,5 @@
 [versions]
-arrow = "18.1.0"
+arrow = "18.2.0"
 akka = "2.9.3"
 akka-http = "10.6.3"
 
