@@ -22,20 +22,17 @@ package smile.shell
   */
 object Main {
   def main(args: Array[String]): Unit = {
-    if (args.length > 0) {
-      args(0) match {
-        case "train" => return Train(args.drop(1))
-        case "predict" => return Predict(args.drop(1))
-        case "serve" => return Serve(args.drop(1))
-        case _ => () // will run below code
+    val command = args.headOption.getOrElse("")
+    command match {
+      case "train" => Train(args.drop(1))
+      case "predict" => Predict(args.drop(1))
+      case "serve" => Serve(args.drop(1))
+      case _ => try {
+        val clazz = Class.forName("ammonite.Main$")
+        AmmoniteREPL.main0(clazz, args)
+      } catch {
+        case _: ClassNotFoundException => ScalaREPL.main0(args)
       }
-    }
-
-    try {
-      val clazz = Class.forName("ammonite.Main$")
-      AmmoniteREPL.main0(clazz, args)
-    } catch {
-      case _: ClassNotFoundException => ScalaREPL.main0(args)
     }
   }
 }
