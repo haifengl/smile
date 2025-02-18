@@ -149,105 +149,15 @@ public class SpectralClustering {
     }
 
     /**
-     * Spectral graph clustering.
-     * @param W the adjacency matrix of graph, which will be modified.
-     * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations for k-means.
-     * @return the model.
-     */
-    public static CentroidClustering<double[], double[]> fit(Matrix W, int k, int maxIter) {
-        return fit(W, new Clustering.Options(k, maxIter));
-    }
-
-    /**
-     * Spectral graph clustering.
-     * @param W the adjacency matrix of graph, which will be modified.
-     * @param options the hyperparameters.
-     * @return the model.
-     */
-    public static CentroidClustering<double[], double[]> fit(Matrix W, Clustering.Options options) {
-        int n = W.nrow();
-        double[] D = W.colSums();
-        for (int i = 0; i < n; i++) {
-            if (D[i] == 0.0) {
-                throw new IllegalArgumentException("Isolated vertex: " + i);                    
-            }
-            
-            D[i] = 1.0 / Math.sqrt(D[i]);
-        }
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double w = D[i] * W.get(i, j) * D[j];
-                W.set(i, j, w);
-                W.set(j, i, w);
-            }
-        }
-
-        W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, options.k());
-        double[][] Y = eigen.Vr.toArray();
-        for (int i = 0; i < n; i++) {
-            MathEx.unitize2(Y[i]);
-        }
-
-        return KMeans.fit(Y, options);
-    }
-
-    /**
      * Spectral clustering the nonnegative count data with cosine similarity.
      * @param data the nonnegative count matrix.
      * @param options the hyperparameters.
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(int[][] data, Clustering.Options options) {
-        int n = data.length;
-        int d = data[0].length;
-
-        double[] idf = new double[d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                idf[j] += data[i][j] > 0 ? 1 : 0;
-            }
-        }
-        for (int j = 0; j < d; j++) {
-            idf[j] = Math.log(n / (1 + idf[j]));
-        }
-
-        double[] x = new double[d];
-        double[] D = new double[n];
-        SparseArray[] X = new SparseArray[n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                x[j] = data[i][j] / idf[j];
-            }
-            MathEx.normalize(x);
-
-            for (int j = 0; j < d; j++) {
-                D[i] += x[j] * x[j];
-            }
-            D[i] -= 1.0;
-
-            double Di = Math.sqrt(D[i]);
-            SparseArray Xi = new SparseArray();
-            for (int j = 0; j < d; j++) {
-                if (data[i][j] > 0) {
-                    Xi.set(j, x[j] / Di);
-                }
-            }
-            X[i] = Xi;
-        }
-
-        var W = new CountMatrix(SparseDataset.of(X, n).toMatrix(), D);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, options.k());
-        double[][] Y = eigen.Vr.toArray();
-        for (int i = 0; i < n; i++) {
-            MathEx.unitize2(Y[i]);
-        }
-
+        double[][] Y = embed(data, options.k());
         return KMeans.fit(Y, options);
     }
-
 
     /**
      * Spectral clustering the data.
@@ -258,22 +168,10 @@ public class SpectralClustering {
     public static CentroidClustering<double[], double[]> fit(double[][] data, Options options) {
         if (options.l >= options.k) {
             return nystrom(data, options);
+        } else {
+            double[][] Y = embed(data, options.k, options.sigma);
+            return KMeans.fit(Y, new Clustering.Options(options.k, options.maxIter, options.tol, options.controller));
         }
-
-        double sigma = options.sigma;
-        int n = data.length;
-        double gamma = -0.5 / (sigma * sigma);
-
-        Matrix W = new Matrix(n, n);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
-                W.set(i, j, w);
-                W.set(j, i, w);
-            }
-        }
-
-        return fit(W, new Clustering.Options(options.k, options.maxIter, options.tol, options.controller));
     }
 
     /**
@@ -358,6 +256,119 @@ public class SpectralClustering {
             features[index[i]] = Y[i];
         }
         return KMeans.fit(features, new Clustering.Options(k, options.maxIter, options.tol, options.controller));
+    }
+
+    /**
+     * Returns the embedding for spectral clustering.
+     * @param W the adjacency matrix of graph, which will be modified.
+     * @param d the dimension of feature space.
+     * @return the embedding.
+     */
+    public static double[][] embed(Matrix W, int d) {
+        int n = W.nrow();
+        double[] D = W.colSums();
+        for (int i = 0; i < n; i++) {
+            if (D[i] == 0.0) {
+                throw new IllegalArgumentException("Isolated vertex: " + i);
+            }
+
+            D[i] = 1.0 / Math.sqrt(D[i]);
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                double w = D[i] * W.get(i, j) * D[j];
+                W.set(i, j, w);
+                W.set(j, i, w);
+            }
+        }
+
+        W.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
+        double[][] Y = eigen.Vr.toArray();
+        for (int i = 0; i < n; i++) {
+            MathEx.unitize2(Y[i]);
+        }
+
+        return Y;
+    }
+
+    /**
+     * Returns the embedding for spectral clustering.
+     * @param data the input data of which each row is an observation.
+     * @param d the dimension of feature space.
+     * @param sigma the smooth/width parameter of Gaussian kernel.
+     * @return the embedding.
+     */
+    public static double[][] embed(double[][] data, int d, double sigma) {
+        int n = data.length;
+        double gamma = -0.5 / (sigma * sigma);
+
+        Matrix W = new Matrix(n, n);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
+                W.set(i, j, w);
+                W.set(j, i, w);
+            }
+        }
+
+        return embed(W, d);
+    }
+
+    /**
+     * Returns the embedding for spectral clustering of the nonnegative count
+     * data with cosine similarity.
+     * @param data the nonnegative count matrix.
+     * @param d the dimension of feature space.
+     * @return the embedding.
+     */
+    public static double[][] embed(int[][] data, int d) {
+        int n = data.length;
+        int p = data[0].length;
+
+        double[] idf = new double[p];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                idf[j] += data[i][j] > 0 ? 1 : 0;
+            }
+        }
+        for (int j = 0; j < p; j++) {
+            idf[j] = Math.log(n / (1 + idf[j]));
+        }
+
+        double[] x = new double[p];
+        double[] D = new double[n];
+        SparseArray[] X = new SparseArray[n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < p; j++) {
+                x[j] = data[i][j] / idf[j];
+            }
+            MathEx.normalize(x);
+
+            for (int j = 0; j < p; j++) {
+                D[i] += x[j] * x[j];
+            }
+            D[i] -= 1.0;
+
+            double Di = Math.sqrt(D[i]);
+            SparseArray Xi = new SparseArray();
+            for (int j = 0; j < p; j++) {
+                if (data[i][j] > 0) {
+                    Xi.set(j, x[j] / Di);
+                }
+            }
+            X[i] = Xi;
+        }
+
+        var W = new CountMatrix(SparseDataset.of(X, n).toMatrix(), D);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
+        double[][] Y = eigen.Vr.toArray();
+        for (int i = 0; i < n; i++) {
+            MathEx.unitize2(Y[i]);
+        }
+
+        return Y;
     }
 
     /**
