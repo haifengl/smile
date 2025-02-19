@@ -27,7 +27,7 @@ import smile.feature.transform.WinsorScaler;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
 import smile.validation.metric.Error;

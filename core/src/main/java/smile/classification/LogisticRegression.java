@@ -21,9 +21,9 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
 import smile.util.IntSet;
+import smile.util.function.DifferentiableMultivariateFunction;
 import smile.validation.ModelSelection;
 
 /**
@@ -307,6 +307,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @param maxIter the maximum number of iterations.
      */
     public record Options(double lambda, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (lambda < 0.0) {
                 throw new IllegalArgumentException("Invalid regularization factor: " + lambda);

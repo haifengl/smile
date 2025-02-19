@@ -19,7 +19,7 @@ package smile.deep;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.junit.jupiter.api.*;
-import smile.util.Paths;
+import smile.io.Paths;
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.jupiter.api.Assertions.*;
 

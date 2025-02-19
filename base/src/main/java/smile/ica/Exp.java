@@ -16,7 +16,7 @@
  */
 package smile.ica;
 
-import smile.math.DifferentiableFunction;
+import smile.util.function.DifferentiableFunction;
 
 /**
  * The contrast function when the independent components are highly
@@ -25,6 +25,10 @@ import smile.math.DifferentiableFunction;
  * @author Haifeng Li
  */
 public class Exp implements DifferentiableFunction {
+    /** Constructor. */
+    public Exp() {
+
+    }
 
     @Override
     public double f(double x) {

@@ -16,9 +16,8 @@
  */
 package smile
 
-import smile.clustering.linkage.{CompleteLinkage, SingleLinkage, UPGMALinkage, UPGMCLinkage, WPGMALinkage, WPGMCLinkage, WardLinkage}
+import smile.clustering.linkage.*
 import smile.math.distance.{Distance, EuclideanDistance, Metric}
-import smile.math.matrix.Matrix
 import smile.neighbor.RNNSearch
 import smile.util.{SparseArray, time}
 
@@ -150,8 +149,8 @@ package object clustering {
     * The mean update for centroids is replaced by the mode one which is
     * a majority vote among element of each cluster.
     */
-  def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): KModes = time("K-Modes") {
-    PartitionClustering.run(runs, () => KModes.fit(data, k, maxIter))
+  def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): CentroidClustering[Array[Int], Array[Int]] = time("K-Modes") {
+    Clustering.run(runs, () => KModes.fit(data, k, maxIter))
   }
 
   /** K-Means clustering. The algorithm partitions n observations into k clusters in which
@@ -192,11 +191,10 @@ package object clustering {
     * @param data    the data set.
     * @param k       the number of clusters.
     * @param maxIter the maximum number of iterations for each running.
-    * @param tol     the tolerance of convergence test.
     * @param runs    the number of runs of K-Means algorithm.
     */
-  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans = time("K-Means") {
-    PartitionClustering.run(runs, () => KMeans.fit(data, k, maxIter, tol))
+  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 16): CentroidClustering[Array[Double], Array[Double]] = time("K-Means") {
+    Clustering.run(runs, () => KMeans.fit(data, k, maxIter))
   }
 
   /** X-Means clustering algorithm, an extended K-Means which tries to
@@ -212,9 +210,10 @@ package object clustering {
     *
     * @param data the data set.
     * @param k    the maximum number of clusters.
+    * @param maxIter the maximum number of iterations for k-means.
     */
-  def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = time("X-Means") {
-    XMeans.fit(data, k)
+  def xmeans(data: Array[Array[Double]], k: Int = 100, maxIter: Int = 100): CentroidClustering[Array[Double], Array[Double]] = time("X-Means") {
+    XMeans.fit(data, k, maxIter)
   }
 
   /** G-Means clustering algorithm, an extended K-Means which tries to
@@ -229,9 +228,10 @@ package object clustering {
     *
     * @param data the data set.
     * @param k    the maximum number of clusters.
+    * @param maxIter the maximum number of iterations for k-means.
     */
-  def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = time("G-Means") {
-    GMeans.fit(data, k)
+  def gmeans(data: Array[Array[Double]], k: Int = 100, maxIter: Int = 100): CentroidClustering[Array[Double], Array[Double]] = time("G-Means") {
+    GMeans.fit(data, k, maxIter)
   }
 
   /** The Sequential Information Bottleneck algorithm. SIB clusters co-occurrence
@@ -268,8 +268,8 @@ package object clustering {
     * @param maxIter the maximum number of iterations.
     * @param runs    the number of runs of SIB algorithm.
     */
-  def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 8): SIB = time("Sequential information bottleneck") {
-    PartitionClustering.run(runs, () => SIB.fit(data, k, maxIter))
+  def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 8): CentroidClustering[Array[Double], SparseArray] = time("Sequential information bottleneck") {
+    Clustering.run(runs, () => SIB.fit(data, k, maxIter))
   }
 
   /** Deterministic annealing clustering. Deterministic annealing extends
@@ -294,8 +294,9 @@ package object clustering {
     * @param tol      the tolerance of convergence test.
     * @param splitTol the tolerance to split a cluster.
     */
-  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9, maxIter: Int = 100, tol: Double = 1E-4, splitTol: Double = 1E-2): DeterministicAnnealing = time("Deterministic annealing clustering") {
-    DeterministicAnnealing.fit(data, k, alpha, maxIter, tol, splitTol)
+  def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9, maxIter: Int = 100,
+          tol: Double = 1E-4, splitTol: Double = 1E-2): CentroidClustering[Array[Double], Array[Double]] = time("Deterministic annealing clustering") {
+    DeterministicAnnealing.fit(data, new DeterministicAnnealing.Options(k, alpha, maxIter, tol, splitTol, null))
   }
 
   /** Clustering Large Applications based upon RANdomized Search. CLARANS is an
@@ -323,11 +324,9 @@ package object clustering {
     * @param data        the data set.
     * @param distance    the distance/dissimilarity measure.
     * @param k           the number of clusters.
-    * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
-    * @param numLocal    the number of local minima to search for.
     */
-  def clarans[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS[T] = time("CLARANS") {
-    PartitionClustering.run(numLocal, () => CLARANS.fit(data, distance, k, maxNeighbor))
+  def clarans[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int): CentroidClustering[T, T] = time("CLARANS") {
+    KMedoids.fit(data, distance, k)
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
@@ -498,19 +497,6 @@ package object clustering {
     MEC.fit(data, new EuclideanDistance, k, radius)
   }
 
-  /** Nonparametric Minimum Conditional Entropy Clustering.
-    *
-    * @param data   the data set.
-    * @param nns    the data structure for neighborhood search.
-    * @param k      the number of clusters. Note that this is just a hint. The final
-    *               number of clusters may be less.
-    * @param radius the neighborhood radius.
-    * @param tol    the tolerance of convergence test.
-    */
-  def mec[T <: AnyRef](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
-    MEC.fit(data, nns, k, radius, y, tol)
-  }
-
   /** Spectral Clustering. Given a set of data points, the similarity matrix may
     * be defined as a matrix S where S<sub>ij</sub> represents a measure of the
     * similarity between points. Spectral clustering techniques make use of the
@@ -526,28 +512,6 @@ package object clustering {
     *  - Marina Maila and Jianbo Shi. Learning segmentation by random walks. NIPS, 2000.
     *  - Deepak Verma and Marina Meila. A Comparison of Spectral Clustering Algorithms. 2003.
     *
-    * @param W the adjacency matrix of graph.
-    * @param k the number of clusters.
-    */
-  def specc(W: Matrix, k: Int): SpectralClustering = time("Spectral clustering") {
-    SpectralClustering.fit(W, k)
-  }
-
-  /** Spectral clustering.
-    *
-    * @param data  the dataset for clustering.
-    * @param k     the number of clusters.
-    * @param sigma the smooth/width parameter of Gaussian kernel, which
-    *              is a somewhat sensitive parameter. To search for the best setting,
-    *              one may pick the value that gives the tightest clusters (smallest
-    *              distortion, see { @link #distortion()}) in feature space.
-    */
-  def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
-    SpectralClustering.fit(data, k, sigma)
-  }
-
-  /** Spectral clustering with Nystrom approximation.
-    *
     * @param data  the dataset for clustering.
     * @param k     the number of clusters.
     * @param l     the number of random samples for Nystrom approximation.
@@ -555,9 +519,10 @@ package object clustering {
     *              is a somewhat sensitive parameter. To search for the best setting,
     *              one may pick the value that gives the tightest clusters (smallest
     *              distortion, see { @link #distortion()}) in feature space.
+    * @param maxIter the maximum number of iterations for k-means.
     */
-  def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
-    SpectralClustering.fit(data, k, l, sigma)
+  def specc(data: Array[Array[Double]], k: Int, sigma: Double, l: Int = 0, maxIter: Int = 100): CentroidClustering[Array[Double], Array[Double]] = time("Spectral clustering") {
+    SpectralClustering.fit(data, new SpectralClustering.Options(k, l, sigma, maxIter))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].

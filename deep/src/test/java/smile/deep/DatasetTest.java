@@ -28,7 +28,7 @@ import smile.deep.metric.Recall;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

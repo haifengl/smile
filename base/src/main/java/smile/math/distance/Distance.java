@@ -68,7 +68,7 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
      * @param x samples.
      * @return the pairwise distance matrix.
      */
-    default Matrix D(T[] x) {
+    default Matrix pdist(T[] x) {
         int n = x.length;
         int N = n * (n - 1) / 2;
         Matrix D = new Matrix(n, n);
@@ -95,7 +95,7 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
      * @param y samples.
      * @return the pairwise distance matrix.
      */
-    default Matrix D(T[] x, T[] y) {
+    default Matrix pdist(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
         Matrix D = new Matrix(m, n);

@@ -33,6 +33,11 @@ public class FDR implements ClassificationMetric {
     /** Default instance. */
     public static final FDR instance = new FDR();
 
+    /** Constructor. */
+    public FDR() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

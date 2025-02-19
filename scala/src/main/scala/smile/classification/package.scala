@@ -23,12 +23,12 @@ import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.MathEx
-import smile.math.TimeFunction
 import smile.math.distance.Distance
 import smile.math.kernel.MercerKernel
 import smile.neighbor.KNNSearch
 import smile.stat.distribution.Distribution
 import smile.util.{time, toJavaBiFunction}
+import smile.util.function.TimeFunction
 
 /** Classification algorithms. In machine learning and pattern recognition,
   * classification refers to an algorithmic procedure for assigning a given
@@ -396,7 +396,7 @@ package object classification {
           learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
           momentum: TimeFunction = TimeFunction.constant(0.0),
           weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP = time("Multi-layer Perceptron Neural Network") {
-    val net = new MLP(builders: _*)
+    val net = new MLP(builders*)
     net.setLearningRate(learningRate)
     net.setMomentum(momentum)
     net.setWeightDecay(weightDecay)
@@ -647,19 +647,22 @@ package object classification {
     * @param mtry the number of random selected features to be used to determine
     *             the decision at a node of the tree. floor(sqrt(dim)) seems to give
     *             generally good performance, where dim is the number of variables.
+    * @param splitRule Decision tree node split rule.
     * @param maxDepth the maximum depth of the tree.
     * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param nodeSize the minimum size of leaf nodes.
     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement.
     *                  < 1.0 means sampling without replacement.
-    * @param splitRule Decision tree node split rule.
+    * @param classWeight Priors of the classes. The weight of each class is roughly
+    *                    the ratio of samples in each class.
+    * @param seeds optional RNG seeds for each decision tree.
     * @return Random forest classification model.
     */
   def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0,
                    splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500,
                    nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null,
-                   seeds: LongStream = null): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight), seeds)
+                   seeds: Array[Long] = null): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds, null))
   }
 
   /** Gradient boosted classification trees.
@@ -739,7 +742,7 @@ package object classification {
     */
   def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6,
           nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
-    GradientTreeBoost.fit(formula, data,new GradientTreeBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
+    GradientTreeBoost.fit(formula, data,new GradientTreeBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample, null, null))
   }
 
   /** AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -779,7 +782,7 @@ package object classification {
     */
   def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
                maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
-    AdaBoost.fit(formula, data, new AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize))
+    AdaBoost.fit(formula, data, new AdaBoost.Options(ntrees, maxDepth, maxNodes, nodeSize, null, null))
   }
 
   /** Fisher's linear discriminant. Fisher defined the separation between two

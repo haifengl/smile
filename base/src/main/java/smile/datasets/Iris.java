@@ -23,7 +23,7 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Iris flower dataset. The dataset consists of 50 samples from each of

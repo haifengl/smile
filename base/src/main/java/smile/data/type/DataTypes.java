@@ -26,74 +26,74 @@ import java.time.*;
  *
  * @author Haifeng Li
  */
-public class DataTypes {
+public interface DataTypes {
     /** Boolean data type. */
-    public static final smile.data.type.BooleanType BooleanType = new smile.data.type.BooleanType(false);
+    smile.data.type.BooleanType BooleanType = new smile.data.type.BooleanType(false);
     /** Char data type. */
-    public static final smile.data.type.CharType CharType = new smile.data.type.CharType(false);
+    smile.data.type.CharType CharType = new smile.data.type.CharType(false);
     /** Byte data type. */
-    public static final smile.data.type.ByteType ByteType = new smile.data.type.ByteType(false);
+    smile.data.type.ByteType ByteType = new smile.data.type.ByteType(false);
     /** Short data type. */
-    public static final smile.data.type.ShortType ShortType = new smile.data.type.ShortType(false);
+    smile.data.type.ShortType ShortType = new smile.data.type.ShortType(false);
     /** Integer data type. */
-    public static final smile.data.type.IntType IntType = new smile.data.type.IntType(false);
+    smile.data.type.IntType IntType = new smile.data.type.IntType(false);
     /** Long data type. */
-    public static final smile.data.type.LongType LongType = new smile.data.type.LongType(false);
+    smile.data.type.LongType LongType = new smile.data.type.LongType(false);
     /** Float data type. */
-    public static final smile.data.type.FloatType FloatType = new smile.data.type.FloatType(false);
+    smile.data.type.FloatType FloatType = new smile.data.type.FloatType(false);
     /** Double data type. */
-    public static final smile.data.type.DoubleType DoubleType = new smile.data.type.DoubleType(false);
+    smile.data.type.DoubleType DoubleType = new smile.data.type.DoubleType(false);
     /** Nullable boolean data type. */
-    public static final smile.data.type.BooleanType NullableBooleanType = new smile.data.type.BooleanType(true);
+    smile.data.type.BooleanType NullableBooleanType = new smile.data.type.BooleanType(true);
     /** Nullable char data type. */
-    public static final smile.data.type.CharType NullableCharType = new smile.data.type.CharType(true);
+    smile.data.type.CharType NullableCharType = new smile.data.type.CharType(true);
     /** Nullable byte data type. */
-    public static final smile.data.type.ByteType NullableByteType = new smile.data.type.ByteType(true);
+    smile.data.type.ByteType NullableByteType = new smile.data.type.ByteType(true);
     /** Nullable short data type. */
-    public static final smile.data.type.ShortType NullableShortType = new smile.data.type.ShortType(true);
+    smile.data.type.ShortType NullableShortType = new smile.data.type.ShortType(true);
     /** Nullable integer data type. */
-    public static final smile.data.type.IntType NullableIntType = new smile.data.type.IntType(true);
+    smile.data.type.IntType NullableIntType = new smile.data.type.IntType(true);
     /** Nullable long data type. */
-    public static final smile.data.type.LongType NullableLongType = new smile.data.type.LongType(true);
+    smile.data.type.LongType NullableLongType = new smile.data.type.LongType(true);
     /** Nullable float data type. */
-    public static final smile.data.type.FloatType NullableFloatType = new smile.data.type.FloatType(true);
+    smile.data.type.FloatType NullableFloatType = new smile.data.type.FloatType(true);
     /** Nullable double data type. */
-    public static final smile.data.type.DoubleType NullableDoubleType = new smile.data.type.DoubleType(true);
+    smile.data.type.DoubleType NullableDoubleType = new smile.data.type.DoubleType(true);
     /** Decimal data type. */
-    public static final smile.data.type.DecimalType DecimalType = smile.data.type.DecimalType.instance;
+    smile.data.type.DecimalType DecimalType = smile.data.type.DecimalType.instance;
     /** String data type. */
-    public static final smile.data.type.StringType StringType = smile.data.type.StringType.instance;
+    smile.data.type.StringType StringType = smile.data.type.StringType.instance;
     /** Date data type with ISO format. */
-    public static final smile.data.type.DateType DateType = smile.data.type.DateType.instance;
+    smile.data.type.DateType DateType = smile.data.type.DateType.instance;
     /** DateTime data type with ISO format. */
-    public static final smile.data.type.DateTimeType DateTimeType = smile.data.type.DateTimeType.instance;
+    smile.data.type.DateTimeType DateTimeType = smile.data.type.DateTimeType.instance;
     /** Time data type with ISO format. */
-    public static final smile.data.type.TimeType TimeType = smile.data.type.TimeType.instance;
+    smile.data.type.TimeType TimeType = smile.data.type.TimeType.instance;
     /** Plain Object data type. */
-    public static final smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
+    smile.data.type.ObjectType ObjectType = smile.data.type.ObjectType.instance;
     /** Boolean Array data type. */
-    public static final smile.data.type.ArrayType BooleanArrayType = smile.data.type.ArrayType.BooleanArrayType;
+    smile.data.type.ArrayType BooleanArrayType = smile.data.type.ArrayType.BooleanArrayType;
     /** Char Array data type. */
-    public static final smile.data.type.ArrayType CharArrayType = smile.data.type.ArrayType.CharArrayType;
+    smile.data.type.ArrayType CharArrayType = smile.data.type.ArrayType.CharArrayType;
     /** Byte Array data type. */
-    public static final smile.data.type.ArrayType ByteArrayType = smile.data.type.ArrayType.ByteArrayType;
+    smile.data.type.ArrayType ByteArrayType = smile.data.type.ArrayType.ByteArrayType;
     /** Short Array data type. */
-    public static final smile.data.type.ArrayType ShortArrayType = smile.data.type.ArrayType.ShortArrayType;
+    smile.data.type.ArrayType ShortArrayType = smile.data.type.ArrayType.ShortArrayType;
     /** Integer Array data type. */
-    public static final smile.data.type.ArrayType IntArrayType = smile.data.type.ArrayType.IntArrayType;
+    smile.data.type.ArrayType IntArrayType = smile.data.type.ArrayType.IntArrayType;
     /** Long Array data type. */
-    public static final smile.data.type.ArrayType LongArrayType = smile.data.type.ArrayType.LongArrayType;
+    smile.data.type.ArrayType LongArrayType = smile.data.type.ArrayType.LongArrayType;
     /** Float Array data type. */
-    public static final smile.data.type.ArrayType FloatArrayType = smile.data.type.ArrayType.FloatArrayType;
+    smile.data.type.ArrayType FloatArrayType = smile.data.type.ArrayType.FloatArrayType;
     /** Double Array data type. */
-    public static final smile.data.type.ArrayType DoubleArrayType = smile.data.type.ArrayType.DoubleArrayType;
+    smile.data.type.ArrayType DoubleArrayType = smile.data.type.ArrayType.DoubleArrayType;
 
     /**
      * Returns an object data type of given class.
      * @param clazz the object class.
      * @return the object data type.
      */
-    public static DataType object(Class<?> clazz) {
+    static DataType object(Class<?> clazz) {
         if (clazz == BigDecimal.class) return DecimalType;
         if (clazz == String.class) return StringType;
         if (clazz == LocalDate.class) return DateType;
@@ -107,7 +107,7 @@ public class DataTypes {
      * @param levels the number of categorical measurement levels.
      * @return the categorical data type.
      */
-    public static DataType category(int levels) {
+    static DataType category(int levels) {
         if (levels <= Byte.MAX_VALUE + 1) {
             return DataTypes.ByteType;
         } else if (levels <= Short.MAX_VALUE + 1) {
@@ -122,7 +122,7 @@ public class DataTypes {
      * @param type the data type of array elements.
      * @return the array data type.
      */
-    public static ArrayType array(DataType type) {
+    static ArrayType array(DataType type) {
         if (type == IntType) return IntArrayType;
         if (type == LongType) return LongArrayType;
         if (type == FloatType) return FloatArrayType;

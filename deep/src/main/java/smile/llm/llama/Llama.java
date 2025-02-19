@@ -88,6 +88,7 @@ public class Llama {
      * @param tokenizerPath the path of tokenizer model file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
+     * @throws IOException if fail to open model checkpoint.
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen) throws IOException {
@@ -101,6 +102,7 @@ public class Llama {
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
      * @param deviceId the optional CUDA device ID.
+     * @throws IOException if fail to open model checkpoint.
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Integer deviceId) throws IOException {

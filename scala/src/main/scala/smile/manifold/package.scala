@@ -95,7 +95,7 @@ package object manifold {
     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
     */
   def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]] = time("IsoMap") {
-    IsoMap.of(data, new IsoMap.Options(k, d, CIsomap))
+    IsoMap.fit(data, new IsoMap.Options(k, d, CIsomap))
   }
 
   /** Locally Linear Embedding. It has several advantages over Isomap, including
@@ -119,7 +119,7 @@ package object manifold {
     */
   def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]] = time("LLE") {
     val nng = NearestNeighborGraph.of(data, k)
-    LLE.of(data, nng, d)
+    LLE.fit(data, nng, d)
   }
 
   /** Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -143,7 +143,7 @@ package object manifold {
     *          Non-positive value means discrete weights.
     */
   def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]] = time("Laplacian Eigen Map") {
-    LaplacianEigenmap.of(data, new LaplacianEigenmap.Options(k, d, t))
+    LaplacianEigenmap.fit(data, new LaplacianEigenmap.Options(k, d, t))
   }
 
   /** t-distributed stochastic neighbor embedding. t-SNE is a nonlinear
@@ -163,11 +163,19 @@ package object manifold {
     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
     * @param d the dimension of the manifold.
     * @param perplexity the perplexity of the conditional distribution.
-    * @param eta        the learning rate.
-    * @param iterations the number of iterations.
+    * @param eta the learning rate.
+    * @param earlyExaggeration Controls how tight natural clusters in the original
+    *                          space are in the embedded space and how much space
+    *                          will be between them. For larger values, the space
+    *                          between natural clusters will be larger in the
+    *                          embedded space. The choice of this parameter is not
+    *                          very critical. If the cost function increases during
+    *                          initial optimization, the early exaggeration factor
+    *                          or the learning rate might be too high.
+    * @param maxIter the number of iterations.
     */
-  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = time("t-SNE") {
-    new TSNE(X, new TSNE.Options(d, perplexity, eta, iterations))
+  def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, earlyExaggeration: Double = 12.0, maxIter: Int = 1000): TSNE = time("t-SNE") {
+    TSNE.fit(X, new TSNE.Options(d, perplexity, eta, earlyExaggeration, maxIter))
   }
 
   /**
@@ -221,7 +229,7 @@ package object manifold {
   def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, epochs: Int = 0, learningRate: Double = 1.0,
            minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0,
            localConnectivity: Double = 1.0): Array[Array[Double]] = time("UMAP") {
-    UMAP.of(data, new UMAP.Options(k, d, epochs, learningRate, minDist, spread,
+    UMAP.fit(data, new UMAP.Options(k, d, epochs, learningRate, minDist, spread,
                                    negativeSamples, repulsionStrength, localConnectivity))
   }
 
@@ -249,7 +257,7 @@ package object manifold {
     *            representing the objects.
     */
   def mds(proximity: Array[Array[Double]], d: Int, positive: Boolean = false): MDS = time("MDS") {
-    MDS.of(proximity, new MDS.Options(d, positive))
+    MDS.fit(proximity, new MDS.Options(d, positive))
   }
 
   /** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
@@ -267,7 +275,7 @@ package object manifold {
     * @param maxIter maximum number of iterations.
     */
   def isomds(proximity: Array[Array[Double]], d: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS = time("Kruskal's nonmetric MDS") {
-    IsotonicMDS.of(proximity, new IsotonicMDS.Options(d, tol, maxIter))
+    IsotonicMDS.fit(proximity, new IsotonicMDS.Options(d, tol, maxIter))
   }
 
   /** The Sammon's mapping is an iterative technique for making interpoint
@@ -301,13 +309,13 @@ package object manifold {
     * @param proximity the non-negative proximity matrix of dissimilarities. The
     *                  diagonal should be zero and all other elements should be positive and symmetric.
     * @param d         the dimension of the projection.
-    * @param lambda    initial value of the step size constant in diagonal Newton method.
-    * @param tol       tolerance for stopping iterations.
-    * @param stepTol   tolerance on step size.
-    * @param maxIter   maximum number of iterations.
+    * @param step      the initial step size in diagonal Newton method.
+    * @param maxIter   the maximum number of iterations.
+    * @param tol       the tolerance of convergence test.
+    * @param stepTol   the tolerance on step size.
     */
-  def sammon(proximity: Array[Array[Double]], d: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
-    SammonMapping.of(proximity, new SammonMapping.Options(d, lambda, tol, stepTol, maxIter))
+  def sammon(proximity: Array[Array[Double]], d: Int = 2, step: Double = 0.2, maxIter: Int = 100, tol: Double = 0.0001, stepTol: Double = 0.001): SammonMapping = time("Sammon's Mapping") {
+    SammonMapping.fit(proximity, new SammonMapping.Options(d, step, maxIter, tol, stepTol, null))
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].

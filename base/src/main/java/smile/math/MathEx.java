@@ -1082,9 +1082,7 @@ public class MathEx {
      */
     public static <E> E[] slice(E[] data, int[] index) {
         int n = index.length;
-
-        @SuppressWarnings("unchecked")
-        E[] x = (E[]) java.lang.reflect.Array.newInstance(data.getClass().getComponentType(), n);
+        E[] x = Arrays.copyOf(data, n);
 
         for (int i = 0; i < n; i++) {
             x[i] = data[index[i]];
@@ -2822,17 +2820,17 @@ public class MathEx {
     }
 
     /**
-     * The squared Euclidean distance with handling missing values (represented as NaN).
+     * The Euclidean distance with handling missing values (represented as NaN).
      * NaN will be treated as missing values and will be excluded from the
-     * calculation. Let m be the number nonmissing values, and n be the
+     * calculation. Let m be the number non-missing values, and n be the
      * number of all values. The returned distance is (n * d / m),
-     * where d is the square of distance between nonmissing values.
+     * where d is the square of distance between non-missing values.
      *
      * @param x a vector.
      * @param y a vector.
-     * @return the square of Euclidean distance.
+     * @return Euclidean distance.
      */
-    public static double squaredDistanceWithMissingValues(double[] x, double[] y) {
+    public static double distanceWithMissingValues(double[] x, double[] y) {
         int n = x.length;
         int m = 0;
         double dist = 0.0;
@@ -2851,7 +2849,7 @@ public class MathEx {
             dist = n * dist / m;
         }
 
-        return dist;
+        return sqrt(dist);
     }
 
     /**

@@ -16,7 +16,7 @@
  */
 package smile.json
 
-import java.lang.StringBuilder
+import java.lang.StringBuilder as JStringBuilder
 import scala.annotation.tailrec
 
 /**
@@ -26,11 +26,11 @@ import scala.annotation.tailrec
 trait PrettyPrinter extends JsonPrinter {
   val Indent = 2
 
-  def print(x: JsValue, sb: StringBuilder): Unit = {
+  def print(x: JsValue, sb: JStringBuilder): Unit = {
     print(x, sb, 0)
   }
 
-  protected def print(x: JsValue, sb: StringBuilder, indent: Int): Unit = {
+  protected def print(x: JsValue, sb: JStringBuilder, indent: Int): Unit = {
     x match {
       case JsObject(x) => printObject(x, sb, indent)
       case JsArray(x)  => printArray(x, sb, indent)
@@ -38,7 +38,7 @@ trait PrettyPrinter extends JsonPrinter {
     }
   }
 
-  protected def printObject(members: Iterable[(String, JsValue)], sb: StringBuilder, indent: Int): Unit = {
+  protected def printObject(members: Iterable[(String, JsValue)], sb: JStringBuilder, indent: Int): Unit = {
     sb.append("{\n")
     printSeq(members, sb.append(",\n")) { m =>
       printIndent(sb, indent + Indent)
@@ -51,13 +51,13 @@ trait PrettyPrinter extends JsonPrinter {
     sb.append("}")
   }
 
-  protected def printArray(elements: Iterable[JsValue], sb: StringBuilder, indent: Int): Unit = {
+  protected def printArray(elements: Iterable[JsValue], sb: JStringBuilder, indent: Int): Unit = {
     sb.append('[')
     printSeq(elements, sb.append(", "))(print(_, sb, indent))
     sb.append(']')
   }
 
-  protected def printIndent(sb: StringBuilder, indent: Int): Unit = {
+  protected def printIndent(sb: JStringBuilder, indent: Int): Unit = {
     @tailrec def rec(indent: Int): Unit =
       if (indent > 0) {
         sb.append(' ')

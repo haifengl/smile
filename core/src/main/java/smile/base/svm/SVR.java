@@ -17,6 +17,7 @@
 package smile.base.svm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
@@ -205,8 +206,7 @@ public class SVR<T> {
         }
 
         double[] alpha = new double[nsv];
-        @SuppressWarnings("unchecked")
-        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
+        T[] sv = Arrays.copyOf(x, nsv);
 
         int i = 0;
         for (SupportVector v : vectors) {

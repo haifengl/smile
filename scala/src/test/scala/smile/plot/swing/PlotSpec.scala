@@ -17,16 +17,15 @@
 package smile.plot.swing
 
 import java.awt.Color.{BLUE, RED}
-import java.lang.Math._
-import org.specs2.mutable._
+import java.lang.Math.*
+import org.specs2.mutable.*
 import smile.read
-import smile.interpolation._
-import smile.math.matrix._
-import smile.stat.distribution._
-import smile.plot.swing._
+import smile.interpolation.*
+import smile.math.matrix.*
+import smile.stat.distribution.*
 import smile.plot.show
-import smile.plot.Render._
-import smile.util.Paths
+import smile.plot.Render.*
+import smile.io.Paths
 
 class PlotSpec extends Specification {
   val iris = read.arff(Paths.getTestData("weka/iris.arff"))
@@ -93,13 +92,13 @@ class PlotSpec extends Specification {
     }
     "Histogram 3D" in {
       val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
-      val data = (0 until 10000) map { i: Int => gauss.rand }
+      val data = (0 until 10000) map { _ => gauss.rand }
       show(hist3(data.toArray, 50, 50))
       1 mustEqual 1
     }
     "QQ" in {
       val gauss = new GaussianDistribution(0.0, 1.0)
-      val data = (0 until 1000) map { i: Int => gauss.rand }
+      val data = (0 until 1000) map { _ => gauss.rand }
       show(qqplot(data.toArray))
       1 mustEqual 1
     }
@@ -134,9 +133,9 @@ class PlotSpec extends Specification {
       val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
 
       val controls = Array.ofDim[Double](x.length, 2)
-      for (i <- 0 until x.length) {
-        controls(i)(0) = x(i);
-        controls(i)(1) = y(i);
+      for (i <- x.indices) {
+        controls(i)(0) = x(i)
+        controls(i)(1) = y(i)
       }
 
       val linear = new LinearInterpolation(x, y)

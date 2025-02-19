@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import smile.sort.IQAgent;
+import smile.util.function.Function;
 import static smile.util.Regex.BOOLEAN_REGEX;
 import static smile.util.Regex.DOUBLE_REGEX;
 

@@ -27,7 +27,7 @@ public interface ItemSetTestData {
 
     static Stream<int[]> read(String path) {
         try {
-            return smile.util.Paths.getTestDataLines(path)
+            return smile.io.Paths.getTestDataLines(path)
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
                     .map(line -> {

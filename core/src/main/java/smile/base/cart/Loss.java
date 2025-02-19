@@ -28,7 +28,13 @@ import java.util.Arrays;
  */
 public interface Loss {
     /**
-     * Calculate the node output.
+     * Returns the value of loss function.
+     * @return the value of loss function.
+     */
+    double value();
+
+    /**
+     * Calculates the node output.
      *
      * @param nodeSamples the index of node samples to their original locations in training dataset.
      * @param sampleCount samples[i] is the number of sampling of dataset[i]. 0 means that the
@@ -99,6 +105,15 @@ public interface Loss {
             double[] residual;
 
             @Override
+            public double value() {
+                double value = 0;
+                for (var r : residual) {
+                    value += r * r;
+                }
+                return value / residual.length;
+            }
+
+            @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
                 int n = 0;
                 double output = 0.0;
@@ -116,7 +131,6 @@ public interface Loss {
                 residual = new double[n];
 
                 double b = MathEx.mean(y);
-
                 for (int i = 0; i < n; i++) {
                     residual[i] = y[i] - b;
                 }
@@ -150,6 +164,15 @@ public interface Loss {
         return new Loss() {
             /** The residual/response variable. */
             final double[] residual = y;
+
+            @Override
+            public double value() {
+                double value = 0;
+                for (var r : residual) {
+                    value += r * r;
+                }
+                return value / residual.length;
+            }
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -207,6 +230,15 @@ public interface Loss {
             double[] residual;
 
             @Override
+            public double value() {
+                double value = 0;
+                for (var r : residual) {
+                    value += Math.max(p * r, (p-1) * r);
+                }
+                return value / residual.length;
+            }
+
+            @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
                 double[] r = Arrays.stream(nodeSamples).mapToDouble(i -> residual[i]).toArray();
                 return QuickSelect.select(r, (int) (r.length * p));
@@ -220,7 +252,6 @@ public interface Loss {
                 System.arraycopy(y, 0, response, 0, n);
 
                 double b = QuickSelect.select(response, (int) (n * p));
-
                 for (int i = 0; i < n; i++) {
                     residual[i] = y[i] - b;
                 }
@@ -261,6 +292,15 @@ public interface Loss {
             double[] response;
             /** The residuals. */
             double[] residual;
+
+            @Override
+            public double value() {
+                double value = 0;
+                for (var r : residual) {
+                    value += Math.abs(r);
+                }
+                return value / residual.length;
+            }
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -322,6 +362,19 @@ public interface Loss {
             double[] residual;
             /** The cutoff. */
             private double delta;
+
+            @Override
+            public double value() {
+                double value = 0;
+                for (var r : residual) {
+                    if (r <= delta) {
+                        value += r * r;
+                    } else {
+                        value += delta * (Math.abs(r) - delta/2);
+                    }
+                }
+                return value / residual.length;
+            }
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -400,6 +453,16 @@ public interface Loss {
             final double[] residual = new double[n];
 
             @Override
+            public double value() {
+                double value = 0;
+                for (int i = 0; i < n; i++) {
+                    double prob = 1 - 1.0 / (1.0 + Math.exp(2 * residual[i]));
+                    value -= y[i] == 1 ? Math.log(prob) : Math.log(1 - prob);
+                }
+                return value / residual.length;
+            }
+
+            @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
                 double nu = 0.0;
                 double de = 0.0;
@@ -458,6 +521,15 @@ public interface Loss {
             final double[] response = new double[n];
             /** The residuals. */
             final double[] residual = new double[n];
+
+            @Override
+            public double value() {
+                double value = 0;
+                for (int i = 0; i < n; i++) {
+                    value -= Math.log(p[i][labels[i]]);
+                }
+                return value / residual.length;
+            }
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {

@@ -18,8 +18,10 @@ package smile.clustering;
 
 import java.io.Serial;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
@@ -40,7 +42,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class DENCLUE extends PartitionClustering {
+public class DENCLUE extends Partitioning {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
@@ -54,9 +56,9 @@ public class DENCLUE extends PartitionClustering {
      */
     private final double sigma;
     /**
-     * The density attractor of each observation.
+     * The density attractor of each data point.
      */
-    public final double[][] attractors;
+    private final double[][] attractors;
     /**
      * The radius of density attractor.
      */
@@ -69,22 +71,124 @@ public class DENCLUE extends PartitionClustering {
     /**
      * Constructor.
      * @param k the number of clusters.
-     * @param attractors the density attractor of each observation.
+     * @param group the cluster labels.
+     * @param attractors the density attractor of each data point.
      * @param radius the radius of density attractor.
      * @param samples the samples in the iterations of hill climbing.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
      *              choose sigma such that number of density attractors is
      *              constant for a long interval of sigma.
-     * @param y the cluster labels.
      * @param tol the tolerance of hill-climbing procedure.
      */
-    public DENCLUE(int k, double[][] attractors, double[] radius, double[][] samples, double sigma, int[] y, double tol) {
-        super(k, y);
+    public DENCLUE(int k, int[] group, double[][] attractors, double[] radius, double[][] samples, double sigma, double tol) {
+        super(k, group);
         this.attractors = attractors;
         this.radius = radius;
         this.samples = samples;
         this.sigma = sigma;
         this.tol = tol;
+    }
+
+    /**
+     * Returns the smooth parameter in the Gaussian kernel.
+     * @return the smooth parameter in the Gaussian kernel.
+     */
+    public double sigma() {
+        return sigma;
+    }
+
+    /**
+     * Returns the tolerance of hill-climbing procedure.
+     * @return the tolerance of hill-climbing procedure.
+     */
+    public double tolerance() {
+        return tol;
+    }
+
+    /**
+     * Returns the radius of density attractor.
+     * @return the radius of density attractor.
+     */
+    public double[] radius() {
+        return radius;
+    }
+
+    /**
+     * Returns the density attractor of each data point.
+     * @return the density attractor of each data point.
+     */
+    public double[][] attractors() {
+        return attractors;
+    }
+
+    /**
+     * DENCLUE hyperparameters.
+     * @param sigma the smooth parameter in the Gaussian kernel. The user can
+     *              choose sigma such that number of density attractors is
+     *              constant for a long interval of sigma.
+     * @param m the number of selected samples used in the iteration.
+     *          This number should be much smaller than the number of
+     *          observations to speed up the algorithm. It should also be
+     *          large enough to capture the sufficient information of
+     *          underlying distribution.
+     * @param minPts the minimum number of neighbors for a core attractor.
+     * @param tol the tolerance of hill-climbing procedure.
+     */
+    public record Options(double sigma, int m, int minPts, double tol) {
+        /** Constructor. */
+        public Options {
+            if (sigma <= 0.0) {
+                throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
+            }
+
+            if (m <= 0) {
+                throw new IllegalArgumentException("Invalid number of selected samples: " + m);
+            }
+
+            if (minPts <= 0) {
+                throw new IllegalArgumentException("Invalid minimum number of neighbors: " + minPts);
+            }
+
+            if (tol < 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param sigma the smooth parameter in the Gaussian kernel.
+         * @param m the number of selected samples used in the iteration.
+         */
+        public Options(double sigma, int m) {
+            this(sigma, m, 10, 1E-2);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.denclue.sigma", Double.toString(sigma));
+            props.setProperty("smile.denclue.m", Integer.toString(m));
+            props.setProperty("smile.denclue.min_points", Integer.toString(minPts));
+            props.setProperty("smile.denclue.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            double sigma = Double.parseDouble(props.getProperty("smile.denclue.radius", "1.0"));
+            int m = Integer.parseInt(props.getProperty("smile.denclue.m", "100"));
+            int minPts = Integer.parseInt(props.getProperty("smile.denclue.min_points", "10"));
+            double tol = Double.parseDouble(props.getProperty("smile.denclue.tolerance", "1E-2"));
+            return new Options(sigma, m, minPts, tol);
+        }
     }
 
     /**
@@ -102,36 +206,28 @@ public class DENCLUE extends PartitionClustering {
      */
     public static DENCLUE fit(double[][] data, double sigma, int m) {
         int n = data.length;
-        return fit(data, sigma, m, 1E-2, Math.max(10, n/200));
+        return fit(data, new Options(sigma, m, Math.max(10, data.length/200), 1E-2));
     }
 
     /**
      * Clustering data.
      * @param data the input data of which each row is an observation.
-     * @param sigma the smooth parameter in the Gaussian kernel. The user can
-     *              choose sigma such that number of density attractors is
-     *              constant for a long interval of sigma.
-     * @param m the number of selected samples used in the iteration.
-     *          This number should be much smaller than the number of
-     *          observations to speed up the algorithm. It should also be
-     *          large enough to capture the sufficient information of
-     *          underlying distribution.
-     * @param tol the tolerance of hill-climbing procedure.
-     * @param minPts the minimum number of neighbors for a core attractor.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts) {
-        if (sigma <= 0.0) {
-            throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
-        }
-        
-        if (m <= 0 || m > data.length) {
+    public static DENCLUE fit(double[][] data, Options options) {
+        double sigma = options.sigma;
+        int m = options.m;
+        int minPts = options.minPts;
+        double tol = options.tol;
+
+        if (m > data.length) {
             throw new IllegalArgumentException("Invalid number of selected samples: " + m);
         }
 
         logger.info("Select {} samples by k-means", m);
-        KMeans kmeans = KMeans.fit(data, m);
-        double[][] samples = kmeans.centroids;
+        var kmeans = KMeans.fit(data, m, 10);
+        double[][] samples = kmeans.centers();
 
         int n = data.length;
         int d = data[0].length;
@@ -157,13 +253,13 @@ public class DENCLUE extends PartitionClustering {
         logger.info("Clustering attractors with DBSCAN (radius = {})", r);
         DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
 
-        return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.y, tol);
+        return new DENCLUE(dbscan.k, dbscan.group, attractors, radius, samples, sigma, tol);
     }
 
     /**
      * Classifies a new observation.
      * @param x a new observation.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(double[] x) {
         int d = attractors[0].length;
@@ -178,7 +274,7 @@ public class DENCLUE extends PartitionClustering {
         double r = step[0] + step[1];
         for (int i = 0; i < attractors.length; i++) {
             if (MathEx.distance(attractors[i], attractor) < radius[i] + r) {
-                return y[i];
+                return group[i];
             }
         }
 

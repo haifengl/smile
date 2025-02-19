@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.awt.Image;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
-import smile.util.Paths;
+import smile.io.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.deep.tensor.Index.*;
 

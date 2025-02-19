@@ -26,7 +26,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class LaplaceInterpolation {
+public interface LaplaceInterpolation {
     /**
      * Laplace interpolation.
      * @param matrix on input, values of NaN are deemed to be missing data.
@@ -251,10 +251,5 @@ public class LaplaceInterpolation {
             ans += v * v;
         }
         return Math.sqrt(ans);
-    }
-
-    @Override
-    public String toString() {
-        return "Laplace Interpolation";
     }
 }

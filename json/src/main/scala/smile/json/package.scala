@@ -38,12 +38,12 @@ package object json {
   implicit class JsonHelper(private val sc: StringContext) extends AnyVal {
     /** JSON object string interpolation. */
     def json(args: Any*): JsObject = {
-      JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsObject]
+      JsonParser(sc.s(args*).stripMargin).asInstanceOf[JsObject]
     }
 
     /** JSON array string interpolation. */
     def jsan(args: Any*): JsArray = {
-      JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsArray]
+      JsonParser(sc.s(args*).stripMargin).asInstanceOf[JsArray]
     }
   }
 
@@ -68,8 +68,8 @@ package object json {
   implicit def byteArray2JsValue(x: Array[Byte]): JsBinary = JsBinary(x)
 
   implicit def array2JsValue[T <: JsValue](x: Array[T]): JsArray = seq2JsValue(ArraySeq.unsafeWrapArray(x))
-  implicit def seq2JsValue[T <: JsValue](x: Seq[T]): JsArray = JsArray(x: _*)
-  implicit def map2JsValue[T <: JsValue](x: Seq[(String, T)]): JsObject = JsObject(x: _*)
+  implicit def seq2JsValue[T <: JsValue](x: Seq[T]): JsArray = JsArray(x*)
+  implicit def map2JsValue[T <: JsValue](x: Seq[(String, T)]): JsObject = JsObject(x*)
   implicit def map2JsValue(x: collection.mutable.Map[String, JsValue]): JsObject = JsObject(SeqMap.empty[String, JsValue].addAll(x))
   implicit def map2JsValue[T <: JsValue](x: collection.immutable.Map[String, T]): JsObject = JsObject(x)
 
@@ -138,51 +138,51 @@ package json {
   }
 
   private[json] class PimpedBooleanSeq(seq: Seq[Boolean]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsBoolean(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsBoolean(e)}*)
   }
 
   private[json] class PimpedIntSeq(seq: Seq[Int]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsInt(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsInt(e)}*)
   }
 
   private[json] class PimpedLongSeq(seq: Seq[Long]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsLong(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsLong(e)}*)
   }
 
   private[json] class PimpedDoubleSeq(seq: Seq[Double]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsDouble(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsDouble(e)}*)
   }
 
   private[json] class PimpedBigDecimalSeq(seq: Seq[BigDecimal]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsDecimal(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsDecimal(e)}*)
   }
 
   private[json] class PimpedStringSeq(seq: Seq[String]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsString(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsString(e)}*)
   }
 
   private[json] class PimpedInstantSeq(seq: Seq[Instant]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsDate(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsDate(e)}*)
   }
 
   private[json] class PimpedLocalDateSeq(seq: Seq[LocalDate]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalDate(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalDate(e)}*)
   }
 
   private[json] class PimpedLocalTimeSeq(seq: Seq[LocalTime]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalTime(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalTime(e)}*)
   }
 
   private[json] class PimpedLocalDateTimeSeq(seq: Seq[LocalDateTime]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalDateTime(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsLocalDateTime(e)}*)
   }
 
   private[json] class PimpedTimestampSeq(seq: Seq[Timestamp]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsTimestamp(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsTimestamp(e)}*)
   }
 
   private[json] class PimpedDateSeq(seq: Seq[Date]) {
-    def toJsArray: JsArray = JsArray(seq.map {e => JsTimestamp(e)}: _*)
+    def toJsArray: JsArray = JsArray(seq.map {e => JsTimestamp(e)}*)
   }
 
   private[json] class PimpedBooleanMap(map: Map[String, Boolean]) {

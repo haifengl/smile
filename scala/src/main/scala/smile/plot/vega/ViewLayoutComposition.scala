@@ -16,7 +16,7 @@
  */
 package smile.plot.vega
 
-import smile.json._
+import smile.json.*
 
 /** all view layout composition (facet, concat, and repeat) can have the
   * following layout properties: align, bounds, center, spacing.

@@ -253,7 +253,6 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * @return the iterator of nonzero entries
      */
     @Override
-    @javax.annotation.Nonnull
     public Iterator<Entry> iterator() {
         return iterator(0, n);
     }

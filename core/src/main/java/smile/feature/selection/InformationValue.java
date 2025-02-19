@@ -28,8 +28,8 @@ import smile.data.transform.ColumnTransform;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
-import smile.math.Function;
 import smile.sort.QuickSort;
+import smile.util.function.Function;
 
 /**
  * Information Value (IV) measures the predictive strength of a feature

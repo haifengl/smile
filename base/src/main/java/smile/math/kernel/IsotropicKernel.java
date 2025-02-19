@@ -16,9 +16,9 @@
  */
 package smile.math.kernel;
 
-import smile.math.Function;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.function.Function;
 
 /**
  * Isotropic kernel. If the kernel is a function only of the distance

@@ -74,9 +74,16 @@ public class OLS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);
 
     /** Computational methods to fit the model. */
-    enum Method {
+    public enum Method {
+        /** QR decomposition. */
         QR,
+        /** Singular value decomposition. */
         SVD
+    }
+
+    /** Private constructor to prevent object creation. */
+    private OLS() {
+
     }
 
     /**
@@ -139,6 +146,7 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @param options the hyperparameters.
      * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Options options) {

@@ -24,6 +24,7 @@ package smile.gap;
  * as it is being assessed. The revised individual replaces the original one
  * in the population.
  *
+ * @param <T> the type of the Chromosome.
  * @author Haifeng Li
  */
 public interface LamarckianChromosome<T extends Chromosome<T>> extends Chromosome<T> {

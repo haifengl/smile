@@ -24,10 +24,11 @@ import smile.math.MathEx;
 /**
  * Regression model validation results.
  *
- * @param <M> the regression model type.
  * @param rounds The multiple round validations.
  * @param avg The average of metrics.
  * @param std The standard deviation of metrics.
+ * @param <M> The regression model type.
+ *
  * @author Haifeng Li
  */
 public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
@@ -39,6 +40,8 @@ public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
     /**
      * Factory method.
      * @param rounds the validation metrics of multiple rounds.
+     * @param <M> the regression model type.
+     * @return the validation object.
      */
     public static <M> RegressionValidations<M> of(List<RegressionValidation<M>> rounds) {
         int k = rounds.size();
@@ -91,7 +94,7 @@ public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()));
         sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()));
-        sb.append(String.format("  validation data size:: %d ± %d,\n", avg.size(), std.size()));
+        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size(), std.size()));
         sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), std.rss()));
         sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), std.mse()));
         sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), std.rmse()));

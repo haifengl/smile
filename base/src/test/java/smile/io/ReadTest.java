@@ -18,7 +18,7 @@ package smile.io;
 
 import org.junit.jupiter.api.BeforeEach;
 import smile.data.DataFrame;
-import smile.util.Paths;
+import smile.io.Paths;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

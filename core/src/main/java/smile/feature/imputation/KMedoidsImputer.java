@@ -16,7 +16,8 @@
  */
 package smile.feature.imputation;
 
-import smile.clustering.CLARANS;
+import smile.clustering.CentroidClustering;
+import smile.clustering.KMedoids;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.transform.Transform;
@@ -33,13 +34,13 @@ import smile.math.distance.Distance;
  */
 public class KMedoidsImputer implements Transform {
     /** The K-Medoids clustering. */
-    private final CLARANS<Tuple> kmedoids;
+    private final CentroidClustering<Tuple, Tuple> kmedoids;
 
     /**
      * Constructor.
      * @param kmedoids the K-Medoids clustering.
      */
-    public KMedoidsImputer(CLARANS<Tuple> kmedoids) {
+    public KMedoidsImputer(CentroidClustering<Tuple, Tuple> kmedoids) {
         this.kmedoids = kmedoids;
     }
 
@@ -49,7 +50,7 @@ public class KMedoidsImputer implements Transform {
             return x;
         }
 
-        Tuple medioid = kmedoids.centroids[kmedoids.predict(x)];
+        Tuple medioid = kmedoids.center(kmedoids.predict(x));
         return new smile.data.AbstractTuple(x.schema()) {
             @Override
             public Object get(int i) {
@@ -72,7 +73,7 @@ public class KMedoidsImputer implements Transform {
             tuples[i] = data.get(i);
         }
 
-        CLARANS<Tuple> kmedoids = CLARANS.fit(tuples, distance, k);
+        var kmedoids = KMedoids.fit(tuples, distance, k);
         return new KMedoidsImputer(kmedoids);
     }
 }

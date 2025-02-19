@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Colon cancer dataset. This dataset has gene expression samples that
@@ -40,6 +40,7 @@ import smile.util.Paths;
 public record ColonCancer(double[][] x, int[] y) {
     /**
      * Load built-in data.
+     * @return the data.
      * @throws IOException when fails to read the file.
      */
     public static ColonCancer load() throws IOException {
@@ -49,6 +50,7 @@ public record ColonCancer(double[][] x, int[] y) {
     /**
      * Load data from the given path.
      * @param path the data path.
+     * @return the data.
      * @throws IOException when fails to read the file.
      */
     public static ColonCancer load(Path path) throws IOException {

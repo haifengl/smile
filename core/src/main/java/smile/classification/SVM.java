@@ -126,6 +126,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param epochs the number of epochs, usually 1 or 2 is sufficient.
      */
     public record Options(double C, double tol, int epochs) {
+        /** Constructor. */
         public Options {
             if (C < 0) {
                 throw new IllegalArgumentException("Invalid maximum number of iterations: " + C);
@@ -138,7 +139,10 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
             }
         }
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param C the soft margin penalty parameter.
+         */
         public Options(double C) {
             this(C, 1E-3, 1);
         }

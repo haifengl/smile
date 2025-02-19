@@ -17,8 +17,7 @@
 package smile.classification;
 
 import java.io.Serial;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.*;
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -29,7 +28,8 @@ import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
-import smile.util.Strings;
+import smile.util.IterativeAlgorithmController;
+import smile.validation.ClassificationMetrics;
 
 /**
  * AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
@@ -133,13 +133,27 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
     }
 
     /**
+     * Training status per tree.
+     * @param tree the tree index, starting at 1.
+     * @param weightedError the weight error of the curren decision tree.
+     * @param metrics the optional validation metrics if test data is provided.
+     */
+    public record TrainingStatus(int tree, double weightedError, ClassificationMetrics metrics) {
+
+    }
+
+    /**
      * AdaBoost hyperparameters.
      * @param ntrees the number of trees.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the minimum size of leaf nodes.
+     * @param test the optional test data for validation per epoch.
+     * @param controller the optional training controller.
      */
-    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize) {
+    public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, DataFrame test,
+                          IterativeAlgorithmController<TrainingStatus> controller) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
@@ -154,9 +168,12 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(500, 20, 6, 1);
+        /**
+         * Constructor.
+         * @param ntrees the number of trees.
+         */
+        public Options(int ntrees) {
+            this(ntrees, 20, 6, 1, null, null);
         }
 
         /**
@@ -183,7 +200,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             int maxDepth = Integer.parseInt(props.getProperty("smile.adaboost.max_depth", "20"));
             int maxNodes = Integer.parseInt(props.getProperty("smile.adaboost.max_nodes", "6"));
             int nodeSize = Integer.parseInt(props.getProperty("smile.adaboost.node_size", "5"));
-            return new Options(ntrees, maxDepth, maxNodes, nodeSize);
+            return new Options(ntrees, maxDepth, maxNodes, nodeSize, null, null);
         }
     }
 
@@ -195,7 +212,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(500));
     }
 
     /**
@@ -207,15 +224,27 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Options options) {
+        long startTime = System.nanoTime();
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         ValueVector y = formula.y(data);
 
         ClassLabels codec = ClassLabels.fit(y);
-        int[][] order = CART.order(x);
-
-        int k = codec.k;
         int n = data.size();
+        int k = codec.k;
+
+        DataFrame testx = null;
+        int[] testy = null;
+        int[] prediction = null;
+        double[][] posteriors = null;
+        if (options.test != null) {
+            testx = formula.x(options.test);
+            testy = codec.indexOf(formula.y(options.test).toIntArray());
+            prediction = new int[testy.length];
+            posteriors = new double[testy.length][k];
+        }
+
+        int[][] order = CART.order(x);
         int[] samples = new int[n];
         double[] w = new double[n];
         boolean[] wrong = new boolean[n];
@@ -241,7 +270,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 samples[s]++;
             }
 
-            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, options.maxDepth, options.maxNodes, options.nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, options.maxDepth, options.maxNodes, options.nodeSize, x.ncol(), samples, order);
             
             for (int i = 0; i < n; i++) {
                 wrong[i] = trees[t].predict(x.get(i)) != codec.y[i];
@@ -254,13 +283,14 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
                 }
             }
 
-            logger.info("Training {} tree, weighted error = {}%", Strings.ordinal(t+1), 100*e);
+            logger.info("Tree {}: weighted error = {}%", t+1, String.format("%.2f", 100*e));
 
             if (1 - e > guess) {
                 failures = 0;
             } else {
                 logger.error("Skip the weak classifier");
                 if (++failures > 3) {
+                    logger.error("Cannot make progress. Early stopping...");
                     trees = Arrays.copyOf(trees, t);
                     alpha = Arrays.copyOf(alpha, t);
                     error = Arrays.copyOf(error, t);
@@ -277,6 +307,31 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             for (int i = 0; i < n; i++) {
                 if (wrong[i]) {
                     w[i] *= a;
+                }
+            }
+
+            double fitTime = (System.nanoTime() - startTime) / 1E6;
+            ClassificationMetrics metrics = null;
+            if (options.test != null) {
+                long testStartTime = System.nanoTime();
+                for (int i = 0; i < testy.length; i++) {
+                    var p = posteriors[i];
+                    p[trees[t].predict(testx.get(i))] += alpha[t];
+                    prediction[i] = MathEx.whichMax(p);
+                }
+                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                metrics = ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriors);
+                logger.info("Validation metrics = {} ", metrics);
+            }
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, e, metrics));
+
+                if (options.controller.isInterrupted()) {
+                    trees = Arrays.copyOf(trees, t);
+                    alpha = Arrays.copyOf(alpha, t);
+                    error = Arrays.copyOf(error, t);
+                    break;
                 }
             }
         }
@@ -375,7 +430,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
 
     /**
      * Predicts the class label of an instance and also calculate a posteriori
-     * probabilities. Not supported.
+     * probabilities.
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
@@ -405,29 +460,17 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         int n = x.size();
         int ntrees = trees.length;
         int[][] prediction = new int[ntrees][n];
+        double[] p = new double[k];
 
-        if (k == 2) {
-            for (int j = 0; j < n; j++) {
-                Tuple xj = x.get(j);
-                double base = 0;
-                for (int i = 0; i < ntrees; i++) {
-                    base += alpha[i] * trees[i].predict(xj);
-                    prediction[i][j] = base > 0 ? 1 : 0;
-                }
-            }
-        } else {
-            double[] p = new double[k];
-            for (int j = 0; j < n; j++) {
-                Tuple xj = x.get(j);
-                Arrays.fill(p, 0);
-                for (int i = 0; i < ntrees; i++) {
-                    p[trees[i].predict(xj)] += alpha[i];
-                    prediction[i][j] = MathEx.whichMax(p);
-                }
+        for (int j = 0; j < n; j++) {
+            Tuple xj = x.get(j);
+            Arrays.fill(p, 0);
+            for (int i = 0; i < ntrees; i++) {
+                p[trees[i].predict(xj)] += alpha[i];
+                prediction[i][j] = MathEx.whichMax(p);
             }
         }
-        
+
         return prediction;
     }
 }
-

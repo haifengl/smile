@@ -228,6 +228,7 @@ public class CRF implements Serializable {
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
     public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
@@ -401,6 +402,11 @@ public class CRF implements Serializable {
      */
     record PotentialLoss(double[] response) implements Loss {
         @Override
+        public double value() {
+            return Double.NaN;
+        }
+
+        @Override
         public double output(int[] nodeSamples, int[] sampleCount) {
             int n = 0;
             double output = 0.0;
@@ -413,7 +419,7 @@ public class CRF implements Serializable {
         }
 
         @Override
-        public double intercept(double[] $y) {
+        public double intercept(double[] y) {
             return 0;
         }
 

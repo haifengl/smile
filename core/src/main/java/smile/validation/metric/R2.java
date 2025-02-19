@@ -33,6 +33,11 @@ public class R2 implements RegressionMetric {
     /** Default instance. */
     public static final R2 instance = new R2();
 
+    /** Constructor. */
+    public R2() {
+
+    }
+
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);

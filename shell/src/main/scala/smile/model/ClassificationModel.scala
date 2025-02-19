@@ -17,12 +17,14 @@
 package smile.model
 
 import java.util.Properties
-import scala.jdk.CollectionConverters._
-import smile.data.DataFrame
+import scala.jdk.CollectionConverters.*
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.classification._
+import smile.classification.*
 import smile.validation.{ClassificationMetrics, CrossValidation}
+import spray.json.*
+import spray.json.DefaultJsonProtocol.*
 
 /**
   * The classification model.
@@ -34,13 +36,30 @@ import smile.validation.{ClassificationMetrics, CrossValidation}
   * @param validation the cross-validation metrics.
   * @param test the test metrics.
   */
+@SerialVersionUID(1L)
 case class ClassificationModel(override val algorithm: String,
                                override val schema: StructType,
                                override val formula: Formula,
                                classifier: DataFrameClassifier,
                                train: ClassificationMetrics,
                                validation: Option[ClassificationMetrics],
-                               test: Option[ClassificationMetrics]) extends DataFrameModel
+                               test: Option[ClassificationMetrics]) extends SmileModel {
+  // cache isSoft as it is an expensive call
+  private val isSoft: Boolean = classifier.soft
+
+  override def predict(x: Tuple, options: Properties): JsValue = {
+    if (isSoft && options.getProperty("probability", "false").toBoolean) {
+      val prob = Array.ofDim[Double](classifier.numClasses())
+      val y = classifier.predict(x, prob)
+      JsObject(
+        "class" -> y.toJson,
+        "probability" -> JsArray(prob.toSeq.map(p => JsNumber(BigDecimal(p).setScale(4, BigDecimal.RoundingMode.HALF_UP)))*)
+      )
+    } else {
+      JsNumber.apply(classifier.predict(x))
+    }
+  }
+}
 
 object ClassificationModel {
   /**
@@ -66,7 +85,7 @@ object ClassificationModel {
       val cv = CrossValidation.stratify(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, params))
       val models = cv.rounds.asScala.map(round => round.model).toArray
       val model = if (ensemble)
-        DataFrameClassifier.ensemble(models: _*)
+        DataFrameClassifier.ensemble(models*)
       else
         fit(algorithm, formula, data, params)
 

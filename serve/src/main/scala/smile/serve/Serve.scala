@@ -17,14 +17,14 @@
 package smile.serve
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.{Failure, Success}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.{ActorSystem, Terminated}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -92,7 +92,7 @@ object Serve {
         }
       }
 
-      startHttpServer(routes)(context.system)
+      startHttpServer(config, routes)(context.system)
       Behaviors.receiveSignal[Nothing] {
         case (context, Terminated(ref)) =>
           context.log.info("Actor {} stopped. Akka system is terminating...", ref.path.name)
@@ -116,16 +116,14 @@ object Serve {
     Option(ex.getMessage).getOrElse(s"${ex.getClass.getName}(null)")
   }
 
-  private def startHttpServer(routes: Route)(implicit system: ActorSystem[?]): Unit = {
+  private def startHttpServer(config: ServeConfig, routes: Route)(implicit system: ActorSystem[?]): Unit = {
     import system.executionContext
 
-    val addr = conf.getString("akka.http.server.interface")
-    val port = conf.getInt("akka.http.server.port")
-    val bindingFuture = Http().newServerAt(addr, port).bind(routes)
+    val bindingFuture = Http().newServerAt(config.host, config.port).bind(routes)
       .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     bindingFuture.onComplete {
       case Success(_) =>
-        system.log.info("SmileServe service online at http://{}:{}/", addr, port)
+        system.log.info("SmileServe service online at http://{}:{}/", config.host, config.port)
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()

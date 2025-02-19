@@ -21,7 +21,7 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
 import smile.util.toJavaBiFunction
-import smile.validation.metric._
+import smile.validation.metric.*
 
 /** Model validation.
   *

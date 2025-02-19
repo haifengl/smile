@@ -19,7 +19,7 @@ package smile.vq;
 import smile.clustering.KMeans;
 import smile.datasets.USPS;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,25 +59,25 @@ public class SOMTest {
         System.out.println("K-Means as a benchmark");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        KMeans model = KMeans.fit(x, 400);
+        var model = KMeans.fit(x, 400, 100);
         double error = 0.0;
         for (double[] xi : x) {
-            double[] yi = model.centroids[model.predict(xi)];
+            double[] yi = model.center(model.predict(xi));
             error += MathEx.distance(xi, yi);
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.8408, error, 1E-4);
+        assertEquals(5.8287, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
-            double[] yi = model.centroids[model.predict(xi)];
+            double[] yi = model.center(model.predict(xi));
             error += MathEx.distance(xi, yi);
         }
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.6368, error, 1E-4);
+        assertEquals(6.6308, error, 1E-4);
     }
 
     @Test
@@ -113,6 +113,6 @@ public class SOMTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5794, error, 1E-4);
+        assertEquals(6.5876, error, 1E-4);
     }
 }

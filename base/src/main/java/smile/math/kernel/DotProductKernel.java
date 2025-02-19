@@ -16,9 +16,9 @@
  */
 package smile.math.kernel;
 
-import smile.math.Function;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.function.Function;
 
 /**
  * Dot product kernel depends only on the dot product of x and y.

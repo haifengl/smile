@@ -55,7 +55,7 @@ public class UMAPTest {
         var mnist = new MNIST();
         var x = mnist.x();
         long start = System.currentTimeMillis();
-        double[][] coordinates = UMAP.of(x, new UMAP.Options(15));
+        double[][] coordinates = UMAP.fit(x, new UMAP.Options(15));
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(x.length, coordinates.length);
@@ -68,7 +68,7 @@ public class UMAPTest {
         var roll = new SwissRoll();
         double[][] data = Arrays.copyOf(roll.data(), 1000);
         long start = System.currentTimeMillis();
-        double[][] coordinates = UMAP.of(data, new UMAP.Options(15));
+        double[][] coordinates = UMAP.fit(data, new UMAP.Options(15));
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(data.length, coordinates.length);

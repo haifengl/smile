@@ -25,8 +25,8 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
-import smile.math.TimeFunction;
-import smile.util.Paths;
+import smile.util.function.TimeFunction;
+import smile.io.Paths;
 import smile.vision.transform.Transform;
 import static org.junit.jupiter.api.Assertions.*;
 

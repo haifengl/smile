@@ -29,7 +29,8 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
-import smile.util.Strings;
+import smile.util.IterativeAlgorithmController;
+import smile.validation.RegressionMetrics;
 
 /**
  * Gradient boosting for regression. Gradient boosting is typically used
@@ -117,7 +118,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     /**
      * Forest of regression trees.
      */
-    private RegressionTree[] trees;
+    private final RegressionTree[] trees;
 
     /**
      * The intercept.
@@ -155,6 +156,16 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     }
 
     /**
+     * Training status per tree.
+     * @param tree the tree index, starting at 1.
+     * @param loss the current loss function value.
+     * @param metrics the optional validation metrics if test data is provided.
+     */
+    public record TrainingStatus(int tree, double loss, RegressionMetrics metrics) {
+
+    }
+
+    /**
      * Gradient tree boosting hyperparameters.
      * @param loss loss function for regression. By default, least absolute deviation
      *             is employed for robust regression.
@@ -165,8 +176,12 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      *                 Setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @param test the optional test data for validation per epoch.
+     * @param controller the optional training controller.
      */
-    public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    public record Options(Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample,
+                          DataFrame test, IterativeAlgorithmController<TrainingStatus> controller) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
@@ -193,9 +208,21 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(Loss.lad(), 500, 20, 6, 5, 0.05, 0.7);
+        /**
+         * Constructor with the least absolute deviation loss.
+         * @param ntrees the number of iterations (trees).
+         */
+        public Options(int ntrees) {
+            this(Loss.lad(), ntrees);
+        }
+
+        /**
+         * Constructor.
+         * @param loss loss function for regression.
+         * @param ntrees the number of iterations (trees).
+         */
+        public Options(Loss loss, int ntrees) {
+            this(loss, ntrees, 20, 6, 5, 0.05, 0.7, null, null);
         }
 
         /**
@@ -204,8 +231,8 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
          */
         public Properties toProperties() {
             Properties props = new Properties();
-            props.setProperty("smile.gradient_boost.trees", Integer.toString(ntrees));
             props.setProperty("smile.gradient_boost.loss", loss.toString());
+            props.setProperty("smile.gradient_boost.trees", Integer.toString(ntrees));
             props.setProperty("smile.gradient_boost.max_depth", Integer.toString(maxDepth));
             props.setProperty("smile.gradient_boost.max_nodes", Integer.toString(maxNodes));
             props.setProperty("smile.gradient_boost.node_size", Integer.toString(nodeSize));
@@ -221,14 +248,14 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
          * @return the options.
          */
         public static Options of(Properties props) {
-            int ntrees = Integer.parseInt(props.getProperty("smile.gradient_boost.trees", "500"));
             Loss loss = Loss.valueOf(props.getProperty("smile.gradient_boost.loss", "LeastAbsoluteDeviation"));
+            int ntrees = Integer.parseInt(props.getProperty("smile.gradient_boost.trees", "500"));
             int maxDepth = Integer.parseInt(props.getProperty("smile.gradient_boost.max_depth", "20"));
             int maxNodes = Integer.parseInt(props.getProperty("smile.gradient_boost.max_nodes", "6"));
             int nodeSize = Integer.parseInt(props.getProperty("smile.gradient_boost.node_size", "5"));
             double shrinkage = Double.parseDouble(props.getProperty("smile.gradient_boost.shrinkage", "0.05"));
             double subsample = Double.parseDouble(props.getProperty("smile.gradient_boost.sampling_rate", "0.7"));
-            return new Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
+            return new Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample, null, null);
         }
     }
 
@@ -240,7 +267,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Options());
+        return fit(formula, data, new Options(500));
     }
 
     /**
@@ -252,6 +279,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Options options) {
+        long startTime = System.nanoTime();
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         double[] y = formula.y(data).toDoubleArray();
@@ -270,8 +298,17 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
         double b = loss.intercept(y);
         double[] residual = loss.residual();
 
-        RegressionTree[] trees = new RegressionTree[ntrees];
+        DataFrame testx = null;
+        double[] testy = null;
+        double[] prediction = null;
+        if (options.test != null) {
+            testx = formula.x(options.test);
+            testy = formula.y(options.test).toDoubleArray();
+            prediction = new double[testy.length];
+            Arrays.fill(prediction, b);
+        }
 
+        RegressionTree[] trees = new RegressionTree[ntrees];
         for (int t = 0; t < ntrees; t++) {
             Arrays.fill(samples, 0);
             MathEx.permutate(permutation);
@@ -279,11 +316,34 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
                 samples[permutation[i]]++;
             }
 
-            logger.info("Training {} tree", Strings.ordinal(t+1));
             trees[t] = new RegressionTree(x, loss, field, options.maxDepth, options.maxNodes, options.nodeSize, x.ncol(), samples, order);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[t].predict(x.get(i));
+            }
+            double lossValue = loss.value();
+            logger.info("Tree {}: loss = {}", t+1, lossValue);
+
+            double fitTime = (System.nanoTime() - startTime) / 1E6;
+            RegressionMetrics metrics = null;
+            if (options.test != null) {
+                long testStartTime = System.nanoTime();
+                var tree = trees[t];
+                for (int i = 0; i < testy.length; i++) {
+                    prediction[i] += shrinkage * tree.predict(testx.get(i));
+                }
+                double scoreTime = (System.nanoTime() - testStartTime) / 1E6;
+                metrics = RegressionMetrics.of(fitTime, scoreTime, testy, prediction);
+                logger.info("Validation metrics = {} ", metrics);
+            }
+
+            if (options.controller != null) {
+                options.controller.submit(new TrainingStatus(t+1, lossValue, metrics));
+
+                if (options.controller.isInterrupted()) {
+                    trees = Arrays.copyOf(trees, t);
+                    break;
+                }
             }
         }
         
@@ -342,17 +402,18 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * prediction.
      * 
      * @param ntrees the new (smaller) size of tree model set.
+     * @return the trimmed model.
      */
-    public void trim(int ntrees) {
-        if (ntrees > trees.length) {
-            throw new IllegalArgumentException("The new model size is larger than the current size.");
-        }
-        
+    public GradientTreeBoost trim(int ntrees) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
-        
-        trees = Arrays.copyOf(trees, ntrees);
+
+        if (ntrees > trees.length) {
+            throw new IllegalArgumentException("The new model size is larger than the current size.");
+        }
+
+        return new GradientTreeBoost(formula, Arrays.copyOf(trees, ntrees), b, shrinkage, importance);
     }
     
     @Override

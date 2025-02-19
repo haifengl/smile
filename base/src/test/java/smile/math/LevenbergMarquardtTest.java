@@ -17,6 +17,7 @@
 package smile.math;
 
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.function.DifferentiableMultivariateFunction;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

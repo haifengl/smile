@@ -21,6 +21,8 @@ import java.util.Arrays;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
+import smile.util.function.DifferentiableMultivariateFunction;
+import smile.util.function.MultivariateFunction;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -86,6 +88,11 @@ public class BFGS {
     private static final double TOLF = 4 * EPSILON;
     /** The scaled maximum step length allowed in line searches. */
     private static final double STPMX = 100.0;
+
+    /** Private constructor to prevent object creation. */
+    private BFGS() {
+
+    }
 
     /**
      * This method solves the unconstrained minimization problem

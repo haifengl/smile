@@ -28,7 +28,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * USPS handwritten text recognition dataset. USPS is a digit dataset scanned

@@ -19,6 +19,7 @@ package smile.clustering;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.IntStream;
 
 import smile.math.MathEx;
@@ -27,6 +28,9 @@ import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 import smile.neighbor.RNNSearch;
+import smile.util.AlgoStatus;
+import smile.util.IterativeAlgorithmController;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * Non-parametric Minimum Conditional Entropy Clustering. This method performs
@@ -57,7 +61,7 @@ import smile.neighbor.RNNSearch;
  *
  * @author Haifeng Li
  */
-public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
+public class MEC<T> extends Partitioning implements Comparable<MEC<T>> {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MEC.class);
@@ -65,11 +69,11 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * The conditional entropy as the objective function.
      */
-    public final double entropy;
+    private final double entropy;
     /**
      * The range of neighborhood.
      */
-    public final double radius;
+    private final double radius;
     /**
      * The neighborhood search data structure.
      */
@@ -77,22 +81,104 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
     /**
      * Constructor.
+     * @param k the number of clusters.
+     * @param group the cluster labels.
      * @param entropy the conditional entropy of clusters.
      * @param radius the neighborhood radius.
      * @param nns the data structure for neighborhood search.
-     * @param k the number of clusters.
-     * @param y the cluster labels.
      */
-    public MEC(double entropy, double radius, RNNSearch<T,T> nns, int k, int[] y) {
-        super(k, y);
+    public MEC(int k, int[] group, double entropy, double radius, RNNSearch<T,T> nns) {
+        super(k, group);
         this.entropy = entropy;
         this.radius = radius;
         this.nns = nns;
     }
 
+    /**
+     * Returns the conditional entropy of clusters.
+     * @return the conditional entropy of clusters.
+     */
+    public double entropy() {
+        return entropy;
+    }
+
+    /**
+     * Returns the neighborhood radius.
+     * @return the neighborhood radius.
+     */
+    public double radius() {
+        return radius;
+    }
+
     @Override
     public int compareTo(MEC<T> o) {
         return Double.compare(entropy, o.entropy);
+    }
+
+    /**
+     * MEC hyperparameters.
+     * @param k the maximum number of clusters.
+     * @param radius the neighborhood radius.
+     * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance of convergence test.
+     * @param controller the optional training controller.
+     */
+    public record Options(int k, double radius, int maxIter, double tol,
+                          IterativeAlgorithmController<AlgoStatus> controller) {
+        /** Constructor. */
+        public Options {
+            if (k < 2) {
+                throw new IllegalArgumentException("Invalid k: " + k);
+            }
+
+            if (radius <= 0.0) {
+                throw new IllegalArgumentException("Invalid radius: " + radius);
+            }
+
+            if (maxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+
+            if (tol < 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+        }
+
+        /**
+         * Constructor.
+         * @param k the maximum number of clusters.
+         * @param radius the neighborhood radius.
+         */
+        public Options(int k, double radius) {
+            this(k, radius, 500, 1E-4, null);
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters.
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.mec.k", Integer.toString(k));
+            props.setProperty("smile.mec.radius", Double.toString(radius));
+            props.setProperty("smile.mec.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.mec.tolerance", Double.toString(tol));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int k = Integer.parseInt(props.getProperty("smile.mec.k", "2"));
+            double radius = Double.parseDouble(props.getProperty("smile.mec.radius", "1.0"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.mec.iterations", "500"));
+            double tol = Double.parseDouble(props.getProperty("smile.mec.tolerance", "1E-4"));
+            return new Options(k, radius, maxIter, tol, null);
+        }
     }
 
     /**
@@ -115,40 +201,33 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         }
 
         // Initialize clusters with KMeans/CLARANS.
-        int[] y;
+        int[] group;
         if (data instanceof double[][] matrix && distance instanceof EuclideanDistance) {
-            KMeans kmeans = KMeans.fit(matrix, k);
-            y = kmeans.y;
+            var kmeans = KMeans.fit(matrix, k, 10);
+            group = kmeans.group();
         } else {
-            CLARANS<T> clarans = CLARANS.fit(data, distance, k);
-            y = clarans.y;
+            var clarans = KMedoids.fit(data, distance, k);
+            group = clarans.group();
         }
 
-        return fit(data, LinearSearch.of(data, distance), k, radius, y, 1E-4);
+        return fit(data, LinearSearch.of(data, distance), group, new Options(k, radius));
     }
 
     /**
      * Clustering the data.
      * @param data the observations.
      * @param nns the neighborhood search data structure.
-     * @param k the number of clusters. Note that this is just a hint. The final
-     *          number of clusters may be less.
-     * @param radius the neighborhood radius.
-     * @param y the initial clustering labels, which could be produced by any
-     *          other clustering methods.
-     * @param tol the tolerance of convergence test.
+     * @param group the initial clustering assignment.
+     * @param options the hyperparameters.
      * @param <T> the data type.
      * @return the model.
      */
-    public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y, double tol) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid k: " + k);
-        }
-
-        if (radius <= 0.0) {
-            throw new IllegalArgumentException("Invalid radius: " + radius);
-        }
-
+    public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int[] group, Options options) {
+        int k = options.k;
+        int maxIter = options.maxIter;
+        double radius = options.radius;
+        double tol = options.tol;
+        var controller = options.controller;
         int n = data.length;
         // The density of each observation.
         double[] px = new double[n];
@@ -188,7 +267,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         IntStream.range(0, n).parallel().forEach(i -> {
             for (int j : neighbors[i]) {
-                size[i][y[j]]++;
+                size[i][group[j]]++;
             }
         });
 
@@ -203,19 +282,19 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         });
 
         double entropy = entropy(k, neighbors, size, px);
-        logger.info("Entropy after initialization: {}", entropy);
+        logger.info("Initial entropy = {}", entropy);
 
         double diff = Double.MAX_VALUE;
-        for (int iter = 1; diff > tol; iter++) {
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
             for (int i = 0; i < n; i++) {
-                if (dominantCluster[i] != y[i]) {
+                if (dominantCluster[i] != group[i]) {
                     double oldMutual = 0.0;
                     double newMutual = 0.0;
 
                     for (int neighbor : neighbors[i]) {
                         double nk = neighbors[neighbor].length;
 
-                        double r1 = (double) size[neighbor][y[i]] / nk;
+                        double r1 = (double) size[neighbor][group[i]] / nk;
                         double r2 = (double) size[neighbor][dominantCluster[i]] / nk;
                         if (r1 > 0) {
                             oldMutual -= r1 * MathEx.log2(r1) * px[neighbor];
@@ -224,7 +303,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                             oldMutual -= r2 * MathEx.log2(r2) * px[neighbor];
                         }
 
-                        r1 = (size[neighbor][y[i]] - 1.0) / nk;
+                        r1 = (size[neighbor][group[i]] - 1.0) / nk;
                         r2 = (size[neighbor][dominantCluster[i]] + 1.0) / nk;
                         if (r1 > 0) {
                             newMutual -= r1 * MathEx.log2(r1) * px[neighbor];
@@ -236,7 +315,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
                     if (newMutual < oldMutual) {
                         for (int neighbor : neighbors[i]) {
-                            --size[neighbor][y[i]];
+                            --size[neighbor][group[i]];
                             ++size[neighbor][dominantCluster[i]];
                             int mi = dominantCluster[i];
                             int mk = dominantCluster[neighbor];
@@ -244,7 +323,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                                 dominantCluster[neighbor] = dominantCluster[i];
                             }
                         }
-                        y[i] = dominantCluster[i];
+                        group[i] = dominantCluster[i];
                     }
                 }
             }
@@ -252,35 +331,40 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             double prevObj = entropy;
             entropy = entropy(k, neighbors, size, px);
             diff = prevObj - entropy;
-            logger.info("Entropy after {} iterations: {}", iter, entropy);
+            logger.info("Iteration {}: entropy = {}", iter, entropy);
+
+            if (controller != null) {
+                controller.submit(new AlgoStatus(iter, entropy));
+                if (controller.isInterrupted()) break;
+            }
         }
 
         // Collapse clusters by removing clusters with no samples.
         int[] clusterSize = new int[k];
         for (int i = 0; i < n; i++) {
-            clusterSize[y[i]]++;
+            clusterSize[group[i]]++;
         }
 
         // Reuse clusterSize as the index of new cluster id.
-        int K = 0;
+        int numClusters = 0;
         for (int i = 0, j = 0; i < k; i++) {
             if (clusterSize[i] > 0) {
-                K++;
+                numClusters++;
                 clusterSize[i] = j++;
             }
         }
 
         for (int i = 0; i < n; i++) {
-            y[i] = clusterSize[y[i]];
+            group[i] = clusterSize[group[i]];
         }
 
-        return new MEC<>(entropy, radius, nns, K, y);
+        return new MEC<>(numClusters, group, entropy, radius, nns);
     }
 
     /**
      * Cluster a new instance.
      * @param x a new instance.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
@@ -292,8 +376,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
         int[] label = new int[k];
         for (Neighbor<T,T> neighbor : neighbors) {
-            int yi = y[neighbor.index()];
-            label[yi]++;
+            int y = group[neighbor.index()];
+            label[y]++;
         }
 
         return MathEx.whichMax(label);
@@ -301,7 +385,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
     @Override
     public String toString() {
-        return String.format("Cluster entropy: %.5f%n", entropy) + super.toString();
+        return String.format("%sEntropy %11.5f%n", super.toString(), entropy);
     }
 
     /** Calculates the entropy. */

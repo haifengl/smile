@@ -48,8 +48,8 @@ public class LibsvmTest {
     @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        SparseDataset<Integer> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.dat"));
+        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.t.dat"));
 
         assertEquals(15935, train.size());
         assertEquals(1,   train.get(0).y());
@@ -83,7 +83,7 @@ public class LibsvmTest {
     @Test
     public void testParseGlass() throws Exception {
         System.out.println("glass");
-        SparseDataset<Integer> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/glass.txt"));
 
         assertEquals(214, train.size());
         assertEquals(9, train.get(0).x().size());

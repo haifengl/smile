@@ -58,21 +58,21 @@ public class SpectralClusteringTest {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        SpectralClustering model = SpectralClustering.fit(x, 10, 8.0);
+        var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 8.0, 100));
         System.out.println(model);
 
-        double r = RandIndex.of(y, model.y);
-        double r2 = AdjustedRandIndex.of(y, model.y);
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9128, r, 1E-4);
-        assertEquals(0.5371, r2, 1E-4);
+        assertEquals(0.9129, r, 1E-4);
+        assertEquals(0.5382, r2, 1E-4);
 
-        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
-        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
-        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
-        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
-        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
-        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.group()));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.group()));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.group()));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.group()));
     }
 
     @Test
@@ -80,21 +80,21 @@ public class SpectralClusteringTest {
         System.out.println("USPS Nystrom approximation");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        SpectralClustering model = SpectralClustering.fit(x, 10, 100, 8.0);
+        var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 100, 8.0, 100));
         System.out.println(model);
 
-        double r = RandIndex.of(y, model.y);
-        double r2 = AdjustedRandIndex.of(y, model.y);
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8995, r, 1E-4);
-        assertEquals(0.4757, r2, 1E-4);
+        assertEquals(0.8994, r, 1E-4);
+        assertEquals(0.4752, r2, 1E-4);
 
-        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
-        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
-        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
-        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
-        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
-        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.group()));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.group()));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.group()));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.group()));
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

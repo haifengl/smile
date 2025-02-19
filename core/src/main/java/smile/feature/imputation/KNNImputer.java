@@ -53,7 +53,7 @@ import smile.neighbor.Neighbor;
         this(data, k, (x, y) -> {
             double[] xd = x.toArray(columns);
             double[] yd = y.toArray(columns);
-            return MathEx.squaredDistanceWithMissingValues(xd, yd);
+            return MathEx.distanceWithMissingValues(xd, yd);
         });
     }
 

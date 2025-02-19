@@ -28,7 +28,7 @@ import java.util.BitSet;
  *
  * @author Haifeng Li
  */
-public class HammingDistance implements Distance<BitSet> {
+public class HammingDistance implements Distance<int[]> {
 
     /** Constructor. */
     public HammingDistance() {
@@ -41,40 +41,18 @@ public class HammingDistance implements Distance<BitSet> {
     }
 
     @Override
-    public double d(BitSet x, BitSet y) {
-        if (x.size() != y.size()) {
-            throw new IllegalArgumentException(String.format("BitSets have different length: x[%d], y[%d]", x.size(), y.size()));
-        }
+    public double d(int[] x, int[] y) {
+        if (x.length != y.length)
+            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
 
         int dist = 0;
-        for (int i = 0; i < x.size(); i++) {
-            if (x.get(i) != y.get(i))
-                dist++;
+        for (int i = 0; i < x.length; i++) {
+            if (x[i] != y[i]) dist++;
         }
 
         return dist;
     }
 
-    /**
-     * Returns Hamming distance between the two bytes.
-     * @param x a byte.
-     * @param y a byte.
-     * @return the distance.
-     */
-    public static int d(byte x, byte y) {
-        return d((int)x, (int)y);
-    }
-    
-    /**
-     * Returns Hamming distance between the two shorts.
-     * @param x a short.
-     * @param y a short.
-     * @return the distance.
-     */
-    public static int d(short x, short y) {
-        return d((int)x, (int)y);
-    }
-    
     /**
      * Returns Hamming distance between the two integers.
      * @param x an integer.
@@ -120,13 +98,12 @@ public class HammingDistance implements Distance<BitSet> {
      * @return the distance.
      */
     public static int d(byte[] x, byte[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-
+        }
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i])
-                dist++;
+            if (x[i] != y[i]) dist++;
         }
 
         return dist;
@@ -139,31 +116,31 @@ public class HammingDistance implements Distance<BitSet> {
      * @return the distance.
      */
     public static int d(short[] x, short[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-
+        }
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i])
-                dist++;
+            if (x[i] != y[i]) dist++;
         }
 
         return dist;
     }
 
     /**
-     * Returns Hamming distance between the two integer arrays.
-     * @param x an integer vector.
-     * @param y an integer vector.
+     * Returns Hamming distance between the two bit sets.
+     * @param x a bit set.
+     * @param y a bit set.
      * @return the distance.
      */
-    public static int d(int[] x, int[] y) {
-        if (x.length != y.length)
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+    public double d(BitSet x, BitSet y) {
+        if (x.size() != y.size()) {
+            throw new IllegalArgumentException(String.format("BitSets have different length: x[%d], y[%d]", x.size(), y.size()));
+        }
 
         int dist = 0;
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i])
+        for (int i = 0; i < x.size(); i++) {
+            if (x.get(i) != y.get(i))
                 dist++;
         }
 

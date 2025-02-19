@@ -27,7 +27,7 @@ trait Vector extends Tensor {
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Vector
   /** Applies the expression. */
-  def apply(env: (String, Tensor)*): Vector = apply(Map(env: _*))
+  def apply(env: (String, Tensor)*): Vector = apply(Map(env*))
   /** Simplify the expression. */
   def simplify: Vector = this
 
@@ -103,15 +103,15 @@ case class Vars(x: Scalar*) extends Vector {
   override def size: IntScalar = IntVal(x.length)
 
   override def d(dx: Var): Vector = {
-    Vars(x.map(_.d(dx)): _*).simplify
+    Vars(x.map(_.d(dx))*).simplify
   }
 
   override def d(dx: VectorVar): Matrix = {
-    RowMatrix(x.map(_.d(dx).simplify): _*).simplify
+    RowMatrix(x.map(_.d(dx).simplify)*).simplify
   }
 
   override def apply(env: Map[String, Tensor]): Vector = {
-    Vars(x.map(_(env)): _*).simplify
+    Vars(x.map(_(env))*).simplify
   }
 
   override def simplify: Vector = {
@@ -159,7 +159,7 @@ case class GradientVector(y: Var, x: VectorVar) extends Vector {
     env.get(x.symbol) match {
       case None => yv.d(x)
       case Some(x: VectorVar) => yv.d(x)
-      case Some(Vars(x @ _*)) if x.forall(_.isInstanceOf[Var]) => yv.d(x.map(_.asInstanceOf[Var]): _*)
+      case Some(Vars(x*)) if x.forall(_.isInstanceOf[Var]) => yv.d(x.map(_.asInstanceOf[Var])*)
       case a => throw new IllegalArgumentException(s"Invalid type: ${a.getClass}, expected VectorVar or Vars")
     }
   }

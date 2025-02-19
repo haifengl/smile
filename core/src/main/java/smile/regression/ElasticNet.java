@@ -44,32 +44,82 @@ import smile.math.matrix.Matrix;
  * @author rayeaster
  */
 public class ElasticNet {
+    /** Private constructor to prevent object creation. */
+    private ElasticNet() {
+
+    }
+
     /**
      * Elastic Net hyperparameters.
      * @param lambda1 the L1 shrinkage/regularization parameter
      * @param lambda2 the L2 shrinkage/regularization parameter
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param tol the tolerance of convergence test (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @param alpha the minimum fraction of decrease in the objective function.
+     * @param beta the step size decrease factor
+     * @param eta the tolerance for PCG termination.
+     * @param lsMaxIter the maximum number of backtracking line search iterations.
+     * @param pcgMaxIter the maximum number of PCG iterations.
      */
-    public record Options(double lambda1, double lambda2, double tol, int maxIter) {
+    public record Options(double lambda1, double lambda2, double tol, int maxIter, double alpha,
+                          double beta, double eta, int lsMaxIter, int pcgMaxIter) {
+        /** Constructor. */
         public Options {
             if (lambda1 <= 0) {
                 throw new IllegalArgumentException("Please use Ridge instead, wrong L1 portion setting: " + lambda1);
             }
+
             if (lambda2 <= 0) {
                 throw new IllegalArgumentException("Please use LASSO instead, wrong L2 portion setting: " + lambda2);
             }
+
             if (tol <= 0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
+
             if (maxIter <= 0) {
                 throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
             }
+
+            if (alpha <= 0.0) {
+                throw new IllegalArgumentException("Invalid alpha: " + alpha);
+            }
+
+            if (beta <= 0.0) {
+                throw new IllegalArgumentException("Invalid beta: " + beta);
+            }
+
+            if (eta <= 0.0) {
+                throw new IllegalArgumentException("Invalid eta: " + eta);
+            }
+
+            if (lsMaxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of line search iterations: " + lsMaxIter);
+            }
+
+            if (pcgMaxIter <= 0) {
+                throw new IllegalArgumentException("Invalid maximum number of PCG iterations: " + pcgMaxIter);
+            }
         }
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param lambda1 the L1 shrinkage/regularization parameter
+         * @param lambda2 the L2 shrinkage/regularization parameter
+         */
         public Options(double lambda1, double lambda2) {
             this(lambda1, lambda2, 1E-4, 1000);
+        }
+
+        /**
+         * Constructor.
+         * @param lambda1 the L1 shrinkage/regularization parameter
+         * @param lambda2 the L2 shrinkage/regularization parameter
+         * @param tol the tolerance of convergence test (relative target duality gap).
+         * @param maxIter the maximum number of IPM (Newton) iterations.
+         */
+        public Options(double lambda1, double lambda2, double tol, int maxIter) {
+            this(lambda1, lambda2, tol, maxIter, 0.01, 0.5, 1E-3, 100, 5000);
         }
 
         /**
@@ -88,6 +138,11 @@ public class ElasticNet {
             props.setProperty("smile.elastic_net.lambda2", Double.toString(lambda2));
             props.setProperty("smile.elastic_net.tolerance", Double.toString(tol));
             props.setProperty("smile.elastic_net.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.elastic_net.alpha", Double.toString(alpha));
+            props.setProperty("smile.elastic_net.beta", Double.toString(beta));
+            props.setProperty("smile.elastic_net.eta", Double.toString(eta));
+            props.setProperty("smile.elastic_net.line_search_iterations", Integer.toString(lsMaxIter));
+            props.setProperty("smile.elastic_net.pcg_iterations", Integer.toString(pcgMaxIter));
             return props;
         }
 
@@ -102,7 +157,12 @@ public class ElasticNet {
             double lambda2 = Double.parseDouble(props.getProperty("smile.elastic_net.lambda2"));
             double tol = Double.parseDouble(props.getProperty("smile.elastic_net.tolerance", "1E-4"));
             int maxIter = Integer.parseInt(props.getProperty("smile.elastic_net.iterations", "1000"));
-            return new Options(lambda1, lambda2, tol, maxIter);
+            double alpha = Double.parseDouble(props.getProperty("smile.elastic_net.alpha", "0.01"));
+            double beta = Double.parseDouble(props.getProperty("smile.elastic_net.beta", "0.5"));
+            double eta = Double.parseDouble(props.getProperty("smile.elastic_net.eta", "1E-3"));
+            int lsMaxIter = Integer.parseInt(props.getProperty("smile.elastic_net.line_search_iterations", "100"));
+            int pcgMaxIter = Integer.parseInt(props.getProperty("smile.elastic_net.pcg_iterations", "5000"));
+            return new Options(lambda1, lambda2, tol, maxIter, alpha, beta, eta, lsMaxIter, pcgMaxIter);
         }
     }
 
@@ -163,7 +223,9 @@ public class ElasticNet {
             X2.set(j + n, j, padding);
         }
 
-        double[] w = LASSO.train(X2, y2,options.lambda1 * c, options.tol, options.maxIter);
+        var lasso = new LASSO.Options(options.lambda1 * c, options.tol, options.maxIter,
+                options.alpha, options.beta, options.eta, options.lsMaxIter, options.pcgMaxIter);
+        double[] w = LASSO.train(X2, y2, lasso);
         for (int i = 0; i < p; i++) {
             w[i] = c * w[i] / scale[i];
         }

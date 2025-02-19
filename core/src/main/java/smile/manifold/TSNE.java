@@ -23,6 +23,8 @@ import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
+import smile.util.AlgoStatus;
+import smile.util.IterativeAlgorithmController;
 
 /**
  * The t-distributed stochastic neighbor embedding. The t-SNE is a nonlinear
@@ -61,21 +63,54 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @see UMAP
  *
+ * @param cost the objective function value.
+ * @param coordinates the principal coordinates
  * @author Haifeng Li
  */
-public class TSNE implements Serializable {
+public record TSNE(double cost, double[][] coordinates) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
      * The t-SNE hyperparameters.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
-     * @param eta the learning rate.
-     * @param iterations the number of iterations.
+     *                   The perplexity is related to the number of nearest
+     *                   neighbors that is used in other manifold learning
+     *                   algorithms. Consider selecting a value between 5
+     *                   and 50. Different values can result in significantly
+     *                   different results. The perplexity must be less than
+     *                   the number of samples.
+     * @param eta the learning rate. Usually in the range [10.0, 1000.0].
+     *            If the learning rate is too high, the data may look like
+     *            a "ball" with any point approximately equidistant from its
+     *            nearest neighbours. If the learning rate is too low, most
+     *            points may look compressed in a dense cloud with few outliers.
+     * @param earlyExaggeration Controls how tight natural clusters in the original
+     *                          space are in the embedded space and how much space
+     *                          will be between them. For larger values, the space
+     *                          between natural clusters will be larger in the
+     *                          embedded space. The choice of this parameter is not
+     *                          very critical. If the cost function increases during
+     *                          initial optimization, the early exaggeration factor
+     *                          or the learning rate might be too high.
+     * @param maxIter the maximum number of iterations. Should be at least 250.
+     * @param maxIterWithoutProgress Maximum number of iterations without progress
+     *                               before aborting the optimization.
+     * @param tol the tolerance of convergence test.
+     * @param momentum the momentum factor.
+     * @param finalMomentum the momentum in later stage.
+     * @param momentumSwitchIter the number of iterations at which switch the
+     *                           momentum to finalMomentum.
+     * @param minGain the floor of gain.
+     * @param controller the optional training controller.
      */
-    public record Options(int d, double perplexity, double eta, int iterations) {
+    public record Options(int d, double perplexity, double eta, double earlyExaggeration,
+                          int maxIter, int maxIterWithoutProgress, double tol,
+                          double momentum, double finalMomentum, int momentumSwitchIter,
+                          double minGain, IterativeAlgorithmController<AlgoStatus> controller) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
@@ -86,14 +121,55 @@ public class TSNE implements Serializable {
             if (eta <= 0) {
                 throw new IllegalArgumentException("Invalid learning rate: " + eta);
             }
-            if (iterations <= 0) {
-                throw new IllegalArgumentException("Invalid iterations: " + iterations);
+            if (earlyExaggeration <= 0) {
+                throw new IllegalArgumentException("Invalid early exaggeration: " + earlyExaggeration);
+            }
+            if (maxIter < 250) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+            }
+            if (maxIterWithoutProgress < 50 || maxIterWithoutProgress > maxIter) {
+                throw new IllegalArgumentException("Invalid maximum number of iterations without progress: " + maxIterWithoutProgress);
+            }
+            if (tol <= 0) {
+                throw new IllegalArgumentException("Invalid tolerance: " + tol);
+            }
+            if (momentum <= 0) {
+                throw new IllegalArgumentException("Invalid momentum: " + momentum);
+            }
+            if (finalMomentum <= 0) {
+                throw new IllegalArgumentException("Invalid final momentum: " + finalMomentum);
+            }
+            if (momentumSwitchIter <= 0 || momentumSwitchIter >= maxIter) {
+                throw new IllegalArgumentException("Invalid learning rate: " + momentumSwitchIter);
+            }
+            if (minGain <= 0) {
+                throw new IllegalArgumentException("Invalid minimum gain: " + minGain);
             }
         }
 
-        /** Constructor. */
-        public Options() {
-            this(2, 20, 200, 1000);
+        /**
+         * Constructor.
+         * @param d the dimension of embedding space.
+         * @param perplexity the perplexity of the conditional distribution.
+         *                   The perplexity is related to the number of nearest
+         *                   neighbors that is used in other manifold learning algorithms.
+         * @param eta the learning rate. Usually in the range [10.0, 1000.0].
+         *            If the learning rate is too high, the data may look like
+         *            a "ball" with any point approximately equidistant from its
+         *            nearest neighbours. If the learning rate is too low, most
+         *            points may look compressed in a dense cloud with few outliers.
+         * @param earlyExaggeration Controls how tight natural clusters in the original
+         *                          space are in the embedded space and how much space
+         *                          will be between them. For larger values, the space
+         *                          between natural clusters will be larger in the
+         *                          embedded space. The choice of this parameter is not
+         *                          very critical. If the cost function increases during
+         *                          initial optimization, the early exaggeration factor
+         *                          or the learning rate might be too high.
+         * @param maxIter the maximum number of iterations. Should be at least 250.
+         */
+        public Options(int d, double perplexity, double eta, double earlyExaggeration, int maxIter) {
+            this(d, perplexity, eta, earlyExaggeration, maxIter, 50, 1E-7, 0.5, 0.8, 250, 0.01, null);
         }
 
         /**
@@ -105,7 +181,14 @@ public class TSNE implements Serializable {
             props.setProperty("smile.t_sne.d", Integer.toString(d));
             props.setProperty("smile.t_sne.perplexity", Double.toString(perplexity));
             props.setProperty("smile.t_sne.eta", Double.toString(eta));
-            props.setProperty("smile.t_sne.iterations", Integer.toString(iterations));
+            props.setProperty("smile.t_sne.early_exaggeration", Double.toString(earlyExaggeration));
+            props.setProperty("smile.t_sne.iterations", Integer.toString(maxIter));
+            props.setProperty("smile.t_sne.max_iterations_without_progress", Integer.toString(maxIterWithoutProgress));
+            props.setProperty("smile.t_sne.tolerance", Double.toString(tol));
+            props.setProperty("smile.t_sne.momentum", Double.toString(momentum));
+            props.setProperty("smile.t_sne.final_momentum", Double.toString(finalMomentum));
+            props.setProperty("smile.t_sne.momentum_switch", Integer.toString(momentumSwitchIter));
+            props.setProperty("smile.t_sne.min_gain", Double.toString(minGain));
             return props;
         }
 
@@ -119,62 +202,40 @@ public class TSNE implements Serializable {
             int d = Integer.parseInt(props.getProperty("smile.t_sne.d", "2"));
             double perplexity = Double.parseDouble(props.getProperty("smile.t_sne.perplexity", "20"));
             double eta = Double.parseDouble(props.getProperty("smile.t_sne.eta", "200"));
-            int iterations = Integer.parseInt(props.getProperty("smile.t_sne.iterations", "1000"));
-            return new Options(d, perplexity, eta, iterations);
+            double earlyExaggeration = Double.parseDouble(props.getProperty("smile.t_sne.early_exaggeration"));
+            int maxIter = Integer.parseInt(props.getProperty("smile.t_sne.iterations", "1000"));
+            int maxIterWithoutProgress = Integer.parseInt(props.getProperty("smile.t_sne.max_iterations_without_progress", "50"));
+            double tol = Double.parseDouble(props.getProperty("smile.t_sne.tolerance", "1E-7"));
+            double momentum = Double.parseDouble(props.getProperty("smile.t_sne.momentum"));
+            double finalMomentum = Double.parseDouble(props.getProperty("smile.t_sne.final_momentum"));
+            int momentumSwitchIter = Integer.parseInt(props.getProperty("smile.t_sne.momentum_switch"));
+            double minGain = Double.parseDouble(props.getProperty("smile.t_sne.momentum_switch"));
+            return new Options(d, perplexity, eta, earlyExaggeration, maxIter, maxIterWithoutProgress, tol,
+                    momentum, finalMomentum, momentumSwitchIter, minGain, null);
         }
     }
 
     /**
-     * The embedding coordinates.
+     * Fits t-SNE for given number of iterations.
+     *
+     * @param X the input data. If X is a square matrix, it is assumed to be
+     *          the squared distance/dissimilarity matrix.
+     * @return the model.
      */
-    private final double[][] coordinates;
+    public static TSNE fit(double[][] X) {
+        return fit(X, new Options(2, 20, 200, 12, 1000));
+    }
 
     /**
-     * The learning rate.
-     */
-    private final double eta;
-    /**
-     * The number of iterations so far.
-     */
-    private int totalIter = 0;
-    /**
-     * The momentum factor.
-     */
-    private double momentum              = 0.5;
-    /**
-     * The momentum in later stage.
-     */
-    private final double finalMomentum   = 0.8;
-    /**
-     * The number of iterations at which switch the momentum to
-     * finalMomentum.
-     */
-    private final int momentumSwitchIter = 250;
-    /**
-     * The floor of gain.
-     */
-    private final double minGain         = .01;
-
-    /** The gain matrix. */
-    private final double[][] gains; // adjust learning rate for each point
-    /** The probability matrix of the distances in the input space. */
-    private final double[][] P;
-    /** The probability matrix of the distances in the feature space. */
-    private final double[][] Q;
-    /** The sum of Q matrix. */
-    private double Qsum;
-    /** The cost function value. */
-    private double cost;
-
-    /**
-     * Constructor. Train t-SNE for given number of iterations.
+     * Fits t-SNE for given number of iterations.
      *
      * @param X the input data. If X is a square matrix, it is assumed to be
      *         the squared distance/dissimilarity matrix.
      * @param options the hyperparameters.
+     * @return the model.
      */
-    public TSNE(double[][] X, Options options) {
-        eta = options.eta;
+    public static TSNE fit(double[][] X, Options options) {
+        double eta = options.eta;
         int n = X.length;
         int d = options.d;
 
@@ -186,15 +247,14 @@ public class TSNE implements Serializable {
             MathEx.pdist(X, D, MathEx::squaredDistance);
         }
 
-        coordinates = new double[n][d];
-        double[][] Y = coordinates;
-        gains = new double[n][d]; // adjust learning rate for each point
+        double[][] coordinates = new double[n][d];
+        double[][] gains = new double[n][d]; // adjust learning rate for each point
 
         // Initialize Y randomly by N(0, 0.0001)
         GaussianDistribution gaussian = new GaussianDistribution(0.0, 0.0001);
         for (int i = 0; i < n; i++) {
             Arrays.fill(gains[i], 1.0);
-            double[] Yi = Y[i];
+            double[] Yi = coordinates[i];
             for (int j = 0; j < d; j++) {
                 Yi[j] = gaussian.rand();
             }
@@ -202,8 +262,10 @@ public class TSNE implements Serializable {
 
         // Large tolerance to speed up the search of Gaussian kernel width
         // A small difference of kernel width is not important.
-        P = expd(D, options.perplexity, 1E-3);
-        Q = new double[n][n];
+        double[][] P = expd(D, options.perplexity, 1E-3);
+        double[][] Q = new double[n][n];
+        double[][] dY = new double[n][d];
+        double[][] dC = new double[n][d];
 
         // Make P symmetric
         // sum(P) = 2 * n as each row of P is normalized
@@ -218,88 +280,83 @@ public class TSNE implements Serializable {
             }
         }
 
-        update(options.iterations);
-    }
-
-    /**
-     * Returns the embedding coordinates.
-     * @return the embedding coordinates.
-     */
-    public double[][] coordinates() {
-        return coordinates;
-    }
-
-    /**
-     * Returns the cost function value.
-     * @return the cost function value.
-     */
-    public double cost() {
-        return cost;
-    }
-
-    /**
-     * Performs additional iterations.
-     * @param iterations the number of iterations.
-     */
-    public void update(int iterations) {
-        double[][] Y = coordinates;
-        int n = Y.length;
-        int d = Y[0].length;
-        double[][] dY = new double[n][d];
-        double[][] dC = new double[n][d];
-
-        for (int iter = 1; iter <= iterations; iter++, totalIter++) {
-            Qsum = computeQ(Y, Q);
-
-            IntStream.range(0, n).parallel().forEach(i -> sne(i, dY[i], dC[i]));
+        double cost = Double.MAX_VALUE;
+        double bestCost = cost;
+        int bestIter = 0;
+        double momentum = options.momentum;
+        for (int iter = 1; iter <= options.maxIter; iter++) {
+            double Qsum = computeQ(coordinates, Q);
+            IntStream.range(0, n).parallel().forEach(i -> sne(i, coordinates, P, Q, gains, dY[i], dC[i], Qsum, options.minGain));
 
             // gradient update with momentum and gains
-            IntStream.range(0, n).parallel().forEach(i -> {
-                double[] Yi = Y[i];
+            final double mu = momentum;
+            double gradNorm = IntStream.range(0, n).parallel().mapToDouble(i -> {
+                double[] Yi = coordinates[i];
                 double[] dYi = dY[i];
                 double[] dCi = dC[i];
                 double[] g = gains[i];
+                double norm = 0;
                 for (int k = 0; k < d; k++) {
-                    dYi[k] = momentum * dYi[k] - eta * g[k] * dCi[k];
+                    dYi[k] = mu * dYi[k] - eta * g[k] * dCi[k];
                     Yi[k] += dYi[k];
+                    norm = Math.max(norm, Math.abs(dYi[k] * g[k]));
                 }
-            });
+                return norm;
+            }).max().orElse(0);
 
-            if (totalIter == momentumSwitchIter) {
-                momentum = finalMomentum;
+            if (iter == options.momentumSwitchIter) {
+                momentum = options.finalMomentum;
                 for (int i = 0; i < n; i++) {
                     double[] Pi = P[i];
                     for (int j = 0; j < n; j++) {
-                        Pi[j] /= 12.0;
+                        Pi[j] /= options.earlyExaggeration;
                     }
                 }
             }
 
             // Compute current value of cost function
-            if (iter % 100 == 0)   {
-                cost = computeCost(P, Q);
-                logger.info("Error after {} iterations: {}", iter, cost);
+            if (iter % 10 == 0 || iter == options.maxIter) {
+                cost = computeCost(P, Q, Qsum);
+                logger.info("Iteration {}: error = {}", iter, cost);
+
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestIter = iter;
+                }
+
+                if (iter > options.momentumSwitchIter) {
+                    if (iter - bestIter > options.maxIterWithoutProgress) {
+                        logger.info("Iteration {}: did not make any progress in last {} episodes. Finished", iter, options.maxIterWithoutProgress);
+                        break;
+                    }
+
+                    if (gradNorm < options.tol) {
+                        logger.info("Iteration {}: gradient norm = {}. Finished", iter, gradNorm);
+                        break;
+                    }
+                }
+
+                if (options.controller != null) {
+                    options.controller.submit(new AlgoStatus(iter, cost));
+                    if (options.controller.isInterrupted()) break;
+                }
             }
         }
 
         // Make solution zero-mean
-        double[] colMeans = MathEx.colMeans(Y);
+        double[] colMeans = MathEx.colMeans(coordinates);
         IntStream.range(0, n).parallel().forEach(i -> {
-            double[] Yi = Y[i];
+            double[] Yi = coordinates[i];
             for (int j = 0; j < d; j++) {
                 Yi[j] -= colMeans[j];
             }
         });
 
-        if (iterations % 100 != 0)   {
-            cost = computeCost(P, Q);
-            logger.info("Error after {} iterations: {}", iterations, cost);
-        }
+        return new TSNE(cost, coordinates);
     }
 
     /** Computes the gradients and updates the coordinates. */
-    private void sne(int i, double[] dY, double[] dC) {
-        double[][] Y = coordinates;
+    private static void sne(int i, double[][] Y, double[][] P, double[][] Q, double[][] gains, double[] dY, double[] dC, double Qsum, double minGain) {
         int n = Y.length;
         int d = Y[0].length;
 
@@ -329,8 +386,8 @@ public class TSNE implements Serializable {
         }
     }
 
-    /** Compute the Gaussian kernel (search the width for given perplexity). */
-    private double[][] expd(double[][] D, double perplexity, double tol) {
+    /** Computes the Gaussian kernel (search the width for given perplexity). */
+    private static double[][] expd(double[][] D, double perplexity, double tol) {
         int n          = D.length;
         double[][] P   = new double[n][n];
         double[] DiSum = MathEx.rowSums(D);
@@ -395,7 +452,7 @@ public class TSNE implements Serializable {
     /**
      * Computes the Q matrix.
      */
-    private double computeQ(double[][] Y, double[][] Q) {
+    private static double computeQ(double[][] Y, double[][] Q) {
         int n = Y.length;
 
         // DoubleStream.sum is unreproducible across machines
@@ -419,7 +476,7 @@ public class TSNE implements Serializable {
     /**
      * Computes the cost function.
      */
-    private double computeCost(double[][] P, double[][] Q) {
+    private static double computeCost(double[][] P, double[][] Q, double Qsum) {
         return 2 * IntStream.range(0, Q.length).parallel().mapToDouble(i -> {
             double[] Pi = P[i];
             double[] Qi = Q[i];

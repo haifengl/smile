@@ -16,17 +16,15 @@
  */
 package smile.feature.transform;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
-import smile.math.Function;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
 import smile.sort.IQAgent;
+import smile.util.function.Function;
 
 /**
  * Scales all numeric variables into the range [0, 1].
@@ -40,13 +38,13 @@ import smile.sort.IQAgent;
  *
  * @author Haifeng Li
  */
-public class WinsorScaler {
+public interface WinsorScaler {
     /**
      * Fits the data transformation with 5% lower limit and 95% upper limit.
      * @param data the training data.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data) {
+    static InvertibleColumnTransform fit(DataFrame data) {
         return fit(data, 0.05, 0.95);
     }
 
@@ -61,7 +59,7 @@ public class WinsorScaler {
      *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data, double lower, double upper, String... columns) {
+    static InvertibleColumnTransform fit(DataFrame data, double lower, double upper, String... columns) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty data frame");
         }

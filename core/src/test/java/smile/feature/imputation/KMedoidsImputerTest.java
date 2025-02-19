@@ -23,6 +23,8 @@ import smile.math.distance.Distance;
 import smile.datasets.SyntheticControl;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -60,13 +62,13 @@ public class KMedoidsImputerTest {
         Distance<Tuple> distance = (x, y) -> {
             double[] xd = x.toArray();
             double[] yd = y.toArray();
-            return MathEx.squaredDistanceWithMissingValues(xd, yd);
+            return MathEx.distanceWithMissingValues(xd, yd);
         };
         KMedoidsImputer kmedoidsImputer = KMedoidsImputer.fit(df, distance,20);
         Function<double[][], double[][]> imputer = x -> kmedoidsImputer.apply(DataFrame.of(x)).toArray();
 
-        impute(imputer, data, 0.01, 17.57);
-        impute(imputer, data, 0.05, 20.09);
-        impute(imputer, data, 0.10, 18.47);
+        assertEquals(17.14, impute(imputer, data, 0.01), 1E-2);
+        assertEquals(19.28, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(17.83, impute(imputer, data, 0.10), 1E-2);
     }
 }

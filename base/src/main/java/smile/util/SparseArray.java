@@ -25,6 +25,8 @@ import java.util.stream.IntStream;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import smile.sort.QuickSort;
+import smile.util.function.ArrayElementConsumer;
+import smile.util.function.ArrayElementFunction;
 
 /**
  * Sparse array of double values.
@@ -155,7 +157,6 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
     }
 
     @Override
-    @javax.annotation.Nonnull
     public Iterator<Entry> iterator() {
         return new Iterator<>() {
             int i = 0;

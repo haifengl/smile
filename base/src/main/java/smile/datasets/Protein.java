@@ -19,11 +19,13 @@ package smile.datasets;
 import java.io.IOException;
 import java.nio.file.Path;
 import smile.data.BinarySparseSequenceDataset;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Protein sequence dataset.
  *
+ * @param train training data.
+ * @param test testing data.
  * @author Haifeng Li
  */
 public record Protein(BinarySparseSequenceDataset train, BinarySparseSequenceDataset test) {

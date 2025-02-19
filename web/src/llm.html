@@ -58,12 +58,12 @@ title: Smile - LLM
         call <code>chat()</code> method to generate conversation responses.</p>
 
     <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     // List of conversational dialogs, where each dialog is a list of messages.
     Message[][] dialogs = {
           {
@@ -126,6 +126,8 @@ Usage: smile-serve [options]
   --max-seq-len &lt;value&gt;    The maximum sequence length
   --max-batch-size &lt;value&gt; The maximum batch size
   --device &lt;value&gt;         The CUDA device ID
+  --host &lt;value&gt;           The IP address to listen on (0.0.0.0 for all available addresses)
+  --port &lt;value&gt;           The port number
   --help                   Display the usage information
           </code></pre>
             </div>
@@ -134,9 +136,8 @@ Usage: smile-serve [options]
 
     <p>By default, SmileServe binds at localhost:3801. If you prefer a different port and/or
         want to expose the server to other hosts, you may set the binding interface and port
-        with <code>-J-Dakka.http.server.interface=0.0.0.0</code> and
-        <code>-J-Dakka.http.server.port=8000</code>, for example. The service exposes the API
-        <code>/v1/chat/completions</code> that is compatible with OpenAI API.</p>
+        with <code>--host=0.0.0.0</code> and <code>--port=8000</code>, for example. The service
+        exposes the API <code>/v1/chat/completions</code> that is compatible with OpenAI API.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

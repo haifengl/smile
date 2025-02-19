@@ -75,7 +75,7 @@ public class SammonMappingTest {
         };
 
         var euro = new Eurodist();
-        SammonMapping sammon = SammonMapping.of(euro.x());
+        SammonMapping sammon = SammonMapping.fit(euro.x());
         assertEquals(0.00941, sammon.stress(), 1E-5);
 
         for (var point : sammon.coordinates()) {

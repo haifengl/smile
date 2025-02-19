@@ -19,6 +19,8 @@ package smile.feature.imputation;
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import smile.datasets.SyntheticControl;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -54,9 +56,9 @@ public class SVDImputerTest {
         int k = data[0].length / 5;
 
         Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);
-        impute(imputer, data, 0.01, 13.50);
-        impute(imputer, data, 0.05, 15.84);
-        impute(imputer, data, 0.10, 14.94);
+        assertEquals(13.50, impute(imputer, data, 0.01), 1E-2);
+        assertEquals(15.84, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(14.94, impute(imputer, data, 0.10), 1E-2);
         // Matrix will be rank deficient with higher missing rate.
     }
 }

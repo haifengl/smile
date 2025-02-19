@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import smile.data.DataFrame;
 import org.apache.commons.csv.CSVFormat;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Distances between European cities.

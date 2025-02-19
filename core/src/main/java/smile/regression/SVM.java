@@ -42,6 +42,11 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SVM {
+    /** Private constructor to prevent object creation. */
+    private SVM() {
+
+    }
+
     /**
      * SVM hyperparameters.
      * @param eps the parameter of epsilon-insensitive hinge loss.
@@ -53,6 +58,7 @@ public class SVM {
      * @param tol the tolerance of convergence test.
      */
     public record Options(double eps, double C, double tol) {
+        /** Constructor. */
         public Options {
             if (eps <= 0) {
                 throw new IllegalArgumentException("Invalid epsilon: " + eps);

@@ -30,6 +30,11 @@ public class Accuracy implements ClassificationMetric {
     /** Default instance. */
     public static final Accuracy instance = new Accuracy();
 
+    /** Constructor. */
+    public Accuracy() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

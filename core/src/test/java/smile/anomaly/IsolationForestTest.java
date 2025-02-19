@@ -20,7 +20,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.junit.jupiter.api.*;
 import smile.io.Read;
 import smile.io.Write;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  *

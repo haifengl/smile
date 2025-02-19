@@ -17,12 +17,13 @@
 package smile.model
 
 import java.util.Properties
-import scala.jdk.CollectionConverters._
-import smile.data.DataFrame
+import scala.jdk.CollectionConverters.*
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.regression._
+import smile.regression.*
 import smile.validation.{CrossValidation, RegressionMetrics}
+import spray.json.{JsNumber, JsValue}
 
 /**
   * The regression model.
@@ -34,13 +35,18 @@ import smile.validation.{CrossValidation, RegressionMetrics}
   * @param validation the cross-validation metrics.
   * @param test the test metrics.
   */
+@SerialVersionUID(1L)
 case class RegressionModel(override val algorithm: String,
                            override val schema: StructType,
                            override val formula: Formula,
                            regression: DataFrameRegression,
                            train: RegressionMetrics,
                            validation: Option[RegressionMetrics],
-                           test: Option[RegressionMetrics]) extends DataFrameModel
+                           test: Option[RegressionMetrics]) extends SmileModel {
+    override def predict(x: Tuple, options: Properties): JsValue = {
+        JsNumber.apply(regression.predict(x))
+    }
+}
 
 object RegressionModel {
     /**
@@ -66,7 +72,7 @@ object RegressionModel {
             val cv = CrossValidation.regression(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, params))
             val models = cv.rounds.asScala.map(round => round.model).toArray
             val model = if (ensemble)
-                DataFrameRegression.ensemble(models: _*)
+                DataFrameRegression.ensemble(models*)
             else
                 fit(algorithm, formula, data, params)
 

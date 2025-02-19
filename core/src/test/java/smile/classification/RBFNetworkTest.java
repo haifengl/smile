@@ -64,13 +64,13 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
 
         System.out.println("RBF Network: " + metrics);
-        assertEquals(0.9667, metrics.accuracy(), 1E-4);
+        assertEquals(0.9733, metrics.accuracy(), 1E-4);
 
         metrics = LOOCV.classification(iris.x(), iris.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10), true));
 
         System.out.println("Normalized RBF Network: " + metrics);
-        assertEquals(0.9733, metrics.accuracy(), 1E-4);
+        assertEquals(0.9867, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -82,13 +82,13 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9162, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9190, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9207, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -101,13 +101,13 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9438, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9477, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9333, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9421, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -126,13 +126,13 @@ public class RBFNetworkTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.println("RBF Network Error = " + error);
-        assertEquals(123, error);
+        assertEquals(127, error);
 
         model = RBFNetwork.fit(x, y, RBF.fit(x, 30), true);
         prediction = model.predict(testx);
         error = Error.of(testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(110, error);
+        assertEquals(116, error);
     }
 
     @Test
@@ -145,20 +145,20 @@ public class RBFNetworkTest {
         int[] y = usps.y();
         double[][] testx = usps.testx();
         int[] testy = usps.testy();
-        KMeans kmeans = KMeans.fit(x, 200);
-        RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), MathEx::distance);
+        var kmeans = KMeans.fit(x, 200, 10);
+        RBF<double[]>[] neurons = RBF.of(kmeans.centers(), new GaussianRadialBasis(8.0), MathEx::distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(x, y, neurons);
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.println("RBF Network Error = " + error);
-        assertEquals(142, error);
+        assertEquals(135, error);
 
         model = RBFNetwork.fit(x, y, neurons, true);
         prediction = model.predict(testx);
         error = Error.of(testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(143, error);
+        assertEquals(137, error);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

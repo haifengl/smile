@@ -16,6 +16,7 @@
  */
 package smile.base.svm;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
@@ -167,8 +168,7 @@ public class OCSVM<T> {
             }
         }
 
-        @SuppressWarnings("unchecked")
-        T[] vectors = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), nsv);
+        T[] vectors = Arrays.copyOf(x, nsv);
         double[] weight = new double[nsv];
         // Since we want the final decision function to evaluate to 1 for points
         // which lie on the margin, we need to subtract this tol from the offset rho.

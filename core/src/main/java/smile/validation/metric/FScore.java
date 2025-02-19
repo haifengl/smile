@@ -67,7 +67,7 @@ public class FScore implements ClassificationMetric {
      *             the effectiveness of retrieval with respect
      *             to a user who attaches &beta; times as much
      *             importance to recall as precision.
-     * @param strategy The aggregating strategy for multi-classes.
+     * @param strategy the aggregating strategy for multi-classes.
      */
     public FScore(double beta, Averaging strategy) {
         if (beta <= 0.0) {
@@ -96,6 +96,7 @@ public class FScore implements ClassificationMetric {
      *             importance to recall as precision.
      * @param truth the ground truth.
      * @param prediction the prediction.
+     * @param strategy the aggregating strategy for multi-classes.
      * @return the metric.
      */
     public static double of(int[] truth, int[] prediction, double beta, Averaging strategy) {

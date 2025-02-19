@@ -32,6 +32,7 @@ import java.io.IOException;
  * @param ffnDimMultiplier the multiplier for the hidden dimension of the feedforward layers.
  * @param normEps the epsilon value used for numerical stability in normalization layers.
  * @param ropeTheta the theta parameter in rotary positional encoding.
+ * @param scaledRope scale RoPE positional encoding if true.
  * @param maxBatchSize the maximum batch size.
  * @param maxSeqLen the maximum sequence length for input data.
  *
@@ -62,6 +63,7 @@ public record ModelArgs(int dim,
      * @param path the file path.
      * @param maxBatchSize the maximum batch size.
      * @param maxSeqLen the maximum sequence length for input data.
+     * @throws IOException if fail to open the parameter file.
      * @return the model hyperparameters.
      */
     public static ModelArgs from(String path, int maxBatchSize, int maxSeqLen) throws IOException {

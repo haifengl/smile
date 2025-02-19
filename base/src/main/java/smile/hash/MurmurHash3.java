@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets;
  *
  * @author Haifeng Li
  */
-public class MurmurHash3 {
+public interface MurmurHash3 {
 
     private static long getblock(ByteBuffer key, int offset, int index) {
         int i_8 = index << 3;
@@ -68,7 +68,7 @@ public class MurmurHash3 {
      * @param seed the seed of hash code.
      * @return the hash code.
      */
-    public static int hash32(String text, int seed) {
+    static int hash32(String text, int seed) {
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
         return hash32(bytes, 0, bytes.length, seed);
     }
@@ -81,7 +81,7 @@ public class MurmurHash3 {
      * @param seed the seed of hash code.
      * @return the hash code.
      */
-    public static int hash32(byte[] data, int offset, int length, int seed) {
+    static int hash32(byte[] data, int offset, int length, int seed) {
         int c1 = 0xcc9e2d51;
         int c2 = 0x1b873593;
         int h1 = seed;
@@ -140,7 +140,7 @@ public class MurmurHash3 {
      * @param seed the seed of hash code.
      * @param result the output of hash code.
      */
-    public static void hash128(ByteBuffer data, int offset, int length, long seed, long[] result) {
+    static void hash128(ByteBuffer data, int offset, int length, long seed, long[] result) {
         final int nblocks = length >> 4; // Process as 128-bit blocks.
 
         long h1 = seed;

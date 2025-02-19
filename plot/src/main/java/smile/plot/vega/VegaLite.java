@@ -194,7 +194,7 @@ public class VegaLite {
      *                 setting includes the padding within the view size
      *                 calculations, such that the width and height settings
      *                 indicate the total intended size of the view.
-     * @link <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
+     * @see <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
      */
     public VegaLite autosize(String type, boolean resize, String contains) {
         ObjectNode autosize = spec.putObject("autosize");

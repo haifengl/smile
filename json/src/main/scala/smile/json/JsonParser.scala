@@ -19,7 +19,7 @@ package smile.json
 import scala.language.implicitConversions
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.SeqMap
-import java.lang.{StringBuilder => JStringBuilder}
+import java.lang.StringBuilder as JStringBuilder
 import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.charset.Charset
 
@@ -118,7 +118,7 @@ class JsonParser(input: ParserInput) {
       }
       values()
       require(']')
-      JsArray(list.result(): _*)
+      JsArray(list.result()*)
     } else {
       advance()
       JsArray()

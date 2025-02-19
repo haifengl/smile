@@ -41,6 +41,11 @@ public class Sensitivity implements ClassificationMetric {
     /** Default instance. */
     public static final Sensitivity instance = new Sensitivity();
 
+    /** Constructor. */
+    public Sensitivity() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

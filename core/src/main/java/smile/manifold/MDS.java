@@ -56,6 +56,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * representing the objects.
      */
     public record Options(int d, boolean positive) {
+        /** Constructor. */
         public Options {
             if (d < 2) {
                 throw new IllegalArgumentException("Invalid dimension of feature space: " + d);
@@ -100,8 +101,8 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * distance, not squared.
      * @return the model.
      */
-    public static MDS of(double[][] proximity) {
-        return of(proximity, new Options());
+    public static MDS fit(double[][] proximity) {
+        return fit(proximity, new Options());
     }
 
     /**
@@ -113,7 +114,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static MDS of(double[][] proximity, Options options) {
+    public static MDS fit(double[][] proximity, Options options) {
         int m = proximity.length;
         int n = proximity[0].length;
 
