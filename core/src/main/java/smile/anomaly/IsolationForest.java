@@ -112,6 +112,7 @@ public class IsolationForest implements Serializable {
      * @param extensionLevel the extension level.
      */
     public record Options(int ntrees, int maxDepth, double subsample, int extensionLevel) {
+        /** Constructor. */
         public Options {
             if (ntrees < 1) {
                 throw new IllegalArgumentException("Invalid number of trees: " + ntrees);

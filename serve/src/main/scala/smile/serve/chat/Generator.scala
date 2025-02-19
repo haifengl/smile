@@ -18,13 +18,13 @@ package smile.serve.chat
 
 import java.util.concurrent.SubmissionPublisher
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.{Failure, Success}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
 import smile.llm.{Message, Role}
-import smile.llm.llama._
+import smile.llm.llama.*
 import smile.serve.ServeConfig
 
 /** GenAI actor.

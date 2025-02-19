@@ -19,7 +19,7 @@ package smile.json
 import java.nio.ByteBuffer
 import java.util.{Arrays, Date}
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /**
  * BSON's 12-byte ObjectId type, constructed using:
@@ -99,7 +99,7 @@ object ObjectId {
 
     val mac = if (!isLinux || correctVersion || noIpv6) {
       Try {
-        import java.net._
+        import java.net.*
         val networkInterfacesEnum = NetworkInterface.getNetworkInterfaces
         val networkInterfaces = networkInterfacesEnum.asScala
         val ha = networkInterfaces.find(ha => Try(ha.getHardwareAddress).isSuccess && ha.getHardwareAddress != null && ha.getHardwareAddress.length == 6)

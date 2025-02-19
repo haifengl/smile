@@ -29,6 +29,11 @@ public class MAD implements RegressionMetric {
     /** Default instance. */
     public static final MAD instance = new MAD();
 
+    /** Constructor. */
+    public MAD() {
+
+    }
+
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);

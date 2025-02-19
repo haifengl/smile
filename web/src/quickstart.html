@@ -415,7 +415,7 @@ smile>
     <div class="tab-content">
         <div class="tab-pane active" id="training_1">
             <div class="code" style="text-align: left;">
-                <pre class="prettyprint lang-shell"><code>
+                <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
 $ bin/smile train
 Smile 4.0.0
 Usage: smile train [random_forest|gradient_boost|adaboost|cart|logistic|fisher|lda|qda|rda|mlp|svm|rbf|ols|lasso|ridge|elastic_net|gaussian_process] [options]
@@ -604,7 +604,7 @@ Usage: smile serve [options]
     <div class="tab-content">
         <div class="tab-pane active" id="train_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-shell"><code>
+    <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
 $ bin/smile train random_forest --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.model
 [main] INFO smile.io.Arff - Read ARFF relation iris
 [ForkJoinPool.commonPool-worker-3] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 88.89%
@@ -651,25 +651,21 @@ Training metrics: {
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
 $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff --probability
-0 [0.9599005925578108, 0.0205362892965633, 0.01956311814562593]
-0 [0.9591845549270528, 0.020962057229598156, 0.01985338784334913]
-0 [0.959796981740008, 0.02072034636162096, 0.019482671898371082]
-0 [0.959796981740008, 0.02072034636162096, 0.019482671898371082]
-0 [0.9598769149423004, 0.020548128104318476, 0.0195749569533811]
-0 [0.9583053192555514, 0.021164037082801724, 0.020530643661646933]
-0 [0.9598769149423004, 0.020548128104318476, 0.0195749569533811]
-0 [0.9598769149423004, 0.020548128104318476, 0.0195749569533811]
-0 [0.9591845549270528, 0.020962057229598156, 0.01985338784334913]
-0 [0.959796981740008, 0.02072034636162096, 0.019482671898371082]
-0 [0.9583053192555514, 0.021164037082801724, 0.020530643661646933]
-0 [0.9598769149423004, 0.020548128104318476, 0.0195749569533811]
-0 [0.9591845549270528, 0.020962057229598156, 0.01985338784334913]
-0 [0.9591845549270528, 0.020962057229598156, 0.01985338784334913]
-0 [0.9027507265438325, 0.07089506779135216, 0.026354205664815347]
-0 [0.911215084168623, 0.0632270620116508, 0.025557853819726185]
-0 [0.9583053192555514, 0.021164037082801724, 0.020530643661646933]
-0 [0.9599005925578108, 0.0205362892965633, 0.01956311814562593]
-0 [0.911215084168623, 0.0632270620116508, 0.025557853819726185]
+0 0.9601 0.0205 0.0194
+0 0.9599 0.0206 0.0195
+0 0.9600 0.0206 0.0194
+0 0.9600 0.0206 0.0194
+0 0.9601 0.0205 0.0194
+0 0.9586 0.0211 0.0203
+0 0.9601 0.0205 0.0194
+0 0.9601 0.0205 0.0194
+0 0.9599 0.0206 0.0195
+0 0.9600 0.0206 0.0194
+0 0.9586 0.0211 0.0203
+0 0.9601 0.0205 0.0194
+0 0.9599 0.0206 0.0195
+0 0.9599 0.0206 0.0195
+0 0.9078 0.0668 0.0254
 ...
   </code></pre>
             </div>
@@ -684,9 +680,9 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
         <div class="tab-pane active" id="serve_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ bin/smile serve --model iris_random_forest.model --probability
+$ bin/smile serve --model iris_random_forest.model --probability --line
 [smile-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-Smile online at http://localhost:8080/v1/infer
+Smile online at http://localhost:8728/v1/infer
 Press RETURN to stop...
   </code></pre>
             </div>
@@ -701,14 +697,14 @@ Press RETURN to stop...
         <div class="tab-pane active" id="serve_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json" \
+$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
         -d '{
           "sepallength": 5.1,
           "sepalwidth": 3.5,
           "petallength": 1.4,
           "petalwidth": 0.2
         }'
-[{"class":0,"probability":[0.9599005925578108,0.0205362892965633,0.01956311814562593]}]
+{"class":0,"probability":[0.9599,0.0207,0.0194]}
   </code></pre>
             </div>
         </div>
@@ -724,11 +720,11 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
         <div class="tab-pane active" id="serve_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json" \
+$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
         -d '{"sepallength": 5.1, "sepalwidth": 3.5, "petallength": 1.4,"petalwidth": 0.2}
           {"sepallength": 6.3, "sepalwidth": 3.3, "petallength": 6.0,"petalwidth": 2.5}'
-[{"class":0,"probability":[0.9599005925578108,0.0205362892965633,0.01956311814562593]},
- {"class":2,"probability":[0.023727657781681327,0.051035220743102516,0.9252371214752161]}]
+{"class":0,"probability":[0.9599,0.0207,0.0194]}
+{"class":2,"probability":[0.0259,0.0517,0.9224]}
   </code></pre>
             </div>
         </div>
@@ -739,7 +735,9 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
         request body (e.g., a JSON array or CSV stream) on an element-by-element basis,
         and render the response immediately without waiting for the rest inference
         to complete first. Therefore, it is safe to send very large requests (multi-GB) to
-        the endpoint!</p>
+        the endpoint! In the below example, we generate a dataset with 150,000 samples
+        by repeating Iris data 1000 times. It takes only 7 seconds to finish the end-to-end
+        processing including HTTP request and printing.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#serve_5" data-toggle="tab">Online Serving with Streaming</a></li>
@@ -747,18 +745,17 @@ $ curl -X POST http://localhost:8080/v1/infer -H "Content-Type: application/json
     <div class="tab-content">
         <div class="tab-pane active" id="serve_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-shell"><code>
+    <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
 $ for i in {1..1000}; do tail -n 153 data/weka/iris.arff | head -n 150 >> iris.txt; done
-$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8080/v1/infer?format=csv
+$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8728/v1/infer?format=csv
   </code></pre>
             </div>
         </div>
     </div>
 
-    <p>By default, SmileServe binds at localhost:8080. If you prefer a different port and/or
+    <p>By default, SmileServe binds at localhost:8728. If you prefer a different port and/or
         want to expose the server to other hosts, you may set the binding interface and port
-        with <code>-J-Dakka.http.server.interface=0.0.0.0</code> and
-        <code>-J-Dakka.http.server.port=8000</code>, for example.</p>
+        with <code>--host=0.0.0.0</code> and <code>--port=8000</code>, for example.</p>
 
     <h2 id="notebook">Notebooks</h2>
 
@@ -781,7 +778,7 @@ $ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http:
     <div class="tab-content">
         <div class="tab-pane active" id="notebook_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
     import $ivy.`com.github.haifengl::smile-scala:4.2.0`
 
     import scala.language.postfixOps

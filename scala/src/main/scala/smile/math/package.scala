@@ -17,7 +17,7 @@
 package smile
 
 import scala.language.implicitConversions
-import smile.math.matrix._
+import smile.math.matrix.*
 import smile.math.special.{Beta, Erf, Gamma}
 import smile.stat.distribution.{Distribution, GaussianDistribution}
 import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}

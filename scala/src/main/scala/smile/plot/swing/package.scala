@@ -224,7 +224,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def boxplot(data: Array[Double]*): Canvas = {
-    BoxPlot.of(data: _*).canvas
+    BoxPlot.of(data*).canvas
   }
 
   /** Box plot.

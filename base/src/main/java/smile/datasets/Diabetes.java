@@ -23,7 +23,7 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Diabetes dataset. This dataset has 10 baseline variables, age, sex, body

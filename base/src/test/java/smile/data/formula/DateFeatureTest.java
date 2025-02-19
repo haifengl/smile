@@ -22,7 +22,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.data.formula.Terms.date;
 

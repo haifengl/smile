@@ -48,6 +48,7 @@ import smile.util.Strings;
 public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex index) implements Iterable<Row>, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrame.class);
 
+    /** Constructor. */
     public DataFrame {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Columns must not be empty");
@@ -436,7 +437,6 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     @Override
-    @javax.annotation.Nonnull
     public Iterator<Row> iterator() {
         return stream().iterator();
     }
@@ -1328,7 +1328,8 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
 
     /**
      * Creates a DataFrame from a stream of tuples.
-     * @param data The data stream.
+     * @param schema the schema of data frame.
+     * @param data the data stream.
      * @return the data frame.
      */
     public static DataFrame of(StructType schema, Stream<? extends Tuple> data) {

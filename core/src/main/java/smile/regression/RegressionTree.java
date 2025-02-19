@@ -293,6 +293,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
      * @param nodeSize the minimum size of leaf nodes.
      */
     public record Options(int maxDepth, int maxNodes, int nodeSize) {
+        /** Constructor. */
         public Options {
             if (maxDepth < 2) {
                 throw new IllegalArgumentException("Invalid maximal tree depth: " + maxDepth);

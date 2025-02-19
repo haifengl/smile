@@ -26,7 +26,7 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.Scaler;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;

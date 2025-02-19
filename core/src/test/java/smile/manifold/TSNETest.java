@@ -57,21 +57,10 @@ public class TSNETest {
         double[][] X = pca.apply(x);
 
         long start = System.currentTimeMillis();
-        TSNE tsne = new TSNE(X, new TSNE.Options(2, 20, 200, 550));
+        TSNE tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 
-        assertEquals(1.3872256, tsne.cost(), 0.1);
-        /*
-        var coordinates = tsne.coordinates();
-        double[] coord0    = {  2.6870328, 16.8175010};
-        double[] coord100  = {-16.3270630,  3.6016438};
-        double[] coord1000 = {-16.2529939, 26.8543395};
-        double[] coord2000 = {-17.0491869,  4.8453648};
-        assertArrayEquals(coord0,    coordinates[0], 1E-6);
-        assertArrayEquals(coord100,  coordinates[100], 1E-6);
-        assertArrayEquals(coord1000, coordinates[1000], 1E-6);
-        assertArrayEquals(coord2000, coordinates[2000], 1E-6);
-         */
+        assertEquals(1.3927, tsne.cost(), 1E-3);
     }
 }

@@ -143,7 +143,7 @@ public class LASVM<T> implements Serializable {
      * @param epochs the number of epochs, usually 1 or 2 is sufficient.
      * @return the model.
      */
-    public KernelMachine<T>  fit(T[] x, int[] y, int epochs) {
+    public KernelMachine<T> fit(T[] x, int[] y, int epochs) {
         this.x = x;
         this.K = new double[x.length][];
 
@@ -170,8 +170,7 @@ public class LASVM<T> implements Serializable {
         finish();
 
         int n = vectors.size();
-        @SuppressWarnings("unchecked")
-        T[] sv = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), n);
+        T[] sv = Arrays.copyOf(x, n);
         double[] alpha = new double[n];
         for (int i = 0; i < n; i++) {
             SupportVector<T> v = vectors.get(i);

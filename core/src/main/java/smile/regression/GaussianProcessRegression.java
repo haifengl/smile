@@ -20,11 +20,11 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.math.BFGS;
-import smile.math.DifferentiableMultivariateFunction;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.MultivariateGaussianDistribution;
+import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -309,6 +309,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
      */
     public record Options(double noise, boolean normalize, double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (noise < 0.0) {
                 throw new IllegalArgumentException("Invalid noise variance = " + noise);

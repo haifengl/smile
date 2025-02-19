@@ -16,16 +16,14 @@
  */
 package smile.feature.transform;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
-import smile.math.Function;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
+import smile.util.function.Function;
 
 /**
  * Scales each feature by its maximum absolute value. This class scales and
@@ -35,7 +33,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public class MaxAbsScaler {
+public interface MaxAbsScaler {
     /**
      * Fits the data transformation.
      * @param data the training data.
@@ -43,7 +41,7 @@ public class MaxAbsScaler {
      *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    public static InvertibleColumnTransform fit(DataFrame data, String... columns) {
+    static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty data frame");
         }

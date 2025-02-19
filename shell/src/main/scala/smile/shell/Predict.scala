@@ -16,10 +16,9 @@
  */
 package smile.shell
 
-import java.util.Arrays
 import scopt.OParser
 import smile.io.Read
-import smile.model._
+import smile.model.*
 import smile.util.Strings
 
 /**
@@ -57,10 +56,10 @@ object Predict {
   def parse(args: Array[String]): Option[PredictConfig] = {
     val builder = OParser.builder[PredictConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile predict"),
-        head("Smile", BuildInfo.version),
+        head("Smile", smile.shell.version),
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
@@ -90,23 +89,25 @@ object Predict {
     */
   def predict(config: PredictConfig): Unit = {
     val data = Read.data(config.data, config.format)
-    val modelObj = smile.read(config.model)
-    if (modelObj.isInstanceOf[ClassificationModel]) {
-      val model = modelObj.asInstanceOf[ClassificationModel]
-      if (config.probability && model.classifier.soft()) {
-        val posteriori = new java.util.ArrayList[Array[Double]]()
-        val y = model.classifier.predict(data, posteriori)
-        (0 until data.size()).foreach { i =>
-          println(s"${y(i)} ${Arrays.toString(posteriori.get(i))}")
+    smile.read(config.model) match {
+      case model: ClassificationModel =>
+        if (config.probability && model.classifier.soft()) {
+          val posteriori = new java.util.ArrayList[Array[Double]]()
+          val y = model.classifier.predict(data, posteriori)
+          (0 until y.length).foreach { i =>
+            print(y(i))
+            posteriori.get(i).foreach { prob => print(" %.4f" format prob) }
+            println()
+          }
+        } else {
+          model.classifier.predict(data).foreach(y => println(y))
         }
-      } else {
-        model.classifier.predict(data).foreach(y => println(y))
-      }
-    } else if (modelObj.isInstanceOf[RegressionModel]) {
-      val model = modelObj.asInstanceOf[RegressionModel]
-      model.regression.predict(data).foreach(y => println(Strings.format(y)))
-    } else {
-      Console.err.println(s"{config.model} doesn't contain a valid model.")
+
+      case model: RegressionModel =>
+        model.regression.predict(data).foreach(y => println(Strings.format(y)))
+
+      case _ =>
+        Console.err.println(s"{config.model} doesn't contain a valid model.")
     }
   }
 }

@@ -54,7 +54,7 @@ public class  NGramTest {
     @Test
     public void testExtract() throws IOException {
         System.out.println("n-gram extraction");
-        String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         PorterStemmer stemmer = new PorterStemmer();
         SimpleTokenizer tokenizer = new SimpleTokenizer();

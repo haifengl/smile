@@ -17,9 +17,12 @@
 package smile.clustering;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.util.AlgoStatus;
 import smile.util.SparseArray;
 
 /**
@@ -56,24 +59,12 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SIB extends CentroidClustering<double[], SparseArray> {
-    @Serial
-    private static final long serialVersionUID = 2L;
+public class SIB {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SIB.class);
 
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     */
-    public SIB(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y);
-    }
+    /** Constructor. */
+    private SIB() {
 
-    @Override
-    protected double distance(double[] x, SparseArray y) {
-        return MathEx.JensenShannonDivergence(x, y);
     }
 
     /**
@@ -81,44 +72,38 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
      * @param data the sparse normalized co-occurrence dataset of which each
      *             row is an observation of which the sum is 1.
      * @param k the number of clusters.
+     * @param maxIter the maximum number of iterations.
      * @return the model.
      */
-    public static SIB fit(SparseArray[] data, int k) {
-        return fit(data, k, 100);
+    public static CentroidClustering<double[], SparseArray> fit(SparseArray[] data, int k, int maxIter) {
+        return fit(data, new Clustering.Options(k, maxIter));
     }
 
     /**
      * Clustering data into k clusters.
      * @param data the sparse normalized co-occurrence dataset of which each
      *             row is an observation of which the sum is 1.
-     * @param k the number of clusters.
-     * @param maxIter the maximum number of iterations.
+     * @param options the hyperparameters.
      * @return the model.
      */
-    public static SIB fit(SparseArray[] data, int k, int maxIter) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid parameter k = " + k);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
+    public static CentroidClustering<double[], SparseArray> fit(SparseArray[] data, Clustering.Options options) {
+        int k = options.k();
+        int maxIter = options.maxIter();
+        double tol = options.tol();
+        var controller = options.controller();
         int n = data.length;
         int d = 1 + Arrays.stream(data).flatMapToInt(SparseArray::indexStream).max().orElse(0);
 
-        int[] y = new int[n];
-        SparseArray[] medoids = new SparseArray[k];
+        ToDoubleBiFunction<SparseArray, SparseArray> distance = MathEx::JensenShannonDivergence;
+        var clustering = CentroidClustering.init("SIB", data, k, distance);
+        logger.info("Initial distortion = {}", clustering.distortion());
 
-        double distortion = MathEx.sum(seed(data, medoids, y, MathEx::JensenShannonDivergence));
-        logger.info("Distortion after initialization: {}", distortion);
-
-        int[] size = new int[k];
+        int[] size = clustering.size();
+        int[] group = clustering.group();
         double[][] centroids = new double[k][d];
-
         IntStream.range(0, k).parallel().forEach(cluster -> {
             for (int i = 0; i < n; i++) {
-                if (y[i] == cluster) {
+                if (group[i] == cluster) {
                     size[cluster]++;
                     for (SparseArray.Entry e : data[i]) {
                         centroids[cluster][e.index()] += e.value();
@@ -131,11 +116,11 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
             }
         });
 
-        for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > 0; iter++) {
+        for (int iter = 1, reassignment = n; iter <= maxIter && reassignment > tol; iter++) {
             reassignment = 0;
 
             for (int i = 0; i < n; i++) {
-                int c = y[i];
+                int c = group[i];
                 double nearest = Double.MAX_VALUE;
                 for (int j = 0; j < k; j++) {
                     double divergence = MathEx.JensenShannonDivergence(data[i], centroids[j]);
@@ -145,8 +130,8 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
                     }
                 }
 
-                if (c != y[i]) {
-                    int o = y[i];
+                if (c != group[i]) {
+                    int o = group[i];
                     for (int j = 0; j < d; j++) {
                         centroids[c][j] *= size[c];
                         centroids[o][j] *= size[o];
@@ -175,19 +160,38 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
                         }
                     }
 
-                    y[i] = c;
+                    group[i] = c;
                     reassignment++;
                 }
             }
-            logger.info("Assignments of {} iterations: {}", smile.util.Strings.ordinal(iter), reassignment);
+
+            logger.info("Iteration {}: assignments = {}", iter, reassignment);
+            if (controller != null) {
+                controller.submit(new AlgoStatus(iter, reassignment));
+                if (controller.isInterrupted()) break;
+            }
         }
 
-        distortion = IntStream.range(0, n).parallel()
-                .mapToDouble(i -> MathEx.JensenShannonDivergence(data[i], centroids[y[i]]))
-                .sum();
-
+        var proximity = clustering.proximity();
+        double distortion = IntStream.range(0, n).parallel().mapToDouble(i -> {
+            double dist = MathEx.JensenShannonDivergence(data[i], centroids[group[i]]);
+            dist *= dist;
+            proximity[i] = dist;
+            return dist;
+        }).sum() / n;
         logger.info("Final distortion: {}", distortion);
 
-        return new SIB(distortion, centroids, y);
+        return new CentroidClustering<>("SIB", centroids, new JSDistance(), group, proximity);
+    }
+
+    /** Serializable distance lambda. */
+    private static class JSDistance implements ToDoubleBiFunction<double[], SparseArray>, Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public double applyAsDouble(double[] x, SparseArray y) {
+            return MathEx.JensenShannonDivergence(x, y);
+        }
     }
 }

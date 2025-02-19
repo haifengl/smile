@@ -55,12 +55,18 @@ import smile.math.matrix.SparseMatrix;
 public class LLE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LLE.class);
 
+    /** Private constructor to prevent object creation. */
+    private LLE() {
+
+    }
+
     /**
      * LLE hyperparameters.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      */
     public record Options(int k, int d) {
+        /** Constructor. */
         public Options {
             if (k < 2) {
                 throw new IllegalArgumentException("Invalid number of nearest neighbors: " + k);
@@ -108,10 +114,10 @@ public class LLE {
      * @param options the hyperparameters.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, Options options) {
+    public static double[][] fit(double[][] data, Options options) {
         // Use the largest connected component of nearest neighbor graph.
         NearestNeighborGraph nng = NearestNeighborGraph.of(data, options.k);
-        return of(data, nng.largest(false), options.d);
+        return fit(data, nng.largest(false), options.d);
     }
 
     /**
@@ -121,7 +127,7 @@ public class LLE {
      * @param d the dimension of the manifold.
      * @return the embedding coordinates.
      */
-    public static double[][] of(double[][] data, NearestNeighborGraph nng, int d) {
+    public static double[][] fit(double[][] data, NearestNeighborGraph nng, int d) {
         int k = nng.k();
         int D = data[0].length;
 

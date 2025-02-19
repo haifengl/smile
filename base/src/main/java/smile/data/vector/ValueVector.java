@@ -132,6 +132,7 @@ public interface ValueVector extends Serializable {
     /**
      * Returns the result of less-than comparison.
      * @param other the reference object with which to compare.
+     * @param <T> the type of the vector elements.
      * @return the result of less-than comparison.
      */
     default <T extends Comparable<T>> boolean[] lt(T other) {
@@ -145,6 +146,7 @@ public interface ValueVector extends Serializable {
     /**
      * Returns the result of less-than or equal comparison.
      * @param other the reference object with which to compare.
+     * @param <T> the type of the vector elements.
      * @return the result of less-than or equal comparison.
      */
     default <T extends Comparable<T>> boolean[] le(T other) {
@@ -158,6 +160,7 @@ public interface ValueVector extends Serializable {
     /**
      * Returns the result of greater-than comparison.
      * @param other the reference object with which to compare.
+     * @param <T> the type of the vector elements.
      * @return the result of greater-than comparison.
      */
     default <T extends Comparable<T>> boolean[] gt(T other) {
@@ -171,6 +174,7 @@ public interface ValueVector extends Serializable {
     /**
      * Returns the result of greater-than or equal comparison.
      * @param other the reference object with which to compare.
+     * @param <T> the type of the vector elements.
      * @return the result of greater-than or equal comparison.
      */
     default <T extends Comparable<T>> boolean[] ge(T other) {

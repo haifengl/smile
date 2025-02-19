@@ -18,11 +18,11 @@ package smile.shell
 
 import java.util.Properties
 import scopt.OParser
-import smile.data.formula._
+import smile.data.formula.*
 import smile.io.Read
 import smile.math.MathEx
-import smile.model._
-import smile.validation._
+import smile.model.*
+import smile.validation.*
 
 /**
   * Train command options.
@@ -80,18 +80,18 @@ object Train {
         if (config.classification) {
           val model = ClassificationModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
+          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
           smile.write(model, config.model)
         } else {
           val model = RegressionModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: ${metrics}"))
-          model.test.foreach(metrics => println(s"Test metrics: ${metrics}"))
+          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
+          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
           smile.write(model, config.model)
           if (test.isDefined) {
             val metrics = RegressionMetrics.of(model.regression, formula, test.get)
-            println(s"Validation metrics: ${metrics}")
+            println(s"Validation metrics: $metrics")
           }
         }
       case _ => ()
@@ -106,10 +106,10 @@ object Train {
   def parse(args: Array[String]): Option[TrainConfig] = {
     val builder = OParser.builder[TrainConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile train"),
-        head("Smile", BuildInfo.version),
+        head("Smile", smile.shell.version),
         opt[String]("formula")
           .optional()
           .valueName("<class ~ .>")

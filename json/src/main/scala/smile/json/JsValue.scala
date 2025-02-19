@@ -16,7 +16,7 @@
  */
 package smile.json
 
-import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneOffset}
 import java.sql.Timestamp
 import java.util.{Date, UUID}
 import java.math.BigDecimal
@@ -669,7 +669,7 @@ case class JsObject(fields: collection.mutable.SeqMap[String, JsValue]) extends 
 }
 
 object JsObject {
-  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.SeqMap(fields: _*))
+  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.SeqMap(fields*))
   def apply(map: Map[String, JsValue]) = new JsObject(collection.mutable.SeqMap() ++ map)
 }
 
@@ -797,5 +797,5 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
 }
 
 object JsArray {
-  def apply(elements: JsValue*) = new JsArray(collection.mutable.ArrayBuffer(elements: _*))
+  def apply(elements: JsValue*) = new JsArray(collection.mutable.ArrayBuffer(elements*))
 }

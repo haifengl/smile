@@ -20,6 +20,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
@@ -27,7 +28,7 @@ import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 
 /**
  * Neural Gas soft competitive learning algorithm. Neural Gas is inspired
@@ -124,21 +125,6 @@ public class NeuralGas implements VectorQuantizer {
         this.lifetime = lifetime;
         this.graph = new AdjacencyMatrix(neurons.length);
         this.dist = new double[neurons.length];
-    }
-
-    /**
-     * Selects random samples as initial neurons of Neural Gas.
-     * @param k the number of neurons.
-     * @param samples some samples to select initial weight vectors.
-     * @return the initial neurons.
-     */
-    public static double[][] seed(int k, double[][] samples) {
-        int n = samples.length;
-        int[] y = new int[n];
-        double[][] medoids = new double[k][];
-        CentroidClustering.seed(samples, medoids, y, MathEx::squaredDistance);
-
-        return medoids;
     }
 
     /**

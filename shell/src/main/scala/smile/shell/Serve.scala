@@ -16,34 +16,40 @@
  */
 package smile.shell
 
-import scala.concurrent.duration._
+import java.util.Properties
+import scala.concurrent.duration.*
+import scala.language.implicitConversions
 import scala.util.{Failure, Success}
-import scopt.OParser
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.common._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl.Source
+import akka.http.scaladsl.common.*
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
+import akka.stream.scaladsl.{Flow, Source}
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import spray.json._
-import spray.json.DefaultJsonProtocol._
-import smile.data._
+import scopt.OParser
+import smile.data.StructTypeOps
 import smile.data.`type`.StructType
-import smile.model.{ClassificationModel, RegressionModel}
+import spray.json.*
+import smile.model.SmileModel
 
 /**
   * Serve command options.
   * @param model the model file path.
   * @param probability the flag if output posteriori probabilities for soft classifiers.
+  * @param line the flag if render multiple JSON objects in a line-by-line fashion.
+  * @param host the IP address to listen on (0.0.0.0 for all available addresses).
+  * @param port the port number.
   */
 case class ServeConfig(model: String,
-                       probability: Boolean = false)
+                       probability: Boolean = false,
+                       line: Boolean = false,
+                       host: String = "localhost",
+                       port: Int = 8728)
 
 /**
   * Online prediction.
@@ -67,10 +73,10 @@ object Serve extends LazyLogging {
   def parse(args: Array[String]): Option[ServeConfig] = {
     val builder = OParser.builder[ServeConfig]
     val parser = {
-      import builder._
+      import builder.*
       OParser.sequence(
         programName("smile serve"),
-        head("Smile", BuildInfo.version),
+        head("Smile", smile.shell.version),
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
@@ -79,6 +85,18 @@ object Serve extends LazyLogging {
           .optional()
           .action((_, c) => c.copy(probability = true))
           .text("Output the posteriori probabilities for soft classifier"),
+        opt[Unit]("line")
+          .optional()
+          .action((_, c) => c.copy(line = true))
+          .text("Render multiple JSON objects in a line-by-line fashion"),
+        opt[String]("host")
+          .optional()
+          .action((x, c) => c.copy(host = x))
+          .text("The IP address to listen on (0.0.0.0 for all available addresses)"),
+        opt[Int]("port")
+          .optional()
+          .action((x, c) => c.copy(port = x))
+          .text("The port number")
       )
     }
 
@@ -86,37 +104,17 @@ object Serve extends LazyLogging {
     // If arguments be bad, the error message would have been displayed.
   }
 
+  implicit def pimpStructType(schema: StructType): StructTypeOps = new StructTypeOps(schema)
+
   /**
     * Online prediction.
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val model = smile.read(config.model)
-    val (schema, predictor) = model match {
-      case model: ClassificationModel =>
-        val schema = model.schema
-        val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { x =>
-            if (config.probability && model.classifier.soft()) {
-              val prob = Array.ofDim[Double](model.classifier.numClasses())
-              val y = model.classifier.predict(x, prob)
-              JsObject(
-                "class" -> y.toJson,
-                "probability" -> prob.toJson
-              )
-            } else {
-              JsNumber.apply(model.classifier.predict(x))
-            }
-          }.getOrElse(JsString("Invalid instance"))
-        (schema, predict)
-
-      case model: RegressionModel =>
-        val schema = model.schema
-        val predict: Option[Tuple] => JsValue =
-          tuple => tuple.map { x =>
-            JsNumber.apply(model.regression.predict(x))
-          }.getOrElse(JsString("Invalid instance"))
-        (schema, predict)
+    val options = new Properties()
+    if (config.probability) options.setProperty("probability", "true")
+    val model = smile.read(config.model) match {
+      case model: SmileModel => model
 
       case _ =>
         Console.err.println(s"{config.model} doesn't contain a valid model.")
@@ -127,19 +125,23 @@ object Serve extends LazyLogging {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
     // Source rendering support trait
-    implicit val jsonStreamingSupport = EntityStreamingSupport.json()
+    // Render multiple JSON objects in a line-by-line fashion
+    val newline = ByteString("\n")
+    val streaming = EntityStreamingSupport.json()
+    val jsonl = streaming.withFramingRenderer(Flow[ByteString].map(bs => bs ++ newline))
+    implicit val jsonStreamingSupport = if (config.line) jsonl else streaming
 
     val route = path("v1" / "infer") {
       post {
-        parameters("format".?) { case format =>
+        parameters("format".?) { format =>
           format.getOrElse("json") match {
             case "json" =>
               entity(asSourceOf[JsValue]) { json =>
-                complete(processJSON(schema, json)(predictor))
+                complete(processJSON(json, model, options))
               }
-            case csvFormat if csvFormat.startsWith("csv") =>
+            case format if format.startsWith("csv") =>
               extractDataBytes { bytes =>
-                complete(processCSV(schema, bytes, csvFormat)(predictor))
+                complete(processCSV(bytes, format, model, options))
               }
             case _ =>
               complete(StatusCodes.UnsupportedMediaType)
@@ -148,23 +150,19 @@ object Serve extends LazyLogging {
       }
     }
 
-    val conf = ConfigFactory.load()
-    val addr = conf.getString("akka.http.server.interface")
-    val port = conf.getInt("akka.http.server.port")
-    val bindingFuture = Http().newServerAt(addr, port).bind(route)
+    val bindingFuture = Http().newServerAt(config.host, config.port).bind(route)
       .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
     bindingFuture.onComplete {
       case Success(_) =>
-        system.log.info("Smile online at http://{}:{}/v1/infer", addr, port)
+        system.log.info("Smile online at http://{}:{}/v1/infer", config.host, config.port)
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()
     }
   }
 
-  def processJSON[T](schema: StructType, stream: Source[JsValue, Any])
-                    (processor: Option[Tuple] => T): Source[T, Any]  = {
-    stream.map(schema.json(_)).map(processor)
+  def processJSON(stream: Source[JsValue, Any], model: SmileModel, options: Properties): Source[JsValue, Any]  = {
+    stream.map(model.schema.json(_)).map(model(_, options))
   }
 
   def getCsvFormatByte(format: String, param: Array[String]): Byte = {
@@ -174,8 +172,7 @@ object Serve extends LazyLogging {
     param(1).charAt(0).toByte
   }
 
-  def processCSV[T](schema: StructType, bytes: Source[ByteString, Any], format: String)
-                   (processor: Option[Tuple] => T): Source[T, Any] = {
+  def processCSV(bytes: Source[ByteString, Any], format: String, model: SmileModel, options: Properties): Source[JsValue, Any] = {
     var delimiter = CsvParsing.Comma
     var quote = CsvParsing.DoubleQuote
     var escape = CsvParsing.Backslash
@@ -193,18 +190,15 @@ object Serve extends LazyLogging {
       }
     }
 
-    implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
-    implicit val csvStreamingSupport = EntityStreamingSupport.csv()
     val lines = bytes.via(CsvParsing.lineScanner(delimiter, quote, escape))
-
     if (header) {
       lines.via(CsvToMap.toMapAsStrings())
-        .map(schema.csv(_))
-        .map(processor)
+        .map(model.schema.csv(_))
+        .map(model(_, options))
     } else {
       lines.map(_.map(_.utf8String))
-        .map(schema.csv(_))
-        .map(processor)
+        .map(model.schema.csv(_))
+        .map(model(_, options))
     }
   }
 }

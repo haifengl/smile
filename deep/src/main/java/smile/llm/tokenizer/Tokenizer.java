@@ -85,6 +85,7 @@ public interface Tokenizer {
     /**
      * Loads a tiktoken model with default BOS token (<s>) and EOS token (</s>).
      * @param path The tiktoken model file path.
+     * @param pattern The regex pattern to split the input text into tokens.
      * @return a tiktoken tokenizer.
      * @throws IOException if fail to load the model.
      */
@@ -97,8 +98,9 @@ public interface Tokenizer {
     /**
      * Loads a tiktoken model.
      * @param path The tiktoken model file path.
-     * @param bos beginning of sequence token.
-     * @param eos end of sequence token.
+     * @param pattern The regex pattern to split the input text into tokens.
+     * @param bos The beginning of sequence token.
+     * @param eos The end of sequence token.
      * @param specialTokens Optional special tokens.
      * @return a tiktoken tokenizer.
      * @throws IOException if fail to load the model.

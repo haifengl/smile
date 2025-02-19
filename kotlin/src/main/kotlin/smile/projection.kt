@@ -18,7 +18,8 @@ package smile.feature.extraction
 
 import smile.data.DataFrame
 import smile.math.kernel.MercerKernel
-import smile.math.TimeFunction
+import smile.manifold.KPCA
+import smile.util.function.TimeFunction
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -113,7 +114,7 @@ fun ppca(data: Array<DoubleArray>, k: Int): ProbabilisticPCA  {
  *                  the given threshold will be kept.
  */
 fun <T> kpca(data: DataFrame, kernel: MercerKernel<DoubleArray>, k: Int, threshold: Double = 0.0001): KernelPCA {
-    return KernelPCA.fit(data, kernel, k, threshold)
+    return KernelPCA.fit(data, kernel, KPCA.Options(k, threshold))
 }
 
 /**

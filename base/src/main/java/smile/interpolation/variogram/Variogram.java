@@ -16,7 +16,7 @@
  */
 package smile.interpolation.variogram;
 
-import smile.math.Function;
+import smile.util.function.Function;
 
 /**
  * In spatial statistics the theoretical variogram

@@ -24,7 +24,7 @@ import java.util.Arrays;
 import smile.data.CategoricalEncoder;
 import smile.io.Read;
 import smile.math.MathEx;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Swiss roll dataset. It is commonly used demonstrating nonlinear

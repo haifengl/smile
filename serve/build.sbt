@@ -2,7 +2,7 @@ name := "smile-serve"
 
 // SprayJsonSupport not working for Future[Seq[Obj]] with Scala 3
 // https://github.com/akka/akka-http/issues/3962
-scalaVersion := "3.3.3"
+scalaVersion := "3.3.4"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.serve")
 
@@ -37,16 +37,10 @@ batScriptExtraDefines ++= Seq(
   """set PATH=!PATH!;%~dp0"""
 )
 
-// BuildInfo
-enablePlugins(BuildInfoPlugin)
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-buildInfoPackage := "smile.serve"
-buildInfoOptions += BuildInfoOption.BuildTime
-
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.2",
-  "org.xerial"         %  "sqlite-jdbc" % "3.48.0.0",
+  "org.xerial"         %  "sqlite-jdbc" % "3.49.0.0",
   "ch.qos.logback"     %  "logback-classic" % "1.5.16"
 )
 

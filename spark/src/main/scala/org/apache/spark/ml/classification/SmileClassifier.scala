@@ -19,16 +19,17 @@ package org.apache.spark.ml.classification
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.classification.{ClassificationModel => SparkClassificationModel, Classifier => SparkClassifier}
+import org.apache.spark.ml.classification.ClassificationModel as SparkClassificationModel
+import org.apache.spark.ml.classification.Classifier as SparkClassifier
 import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation._
-import org.apache.spark.ml.util.{Identifiable, _}
+import org.apache.spark.ml.param.*
+import org.apache.spark.ml.util.*
+import org.apache.spark.ml.util.Instrumentation.*
 import org.apache.spark.sql.Dataset
 import org.apache.spark.storage.StorageLevel
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-import org.json4s.{DefaultFormats, JObject}
+import org.json4s.*
+import org.json4s.JsonDSL.*
+import org.json4s.jackson.JsonMethods.*
 
 /**
   * Params for SmileClassifier
@@ -83,9 +84,9 @@ class SmileClassifier(override val uid: String)
 
   /** @group setParam */
   def setTrainer(value: (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]]): this.type =
-    set(trainer, value.asInstanceOf[Trainer])
+    set(trainer, value)
 
-  override protected def train(dataset: Dataset[_]): SmileClassificationModel =
+  override protected def train(dataset: Dataset[?]): SmileClassificationModel =
     instrumented { instr =>
       instr.logPipelineStage(this)
       instr.logDataset(dataset)

@@ -44,6 +44,11 @@ public class AdjustedRandIndex implements ClusteringMetric {
     /** Default instance. */
     public static final AdjustedRandIndex instance = new AdjustedRandIndex();
 
+    /** Constructor. */
+    public AdjustedRandIndex() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] cluster) {
         return of(truth, cluster);

@@ -34,6 +34,11 @@ public class MatthewsCorrelation implements ClassificationMetric {
     /** Default instance. */
     public static final MatthewsCorrelation instance = new MatthewsCorrelation();
 
+    /** Constructor. */
+    public MatthewsCorrelation() {
+
+    }
+
     @Override
     public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);

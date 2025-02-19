@@ -26,6 +26,7 @@ import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.RNNSearch;
 import smile.math.distance.Distance;
+import static smile.clustering.Clustering.OUTLIER;
 
 /**
  * Density-Based Spatial Clustering of Applications with Noise.
@@ -62,7 +63,7 @@ import smile.math.distance.Distance;
  *      completely surrounded by (but not connected to) a different cluster.
  *      Due to the MinPts parameter, the so-called single-link effect
  *     (different clusters being connected by a thin line of points) is reduced.
- * <li> DBSCAN has a notion of noise. Outliers are labeled as Clustering.OUTLIER,
+ * <li> DBSCAN has a notion of noise. Outliers are labeled as PartitionClustering.OUTLIER,
  *      which is Integer.MAX_VALUE.
  * <li> DBSCAN requires just two parameters and is mostly insensitive to the
  *      ordering of the points in the database. (Only points sitting on the
@@ -88,18 +89,18 @@ import smile.math.distance.Distance;
  * 
  * @author Haifeng Li
  */
-public class DBSCAN<T> extends PartitionClustering {
+public class DBSCAN<T> extends Partitioning {
     @Serial
     private static final long serialVersionUID = 2L;
 
     /**
      * The minimum number of points required to form a cluster
      */
-    public final double minPts;
+    private final int minPoints;
     /**
      * The neighborhood radius.
      */
-    public final double radius;
+    private final double radius;
     /**
      * Data structure for neighborhood search.
      */
@@ -111,19 +112,35 @@ public class DBSCAN<T> extends PartitionClustering {
 
     /**
      * Constructor.
-     * @param minPts the minimum number of neighbors for a core data point.
+     * @param k the number of clusters.
+     * @param group the cluster labels.
+     * @param core the flag if the point is a core point.
+     * @param minPoints the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      * @param nns the data structure for neighborhood search.
-     * @param k the number of clusters.
-     * @param y the cluster labels.
-     * @param core the flag if the point is a core point.
      */
-    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y, boolean[] core) {
-        super(k, y);
-        this.minPts = minPts;
+    public DBSCAN(int k, int[] group, boolean[] core, int minPoints, double radius, RNNSearch<T,T> nns) {
+        super(k, group);
+        this.minPoints = minPoints;
         this.radius = radius;
         this.nns = nns;
         this.core = core;
+    }
+
+    /**
+     * Returns the minimum number of neighbors for a core data point.
+     * @return the minimum number of neighbors for a core data point.
+     */
+    public int minPoints() {
+        return minPoints;
+    }
+
+    /**
+     * Returns the neighborhood radius.
+     * @return the neighborhood radius.
+     */
+    public double radius() {
+        return radius;
     }
 
     /**
@@ -178,22 +195,22 @@ public class DBSCAN<T> extends PartitionClustering {
         int k = 0;
         int n = data.length;
         boolean[] core = new boolean[n];
-        int[] y = new int[n];
-        Arrays.fill(y, UNDEFINED);
+        int[] group = new int[n];
+        Arrays.fill(group, UNDEFINED);
 
         for (int i = 0; i < data.length; i++) {
-            if (y[i] == UNDEFINED) {
+            if (group[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
                 nns.search(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
-                    y[i] = OUTLIER;
+                    group[i] = OUTLIER;
                 } else {
-                    y[i] = k;
+                    group[i] = k;
                     core[i] = true;
 
                     for (Neighbor<T, T> neighbor : neighbors) {
-                        if (y[neighbor.index()] == UNDEFINED) {
-                            y[neighbor.index()] = QUEUED;
+                        if (group[neighbor.index()] == UNDEFINED) {
+                            group[neighbor.index()] = QUEUED;
                         }
                     }
 
@@ -201,12 +218,12 @@ public class DBSCAN<T> extends PartitionClustering {
                         Neighbor<T,T> neighbor = neighbors.get(j);
                         int index = neighbor.index();
 
-                        if (y[index] == OUTLIER) {
-                            y[index] = k;
+                        if (group[index] == OUTLIER) {
+                            group[index] = k;
                         }
 
-                        if (y[index] == UNDEFINED || y[index] == QUEUED) {
-                            y[index] = k;
+                        if (group[index] == UNDEFINED || group[index] == QUEUED) {
+                            group[index] = k;
 
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
                             nns.search(neighbor.key(), radius, secondaryNeighbors);
@@ -214,9 +231,9 @@ public class DBSCAN<T> extends PartitionClustering {
                             if (secondaryNeighbors.size() >= minPts) {
                                 core[neighbor.index()] = true;
                                 for (var secondaryNeighbor : secondaryNeighbors) {
-                                    int label = y[secondaryNeighbor.index()];
+                                    int label = group[secondaryNeighbor.index()];
                                     if (label == UNDEFINED) {
-                                        y[secondaryNeighbor.index()] = QUEUED;
+                                        group[secondaryNeighbor.index()] = QUEUED;
                                     }
 
                                     if (label == UNDEFINED || label == OUTLIER) {
@@ -232,13 +249,13 @@ public class DBSCAN<T> extends PartitionClustering {
             }
         }
 
-        return new DBSCAN<>(minPts, radius, nns, k, y, core);
+        return new DBSCAN<>(k, group, core, minPts, radius, nns);
     }
 
     /**
      * Classifies a new observation.
      * @param x a new observation.
-     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     * @return the cluster label. Note that it may be {@link Clustering#OUTLIER}.
      */
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
@@ -247,7 +264,7 @@ public class DBSCAN<T> extends PartitionClustering {
         Collections.sort(neighbors);
         for (Neighbor<T, T> neighbor : neighbors) {
             if (core[neighbor.index()]) {
-                return y[neighbor.index()];
+                return group[neighbor.index()];
             }
         }
 

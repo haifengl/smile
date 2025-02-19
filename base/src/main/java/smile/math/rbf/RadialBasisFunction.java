@@ -16,7 +16,7 @@
  */
 package smile.math.rbf;
 
-import smile.math.Function;
+import smile.util.function.Function;
 
 /**
  * A radial basis function (RBF) is a real-valued function whose value depends

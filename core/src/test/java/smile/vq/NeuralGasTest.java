@@ -16,9 +16,10 @@
  */
 package smile.vq;
 
+import smile.clustering.CentroidClustering;
 import smile.datasets.USPS;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
+import smile.util.function.TimeFunction;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,7 +58,7 @@ public class NeuralGasTest {
 
         int epochs = 20;
         int T = x.length * epochs;
-        NeuralGas model = new NeuralGas(NeuralGas.seed(400, x),
+        NeuralGas model = new NeuralGas(CentroidClustering.seeds(x, 400),
                 TimeFunction.exp(0.3, T / 2.0),
                 TimeFunction.exp(30, T / 8.0),
                 TimeFunction.constant(x.length * 2));
@@ -75,7 +76,7 @@ public class NeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.7002, error, 1E-4);
+        assertEquals(5.7022, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -85,6 +86,6 @@ public class NeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5502, error, 1E-4);
+        assertEquals(6.5451, error, 1E-4);
     }
 }

@@ -17,7 +17,6 @@
 package smile.util;
 
 import java.util.*;
-import javax.annotation.Nonnull;
 
  /**
   * A pairing heap is a type of heap data structure with relatively simple
@@ -25,7 +24,8 @@ import javax.annotation.Nonnull;
   * heaps are heap-ordered multiway tree structures, and can be considered
   * simplified Fibonacci heaps. They are considered a robust choice for
   * implementing such algorithms as Prim's MST algorithm.
-  * 
+  *
+  * @param <E> the type of the heap elements.
   * @author Karl Li
   */
 public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
@@ -71,9 +71,15 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     /** The root of multiway tree. */
-    private Node root = null;
+    private Node root;
     /** The number of elements. */
-    private int size = 0;
+    private int size;
+
+    /** Constructor. */
+    public PairingHeap() {
+        root = null;
+        size = 0;
+    }
 
     @Override
     public int size() {
@@ -183,17 +189,17 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     @Override
-    public boolean containsAll(@Nonnull Collection<?> c) {
+    public boolean containsAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean retainAll(@Nonnull Collection<?> c) {
+    public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean removeAll(@Nonnull Collection<?> c) {
+    public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
@@ -203,19 +209,16 @@ public class PairingHeap<E extends Comparable<E>> implements Queue<E> {
     }
 
     @Override
-    @Nonnull
     public Object[] toArray() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    @Nonnull
-    public <T> T[] toArray(@Nonnull T[] a) {
+    public <T> T[] toArray(T[] a) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    @Nonnull
     public Iterator<E> iterator() {
         throw new UnsupportedOperationException();
     }

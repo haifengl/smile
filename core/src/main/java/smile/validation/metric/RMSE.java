@@ -31,6 +31,11 @@ public class RMSE implements RegressionMetric {
     /** Default instance. */
     public static final RMSE instance = new RMSE();
 
+    /** Constructor. */
+    public RMSE() {
+
+    }
+
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);

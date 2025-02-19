@@ -31,13 +31,11 @@ find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 # build smile-kotlin.jar and copy it to shell
 rm shell/src/universal/bin/smile-kotlin-*.jar
-cd kotlin
-./gradlew build
+./gradlew :kotlin:build
 check_error "!!"
 
-./gradlew dokkaHtml
+./gradlew :kotlin:dokkaGenerate
 check_error "!!"
-cd ..
 find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 cd clojure
@@ -69,20 +67,7 @@ while true; do
             check_error "sbt json/publish"
             # sbt ++3.3.4 spark/publishSigned
             # check_error "sbt spark/publish"
-            break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-while true; do
-    read -p "Do you want to publish smile-kotlin? (yes/no): " ans
-    case $ans in
-        [Yy]* )
-            cd kotlin
-            ./gradlew publishMavenJavaPublicationToMavenRepository
-            check_error "gradle publish"
-            cd ..
+            ./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;

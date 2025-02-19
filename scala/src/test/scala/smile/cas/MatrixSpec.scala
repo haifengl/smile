@@ -16,7 +16,7 @@
  */
 package smile.cas
 
-import org.specs2.mutable._
+import org.specs2.mutable.*
 
 class MatrixSpec extends Specification {
 

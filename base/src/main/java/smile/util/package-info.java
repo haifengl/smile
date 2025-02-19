@@ -16,7 +16,7 @@
  */
 
 /**
- * Utility functions.
+ * Primitive data collections, string, date and time facilities, and miscellaneous utility classes.
  * 
  * @author Haifeng Li
  */

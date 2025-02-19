@@ -24,7 +24,7 @@ import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{Regression, DataFrameRegression}
-import smile.validation._
+import smile.validation.*
 
 /**
   * Integration of Smile and Spark.

@@ -62,18 +62,18 @@ public class MECTest {
         MEC<double[]> model = MEC.fit(x, MathEx::distance, 10, 8.0);
         System.out.println(model);
 
-        double r = RandIndex.of(y, model.y);
-        double r2 = AdjustedRandIndex.of(y, model.y);
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8898, r, 1E-4);
-        assertEquals(0.4636, r2, 1E-4);
+        assertEquals(0.9048, r, 1E-4);
+        assertEquals(0.5159, r2, 1E-4);
 
-        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
-        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
-        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
-        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
-        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
-        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.group()));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.group()));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.group()));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.group()));
 
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -83,8 +83,8 @@ public class MECTest {
         r = RandIndex.of(testy, p);
         r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8683, r, 1E-4);
-        assertEquals(0.3898, r2, 1E-4);
+        assertEquals(0.8754, r, 1E-4);
+        assertEquals(0.4084, r2, 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

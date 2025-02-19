@@ -42,6 +42,7 @@ public class AutoScope implements AutoCloseable {
     /**
      * Adds resource to this scope.
      * @param resource the resource to be added to this scope.
+     * @param <T> the type of resource.
      * @return the resource object.
      */
     public <T extends AutoCloseable> T add(T resource) {

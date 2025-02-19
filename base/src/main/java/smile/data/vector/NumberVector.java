@@ -45,40 +45,61 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
         }
     }
 
-    /** Returns the mean. */
+    /**
+     * Returns the mean.
+     * @return the mean.
+     */
     public double mean() {
         return doubleStream().filter(Double::isFinite).average().orElse(0);
     }
 
-    /** Returns the standard deviation. */
+    /**
+     * Returns the standard deviation.
+     * @return the standard deviation.
+     */
     public double stdev() {
         double[] data = doubleStream().filter(Double::isFinite).toArray();
         return MathEx.stdev(data);
     }
 
-    /** Returns the minimal value. */
+    /**
+     * Returns the minimal value.
+     * @return the minimal value.
+     */
     public double min() {
         return doubleStream().filter(Double::isFinite).min().orElse(0);
     }
 
-    /** Returns the maximal value. */
+    /**
+     * Returns the maximal value.
+     * @return the maximal value.
+     */
     public double max() {
         return doubleStream().filter(Double::isFinite).max().orElse(0);
     }
 
-    /** Returns the median. */
+    /**
+     * Returns the median.
+     * @return the median.
+     */
     public double median() {
         double[] data = doubleStream().filter(Double::isFinite).toArray();
         return MathEx.median(data);
     }
 
-    /** Returns the 25% quantile. */
+    /**
+     * Returns the 25% quantile.
+     * @return the 25% quantile.
+     */
     public double q1() {
         double[] data = doubleStream().filter(Double::isFinite).toArray();
         return MathEx.q1(data);
     }
 
-    /** Returns the 75% quantile. */
+    /**
+     * Returns the 75% quantile.
+     * @return the 75% quantile.
+     */
     public double q3() {
         double[] data = doubleStream().filter(Double::isFinite).toArray();
         return MathEx.q3(data);
@@ -114,8 +135,7 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
 
     @Override
     public NumberVector<T> get(Index index) {
-        @SuppressWarnings("unchecked")
-        T[] data = (T[]) java.lang.reflect.Array.newInstance(vector.getClass().getComponentType(), index.size());
+        T[] data = Arrays.copyOf(vector, index.size());
         for (int i = 0; i < data.length; i++) {
             data[i] = vector[index.apply(i)];
         }

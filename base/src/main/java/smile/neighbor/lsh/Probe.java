@@ -22,7 +22,6 @@ package smile.neighbor.lsh;
  * @author Haifeng Li
  */
 public class Probe implements Comparable<Probe> {
-
     /**
      * The valid range of buckets.
      */
@@ -52,6 +51,7 @@ public class Probe implements Comparable<Probe> {
 
     /**
      * Returns a shallow copy that shares the range array.
+     * @return a shallow copy that shares the range array.
      */
     public Probe copy() {
         Probe probe = new Probe(range);

@@ -19,7 +19,7 @@ package smile.serve.chat
 import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import smile.llm.{CompletionPrediction, FinishReason, Message, Role}
-import spray.json._
+import spray.json.*
 
 // domain model
 final case class Thread(id: Long,

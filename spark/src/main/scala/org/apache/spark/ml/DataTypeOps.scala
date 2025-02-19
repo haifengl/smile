@@ -16,9 +16,9 @@
  */
 package org.apache.spark.ml
 
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.*
 import org.apache.spark.ml.linalg.VectorUDT
-import org.apache.spark.mllib.linalg.{VectorUDT => OldVectorUDT}
+import org.apache.spark.mllib.linalg.VectorUDT as OldVectorUDT
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 
@@ -33,7 +33,7 @@ object DataTypeOps {
     * @return Smile schema
     */
   def toSmileSchema(schema: org.apache.spark.sql.types.StructType): StructType = {
-    new StructType(schema.map(toSmileField): _*)
+    new StructType(schema.map(toSmileField)*)
   }
 
   /**
@@ -68,15 +68,15 @@ object DataTypeOps {
       case TimestampType => DataTypes.DateTimeType
       case DateType => DataTypes.DateType
       case ArrayType(elementType, nullable) => DataTypes.array(toSmileType(elementType, nullable))
-      case org.apache.spark.sql.types.StructType(fields) => new StructType(fields.map(toSmileField): _*)
+      case org.apache.spark.sql.types.StructType(fields) => new StructType(fields.map(toSmileField)*)
       case MapType(keyType, valueType, nullable) => DataTypes.array(new StructType(Seq(
           new StructField("key", toSmileType(keyType, nullable)),
-          new StructField("value", toSmileType(valueType, nullable))): _*))
+          new StructField("value", toSmileType(valueType, nullable)))*))
       case ObjectType(cls) => DataTypes.`object`(cls)
       case _: NullType => DataTypes.StringType
       case _: VectorUDT => DataTypes.array(DataTypes.DoubleType)
       case _: OldVectorUDT => DataTypes.array(DataTypes.DoubleType)
-      case definedType: UserDefinedType[_] => DataTypes.`object`(definedType.userClass)
+      case definedType: UserDefinedType[?] => DataTypes.`object`(definedType.userClass)
     }
   }
 

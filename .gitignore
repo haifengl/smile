@@ -1,4 +1,4 @@
-# class and package Files
+# Class and package files
 *.class
 *.jar
 *.war
@@ -24,7 +24,7 @@ nbproject
 # Android Studio
 *.iml
 
-# jupyter
+# Jupyter
 .ipynb_checkpoints
 
 # PyTorch checkpoints
@@ -32,25 +32,28 @@ nbproject
 
 # JavaDoc
 doc/api
-web/node_modules/
 web/_site/
+
+# Data
+shell/src/universal/data/image
+shell/src/universal/data/mnist
 shell/src/universal/data/nlp
 
-# clojure
+# Clojure
 .lein-repl-*
 clojure/pom.xml*
 
-# gradle
+# Gradle
 .gradle
 build
 
-# node.js
+# Node.js
 node_modules
 
 # JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-# MacOS
+# macOS
 .DS_Store
 
 # Generated

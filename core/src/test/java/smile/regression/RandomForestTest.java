@@ -17,6 +17,7 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.concurrent.Flow;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
@@ -24,6 +25,7 @@ import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.util.IterativeAlgorithmController;
 import smile.validation.*;
 import smile.validation.metric.RMSE;
 import org.junit.jupiter.api.*;
@@ -71,16 +73,35 @@ public class RandomForestTest {
             50014340, 489234689, 129556481, 178766593, 142540536, 213594113,
             870440184, 277912577};
 
-    Abalone abalone;
-    Bank32nh bank32nh;
-    BostonHousing bostonHousing;
-    CalHousing calHousing;
+    static class TrainingStatusSubscriber implements Flow.Subscriber<RandomForest.TrainingStatus> {
+        private Flow.Subscription subscription;
 
-    public RandomForestTest() throws Exception {
-        abalone = new Abalone();
-        bank32nh = new Bank32nh();
-        bostonHousing = new BostonHousing();
-        calHousing = new CalHousing();
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            this.subscription = subscription;
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(RandomForest.TrainingStatus status) {
+            System.out.format("Tree %d: OOB metrics = %s%n", status.tree(), status.metrics());
+            subscription.request(1);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            System.err.println("Controller receives an exception: " + throwable.getMessage());
+        }
+
+        @Override
+        public void onComplete() {
+            System.out.println("Training is done");
+        }
+    }
+
+
+    public RandomForestTest() {
+
     }
 
     @BeforeAll
@@ -105,8 +126,8 @@ public class RandomForestTest {
         System.out.println("longley");
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         var longley = new Longley();
-        var options = new RandomForest.Options(100, 3, 20, 10, 3, 1.0);
-        RandomForest model = RandomForest.fit(longley.formula(), longley.data(), options, Arrays.stream(seeds));
+        var options = new RandomForest.Options(100, 3, 20, 10, 3, 1.0, seeds, null);
+        RandomForest model = RandomForest.fit(longley.formula(), longley.data(), options);
 
         double[] importance = model.importance();
         System.out.println("----- importance -----");
@@ -128,7 +149,7 @@ public class RandomForestTest {
         }
 
         RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
-                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options));
 
         System.out.println(metrics);
         assertEquals(2.7034, metrics.rmse(), 1E-4);
@@ -137,95 +158,114 @@ public class RandomForestTest {
         Read.object(temp);
     }
 
-    public void test(String name, Formula formula, DataFrame data, double expected) {
-        System.out.println(name);
-
+    public double test(Formula formula, DataFrame data) {
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0);
+
+        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0, seeds, null);
         RegressionValidations<RandomForest> result = CrossValidation.regression(3, formula, data,
-                (f, x) -> RandomForest.fit(f, x, options, Arrays.stream(seeds)));
+                (f, x) -> RandomForest.fit(f, x, options));
+
+        try (var controller = new IterativeAlgorithmController<RandomForest.TrainingStatus>()) {
+            controller.subscribe(new TrainingStatusSubscriber());
+            var opts = new RandomForest.Options(100, 3, 20, 100, 5, 1.0, seeds, controller);
+            RandomForest model = RandomForest.fit(formula, data, opts);
+            double[] importance = model.importance();
+            System.out.println("----- importance -----");
+            for (int i = 0; i < importance.length; i++) {
+                System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
+            }
+        }
 
         System.out.println(result);
-        assertEquals(expected, result.avg().rmse(), 1E-4);
-
-        RandomForest model = RandomForest.fit(formula, data);
-        double[] importance = model.importance();
-        System.out.println("----- importance -----");
-        for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
-        }
+        return result.avg().rmse();
     }
 
     @Test
     public void testCPU() throws Exception {
+        System.out.println("CPU");
         var cpu = new CPU();
-        test("CPU", cpu.formula(), cpu.data(), 69.0170);
+        assertEquals(69.0170, test(cpu.formula(), cpu.data()), 1E-4);
     }
 
     @Test
     public void test2DPlanes() throws Exception {
+        System.out.println("2dplanes - exact");
         System.setProperty("smile.regression_tree.bins", "1");
         var planes = new Planes2D();
-        test("2dplanes - exact", planes.formula(), planes.data(), 1.3581);
+        assertEquals(1.3581, test(planes.formula(), planes.data()), 1E-4);
     }
 
     @Test
     public void test2DPlanesHist() throws Exception {
+        System.out.println("2dplanes - hist");
         var planes = new Planes2D();
-        test("2dplanes - hist", planes.formula(), planes.data(), 1.2999);
+        assertEquals(1.2999, test( planes.formula(), planes.data()), 1E-4);
     }
 
     @Test
-    public void testAbalone() {
-        test("abalone", abalone.formula(), abalone.train(), 2.1931);
+    public void testAbalone() throws Exception {
+        System.out.println("abalone");
+        var abalone = new Abalone();
+        assertEquals(2.1930, test(abalone.formula(), abalone.train()), 1E-4);
     }
 
     @Test
     public void testAilerons() throws Exception {
+        System.out.println("ailerons");
         var ailerons = new Ailerons();
-        test("ailerons", ailerons.formula(), ailerons.data(), 0.0002);
+        assertEquals(0.0002, test(ailerons.formula(), ailerons.data()), 1E-4);
     }
 
     @Test
-    public void testBank32nh() {
+    public void testBank32nh() throws Exception {
+        System.out.println("bank32nh - exact");
         System.setProperty("smile.regression_tree.bins", "1");
-        test("bank32nh - exact", bank32nh.formula(), bank32nh.data(), 0.0978);
+        var bank32nh = new Bank32nh();
+        assertEquals(0.0978, test(bank32nh.formula(), bank32nh.data()), 1E-4);
     }
 
     @Test
-    public void testBank32nhHist() {
-        test("bank32nh - hist", bank32nh.formula(), bank32nh.data(), 0.0996);
+    public void testBank32nhHist() throws Exception {
+        System.out.println("bank32nh - hist");
+        var bank32nh = new Bank32nh();
+        assertEquals(0.0996, test(bank32nh.formula(), bank32nh.data()), 1E-4);
     }
 
     @Test
     public void testAutoMPG() throws Exception {
+        System.out.println("autoMPG");
         var autoMPG = new AutoMPG();
-        test("autoMPG", autoMPG.formula(), autoMPG.data(), 3.5532);
+        assertEquals(3.5532, test(autoMPG.formula(), autoMPG.data()), 1E-4);
     }
 
     @Test
-    public void testCalHousing() {
+    public void testCalHousing() throws Exception {
+        System.out.println("cal_housing");
         System.setProperty("smile.regression_tree.bins", "300");
-        test("cal_housing", calHousing.formula(), calHousing.data(), 59481.6595);
+        var calHousing = new CalHousing();
+        assertEquals(59481.6595, test(calHousing.formula(), calHousing.data()), 1E-4);
     }
 
     @Test
     public void testPuma8nh() throws Exception {
+        System.out.println("puma8nh");
         var puma = new Puma8NH();
-        test("puma8nh", puma.formula(), puma.data(), 3.3895);
+        assertEquals(3.3895, test(puma.formula(), puma.data()), 1E-4);
     }
 
     @Test
     public void testKin8nm() throws Exception {
+        System.out.println("kin8nm");
         var kin8nm = new Kin8nm();
-        test("kin8nm", kin8nm.formula(), kin8nm.data(), 0.1774);
+        assertEquals(0.1774, test(kin8nm.formula(), kin8nm.data()), 1E-4);
     }
 
     @Test
-    public void testTrim() {
+    public void testTrim() throws Exception {
         System.out.println("trim");
-        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0);
-        RandomForest model = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds));
+        var abalone = new Abalone();
+        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0, seeds, null);
+        RandomForest model = RandomForest.fit(abalone.formula(), abalone.train(), options);
         System.out.println(model.metrics());
         assertEquals(50, model.size());
 
@@ -238,10 +278,10 @@ public class RandomForestTest {
         assertEquals(40, trimmed.size());
 
         double rmse1 = Arrays.stream(model.models())
-                .mapToDouble(m -> m.metrics.rmse())
+                .mapToDouble(m -> m.metrics().rmse())
                 .max().orElseThrow();
         double rmse2 = Arrays.stream(trimmed.models())
-                .mapToDouble(m -> m.metrics.rmse())
+                .mapToDouble(m -> m.metrics().rmse())
                 .max().orElseThrow();
         assertTrue(rmse1 > rmse2);
 
@@ -250,11 +290,13 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testMerge() {
+    public void testMerge() throws Exception {
         System.out.println("merge");
-        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0);
-        RandomForest forest1 = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds));
-        RandomForest forest2 = RandomForest.fit(abalone.formula(), abalone.train(), options, Arrays.stream(seeds).skip(50));
+        var abalone = new Abalone();
+        var options = new RandomForest.Options(50, 3, 20, 100, 5, 1.0, seeds, null);
+        RandomForest forest1 = RandomForest.fit(abalone.formula(), abalone.train(), options);
+        var options2 = new RandomForest.Options(50, 3, 20, 100, 5, 1.0, Arrays.copyOfRange(seeds, 50, seeds.length), null);
+        RandomForest forest2 = RandomForest.fit(abalone.formula(), abalone.train(), options2);
         RandomForest forest = forest1.merge(forest2);
         double rmse1 = RMSE.of(abalone.testy(), forest1.predict(abalone.test()));
         double rmse2 = RMSE.of(abalone.testy(), forest2.predict(abalone.test()));
@@ -268,11 +310,12 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testShap() {
+    public void testShap() throws Exception {
         MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
-        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0);
-        RandomForest model = RandomForest.fit(bostonHousing.formula(), bostonHousing.data(), options, Arrays.stream(seeds));
+        var bostonHousing = new BostonHousing();
+        var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0, seeds, null);
+        RandomForest model = RandomForest.fit(bostonHousing.formula(), bostonHousing.data(), options);
         double[] importance = model.importance();
         double[] shap = model.shap(bostonHousing.data());
 

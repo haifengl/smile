@@ -124,6 +124,7 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      * @param data the dataset.
      * @param k k-nearest neighbor.
      * @param distance the distance function.
+     * @param <T> the type of data objects.
      * @return k-nearest neighbor graph.
      */
     public static <T> NearestNeighborGraph of(T[] data, Distance<T> distance, int k) {
@@ -137,6 +138,7 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      * @param data the dataset.
      * @param k k-random neighbor.
      * @param distance the distance function.
+     * @param <T> the type of data objects.
      * @return k-random neighbor graph.
      */
     public static <T> NearestNeighborGraph random(T[] data, Distance<T> distance, int k) {
@@ -283,7 +285,12 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      * @param data the dataset.
      * @param k k-nearest neighbor.
      * @param numTrees the number of trees.
-     * @param leafSize The maximum size of leaf node.
+     * @param leafSize the maximum size of leaf node.
+     * @param maxCandidates the maximum number of candidates in nearest neighbor search.
+     * @param maxIter the maximum number of iterations.
+     * @param delta Controls the early stop due to limited progress. Larger values
+     *              will result in earlier aborts, providing less accurate indexes,
+     *              and less accurate searching.
      * @return approximate k-nearest neighbor graph.
      */
     public static NearestNeighborGraph descent(double[][] data, int k, int numTrees, int leafSize,
@@ -344,6 +351,7 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      * @param data the dataset.
      * @param k k-nearest neighbor.
      * @param distance the distance function.
+     * @param <T> the type of data objects.
      * @return approximate k-nearest neighbor graph.
      */
     public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k) {
@@ -359,8 +367,9 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      * @param maxCandidates the maximum number of candidates in nearest neighbor search.
      * @param maxIter the maximum number of iterations.
      * @param delta Controls the early stop due to limited progress. Larger values
-     *         will result in earlier aborts, providing less accurate indexes,
-     *         and less accurate searching.
+     *              will result in earlier aborts, providing less accurate indexes,
+     *              and less accurate searching.
+     * @param <T> the type of data objects.
      * @return approximate k-nearest neighbor graph.
      */
     public static <T> NearestNeighborGraph descent(T[] data, Metric<T> distance, int k, int maxCandidates, int maxIter, double delta) {

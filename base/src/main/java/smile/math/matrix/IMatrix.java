@@ -94,6 +94,11 @@ public abstract class IMatrix implements Serializable {
      */
     private String[] colNames;
 
+    /** Constructor. */
+    public IMatrix() {
+
+    }
+
     /**
      * Returns a deep copy of matrix.
      * @return a deep copy of matrix.

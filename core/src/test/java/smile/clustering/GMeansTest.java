@@ -60,21 +60,21 @@ public class GMeansTest {
         double[][] testx = usps.testx();
         int[] testy = usps.testy();
 
-        GMeans model = GMeans.fit(x, 10);
+        var model = GMeans.fit(x, 10, 100);
         System.out.println(model);
 
-        double r = RandIndex.of(y, model.y);
-        double r2 = AdjustedRandIndex.of(y, model.y);
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9137, r, 1E-4);
-        assertEquals(0.5485, r2, 1E-4);
+        assertEquals(0.9203, r, 1E-4);
+        assertEquals(0.5881, r2, 1E-4);
 
-        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
-        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
-        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
-        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
-        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
-        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.group()));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.group()));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.group()));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.group()));
 
         int[] p = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
@@ -84,8 +84,8 @@ public class GMeansTest {
         r = RandIndex.of(testy, p);
         r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9012, r, 1E-4);
-        assertEquals(0.4822, r2, 1E-4);
+        assertEquals(0.9103, r, 1E-4);
+        assertEquals(0.5337, r2, 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

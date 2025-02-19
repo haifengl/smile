@@ -18,16 +18,16 @@ package smile.spark
 
 import java.util.Properties
 import java.util.stream.Collectors
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import org.apache.spark.sql.SparkSession
-import org.specs2.mutable._
+import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.classification.RandomForest
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.hpo.Hyperparameters
 import smile.io.Read
-import smile.util.Paths
+import smile.io.Paths
 
 class HpoSpec extends Specification with BeforeAll with AfterAll{
 
@@ -52,7 +52,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
         (formula: Formula, data: DataFrame, params: Properties) => RandomForest.fit(formula, data, RandomForest.Options.of(params))
       }
 
-      (0 until configurations.length) foreach { i =>
+      configurations.indices foreach { i =>
         print(configurations(i))
         println(scores(i))
       }

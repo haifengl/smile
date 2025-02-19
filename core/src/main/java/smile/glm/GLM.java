@@ -300,6 +300,7 @@ public class GLM implements Serializable {
      * @param maxIter the maximum number of iterations.
      */
     public record Options(double tol, int maxIter) {
+        /** Constructor. */
         public Options {
             if (tol <= 0.0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);

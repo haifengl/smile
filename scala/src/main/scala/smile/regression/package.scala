@@ -297,13 +297,14 @@ package object regression {
     * @param nodeSize the minimum size of leaf nodes.
     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement.
     *                  < 1.0 means sampling without replacement.
+    * @param seeds optional RNG seeds for each decision tree.
     *
     * @return Random forest regression model.
     */
   def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0,
                    maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 5,
-                   subsample: Double = 1.0): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample))
+                   subsample: Double = 1.0, seeds: Array[Long] = null): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, new RandomForest.Options(ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, seeds, null))
   }
 
   /** Gradient boosted regression trees.
@@ -386,7 +387,7 @@ package object regression {
   def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500, maxDepth: Int = 20,
           maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
           subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
-    GradientTreeBoost.fit(formula, data, new GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample))
+    GradientTreeBoost.fit(formula, data, new GradientTreeBoost.Options(loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample, null, null))
   }
 
   /** Gaussian Process for Regression. */

@@ -50,37 +50,21 @@ import smile.sort.IntHeapSelect;
  * </ol>
  * 
  * @see Linkage
- * 
+ *
+ * @param tree the hierarchical cluster tree. An n-1 by 2 matrix of which
+ *             row i describes the merging of clusters at step i of the
+ *             clustering. If an element j in the row is less than n,
+ *             then observation j was merged at this stage.
+ *             If {@code j >= n} then the merge was with the cluster formed
+ *             at the (earlier) stage j-n of the algorithm.
+ * @param height the clustering height. A set of n-1 non-decreasing real values,
+ *               which are the value of the criterion associated with the
+ *               clustering method for the particular agglomeration.
  * @author Haifeng Li
  */
-public class HierarchicalClustering implements Serializable {
+public record HierarchicalClustering(int[][] tree, double[] height) implements Serializable {
     @Serial
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * An n-1 by 2 matrix of which row i describes the merging of clusters at
-     * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If {@code j >= n} then the merge
-     * was with the cluster formed at the (earlier) stage j-n of the algorithm.
-     */
-    private final int[][] merge;
-    /**
-     * A set of n-1 non-decreasing real values, which are the clustering height,
-     * i.e., the value of the criterion associated with the clustering method
-     * for the particular agglomeration.
-     */
-    private final double[] height;
-
-    /**
-     * Constructor.
-     * @param tree an n-1 by 2 matrix of which row i describes the merging
-     *             of clusters at step i of the clustering.
-     * @param height the clustering height.
-     */
-    public HierarchicalClustering(int[][] tree, double[] height) {
-        this.merge = tree;
-        this.height = height;
-    }
+    private static final long serialVersionUID = 3L;
 
     /**
      * Fits the Agglomerative Hierarchical Clustering with given linkage
@@ -126,39 +110,18 @@ public class HierarchicalClustering implements Serializable {
     }
 
     /**
-     * Returns an n-1 by 2 matrix of which row i describes the merging of clusters at
-     * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If {@code j >= n} then the merge
-     * was with the cluster formed at the (earlier) stage j-n of the algorithm.
-     * @return the merge tree.
-     */
-    public int[][] tree() {
-        return merge;
-    }
-
-    /**
-     * Returns a set of n-1 non-decreasing real values, which are the clustering height,
-     * i.e., the value of the criterion associated with the clustering method
-     * for the particular agglomeration.
-     * @return the tree node height.
-     */
-    public double[] height() {
-        return height;
-    }
-
-    /**
      * Cuts a tree into several groups by specifying the desired number.
      * @param k the number of clusters.
      * @return the cluster label of each sample.
      */
     public int[] partition(int k) {
-        int n = merge.length + 1;
+        int n = tree.length + 1;
         int[] membership = new int[n];
 
         IntHeapSelect heap = new IntHeapSelect(k);
         for (int i = 2; i <= k; i++) {
-            heap.add(merge[n - i][0]);
-            heap.add(merge[n - i][1]);
+            heap.add(tree[n - i][0]);
+            heap.add(tree[n - i][1]);
         }
 
         for (int i = 0; i < k; i++) {
@@ -180,7 +143,7 @@ public class HierarchicalClustering implements Serializable {
             }
         }
 
-        int n = merge.length + 1;
+        int n = tree.length + 1;
         int k = 2;
         for (; k <= n; k++) {
             if (height[n - k] < h) {
@@ -202,7 +165,7 @@ public class HierarchicalClustering implements Serializable {
      * @param id the cluster ID.
      */
     private void bfs(int[] membership, int cluster, int id) {
-        int n = merge.length + 1;
+        int n = tree.length + 1;
         Queue<Integer> queue = new LinkedList<>();
         queue.offer(cluster);
 
@@ -214,7 +177,7 @@ public class HierarchicalClustering implements Serializable {
 
             i -= n;
 
-            int m1 = merge[i][0];
+            int m1 = tree[i][0];
 
             if (m1 >= n) {
                 queue.offer(m1);
@@ -222,7 +185,7 @@ public class HierarchicalClustering implements Serializable {
                 membership[m1] = id;
             }
 
-            int m2 = merge[i][1];
+            int m2 = tree[i][1];
 
             if (m2 >= n) {
                 queue.offer(m2);

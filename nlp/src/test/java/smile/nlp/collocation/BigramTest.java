@@ -33,7 +33,7 @@ public class BigramTest {
 
     public BigramTest() {
         try {
-            smile.util.Paths.getTestDataLines("text/plot.tok.gt9.5000")
+            smile.io.Paths.getTestDataLines("text/plot.tok.gt9.5000")
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
                     .forEach(line -> corpus.add(new Text(line)));

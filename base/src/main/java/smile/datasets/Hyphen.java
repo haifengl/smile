@@ -19,13 +19,13 @@ package smile.datasets;
 import java.io.IOException;
 import java.nio.file.Path;
 import smile.data.BinarySparseSequenceDataset;
-import smile.util.Paths;
+import smile.io.Paths;
 
 /**
  * Hyphen sequence dataset.
  *
- * @param train training data frame.
- * @param test testing data frame.
+ * @param train training data.
+ * @param test testing data.
  * @author Haifeng Li
  */
 public record Hyphen(BinarySparseSequenceDataset train, BinarySparseSequenceDataset test) {

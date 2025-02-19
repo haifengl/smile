@@ -73,7 +73,7 @@ public class IsotonicMDSTest {
         };
 
         var euro = new Eurodist();
-        IsotonicMDS mds = IsotonicMDS.of(euro.x());
+        IsotonicMDS mds = IsotonicMDS.fit(euro.x());
         assertEquals(0.05846, mds.stress(), 1E-5);
 
         double[][] coordinates = mds.coordinates();

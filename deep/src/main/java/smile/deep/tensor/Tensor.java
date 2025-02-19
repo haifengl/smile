@@ -40,7 +40,6 @@ public class Tensor implements AutoCloseable {
     /** PyTorch Tensor handle. */
     final org.bytedeco.pytorch.Tensor value;
 
-
     /**
      * Sets the default options to create tensors. This does not affect
      * factory function calls which are called with an explicit options
