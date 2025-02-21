@@ -40,7 +40,7 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.5.2",
-  "org.xerial"         %  "sqlite-jdbc" % "3.49.0.0",
+  "org.xerial"         %  "sqlite-jdbc" % "3.49.1.0",
   "ch.qos.logback"     %  "logback-classic" % "1.5.16"
 )
 

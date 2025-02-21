@@ -13,5 +13,5 @@ dependencies {
     implementation("org.apache.hadoop:hadoop-mapreduce-client-core:3.4.1") { exclude("org.slf4j", "slf4j-log4j12") }
     implementation("org.apache.avro:avro:1.12.0") { exclude("org.slf4j", "slf4j-log4j12") }
 
-    testRuntimeOnly("org.xerial:sqlite-jdbc:3.49.0.0")
+    testRuntimeOnly(libs.sqlite)
 }
