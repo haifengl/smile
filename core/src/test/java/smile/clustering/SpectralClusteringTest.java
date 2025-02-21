@@ -16,10 +16,12 @@
  */
 package smile.clustering;
 
+import smile.data.SparseDataset;
 import smile.io.Read;
 import smile.io.Write;
 import smile.datasets.USPS;
 import smile.math.MathEx;
+import smile.util.SparseIntArray;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,7 +65,7 @@ public class SpectralClusteringTest {
 
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        System.out.format("Rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9129, r, 1E-4);
         assertEquals(0.5382, r2, 1E-4);
 
@@ -85,7 +87,7 @@ public class SpectralClusteringTest {
 
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        System.out.format("Rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.8994, r, 1E-4);
         assertEquals(0.4752, r2, 1E-4);
 
@@ -98,5 +100,35 @@ public class SpectralClusteringTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+    }
+
+    @Test
+    public void testNews() throws Exception {
+        System.out.println("News");
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        SparseDataset<Integer> news = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.dat"));
+        int n = 2000; // partial data to reduce test time
+        int p = news.ncol();
+
+        int[] y = new int[n];
+        SparseIntArray[] data = new SparseIntArray[n];
+        for (int i = 0; i < n; i++) {
+            var instance = news.get(i);
+            var row = instance.x();
+            y[i] = instance.y();
+            var count = new SparseIntArray(row.size());
+            row.forEach((j, value) -> count.set(j, (int) value));
+            data[i] = count;
+        }
+
+        var model = SpectralClustering.fit(data, p, new Clustering.Options(20, 100));
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
+        System.out.format("Rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8903, r, 1E-4);
+        assertEquals(0.0344, r2, 1E-4);
     }
 }
