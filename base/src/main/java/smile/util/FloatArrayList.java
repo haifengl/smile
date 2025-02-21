@@ -21,21 +21,22 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
- * A resizeable, array-backed list of double primitives.
+ * A resizeable, array-backed list of float primitives.
  *
  * @author Haifeng Li
  */
 
-public final class DoubleArrayList implements Serializable {
+public final class FloatArrayList implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * The data of the list.
      */
-    double[] data;
+    float[] data;
 
     /**
      * The index after the last entry in the list.
@@ -45,7 +46,7 @@ public final class DoubleArrayList implements Serializable {
     /**
      * Constructs an empty list.
      */
-    public DoubleArrayList() {
+    public FloatArrayList() {
         this(10);
     }
 
@@ -54,8 +55,8 @@ public final class DoubleArrayList implements Serializable {
      *
      * @param capacity the initial size of array list.
      */
-    public DoubleArrayList(int capacity) {
-        data = new double[capacity];
+    public FloatArrayList(int capacity) {
+        data = new float[capacity];
         size = 0;
     }
 
@@ -64,7 +65,7 @@ public final class DoubleArrayList implements Serializable {
      *
      * @param values the initial values of array list.
      */
-    public DoubleArrayList(double[] values) {
+    public FloatArrayList(float[] values) {
         this(Math.max(values.length, 10));
         add(values);
     }
@@ -82,7 +83,7 @@ public final class DoubleArrayList implements Serializable {
      * @return the stream of the array list.
      */
     public DoubleStream stream() {
-        return DoubleStream.of(data).limit(size);
+        return IntStream.range(0, size).mapToDouble(i -> data[i]);
     }
 
     /**
@@ -95,7 +96,7 @@ public final class DoubleArrayList implements Serializable {
     public void ensureCapacity(int capacity) {
         if (capacity > data.length) {
             int newCap = Math.max(data.length << 1, capacity);
-            double[] tmp = new double[newCap];
+            float[] tmp = new float[newCap];
             System.arraycopy(data, 0, tmp, 0, data.length);
             data = tmp;
         }
@@ -133,7 +134,7 @@ public final class DoubleArrayList implements Serializable {
      *
      * @param val a value to be appended to this list.
      */
-    public void add(double val) {
+    public void add(float val) {
         ensureCapacity(size + 1);
         data[size++] = val;
     }
@@ -143,7 +144,7 @@ public final class DoubleArrayList implements Serializable {
      *
      * @param vals an array to be appended to this list.
      */
-    public void add(double[] vals) {
+    public void add(float[] vals) {
         ensureCapacity(size + vals.length);
         System.arraycopy(vals, 0, data, size, vals.length);
         size += vals.length;
@@ -155,7 +156,7 @@ public final class DoubleArrayList implements Serializable {
      * @param index index of the value to return 
      * @return the value at the specified position in this list 
      */
-    public double get(int index) {
+    public float get(int index) {
         return data[index];
     }
 
@@ -167,7 +168,7 @@ public final class DoubleArrayList implements Serializable {
      * @param val value to be stored at the specified position 
      * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
-    public void set(int index, double val) {
+    public void set(int index, float val) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException(String.valueOf(index));
         }
@@ -189,13 +190,13 @@ public final class DoubleArrayList implements Serializable {
      * @return the value previously stored at specified index
      * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
-    public double remove(int index) {
+    public float remove(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException(String.valueOf(index));
         }
 
-        double old = get(index);
-        
+        float old = get(index);
+
         if (index == 0) {
             // data at the front
             System.arraycopy(data, 1, data, 0, size - 1);
@@ -203,7 +204,7 @@ public final class DoubleArrayList implements Serializable {
             // data in the middle
             System.arraycopy(data, index + 1, data, index, size - (index + 1));
         }
-        
+
         size--;
         return old;
     }
@@ -214,7 +215,7 @@ public final class DoubleArrayList implements Serializable {
      * The caller is thus free to modify the returned array.
      * @return an array containing the values of the list.
      */
-    public double[] toArray() {
+    public float[] toArray() {
         return Arrays.copyOf(data, size);
     }
 
@@ -229,11 +230,11 @@ public final class DoubleArrayList implements Serializable {
      * for this purpose. 
      * @return an array containing the values of the list.
      */
-    public double[] toArray(double[] dest) {
+    public float[] toArray(float[] dest) {
         if (dest == null || dest.length < size()) {
-            dest = new double[size];
+            dest = new float[size];
         }
-        
+
         System.arraycopy(data, 0, dest, 0, size);
         return dest;
     }
