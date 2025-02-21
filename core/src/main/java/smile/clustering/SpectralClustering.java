@@ -28,6 +28,7 @@ import smile.math.matrix.Matrix;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 import smile.util.SparseArray;
+import smile.util.SparseIntArray;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -151,11 +152,12 @@ public class SpectralClustering {
     /**
      * Spectral clustering the nonnegative count data with cosine similarity.
      * @param data the nonnegative count matrix.
+     * @param p the number of features.
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static CentroidClustering<double[], double[]> fit(int[][] data, Clustering.Options options) {
-        double[][] Y = embed(data, options.k());
+    public static CentroidClustering<double[], double[]> fit(SparseIntArray[] data, int p, Clustering.Options options) {
+        double[][] Y = embed(data, p, options.k());
         return KMeans.fit(Y, options);
     }
 
@@ -317,21 +319,18 @@ public class SpectralClustering {
     }
 
     /**
-     * Returns the embedding for spectral clustering of the nonnegative count
-     * data with cosine similarity.
+     * Returns the embedding for the nonnegative count data with cosine similarity.
      * @param data the nonnegative count matrix.
+     * @param p the number of features.
      * @param d the dimension of feature space.
      * @return the embedding.
      */
-    public static double[][] embed(int[][] data, int d) {
+    public static double[][] embed(SparseIntArray[] data, int p, int d) {
         int n = data.length;
-        int p = data[0].length;
 
         double[] idf = new double[p];
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                idf[j] += data[i][j] > 0 ? 1 : 0;
-            }
+            data[i].forEach((j, count) -> idf[j] += count > 0 ? 1 : 0);
         }
         for (int j = 0; j < p; j++) {
             idf[j] = Math.log(n / (1 + idf[j]));
@@ -341,9 +340,9 @@ public class SpectralClustering {
         double[] D = new double[n];
         SparseArray[] X = new SparseArray[n];
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                x[j] = data[i][j] / idf[j];
-            }
+            data[i].forEach((j, count) -> {
+                if (count > 0) x[j] = count / idf[j];
+            });
             MathEx.normalize(x);
 
             for (int j = 0; j < p; j++) {
@@ -354,7 +353,7 @@ public class SpectralClustering {
             double Di = Math.sqrt(D[i]);
             SparseArray Xi = new SparseArray();
             for (int j = 0; j < p; j++) {
-                if (data[i][j] > 0) {
+                if (x[j] > 0) {
                     Xi.set(j, x[j] / Di);
                 }
             }
