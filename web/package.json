@@ -1,7 +1,7 @@
 {
   "name": "smile-web",
   "version": "1.0.0",
-  "description": "Statistical Machine Intelligence &amp; Learning Engine",
+  "description": "Statistical Machine Intelligence and Learning Engine",
   "scripts": {
     "serve": "ELEVENTY_ENV=dev npx @11ty/eleventy --serve",
     "deploy": "npx @11ty/eleventy"
