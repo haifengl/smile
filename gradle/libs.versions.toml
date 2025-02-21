@@ -4,6 +4,7 @@ akka = "2.9.3"
 akka-http = "10.6.3"
 
 [libraries]
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.49.1.0" }
 javacpp = { module = "org.bytedeco:javacpp", version = "1.5.11" }
 openblas = { module = "org.bytedeco:openblas-platform", version = "0.3.28-1.5.11" }
 arpack = { module = "org.bytedeco:arpack-ng-platform", version = "3.9.1-1.5.11" }

@@ -15,6 +15,6 @@ libraryDependencies ++= {
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
     "org.apache.commons" % "commons-csv" % "1.13.0",
     "org.duckdb" % "duckdb_jdbc" % "1.2.0",
-    "org.xerial" % "sqlite-jdbc" % "3.49.0.0" % Test
+    "org.xerial" % "sqlite-jdbc" % "3.49.1.0" % Test
   )
 }
