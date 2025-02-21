@@ -16,6 +16,7 @@
  */
 package smile.clustering;
 
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.data.SparseDataset;
@@ -340,27 +341,32 @@ public class SpectralClustering {
         double[] D = new double[n];
         SparseArray[] X = new SparseArray[n];
         for (int i = 0; i < n; i++) {
+            Arrays.fill(x, 0.0);
             data[i].forEach((j, count) -> {
                 if (count > 0) x[j] = count / idf[j];
             });
             MathEx.normalize(x);
-
-            for (int j = 0; j < p; j++) {
-                D[i] += x[j] * x[j];
-            }
-            D[i] -= 1.0;
-
-            double Di = Math.sqrt(D[i]);
-            SparseArray Xi = new SparseArray();
+            SparseArray Xi = new SparseArray(data[i].size());
             for (int j = 0; j < p; j++) {
                 if (x[j] > 0) {
-                    Xi.set(j, x[j] / Di);
+                    Xi.set(j, x[j]);
                 }
             }
             X[i] = Xi;
         }
 
-        var W = new CountMatrix(SparseDataset.of(X, n).toMatrix(), D);
+        for (int i = 0; i < n; i++) {
+            double Di = -1;
+            for (int j = 0; j < n; j++) {
+                Di += MathEx.dot(X[i], X[j]);
+            }
+
+            D[i] = Di;
+            double di = Math.sqrt(Di);
+            X[i].update((j, xj) -> xj / di);
+        }
+
+        var W = new CountMatrix(SparseDataset.of(X, p).toMatrix(), D);
         Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
         double[][] Y = eigen.Vr.toArray();
         for (int i = 0; i < n; i++) {
@@ -377,7 +383,9 @@ public class SpectralClustering {
         /** The design matrix. */
         final IMatrix X;
         final double[] D;
+        final double[] x;
         final double[] ax;
+        final double[] y;
 
         /**
          * Constructor.
@@ -388,6 +396,8 @@ public class SpectralClustering {
 
             int n = X.nrow();
             int p = X.ncol();
+            x = new double[n];
+            y = new double[n];
             ax = new double[p];
         }
 
@@ -428,9 +438,15 @@ public class SpectralClustering {
 
         @Override
         public void mv(double[] work, int inputOffset, int outputOffset) {
-            throw new UnsupportedOperationException();
-        }
+            System.arraycopy(work, inputOffset, x, 0, x.length);
+            X.tv(work, ax);
+            X.mv(ax, y);
 
+            for (int i = 0; i < y.length; i++) {
+                y[i] -= x[i] / D[i];
+            }
+            System.arraycopy(y, 0, work, outputOffset, y.length);
+        }
 
         @Override
         public void tv(double[] work, int inputOffset, int outputOffset) {
