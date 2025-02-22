@@ -337,15 +337,12 @@ public class SpectralClustering {
             idf[j] = Math.log(n / (1 + idf[j]));
         }
 
-        double[] x = new double[p];
-        double[] D = new double[n];
         SparseArray[] X = new SparseArray[n];
-        for (int i = 0; i < n; i++) {
-            Arrays.fill(x, 0.0);
-            data[i].forEach((j, count) -> {
-                if (count > 0) x[j] = count / idf[j];
-            });
+        IntStream.range(0, n).parallel().forEach( i -> {
+            double[] x = new double[p];
+            data[i].forEach((j, count) -> x[j] = count / idf[j]);
             MathEx.normalize(x);
+
             SparseArray Xi = new SparseArray(data[i].size());
             for (int j = 0; j < p; j++) {
                 if (x[j] > 0) {
@@ -353,9 +350,10 @@ public class SpectralClustering {
                 }
             }
             X[i] = Xi;
-        }
+        });
 
-        for (int i = 0; i < n; i++) {
+        double[] D = new double[n];
+        IntStream.range(0, n).parallel().forEach( i -> {
             double Di = -1;
             for (int j = 0; j < n; j++) {
                 Di += MathEx.dot(X[i], X[j]);
@@ -364,7 +362,7 @@ public class SpectralClustering {
             D[i] = Di;
             double di = Math.sqrt(Di);
             X[i].update((j, xj) -> xj / di);
-        }
+        });
 
         var W = new CountMatrix(SparseDataset.of(X, p).toMatrix(), D);
         Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
