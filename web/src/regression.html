@@ -63,9 +63,7 @@ title: Smile - Regression
     public class OLS {
         public static LinearModel fit(Formula formula,
                                       DataFrame data,
-                                      String method,
-                                      boolean stderr,
-                                      boolean recursive);
+                                      Options options);
     }
           </code></pre>
             </div>
@@ -495,9 +493,7 @@ title: Smile - Regression
     public class LASSO {
         public static LinearModel fit(Formula formula,
                                       DataFrame data,
-                                      double lambda,
-                                      double tol,
-                                      int maxIter);
+                                      Options options);
     }
           </code></pre>
             </div>
@@ -749,9 +745,7 @@ title: Smile - Regression
         public static KernelMachine&lt;T&gt; fit(T[] x,
                                            double[] y,
                                            MercerKernel&lt;T&gt; kernel,
-                                           double eps,
-                                           double C,
-                                           double tol);
+                                           Options options);
     }
           </code></pre>
             </div>
@@ -870,10 +864,7 @@ title: Smile - Regression
     public class RegressionTree {
          public static RegressionTree fit(Formula formula,
                                           DataFrame data,
-                                          SplitRule rule,
-                                          int maxDepth,
-                                          int maxNodes,
-                                          int nodeSize);
+                                          Options options);
     }
           </code></pre>
             </div>
@@ -1025,13 +1016,7 @@ title: Smile - Regression
     public class RandomForest {
          public static RandomForest fit(Formula formula,
                                         DataFrame data,
-                                        int ntrees,
-                                        int mtry,
-                                        int maxDepth,
-                                        int maxNodes,
-                                        int nodeSize,
-                                        double subsample,
-                                        LongStream seeds);
+                                        Options options);
     }
           </code></pre>
             </div>
@@ -1195,13 +1180,7 @@ title: Smile - Regression
     public class GradientTreeBoost {
          public static GradientTreeBoost fit(Formula formula,
                                              DataFrame data,
-                                             Loss loss,
-                                             int ntrees,
-                                             int maxDepth,
-                                             int maxNodes,
-                                             int nodeSize,
-                                             double shrinkage,
-                                             double subsample);
+                                             Options options);
     }
           </code></pre>
             </div>
