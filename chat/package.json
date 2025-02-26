@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build --emptyOutDir",
     "preview": "vite preview --host"
   },
@@ -17,6 +17,7 @@
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "ollama": "^0.5.14",
     "sse.js": "^2.6.0"
   },
   "devDependencies": {
