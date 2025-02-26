@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from 'react'
 import { SSE } from 'sse.js'
-import ollama from 'ollama/browser'
+import { Ollama } from 'ollama/browser'
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
@@ -78,6 +78,8 @@ function App() {
     }
   }, [])
 
+  const ollama = new Ollama({ host: 'https://smile-ai.org' });
+
   const sendMessage = async (text) => {
     messages.push({
       user: user,
@@ -131,6 +133,7 @@ function App() {
           message.text += part.message.content;
           setMessages([...history, message]);
         }
+        setShowTypingIndicator(false);
       } else {
         let msg = response.message.content;
         messages.push({
