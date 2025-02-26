@@ -65,5 +65,5 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "com.formdev"    % "flatlaf"         % "3.5.4",
   "com.fifesoft"   % "rsyntaxtextarea" % "3.5.4",
-  "com.fifesoft"   % "autocomplete"    % "3.3.1"
+  "com.fifesoft"   % "autocomplete"    % "3.3.2"
 )

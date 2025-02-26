@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -14,17 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  base: '/chat',
-  build: {
-    outDir: '../serve/src/universal/chat'
-  },
-  plugins: [react()],
-  preview: {
-    allowedHosts: ['smile-ai.org'],
-  },
-})
+package smile.util.function;
+
+/**
+ * Represents a function that accepts an array element of integer value
+ * and produces a result.
+ *
+ * @author Karl Li
+ */
+public interface IntArrayElementFunction {
+    /**
+     * Performs this operation on the given element.
+     *
+     * @param i the index of array element.
+     * @param x the value of array element.
+     * @return the function result.
+     */
+    int apply(int i, int x);
+}
