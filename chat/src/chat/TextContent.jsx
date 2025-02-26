@@ -35,8 +35,8 @@ export default function TextContent({
     </pre>
 
     return (
-        <div className="text-content">
-            <Markdown className="line-break"
+        <div className="text-content line-break">
+            <Markdown
                 remarkPlugins={[remarkGfm, remarkGemoji, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
