@@ -95,9 +95,9 @@ lazy val javaSettings = commonSettings ++ Seq(
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.16",
-    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "5.11.4" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.17",
+    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "5.12.0" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -124,7 +124,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
     "org.specs2" %% "specs2-core" % "4.20.9" % Test
   ),
 )
