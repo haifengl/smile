@@ -27,4 +27,7 @@ export default defineConfig({
   preview: {
     allowedHosts: ['smile-ai.org'],
   },
+  server: {
+    cors: false,
+  },
 })
