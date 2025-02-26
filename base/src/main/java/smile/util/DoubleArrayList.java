@@ -18,7 +18,6 @@ package smile.util;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -32,8 +31,6 @@ import java.util.stream.DoubleStream;
 public final class DoubleArrayList implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    /** Format for toString. */
-    private static final DecimalFormat format = new DecimalFormat("#.######");
 
     /**
      * The data of the list.
@@ -76,7 +73,7 @@ public final class DoubleArrayList implements Serializable {
     public String toString() {
         String suffix = size() > 10 ?  ", ...]" : "]";
         return stream().limit(10)
-                .mapToObj(format::format)
+                .mapToObj(Strings::format)
                 .collect(Collectors.joining(", ", "[", suffix));
     }
 

@@ -3,7 +3,7 @@ name := "smile-base"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.base")
 
 libraryDependencies ++= {
-  val arrowV = "18.1.0"
+  val arrowV = "18.2.0"
   Seq(
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
@@ -14,7 +14,7 @@ libraryDependencies ++= {
     "org.apache.avro" % "avro" % "1.12.0" % Provided exclude("org.slf4j", "slf4j-log4j12"),
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
     "org.apache.commons" % "commons-csv" % "1.13.0",
-    "org.duckdb" % "duckdb_jdbc" % "1.1.3",
-    "org.xerial" % "sqlite-jdbc" % "3.49.0.0" % Test
+    "org.duckdb" % "duckdb_jdbc" % "1.2.0",
+    "org.xerial" % "sqlite-jdbc" % "3.49.1.0" % Test
   )
 }

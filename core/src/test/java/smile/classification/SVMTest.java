@@ -95,51 +95,7 @@ public class SVMTest {
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
         assertEquals(130, error, 10);
     }
-/*
-    @Test
-    public void testAdult() throws IOException {
-        System.out.println("adult");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
-        // Adult is not in standard format as its index start with 0.
-        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
-        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
-
-        int n = Math.min(20000, train.size()); // to avoid OOM
-        int[][] x = new int[n][];
-        int[] y = new int[n];
-        for (int i = 0; i < n; i++) {
-            SampleInstance<SparseArray, Integer> sample = train.get(i);
-            x[i] = new int[sample.x().size()];
-            int j = 0;
-            for (SparseArray.Entry e : sample.x()) {
-                x[i][j++] = e.i + 1; // The file is not standard libsvm format as the index starts with 0.
-            }
-            y[i] = sample.y();
-        }
-
-        n = test.size();
-        int[][] testx = new int[n][];
-        int[] testy = new int[n];
-        for (int i = 0; i < n; i++) {
-            SampleInstance<SparseArray, Integer> sample = test.get(i);
-            testx[i] = new int[sample.x().size()];
-            int j = 0;
-            for (SparseArray.Entry e : sample.x()) {
-                testx[i][j++] = e.i + 1;
-            }
-            testy[i] = sample.y();
-        }
-
-        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(28);
-        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
-
-        int[] prediction = model.predict(testx);
-        int error = Error.of(testy, prediction);
-        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2479, error);
-    }
-*/
     @Test
     public void testSegment() throws Exception {
         System.out.println("Segment");

@@ -16,6 +16,7 @@
  */
 package smile.clustering;
 
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.data.SparseDataset;
@@ -28,6 +29,7 @@ import smile.math.matrix.Matrix;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 import smile.util.SparseArray;
+import smile.util.SparseIntArray;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -151,11 +153,12 @@ public class SpectralClustering {
     /**
      * Spectral clustering the nonnegative count data with cosine similarity.
      * @param data the nonnegative count matrix.
+     * @param p the number of features.
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static CentroidClustering<double[], double[]> fit(int[][] data, Clustering.Options options) {
-        double[][] Y = embed(data, options.k());
+    public static CentroidClustering<double[], double[]> fit(SparseIntArray[] data, int p, Clustering.Options options) {
+        double[][] Y = embed(data, p, options.k());
         return KMeans.fit(Y, options);
     }
 
@@ -317,51 +320,51 @@ public class SpectralClustering {
     }
 
     /**
-     * Returns the embedding for spectral clustering of the nonnegative count
-     * data with cosine similarity.
+     * Returns the embedding for the nonnegative count data with cosine similarity.
      * @param data the nonnegative count matrix.
+     * @param p the number of features.
      * @param d the dimension of feature space.
      * @return the embedding.
      */
-    public static double[][] embed(int[][] data, int d) {
+    public static double[][] embed(SparseIntArray[] data, int p, int d) {
         int n = data.length;
-        int p = data[0].length;
 
         double[] idf = new double[p];
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                idf[j] += data[i][j] > 0 ? 1 : 0;
-            }
+            data[i].forEach((j, count) -> idf[j] += count > 0 ? 1 : 0);
         }
         for (int j = 0; j < p; j++) {
             idf[j] = Math.log(n / (1 + idf[j]));
         }
 
-        double[] x = new double[p];
-        double[] D = new double[n];
         SparseArray[] X = new SparseArray[n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                x[j] = data[i][j] / idf[j];
-            }
+        IntStream.range(0, n).parallel().forEach( i -> {
+            double[] x = new double[p];
+            data[i].forEach((j, count) -> x[j] = count / idf[j]);
             MathEx.normalize(x);
 
+            SparseArray Xi = new SparseArray(data[i].size());
             for (int j = 0; j < p; j++) {
-                D[i] += x[j] * x[j];
-            }
-            D[i] -= 1.0;
-
-            double Di = Math.sqrt(D[i]);
-            SparseArray Xi = new SparseArray();
-            for (int j = 0; j < p; j++) {
-                if (data[i][j] > 0) {
-                    Xi.set(j, x[j] / Di);
+                if (x[j] > 0) {
+                    Xi.set(j, x[j]);
                 }
             }
             X[i] = Xi;
-        }
+        });
 
-        var W = new CountMatrix(SparseDataset.of(X, n).toMatrix(), D);
+        double[] D = new double[n];
+        IntStream.range(0, n).parallel().forEach( i -> {
+            double Di = -1;
+            for (int j = 0; j < n; j++) {
+                Di += MathEx.dot(X[i], X[j]);
+            }
+
+            D[i] = Di;
+            double di = Math.sqrt(Di);
+            X[i].update((j, xj) -> xj / di);
+        });
+
+        var W = new CountMatrix(SparseDataset.of(X, p).toMatrix(), D);
         Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
         double[][] Y = eigen.Vr.toArray();
         for (int i = 0; i < n; i++) {
@@ -378,7 +381,9 @@ public class SpectralClustering {
         /** The design matrix. */
         final IMatrix X;
         final double[] D;
+        final double[] x;
         final double[] ax;
+        final double[] y;
 
         /**
          * Constructor.
@@ -389,6 +394,8 @@ public class SpectralClustering {
 
             int n = X.nrow();
             int p = X.ncol();
+            x = new double[n];
+            y = new double[n];
             ax = new double[p];
         }
 
@@ -429,9 +436,15 @@ public class SpectralClustering {
 
         @Override
         public void mv(double[] work, int inputOffset, int outputOffset) {
-            throw new UnsupportedOperationException();
-        }
+            System.arraycopy(work, inputOffset, x, 0, x.length);
+            X.tv(work, ax);
+            X.mv(ax, y);
 
+            for (int i = 0; i < y.length; i++) {
+                y[i] -= x[i] / D[i];
+            }
+            System.arraycopy(y, 0, work, outputOffset, y.length);
+        }
 
         @Override
         public void tv(double[] work, int inputOffset, int outputOffset) {
