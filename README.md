@@ -118,7 +118,7 @@ of Gradle build script.
 
 For Clojure API, add the following dependency to your project file:
 ```
-    [org.clojars.haifengl/smile "4.3.0"]
+    [org.clojars.haifengl/smile "4.2.0"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
