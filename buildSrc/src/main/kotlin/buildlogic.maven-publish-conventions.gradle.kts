@@ -3,6 +3,11 @@ plugins {
     signing
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
@@ -69,3 +74,4 @@ signing {
     sign(configurations.archives.get())
     sign(publishing.publications["mavenJava"])
 }
+
