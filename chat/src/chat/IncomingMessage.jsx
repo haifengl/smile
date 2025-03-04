@@ -33,6 +33,32 @@ export default function IncomingMessage({
         }
     }, [user])
 
+
+    let start = text.indexOf('<think>');
+    let end = text.indexOf('</think>');
+    if (start !== -1) {
+        let think = "";
+        let answer = "";
+        if (end !== -1) {
+            think = text.substring(start + 7, end).trimEnd();
+            answer = text.substring(end + 8);
+        } else {
+            think = text.substring(start + 7);
+        }
+
+        // think is not empty
+        if (think) {
+            // block quote
+            think = think.replaceAll('\n', '\n> ');
+            if (!think.startsWith('\n> ')) {
+                think = '> ' + think;
+            }
+            think += '\n';
+        }
+
+        text = think + answer;
+    }
+
     return (
         <div data-testid="incoming-message" className="incoming-wrapper">
             <div className="text-wrapper">

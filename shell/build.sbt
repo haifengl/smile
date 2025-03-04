@@ -62,7 +62,7 @@ libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "8.0.0",
   "org.scala-lang" % "scala-compiler"  % "2.13.16",
-  "ch.qos.logback" % "logback-classic" % "1.5.16",
+  "ch.qos.logback" % "logback-classic" % "1.5.17",
   "com.formdev"    % "flatlaf"         % "3.5.4",
   "com.fifesoft"   % "rsyntaxtextarea" % "3.5.4",
   "com.fifesoft"   % "autocomplete"    % "3.3.2"

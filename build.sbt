@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "4.2.0",
+  version := "4.3.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -95,8 +95,8 @@ lazy val javaSettings = commonSettings ++ Seq(
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.16",
-    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.17",
+    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
     "org.junit.jupiter" % "junit-jupiter-engine" % "5.11.4" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
@@ -117,14 +117,14 @@ lazy val scalaSettings = commonSettings ++ Seq(
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-dynamic-side-menu",
-    "-project-version", "4.2.0",
+    "-project-version", "4.3.0",
     "-project-logo", "web/src/images/smile.jpg",
     "-project-footer", """Copyright © 2010-2025 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.slf4j" % "slf4j-simple" % "2.0.16" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
     "org.specs2" %% "specs2-core" % "4.20.9" % Test
   ),
 )

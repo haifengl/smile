@@ -27,11 +27,3 @@ dokka {
     }
 }
 
-// Build javadoc.jar from dokka task output
-/*
-tasks.register<Jar>("dokkaHtmlJar") {
-    dependsOn(tasks.dokkaGenerate)
-    from(tasks.dokkaGenerate.flatMap { it.outputDirectory })
-    archiveClassifier.set("html-docs")
-}
-*/

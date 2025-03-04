@@ -3,6 +3,11 @@ plugins {
     signing
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
@@ -65,7 +70,8 @@ signing {
     setRequired({
         (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
     })
-    // useGpgCmd()
+    useGpgCmd()
     sign(configurations.archives.get())
     sign(publishing.publications["mavenJava"])
 }
+
