@@ -21,11 +21,11 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.4 json/doc
+sbt ++3.3.5 json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.4 scala/doc
+sbt ++3.3.5 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
@@ -38,12 +38,12 @@ check_error "!!"
 check_error "!!"
 find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
-cd clojure
-./lein codox
-check_error "!!"
-cd ..
-find doc/api/clojure -name '*.html' -exec tidy -m {} \;
-find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
+#cd clojure
+#./lein codox
+#check_error "!!"
+#cd ..
+#find doc/api/clojure -name '*.html' -exec tidy -m {} \;
+#find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
 cd web
 npm run deploy
@@ -61,11 +61,11 @@ while true; do
             sbt publishSigned
             check_error "sbt publish"
 
-            sbt ++3.3.4 scala/publishSigned
+            sbt ++3.3.5 scala/publishSigned
             check_error "sbt scala/publish"
-            sbt ++3.3.4 json/publishSigned
+            sbt ++3.3.5 json/publishSigned
             check_error "sbt json/publish"
-            # sbt ++3.3.4 spark/publishSigned
+            # sbt ++3.3.5 spark/publishSigned
             # check_error "sbt spark/publish"
             ./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
             break;;

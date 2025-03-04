@@ -304,7 +304,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class KMeans {
-        public static KMeans fit(double[][] data, int k, int maxIter, double tol);
+        public static KMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
@@ -341,7 +341,7 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 6));
+    var clusters = Clustering.run(20, () -> KMeans.fit(x, 6));
     ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
             </div>
@@ -384,7 +384,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
-    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 2));
+    var clusters = Clustering.run(20, () -> KMeans.fit(x, 2));
     ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
             </div>
@@ -437,7 +437,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class XMeans {
-        public static XMeans fit(double[][] data, int kmax, int maxIter, double tol);
+        public static XMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
@@ -519,7 +519,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class GMeans {
-        public static GMeans fit(double[][] data, int kmax, int maxIter, double tol);
+        public static GMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
@@ -653,7 +653,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class DeterministicAnnealing {
-        public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol);
+        public static DeterministicAnnealing fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
@@ -799,7 +799,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SIB {
-        public static SIB fit(SparseArray[] data, int k, int maxIter);
+        public static SIB fit(SparseArray[] data, Options options);
     }
           </code></pre>
             </div>
@@ -895,8 +895,8 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_15">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    public class CLARANS {
-        public static CLARANS&lt;T&gt; fit(T[] data, int k, int maxNeighbor, Distance&lt;T&gt; distance);
+    public class KMedoids {
+        public static KMedoids&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
     }
           </code></pre>
             </div>
@@ -933,7 +933,7 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var clusters = PartitionClustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
+    var clusters = Clustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
     ScatterPlot.of(x, clusters.y, '.').canvas().window();
           </code></pre>
             </div>
@@ -1130,7 +1130,7 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class DENCLUE {
-        public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts);
+        public static DENCLUE fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
@@ -1235,10 +1235,10 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SpectralClustering {
-        public static SpectralClustering fit(DenseMatrix W, int k, int maxIter, double tol);
-        public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol);
-        // Nystrom approximation
-        public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol);
+        public static SpectralClustering fit(DenseMatrix W, Options options);
+        public static SpectralClustering fit(double[][] data, Options options);
+        // Feature count matrix with cosine similarity
+        public static SpectralClustering fit(SparseIntArray[] data, Options options);
     }
           </code></pre>
             </div>
@@ -1348,8 +1348,8 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class MEC {
-        public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int k, double radius);
-        public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int k, double radius, int[] y, double tol);
+        public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
+        public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, Options options);
     }
           </code></pre>
             </div>

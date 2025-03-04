@@ -56,24 +56,26 @@ import static smile.math.MathEx.norm;
  * <p>
  * Like the original BFGS, the limited-memory BFGS (L-BFGS) uses an
  * estimation to the inverse Hessian matrix to steer its search
- * through variable space, but where BFGS stores a dense {@code n × n}
- * approximation to the inverse Hessian (<code>n</code> being the number of
- * variables in the problem), L-BFGS stores only a few vectors
+ * through variable space, but where BFGS stores a dense n-by-n
+ * approximation to the inverse Hessian (<code>n</code> being the number
+ * of variables in the problem), L-BFGS stores only a few vectors
  * that represent the approximation implicitly. Due to its resulting
  * linear memory requirement, the L-BFGS method is particularly well
  * suited for optimization problems with a large number of variables
- * (e.g., {@code > 1000}). Instead of the inverse Hessian <code>H_k</code>, L-BFGS
- * maintains * a history of the past <code>m</code> updates of the position
- * <code>x</code> and gradient <code>∇f(x)</code>, where generally the
- * history size <code>m</code> can be small (often {@code m < 10}).
+ * (e.g., {@code > 1000}). Instead of the inverse Hessian <code>H_k</code>,
+ * L-BFGS maintains a history of the past <code>m</code> updates of the
+ * position <code>x</code> and gradient <code>∇f(x)</code>, where generally
+ * the history size <code>m</code> can be small (often {@code m < 10}).
  * These updates are used to implicitly do operations requiring the
  * <code>H_k</code>-vector product.
  *
  * <h2>References</h2>
  * <ol>
- *     <li>Roger Fletcher. Practical methods of optimization.</li>
- *     <li>D. Liu and J. Nocedal. On the limited memory BFGS method for large scale optimization. Mathematical Programming B 45 (1989) 503-528.</li>
- *     <li>Richard H. Byrd, Peihuang Lu, Jorge Nocedal and Ciyou Zhu. A limited memory algorithm for bound constrained optimization.</li>
+ * <li>Roger Fletcher. Practical methods of optimization.</li>
+ * <li>D. Liu and J. Nocedal. On the limited memory BFGS method for large scale optimization.
+ * Mathematical Programming B 45 (1989) 503-528.</li>
+ * <li>Richard H. Byrd, Peihuang Lu, Jorge Nocedal and Ciyou Zhu.
+ * A limited memory algorithm for bound constrained optimization.</li>
  * </ol>
  *
  * @author Haifeng Li

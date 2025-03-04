@@ -771,7 +771,7 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     public class LogisticRegression {
-        public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter);
+        public static LogisticRegression fit(double[][] x, int[] y, Options options);
     }
           </code></pre>
             </div>
@@ -889,7 +889,7 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Maxent {
-        public static Maxent fit(int[][] x, int[] y, double lambda, double tol, int maxIter);
+        public static Maxent fit(int[][] x, int[] y, Options options);
     }
           </code></pre>
             </div>
@@ -1281,13 +1281,13 @@ title: Smile - Classification
           <pre class="prettyprint lang-java"><code>
     public class SVM {
         // Fits a binary-class linear SVM
-        public static Classifier&lt;double[]&gt; fit(double[][] x, int[] y, double C, double tol);
+        public static Classifier&lt;double[]&gt; fit(double[][] x, int[] y, Options options);
         // Fits a binary-class linear SVM of binary sparse data
-        public static Classifier&lt;int[]&gt; fit(int[][] x, int[] y, int p, double C, double tol);
+        public static Classifier&lt;int[]&gt; fit(int[][] x, int[] y, int p, Options options);
         // Fits a binary-class linear SVM of binary sparse data
-        public static Classifier&lt;SparseArray&gt; fit(SparseArray[] x, int[] y, int p, double C, double tol);
+        public static Classifier&lt;SparseArray&gt; fit(SparseArray[] x, int[] y, int p, Options options);
         // Fits a non-linear SVM
-        public static SVM&lt;T&gt; fit(T[] x, int[] y, MercerKernel&lt;T&gt; kernel, double C, double tol);
+        public static SVM&lt;T&gt; fit(T[] x, int[] y, MercerKernel&lt;T&gt; kernel, Options options);
     }
           </code></pre>
             </div>
@@ -1470,7 +1470,7 @@ title: Smile - Classification
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
     public class DecisionTree {
-         public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize);
+         public static DecisionTree fit(Formula formula, DataFrame data, Options options);
     }
           </code></pre>
             </div>
@@ -1699,15 +1699,7 @@ title: Smile - Classification
     public class RandomForest {
         public static RandomForest fit(Formula formula,
                                        DataFrame data,
-                                       int ntrees,
-                                       int mtry,
-                                       SplitRule rule,
-                                       int maxDepth,
-                                       int maxNodes,
-                                       int nodeSize,
-                                       double subsample,
-                                       int[] classWeight,
-                                       LongStream seeds);
+                                       Options options);
     }
           </code></pre>
             </div>
@@ -1839,12 +1831,7 @@ title: Smile - Classification
     public class GradientTreeBoost {
          public static GradientTreeBoost fit(Formula formula,
                                              DataFrame data,
-                                             int ntrees,
-                                             int maxDepth,
-                                             int maxNodes,
-                                             int nodeSize,
-                                             double shrinkage,
-                                             double subsample);
+                                             Options options);
     }
           </code></pre>
             </div>
@@ -1939,10 +1926,7 @@ title: Smile - Classification
     public class AdaBoost {
          public static AdaBoost fit(Formula formula,
                                     DataFrame data,
-                                    int ntrees,
-                                    int maxDepth,
-                                    int maxNodes,
-                                    int nodeSize);
+                                    Options options);
     }
           </code></pre>
             </div>
