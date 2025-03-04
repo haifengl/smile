@@ -47,7 +47,7 @@ import smile.util.AlgoStatus;
  */
 public class GMeans {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
-    private static double CRITICAL_VALUE = 1.8692;
+    private static final double CRITICAL_VALUE = 1.8692;
 
     /** Constructor. */
     private GMeans() {
