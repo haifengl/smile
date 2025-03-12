@@ -26,7 +26,7 @@ import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 
 /**
- * The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
+ * The signal-to-noise (S2N) ratio is a univariate feature ranking metric,
  * which can be used as a feature selection criterion for binary classification
  * problems. S2N is defined as |&mu;<sub>1</sub> - &mu;<sub>2</sub>| / (&sigma;<sub>1</sub> + &sigma;<sub>2</sub>),
  * where &mu;<sub>1</sub> and &mu;<sub>2</sub> are the mean value of the variable
@@ -83,31 +83,32 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
 
         StructType schema = data.schema();
 
-        return IntStream.range(0, schema.length()).mapToObj(i -> {
+        return IntStream.range(0, schema.length())
+                .filter(i -> {
+                    StructField field = schema.field(i);
+                    return !field.name().equals(clazz) && field.isNumeric();
+                })
+                .mapToObj(i -> {
             StructField field = schema.field(i);
-            if (field.isNumeric()) {
-                Arrays.fill(x1, 0.0);
-                Arrays.fill(x2, 0.0);
-                ValueVector xi = data.column(i);
+            Arrays.fill(x1, 0.0);
+            Arrays.fill(x2, 0.0);
+            ValueVector xi = data.column(i);
 
-                for (int l = 0, j = 0, k = 0; l < n; l++) {
-                    if (codec.y[l] == 0) {
-                        x1[j++] = xi.getDouble(l);
-                    } else {
-                        x2[k++] = xi.getDouble(l);
-                    }
+            for (int l = 0, j = 0, k = 0; l < n; l++) {
+                if (codec.y[l] == 0) {
+                    x1[j++] = xi.getDouble(l);
+                } else {
+                    x2[k++] = xi.getDouble(l);
                 }
-
-                double mu1 = MathEx.mean(x1);
-                double mu2 = MathEx.mean(x2);
-                double sd1 = MathEx.stdev(x1);
-                double sd2 = MathEx.stdev(x2);
-
-                double s2n = Math.abs(mu1 - mu2) / (sd1 + sd2);
-                return new SignalNoiseRatio(field.name(), s2n);
-            } else {
-                return null;
             }
-        }).filter(s2n -> s2n != null && !s2n.feature.equals(clazz)).toArray(SignalNoiseRatio[]::new);
+
+            double mu1 = MathEx.mean(x1);
+            double mu2 = MathEx.mean(x2);
+            double sd1 = MathEx.stdev(x1);
+            double sd2 = MathEx.stdev(x2);
+
+            double s2n = Math.abs(mu1 - mu2) / (sd1 + sd2);
+            return new SignalNoiseRatio(field.name(), s2n);
+        }).toArray(SignalNoiseRatio[]::new);
     }
 }
