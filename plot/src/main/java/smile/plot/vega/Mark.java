@@ -38,6 +38,14 @@ public class Mark {
         this.spec = spec;
     }
 
+    /**
+     * Returns the underlying Mark definition object.
+     * @return the underlying Mark definition object.
+     */
+    public ObjectNode spec() {
+        return spec;
+    }
+
     @Override
     public String toString() {
         return spec.toString();

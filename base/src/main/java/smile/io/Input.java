@@ -56,10 +56,9 @@ public interface Input {
      * Returns the input stream of a file path or URI.
      * @param path the input file path.
      * @throws IOException when fails to read the file.
-     * @throws URISyntaxException when the file path syntax is wrong.
      * @return the file input stream.
      */
-    static InputStream stream(String path) throws IOException, URISyntaxException {
+    static InputStream stream(String path) throws IOException {
         try {
             URI uri = new URI(path);
             String scheme = uri.getScheme();

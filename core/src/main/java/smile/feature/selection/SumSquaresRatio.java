@@ -82,38 +82,39 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
 
         StructType schema = data.schema();
 
-        return IntStream.range(0, schema.length()).mapToObj(j -> {
+        return IntStream.range(0, schema.length())
+                .filter(i -> {
+                    StructField field = schema.field(i);
+                    return !field.name().equals(clazz) && field.isNumeric();
+                })
+                .mapToObj(j -> {
             StructField field = schema.field(j);
-            if (field.isNumeric()) {
-                ValueVector xj = data.column(j);
-                double mu = 0.0;
-                Arrays.fill(condmu, 0.0);
-                for (int i = 0; i < n; i++) {
-                    int yi = codec.y[i];
-                    double xij = xj.getDouble(i);
-                    mu += xij;
-                    condmu[yi] += xij;
-                }
-
-                mu /= n;
-                for (int i = 0; i < k; i++) {
-                    condmu[i] /= nc[i];
-                }
-
-                double wss = 0.0;
-                double bss = 0.0;
-
-                for (int i = 0; i < n; i++) {
-                    int yi = codec.y[i];
-                    double xij = xj.getDouble(i);
-                    bss += MathEx.pow2(condmu[yi] - mu);
-                    wss += MathEx.pow2(xij - condmu[yi]);
-                }
-
-                return new SumSquaresRatio(field.name(), bss / wss);
-            } else {
-                return null;
+            ValueVector xj = data.column(j);
+            double mu = 0.0;
+            Arrays.fill(condmu, 0.0);
+            for (int i = 0; i < n; i++) {
+                int yi = codec.y[i];
+                double xij = xj.getDouble(i);
+                mu += xij;
+                condmu[yi] += xij;
             }
-        }).filter(s2n -> s2n != null && !s2n.feature.equals(clazz)).toArray(SumSquaresRatio[]::new);
+
+            mu /= n;
+            for (int i = 0; i < k; i++) {
+                condmu[i] /= nc[i];
+            }
+
+            double wss = 0.0;
+            double bss = 0.0;
+
+            for (int i = 0; i < n; i++) {
+                int yi = codec.y[i];
+                double xij = xj.getDouble(i);
+                bss += MathEx.pow2(condmu[yi] - mu);
+                wss += MathEx.pow2(xij - condmu[yi]);
+            }
+
+            return new SumSquaresRatio(field.name(), bss / wss);
+        }).toArray(SumSquaresRatio[]::new);
     }
 }

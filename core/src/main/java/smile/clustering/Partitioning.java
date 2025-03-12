@@ -30,11 +30,11 @@ public class Partitioning implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** The number of clusters. */
-    int k;
+    final int k;
     /** The cluster labels of data points. */
-    int[] group;
+    final int[] group;
     /** The number of data points in each cluster. */
-    int[] size;
+    final int[] size;
 
     /**
      * Constructor.
