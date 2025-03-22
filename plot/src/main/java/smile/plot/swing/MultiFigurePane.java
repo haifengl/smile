@@ -22,26 +22,17 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-
+import java.util.Objects;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JToolBar;
-import javax.swing.RepaintManager;
-
+import javax.swing.*;
 import smile.data.DataFrame;
+import smile.swing.Button;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
 
@@ -50,21 +41,7 @@ import smile.swing.Printer;
  *
  * @author Haifeng Li
  */
-public class MultiFigurePane extends JPanel implements ActionListener, Printable {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MultiFigurePane.class);
-
-    /**
-     * Toolbar command.
-     */
-    private static final String SAVE = "save";
-    /**
-     * Toolbar command.
-     */
-    private static final String PRINT = "print";
-    /**
-     * The content panel to hold plots.
-     */
-    private final JPanel contentPane;
+public class MultiFigurePane extends JPanel implements Printable {
     /**
      * Optional toolbar to control plots.
      */
@@ -75,12 +52,9 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
      * @param layout the layout manager of plot content pane.
      */
     public MultiFigurePane(LayoutManager layout) {
-        super(new BorderLayout());
+        super(layout, true);
+        setBackground(Color.WHITE);
         initToolBar();
-
-        contentPane = new JPanel(layout, true);
-        contentPane.setBackground(Color.WHITE);
-        add(contentPane, BorderLayout.CENTER);
     }
 
     /**
@@ -99,7 +73,7 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
     public MultiFigurePane(Canvas... plots) {
         this(grid(plots.length));
         for (var plot : plots) {
-            contentPane.add(plot);
+            add(plot);
         }
     }
 
@@ -131,126 +105,43 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
     }
 
     /**
-     * Appends the specified plot to the end of this container.
-     * @param plot a plot canvas.
+     * Toolbar button actions.
      */
-    public void add(Canvas plot) {
-        contentPane.add(plot);
-        if (getLayout() instanceof GridLayout) {
-            contentPane.setLayout(grid(contentPane.getComponentCount()));
-        }
-    }
-
-    /**
-     * Adds the specified plot to this container at the given position.
-     * @param plot a plot canvas.
-     * @param index the position in the container's list at which to insert
-     *              the plot; -1 means insert at the end component.
-     */
-    public void add(Canvas plot, int index) {
-        contentPane.add(plot, index);
-    }
-
-    /**
-     * Appends the specified plot to the end of this container.
-     * @param plot a plot canvas.
-     * @param constraints an object expressing layout constraints for this plot.
-     */
-    public void	add(Canvas plot, Object constraints) {
-        contentPane.add(plot, constraints);
-    }
-
-    /**
-     * Adds the specified component to this container with the specified
-     * constraints at the specified index.
-     * @param plot a plot canvas.
-     * @param constraints an object expressing layout constraints for this plot.
-     * @param index the position in the container's list at which to insert
-     *              the plot; -1 means insert at the end component.
-     */
-    public void	add(Canvas plot, Object constraints, int index) {
-        contentPane.add(plot, constraints, index);
-    }
-
-    /**
-     * Removes the specified plot from this container.
-     * @param plot a plot canvas.
-     */
-    public void remove(Canvas plot) {
-        contentPane.remove(plot);
-        if (getLayout() instanceof GridLayout) {
-            contentPane.setLayout(grid(contentPane.getComponentCount()));
-        }
-    }
-
-    /**
-     * Removes the plot, specified by index, from this container.
-     * @param index the index of the plot to be removed
-     */
-    public void remove(int index) {
-        contentPane.remove(index);
-        if (getLayout() instanceof GridLayout) {
-            contentPane.setLayout(grid(contentPane.getComponentCount()));
-        }
-    }
-
-    /**
-     * Removes all the components from this container.
-     */
-    public void removeAll() {
-        contentPane.removeAll();
-        if (getLayout() instanceof GridLayout) {
-            contentPane.setLayout(grid(contentPane.getComponentCount()));
-        }
-    }
+    private transient final Action saveAction = new SaveAction();
+    private transient final Action printAction = new PrintAction();
 
     /**
      * Initialize toolbar.
      */
     private void initToolBar() {
-        JButton button = makeButton("save", SAVE, "Save", "Save");
-        toolbar.add(button);
-
-        button = makeButton("print", PRINT, "Print", "Print");
-        toolbar.add(button);
+        toolbar.add(new Button(saveAction));
+        toolbar.add(new Button(printAction));
     }
-    
-    /**
-     * Creates a button for toolbar.
-     */
-    private JButton makeButton(String imageName, String actionCommand, String toolTipText, String altText) {
-        // Look for the image.
-        String imgLocation = "images/" + imageName + "16.png";
-        URL imageURL = MultiFigurePane.class.getResource(imgLocation);
 
-        // Create and initialize the button.
-        JButton button = new JButton();
-        button.setActionCommand(actionCommand);
-        button.setToolTipText(toolTipText);
-        button.addActionListener(this);
+    private class SaveAction extends AbstractAction {
 
-        if (imageURL != null) {   // image found
-            button.setIcon(new ImageIcon(imageURL, altText));
-        } else {                  // no image found
-            button.setText(altText);
-            logger.error("Resource not found: {}", imgLocation);
+        public SaveAction() {
+            super("Save", new ImageIcon(Objects.requireNonNull(MultiFigurePane.class.getResource("images/save16.png"))));
         }
 
-        return button;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String cmd = e.getActionCommand();
-        if (SAVE.equals(cmd)) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
             try {
                 save();
             } catch (IOException ex) {
-                logger.error("Failed to save the screenshot", ex);
                 JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
 
-        } else if (PRINT.equals(cmd)) {
+    private class PrintAction extends AbstractAction {
+
+        public PrintAction() {
+            super("Print", new ImageIcon(Objects.requireNonNull(MultiFigurePane.class.getResource("images/print16.png"))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
             print();
         }
     }
@@ -269,8 +160,8 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
         g2d.translate(pf.getImageableX(), pf.getImageableY());
 
         // Scale plots to paper size.
-        double scaleX = pf.getImageableWidth() / contentPane.getWidth();
-        double scaleY = pf.getImageableHeight() / contentPane.getHeight();
+        double scaleX = pf.getImageableWidth() / getWidth();
+        double scaleY = pf.getImageableHeight() / getHeight();
         g2d.scale(scaleX, scaleY);
 
         // Disable double buffering
@@ -278,7 +169,7 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
         currentManager.setDoubleBufferingEnabled(false);
 
         // Now we perform our rendering
-        contentPane.printAll(g);
+        printAll(g);
 
         // Enable double buffering
         currentManager.setDoubleBufferingEnabled(true);
@@ -310,9 +201,9 @@ public class MultiFigurePane extends JPanel implements ActionListener, Printable
      * @throws IOException if an error occurs during writing.
      */
     public void save(File file) throws IOException {
-        BufferedImage bi = new BufferedImage(contentPane.getWidth(), contentPane.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bi = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
-        contentPane.printAll(g2d);
+        printAll(g2d);
 
         ImageIO.write(bi, FileChooser.getExtension(file), file);
     }
