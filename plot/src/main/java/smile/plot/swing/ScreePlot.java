@@ -89,8 +89,8 @@ public class ScreePlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure canvas() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.setAxisLabels("Principal Component", "Proportion of Variance");
         canvas.getAxis(0).setTicks(labels, x);
         canvas.add(this);

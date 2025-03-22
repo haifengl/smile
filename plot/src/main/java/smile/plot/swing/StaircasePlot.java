@@ -58,8 +58,8 @@ public class StaircasePlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure canvas() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.base.extendBound(1);
         canvas.add(this);
         return canvas;

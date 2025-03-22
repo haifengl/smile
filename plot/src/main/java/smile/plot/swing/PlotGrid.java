@@ -50,7 +50,6 @@ import smile.swing.Printer;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class PlotGrid extends JPanel implements ActionListener, Printable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotGrid.class);
 
@@ -84,9 +83,9 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * Constructor.
      * @param plots the plots to add into the frame.
      */
-    public PlotGrid(PlotPanel... plots) {
+    public PlotGrid(FigurePane... plots) {
         init(layout(plots.length));
-        for (PlotPanel plot : plots) {
+        for (FigurePane plot : plots) {
             contentPane.add(plot);
         }
     }
@@ -126,7 +125,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     /**
      * Add a plot into the frame.
      */
-    public void add(PlotPanel plot) {
+    public void add(FigurePane plot) {
         contentPane.add(plot);
         contentPane.setLayout(layout(contentPane.getComponentCount()));
     }
@@ -134,7 +133,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     /**
      * Remove a plot from the frame.
      */
-    public void remove(PlotPanel plot) {
+    public void remove(FigurePane plot) {
         contentPane.remove(plot);
         contentPane.setLayout(layout(contentPane.getComponentCount()));
     }
@@ -267,7 +266,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      */
     public JFrame window() throws InterruptedException, InvocationTargetException {
         JFrame frame = new JFrame();
-        String title = String.format("Smile Plot %d", PlotPanel.WindowCount.addAndGet(1));
+        String title = String.format("Smile Plot %d", FigurePane.WindowCount.addAndGet(1));
         frame.setTitle(title);
 
         JPanel pane = new JPanel(new BorderLayout());
@@ -298,7 +297,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
         PlotGrid grid = new PlotGrid(p, p);
         for (int i = p; i-- > 0;) {
             for (String column : columns) {
-                Canvas canvas = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
+                Figure canvas = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
                 canvas.setAxisLabels(column, columns[i]);
                 grid.add(canvas.panel());
             }
@@ -321,7 +320,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
                 if (j == clazz) continue;
-                Canvas canvas = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
+                Figure canvas = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
                 canvas.setLegendVisible(false);
                 canvas.setAxisLabels(columns[j], columns[i]);
                 grid.add(canvas.panel());

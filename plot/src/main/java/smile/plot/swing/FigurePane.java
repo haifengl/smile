@@ -19,13 +19,10 @@ package smile.plot.swing;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -37,341 +34,44 @@ import smile.swing.Printer;
 import smile.swing.Table;
 
 /**
- * Canvas for mathematical plots.
- * <p>
- * For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
- * the user can shift the coordinates by moving mouse after double click. The
- * user can also select an area by mouse for detailed view. For 3D plot, the user
- * can rotate the view by dragging mouse.
+ * Interactive pane for mathematical plots. For both 2D and 3D plot,
+ * the user can zoom in/out by mouse wheel. For 2D plot, the user can
+ * shift the coordinates by moving mouse after double click. The user
+ * can also select an area by mouse for detailed view. For 3D plot,
+ * the user can rotate the view by dragging mouse.
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
-public class PlotPanel extends JPanel {
+public class FigurePane extends JPanel {
     /**
-     * The canvas of plots.
+     * The plot figure.
+     */
+    private final Figure figure;
+    /**
+     * The Swing component to draw the figure.
      */
     private final Canvas canvas;
     /**
-     * The Swing component to draw the canvas.
-     */
-    private final JCanvas contentPane;
-    /**
      * Optional toolbar to control plots.
      */
-    private JToolBar toolbar;
+    private final JToolBar toolbar = new JToolBar();
     /**
      * Right-click popup menu.
      */
-    private JPopupMenu popup;
+    private final JPopupMenu popup = new JPopupMenu();;
     /**
      * Property table.
      */
     private JTable propertyTable;
 
     /**
-     * The Swing component to draw the canvas.
-     */
-    private class JCanvas extends JComponent implements Printable, ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
-        /**
-         * If the mouse double-clicked.
-         */
-        private boolean mouseDoubleClicked = false;
-        /**
-         * The x coordinate (in Java2D coordinate space) of mouse click.
-         */
-        private int mouseClickX = -1;
-        /**
-         * The y coordinate (in Java2D coordinate space) of mouse click.
-         */
-        private int mouseClickY = -1;
-        /**
-         * The x coordinate (in Java2D coordinate space) of mouse dragging.
-         */
-        private int mouseDraggingX = -1;
-        /**
-         * The y coordinate (in Java2D coordinate space) of mouse dragging.
-         */
-        private int mouseDraggingY = -1;
-        /**
-         * The coordinate base when the user start dragging the mouse.
-         */
-        private Base backupBase;
-
-        /**
-         * Constructor.
-         */
-        JCanvas() {
-            setBackground(Color.white);
-            setDoubleBuffered(true);
-            addComponentListener(this);
-            addMouseListener(this);
-            addMouseMotionListener(this);
-            addMouseWheelListener(this);
-        }
-
-        @Override
-        public void paintComponent(java.awt.Graphics g) {
-            canvas.paint((Graphics2D) g, getWidth(), getHeight());
-
-            if (mouseDraggingX >= 0 && mouseDraggingY >= 0) {
-                g.setColor(Color.BLACK);
-                g.drawRect(
-                        Math.min(mouseClickX, mouseDraggingX),
-                        Math.min(mouseClickY, mouseDraggingY),
-                        Math.abs(mouseClickX - mouseDraggingX),
-                        Math.abs(mouseClickY - mouseDraggingY)
-                );
-            }
-        }
-
-        @Override
-        public int print(java.awt.Graphics g, PageFormat pf, int page) {
-            if (page > 0) {
-                // We have only one page, and 'page' is zero-based
-                return NO_SUCH_PAGE;
-            }
-
-            Graphics2D g2d = (Graphics2D) g;
-
-            // User (0,0) is typically outside the printable area, so we must
-            // translate by the X and Y values in the PageFormat to avoid clipping
-            g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-            // Scale plots to paper size.
-            double scaleX = pf.getImageableWidth() / getWidth();
-            double scaleY = pf.getImageableHeight() / getHeight();
-            g2d.scale(scaleX, scaleY);
-
-            // Now we perform our rendering
-            canvas.paint(g2d, getWidth(), getHeight());
-
-            // tell the caller that this page is part of the printed document
-            return PAGE_EXISTS;
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                popup.show(e.getComponent(), e.getX(), e.getY());
-                e.consume();
-            } else {
-                mouseClickX = e.getX();
-                mouseClickY = e.getY();
-                e.consume();
-            }
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if (canvas.base.dimension == 2) {
-                mouseDraggingX = e.getX();
-                mouseDraggingY = e.getY();
-            } else if (canvas.base.dimension == 3) {
-                canvas.graphics.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
-                mouseClickX = e.getX();
-                mouseClickY = e.getY();
-            }
-
-            repaint();
-            e.consume();
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            Base base = canvas.base;
-            Graphics graphics = canvas.graphics;
-
-            if (e.isPopupTrigger()) {
-                popup.show(e.getComponent(), e.getX(), e.getY());
-                e.consume();
-            } else {
-                if (mouseDraggingX != -1 && mouseDraggingY != -1) {
-                    mouseDraggingX = -1;
-                    mouseDraggingY = -1;
-
-                    if (base.dimension == 2) {
-                        if (Math.abs(e.getX() - mouseClickX) > 20 && Math.abs(e.getY() - mouseClickY) > 20) {
-                            double[] sc1 = ((Projection2D) (graphics.projection)).inverseProjection(mouseClickX, mouseClickY);
-                            double[] sc2 = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
-
-                            if (Math.min(sc1[0], sc2[0]) < base.upperBound[0]
-                                    && Math.max(sc1[0], sc2[0]) > canvas.base.lowerBound[0]
-                                    && Math.min(sc1[1], sc2[1]) < base.upperBound[1]
-                                    && Math.max(sc1[1], sc2[1]) > base.lowerBound[1]) {
-
-                                base.lowerBound[0] = Math.max(base.lowerBound[0], Math.min(sc1[0], sc2[0]));
-                                base.upperBound[0] = Math.min(base.upperBound[0], Math.max(sc1[0], sc2[0]));
-                                base.lowerBound[1] = Math.max(base.lowerBound[1], Math.min(sc1[1], sc2[1]));
-                                base.upperBound[1] = Math.min(base.upperBound[1], Math.max(sc1[1], sc2[1]));
-
-                                for (int i = 0; i < base.dimension; i++) {
-                                    base.setPrecisionUnit(i);
-                                }
-                                base.initBaseCoord();
-                                graphics.projection.reset();
-                                canvas.resetAxis();
-                            }
-                        }
-                    }
-
-                    repaint();
-                    e.consume();
-                }
-            }
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                mouseDoubleClicked = true;
-                backupBase = canvas.base;
-            } else {
-                mouseDoubleClicked = false;
-            }
-
-            mouseClickX = e.getX();
-            mouseClickY = e.getY();
-
-            e.consume();
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            Base base = canvas.base;
-            Graphics graphics = canvas.graphics;
-
-            if (base.dimension == 2) {
-                if (mouseDoubleClicked) {
-                    double x = mouseClickX - e.getX();
-                    if (Math.abs(x) > 20) {
-                        int s = canvas.axis[0].slices();
-                        x = x > 0 ? 1.0 / s : -1.0 / s;
-                        x *= (backupBase.upperBound[0] - backupBase.lowerBound[0]);
-                        base.lowerBound[0] = backupBase.lowerBound[0] + x;
-                        base.upperBound[0] = backupBase.upperBound[0] + x;
-                        mouseClickX = e.getX();
-                    }
-
-                    double y = mouseClickY - e.getY();
-                    if (Math.abs(y) > 20) {
-                        int s = canvas.axis[1].slices();
-                        y = y > 0 ? -1.0 / s : 1.0 / s;
-                        y *= (backupBase.upperBound[1] - backupBase.lowerBound[1]);
-                        base.lowerBound[1] = backupBase.lowerBound[1] + y;
-                        base.upperBound[1] = backupBase.upperBound[1] + y;
-                        mouseClickY = e.getY();
-                    }
-
-                    base.initBaseCoord();
-                    graphics.projection.reset();
-                    canvas.resetAxis();
-                    repaint();
-                } else {
-                    StringBuilder tooltip = new StringBuilder();
-                    double[] sc = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
-
-                    //String firstid = null;
-                    for (Shape shape : canvas.shapes) {
-                        if (shape instanceof Plot plot) {
-                            Optional<String> s = plot.tooltip(sc);
-                            if (s.isPresent()) {
-                                if (!tooltip.isEmpty()) {
-                                    tooltip.append("<br>");
-                                }
-                                tooltip.append(s);
-                            }
-                        }
-                    }
-
-                    if (!tooltip.isEmpty()) {
-                        setToolTipText(String.format("<html>%s</html>", tooltip));
-                    }
-                }
-            }
-
-            e.consume();
-        }
-
-        @Override
-        public void mouseWheelMoved(MouseWheelEvent e) {
-            if (e.getWheelRotation() == 0) {
-                return;
-            }
-
-            Base base = canvas.base;
-            Graphics graphics = canvas.graphics;
-
-            for (int i = 0; i < base.dimension; i++) {
-                int s = canvas.axis[i].slices();
-                double r = e.getWheelRotation() > 0 ? 1.0 / s : -1.0 / s;
-                if (r > -0.5) {
-                    double d = (base.upperBound[i] - base.lowerBound[i]) * r;
-                    base.lowerBound[i] -= d;
-                    base.upperBound[i] += d;
-                }
-            }
-
-            for (int i = 0; i < base.dimension; i++) {
-                base.setPrecisionUnit(i);
-            }
-
-            base.initBaseCoord();
-            graphics.projection.reset();
-            canvas.resetAxis();
-
-            repaint();
-            e.consume();
-        }
-
-        @Override
-        public void componentResized(ComponentEvent e) {
-            Base base = canvas.base;
-            Graphics graphics = canvas.graphics;
-
-            if (graphics != null) {
-                base.initBaseCoord();
-                graphics.projection.reset();
-                canvas.resetAxis();
-            }
-
-            repaint();
-        }
-
-        @Override
-        public void componentHidden(ComponentEvent e) {
-        }
-
-        @Override
-        public void componentMoved(ComponentEvent e) {
-        }
-
-        @Override
-        public void componentShown(ComponentEvent e) {
-        }
-    }
-
-    /**
      * Constructor
      */
-    public PlotPanel(Canvas canvas) {
-        this.canvas = canvas;
-        contentPane = new JCanvas();
-
-        setLayout(new BorderLayout());
-        add(contentPane, BorderLayout.CENTER);
+    public FigurePane(Figure figure) {
+        super(new BorderLayout());
+        this.figure = figure;
+        this.canvas = new Canvas(figure, popup);
+        add(canvas, BorderLayout.CENTER);
         initContextMenauAndToolBar();
     }
 
@@ -404,7 +104,6 @@ public class PlotPanel extends JPanel {
      * Initialize context menu and toolbar.
      */
     private void initContextMenauAndToolBar() {
-        toolbar = new JToolBar();
         toolbar.add(new Button(saveAction));
         toolbar.add(new Button(printAction));
         toolbar.addSeparator();
@@ -425,7 +124,6 @@ public class PlotPanel extends JPanel {
         decreaseWidthAction.setEnabled(false);
 
         //Initialize popup menu.
-        popup = new JPopupMenu();
         popup.add(new JMenuItem(saveAction));
         popup.add(new JMenuItem(printAction));
         popup.addSeparator();
@@ -443,7 +141,6 @@ public class PlotPanel extends JPanel {
         popup.add(new JMenuItem(propertyAction));
 
         AncestorListener ancestorListener = new AncestorListener() {
-
             @Override
             public void ancestorAdded(AncestorEvent ae) {
                 boolean inScrollPane = false;
@@ -477,7 +174,7 @@ public class PlotPanel extends JPanel {
     private class SaveAction extends AbstractAction {
 
         public SaveAction() {
-            super("Save", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/save16.png"))));
+            super("Save", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/save16.png"))));
         }
 
         @Override
@@ -493,7 +190,7 @@ public class PlotPanel extends JPanel {
     private class PrintAction extends AbstractAction {
 
         public PrintAction() {
-            super("Print", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/print16.png"))));
+            super("Print", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/print16.png"))));
         }
 
         @Override
@@ -505,7 +202,7 @@ public class PlotPanel extends JPanel {
     private class ZoomInAction extends AbstractAction {
 
         public ZoomInAction() {
-            super("Zoom In", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/zoom-in16.png"))));
+            super("Zoom In", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/zoom-in16.png"))));
         }
 
         @Override
@@ -517,7 +214,7 @@ public class PlotPanel extends JPanel {
     private class ZoomOutAction extends AbstractAction {
 
         public ZoomOutAction() {
-            super("Zoom Out", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/zoom-out16.png"))));
+            super("Zoom Out", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/zoom-out16.png"))));
         }
 
         @Override
@@ -529,7 +226,7 @@ public class PlotPanel extends JPanel {
     private class ResetAction extends AbstractAction {
 
         public ResetAction() {
-            super("Reset", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/refresh16.png"))));
+            super("Reset", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/refresh16.png"))));
         }
 
         @Override
@@ -541,18 +238,18 @@ public class PlotPanel extends JPanel {
     private class EnlargePlotAreaAction extends AbstractAction {
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/resize-larger16.png"))));
+            super("Enlarge", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/resize-larger16.png"))));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (canvas.margin > 0.05) {
-                canvas.margin -= 0.05;
-                canvas.graphics.projection.reset();
+            if (figure.margin > 0.05) {
+                figure.margin -= 0.05;
+                figure.graphics.projection.reset();
                 repaint();
             }
 
-            if (canvas.margin <= 0.05) {
+            if (figure.margin <= 0.05) {
                 setEnabled(false);
             }
 
@@ -565,18 +262,18 @@ public class PlotPanel extends JPanel {
     private class ShrinkPlotAreaAction extends AbstractAction {
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/resize-smaller16.png"))));
+            super("Shrink", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/resize-smaller16.png"))));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (canvas.margin < 0.3) {
-                canvas.margin += 0.05;
-                canvas.graphics.projection.reset();
+            if (figure.margin < 0.3) {
+                figure.margin += 0.05;
+                figure.graphics.projection.reset();
                 repaint();
             }
 
-            if (canvas.margin >= 0.3) {
+            if (figure.margin >= 0.3) {
                 setEnabled(false);
             }
 
@@ -589,7 +286,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseWidthAction extends AbstractAction {
 
         public IncreaseWidthAction() {
-            super("Increase Width", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/increase-width16.png"))));
+            super("Increase Width", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/increase-width16.png"))));
         }
 
         @Override
@@ -609,7 +306,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseHeightAction extends AbstractAction {
 
         public IncreaseHeightAction() {
-            super("Increase Height", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/increase-height16.png"))));
+            super("Increase Height", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/increase-height16.png"))));
         }
 
         @Override
@@ -629,7 +326,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseWidthAction extends AbstractAction {
 
         public DecreaseWidthAction() {
-            super("Decrease Width", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/decrease-width16.png"))));
+            super("Decrease Width", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/decrease-width16.png"))));
         }
 
         @Override
@@ -652,7 +349,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseHeightAction extends AbstractAction {
 
         public DecreaseHeightAction() {
-            super("Decrease Height", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/decrease-height16.png"))));
+            super("Decrease Height", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/decrease-height16.png"))));
         }
 
         @Override
@@ -675,7 +372,7 @@ public class PlotPanel extends JPanel {
     private class PropertyAction extends AbstractAction {
 
         public PropertyAction() {
-            super("Properties", new ImageIcon(Objects.requireNonNull(PlotPanel.class.getResource("images/property16.png"))));
+            super("Properties", new ImageIcon(Objects.requireNonNull(FigurePane.class.getResource("images/property16.png"))));
         }
 
         @Override
@@ -714,35 +411,31 @@ public class PlotPanel extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("ENTER"), okAction.getValue(Action.DEFAULT));
 
         String[] columnNames = {"Property", "Value"};
-        Base base = canvas.base;
+        Base base = figure.base;
 
-        if (canvas.base.dimension == 2) {
-            Object[][] data = {
-                    {"Title", canvas.getTitle()},
-                    {"Title Font", canvas.getTitleFont()},
-                    {"Title Color", canvas.getTitleColor()},
-                    {"X Axis Title", canvas.getAxis(0).getLabel()},
+        Object[][] data = figure.base.dimension == 2 ?
+            new Object[][] {
+                    {"Title", figure.getTitle()},
+                    {"Title Font", figure.getTitleFont()},
+                    {"Title Color", figure.getTitleColor()},
+                    {"X Axis Title", figure.getAxis(0).getLabel()},
                     {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
-                    {"Y Axis Title", canvas.getAxis(1).getLabel()},
+                    {"Y Axis Title", figure.getAxis(1).getLabel()},
                     {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}}
-            };
-
-            propertyTable = new Table(data, columnNames);
-        } else {
-            Object[][] data = {
-                    {"Title", canvas.getTitle()},
-                    {"Title Font", canvas.getTitleFont()},
-                    {"Title Color", canvas.getTitleColor()},
-                    {"X Axis Title", canvas.getAxis(0).getLabel()},
+            } :
+            new Object[][] {
+                    {"Title", figure.getTitle()},
+                    {"Title Font", figure.getTitleFont()},
+                    {"Title Color", figure.getTitleColor()},
+                    {"X Axis Title", figure.getAxis(0).getLabel()},
                     {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
-                    {"Y Axis Title", canvas.getAxis(1).getLabel()},
+                    {"Y Axis Title", figure.getAxis(1).getLabel()},
                     {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}},
-                    {"Z Axis Title", canvas.getAxis(2).getLabel()},
+                    {"Z Axis Title", figure.getAxis(2).getLabel()},
                     {"Z Axis Range", new double[]{base.getLowerBounds()[2], base.getUpperBounds()[2]}}
             };
 
-            propertyTable = new Table(data, columnNames);
-        }
+        propertyTable = new Table(data, columnNames);
 
         // There is a known issue with JTables whereby the changes made in a
         // cell editor are not committed when focus is lost.
@@ -783,37 +476,37 @@ public class PlotPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            canvas.setTitle((String) propertyTable.getValueAt(0, 1));
-            canvas.setTitleFont((Font) propertyTable.getValueAt(1, 1));
-            canvas.setTitleColor((Color) propertyTable.getValueAt(2, 1));
+            figure.setTitle((String) propertyTable.getValueAt(0, 1));
+            figure.setTitleFont((Font) propertyTable.getValueAt(1, 1));
+            figure.setTitleColor((Color) propertyTable.getValueAt(2, 1));
 
-            canvas.getAxis(0).setLabel((String) propertyTable.getValueAt(3, 1));
+            figure.getAxis(0).setLabel((String) propertyTable.getValueAt(3, 1));
             double[] xbound = (double[]) propertyTable.getValueAt(4, 1);
-            canvas.base.lowerBound[0] = xbound[0];
-            canvas.base.upperBound[0] = xbound[1];
+            figure.base.lowerBound[0] = xbound[0];
+            figure.base.upperBound[0] = xbound[1];
 
-            canvas.getAxis(1).setLabel((String) propertyTable.getValueAt(5, 1));
+            figure.getAxis(1).setLabel((String) propertyTable.getValueAt(5, 1));
             double[] ybound = (double[]) propertyTable.getValueAt(6, 1);
-            canvas.base.lowerBound[1] = ybound[0];
-            canvas.base.upperBound[1] = ybound[1];
+            figure.base.lowerBound[1] = ybound[0];
+            figure.base.upperBound[1] = ybound[1];
 
-            if (canvas.base.dimension > 2) {
-                canvas.getAxis(2).setLabel((String) propertyTable.getValueAt(7, 1));
+            if (figure.base.dimension > 2) {
+                figure.getAxis(2).setLabel((String) propertyTable.getValueAt(7, 1));
                 double[] zbound = (double[]) propertyTable.getValueAt(8, 1);
-                canvas.base.lowerBound[2] = zbound[0];
-                canvas.base.upperBound[2] = zbound[1];
+                figure.base.lowerBound[2] = zbound[0];
+                figure.base.upperBound[2] = zbound[1];
             }
 
-            for (int i = 0; i < canvas.base.dimension; i++) {
-                canvas.base.setPrecisionUnit(i);
+            for (int i = 0; i < figure.base.dimension; i++) {
+                figure.base.setPrecisionUnit(i);
             }
 
-            canvas.base.initBaseCoord();
-            canvas.graphics.projection.reset();
-            canvas.resetAxis();
+            figure.base.initBaseCoord();
+            figure.graphics.projection.reset();
+            figure.resetAxis();
 
             dialog.setVisible(false);
-            contentPane.repaint();
+            canvas.repaint();
         }
     }
 
@@ -862,7 +555,7 @@ public class PlotPanel extends JPanel {
      * @throws IOException if an error occurs during writing.
      */
     public void save(File file) throws IOException {
-        BufferedImage bi = canvas.toBufferedImage(contentPane.getWidth(), contentPane.getHeight());
+        BufferedImage bi = figure.toBufferedImage(canvas.getWidth(), canvas.getHeight());
         ImageIO.write(bi, FileChooser.getExtension(file), file);
     }
 
@@ -870,7 +563,7 @@ public class PlotPanel extends JPanel {
      * Prints the plot.
      */
     public void print() {
-        Printer.getPrinter().print(contentPane);
+        Printer.getPrinter().print(canvas);
     }
 
     /**
@@ -878,10 +571,10 @@ public class PlotPanel extends JPanel {
      * @param inout true if zoom in. Otherwise, zoom out.
      */
     public void zoom(boolean inout) {
-        Base base = canvas.base;
+        Base base = figure.base;
 
         for (int i = 0; i < base.dimension; i++) {
-            int s = canvas.axis[i].slices();
+            int s = figure.axis[i].slices();
             double r = inout ? -1.0 / s : 1.0 / s;
             double d = (base.upperBound[i] - base.lowerBound[i]) * r;
             base.lowerBound[i] -= d;
@@ -893,28 +586,28 @@ public class PlotPanel extends JPanel {
         }
 
         base.initBaseCoord();
-        canvas.graphics.projection.reset();
-        canvas.resetAxis();
+        figure.graphics.projection.reset();
+        figure.resetAxis();
 
-        contentPane.repaint();
+        canvas.repaint();
     }
 
     /**
      * Resets the plot.
      */
     public void reset() {
-        Base base = canvas.base;
-        Graphics graphics = canvas.graphics;
+        Base base = figure.base;
+        Graphics graphics = figure.graphics;
 
         base.reset();
         graphics.projection.reset();
-        canvas.resetAxis();
+        figure.resetAxis();
 
         if (graphics.projection instanceof Projection3D p3d) {
             p3d.setDefaultView();
         }
 
-        contentPane.repaint();
+        canvas.repaint();
     }
 
     /** The number of created windows, as the default window title. */
@@ -926,7 +619,7 @@ public class PlotPanel extends JPanel {
      */
     public JFrame window() throws InterruptedException, InvocationTargetException  {
         JFrame frame = new JFrame();
-        String title = canvas.getTitle();
+        String title = figure.getTitle();
         if (title != null) {
             title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
         }

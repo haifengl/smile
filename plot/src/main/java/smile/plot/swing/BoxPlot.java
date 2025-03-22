@@ -180,11 +180,11 @@ public class BoxPlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
+    public Figure canvas() {
         double[] lowerBound = getLowerBound();
         double[] upperBound = getUpperBound();
 
-        Canvas canvas = new Canvas(lowerBound, upperBound);
+        Figure canvas = new Figure(lowerBound, upperBound);
         canvas.add(this);
         canvas.getAxis(0).setGridVisible(false);
 

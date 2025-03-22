@@ -101,8 +101,8 @@ public class BarPlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+    public Figure canvas() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound());
         canvas.add(this);
         canvas.getAxis(0).setGridVisible(false);
         return canvas;
