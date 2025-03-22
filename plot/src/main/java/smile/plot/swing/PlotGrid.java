@@ -299,7 +299,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
             for (String column : columns) {
                 Figure canvas = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
                 canvas.setAxisLabels(column, columns[i]);
-                grid.add(canvas.panel());
+                grid.add(new FigurePane(canvas));
             }
         }
 
@@ -323,7 +323,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
                 Figure canvas = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
                 canvas.setLegendVisible(false);
                 canvas.setAxisLabels(columns[j], columns[i]);
-                grid.add(canvas.panel());
+                grid.add(new FigurePane(canvas));
             }
         }
 

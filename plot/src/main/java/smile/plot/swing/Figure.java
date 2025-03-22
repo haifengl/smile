@@ -21,8 +21,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
@@ -489,32 +487,12 @@ public class Figure {
     }
 
     /**
-     * Returns a Swing JPanel of the canvas.
-     */
-    public FigurePane panel() {
-        FigurePane panel = new FigurePane(this);
-        panel.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                panel.reset();
-                panel.repaint();
-            }
-
-            @Override
-            public void componentShown(ComponentEvent e) {
-                panel.reset();
-                panel.repaint();
-            }
-        });
-        return panel;
-    }
-
-    /**
      * Shows the plot in a window.
      *
      * @return a new JFrame that contains the plot.
      */
-    public JFrame window() throws InterruptedException, InvocationTargetException {
-        return panel().window();
+    public JFrame show() throws InterruptedException, InvocationTargetException {
+        var pane = new FigurePane(this);
+        return pane.window();
     }
 }
