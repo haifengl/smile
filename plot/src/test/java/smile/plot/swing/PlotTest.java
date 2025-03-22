@@ -86,7 +86,8 @@ public class PlotTest {
         }
 
         var canvas = LinePlot.of(heart, RED).canvas();
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -95,7 +96,8 @@ public class PlotTest {
 
         var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
         canvas.setAxisLabels("sepallength", "sepalwidth");
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -104,14 +106,15 @@ public class PlotTest {
 
         var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
         canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
     public void testSPLOM() throws Exception {
         System.out.println("SPLOM");
 
-        var canvas = PlotGrid.splom(iris, '*', "class");
+        var canvas = MultiFigurePane.splom(iris, '*', "class");
         canvas.window();
     }
 
@@ -130,7 +133,8 @@ public class PlotTest {
         }
         var canvas = new BoxPlot(data, labels).canvas();
         canvas.setAxisLabels("", "sepallength");
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -141,7 +145,8 @@ public class PlotTest {
         var data = Arrays.stream(cow).filter(w -> w <= 3500).toArray();
         var canvas = Histogram.of(data, 50, true).canvas();
         canvas.setAxisLabels("Weight", "Probability");
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -152,7 +157,10 @@ public class PlotTest {
         double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
         var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
         var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
-        Histogram3D.of(data, 50, false).canvas().window();
+        var canvas = Histogram3D.of(data, 50, false).canvas();
+        var pane = new FigurePane(canvas);
+        pane.window();
+
     }
 
     @Test
@@ -161,7 +169,10 @@ public class PlotTest {
 
         var gauss = new GaussianDistribution(0.0, 1.0);
         var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
-        QQPlot.of(data).canvas().window();
+        var canvas = QQPlot.of(data).canvas();
+        var pane = new FigurePane(canvas);
+        pane.window();
+
     }
 
     @Test
@@ -169,7 +180,8 @@ public class PlotTest {
         System.out.println("Heatmap");
 
         var canvas = Heatmap.of(Z, Palette.jet(256)).canvas();
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -179,7 +191,8 @@ public class PlotTest {
         var sparse = SparseMatrix.text(Paths.getTestData("matrix/mesh2em5.txt"));
         var canvas = SparseMatrixPlot.of(sparse).canvas();
         canvas.setTitle("mesh2em5");
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -188,7 +201,8 @@ public class PlotTest {
 
         var canvas = Heatmap.of(Z, 256).canvas();
         canvas.add(Contour.of(Z));
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 
     @Test
@@ -196,6 +210,7 @@ public class PlotTest {
         System.out.println("Surface");
 
         var canvas = Surface.of(Z, Palette.jet(256, 1.0f)).canvas();
-        canvas.window();
+        var pane = new FigurePane(canvas);
+        pane.window();
     }
 }
