@@ -66,6 +66,7 @@ public class FigurePane extends JPanel {
 
     /**
      * Constructor
+     * @param figure The plot figure.
      */
     public FigurePane(Figure figure) {
         super(new BorderLayout());
@@ -73,6 +74,7 @@ public class FigurePane extends JPanel {
         this.canvas = new Canvas(figure, popup);
         add(canvas, BorderLayout.CENTER);
         initContextMenauAndToolBar();
+        initComponentListener();
     }
 
     /**
@@ -169,6 +171,26 @@ public class FigurePane extends JPanel {
         };
 
         addAncestorListener(ancestorListener);
+    }
+
+    /**
+     * Listens to component events.
+     */
+    private void initComponentListener() {
+        FigurePane pane = this;
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                pane.reset();
+                pane.repaint();
+            }
+
+            @Override
+            public void componentShown(ComponentEvent e) {
+                pane.reset();
+                pane.repaint();
+            }
+        });
     }
 
     private class SaveAction extends AbstractAction {
@@ -614,8 +636,8 @@ public class FigurePane extends JPanel {
     static final AtomicInteger WindowCount = new AtomicInteger();
 
     /**
-     * Shows the plot in a window.
-     * @return a new JFrame that contains the plot.
+     * Shows the figure in a window.
+     * @return a new JFrame that contains the figure pane.
      */
     public JFrame window() throws InterruptedException, InvocationTargetException  {
         JFrame frame = new JFrame();
