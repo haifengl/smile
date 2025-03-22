@@ -95,6 +95,14 @@ public class Canvas extends JComponent implements ComponentListener,
         initContextMenuAndToolBar();
     }
 
+    /**
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
+     */
+    public JToolBar toolbar() {
+        return toolbar;
+    }
+
     @Override
     public void paintComponent(java.awt.Graphics g) {
         figure.paint((Graphics2D) g, getWidth(), getHeight());
@@ -340,14 +348,6 @@ public class Canvas extends JComponent implements ComponentListener,
 
     @Override
     public void componentShown(ComponentEvent e) {
-    }
-
-    /**
-     * Returns a toolbar to control the plot.
-     * @return a toolbar to control the plot.
-     */
-    public JComponent toolbar() {
-        return toolbar;
     }
 
     /**

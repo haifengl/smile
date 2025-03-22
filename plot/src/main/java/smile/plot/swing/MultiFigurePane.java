@@ -46,12 +46,12 @@ import smile.swing.FileChooser;
 import smile.swing.Printer;
 
 /**
- * PlotGrid organizes multiple plots in a grid layout.
+ * Interactive pane for multiple mathematical plots.
  *
  * @author Haifeng Li
  */
-public class PlotGrid extends JPanel implements ActionListener, Printable {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotGrid.class);
+public class MultiFigurePane extends JPanel implements ActionListener, Printable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MultiFigurePane.class);
 
     /**
      * Toolbar command.
@@ -64,86 +64,150 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     /**
      * The content panel to hold plots.
      */
-    private JPanel contentPane;
+    private final JPanel contentPane;
     /**
      * Optional toolbar to control plots.
      */
-    private JToolBar toolbar;
+    private final JToolBar toolbar = new JToolBar();
 
     /**
      * Constructor.
-     * @param nrow the number of rows.
-     * @param ncol the number of columns.
+     * @param layout the layout manager of plot content pane.
      */
-    public PlotGrid(int nrow, int ncol) {
-        init(layout(nrow, ncol));
+    public MultiFigurePane(LayoutManager layout) {
+        super(new BorderLayout());
+        initToolBar();
+
+        contentPane = new JPanel(layout, true);
+        contentPane.setBackground(Color.WHITE);
+        add(contentPane, BorderLayout.CENTER);
     }
 
     /**
-     * Constructor.
+     * Constructor with GridLayout.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
+     */
+    public MultiFigurePane(int nrow, int ncol) {
+        this(grid(nrow, ncol));
+    }
+
+    /**
+     * Constructor with GridLayout.
      * @param plots the plots to add into the frame.
      */
-    public PlotGrid(FigurePane... plots) {
-        init(layout(plots.length));
-        for (FigurePane plot : plots) {
+    public MultiFigurePane(Canvas... plots) {
+        this(grid(plots.length));
+        for (var plot : plots) {
             contentPane.add(plot);
         }
     }
 
     /**
-     * Initialization.
-     */
-    private void init(LayoutManager layout) {
-        setLayout(new BorderLayout());
-        initToolBar();
-
-        contentPane = new JPanel();
-        contentPane.setLayout(layout);
-        contentPane.setBackground(Color.WHITE);
-        add(contentPane, BorderLayout.CENTER);
-    }
-    
-    /**
-     * Returns a layout manager for content pane.
+     * Returns a grid layout manager.
      * @param size the number of plots.
      */
-    private LayoutManager layout(int size) {
+    private static LayoutManager grid(int size) {
         int n = (int) Math.ceil(Math.sqrt(size));
         if (n < 1) n = 1;
-        return layout(n, n);
+        return grid(n, n);
     }
 
     /**
-     * Returns a layout manager for content pane.
+     * Returns a grid layout manager.
      * @param nrow the number of rows.
      * @param ncol the number of columns.
      */
-    private LayoutManager layout(int nrow, int ncol) {
+    private static LayoutManager grid(int nrow, int ncol) {
         return new GridLayout(nrow, ncol, 0, 0);
     }
 
     /**
-     * Add a plot into the frame.
+     * Returns a toolbar to control the plot.
+     * @return a toolbar to control the plot.
      */
-    public void add(FigurePane plot) {
-        contentPane.add(plot);
-        contentPane.setLayout(layout(contentPane.getComponentCount()));
+    public JToolBar toolbar() {
+        return toolbar;
     }
 
     /**
-     * Remove a plot from the frame.
+     * Appends the specified plot to the end of this container.
+     * @param plot a plot canvas.
      */
-    public void remove(FigurePane plot) {
-        contentPane.remove(plot);
-        contentPane.setLayout(layout(contentPane.getComponentCount()));
+    public void add(Canvas plot) {
+        contentPane.add(plot);
+        if (getLayout() instanceof GridLayout) {
+            contentPane.setLayout(grid(contentPane.getComponentCount()));
+        }
     }
-    
+
+    /**
+     * Adds the specified plot to this container at the given position.
+     * @param plot a plot canvas.
+     * @param index the position in the container's list at which to insert
+     *              the plot; -1 means insert at the end component.
+     */
+    public void add(Canvas plot, int index) {
+        contentPane.add(plot, index);
+    }
+
+    /**
+     * Appends the specified plot to the end of this container.
+     * @param plot a plot canvas.
+     * @param constraints an object expressing layout constraints for this plot.
+     */
+    public void	add(Canvas plot, Object constraints) {
+        contentPane.add(plot, constraints);
+    }
+
+    /**
+     * Adds the specified component to this container with the specified
+     * constraints at the specified index.
+     * @param plot a plot canvas.
+     * @param constraints an object expressing layout constraints for this plot.
+     * @param index the position in the container's list at which to insert
+     *              the plot; -1 means insert at the end component.
+     */
+    public void	add(Canvas plot, Object constraints, int index) {
+        contentPane.add(plot, constraints, index);
+    }
+
+    /**
+     * Removes the specified plot from this container.
+     * @param plot a plot canvas.
+     */
+    public void remove(Canvas plot) {
+        contentPane.remove(plot);
+        if (getLayout() instanceof GridLayout) {
+            contentPane.setLayout(grid(contentPane.getComponentCount()));
+        }
+    }
+
+    /**
+     * Removes the plot, specified by index, from this container.
+     * @param index the index of the plot to be removed
+     */
+    public void remove(int index) {
+        contentPane.remove(index);
+        if (getLayout() instanceof GridLayout) {
+            contentPane.setLayout(grid(contentPane.getComponentCount()));
+        }
+    }
+
+    /**
+     * Removes all the components from this container.
+     */
+    public void removeAll() {
+        contentPane.removeAll();
+        if (getLayout() instanceof GridLayout) {
+            contentPane.setLayout(grid(contentPane.getComponentCount()));
+        }
+    }
+
     /**
      * Initialize toolbar.
      */
     private void initToolBar() {
-        toolbar = new JToolBar();
-
         JButton button = makeButton("save", SAVE, "Save", "Save");
         toolbar.add(button);
 
@@ -157,7 +221,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     private JButton makeButton(String imageName, String actionCommand, String toolTipText, String altText) {
         // Look for the image.
         String imgLocation = "images/" + imageName + "16.png";
-        URL imageURL = PlotGrid.class.getResource(imgLocation);
+        URL imageURL = MultiFigurePane.class.getResource(imgLocation);
 
         // Create and initialize the button.
         JButton button = new JButton();
@@ -291,15 +355,15 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * Scatterplot Matrix (SPLOM).
      * @param data the data frame.
      */
-    public static PlotGrid splom(DataFrame data, char mark, Color color) {
+    public static MultiFigurePane splom(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
         int p = columns.length;
-        PlotGrid grid = new PlotGrid(p, p);
+        MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             for (String column : columns) {
-                Figure canvas = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
-                canvas.setAxisLabels(column, columns[i]);
-                grid.add(new FigurePane(canvas));
+                Figure figure = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
+                figure.setAxisLabels(column, columns[i]);
+                grid.add(new Canvas(figure));
             }
         }
 
@@ -311,19 +375,19 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * @param data the data frame.
      * @param category the category column for coloring.
      */
-    public static PlotGrid splom(DataFrame data, char mark, String category) {
+    public static MultiFigurePane splom(DataFrame data, char mark, String category) {
         int clazz = data.schema().indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
-        PlotGrid grid = new PlotGrid(p, p);
+        MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
                 if (j == clazz) continue;
-                Figure canvas = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
-                canvas.setLegendVisible(false);
-                canvas.setAxisLabels(columns[j], columns[i]);
-                grid.add(new FigurePane(canvas));
+                Figure figure = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
+                figure.setLegendVisible(false);
+                figure.setAxisLabels(columns[j], columns[i]);
+                grid.add(new Canvas(figure));
             }
         }
 
