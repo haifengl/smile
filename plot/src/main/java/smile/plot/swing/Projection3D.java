@@ -56,7 +56,7 @@ class Projection3D extends Projection {
     /**
      * Constructor.
      */
-    public Projection3D(Canvas canvas) {
+    public Projection3D(Figure canvas) {
         super(canvas);
     }
 
@@ -98,13 +98,13 @@ class Projection3D extends Projection {
     double[] baseCoordsScreenProjectionRatio(double[] xyz) {
         double[] sc = new double[2];
         sc[0] = 0.5
-                + (cosTheta * ((xyz[1] - (canvas.base.upperBound[1] + canvas.base.lowerBound[1]) / 2) / (canvas.base.upperBound[1] - canvas.base.lowerBound[1]))
-                -  sinTheta * ((xyz[0] - (canvas.base.upperBound[0] + canvas.base.lowerBound[0]) / 2) / (canvas.base.upperBound[0] - canvas.base.lowerBound[0])))
+                + (cosTheta * ((xyz[1] - (figure.base.upperBound[1] + figure.base.lowerBound[1]) / 2) / (figure.base.upperBound[1] - figure.base.lowerBound[1]))
+                -  sinTheta * ((xyz[0] - (figure.base.upperBound[0] + figure.base.lowerBound[0]) / 2) / (figure.base.upperBound[0] - figure.base.lowerBound[0])))
                 / factor;
         sc[1] = 0.5
-                + (cosPhi * ((xyz[2] - (canvas.base.upperBound[2] + canvas.base.lowerBound[2]) / 2) / (canvas.base.upperBound[2] - canvas.base.lowerBound[2]))
-                -  sinPhi * cosTheta * ((xyz[0] - (canvas.base.upperBound[0] + canvas.base.lowerBound[0]) / 2) / (canvas.base.upperBound[0] - canvas.base.lowerBound[0]))
-                -  sinPhi * sinTheta * ((xyz[1] - (canvas.base.upperBound[1] + canvas.base.lowerBound[1]) / 2) / (canvas.base.upperBound[1] - canvas.base.lowerBound[1])))
+                + (cosPhi * ((xyz[2] - (figure.base.upperBound[2] + figure.base.lowerBound[2]) / 2) / (figure.base.upperBound[2] - figure.base.lowerBound[2]))
+                -  sinPhi * cosTheta * ((xyz[0] - (figure.base.upperBound[0] + figure.base.lowerBound[0]) / 2) / (figure.base.upperBound[0] - figure.base.lowerBound[0]))
+                -  sinPhi * sinTheta * ((xyz[1] - (figure.base.upperBound[1] + figure.base.lowerBound[1]) / 2) / (figure.base.upperBound[1] - figure.base.lowerBound[1])))
                 / factor;
         return sc;
     }

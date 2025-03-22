@@ -211,10 +211,10 @@ public class SparseMatrixPlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
+    public Figure canvas() {
         double[] lowerBound = {0, 0};
         double[] upperBound = {sparse.ncol(), sparse.nrow()};
-        Canvas canvas = new Canvas(lowerBound, upperBound, false);
+        Figure canvas = new Figure(lowerBound, upperBound, false);
         canvas.add(this);
 
         canvas.getAxis(0).setTickVisible(false);

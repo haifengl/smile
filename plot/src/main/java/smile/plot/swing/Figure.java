@@ -32,11 +32,13 @@ import javax.swing.JFrame;
 import javax.swing.event.SwingPropertyChangeSupport;
 
 /**
- * Canvas for mathematical plots.
+ * A figure serves as the canvas on which plots and other elements are drawn.
+ * It can be conceptualized as the top-level container holding all plot
+ * elements, including axes, titles, legends, and annotations.
  *
  * @author Haifeng Li
  */
-public class Canvas {
+public class Figure {
 
     /**
      * The default (one side) margin portion.
@@ -94,14 +96,14 @@ public class Canvas {
     /**
      * Constructor
      */
-    public Canvas(double[] lowerBound, double[] upperBound) {
+    public Figure(double[] lowerBound, double[] upperBound) {
         this(lowerBound, upperBound, true);
     }
 
     /**
      * Constructor
      */
-    public Canvas(double[] lowerBound, double[] upperBound, boolean extendBound) {
+    public Figure(double[] lowerBound, double[] upperBound, boolean extendBound) {
         initBase(lowerBound, upperBound, extendBound);
         initGraphics();
     }
@@ -191,7 +193,7 @@ public class Canvas {
     /**
      * Sets if legends are visible.
      */
-    public Canvas setLegendVisible(boolean visible) {
+    public Figure setLegendVisible(boolean visible) {
         isLegendVisible = visible;
         return this;
     }
@@ -212,7 +214,7 @@ public class Canvas {
      *
      * @param margin the size of margin.
      */
-    public Canvas setMargin(double margin) {
+    public Figure setMargin(double margin) {
         if (margin < 0.0 || margin >= 0.3) {
             throw new IllegalArgumentException("Invalid margin: " + margin);
         }
@@ -233,7 +235,7 @@ public class Canvas {
     /**
      * Set the main title of canvas.
      */
-    public Canvas setTitle(String title) {
+    public Figure setTitle(String title) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "title", this.title, title);
         this.title = title;
         pcs.firePropertyChange(event);
@@ -250,7 +252,7 @@ public class Canvas {
     /**
      * Set the font for title.
      */
-    public Canvas setTitleFont(Font font) {
+    public Figure setTitleFont(Font font) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "titleFont", this.titleFont, font);
         this.titleFont = font;
         pcs.firePropertyChange(event);
@@ -267,7 +269,7 @@ public class Canvas {
     /**
      * Set the color for title.
      */
-    public Canvas setTitleColor(Color color) {
+    public Figure setTitleColor(Color color) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "titleColor", this.titleColor, color);
         this.titleColor = color;
         pcs.firePropertyChange(event);
@@ -302,7 +304,7 @@ public class Canvas {
     /**
      * Sets the labels/legends of axes.
      */
-    public Canvas setAxisLabels(String... labels) {
+    public Figure setAxisLabels(String... labels) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", getAxisLabels(), labels);
         for (int i = 0; i < labels.length; i++) {
             axis[i].setLabel(labels[i]);
@@ -314,7 +316,7 @@ public class Canvas {
     /**
      * Sets the label/legend of an axis.
      */
-    public Canvas setAxisLabel(int i, String label) {
+    public Figure setAxisLabel(int i, String label) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axis[i].getLabel(), label);
         axis[i].setLabel(label);
         pcs.firePropertyChange(event);
@@ -489,8 +491,8 @@ public class Canvas {
     /**
      * Returns a Swing JPanel of the canvas.
      */
-    public PlotPanel panel() {
-        PlotPanel panel = new PlotPanel(this);
+    public FigurePane panel() {
+        FigurePane panel = new FigurePane(this);
         panel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {

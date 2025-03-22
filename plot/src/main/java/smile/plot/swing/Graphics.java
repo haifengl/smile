@@ -94,14 +94,14 @@ public class Graphics {
      * Returns the lower bounds of coordinate space.
      */
     public double[] getLowerBound() {
-        return projection.canvas.base.lowerBound;
+        return projection.figure.base.lowerBound;
     }
 
     /**
      * Returns the upper bounds of coordinate space.
      */
     public double[] getUpperBound() {
-        return projection.canvas.base.upperBound;
+        return projection.figure.base.upperBound;
     }
 
     /**
@@ -168,10 +168,10 @@ public class Graphics {
      * Restrict the draw area to the valid base coordinate space.
      */
     public void clip() {
-        int x = (int) (projection.width * projection.canvas.margin);
-        int y = (int) (projection.height * projection.canvas.margin);
-        int w = (int) (projection.width * (1 - 2 * projection.canvas.margin));
-        int h = (int) (projection.height * (1 - 2 * projection.canvas.margin));
+        int x = (int) (projection.width * projection.figure.margin);
+        int y = (int) (projection.height * projection.figure.margin);
+        int w = (int) (projection.width * (1 - 2 * projection.figure.margin));
+        int h = (int) (projection.height * (1 - 2 * projection.figure.margin));
         originalClip = g2d.getClip();
         g2d.clipRect(x, y, w, h);
     }

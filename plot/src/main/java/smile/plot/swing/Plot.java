@@ -51,8 +51,8 @@ public abstract class Plot extends Shape {
     public abstract double[] getUpperBound();
 
     /** Returns a canvas of the plot. */
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+    public Figure canvas() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound());
         canvas.add(this);
         if (name != null) {
             canvas.setTitle(name);
