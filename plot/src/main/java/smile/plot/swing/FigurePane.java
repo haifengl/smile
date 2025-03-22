@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 
 /**
- * Interactive pane for mathematical plots. For both 2D and 3D plot,
+ * Interactive pane for a mathematical plot. For both 2D and 3D plot,
  * the user can zoom in/out by mouse wheel. For 2D plot, the user can
  * shift the coordinates by moving mouse after double click. The user
  * can also select an area by mouse for detailed view. For 3D plot,
@@ -41,7 +41,7 @@ public class FigurePane extends JPanel {
     private final Canvas canvas;
 
     /**
-     * Constructor
+     * Constructor.
      * @param figure The plot figure.
      */
     public FigurePane(Figure figure) {
