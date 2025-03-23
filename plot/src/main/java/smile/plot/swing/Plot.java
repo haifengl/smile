@@ -50,14 +50,14 @@ public abstract class Plot extends Shape {
     /** Returns the upper bound of data. */
     public abstract double[] getUpperBound();
 
-    /** Returns a canvas of the plot. */
-    public Figure canvas() {
-        Figure canvas = new Figure(getLowerBound(), getUpperBound());
-        canvas.add(this);
+    /** Returns a figure containing the plot. */
+    public Figure figure() {
+        Figure figure = new Figure(getLowerBound(), getUpperBound());
+        figure.add(this);
         if (name != null) {
-            canvas.setTitle(name);
+            figure.setTitle(name);
         }
-        return canvas;
+        return figure;
     }
 
     /**

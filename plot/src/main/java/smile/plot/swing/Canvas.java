@@ -18,27 +18,23 @@ package smile.plot.swing;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import smile.swing.Button;
-import smile.swing.FileChooser;
-import smile.swing.Printer;
 import smile.swing.Table;
 
 /**
- * The Swing component to draw the figure.
+ * Interactive view of a mathematical plot. For both 2D and 3D plot,
+ * the user can zoom in/out by mouse wheel. For 2D plot, the user can
+ * shift the coordinates by moving mouse after double click. The user
+ * can also select an area by mouse for detailed view. For 3D plot,
+ * the user can rotate the view by dragging mouse.
  */
 public class Canvas extends JComponent implements ComponentListener,
-        MouseListener, MouseMotionListener, MouseWheelListener, Printable {
+        MouseListener, MouseMotionListener, MouseWheelListener, Scene {
     /**
      * The plot figure.
      */
@@ -95,10 +91,12 @@ public class Canvas extends JComponent implements ComponentListener,
         initContextMenuAndToolBar();
     }
 
-    /**
-     * Returns a toolbar to control the plot.
-     * @return a toolbar to control the plot.
-     */
+    @Override
+    public JComponent content() {
+        return this;
+    }
+
+    @Override
     public JToolBar toolbar() {
         return toolbar;
     }
@@ -116,31 +114,6 @@ public class Canvas extends JComponent implements ComponentListener,
                     Math.abs(mouseClickY - mouseDraggingY)
             );
         }
-    }
-
-    @Override
-    public int print(java.awt.Graphics g, PageFormat pf, int page) {
-        if (page > 0) {
-            // We have only one page, and 'page' is zero-based
-            return NO_SUCH_PAGE;
-        }
-
-        Graphics2D g2d = (Graphics2D) g;
-
-        // User (0,0) is typically outside the printable area, so we must
-        // translate by the X and Y values in the PageFormat to avoid clipping
-        g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-        // Scale plots to paper size.
-        double scaleX = pf.getImageableWidth() / getWidth();
-        double scaleY = pf.getImageableHeight() / getHeight();
-        g2d.scale(scaleX, scaleY);
-
-        // Now we perform our rendering
-        figure.paint(g2d, getWidth(), getHeight());
-
-        // tell the caller that this page is part of the printed document
-        return PAGE_EXISTS;
     }
 
     @Override
@@ -353,8 +326,8 @@ public class Canvas extends JComponent implements ComponentListener,
     /**
      * Toolbar button actions.
      */
-    private transient final Action saveAction = new SaveAction();
-    private transient final Action printAction = new PrintAction();
+    private transient final Action saveAction = saveAction();
+    private transient final Action printAction = printAction();
     private transient final Action zoomInAction = new ZoomInAction();
     private transient final Action zoomOutAction = new ZoomOutAction();
     private transient final Action resetAction = new ResetAction();
@@ -436,34 +409,6 @@ public class Canvas extends JComponent implements ComponentListener,
         };
 
         addAncestorListener(ancestorListener);
-    }
-
-    private class SaveAction extends AbstractAction {
-
-        public SaveAction() {
-            super("Save", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/save16.png"))));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                save();
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private class PrintAction extends AbstractAction {
-
-        public PrintAction() {
-            super("Print", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/print16.png"))));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            print();
-        }
     }
 
     private class ZoomInAction extends AbstractAction {
@@ -793,44 +738,6 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             dialog.setVisible(false);
         }
-    }
-
-    /**
-     * Shows a file chooser and exports the plot to the selected image file.
-     * @throws IOException if an error occurs during writing.
-     */
-    public void save() throws IOException {
-        FileChooser.SimpleFileFilter filter = FileChooser.SimpleFileFilter.getWritableImageFIlter();
-        JFileChooser chooser = FileChooser.getInstance();
-        chooser.setFileFilter(filter);
-        chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setSelectedFiles(new File[0]);
-        int returnVal = chooser.showSaveDialog(null);
-
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            if (!filter.accept(file)) {
-                file = new File(file.getParentFile(), file.getName() + ".png");
-            }
-            save(file);
-        }
-    }
-
-    /**
-     * Exports the plot to an image file.
-     * @param file the destination file.
-     * @throws IOException if an error occurs during writing.
-     */
-    public void save(File file) throws IOException {
-        BufferedImage bi = figure.toBufferedImage(getWidth(), getHeight());
-        ImageIO.write(bi, FileChooser.getExtension(file), file);
-    }
-
-    /**
-     * Prints the plot.
-     */
-    public void print() {
-        Printer.getPrinter().print(this);
     }
 
     /**
