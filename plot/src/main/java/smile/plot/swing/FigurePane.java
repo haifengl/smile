@@ -20,23 +20,14 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 
 /**
- * Interactive pane for a mathematical plot. For both 2D and 3D plot,
- * the user can zoom in/out by mouse wheel. For 2D plot, the user can
- * shift the coordinates by moving mouse after double click. The user
- * can also select an area by mouse for detailed view. For 3D plot,
- * the user can rotate the view by dragging mouse.
+ * The Swing container of a figure with toolbar.
  *
  * @author Haifeng Li
  */
 public class FigurePane extends JPanel {
-    /** The number of created windows, as the default window title. */
-    static final AtomicInteger WindowCount = new AtomicInteger();
-    /** The plot figure. */
-    private final Figure figure;
     /** The Swing component to draw the figure. */
     private final Canvas canvas;
 
@@ -46,7 +37,6 @@ public class FigurePane extends JPanel {
      */
     public FigurePane(Figure figure) {
         super(new BorderLayout());
-        this.figure = figure;
         this.canvas = new Canvas(figure);
         add(canvas, BorderLayout.CENTER);
         add(canvas.toolbar(), BorderLayout.NORTH);
@@ -66,29 +56,10 @@ public class FigurePane extends JPanel {
     }
 
     /**
-     * Shows the figure in a window.
-     * @return a new JFrame that contains the figure pane.
+     * Shows the plot group in a window.
+     * @return a new JFrame that contains the plot group.
      */
-    public JFrame window() throws InterruptedException, InvocationTargetException  {
-        JFrame frame = new JFrame();
-        String title = figure.getTitle();
-        if (title != null) {
-            title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
-        }
-        frame.setTitle(title);
-        frame.getContentPane().add(this);
-
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 800));
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        javax.swing.SwingUtilities.invokeAndWait(() -> {
-            canvas.reset();
-            repaint();
-            frame.toFront();
-        });
-
-        return frame;
+    public JFrame window() throws InterruptedException, InvocationTargetException {
+        return canvas.window();
     }
 }

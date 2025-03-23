@@ -85,8 +85,8 @@ public class PlotTest {
             heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
         }
 
-        var canvas = LinePlot.of(heart, RED).canvas();
-        var pane = new FigurePane(canvas);
+        var figure = LinePlot.of(heart, RED).figure();
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -94,9 +94,9 @@ public class PlotTest {
     public void testScatter() throws Exception {
         System.out.println("Scatter");
 
-        var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
-        canvas.setAxisLabels("sepallength", "sepalwidth");
-        var pane = new FigurePane(canvas);
+        var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+        figure.setAxisLabels("sepallength", "sepalwidth");
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -104,9 +104,9 @@ public class PlotTest {
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
-        canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
-        var pane = new FigurePane(canvas);
+        var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').figure();
+        figure.setAxisLabels("sepallength", "sepalwidth", "petallength");
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -131,9 +131,9 @@ public class PlotTest {
                     mapToDouble(row -> row.getFloat("sepallength")).
                     toArray();
         }
-        var canvas = new BoxPlot(data, labels).canvas();
-        canvas.setAxisLabels("", "sepallength");
-        var pane = new FigurePane(canvas);
+        var figure = new BoxPlot(data, labels).figure();
+        figure.setAxisLabels("", "sepallength");
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -157,8 +157,8 @@ public class PlotTest {
         double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
         var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
         var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
-        var canvas = Histogram3D.of(data, 50, false).canvas();
-        var pane = new FigurePane(canvas);
+        var figure = Histogram3D.of(data, 50, false).figure();
+        var pane = new FigurePane(figure);
         pane.window();
 
     }
@@ -169,8 +169,8 @@ public class PlotTest {
 
         var gauss = new GaussianDistribution(0.0, 1.0);
         var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
-        var canvas = QQPlot.of(data).canvas();
-        var pane = new FigurePane(canvas);
+        var figure = QQPlot.of(data).figure();
+        var pane = new FigurePane(figure);
         pane.window();
 
     }
@@ -179,8 +179,8 @@ public class PlotTest {
     public void testHeatmap() throws Exception {
         System.out.println("Heatmap");
 
-        var canvas = Heatmap.of(Z, Palette.jet(256)).canvas();
-        var pane = new FigurePane(canvas);
+        var figure = Heatmap.of(Z, Palette.jet(256)).figure();
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -189,9 +189,9 @@ public class PlotTest {
         System.out.println("Sparse Matrix");
 
         var sparse = SparseMatrix.text(Paths.getTestData("matrix/mesh2em5.txt"));
-        var canvas = SparseMatrixPlot.of(sparse).canvas();
-        canvas.setTitle("mesh2em5");
-        var pane = new FigurePane(canvas);
+        var figure = SparseMatrixPlot.of(sparse).figure();
+        figure.setTitle("mesh2em5");
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -199,9 +199,9 @@ public class PlotTest {
     public void testContour() throws Exception {
         System.out.println("Contour");
 
-        var canvas = Heatmap.of(Z, 256).canvas();
-        canvas.add(Contour.of(Z));
-        var pane = new FigurePane(canvas);
+        var figure = Heatmap.of(Z, 256).figure();
+        figure.add(Contour.of(Z));
+        var pane = new FigurePane(figure);
         pane.window();
     }
 
@@ -209,8 +209,8 @@ public class PlotTest {
     public void testSurface() throws Exception {
         System.out.println("Surface");
 
-        var canvas = Surface.of(Z, Palette.jet(256, 1.0f)).canvas();
-        var pane = new FigurePane(canvas);
+        var figure = Surface.of(Z, Palette.jet(256, 1.0f)).figure();
+        var pane = new FigurePane(figure);
         pane.window();
     }
 }

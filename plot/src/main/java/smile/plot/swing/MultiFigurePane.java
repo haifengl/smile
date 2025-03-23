@@ -16,40 +16,27 @@
  */
 package smile.plot.swing;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
-import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import smile.data.DataFrame;
 import smile.swing.Button;
-import smile.swing.FileChooser;
-import smile.swing.Printer;
 
 /**
- * Interactive pane for multiple mathematical plots.
+ * Interactive view for multiple mathematical plots.
  *
  * @author Haifeng Li
  */
-public class MultiFigurePane extends JPanel implements Printable {
+public class MultiFigurePane extends JPanel implements Scene {
     /**
-     * Optional toolbar to control plots.
+     * The toolbar to control plots.
      */
     private final JToolBar toolbar = new JToolBar();
 
     /**
      * Constructor.
-     * @param layout the layout manager of plot content pane.
+     * @param layout the layout manager.
      */
     public MultiFigurePane(LayoutManager layout) {
         super(layout, true);
@@ -96,155 +83,30 @@ public class MultiFigurePane extends JPanel implements Printable {
         return new GridLayout(nrow, ncol, 0, 0);
     }
 
-    /**
-     * Returns a toolbar to control the plot.
-     * @return a toolbar to control the plot.
-     */
+    @Override
+    public JComponent content() {
+        return this;
+    }
+
+    @Override
     public JToolBar toolbar() {
         return toolbar;
     }
 
     /**
-     * Toolbar button actions.
-     */
-    private transient final Action saveAction = new SaveAction();
-    private transient final Action printAction = new PrintAction();
-
-    /**
      * Initialize toolbar.
      */
     private void initToolBar() {
-        toolbar.add(new Button(saveAction));
-        toolbar.add(new Button(printAction));
-    }
-
-    private class SaveAction extends AbstractAction {
-
-        public SaveAction() {
-            super("Save", new ImageIcon(Objects.requireNonNull(MultiFigurePane.class.getResource("images/save16.png"))));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                save();
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private class PrintAction extends AbstractAction {
-
-        public PrintAction() {
-            super("Print", new ImageIcon(Objects.requireNonNull(MultiFigurePane.class.getResource("images/print16.png"))));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            print();
-        }
-    }
-
-    @Override
-    public int print(java.awt.Graphics g, PageFormat pf, int page) {
-        if (page > 0) {
-            // We have only one page, and 'page' is zero-based
-            return NO_SUCH_PAGE;
-        }
-
-        Graphics2D g2d = (Graphics2D) g;
-        
-        // User (0,0) is typically outside the imageable area, so we must
-        // translate by the X and Y values in the PageFormat to avoid clipping
-        g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-        // Scale plots to paper size.
-        double scaleX = pf.getImageableWidth() / getWidth();
-        double scaleY = pf.getImageableHeight() / getHeight();
-        g2d.scale(scaleX, scaleY);
-
-        // Disable double buffering
-        RepaintManager currentManager = RepaintManager.currentManager(this);
-        currentManager.setDoubleBufferingEnabled(false);
-
-        // Now we perform our rendering
-        printAll(g);
-
-        // Enable double buffering
-        currentManager.setDoubleBufferingEnabled(true);
-
-        // tell the caller that this page is part of the printed document
-        return PAGE_EXISTS;
-    }        
-    
-    /**
-     * Shows a file chooser and exports the plot to the selected image file.
-     * @throws IOException if an error occurs during writing.
-     */
-    public void save() throws IOException {
-        JFileChooser fc = FileChooser.getInstance();
-        fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFIlter());
-        fc.setAcceptAllFileFilterUsed(false);
-        fc.setSelectedFiles(new File[0]);
-        int returnVal = fc.showSaveDialog(this);
-
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fc.getSelectedFile();
-            save(file);
-        }        
-    }
-    
-    /**
-     * Exports the plot to an image file.
-     * @param file the destination file.
-     * @throws IOException if an error occurs during writing.
-     */
-    public void save(File file) throws IOException {
-        BufferedImage bi = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = bi.createGraphics();
-        printAll(g2d);
-
-        ImageIO.write(bi, FileChooser.getExtension(file), file);
+        toolbar.add(new Button(saveAction()));
+        toolbar.add(new Button(printAction()));
     }
 
     /**
-     * Prints the plot.
-     */
-    public void print() {
-        Printer.getPrinter().print(this);
-    }
-
-    /**
-     * Shows the plot group in a window.
-     * @return a new JFrame that contains the plot group.
-     */
-    public JFrame window() throws InterruptedException, InvocationTargetException {
-        JFrame frame = new JFrame();
-        String title = String.format("Smile Plot %d", FigurePane.WindowCount.addAndGet(1));
-        frame.setTitle(title);
-
-        JPanel pane = new JPanel(new BorderLayout());
-        pane.add(this, BorderLayout.CENTER);
-        pane.add(toolbar, BorderLayout.NORTH);
-
-        frame.getContentPane().add(pane);
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 1000));
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        javax.swing.SwingUtilities.invokeAndWait(() -> {
-            frame.toFront();
-            frame.repaint();
-        });
-
-        return frame;
-    }
-
-    /**
-     * Scatterplot Matrix (SPLOM).
+     * Returns the scatter plot matrix (SPLOM).
      * @param data the data frame.
+     * @param mark the mark of points.
+     * @param color the color of points.
+     * @return the scatter plot matrix.
      */
     public static MultiFigurePane splom(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
@@ -252,7 +114,7 @@ public class MultiFigurePane extends JPanel implements Printable {
         MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             for (String column : columns) {
-                Figure figure = ScatterPlot.of(data, column, columns[i], mark, color).canvas();
+                Figure figure = ScatterPlot.of(data, column, columns[i], mark, color).figure();
                 figure.setAxisLabels(column, columns[i]);
                 grid.add(new Canvas(figure));
             }
@@ -262,9 +124,11 @@ public class MultiFigurePane extends JPanel implements Printable {
     }
 
     /**
-     * Scatterplot Matrix (SPLOM).
+     * Returns the scatter plot matrix (SPLOM).
      * @param data the data frame.
+     * @param mark the mark of points.
      * @param category the category column for coloring.
+     * @return the scatter plot matrix.
      */
     public static MultiFigurePane splom(DataFrame data, char mark, String category) {
         int clazz = data.schema().indexOf(category);
@@ -275,7 +139,7 @@ public class MultiFigurePane extends JPanel implements Printable {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
                 if (j == clazz) continue;
-                Figure figure = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
+                Figure figure = ScatterPlot.of(data, columns[j], columns[i], category, mark).figure();
                 figure.setLegendVisible(false);
                 figure.setAxisLabels(columns[j], columns[i]);
                 grid.add(new Canvas(figure));
