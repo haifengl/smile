@@ -114,7 +114,7 @@ public class PlotTest {
     public void testSPLOM() throws Exception {
         System.out.println("SPLOM");
 
-        var canvas = MultiFigurePane.splom(iris, '*', "class");
+        var canvas = CanvasContainer.splom(iris, '*', "class");
         canvas.window();
     }
 

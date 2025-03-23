@@ -28,7 +28,7 @@ import smile.swing.Button;
  *
  * @author Haifeng Li
  */
-public class MultiFigurePane extends JPanel implements Scene {
+public class CanvasContainer extends JPanel implements Scene {
     /**
      * The toolbar to control plots.
      */
@@ -38,7 +38,7 @@ public class MultiFigurePane extends JPanel implements Scene {
      * Constructor.
      * @param layout the layout manager.
      */
-    public MultiFigurePane(LayoutManager layout) {
+    public CanvasContainer(LayoutManager layout) {
         super(layout, true);
         setBackground(Color.WHITE);
         initToolBar();
@@ -49,7 +49,7 @@ public class MultiFigurePane extends JPanel implements Scene {
      * @param nrow the number of rows.
      * @param ncol the number of columns.
      */
-    public MultiFigurePane(int nrow, int ncol) {
+    public CanvasContainer(int nrow, int ncol) {
         this(grid(nrow, ncol));
     }
 
@@ -57,7 +57,7 @@ public class MultiFigurePane extends JPanel implements Scene {
      * Constructor with GridLayout.
      * @param plots the plots to add into the frame.
      */
-    public MultiFigurePane(Canvas... plots) {
+    public CanvasContainer(Canvas... plots) {
         this(grid(plots.length));
         for (var plot : plots) {
             add(plot);
@@ -108,10 +108,10 @@ public class MultiFigurePane extends JPanel implements Scene {
      * @param color the color of points.
      * @return the scatter plot matrix.
      */
-    public static MultiFigurePane splom(DataFrame data, char mark, Color color) {
+    public static CanvasContainer splom(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
         int p = columns.length;
-        MultiFigurePane grid = new MultiFigurePane(p, p);
+        CanvasContainer grid = new CanvasContainer(p, p);
         for (int i = p; i-- > 0;) {
             for (String column : columns) {
                 Figure figure = ScatterPlot.of(data, column, columns[i], mark, color).figure();
@@ -130,11 +130,11 @@ public class MultiFigurePane extends JPanel implements Scene {
      * @param category the category column for coloring.
      * @return the scatter plot matrix.
      */
-    public static MultiFigurePane splom(DataFrame data, char mark, String category) {
+    public static CanvasContainer splom(DataFrame data, char mark, String category) {
         int clazz = data.schema().indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
-        MultiFigurePane grid = new MultiFigurePane(p, p);
+        CanvasContainer grid = new CanvasContainer(p, p);
         for (int i = p; i-- > 0;) {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
