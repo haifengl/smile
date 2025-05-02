@@ -8,7 +8,7 @@ dependencies {
     implementation(libs.logback)
     implementation(libs.sqlite)
     implementation("com.github.scopt:scopt_3:4.1.0")
-    implementation("com.typesafe.slick:slick_3:3.5.2")
+    implementation("com.typesafe.slick:slick_3:3.6.0")
 }
 
 application {

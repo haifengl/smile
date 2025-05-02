@@ -56,8 +56,8 @@ public class FigurePane extends JPanel {
     }
 
     /**
-     * Shows the plot group in a window.
-     * @return a new JFrame that contains the plot group.
+     * Shows the figure in a window.
+     * @return a new JFrame that contains the figure.
      */
     public JFrame window() throws InterruptedException, InvocationTargetException {
         return canvas.window();
