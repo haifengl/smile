@@ -548,7 +548,10 @@ public class UMAP {
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with heuristic min(2*k+1, sqrt(n)).
         int k = d + 1;
-        int numEigen = Math.max(2*k+1, (int) Math.sqrt(n));
+        int numEigen = Math.min(2*k+1, (int) Math.sqrt(n));
+        // safeguard on edge cases
+        numEigen = Math.max(numEigen, k);
+        numEigen = Math.min(numEigen, n);
         SparseMatrix L = laplacian.toMatrix();
         logger.info("Spectral layout computes {} eigen vectors", numEigen);
         Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
