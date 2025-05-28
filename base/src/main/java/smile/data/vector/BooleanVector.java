@@ -40,7 +40,7 @@ public class BooleanVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public BooleanVector(String name, boolean[] vector) {
-        this(new StructField(name, DataTypes.ByteType), vector);
+        this(new StructField(name, DataTypes.BooleanType), vector);
     }
 
     /**
@@ -59,7 +59,7 @@ public class BooleanVector extends PrimitiveVector {
      * @param bits the bit map of vector.
      */
     public BooleanVector(String name, int size, BitSet bits) {
-        this(new StructField(name, DataTypes.ByteType), size, bits);
+        this(new StructField(name, DataTypes.BooleanType), size, bits);
     }
 
     /**
