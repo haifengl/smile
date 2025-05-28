@@ -110,8 +110,17 @@ public interface ValueVector extends Serializable {
      */
     default boolean[] eq(Object other) {
         boolean[] result = new boolean[size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = other.equals(get(i));
+        if (other instanceof ValueVector vector) {
+            if (vector.size() != size()) {
+                throw new IllegalArgumentException("Vector size mismatch");
+            }
+            for (int i = 0; i < result.length; i++) {
+                result[i] = vector.get(i).equals(get(i));
+            }
+        } else {
+            for (int i = 0; i < result.length; i++) {
+                result[i] = other.equals(get(i));
+            }
         }
         return result;
     }
@@ -123,8 +132,17 @@ public interface ValueVector extends Serializable {
      */
     default boolean[] ne(Object other) {
         boolean[] result = new boolean[size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = !other.equals(get(i));
+        if (other instanceof ValueVector vector) {
+            if (vector.size() != size()) {
+                throw new IllegalArgumentException("Vector size mismatch");
+            }
+            for (int i = 0; i < result.length; i++) {
+                result[i] = !vector.get(i).equals(get(i));
+            }
+        } else {
+            for (int i = 0; i < result.length; i++) {
+                result[i] = !other.equals(get(i));
+            }
         }
         return result;
     }
