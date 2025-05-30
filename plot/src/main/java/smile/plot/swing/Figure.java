@@ -132,15 +132,20 @@ public class Figure {
     }
 
     /**
-     * Returns a renderer of the figure.
-     * @return a renderer of the figure.
+     * Returns a projection of the figure.
+     * @param width  the canvas width.
+     * @param height the canvas height.
+     * @return a projection of the figure.
      */
-    public Renderer renderer() {
+    public Projection projection(int width, int height) {
+        Projection projection;
         if (base.dimension == 2) {
-            return new Renderer(new Projection2D(this));
+            projection = new Projection2D(this);
         } else {
-            return new Renderer(new Projection3D(this));
+            projection = new Projection3D(this);
         }
+        projection.setSize(width, height);
+        return projection;
     }
 
     /**
@@ -150,10 +155,10 @@ public class Figure {
      * @param height the height of image.
      */
     public BufferedImage toBufferedImage(int width, int height) {
+        Renderer renderer = new Renderer(projection(width, height));
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
-        Renderer renderer = renderer();
-        renderer.setGraphics(g2d, width, height);
+        renderer.setGraphics(g2d);
         paint(renderer);
         return bi;
     }

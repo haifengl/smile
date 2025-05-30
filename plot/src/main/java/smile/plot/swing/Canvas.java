@@ -86,7 +86,7 @@ public class Canvas extends JComponent implements ComponentListener,
      */
     public Canvas(Figure figure) {
         this.figure = figure;
-        this.renderer = figure.renderer();
+        this.renderer = new Renderer(figure.projection(800, 800));
 
         setBackground(Color.WHITE);
         setDoubleBuffered(true);
@@ -117,7 +117,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     @Override
     public void paintComponent(Graphics g) {
-        renderer.setGraphics((Graphics2D) g, getWidth(), getHeight());
+        renderer.setGraphics((Graphics2D) g);
+        renderer.projection().setSize(getWidth(), getHeight());
         figure.paint(renderer);
 
         if (mouseDraggingX >= 0 && mouseDraggingY >= 0) {
