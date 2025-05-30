@@ -419,13 +419,13 @@ public class Axis {
 
         if (isTickVisible) {
             if (gridLabels != null) {
-                int[] xy = g.projection.screenProjection(gridLabels[1].coordinates);
+                int[] xy = g.projection().screenProjection(gridLabels[1].coordinates);
                 int prevx = xy[0];
                 int prevy = xy[1];
                 for (int i = 0; i < gridLabels.length; i++) {
                     if (!gridLabels[i].text.isEmpty()) {
                         double[] coord = gridLabels[i].coordinates;
-                        xy = g.projection.screenProjection(coord);
+                        xy = g.projection().screenProjection(coord);
                         int x = xy[0];
                         int y = xy[1];
                         
