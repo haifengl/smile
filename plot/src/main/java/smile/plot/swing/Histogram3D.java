@@ -240,7 +240,7 @@ public class Histogram3D extends Plot {
 
     @Override
     public void paint(Renderer g) {
-        Projection3D p3d = (Projection3D) g.projection;
+        Projection3D p3d = (Projection3D) g.projection();
 
         // Calculates z-axis values in camera coordinates.
         for (int i = 0; i < freq.length; i++) {

@@ -41,15 +41,15 @@ public class Renderer {
      * Projection used to map logical/mathematical coordinates to Java2D
      * coordinates.
      */
-    final Projection projection;
+    private final Projection projection;
     /**
      * Java2D graphics object to render shapes.
      */
     private Graphics2D g2d;
     /**
-     * Original clip shape.
+     * Original clip shape associated with g2d.
      */
-    private java.awt.Shape originalClip;
+    private java.awt.Shape clip;
 
     /**
      * Constructor.
@@ -59,16 +59,9 @@ public class Renderer {
     }
 
     /**
-     * Reset projection object when the Canvas size changed.
-     */
-    public void resetProjection() {
-        projection.reset();
-    }
-
-    /**
      * Returns the projection object.
      */
-    public Projection getProjection() {
+    public Projection projection() {
         return projection;
     }
 
@@ -172,7 +165,7 @@ public class Renderer {
         int y = (int) (projection.height * projection.figure.margin);
         int w = (int) (projection.width * (1 - 2 * projection.figure.margin));
         int h = (int) (projection.height * (1 - 2 * projection.figure.margin));
-        originalClip = g2d.getClip();
+        clip = g2d.getClip();
         g2d.clipRect(x, y, w, h);
     }
 
@@ -180,8 +173,8 @@ public class Renderer {
      * Clear the restriction of the draw area.
      */
     public void clearClip() {
-        g2d.setClip(originalClip);
-        originalClip = null;
+        g2d.setClip(clip);
+        clip = null;
     }
 
     /**

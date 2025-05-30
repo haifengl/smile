@@ -166,8 +166,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
                 if (base.dimension == 2) {
                     if (Math.abs(e.getX() - mouseClickX) > 20 && Math.abs(e.getY() - mouseClickY) > 20) {
-                        double[] sc1 = ((Projection2D) (renderer.projection)).inverseProjection(mouseClickX, mouseClickY);
-                        double[] sc2 = ((Projection2D) (renderer.projection)).inverseProjection(e.getX(), e.getY());
+                        double[] sc1 = ((Projection2D) (renderer.projection())).inverseProjection(mouseClickX, mouseClickY);
+                        double[] sc2 = ((Projection2D) (renderer.projection())).inverseProjection(e.getX(), e.getY());
 
                         if (Math.min(sc1[0], sc2[0]) < base.upperBound[0]
                                 && Math.max(sc1[0], sc2[0]) > figure.base.lowerBound[0]
@@ -183,7 +183,7 @@ public class Canvas extends JComponent implements ComponentListener,
                                 base.setPrecisionUnit(i);
                             }
                             base.initBaseCoord();
-                            renderer.projection.reset();
+                            renderer.projection().reset();
                             figure.resetAxis();
                         }
                     }
@@ -246,12 +246,12 @@ public class Canvas extends JComponent implements ComponentListener,
                 }
 
                 base.initBaseCoord();
-                renderer.projection.reset();
+                renderer.projection().reset();
                 figure.resetAxis();
                 repaint();
             } else {
                 StringBuilder tooltip = new StringBuilder();
-                double[] sc = ((Projection2D) (renderer.projection)).inverseProjection(e.getX(), e.getY());
+                double[] sc = ((Projection2D) (renderer.projection())).inverseProjection(e.getX(), e.getY());
 
                 for (Shape shape : figure.shapes) {
                     if (shape instanceof Plot plot) {
@@ -298,7 +298,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         base.initBaseCoord();
-        renderer.projection.reset();
+        renderer.projection().reset();
         figure.resetAxis();
 
         repaint();
@@ -312,7 +312,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         if (renderer != null) {
             base.initBaseCoord();
-            renderer.projection.reset();
+            renderer.projection().reset();
             figure.resetAxis();
         }
 
@@ -465,7 +465,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin > 0.05) {
                 figure.margin -= 0.05;
-                figure.renderer.projection.reset();
+                figure.renderer.projection().reset();
                 repaint();
             }
 
@@ -489,7 +489,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin < 0.3) {
                 figure.margin += 0.05;
-                figure.renderer.projection.reset();
+                figure.renderer.projection().reset();
                 repaint();
             }
 
@@ -722,7 +722,7 @@ public class Canvas extends JComponent implements ComponentListener,
             }
 
             figure.base.initBaseCoord();
-            figure.renderer.projection.reset();
+            figure.renderer.projection().reset();
             figure.resetAxis();
 
             dialog.setVisible(false);
@@ -768,7 +768,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         base.initBaseCoord();
-        figure.renderer.projection.reset();
+        figure.renderer.projection().reset();
         figure.resetAxis();
         repaint();
     }
@@ -781,10 +781,10 @@ public class Canvas extends JComponent implements ComponentListener,
         Renderer renderer = figure.renderer;
 
         base.reset();
-        renderer.projection.reset();
+        renderer.projection().reset();
         figure.resetAxis();
 
-        if (renderer.projection instanceof Projection3D p3d) {
+        if (renderer.projection() instanceof Projection3D p3d) {
             p3d.setDefaultView();
         }
 

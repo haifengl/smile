@@ -184,7 +184,7 @@ public class Surface extends Plot {
         if (palette != null) {
             int m = data.length;
             int n = data[0].length;
-            Projection3D p3d = (Projection3D) g.projection;
+            Projection3D p3d = (Projection3D) g.projection();
 
             // Calculates z-axis values in camera coordinates.
             for (int i = 0; i < m; i++) {
