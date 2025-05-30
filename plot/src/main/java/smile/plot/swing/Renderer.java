@@ -73,11 +73,10 @@ public class Renderer {
     }
 
     /**
-     * Sets the Java2D graphics object and canvas size.
+     * Sets the Java2D graphics object.
      */
-    public void setGraphics(Graphics2D g2d, int width, int height) {
+    public void setGraphics(Graphics2D g2d) {
         this.g2d = g2d;
-        projection.setSize(width, height);
         // antialiasing methods
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);

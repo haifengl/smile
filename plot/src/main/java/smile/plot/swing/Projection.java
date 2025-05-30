@@ -36,11 +36,11 @@ public abstract class Projection {
     /**
      * The width of canvas in Java2D coordinate space.
      */
-    int width = 1;
+    int width = 800;
     /**
      * The height of canvas in Java2D coordinate space.
      */
-    int height = 1;
+    int height = 800;
 
     /**
      * Constructor.
@@ -60,6 +60,8 @@ public abstract class Projection {
 
     /**
      * Sets the canvas size.
+     * @param width  the canvas width.
+     * @param height the canvas height.
      */
     public void setSize(int width, int height) {
         this.width = width;
