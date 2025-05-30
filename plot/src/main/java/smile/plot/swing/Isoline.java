@@ -68,7 +68,7 @@ public class Isoline extends Shape {
      * value of contour line will be shown along the line.
      */
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         double angle = 0.0;
         double horizontalReference = 0.0;
         double verticalReference = 0.0;

@@ -88,7 +88,7 @@ public class Bar extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(Color.BLACK);
         for (int i = 0; i < data.length; i++) {
             g.drawLine(leftBottom[i], leftTop[i]);

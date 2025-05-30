@@ -57,9 +57,9 @@ public class Figure {
     /**
      * The graphics object associated with this canvas.
      */
-    Graphics graphics;
+    Renderer renderer;
     /**
-     * The portion of the canvas used for margin.
+     * The portion of the canvas used for margin outside axes.
      */
     double margin = DEFAULT_MARGIN;
     /**
@@ -155,9 +155,9 @@ public class Figure {
      */
     private void initGraphics() {
         if (base.dimension == 2) {
-            graphics = new Graphics(new Projection2D(this));
+            renderer = new Renderer(new Projection2D(this));
         } else {
-            graphics = new Graphics(new Projection3D(this));
+            renderer = new Renderer(new Projection3D(this));
         }
     }
 
@@ -433,25 +433,25 @@ public class Figure {
     /**
      * Paints the canvas.
      */
-    public void paint(java.awt.Graphics2D g2d, int width, int height) {
-        graphics.setGraphics(g2d, width, height);
+    public void paint(Graphics2D g2d, int width, int height) {
+        renderer.setGraphics(g2d, width, height);
 
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, width, height);
 
         for (var ax : axis) {
-            ax.paint(graphics);
+            ax.paint(renderer);
         }
 
         // draw plot
-        graphics.clip();
+        renderer.clip();
         // with for-each loop, we will get a ConcurrentModificationException.
         // Use for loop instead.
         for (var shape : shapes) {
-            graphics.setColor(shape.color);
-            shape.paint(graphics);
+            renderer.setColor(shape.color);
+            shape.paint(renderer);
         }
-        graphics.clearClip();
+        renderer.clearClip();
 
         // draw legends
         if (isLegendVisible) {

@@ -40,7 +40,7 @@ public class Grid extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (var row : data) {

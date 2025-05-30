@@ -117,7 +117,7 @@ public interface Scene extends Printable {
     }
 
     @Override
-    default int print(java.awt.Graphics g, PageFormat pf, int page) {
+    default int print(Graphics g, PageFormat pf, int page) {
         if (page > 0) {
             // We have only one page, and 'page' is zero-based
             return NO_SUCH_PAGE;

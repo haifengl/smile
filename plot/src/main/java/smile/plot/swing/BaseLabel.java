@@ -39,7 +39,7 @@ class BaseLabel extends Label {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Font f = g.getFont();
         g.setFont(font);
 

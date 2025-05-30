@@ -166,7 +166,7 @@ public class Surface extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (var datum : data) {

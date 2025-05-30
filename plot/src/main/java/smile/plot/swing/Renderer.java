@@ -28,14 +28,14 @@ import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 
 /**
- * Graphics provides methods to draw graphical primitives in logical/mathematical
+ * Renderer provides methods to draw graphical primitives in logical/mathematical
  * coordinates. The mathematical coordinates are translated into Java2D
  * coordinates based on suitable projection method. Both 2D and 3D shapes are
  * supported.
  *
  * @author Haifeng Li
  */
-public class Graphics {
+public class Renderer {
 
     /**
      * Projection used to map logical/mathematical coordinates to Java2D
@@ -54,12 +54,12 @@ public class Graphics {
     /**
      * Constructor.
      */
-    public Graphics(Projection projection) {
+    public Renderer(Projection projection) {
         this.projection = projection;
     }
 
     /**
-     * Reset projection object when the PlotCanvas size changed.
+     * Reset projection object when the Canvas size changed.
      */
     public void resetProjection() {
         projection.reset();
@@ -75,14 +75,14 @@ public class Graphics {
     /**
      * Returns the Java2D graphics object.
      */
-    public java.awt.Graphics2D getGraphics() {
+    public Graphics2D getGraphics() {
         return g2d;
     }
 
     /**
      * Set the Java2D graphics object.
      */
-    public void setGraphics(java.awt.Graphics2D g2d, int width, int height) {
+    public void setGraphics(Graphics2D g2d, int width, int height) {
         this.g2d = g2d;
         projection.setSize(width, height);
         // antialiasing methods
@@ -114,7 +114,7 @@ public class Graphics {
     /**
      * Set the font.
      */
-    public Graphics setFont(Font font) {
+    public Renderer setFont(Font font) {
         g2d.setFont(font);
         return this;
     }
@@ -129,7 +129,7 @@ public class Graphics {
     /**
      * Set the color.
      */
-    public Graphics setColor(Color color) {
+    public Renderer setColor(Color color) {
         g2d.setColor(color);
         return this;
     }
@@ -144,7 +144,7 @@ public class Graphics {
     /**
      * Set the paint object.
      */
-    public Graphics setPaint(Paint paint) {
+    public Renderer setPaint(Paint paint) {
         g2d.setPaint(paint);
         return this;
     }
@@ -159,7 +159,7 @@ public class Graphics {
     /**
      * Set the stroke.
      */
-    public Graphics setStroke(Stroke stroke) {
+    public Renderer setStroke(Stroke stroke) {
         g2d.setStroke(stroke);
         return this;
     }

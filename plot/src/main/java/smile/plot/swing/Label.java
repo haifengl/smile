@@ -71,7 +71,7 @@ public class Label extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Font f = g.getFont();
         if (font != null) g.setFont(font);
 

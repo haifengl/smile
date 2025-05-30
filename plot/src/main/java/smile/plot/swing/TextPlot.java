@@ -38,7 +38,7 @@ public class TextPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Label text : texts) {
             text.paint(g);
         }

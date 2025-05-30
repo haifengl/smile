@@ -143,7 +143,7 @@ public class Hexmap extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (int i = 0; i < z.length; i++) {
             for (int j = 0; j < z[i].length; j++) {
                 if (Double.isNaN(z[i][j])) {

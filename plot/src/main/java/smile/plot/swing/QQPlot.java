@@ -50,7 +50,7 @@ public class QQPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         double[] lowerEnd = g.getLowerBound();

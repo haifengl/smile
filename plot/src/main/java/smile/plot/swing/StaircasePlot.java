@@ -98,7 +98,7 @@ public class StaircasePlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Staircase line : lines) {
             line.paint(g);
         }
