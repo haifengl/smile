@@ -123,7 +123,7 @@ public class SparseMatrixPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         double[] start = new double[2];
         double[] end = new double[2];
 

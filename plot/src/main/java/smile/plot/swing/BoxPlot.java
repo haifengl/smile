@@ -127,7 +127,7 @@ public class BoxPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         double[] start = new double[2];

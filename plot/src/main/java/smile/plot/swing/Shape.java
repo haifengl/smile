@@ -19,7 +19,7 @@ package smile.plot.swing;
 import java.awt.Color;
 
 /**
- * Abstract rendering object in a PlotCanvas.
+ * Abstract object that knows how to use a renderer to paint onto the canvas.
  *
  * @author Haifeng Li
  */
@@ -47,5 +47,5 @@ public abstract class Shape {
     /**
      * Draws the shape.
      */
-    public abstract void paint(Graphics g);
+    public abstract void paint(Renderer g);
 }

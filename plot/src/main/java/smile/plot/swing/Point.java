@@ -67,7 +67,7 @@ public class Point extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (double[] point : points) {

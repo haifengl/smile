@@ -77,7 +77,7 @@ public class ScreePlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Line line : lines) {
             line.paint(g);
         }

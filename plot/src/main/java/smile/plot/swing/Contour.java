@@ -688,7 +688,7 @@ public class Contour extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Isoline contour : contours) {
             contour.paint(g);
         }

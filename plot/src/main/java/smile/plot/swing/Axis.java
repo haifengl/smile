@@ -399,7 +399,7 @@ public class Axis {
     /**
      * Draw the axis.
      */
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         if (gridLines != null) {
             if (isGridVisible) {
                 for (var gridLine : gridLines) {

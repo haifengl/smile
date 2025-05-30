@@ -51,7 +51,7 @@ public class BarPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Bar bar : bars) {
             bar.paint(g);
         }

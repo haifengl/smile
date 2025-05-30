@@ -127,7 +127,7 @@ public class Line extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         Stroke s = g.getStroke();

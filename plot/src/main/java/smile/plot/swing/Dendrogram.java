@@ -135,7 +135,7 @@ public class Dendrogram extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Color c = g.getColor();
         g.setColor(color);
 

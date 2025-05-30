@@ -58,7 +58,7 @@ public class ScatterPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Point point : points) {
             point.paint(g);
         }

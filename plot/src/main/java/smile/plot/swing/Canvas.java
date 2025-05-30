@@ -110,7 +110,7 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     @Override
-    public void paintComponent(java.awt.Graphics g) {
+    public void paintComponent(Graphics g) {
         figure.paint((Graphics2D) g, getWidth(), getHeight());
 
         if (mouseDraggingX >= 0 && mouseDraggingY >= 0) {
@@ -142,7 +142,7 @@ public class Canvas extends JComponent implements ComponentListener,
             mouseDraggingX = e.getX();
             mouseDraggingY = e.getY();
         } else if (figure.base.dimension == 3) {
-            figure.graphics.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
+            figure.renderer.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
             mouseClickX = e.getX();
             mouseClickY = e.getY();
         }
@@ -154,7 +154,7 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void mouseReleased(MouseEvent e) {
         Base base = figure.base;
-        Graphics graphics = figure.graphics;
+        Renderer renderer = figure.renderer;
 
         if (e.isPopupTrigger()) {
             popup.show(e.getComponent(), e.getX(), e.getY());
@@ -166,8 +166,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
                 if (base.dimension == 2) {
                     if (Math.abs(e.getX() - mouseClickX) > 20 && Math.abs(e.getY() - mouseClickY) > 20) {
-                        double[] sc1 = ((Projection2D) (graphics.projection)).inverseProjection(mouseClickX, mouseClickY);
-                        double[] sc2 = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
+                        double[] sc1 = ((Projection2D) (renderer.projection)).inverseProjection(mouseClickX, mouseClickY);
+                        double[] sc2 = ((Projection2D) (renderer.projection)).inverseProjection(e.getX(), e.getY());
 
                         if (Math.min(sc1[0], sc2[0]) < base.upperBound[0]
                                 && Math.max(sc1[0], sc2[0]) > figure.base.lowerBound[0]
@@ -183,7 +183,7 @@ public class Canvas extends JComponent implements ComponentListener,
                                 base.setPrecisionUnit(i);
                             }
                             base.initBaseCoord();
-                            graphics.projection.reset();
+                            renderer.projection.reset();
                             figure.resetAxis();
                         }
                     }
@@ -221,7 +221,7 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void mouseMoved(MouseEvent e) {
         Base base = figure.base;
-        Graphics graphics = figure.graphics;
+        Renderer renderer = figure.renderer;
 
         if (base.dimension == 2) {
             if (mouseDoubleClicked) {
@@ -246,12 +246,12 @@ public class Canvas extends JComponent implements ComponentListener,
                 }
 
                 base.initBaseCoord();
-                graphics.projection.reset();
+                renderer.projection.reset();
                 figure.resetAxis();
                 repaint();
             } else {
                 StringBuilder tooltip = new StringBuilder();
-                double[] sc = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
+                double[] sc = ((Projection2D) (renderer.projection)).inverseProjection(e.getX(), e.getY());
 
                 for (Shape shape : figure.shapes) {
                     if (shape instanceof Plot plot) {
@@ -281,7 +281,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         Base base = figure.base;
-        Graphics graphics = figure.graphics;
+        Renderer renderer = figure.renderer;
 
         for (int i = 0; i < base.dimension; i++) {
             int s = figure.axis[i].slices();
@@ -298,7 +298,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         base.initBaseCoord();
-        graphics.projection.reset();
+        renderer.projection.reset();
         figure.resetAxis();
 
         repaint();
@@ -308,11 +308,11 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void componentResized(ComponentEvent e) {
         Base base = figure.base;
-        Graphics graphics = figure.graphics;
+        Renderer renderer = figure.renderer;
 
-        if (graphics != null) {
+        if (renderer != null) {
             base.initBaseCoord();
-            graphics.projection.reset();
+            renderer.projection.reset();
             figure.resetAxis();
         }
 
@@ -465,7 +465,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin > 0.05) {
                 figure.margin -= 0.05;
-                figure.graphics.projection.reset();
+                figure.renderer.projection.reset();
                 repaint();
             }
 
@@ -489,7 +489,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin < 0.3) {
                 figure.margin += 0.05;
-                figure.graphics.projection.reset();
+                figure.renderer.projection.reset();
                 repaint();
             }
 
@@ -722,7 +722,7 @@ public class Canvas extends JComponent implements ComponentListener,
             }
 
             figure.base.initBaseCoord();
-            figure.graphics.projection.reset();
+            figure.renderer.projection.reset();
             figure.resetAxis();
 
             dialog.setVisible(false);
@@ -768,7 +768,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         base.initBaseCoord();
-        figure.graphics.projection.reset();
+        figure.renderer.projection.reset();
         figure.resetAxis();
         repaint();
     }
@@ -778,13 +778,13 @@ public class Canvas extends JComponent implements ComponentListener,
      */
     public void reset() {
         Base base = figure.base;
-        Graphics graphics = figure.graphics;
+        Renderer renderer = figure.renderer;
 
         base.reset();
-        graphics.projection.reset();
+        renderer.projection.reset();
         figure.resetAxis();
 
-        if (graphics.projection instanceof Projection3D p3d) {
+        if (renderer.projection instanceof Projection3D p3d) {
             p3d.setDefaultView();
         }
 
