@@ -91,6 +91,14 @@ public class Canvas extends JComponent implements ComponentListener,
         initContextMenuAndToolBar();
     }
 
+    /**
+     * Returns the figure in this canvas.
+     * @return the figure in this canvas.
+     */
+    public Figure figure() {
+        return figure;
+    }
+
     @Override
     public JComponent content() {
         return this;
