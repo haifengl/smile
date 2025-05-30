@@ -60,7 +60,7 @@ public class Figure {
     /**
      * The axis objects.
      */
-    Axis[] axis;
+    Axis[] axes;
     /**
      * The shapes in the canvas, e.g. label, plots, etc.
      */
@@ -168,9 +168,9 @@ public class Figure {
      */
     private void initBase(double[] lowerBound, double[] upperBound, boolean extendBound) {
         base = new Base(lowerBound, upperBound, extendBound);
-        axis = new Axis[base.getDimension()];
+        axes = new Axis[base.getDimension()];
         for (int i = 0; i < base.getDimension(); i++) {
-            axis[i] = new Axis(base, i);
+            axes[i] = new Axis(base, i);
         }
     }
 
@@ -178,7 +178,7 @@ public class Figure {
      * Reset the grid (when the base changes).
      */
     void resetAxis() {
-        for (var ax : axis) {
+        for (var ax : axes) {
             ax.reset();
         }
     }
@@ -280,7 +280,7 @@ public class Figure {
      * Returns the i-<i>th</i> axis.
      */
     public Axis getAxis(int i) {
-        return axis[i];
+        return axes[i];
     }
 
     /**
@@ -289,7 +289,7 @@ public class Figure {
     public String[] getAxisLabels() {
         String[] labels = new String[base.dimension];
         for (int i = 0; i < base.dimension; i++) {
-            labels[i] = axis[i].getLabel();
+            labels[i] = axes[i].getLabel();
         }
         return labels;
     }
@@ -298,7 +298,7 @@ public class Figure {
      * Returns the label/legend of an axis.
      */
     public String getAxisLabel(int i) {
-        return axis[i].getLabel();
+        return axes[i].getLabel();
     }
 
     /**
@@ -307,7 +307,7 @@ public class Figure {
     public Figure setAxisLabels(String... labels) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", getAxisLabels(), labels);
         for (int i = 0; i < labels.length; i++) {
-            axis[i].setLabel(labels[i]);
+            axes[i].setLabel(labels[i]);
         }
         pcs.firePropertyChange(event);
         return this;
@@ -317,8 +317,8 @@ public class Figure {
      * Sets the label/legend of an axis.
      */
     public Figure setAxisLabel(int i, String label) {
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axis[i].getLabel(), label);
-        axis[i].setLabel(label);
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axes[i].getLabel(), label);
+        axes[i].setLabel(label);
         pcs.firePropertyChange(event);
         return this;
     }
@@ -443,8 +443,8 @@ public class Figure {
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, width, height);
 
-        for (var ax : axis) {
-            ax.paint(renderer);
+        for (var axis : axes) {
+            axis.paint(renderer);
         }
 
         // draw plot

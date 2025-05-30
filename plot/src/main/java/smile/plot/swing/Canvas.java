@@ -78,7 +78,7 @@ public class Canvas extends JComponent implements ComponentListener,
     /**
      * The coordinate base when the user start dragging the mouse.
      */
-    private Base backupBase;
+    private Base baseClicked;
 
     /**
      * Constructor.
@@ -206,7 +206,7 @@ public class Canvas extends JComponent implements ComponentListener,
     public void mouseClicked(MouseEvent e) {
         if (e.getClickCount() == 2) {
             mouseDoubleClicked = true;
-            backupBase = figure.base;
+            baseClicked = figure.base;
         } else {
             mouseDoubleClicked = false;
         }
@@ -233,21 +233,21 @@ public class Canvas extends JComponent implements ComponentListener,
             if (mouseDoubleClicked) {
                 double x = mouseClickX - e.getX();
                 if (Math.abs(x) > 20) {
-                    int s = figure.axis[0].slices();
+                    int s = figure.axes[0].slices();
                     x = x > 0 ? 1.0 / s : -1.0 / s;
-                    x *= (backupBase.upperBound[0] - backupBase.lowerBound[0]);
-                    base.lowerBound[0] = backupBase.lowerBound[0] + x;
-                    base.upperBound[0] = backupBase.upperBound[0] + x;
+                    x *= (baseClicked.upperBound[0] - baseClicked.lowerBound[0]);
+                    base.lowerBound[0] = baseClicked.lowerBound[0] + x;
+                    base.upperBound[0] = baseClicked.upperBound[0] + x;
                     mouseClickX = e.getX();
                 }
 
                 double y = mouseClickY - e.getY();
                 if (Math.abs(y) > 20) {
-                    int s = figure.axis[1].slices();
+                    int s = figure.axes[1].slices();
                     y = y > 0 ? -1.0 / s : 1.0 / s;
-                    y *= (backupBase.upperBound[1] - backupBase.lowerBound[1]);
-                    base.lowerBound[1] = backupBase.lowerBound[1] + y;
-                    base.upperBound[1] = backupBase.upperBound[1] + y;
+                    y *= (baseClicked.upperBound[1] - baseClicked.lowerBound[1]);
+                    base.lowerBound[1] = baseClicked.lowerBound[1] + y;
+                    base.upperBound[1] = baseClicked.upperBound[1] + y;
                     mouseClickY = e.getY();
                 }
 
@@ -289,7 +289,7 @@ public class Canvas extends JComponent implements ComponentListener,
         Base base = figure.base;
 
         for (int i = 0; i < base.dimension; i++) {
-            int s = figure.axis[i].slices();
+            int s = figure.axes[i].slices();
             double r = e.getWheelRotation() > 0 ? 1.0 / s : -1.0 / s;
             if (r > -0.5) {
                 double d = (base.upperBound[i] - base.lowerBound[i]) * r;
@@ -760,7 +760,7 @@ public class Canvas extends JComponent implements ComponentListener,
         Base base = figure.base;
 
         for (int i = 0; i < base.dimension; i++) {
-            int s = figure.axis[i].slices();
+            int s = figure.axes[i].slices();
             double r = inout ? -1.0 / s : 1.0 / s;
             double d = (base.upperBound[i] - base.lowerBound[i]) * r;
             base.lowerBound[i] -= d;
