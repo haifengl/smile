@@ -37,7 +37,6 @@ import javax.swing.event.SwingPropertyChangeSupport;
  * @author Haifeng Li
  */
 public class Figure {
-
     /**
      * The default (one side) margin portion.
      */
@@ -54,10 +53,6 @@ public class Figure {
      * The current coordinate base.
      */
     Base base;
-    /**
-     * The graphics object associated with this canvas.
-     */
-    Renderer renderer;
     /**
      * The portion of the canvas used for margin outside axes.
      */
@@ -103,7 +98,6 @@ public class Figure {
      */
     public Figure(double[] lowerBound, double[] upperBound, boolean extendBound) {
         initBase(lowerBound, upperBound, extendBound);
-        initGraphics();
     }
 
     /**
@@ -138,6 +132,18 @@ public class Figure {
     }
 
     /**
+     * Returns a renderer of the figure.
+     * @return a renderer of the figure.
+     */
+    public Renderer renderer() {
+        if (base.dimension == 2) {
+            return new Renderer(new Projection2D(this));
+        } else {
+            return new Renderer(new Projection3D(this));
+        }
+    }
+
+    /**
      * Exports the plot to an image.
      *
      * @param width  the width of image.
@@ -146,19 +152,10 @@ public class Figure {
     public BufferedImage toBufferedImage(int width, int height) {
         BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
-        paint(g2d, width, height);
+        Renderer renderer = renderer();
+        renderer.setGraphics(g2d, width, height);
+        paint(renderer);
         return bi;
-    }
-
-    /**
-     * Initialize the Graphics object.
-     */
-    private void initGraphics() {
-        if (base.dimension == 2) {
-            renderer = new Renderer(new Projection2D(this));
-        } else {
-            renderer = new Renderer(new Projection3D(this));
-        }
     }
 
     /**
@@ -433,8 +430,10 @@ public class Figure {
     /**
      * Paints the canvas.
      */
-    public void paint(Graphics2D g2d, int width, int height) {
-        renderer.setGraphics(g2d, width, height);
+    public void paint(Renderer renderer) {
+        Graphics2D g2d = renderer.getGraphics();
+        int width = renderer.projection().width();
+        int height = renderer.projection().height();
 
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, width, height);

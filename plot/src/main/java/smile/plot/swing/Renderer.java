@@ -73,7 +73,7 @@ public class Renderer {
     }
 
     /**
-     * Set the Java2D graphics object.
+     * Sets the Java2D graphics object and canvas size.
      */
     public void setGraphics(Graphics2D g2d, int width, int height) {
         this.g2d = g2d;
@@ -161,10 +161,10 @@ public class Renderer {
      * Restrict the draw area to the valid base coordinate space.
      */
     public void clip() {
-        int x = (int) (projection.width * projection.figure.margin);
-        int y = (int) (projection.height * projection.figure.margin);
-        int w = (int) (projection.width * (1 - 2 * projection.figure.margin));
-        int h = (int) (projection.height * (1 - 2 * projection.figure.margin));
+        int x = (int) (projection.width() * projection.figure.margin);
+        int y = (int) (projection.height() * projection.figure.margin);
+        int w = (int) (projection.width() * (1 - 2 * projection.figure.margin));
+        int h = (int) (projection.height() * (1 - 2 * projection.figure.margin));
         clip = g2d.getClip();
         g2d.clipRect(x, y, w, h);
     }

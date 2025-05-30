@@ -40,6 +40,10 @@ public class Canvas extends JComponent implements ComponentListener,
      */
     private final Figure figure;
     /**
+     * The graphics object associated with this canvas.
+     */
+    private final Renderer renderer;
+    /**
      * The toolbar to control plots.
      */
     private final JToolBar toolbar = new JToolBar();
@@ -82,6 +86,8 @@ public class Canvas extends JComponent implements ComponentListener,
      */
     public Canvas(Figure figure) {
         this.figure = figure;
+        this.renderer = figure.renderer();
+
         setBackground(Color.WHITE);
         setDoubleBuffered(true);
         addComponentListener(this);
@@ -111,7 +117,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     @Override
     public void paintComponent(Graphics g) {
-        figure.paint((Graphics2D) g, getWidth(), getHeight());
+        renderer.setGraphics((Graphics2D) g, getWidth(), getHeight());
+        figure.paint(renderer);
 
         if (mouseDraggingX >= 0 && mouseDraggingY >= 0) {
             g.setColor(Color.BLACK);
@@ -142,7 +149,7 @@ public class Canvas extends JComponent implements ComponentListener,
             mouseDraggingX = e.getX();
             mouseDraggingY = e.getY();
         } else if (figure.base.dimension == 3) {
-            figure.renderer.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
+            renderer.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
             mouseClickX = e.getX();
             mouseClickY = e.getY();
         }
@@ -154,7 +161,6 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void mouseReleased(MouseEvent e) {
         Base base = figure.base;
-        Renderer renderer = figure.renderer;
 
         if (e.isPopupTrigger()) {
             popup.show(e.getComponent(), e.getX(), e.getY());
@@ -221,7 +227,6 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void mouseMoved(MouseEvent e) {
         Base base = figure.base;
-        Renderer renderer = figure.renderer;
 
         if (base.dimension == 2) {
             if (mouseDoubleClicked) {
@@ -281,7 +286,6 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         Base base = figure.base;
-        Renderer renderer = figure.renderer;
 
         for (int i = 0; i < base.dimension; i++) {
             int s = figure.axis[i].slices();
@@ -308,7 +312,6 @@ public class Canvas extends JComponent implements ComponentListener,
     @Override
     public void componentResized(ComponentEvent e) {
         Base base = figure.base;
-        Renderer renderer = figure.renderer;
 
         if (renderer != null) {
             base.initBaseCoord();
@@ -465,7 +468,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin > 0.05) {
                 figure.margin -= 0.05;
-                figure.renderer.projection().reset();
+                renderer.projection().reset();
                 repaint();
             }
 
@@ -489,7 +492,7 @@ public class Canvas extends JComponent implements ComponentListener,
         public void actionPerformed(ActionEvent e) {
             if (figure.margin < 0.3) {
                 figure.margin += 0.05;
-                figure.renderer.projection().reset();
+                renderer.projection().reset();
                 repaint();
             }
 
@@ -722,7 +725,7 @@ public class Canvas extends JComponent implements ComponentListener,
             }
 
             figure.base.initBaseCoord();
-            figure.renderer.projection().reset();
+            renderer.projection().reset();
             figure.resetAxis();
 
             dialog.setVisible(false);
@@ -768,7 +771,7 @@ public class Canvas extends JComponent implements ComponentListener,
         }
 
         base.initBaseCoord();
-        figure.renderer.projection().reset();
+        renderer.projection().reset();
         figure.resetAxis();
         repaint();
     }
@@ -778,7 +781,6 @@ public class Canvas extends JComponent implements ComponentListener,
      */
     public void reset() {
         Base base = figure.base;
-        Renderer renderer = figure.renderer;
 
         base.reset();
         renderer.projection().reset();
