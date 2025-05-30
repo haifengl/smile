@@ -56,8 +56,8 @@ class Projection3D extends Projection {
     /**
      * Constructor.
      */
-    public Projection3D(Figure canvas) {
-        super(canvas);
+    public Projection3D(Figure figure) {
+        super(figure);
     }
 
     /**

@@ -26,8 +26,8 @@ class Projection2D extends Projection {
     /**
      * Constructor.
      */
-    public Projection2D(Figure canvas) {
-        super(canvas);
+    public Projection2D(Figure figure) {
+        super(figure);
     }
 
     @Override
