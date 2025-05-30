@@ -16,9 +16,7 @@
  */
 package smile.plot.swing;
 
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.LayoutManager;
+import java.awt.*;
 import javax.swing.*;
 import smile.data.DataFrame;
 import smile.swing.Button;
@@ -28,20 +26,30 @@ import smile.swing.Button;
  *
  * @author Haifeng Li
  */
-public class CanvasContainer extends JPanel implements Scene {
+public class MultiFigurePane extends JPanel implements Scene {
     /**
      * The toolbar to control plots.
      */
-    private final JToolBar toolbar = new JToolBar();
+    private final JToolBar toolbar;
+    /**
+     * The content pane.
+     */
+    private final JPanel content;
 
     /**
      * Constructor.
      * @param layout the layout manager.
      */
-    public CanvasContainer(LayoutManager layout) {
+    public MultiFigurePane(LayoutManager layout) {
         super(layout, true);
-        setBackground(Color.WHITE);
-        initToolBar();
+        toolbar = new JToolBar();
+        toolbar.add(new Button(saveAction()));
+        toolbar.add(new Button(printAction()));
+        add(toolbar, BorderLayout.NORTH);
+
+        content = new JPanel(layout);
+        content.setBackground(Color.WHITE);
+        add(content, BorderLayout.CENTER);
     }
 
     /**
@@ -49,7 +57,7 @@ public class CanvasContainer extends JPanel implements Scene {
      * @param nrow the number of rows.
      * @param ncol the number of columns.
      */
-    public CanvasContainer(int nrow, int ncol) {
+    public MultiFigurePane(int nrow, int ncol) {
         this(grid(nrow, ncol));
     }
 
@@ -57,7 +65,7 @@ public class CanvasContainer extends JPanel implements Scene {
      * Constructor with GridLayout.
      * @param plots the plots to add into the frame.
      */
-    public CanvasContainer(Canvas... plots) {
+    public MultiFigurePane(Canvas... plots) {
         this(grid(plots.length));
         for (var plot : plots) {
             add(plot);
@@ -85,20 +93,12 @@ public class CanvasContainer extends JPanel implements Scene {
 
     @Override
     public JComponent content() {
-        return this;
+        return content;
     }
 
     @Override
     public JToolBar toolbar() {
         return toolbar;
-    }
-
-    /**
-     * Initialize toolbar.
-     */
-    private void initToolBar() {
-        toolbar.add(new Button(saveAction()));
-        toolbar.add(new Button(printAction()));
     }
 
     /**
@@ -108,15 +108,15 @@ public class CanvasContainer extends JPanel implements Scene {
      * @param color the color of points.
      * @return the scatter plot matrix.
      */
-    public static CanvasContainer splom(DataFrame data, char mark, Color color) {
+    public static MultiFigurePane splom(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
         int p = columns.length;
-        CanvasContainer grid = new CanvasContainer(p, p);
+        MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             for (String column : columns) {
                 Figure figure = ScatterPlot.of(data, column, columns[i], mark, color).figure();
                 figure.setAxisLabels(column, columns[i]);
-                grid.add(new Canvas(figure));
+                grid.content().add(new Canvas(figure));
             }
         }
 
@@ -130,11 +130,11 @@ public class CanvasContainer extends JPanel implements Scene {
      * @param category the category column for coloring.
      * @return the scatter plot matrix.
      */
-    public static CanvasContainer splom(DataFrame data, char mark, String category) {
+    public static MultiFigurePane splom(DataFrame data, char mark, String category) {
         int clazz = data.schema().indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
-        CanvasContainer grid = new CanvasContainer(p, p);
+        MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
@@ -142,7 +142,7 @@ public class CanvasContainer extends JPanel implements Scene {
                 Figure figure = ScatterPlot.of(data, columns[j], columns[i], category, mark).figure();
                 figure.setLegendVisible(false);
                 figure.setAxisLabels(columns[j], columns[i]);
-                grid.add(new Canvas(figure));
+                grid.content().add(new Canvas(figure));
             }
         }
 
