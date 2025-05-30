@@ -180,7 +180,7 @@ public class BoxPlot extends Plot {
     }
 
     @Override
-    public Figure canvas() {
+    public Figure figure() {
         double[] lowerBound = getLowerBound();
         double[] upperBound = getUpperBound();
 

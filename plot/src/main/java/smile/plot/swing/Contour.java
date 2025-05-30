@@ -695,7 +695,7 @@ public class Contour extends Plot {
     }
 
     @Override
-    public Figure canvas() {
+    public Figure figure() {
         Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.add(this);
 

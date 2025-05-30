@@ -211,7 +211,7 @@ public class SparseMatrixPlot extends Plot {
     }
 
     @Override
-    public Figure canvas() {
+    public Figure figure() {
         double[] lowerBound = {0, 0};
         double[] upperBound = {sparse.ncol(), sparse.nrow()};
         Figure canvas = new Figure(lowerBound, upperBound, false);

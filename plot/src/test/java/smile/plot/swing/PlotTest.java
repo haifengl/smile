@@ -114,7 +114,7 @@ public class PlotTest {
     public void testSPLOM() throws Exception {
         System.out.println("SPLOM");
 
-        var canvas = CanvasContainer.splom(iris, '*', "class");
+        var canvas = MultiFigurePane.splom(iris, '*', "class");
         canvas.window();
     }
 
@@ -143,9 +143,9 @@ public class PlotTest {
 
         var cow = Read.csv(Paths.getTestData("stat/cow.txt")).column("V1").toDoubleArray();
         var data = Arrays.stream(cow).filter(w -> w <= 3500).toArray();
-        var canvas = Histogram.of(data, 50, true).canvas();
-        canvas.setAxisLabels("Weight", "Probability");
-        var pane = new FigurePane(canvas);
+        var figure = Histogram.of(data, 50, true).figure();
+        figure.setAxisLabels("Weight", "Probability");
+        var pane = new FigurePane(figure);
         pane.window();
     }
 

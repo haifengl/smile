@@ -158,7 +158,7 @@ public class Dendrogram extends Plot {
     }
 
     @Override
-    public Figure canvas() {
+    public Figure figure() {
         Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.getAxis(0).setGridVisible(false);
         canvas.getAxis(0).setTickVisible(false);
