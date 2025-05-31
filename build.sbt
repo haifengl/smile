@@ -86,7 +86,7 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-target", "21"
   ),
   Compile / doc / javacOptions ++= Seq(
-    "-Xdoclint:none",
+    //"-Xdoclint:none",
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
