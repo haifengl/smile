@@ -27,6 +27,11 @@ import java.util.Map;
  * @author Haifeng Li
  */
 public class Palette {
+    /** Private constructor. */
+    private Palette() {
+
+    }
+
     /**
      * Creates a color specified with an HTML or CSS attribute string.
      *
@@ -261,17 +266,19 @@ public class Palette {
     }
 
     /**
-     * Generate terrain color palette.
+     * Generates terrain color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] terrain(int n) {
         return terrain(n, 1.0f);
     }
 
     /**
-     * Generate terrain color palette.
+     * Generates terrain color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] terrain(int n, float alpha) {
         int k = n / 2;
@@ -321,17 +328,19 @@ public class Palette {
     }
 
     /**
-     * Generate topo color palette.
+     * Generates topo color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] topo(int n) {
         return topo(n, 1.0f);
     }
 
     /**
-     * Generate topo color palette.
+     * Generates topo color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] topo(int n, float alpha) {
         int j = n / 3;
@@ -369,17 +378,19 @@ public class Palette {
     }
 
     /**
-     * Generate jet color palette.
+     * Generates jet color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] jet(int n) {
         return jet(n, 1.0f);
     }
 
     /**
-     * Generate jet color palette.
+     * Generates jet color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] jet(int n, float alpha) {
         int m = (int) Math.ceil(n / 4.0);
@@ -424,17 +435,19 @@ public class Palette {
     }
 
     /**
-     * Generate red-green color palette.
+     * Generates red-green color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] redgreen(int n) {
         return redgreen(n, 1.0f);
     }
 
     /**
-     * Generate red-green color palette.
+     * Generates red-green color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] redgreen(int n, float alpha) {
         Color[] palette = new Color[n];
@@ -446,17 +459,19 @@ public class Palette {
     }
 
     /**
-     * Generate red-blue color palette.
+     * Generates red-blue color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] redblue(int n) {
         return redblue(n, 1.0f);
     }
 
     /**
-     * Generate red-blue color palette.
+     * Generates red-blue color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] redblue(int n, float alpha) {
         Color[] palette = new Color[n];
@@ -468,17 +483,19 @@ public class Palette {
     }
 
     /**
-     * Generate heat color palette.
+     * Generates heat color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] heat(int n) {
         return heat(n, 1.0f);
     }
 
     /**
-     * Generate heat color palette.
+     * Generates heat color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] heat(int n, float alpha) {
         int j = n / 4;
@@ -503,17 +520,19 @@ public class Palette {
     }
 
     /**
-     * Generate rainbow color palette.
+     * Generates rainbow color palette.
      * @param n the number of colors in the palette.
+     * @return the color palette.
      */
     public static Color[] rainbow(int n) {
         return rainbow(n, 1.0f);
     }
 
     /**
-     * Generate rainbow color palette.
+     * Generates rainbow color palette.
      * @param n the number of colors in the palette.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] rainbow(int n, float alpha) {
         return rainbow(n, 0.0f, (float) (n - 1) / n, alpha);
@@ -525,19 +544,21 @@ public class Palette {
      * @param start the start of h in the HSV color model.
      * @param end the start of h in the HSV color model.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] rainbow(int n, float start, float end, float alpha) {
         return rainbow(n, start, end, 1.0f, 1.0f, alpha);
     }
 
     /**
-     * Generate rainbow color palette.
+     * Generates rainbow color palette.
      * @param n the number of colors in the palette.
      * @param start the start of h in the HSV color model.
      * @param end the start of h in the HSV color model.
      * @param s the s in the HSV color model.
      * @param v the v in the HSV color model.
      * @param alpha the parameter in [0,1] for transparency.
+     * @return the color palette.
      */
     public static Color[] rainbow(int n, float start, float end, float s, float v, float alpha) {
         Color[] palette = new Color[n];

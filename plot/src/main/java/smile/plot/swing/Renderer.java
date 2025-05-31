@@ -53,6 +53,7 @@ public class Renderer {
 
     /**
      * Constructor.
+     * @param projection the projection.
      */
     public Renderer(Projection projection) {
         this.projection = projection;
@@ -60,6 +61,7 @@ public class Renderer {
 
     /**
      * Returns the projection object.
+     * @return the projection object.
      */
     public Projection projection() {
         return projection;
@@ -67,6 +69,7 @@ public class Renderer {
 
     /**
      * Returns the Java2D graphics object.
+     * @return the Java2D graphics object.
      */
     public Graphics2D getGraphics() {
         return g2d;
@@ -74,6 +77,7 @@ public class Renderer {
 
     /**
      * Sets the Java2D graphics object.
+     * @param g2d Java2D graphics.
      */
     public void setGraphics(Graphics2D g2d) {
         this.g2d = g2d;
@@ -84,6 +88,7 @@ public class Renderer {
 
     /**
      * Returns the lower bounds of coordinate space.
+     * @return the lower bounds of coordinate space.
      */
     public double[] getLowerBound() {
         return projection.figure.base.lowerBound;
@@ -91,20 +96,24 @@ public class Renderer {
 
     /**
      * Returns the upper bounds of coordinate space.
+     * @return the upper bounds of coordinate space.
      */
     public double[] getUpperBound() {
         return projection.figure.base.upperBound;
     }
 
     /**
-     * Get the current font.
+     * Gets the current font.
+     * @return the font.
      */
     public Font getFont() {
         return g2d.getFont();
     }
 
     /**
-     * Set the font.
+     * Sets the font.
+     * @param font the font.
+     * @return this object.
      */
     public Renderer setFont(Font font) {
         g2d.setFont(font);
@@ -112,14 +121,17 @@ public class Renderer {
     }
 
     /**
-     * Get the current color.
+     * Gets the current color.
+     * @return the color.
      */
     public Color getColor() {
         return g2d.getColor();
     }
 
     /**
-     * Set the color.
+     * Sets the color.
+     * @param color the color.
+     * @return this object.
      */
     public Renderer setColor(Color color) {
         g2d.setColor(color);
@@ -127,14 +139,17 @@ public class Renderer {
     }
 
     /**
-     * Get the current paint object.
+     * Gets the current paint object.
+     * @return the paint.
      */
     public Paint getPaint() {
         return g2d.getPaint();
     }
 
     /**
-     * Set the paint object.
+     * Sets the paint object.
+     * @param paint the paint.
+     * @return this object.
      */
     public Renderer setPaint(Paint paint) {
         g2d.setPaint(paint);
@@ -142,14 +157,17 @@ public class Renderer {
     }
 
     /**
-     * Get the current stroke.
+     * Gets the current stroke.
+     * @return the stroke.
      */
     public Stroke getStroke() {
         return g2d.getStroke();
     }
 
     /**
-     * Set the stroke.
+     * Sets the stroke.
+     * @param stroke the stroke.
+     * @return this object.
      */
     public Renderer setStroke(Stroke stroke) {
         g2d.setStroke(stroke);
@@ -157,7 +175,7 @@ public class Renderer {
     }
 
     /**
-     * Restrict the draw area to the valid base coordinate space.
+     * Restricts the draw area to the valid base coordinate space.
      */
     public void clip() {
         int x = (int) (projection.width() * projection.figure.margin);
@@ -169,7 +187,7 @@ public class Renderer {
     }
 
     /**
-     * Clear the restriction of the draw area.
+     * Clears the restriction of the draw area.
      */
     public void clearClip() {
         g2d.setClip(clip);
@@ -177,36 +195,50 @@ public class Renderer {
     }
 
     /**
-     * Draw a string. Reference point is the center of string. The coordinates
+     * Draws a string. Reference point is the center of string. The coordinates
      * are logical coordinates.
+     * @param text the text.
+     * @param coord the text coordinates.
      */
-    public void drawText(String label, double[] coord) {
-        drawText(label, coord, 0.5, 0.5, 0.0);
+    public void drawText(String text, double[] coord) {
+        drawText(text, coord, 0.5, 0.5, 0.0);
     }
 
     /**
-     * Draw a string with given rotation angle. Reference point is the center
+     * Draws a string with given rotation angle. Reference point is the center
      * of string. The coordinates are logical coordinates. The angle of rotation
      * is in radians.
+     * @param text the text.
+     * @param coord the text coordinates.
+     * @param rotation the rotation angel of text.
      */
-    public void drawText(String label, double[] coord, double rotation) {
-        drawText(label, coord, 0.5, 0.5, rotation);
+    public void drawText(String text, double[] coord, double rotation) {
+        drawText(text, coord, 0.5, 0.5, rotation);
     }
 
     /**
-     * Draw a string with given reference point. (0.5, 0.5) is center, (0, 0) is
+     * Draws a string with given reference point. (0.5, 0.5) is center, (0, 0) is
      * lower left, (0, 1) is upper left, etc. The coordinates are logical coordinates.
+     * @param text the text.
+     * @param coord the text coordinates.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
      */
-    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference) {
-        drawText(label, coord, horizontalReference, verticalReference, 0.0);
+    public void drawText(String text, double[] coord, double horizontalReference, double verticalReference) {
+        drawText(text, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
-     * Draw a string with given reference point and rotation angle. (0.5, 0.5)
+     * Draws a string with given reference point and rotation angle. (0.5, 0.5)
      * is center, (0, 0) is lower left, (0, 1) is upper left, etc. The angle of
      * rotation is in radians. The coordinates are logical coordinates.
+     * @param text the text.
+     * @param coord the text coordinates.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
+     * @param rotation the rotation angel of text.
      */
-    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
+    public void drawText(String text, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjection(coord);
         int x = sc[0];
         int y = sc[1];
@@ -216,7 +248,7 @@ public class Renderer {
         // Corner offset adjustment : Text Offset is used Here
         FontRenderContext frc = g2d.getFontRenderContext();
         Font font = g2d.getFont();
-        double w = font.getStringBounds(label, frc).getWidth();
+        double w = font.getStringBounds(text, frc).getWidth();
         double h = font.getSize2D();
 
         if (rotation != 0) {
@@ -226,35 +258,43 @@ public class Renderer {
         x -= (int) (w * horizontalReference);
         y += (int) (h * verticalReference);
 
-        g2d.drawString(label, x, y);
-
+        g2d.drawString(text, x, y);
         g2d.setTransform(transform);
     }
 
     /**
      * Draw a string with given rotation angle. Reference point is the center
      * of string. The logical coordinates are proportional to the base coordinates.
+     * @param text the text.
+     * @param coord the text coordinates in base ratio.
      */
-    public void drawTextBaseRatio(String label, double[] coord) {
-        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
+    public void drawTextBaseRatio(String text, double[] coord) {
+        drawTextBaseRatio(text, coord, 0.5, 0.5, 0.0);
     }
 
     /**
      * Draw a string with given rotation angle. Reference point is the center
      * of string. The angle of rotation is in radians. The logical coordinates
      * are proportional to the base coordinates.
+     * @param text the text.
+     * @param coord the text coordinates in base ratio.
+     * @param rotation the rotation angel of text.
      */
-    public void drawTextBaseRatio(String label, double[] coord, double rotation) {
-        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
+    public void drawTextBaseRatio(String text, double[] coord, double rotation) {
+        drawTextBaseRatio(text, coord, 0.5, 0.5, 0.0);
     }
 
     /**
      * Draw a string with given reference point. (0.5, 0.5) is center, (0, 0) is
      * lower left, (0, 1) is upper left, etc. The logical coordinates are
      * proportional to the base coordinates.
+     * @param text the text.
+     * @param coord the text coordinates in base ratio.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
      */
-    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference) {
-        drawTextBaseRatio(label, coord, horizontalReference, verticalReference, 0.0);
+    public void drawTextBaseRatio(String text, double[] coord, double horizontalReference, double verticalReference) {
+        drawTextBaseRatio(text, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
@@ -262,8 +302,13 @@ public class Renderer {
      * is center, (0, 0) is lower left, (1, 0) is upper left, etc.
      * The angle of rotation is in radians. The logical  are proportional to
      * the base coordinates.
+     * @param text the text.
+     * @param coord the text coordinates in base ratio.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
+     * @param rotation the rotation angel of text.
      */
-    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
+    public void drawTextBaseRatio(String text, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjectionBaseRatio(coord);
         int x = sc[0];
         int y = sc[1];
@@ -273,7 +318,7 @@ public class Renderer {
         // Corner offset adjustment : Text Offset is used Here
         FontRenderContext frc = g2d.getFontRenderContext();
         Font font = g2d.getFont();
-        double w = font.getStringBounds(label, frc).getWidth();
+        double w = font.getStringBounds(text, frc).getWidth();
         double h = font.getSize2D();
 
         if (rotation != 0) {
@@ -283,13 +328,13 @@ public class Renderer {
         x -= (int) (w * horizontalReference);
         y += (int) (h * verticalReference);
 
-        g2d.drawString(label, x, y);
-
+        g2d.drawString(text, x, y);
         g2d.setTransform(transform);
     }
 
     /**
-     * Draw poly line.
+     * Draws poly line.
+     * @param coord the line point coordinates.
      */
     private void drawLine(int[]... coord) {
         int[] x = new int[coord.length];
@@ -306,7 +351,8 @@ public class Renderer {
     }
 
     /**
-     * Draw poly line. The coordinates are in logical coordinates.
+     * Draws poly line. The coordinates are in logical coordinates.
+     * @param coord the line point coordinates.
      */
     public void drawLine(double[]... coord) {
         int[][] sc = new int[coord.length][];
@@ -318,8 +364,9 @@ public class Renderer {
     }
 
     /**
-     * Draw poly line. The logical coordinates are proportional to the base
+     * Draws poly line. The logical coordinates are proportional to the base
      * coordinates.
+     * @param coord the line point coordinates in base ratio.
      */
     public void drawLineBaseRatio(double[]... coord) {
         int[][] sc = new int[coord.length][];
@@ -331,15 +378,16 @@ public class Renderer {
     }
 
     /**
-     * Draw a dot. The coordinates are in logical coordinates.
+     * Draws a point. The coordinates are in logical coordinates.
+     * @param coord the point coordinates.
      */
     public void drawPoint(double... coord) {
         drawPoint('.', coord);
     }
 
     /**
-     * Draw a dot with given pattern. The coordinates are in logical coordinates.
-     * @param dot the pattern of dot:
+     * Draws a point with given pattern. The coordinates are in logical coordinates.
+     * @param mark the pattern of point:
      * <ul>
      * <li> . : dot
      * <li> + : cross
@@ -356,8 +404,9 @@ public class Renderer {
      * <li> q : solid square
      * <li> Q : large solid square
      * </ul>
+     * @param coord the point coordinates.
      */
-    public void drawPoint(char dot, double... coord) {
+    public void drawPoint(char mark, double... coord) {
         int size = 2;
         int midSize = 3;
         int bigSize = 4;
@@ -367,7 +416,7 @@ public class Renderer {
         int x = sc[0];
         int y = sc[1];
 
-        switch (dot) {
+        switch (mark) {
             case '+':
                 g2d.drawLine(x - size, y, x + size, y);
                 g2d.drawLine(x, y - size, x, y + size);
@@ -432,7 +481,8 @@ public class Renderer {
     }
 
     /**
-     * Draw polygon. The coordinates are in logical coordinates.
+     * Draws polygon. The coordinates are in logical coordinates.
+     * @param coord the polygon point coordinates.
      */
     public void drawPolygon(double[]... coord) {
         int[][] c = new int[coord.length][2];
@@ -452,7 +502,8 @@ public class Renderer {
     }
 
     /**
-     * Fill polygon. The coordinates are in logical coordinates.
+     * Fills polygon. The coordinates are in logical coordinates.
+     * @param coord the polygon point coordinates.
      */
     public void fillPolygon(double[]... coord) {
         int[][] c = new int[coord.length][2];
@@ -473,13 +524,14 @@ public class Renderer {
     }
 
     /**
-     * Fill polygon. The coordinates are in logical coordinates. This also supports
+     * Fills polygon. The coordinates are in logical coordinates. This also supports
      * basic alpha compositing rules for combining source and destination
      * colors to achieve blending and transparency effects with graphics and images.
      *
      * @param alpha the constant alpha to be multiplied with the alpha of the
      *     source. alpha must be a floating point number in the inclusive range
      *     [0.0, 1.0].
+     * @param coord the polygon point coordinates.
      */
     public void fillPolygon(float alpha, double[]... coord) {
         int[][] c = new int[coord.length][2];
@@ -505,7 +557,9 @@ public class Renderer {
     }
 
     /**
-     * Draw the outline of the specified rectangle.
+     * Draws the outline of the specified rectangle.
+     * @param topLeft the top left coordinates.
+     * @param rightBottom the right bottom coordinates.
      */
     public void drawRect(double[] topLeft, double[] rightBottom) {
         if (!(projection instanceof Projection2D)) {
@@ -519,8 +573,10 @@ public class Renderer {
     }
 
     /**
-     * Draw the outline of the specified rectangle. The logical coordinates
+     * Draws the outline of the specified rectangle. The logical coordinates
      * are proportional to the base coordinates.
+     * @param topLeft the top left coordinates in base ratio.
+     * @param rightBottom the right bottom coordinates in base ratio.
      */
     public void drawRectBaseRatio(double[] topLeft, double[] rightBottom) {
         if (!(projection instanceof Projection2D)) {
@@ -534,7 +590,9 @@ public class Renderer {
     }
 
     /**
-     * Fill the specified rectangle.
+     * Fills the specified rectangle.
+     * @param topLeft the top left coordinates.
+     * @param rightBottom the right bottom coordinates.
      */
     public void fillRect(double[] topLeft, double[] rightBottom) {
         if (!(projection instanceof Projection2D)) {
@@ -548,8 +606,10 @@ public class Renderer {
     }
 
     /**
-     * Fill the specified rectangle. The logical coordinates are proportional
+     * Fills the specified rectangle. The logical coordinates are proportional
      * to the base coordinates.
+     * @param topLeft the top left coordinates in base ratio.
+     * @param rightBottom the right bottom coordinates in base ratio.
      */
     public void fillRectBaseRatio(double[] topLeft, double[] rightBottom) {
         if (!(projection instanceof Projection2D)) {
@@ -563,7 +623,7 @@ public class Renderer {
     }
 
     /**
-     * Rotate the 3D view based on the changes on mouse position.
+     * Rotates the 3D view based on the changes on mouse position.
      * @param x changes of mouse position on the x-axis.
      * @param y changes on mouse position on the y-axis.
      */

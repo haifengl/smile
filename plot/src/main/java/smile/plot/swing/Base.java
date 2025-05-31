@@ -19,7 +19,7 @@ package smile.plot.swing;
 import java.util.Arrays;
 
 /**
- * The coordinate base of PlotCanvas. This support both 2D and 3D
+ * The coordinate base of Canvas. This support both 2D and 3D
  * device-independent logical space where graphics primitives are specified.
  * <p>
  * The user need supply the lower and upper bounds for each axis. These bounds
@@ -69,6 +69,8 @@ public class Base {
 
     /**
      * Constructor.
+     * @param lowerBound the lower bound of base.
+     * @param upperBound the upper bound of base.
      */
     public Base(double[] lowerBound, double[] upperBound) {
         this(lowerBound, upperBound, true);
@@ -76,6 +78,9 @@ public class Base {
 
     /**
      * Constructor.
+     * @param lowerBound the lower bound of base.
+     * @param upperBound the upper bound of base.
+     * @param extendBound true if extending the bounds for padding.
      */
     public Base(double[] lowerBound, double[] upperBound, boolean extendBound) {
         if (lowerBound.length != upperBound.length) {
@@ -147,13 +152,15 @@ public class Base {
 
     /**
      * Returns the dimensionality of coordinates.
+     * @return the dimensionality of coordinates.
      */
     public int getDimension() {
         return dimension;
     }
 
     /**
-     * Set the precision unit for axis i.
+     * Sets the precision unit for axis i.
+     * @param i the index of axis.
      */
     void setPrecisionUnit(int i) {
         if (upperBound[i] > lowerBound[i]) {
@@ -179,6 +186,7 @@ public class Base {
 
     /**
      * Rounds the bounds for axis i.
+     * @param i the index of axis.
      */
     public void extendBound(int i) {
         if (i < 0 || i >= dimension) {
@@ -210,6 +218,7 @@ public class Base {
 
     /**
      * Returns the coordinates.
+     * @return the coordinates.
      */
     public double[][] getCoordinateSpace() {
         return baseCoords;
@@ -217,6 +226,7 @@ public class Base {
 
     /**
      * Returns the lower bounds.
+     * @return the lower bounds.
      */
     public double[] getLowerBounds() {
         return lowerBound;
@@ -224,6 +234,7 @@ public class Base {
 
     /**
      * Returns the upper bounds.
+     * @return the upper bounds.
      */
     public double[] getUpperBounds() {
         return upperBound;
@@ -231,6 +242,7 @@ public class Base {
 
     /**
      * Returns the precision units of axes.
+     * @return the precision units of axes.
      */
     public double[] getPrecisionUnit() {
         return precisionUnit;
@@ -238,13 +250,15 @@ public class Base {
 
     /**
      * Returns the precision unit digits of axes.
+     * @return the precision unit digits of axes.
      */
     public int[] getPrecisionDigits() {
         return precisionDigits;
     }
 
     /**
-     * Extend lower bounds.
+     * Extends lower bounds.
+     * @param bound the new bound.
      */
     public void extendLowerBound(double[] bound) {
         if (bound.length != dimension) {
@@ -265,7 +279,8 @@ public class Base {
     }
 
     /**
-     * Extend upper bounds.
+     * Extends upper bounds.
+     * @param bound the new bound.
      */
     public void extendUpperBound(double[] bound) {
         if (bound.length != dimension) {
@@ -286,7 +301,9 @@ public class Base {
     }
 
     /**
-     * Extend lower and upper bounds.
+     * Extends lower and upper bounds.
+     * @param lowerBound the new lower bound.
+     * @param upperBound the new upper bound.
      */
     public void extendBound(double[] lowerBound, double[] upperBound) {
         if (lowerBound.length != dimension || upperBound.length != dimension) {

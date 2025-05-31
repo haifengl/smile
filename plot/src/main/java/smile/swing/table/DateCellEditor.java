@@ -44,20 +44,29 @@ import javax.swing.text.DefaultFormatterFactory;
 @SuppressWarnings("serial")
 public class DateCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DateCellEditor.class);
-    
-    public static final DateCellEditor YYYYMMDD        = new DateCellEditor("yyyy-MM-dd");
-    public static final DateCellEditor MMDDYY          = new DateCellEditor("MM/dd/yy");
-    public static final DateCellEditor YYYYMMDD_HHMMSS = new DateCellEditor("yyyy-MM-dd HH:mm:ss");
-    public static final DateCellEditor YYYYMMDD_HHMM   = new DateCellEditor("yyyy-MM-dd HH:mm");
-    public static final DateCellEditor HHMM            = new DateCellEditor("HH:mm");
-    public static final DateCellEditor HHMMSS          = new DateCellEditor("HH:mm:ss");
-    public static final DateCellEditor ISO8601         = new DateCellEditor("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-    final JFormattedTextField textField;
-    final DateFormat dateFormat;
+    /** Predefined date editor in YYYY-MM-DD format. */
+    public static final DateCellEditor YYYYMMDD        = new DateCellEditor("yyyy-MM-dd");
+    /** Predefined date editor in MM/dd/yy format. */
+    public static final DateCellEditor MMDDYY          = new DateCellEditor("MM/dd/yy");
+    /** Predefined datetime editor in yyyy-MM-dd HH:mm:ss format. */
+    public static final DateCellEditor YYYYMMDD_HHMMSS = new DateCellEditor("yyyy-MM-dd HH:mm:ss");
+    /** Predefined datetime editor in yyyy-MM-dd HH:mm format. */
+    public static final DateCellEditor YYYYMMDD_HHMM   = new DateCellEditor("yyyy-MM-dd HH:mm");
+    /** Predefined time editor in HH:mm format. */
+    public static final DateCellEditor HHMM            = new DateCellEditor("HH:mm");
+    /** Predefined time editor in HH:mm:ss format. */
+    public static final DateCellEditor HHMMSS          = new DateCellEditor("HH:mm:ss");
+    /** Predefined date editor in ISO-8601 format yyyy-MM-dd'T'HH:mm:ss.SSSXXX. */
+    public static final DateCellEditor ISO8601         = new DateCellEditor("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    /** The text field. */
+    private final JFormattedTextField textField;
+    /** The date format. */
+    private final DateFormat dateFormat;
 
     /**
      * Constructor.
+     * @param format the date regex format.
      */
     public DateCellEditor(String format) {
         this(new SimpleDateFormat(format));
@@ -65,12 +74,13 @@ public class DateCellEditor extends DefaultCellEditor {
     
     /**
      * Constructor.
+     * @param format the date format.
      */
-    public DateCellEditor(DateFormat dateFormat) {
+    public DateCellEditor(DateFormat format) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
 
-        this.dateFormat = dateFormat;
+        this.dateFormat = format;
         DateFormatter dateFormatter = new DateFormatter(dateFormat);
 
         textField.setFormatterFactory(new DefaultFormatterFactory(dateFormatter));

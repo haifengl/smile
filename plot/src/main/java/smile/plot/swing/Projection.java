@@ -44,6 +44,7 @@ public abstract class Projection {
 
     /**
      * Constructor.
+     * @param figure the figure to project.
      */
     public Projection(Figure figure) {
         this.figure = figure;
@@ -101,6 +102,8 @@ public abstract class Projection {
 
     /**
      * Project logical coordinates to Java2D coordinates.
+     * @param coord the logic coordinates.
+     * @return Java2D coordinates.
      */
     public int[] screenProjection(double... coord) {
         Base base = figure.base;
@@ -119,6 +122,8 @@ public abstract class Projection {
 
     /**
      * Project logical coordinates in base ratio to Java2D coordinates.
+     * @param coord the logic coordinates in base ratio.
+     * @return Java2D coordinates.
      */
     public int[] screenProjectionBaseRatio(double... coord) {
         Base base = figure.base;

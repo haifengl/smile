@@ -82,6 +82,8 @@ public class Axis {
 
     /**
      * Constructor.
+     * @param base The base coordinate space.
+     * @param index The index of coordinate associated with this axis.
      */
     public Axis(Base base, int index) {
         this.base = base;
@@ -268,7 +270,7 @@ public class Axis {
     }
 
     /**
-     * Set the base coordinate space.
+     * Resets the base coordinate space.
      */
     public void reset() {
         init();
@@ -277,6 +279,7 @@ public class Axis {
     /**
      * Sets the rotation degree of tick strings.
      * @param rotation rotation degree.
+     * @return this object.
      */
     public Axis setRotation(double rotation) {
         this.rotation = rotation;
@@ -284,9 +287,12 @@ public class Axis {
     }
 
     /**
-     * Add a label to the axis at given location.
+     * Adds a label to the axis at given location.
+     * @param ticks the tick labels.
+     * @param location the tick location.
+     * @return this object.
      */
-    public void setTicks(String[] ticks, double[] location) {
+    public Axis setTicks(String[] ticks, double[] location) {
         if (ticks.length != location.length) {
             throw new IllegalArgumentException("Tick and location size don't match.");
         }
@@ -295,25 +301,30 @@ public class Axis {
         this.location = location;
 
         setTicks();
+        return this;
     }
 
     /**
      * Returns the number of slices in linear scale.
+     * @return the number of slices in linear scale.
      */
     public int slices() {
         return slices;
     }
 
     /**
-     * Set the visibility of the grid lines and their labels.
+     * Sets the visibility of the grid lines and their labels.
+     * @param visible the flag if the grid is visible.
+     * @return this object.
      */
-    public Axis setGridVisible(boolean v) {
-        isGridVisible = v;
+    public Axis setGridVisible(boolean visible) {
+        isGridVisible = visible;
         return this;
     }
 
     /**
      * Returns the visibility of the grid lines and their labels.
+     * @return true if the grid is visible.
      */
     public boolean isGridVisible() {
         return isGridVisible;
@@ -321,29 +332,35 @@ public class Axis {
 
     /**
      * Set the visibility of the frame grid lines and their labels.
+     * @param visible the flag if the frame is visible.
+     * @return this object.
      */
-    public Axis setFrameVisible(boolean v) {
-        isFrameVisible = v;
+    public Axis setFrameVisible(boolean visible) {
+        isFrameVisible = visible;
         return this;
     }
 
     /**
      * Returns the visibility of the frame grid lines and their labels.
+     * @return true if the frame is visible.
      */
     public boolean isFrameVisible() {
         return isFrameVisible;
     }
 
     /**
-     * Set the visibility of the axis label.
+     * Sets the visibility of the tick labels.
+     * @param visible the flag if the ticks are visible.
+     * @return this object.
      */
-    public Axis setTickVisible(boolean v) {
-        isTickVisible = v;
+    public Axis setTickVisible(boolean visible) {
+        isTickVisible = visible;
         return this;
     }
 
     /**
-     * Returns the visibility of the axis label.
+     * Returns the visibility of the tick labels.
+     * @return true if the ticks are visible.
      */
     public boolean isTickVisible() {
         return isTickVisible;
@@ -351,6 +368,7 @@ public class Axis {
 
     /**
      * Sets the label.
+     * @param label the label of the axis.
      */
     public void setLabel(String label) {
         if (label == null) {
@@ -387,6 +405,7 @@ public class Axis {
 
     /**
      * Returns the label of the axis.
+     * @return the label of the axis.
      */
     public String getLabel() {
         if (axisLabel == null) {
@@ -397,7 +416,8 @@ public class Axis {
     }
 
     /**
-     * Draw the axis.
+     * Draws the axis.
+     * @param g the renderer.
      */
     public void paint(Renderer g) {
         if (gridLines != null) {

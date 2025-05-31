@@ -87,14 +87,19 @@ public class Figure {
     private final SwingPropertyChangeSupport pcs = new SwingPropertyChangeSupport(this, true);
 
     /**
-     * Constructor
+     * Constructor.
+     * @param lowerBound the lower bound of base.
+     * @param upperBound the upper bound of base.
      */
     public Figure(double[] lowerBound, double[] upperBound) {
         this(lowerBound, upperBound, true);
     }
 
     /**
-     * Constructor
+     * Constructor.
+     * @param lowerBound the lower bound of base.
+     * @param upperBound the upper bound of base.
+     * @param extendBound true if extending the bounds for padding.
      */
     public Figure(double[] lowerBound, double[] upperBound, boolean extendBound) {
         initBase(lowerBound, upperBound, extendBound);
@@ -106,6 +111,7 @@ public class Figure {
      * be added more than once, and will be called as many times as it
      * is added. If listener is null, no exception is thrown and no
      * action is taken.
+     * @param listener a property change listener.
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
@@ -118,6 +124,7 @@ public class Figure {
      * event source, it will be notified one less time after being
      * removed. If listener is null, or was never added, no exception
      * is thrown and no action is taken.
+     * @param listener a property change listener.
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         pcs.removePropertyChangeListener(listener);
@@ -126,6 +133,7 @@ public class Figure {
     /**
      * Returns an array of all the listeners that were added to
      * the PropertyChangeSupport object with addPropertyChangeListener().
+     * @return the registered property change listeners.
      */
     public PropertyChangeListener[] getPropertyChangeListeners() {
         return pcs.getPropertyChangeListeners();
@@ -149,10 +157,11 @@ public class Figure {
     }
 
     /**
-     * Exports the plot to an image.
+     * Exports the figure to an image.
      *
      * @param width  the width of image.
      * @param height the height of image.
+     * @return the image of figure.
      */
     public BufferedImage toBufferedImage(int width, int height) {
         Renderer renderer = new Renderer(projection(width, height));
@@ -175,7 +184,7 @@ public class Figure {
     }
 
     /**
-     * Reset the grid (when the base changes).
+     * Resets the grid (when the base changes).
      */
     void resetAxis() {
         for (var ax : axes) {
@@ -185,6 +194,7 @@ public class Figure {
 
     /**
      * Returns true if legends are visible.
+     * @return true if legends are visible.
      */
     public boolean isLegendVisible() {
         return isLegendVisible;
@@ -192,6 +202,8 @@ public class Figure {
 
     /**
      * Sets if legends are visible.
+     * @param visible the flag if legends are visible.
+     * @return this object.
      */
     public Figure setLegendVisible(boolean visible) {
         isLegendVisible = visible;
@@ -213,6 +225,7 @@ public class Figure {
      * sides have the same margin size.
      *
      * @param margin the size of margin.
+     * @return this object.
      */
     public Figure setMargin(double margin) {
         if (margin < 0.0 || margin >= 0.3) {
@@ -226,14 +239,17 @@ public class Figure {
     }
 
     /**
-     * Returns the main title of canvas.
+     * Returns the main title of figure.
+     * @return the main title of figure.
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * Set the main title of canvas.
+     * Sets the main title of figure.
+     * @param title the main title of figure.
+     * @return this object.
      */
     public Figure setTitle(String title) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "title", this.title, title);
@@ -244,13 +260,16 @@ public class Figure {
 
     /**
      * Returns the font for title.
+     * @return the font for title.
      */
     public Font getTitleFont() {
         return titleFont;
     }
 
     /**
-     * Set the font for title.
+     * Sets the font for title.
+     * @param font the font for title.
+     * @return this object.
      */
     public Figure setTitleFont(Font font) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "titleFont", this.titleFont, font);
@@ -261,13 +280,16 @@ public class Figure {
 
     /**
      * Returns the color for title.
+     * @return the color for title.
      */
     public Color getTitleColor() {
         return titleColor;
     }
 
     /**
-     * Set the color for title.
+     * Sets the color for title.
+     * @param color the color for title.
+     * @return this object.
      */
     public Figure setTitleColor(Color color) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "titleColor", this.titleColor, color);
@@ -278,6 +300,8 @@ public class Figure {
 
     /**
      * Returns the i-<i>th</i> axis.
+     * @param i the index of axis.
+     * @return the i-<i>th</i> axis.
      */
     public Axis getAxis(int i) {
         return axes[i];
@@ -285,6 +309,7 @@ public class Figure {
 
     /**
      * Returns the labels/legends of axes.
+     * @return the labels/legends of axes.
      */
     public String[] getAxisLabels() {
         String[] labels = new String[base.dimension];
@@ -296,6 +321,8 @@ public class Figure {
 
     /**
      * Returns the label/legend of an axis.
+     * @param i the index of axis.
+     * @return the label/legend of an axis.
      */
     public String getAxisLabel(int i) {
         return axes[i].getLabel();
@@ -303,6 +330,8 @@ public class Figure {
 
     /**
      * Sets the labels/legends of axes.
+     * @param labels the labels/legends of axes.
+     * @return this object.
      */
     public Figure setAxisLabels(String... labels) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", getAxisLabels(), labels);
@@ -315,6 +344,9 @@ public class Figure {
 
     /**
      * Sets the label/legend of an axis.
+     * @param i the index of axis.
+     * @param label the label/legend of axes.
+     * @return this object.
      */
     public Figure setAxisLabel(int i, String label) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axes[i].getLabel(), label);
@@ -333,7 +365,8 @@ public class Figure {
     }
 
     /**
-     * Add a graphical shape to the canvas.
+     * Adds a graphical shape to the canvas.
+     * @param p the shape.
      */
     public void add(Shape p) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "addShape", this, p);
@@ -342,7 +375,8 @@ public class Figure {
     }
 
     /**
-     * Remove a graphical shape from the canvas.
+     * Removes a graphical shape from the canvas.
+     * @param p the shape.
      */
     public void remove(Shape p) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "removeShape", this, p);
@@ -351,7 +385,8 @@ public class Figure {
     }
 
     /**
-     * Add a graphical shape to the canvas.
+     * Adds a graphical shape to the canvas.
+     * @param p the plot.
      */
     public void add(Plot p) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "addPlot", this, p);
@@ -361,7 +396,8 @@ public class Figure {
     }
 
     /**
-     * Remove a graphical shape from the canvas.
+     * Removes a graphical shape from the canvas.
+     * @param p the plot.
      */
     public void remove(Plot p) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "removePlot", this, p);
@@ -370,7 +406,7 @@ public class Figure {
     }
 
     /**
-     * Remove all graphic plots from the canvas.
+     * Removes all graphic plots from the canvas.
      */
     public void clear() {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "clear", this, null);
@@ -380,6 +416,7 @@ public class Figure {
 
     /**
      * Returns the lower bounds.
+     * @return the lower bounds.
      */
     public double[] getLowerBounds() {
         return base.lowerBound;
@@ -387,13 +424,15 @@ public class Figure {
 
     /**
      * Returns the upper bounds.
+     * @return the upper bounds.
      */
     public double[] getUpperBounds() {
         return base.upperBound;
     }
 
     /**
-     * Extend lower bounds.
+     * Extends the lower bounds.
+     * @param bound the new lower bounds.
      */
     public void extendLowerBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendLowerBound", this, bound);
@@ -403,7 +442,8 @@ public class Figure {
     }
 
     /**
-     * Extend upper bounds.
+     * Extends the upper bounds.
+     * @param bound the new upper bounds.
      */
     public void extendUpperBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendUpperBound", this, bound);
@@ -413,7 +453,9 @@ public class Figure {
     }
 
     /**
-     * Extend lower and upper bounds.
+     * Extends the lower and upper bounds.
+     * @param lowerBound the new lower bounds.
+     * @param upperBound the new upper bounds.
      */
     public void extendBound(double[] lowerBound, double[] upperBound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendBound", this, new double[][]{lowerBound, upperBound});
@@ -423,7 +465,9 @@ public class Figure {
     }
 
     /**
-     * Extend lower and upper bounds.
+     * Sets the lower and upper bounds.
+     * @param lowerBound the new lower bounds.
+     * @param upperBound the new upper bounds.
      */
     public void setBound(double[] lowerBound, double[] upperBound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "setBound", this, new double[][]{lowerBound, upperBound});
@@ -433,7 +477,8 @@ public class Figure {
     }
 
     /**
-     * Paints the canvas.
+     * Paints the figure.
+     * @param renderer the renderer.
      */
     public void paint(Renderer renderer) {
         Graphics2D g2d = renderer.getGraphics();
@@ -492,8 +537,9 @@ public class Figure {
 
     /**
      * Shows the plot in a window.
-     *
      * @return a new JFrame that contains the plot.
+     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
+     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
     public JFrame show() throws InterruptedException, InvocationTargetException {
         var pane = new FigurePane(this);

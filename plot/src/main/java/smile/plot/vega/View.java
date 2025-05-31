@@ -43,6 +43,8 @@ public class View extends VegaLite {
     /**
      * Sets the width of a plot with a continuous x-field,
      * or the fixed width of a plot a discrete x-field or no x-field.
+     * @param width the width of plot.
+     * @return this object.
      */
     public View width(int width) {
         spec.put("width", width);
@@ -52,6 +54,8 @@ public class View extends VegaLite {
     /**
      * Sets the height of a plot with a continuous y-field,
      * or the fixed height of a plot a discrete y-field or no y-field.
+     * @param height the height of plot.
+     * @return this object.
      */
     public View height(int height) {
         spec.put("height", height);
@@ -61,6 +65,7 @@ public class View extends VegaLite {
     /**
      * To enable responsive sizing on width.
      * @param width it should be set to "container".
+     * @return this object.
      */
     public View width(String width) {
         assert "container".equals(width) : "Invalid width: " + width;
@@ -71,6 +76,7 @@ public class View extends VegaLite {
     /**
      * To enable responsive sizing on height.
      * @param height it should be set to "container".
+     * @return this object.
      */
     public View height(String height) {
         assert "container".equals(height) : "Invalid height: " + height;
@@ -80,6 +86,8 @@ public class View extends VegaLite {
 
     /**
      * For a discrete x-field, sets the width per discrete step.
+     * @param step the width per discrete step.
+     * @return this object.
      */
     public View widthStep(int step) {
         ObjectNode width = spec.putObject("width");
@@ -89,6 +97,8 @@ public class View extends VegaLite {
 
     /**
      * For a discrete y-field, sets the height per discrete step.
+     * @param step the height per discrete step.
+     * @return this object.
      */
     public View heightStep(int step) {
         ObjectNode height = spec.putObject("height");
@@ -112,6 +122,7 @@ public class View extends VegaLite {
 
     /**
      * Returns the view background's fill and stroke object.
+     * @return the view background.
      */
     public Background background() {
         return new Background(spec.has("view") ? (ObjectNode) spec.get("view") : spec.putObject("view"));
@@ -122,6 +133,7 @@ public class View extends VegaLite {
      * applied to shape path for "geoshape" marks and to latitude and
      * "longitude" channels for other marks.
      * @param type The cartographic projection to use.
+     * @return the geographic projection.
      * @see <a href="https://vega.github.io/vega-lite/docs/projection.html#projection-types">projection types</a>
      */
     public Projection projection(String type) {

@@ -385,6 +385,7 @@ public class Field {
      * null - No-stacking. This will produce layered bar and area chart.
      *
      * @param type "zero", "normalize", "center", or null.
+     * @return this object.
      */
     public Field stack(String type) {
         spec.put("stack", type);
@@ -420,7 +421,10 @@ public class Field {
         return new Legend(node);
     }
 
-    /** Removes the legend for the encoding channel will be removed. */
+    /**
+     * Removes the legend for the encoding channel will be removed.
+     * @return this object.
+     */
     public Field removeLegend() {
         spec.putNull("legend");
         return this;

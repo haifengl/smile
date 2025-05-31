@@ -36,6 +36,8 @@ public class Legend {
 
     /**
      * Constructor.
+     * @param text the legend label.
+     * @param color the color of legend.
      */
     public Legend(String text, Color color) {
         this.text = text;

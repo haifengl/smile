@@ -77,6 +77,8 @@ public class Point extends Shape {
 
     /**
      * Creates a Point with circle mark and black color.
+     * @param points the points.
+     * @return the point shape.
      */
     public static Point of (double[][] points) {
         return new Point(points, 'o', Color.BLACK);
@@ -84,6 +86,9 @@ public class Point extends Shape {
 
     /**
      * Creates a Point with circle mark.
+     * @param points the points.
+     * @param color the point color.
+     * @return the point shape.
      */
     public static Point of (double[][] points, Color color) {
         return new Point(points, 'o', color);
@@ -91,6 +96,9 @@ public class Point extends Shape {
 
     /**
      * Creates a Point with black color.
+     * @param points the points.
+     * @param mark the point mark.
+     * @return the point shape.
      */
     public static Point of (double[][] points, char mark) {
         return new Point(points, mark, Color.BLACK);

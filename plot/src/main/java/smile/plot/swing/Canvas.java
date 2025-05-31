@@ -350,6 +350,7 @@ public class Canvas extends JComponent implements ComponentListener,
     private transient final Action increaseWidthAction = new IncreaseWidthAction();
     private transient final Action decreaseHeightAction = new DecreaseHeightAction();
     private transient final Action decreaseWidthAction = new DecreaseWidthAction();
+    /** The parent scroll pane. */
     private JScrollPane scrollPane;
 
     /**

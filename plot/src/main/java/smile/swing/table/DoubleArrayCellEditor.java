@@ -40,8 +40,8 @@ import smile.swing.text.FloatArrayFormatter;
 @SuppressWarnings("serial")
 public class DoubleArrayCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleArrayCellEditor.class);
-
-    final JFormattedTextField textField;
+    /** The text field. */
+    private final JFormattedTextField textField;
 
     /**
      * Constructor.

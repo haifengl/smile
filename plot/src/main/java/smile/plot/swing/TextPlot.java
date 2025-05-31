@@ -32,6 +32,7 @@ public class TextPlot extends Plot {
 
     /**
      * Constructor.
+     * @param texts the text labels.
      */
     public TextPlot(Label... texts) {
         this.texts = texts;
@@ -80,6 +81,7 @@ public class TextPlot extends Plot {
      * Create a text plot.
      * @param texts the texts.
      * @param coordinates an n-by-2 or n-by-3 matrix that are the coordinates of texts.
+     * @return the plot.
      */
     public static TextPlot of(String[] texts, double[][] coordinates) {
         if (texts.length != coordinates.length) {

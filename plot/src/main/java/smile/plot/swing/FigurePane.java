@@ -58,6 +58,8 @@ public class FigurePane extends JPanel {
     /**
      * Shows the figure in a window.
      * @return a new JFrame that contains the figure.
+     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
+     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
     public JFrame window() throws InterruptedException, InvocationTargetException {
         return canvas.window();

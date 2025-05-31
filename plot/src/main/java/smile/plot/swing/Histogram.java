@@ -28,14 +28,15 @@ import java.awt.Color;
  * 
  * @author Haifeng Li
  */
-public class Histogram {
+public interface Histogram {
     /**
      * Creates a histogram plot.
      * The number of bins will be determined by square-root rule
      * and the y-axis will be in the probability scale.
      * @param data a sample set.
+     * @return the histogram plot.
      */
-    public static BarPlot of(int[] data) {
+    static BarPlot of(int[] data) {
         return of(data, smile.math.Histogram.bins(data.length), true);
     }
 
@@ -45,8 +46,9 @@ public class Histogram {
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @return the histogram plot.
      */
-    public static BarPlot of(int[] data, int k, boolean prob) {
+    static BarPlot of(int[] data, int k, boolean prob) {
         return of(data, k, prob, Color.BLUE);
     }
 
@@ -56,8 +58,10 @@ public class Histogram {
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @param color the color of bars.
+     * @return the histogram plot.
      */
-    public static BarPlot of(int[] data, int k, boolean prob, Color color) {
+    static BarPlot of(int[] data, int k, boolean prob, Color color) {
         double[][] hist = smile.math.Histogram.of(data, k);
 
         // The number of bins may be extended to cover all data.
@@ -85,8 +89,9 @@ public class Histogram {
      * histogram cells. Must be in ascending order.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @return the histogram plot.
      */
-    public static BarPlot of(int[] data, double[] breaks, boolean prob) {
+    static BarPlot of(int[] data, double[] breaks, boolean prob) {
         return of(data, breaks, prob, Color.BLUE);
     }
 
@@ -97,8 +102,10 @@ public class Histogram {
      * histogram cells. Must be in ascending order.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @param color the color of bars.
+     * @return the histogram plot.
      */
-    public static BarPlot of(int[] data, double[] breaks, boolean prob, Color color) {
+    static BarPlot of(int[] data, double[] breaks, boolean prob, Color color) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -127,8 +134,9 @@ public class Histogram {
      * The number of bins will be determined by square-root rule
      * and the y-axis will be in the probability scale.
      * @param data a sample set.
+     * @return the histogram plot.
      */
-    public static BarPlot of(double[] data) {
+    static BarPlot of(double[] data) {
         return of(data, smile.math.Histogram.bins(data.length), true, Color.BLUE);
     }
 
@@ -138,8 +146,9 @@ public class Histogram {
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @return the histogram plot.
      */
-    public static BarPlot of(double[] data, int k, boolean prob) {
+    static BarPlot of(double[] data, int k, boolean prob) {
         return of(data, k, prob, Color.BLUE);
     }
 
@@ -149,8 +158,10 @@ public class Histogram {
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @param color the color of bars.
+     * @return the histogram plot.
      */
-    public static BarPlot of(double[] data, int k, boolean prob, Color color) {
+    static BarPlot of(double[] data, int k, boolean prob, Color color) {
         double[][] hist = smile.math.Histogram.of(data, k);
 
         // The number of bins may be extended to cover all data.
@@ -178,8 +189,9 @@ public class Histogram {
      * histogram cells. Must be in ascending order.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @return the histogram plot.
      */
-    public static BarPlot of(double[] data, double[] breaks, boolean prob) {
+    static BarPlot of(double[] data, double[] breaks, boolean prob) {
         return of(data, breaks, prob, Color.BLUE);
     }
 
@@ -190,8 +202,10 @@ public class Histogram {
      * histogram cells. Must be in ascending order.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
+     * @param color the color of bars.
+     * @return the histogram plot.
      */
-    public static BarPlot of(double[] data, double[] breaks, boolean prob, Color color) {
+    static BarPlot of(double[] data, double[] breaks, boolean prob, Color color) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);

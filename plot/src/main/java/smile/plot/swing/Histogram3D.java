@@ -353,6 +353,7 @@ public class Histogram3D extends Plot {
     /**
      * Creates a 3D histogram plot.
      * @param data a sample set.
+     * @return the histogram plot.
      */
     public static Histogram3D of(double[][] data) {
         return of(data, 10, true);
@@ -363,6 +364,7 @@ public class Histogram3D extends Plot {
      * @param data a sample set.
      * @param nbins the number of bins.
      * @param palette the color palette.
+     * @return the histogram plot.
      */
     public static Histogram3D of(double[][] data, int nbins, Color[] palette) {
         return new Histogram3D(data, nbins, nbins, true, palette);
@@ -374,6 +376,7 @@ public class Histogram3D extends Plot {
      * @param nbins the number of bins.
      * @param prob if true, the z-axis will be in the probability scale.
      * Otherwise, z-axis will be in the frequency scale.
+     * @return the histogram plot.
      */
     public static Histogram3D of(double[][] data, int nbins, boolean prob) {
         return new Histogram3D(data, nbins, nbins, prob, null);
@@ -386,6 +389,7 @@ public class Histogram3D extends Plot {
      * @param prob if true, the z-axis will be in the probability scale.
      * Otherwise, z-axis will be in the frequency scale.
      * @param palette the color palette.
+     * @return the histogram plot.
      */
     public static Histogram3D of(double[][] data, int nbins, boolean prob, Color[] palette) {
         return new Histogram3D(data, nbins, nbins, prob, palette);
