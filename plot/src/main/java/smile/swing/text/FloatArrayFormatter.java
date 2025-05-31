@@ -25,6 +25,11 @@ import java.text.ParseException;
  * @author Haifeng Li
  */
 public class FloatArrayFormatter extends DefaultFormatter {
+    /** Constructor. */
+    public FloatArrayFormatter() {
+
+    }
+
     @Override
     public Object stringToValue(String string) throws ParseException {
         string = string.trim();

@@ -39,6 +39,7 @@ public class StaircasePlot extends Plot {
 
     /**
      * Constructor.
+     * @param lines the staircase lines.
      */
     public StaircasePlot(Staircase... lines) {
         this(lines, null);
@@ -46,6 +47,8 @@ public class StaircasePlot extends Plot {
 
     /**
      * Constructor.
+     * @param lines the staircase lines.
+     * @param legends the line legends.
      */
     public StaircasePlot(Staircase[] lines, Legend[] legends) {
         this.lines = lines;
@@ -106,6 +109,8 @@ public class StaircasePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the point coordinates.
+     * @return the plot.
      */
     public static StaircasePlot of(double[][] data) {
         return new StaircasePlot(Staircase.of(data));
@@ -114,6 +119,10 @@ public class StaircasePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the point coordinates.
+     * @param color the line color.
+     * @param label the legend label.
+     * @return the plot.
      */
     public static StaircasePlot of(double[][] data, Color color, String label) {
         Staircase[] line = {new Staircase(data, color)};

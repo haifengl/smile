@@ -39,13 +39,13 @@ import javax.swing.text.NumberFormatter;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class DoubleCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DoubleCellEditor.class);
     private static final DoubleCellEditor instance = new DoubleCellEditor();
-
-    final JFormattedTextField textField;
-    final NumberFormat doubleFormat;
+    /** The text field. */
+    private final JFormattedTextField textField;
+    /** The number format. */
+    private final NumberFormat doubleFormat;
 
     /**
      * Constructor.
@@ -101,6 +101,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
 
     /**
      * Returns the default instance.
+     * @return the default instance.
      */
     public static DoubleCellEditor getInstance() {
         return instance;

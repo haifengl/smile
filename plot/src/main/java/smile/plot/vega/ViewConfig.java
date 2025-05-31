@@ -29,6 +29,7 @@ public class ViewConfig {
 
     /**
      * Hides the constructor so that users cannot create the instances directly.
+     * @param spec the specification object.
      */
     ViewConfig(ObjectNode spec) {
         this.spec = spec;
@@ -50,6 +51,8 @@ public class ViewConfig {
     /**
      * Sets the default width when the plot has a continuous field
      * for x or longitude, or has arc marks.
+     * @param width the width.
+     * @return this object.
      */
     public ViewConfig continuousWidth(int width) {
         spec.put("continuousWidth", width);
@@ -59,6 +62,8 @@ public class ViewConfig {
     /**
      * Sets the default height when the plot has a continuous field
      * for y or latitude, or has arc marks.
+     * @param height the width.
+     * @return this object.
      */
     public ViewConfig continuousHeight(int height) {
         spec.put("continuousHeight", height);
@@ -68,6 +73,8 @@ public class ViewConfig {
     /**
      * Sets the default width when the plot has non-arc marks
      * and either a discrete x-field or no x-field.
+     * @param width the width.
+     * @return this object.
      */
     public ViewConfig discreteWidth(int width) {
         spec.put("discreteWidth", width);
@@ -77,6 +84,8 @@ public class ViewConfig {
     /**
      * Sets the default height when the plot has non arc marks
      * and either a discrete y-field or no y-field.
+     * @param height the width.
+     * @return this object.
      */
     public ViewConfig discreteHeight(int height) {
         spec.put("discreteHeight", height);
@@ -85,6 +94,8 @@ public class ViewConfig {
 
     /**
      * Sets the default step size for x-/y- discrete fields.
+     * @param step the step size.
+     * @return this object.
      */
     public ViewConfig step(int step) {
         spec.put("step", step);

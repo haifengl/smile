@@ -39,12 +39,12 @@ import javax.swing.text.NumberFormatter;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class IntegerCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IntegerCellEditor.class);
-
-    final JFormattedTextField textField;
-    final NumberFormat integerFormat;
+    /** The text field. */
+    private final JFormattedTextField textField;
+    /** The number format. */
+    private final NumberFormat integerFormat;
 
     /**
      * Constructor.

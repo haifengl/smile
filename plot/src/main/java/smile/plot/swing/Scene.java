@@ -181,6 +181,7 @@ public interface Scene extends Printable {
 
     /**
      * Exports the scene to an image.
+     * @return the image of scene.
      */
     default Image toImage() {
         JComponent c = content();
@@ -200,6 +201,8 @@ public interface Scene extends Printable {
     /**
      * Shows the scene in a window.
      * @return a new JFrame that contains the scene.
+     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
+     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
     default JFrame window() throws InterruptedException, InvocationTargetException {
         JFrame frame = new JFrame();

@@ -107,6 +107,7 @@ public class Dendrogram extends Plot {
 
     /**
      * Returns the height of tree.
+     * @return the height of tree.
      */
     public double getHeight() {
         return height;

@@ -37,6 +37,7 @@ public class BarPlot extends Plot {
 
     /**
      * Constructor.
+     * @param bars the bar shapes.
      */
     public BarPlot(Bar... bars) {
         this(bars, null);
@@ -44,6 +45,8 @@ public class BarPlot extends Plot {
 
     /**
      * Constructor.
+     * @param bars the bar shapes.
+     * @param legends the legends of bars.
      */
     public BarPlot(Bar[] bars, Legend[] legends) {
         this.bars = bars;
@@ -110,6 +113,8 @@ public class BarPlot extends Plot {
 
     /**
      * Creates a bar plot.
+     * @param data the data.
+     * @return a bar plot.
      */
     public static BarPlot of(double[] data) {
         return new BarPlot(Bar.of(data));
@@ -117,6 +122,8 @@ public class BarPlot extends Plot {
 
     /**
      * Creates a bar plot.
+     * @param data the data.
+     * @return a bar plot.
      */
     public static BarPlot of(int[] data) {
         return new BarPlot(Bar.of(data));
@@ -126,6 +133,7 @@ public class BarPlot extends Plot {
      * Creates a bar plot of multiple groups/colors.
      * @param data each row is a data set of bars (bar height).
      * @param labels the group label of data points.
+     * @return a bar plot.
      */
     public static BarPlot of(double[][] data, String[] labels) {
         if (data.length != labels.length) {

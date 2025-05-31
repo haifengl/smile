@@ -104,7 +104,9 @@ public class Bar extends Shape {
     }
 
     /**
-     * Creates a bar plot.
+     * Creates a bar shape.
+     * @param x the bar data.
+     * @return a bar shape.
      */
     public static Bar of(int[] x) {
         double[][] data = new double[x.length][2];
@@ -117,7 +119,9 @@ public class Bar extends Shape {
     }
 
     /**
-     * Creates a bar plot.
+     * Creates a bar shape.
+     * @param x the bar data.
+     * @return a bar shape.
      */
     public static Bar of(double[] x) {
         double[][] data = new double[x.length][2];

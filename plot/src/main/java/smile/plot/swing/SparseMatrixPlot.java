@@ -32,7 +32,7 @@ public class SparseMatrixPlot extends Plot {
     /**
      * The sparse matrix.
      */
-    private final SparseMatrix sparse;
+    private final SparseMatrix matrix;
     /**
      * The x coordinate of matrix entries.
      */
@@ -60,13 +60,15 @@ public class SparseMatrixPlot extends Plot {
 
     /**
      * Constructor.
+     * @param matrix the sparse matrix.
+     * @param color the color of plot.
      */
-    public SparseMatrixPlot(SparseMatrix sparse, Color color) {
+    public SparseMatrixPlot(SparseMatrix matrix, Color color) {
         super(color);
-        this.sparse = sparse;
+        this.matrix = matrix;
 
-        int m = sparse.nrow();
-        int n = sparse.ncol();
+        int m = matrix.nrow();
+        int n = matrix.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -80,14 +82,15 @@ public class SparseMatrixPlot extends Plot {
 
     /**
      * Constructor.
+     * @param matrix the sparse matrix.
      * @param palette the color palette.
      */
-    public SparseMatrixPlot(SparseMatrix sparse, Color[] palette) {
-        this.sparse = sparse;
+    public SparseMatrixPlot(SparseMatrix matrix, Color[] palette) {
+        this.matrix = matrix;
         this.palette = palette;
 
-        int m = sparse.nrow();
-        int n = sparse.ncol();
+        int m = matrix.nrow();
+        int n = matrix.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -100,7 +103,7 @@ public class SparseMatrixPlot extends Plot {
 
         // In case of outliers, we use 1% and 99% quantiles as lower and
         // upper limits instead of min and max.
-        double[] values = sparse.nonzeros().mapToDouble(e -> e.x).filter(x -> !Double.isNaN(x)).toArray();
+        double[] values = matrix.nonzeros().mapToDouble(e -> e.x).filter(x -> !Double.isNaN(x)).toArray();
 
         if (values.length == 0) {
             throw new IllegalArgumentException("Sparse matrix has no non-zero values");
@@ -119,7 +122,7 @@ public class SparseMatrixPlot extends Plot {
 
     @Override
     public double[] getUpperBound() {
-        return new double[]{sparse.ncol(), sparse.nrow()};
+        return new double[]{matrix.ncol(), matrix.nrow()};
     }
 
     @Override
@@ -128,7 +131,7 @@ public class SparseMatrixPlot extends Plot {
         double[] end = new double[2];
 
         g.setColor(color);
-        for (SparseMatrix.Entry cell : sparse) {
+        for (SparseMatrix.Entry cell : matrix) {
             int i = cell.i;
             int j = cell.j;
             double z = cell.x;
@@ -213,7 +216,7 @@ public class SparseMatrixPlot extends Plot {
     @Override
     public Figure figure() {
         double[] lowerBound = {0, 0};
-        double[] upperBound = {sparse.ncol(), sparse.nrow()};
+        double[] upperBound = {matrix.ncol(), matrix.nrow()};
         Figure canvas = new Figure(lowerBound, upperBound, false);
         canvas.add(this);
 
@@ -227,16 +230,20 @@ public class SparseMatrixPlot extends Plot {
 
     /**
      * Creates a sparse matrix plot with blue color for nonzero entries.
+     * @param matrix the sparse matrix.
+     * @return the plot.
      */
-    public static SparseMatrixPlot of(SparseMatrix sparse) {
-        return new SparseMatrixPlot(sparse, Color.BLUE);
+    public static SparseMatrixPlot of(SparseMatrix matrix) {
+        return new SparseMatrixPlot(matrix, Color.BLUE);
     }
 
     /**
      * Creates a sparse matrix plot with the jet color palette.
+     * @param matrix the sparse matrix.
      * @param k the number of colors in the palette.
+     * @return the plot.
      */
-    public static SparseMatrixPlot of(SparseMatrix sparse, int k) {
-        return new SparseMatrixPlot(sparse, Palette.jet(k, 1.0f));
+    public static SparseMatrixPlot of(SparseMatrix matrix, int k) {
+        return new SparseMatrixPlot(matrix, Palette.jet(k, 1.0f));
     }
 }

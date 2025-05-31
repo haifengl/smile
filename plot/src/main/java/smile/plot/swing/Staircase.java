@@ -70,6 +70,8 @@ public class Staircase extends Shape {
 
     /**
      * Creates a Staircase with solid stroke and black color.
+     * @param points the points.
+     * @return the plot.
      */
     public static Staircase of(double[][] points) {
         return new Staircase(points, Color.BLACK);
