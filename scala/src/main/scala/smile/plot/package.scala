@@ -16,7 +16,7 @@
  */
 package smile
 
-import smile.plot.swing.{Canvas, PlotGrid}
+import smile.plot.swing.Canvas
 import smile.plot.vega.VegaLite
 
 /** Data visualization.
@@ -27,11 +27,6 @@ package object plot {
   /** Shows a plot canvas with implicit renderer. */
   def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
     renderer(canvas)
-  }
-
-  /** Shows a plot grid with implicit renderer. */
-  def show(grid: PlotGrid)(implicit renderer: PlotGrid => Unit): Unit = {
-    renderer(grid)
   }
 
   /** Shows a vega-lite plot with implicit renderer. */
