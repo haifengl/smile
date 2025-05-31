@@ -51,7 +51,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(x: Array[Array[Double]], mark: Char = '*', color: Color = Color.BLACK): Canvas = {
-    ScatterPlot.of(x, mark, color).canvas
+    new Canvas(ScatterPlot.of(x, mark, color).figure())
   }
 
   /** Scatter plot.
@@ -62,7 +62,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(x: Array[Array[Double]], y: Array[String], mark: Char): Canvas = {
-    ScatterPlot.of(x, y, mark).canvas
+    new Canvas(ScatterPlot.of(x, y, mark).figure())
   }
 
   /** Scatter plot.
@@ -73,7 +73,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(x: Array[Array[Double]], y: Array[Int], mark: Char): Canvas = {
-    ScatterPlot.of(x, y, mark).canvas
+    new Canvas(ScatterPlot.of(x, y, mark).figure())
   }
 
   /** Scatter plot.
@@ -84,9 +84,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, mark: Char, color: Color): Canvas = {
-    val canvas = ScatterPlot.of(data, x, y, mark, color).canvas
-    canvas.setAxisLabels(x, y)
-    canvas
+    val figure = ScatterPlot.of(data, x, y, mark, color).figure()
+    figure.setAxisLabels(x, y)
+    new Canvas(figure)
   }
 
   /** Scatter plot.
@@ -98,9 +98,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, category: String, mark: Char): Canvas = {
-    val canvas = ScatterPlot.of(data, x, y, category, mark).canvas
-    canvas.setAxisLabels(x, y)
-    canvas
+    val figure = ScatterPlot.of(data, x, y, category, mark).figure()
+    figure.setAxisLabels(x, y)
+    new Canvas(figure)
   }
 
   /** Scatter plot.
@@ -112,9 +112,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, z: String, mark: Char, color: Color): Canvas = {
-    val canvas = ScatterPlot.of(data, x, y, z, mark, color).canvas
-    canvas.setAxisLabels(x, y, z)
-    canvas
+    val figure = ScatterPlot.of(data, x, y, z, mark, color).figure()
+    figure.setAxisLabels(x, y, z)
+    new Canvas(figure)
   }
 
   /** Scatter plot.
@@ -127,9 +127,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, z: String, category: String, mark: Char): Canvas = {
-    val canvas = ScatterPlot.of(data, x, y, z, category, mark).canvas
-    canvas.setAxisLabels(x, y, z)
-    canvas
+    val figure = ScatterPlot.of(data, x, y, z, category, mark).figure()
+    figure.setAxisLabels(x, y, z)
+    new Canvas(figure)
   }
 
   /** Scatterplot Matrix (SPLOM).
@@ -138,8 +138,8 @@ package object swing {
     * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def splom(data: DataFrame, mark: Char, color: Color): PlotGrid = {
-    PlotGrid.splom(data, mark, color)
+  def splom(data: DataFrame, mark: Char, color: Color): MultiFigurePane = {
+    MultiFigurePane.splom(data, mark, color)
   }
 
   /** Scatterplot Matrix (SPLOM).
@@ -149,8 +149,8 @@ package object swing {
     * @param category the category column for coloring.
     * @return the plot panel.
     */
-  def splom(data: DataFrame, mark: Char, category: String): PlotGrid = {
-    PlotGrid.splom(data, mark, category)
+  def splom(data: DataFrame, mark: Char, category: String): MultiFigurePane = {
+    MultiFigurePane.splom(data, mark, category)
   }
 
   /**
@@ -159,7 +159,9 @@ package object swing {
     * @param texts       the texts.
     * @param coordinates a n-by-2 or n-by-3 matrix that are the coordinates of texts.
     */
-  def text(texts: Array[String], coordinates: Array[Array[Double]]): Canvas = TextPlot.of(texts, coordinates).canvas
+  def text(texts: Array[String], coordinates: Array[Array[Double]]): Canvas = {
+    new Canvas(TextPlot.of(texts, coordinates).figure())
+  }
 
   /** Line plot.
     *
@@ -172,20 +174,21 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas = {
-    if (label == null) {
-      new LinePlot(new Line(data, style, mark, color)).canvas
+    val figure = if (label == null) {
+      new LinePlot(new Line(data, style, mark, color)).figure()
     } else {
       val lines = Array(new Line(data, style, mark, color))
       val legends = Array(new Legend(label, color))
-      new LinePlot(lines, legends).canvas
+      new LinePlot(lines, legends).figure()
     }
+    new Canvas(figure)
   }
 
   /** Create a plot canvas with the staircase line plot.
     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
     */
   def staircase(data: Array[Array[Double]], color: Color = Color.BLACK, label: String = null): Canvas = {
-    StaircasePlot.of(data, color, label).canvas
+    new Canvas(StaircasePlot.of(data, color, label).figure())
   }
 
   /** A box plot is a convenient way of graphically depicting groups of numerical
@@ -224,7 +227,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def boxplot(data: Array[Double]*): Canvas = {
-    BoxPlot.of(data*).canvas
+    new Canvas(BoxPlot.of(data*).figure())
   }
 
   /** Box plot.
@@ -235,7 +238,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def boxplot(data: Array[Array[Double]], labels: Array[String]): Canvas = {
-    new BoxPlot(data, labels).canvas()
+    new Canvas(new BoxPlot(data, labels).figure())
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -249,7 +252,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def contour(z: Array[Array[Double]]): Canvas = {
-    Contour.of(z).canvas
+    new Canvas(Contour.of(z).figure())
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -264,7 +267,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def contour(z: Array[Array[Double]], levels: Array[Double]): Canvas = {
-    new Contour(z, levels).canvas
+    new Canvas(new Contour(z, levels).figure())
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -280,7 +283,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Canvas = {
-    Contour.of(x, y, z).canvas
+    new Canvas(Contour.of(x, y, z).figure())
   }
 
   /** 3D surface plot.
@@ -291,7 +294,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
-    Surface.of(z, palette).canvas
+    new Canvas(Surface.of(z, palette).figure())
   }
 
   /** 3D surface plot.
@@ -304,7 +307,7 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
-    Surface.of(x, y, z, palette).canvas
+    new Canvas(Surface.of(x, y, z, palette).figure())
   }
 
   /** Wire frame plot.
@@ -317,7 +320,7 @@ package object swing {
     *              end points of each edge.
     */
   def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Canvas = {
-    Wireframe.of(vertices, edges).canvas
+    new Canvas(Wireframe.of(vertices, edges).figure())
   }
 
   /** 2D grid plot.
@@ -325,7 +328,7 @@ package object swing {
     * @param data an m x n x 2 array which are coordinates of m x n grid.
     */
   def grid(data: Array[Array[Array[Double]]]): Canvas = {
-    Grid.of(data).canvas
+    new Canvas(Grid.of(data).figure())
   }
 
   /** Pseudo heat map plot.
@@ -333,7 +336,7 @@ package object swing {
     * @param palette the color palette.
     */
   def heatmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
-    Heatmap.of(z, palette).canvas
+    new Canvas(Heatmap.of(z, palette).figure())
   }
 
   /** Pseudo heat map plot.
@@ -343,7 +346,7 @@ package object swing {
     * @param palette the color palette.
     */
   def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
-    new Heatmap(x, y, z, palette).canvas
+    new Canvas(new Heatmap(x, y, z, palette).figure())
   }
 
   /** Pseudo heat map plot.
@@ -353,17 +356,18 @@ package object swing {
     * @param palette the color palette.
     */
   def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
-    new Heatmap(rowLabels, columnLabels, z, palette).canvas
+    new Canvas(new Heatmap(rowLabels, columnLabels, z, palette).figure())
   }
 
   /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
   def spy(matrix: SparseMatrix, k: Int = 1): Canvas = {
-    if (k <= 1)
-      SparseMatrixPlot.of(matrix).canvas
+    val figure = if (k <= 1)
+      SparseMatrixPlot.of(matrix).figure()
     else
-      SparseMatrixPlot.of(matrix, k).canvas
+      SparseMatrixPlot.of(matrix, k).figure()
+    new Canvas(figure)
   }
 
   /** Heat map with hex shape.
@@ -371,7 +375,7 @@ package object swing {
     * @param palette the color palette.
     */
   def hexmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
-    Hexmap.of(z, palette).canvas
+    new Canvas(Hexmap.of(z, palette).figure())
   }
 
   /** Histogram plot.
@@ -379,7 +383,7 @@ package object swing {
     * @param k the number of bins.
     */
   def hist(data: Array[Double], k: Int = 10, prob: Boolean = false, color: Color = Color.BLUE): Canvas = {
-    Histogram.of(data, k, prob, color).canvas
+    new Canvas(Histogram.of(data, k, prob, color).figure())
   }
 
   /** Histogram plot.
@@ -388,7 +392,7 @@ package object swing {
     *               histogram cells. Must be in ascending order.
     */
   def hist(data: Array[Double], breaks: Array[Double], prob: Boolean, color: Color): Canvas = {
-    Histogram.of(data, breaks, prob, color).canvas
+    new Canvas(Histogram.of(data, breaks, prob, color).figure())
   }
 
   /** 3D histogram plot.
@@ -397,7 +401,7 @@ package object swing {
     * @param ybins the number of bins on y-axis.
     */
   def hist3(data: Array[Array[Double]], xbins: Int = 10, ybins: Int = 10, prob: Boolean = false, palette: Array[Color] = Palette.jet(16)): Canvas = {
-    new Histogram3D(data, xbins, ybins, prob, palette).canvas
+    new Canvas(new Histogram3D(data, xbins, ybins, prob, palette).figure())
   }
 
   /** QQ plot of samples to standard normal distribution.
@@ -406,7 +410,7 @@ package object swing {
     * @param x a sample set.
     */
   def qqplot(x: Array[Double]): Canvas = {
-    QQPlot.of(x).canvas
+    new Canvas(QQPlot.of(x).figure())
   }
 
   /** QQ plot of samples to given distribution.
@@ -416,7 +420,7 @@ package object swing {
     * @param d a distribution.
     */
   def qqplot(x: Array[Double], d: Distribution): Canvas = {
-    QQPlot.of(x, d).canvas
+    new Canvas(QQPlot.of(x, d).figure())
   }
 
   /** QQ plot of two sample sets.
@@ -425,7 +429,7 @@ package object swing {
     * @param y a sample set.
     */
   def qqplot(x: Array[Double], y: Array[Double]): Canvas = {
-    QQPlot.of(x, y).canvas
+    new Canvas(QQPlot.of(x, y).figure())
   }
 
   /** QQ plot of samples to given distribution.
@@ -435,7 +439,7 @@ package object swing {
     * @param d a distribution.
     */
   def qqplot(x: Array[Int], d: DiscreteDistribution): Canvas = {
-    QQPlot.of(x, d).canvas
+    new Canvas(QQPlot.of(x, d).figure())
   }
 
   /** QQ plot of two sample sets.
@@ -444,7 +448,7 @@ package object swing {
     * @param y a sample set.
     */
   def qqplot(x: Array[Int], y: Array[Int]): Canvas = {
-    QQPlot.of(x, y).canvas
+    new Canvas(QQPlot.of(x, y).figure())
   }
 
   /** The scree plot is a useful visual aid for determining an appropriate number of principal components.
@@ -455,7 +459,7 @@ package object swing {
     * @param varianceProportion The proportion of variance contained in each principal component.
     */
   def screeplot(varianceProportion: Array[Double]): Canvas = {
-    new ScreePlot(varianceProportion).canvas
+    new Canvas(new ScreePlot(varianceProportion).figure())
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement
@@ -464,7 +468,7 @@ package object swing {
     * @param hc hierarchical clustering object.
     */
   def dendrogram(hc: HierarchicalClustering): Canvas = {
-    new Dendrogram(hc.tree, hc.height).canvas
+    new Canvas(new Dendrogram(hc.tree, hc.height).figure())
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement
@@ -479,6 +483,6 @@ package object swing {
     *               for the particular agglomeration.
     */
   def dendrogram(merge: Array[Array[Int]], height: Array[Double]): Canvas = {
-    new Dendrogram(merge, height).canvas
+    new Canvas(new Dendrogram(merge, height).figure())
   }
 }

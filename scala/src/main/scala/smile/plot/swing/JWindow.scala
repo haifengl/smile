@@ -33,7 +33,7 @@ trait JWindow {
 case class CanvasWindow(override val frame: JFrame, canvas: Canvas) extends JWindow
 
 /** Plot grid window. */
-case class PlotGridWindow(override val frame: JFrame, canvas: PlotGrid) extends JWindow
+case class MultiFigureWindow(override val frame: JFrame, canvas: MultiFigurePane) extends JWindow
 
 object JWindow {
   /** Opens a plot window. */
@@ -42,7 +42,7 @@ object JWindow {
   }
 
   /** Opens a plot grid window. */
-  def apply(canvas: PlotGrid): PlotGridWindow = {
-    PlotGridWindow(canvas.window, canvas)
+  def apply(canvas: MultiFigurePane): MultiFigureWindow = {
+    MultiFigureWindow(canvas.window, canvas)
   }
 }
