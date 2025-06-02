@@ -54,13 +54,13 @@ class RenderMacro(val c: whitebox.Context) {
   }
 
   /** Materialize the plot grid renderer. */
-  def renderPlotGrid: Tree = {
+  def renderMultiFigurePane: Tree = {
     val possibilities: Try[Tree] =
-      compile(q"""(grid: PlotGrid) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.Html.of(grid))) }""") orElse
-        compile(q"""(grid: PlotGrid) => { publish.html(smile.plot.swing.Html.of(grid)) }""") orElse
-        compile(q"""(grid: PlotGrid) => { display.html(smile.plot.swing.Html.of(grid)) }""") orElse
-        compile(q"""(grid: PlotGrid) => { kernel.display.content("text/html", smile.plot.swing.Html.of(grid)) }""") orElse
-        compile(q"""(grid: PlotGrid) => { smile.plot.Render.desktop(grid) }""")
+      compile(q"""(grid: MultiFigurePane) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.Html.of(grid))) }""") orElse
+        compile(q"""(grid: MultiFigurePane) => { publish.html(smile.plot.swing.Html.of(grid)) }""") orElse
+        compile(q"""(grid: MultiFigurePane) => { display.html(smile.plot.swing.Html.of(grid)) }""") orElse
+        compile(q"""(grid: MultiFigurePane) => { kernel.display.content("text/html", smile.plot.swing.Html.of(grid)) }""") orElse
+        compile(q"""(grid: MultiFigurePane) => { smile.plot.Render.desktop(grid) }""")
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default PlotGrid renderer could be materialized"))
   }
@@ -69,4 +69,5 @@ class RenderMacro(val c: whitebox.Context) {
 object RenderMacro {
   implicit def renderVegaMacro: VegaLite => Unit = macro RenderMacro.renderVega
   implicit def renderCanvasMacro: Canvas => Unit = macro RenderMacro.renderCanvas
+  implicit def renderMultiFigureMacro: Canvas => Unit = macro RenderMacro.renderMultiFigurePane
 }

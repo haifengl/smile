@@ -16,7 +16,7 @@
  */
 package smile
 
-import smile.plot.swing.Canvas
+import smile.plot.swing.{Canvas, MultiFigurePane}
 import smile.plot.vega.VegaLite
 
 /** Data visualization.
@@ -26,6 +26,11 @@ import smile.plot.vega.VegaLite
 package object plot {
   /** Shows a plot canvas with implicit renderer. */
   def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
+    renderer(canvas)
+  }
+
+  /** Shows a multi-figure pane with implicit renderer. */
+  def show(canvas: MultiFigurePane)(implicit renderer: MultiFigurePane => Unit): Unit = {
     renderer(canvas)
   }
 

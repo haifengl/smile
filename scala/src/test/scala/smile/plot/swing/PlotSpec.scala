@@ -60,13 +60,13 @@ class PlotSpec extends Specification {
     }
     "Scatter" in {
       val canvas = plot(iris, "sepallength", "sepalwidth", "class", '*')
-      canvas.setAxisLabels("sepallength", "sepalwidth")
+      canvas.figure().setAxisLabels("sepallength", "sepalwidth")
       show(canvas)
       1 mustEqual 1
     }
     "Iris" in {
       val canvas = plot(iris, "sepallength", "sepalwidth", "petallength", "class", '*')
-      canvas.setAxisLabels("sepallength", "sepalwidth", "petallength")
+      canvas.figure().setAxisLabels("sepallength", "sepalwidth", "petallength")
       show(canvas)
       1 mustEqual 1
     }
@@ -79,14 +79,14 @@ class PlotSpec extends Specification {
       val labels = groups.keys.toArray
       val data = groups.values.map { a => a.map(_._1) }.toArray
       val canvas = boxplot(data, labels)
-      canvas.setAxisLabels("", "sepallength")
+      canvas.figure().setAxisLabels("", "sepallength")
       show(canvas)
       1 mustEqual 1
     }
     "Histogram" in {
       val cow = read.csv(Paths.getTestData("stat/cow.txt").toString, header = false)("V1").toDoubleArray
       val canvas = hist(cow.filter(_ <= 3500), 50)
-      canvas.setAxisLabels("Weight", "Probability")
+      canvas.figure().setAxisLabels("Weight", "Probability")
       show(canvas)
       1 mustEqual 1
     }
@@ -109,13 +109,13 @@ class PlotSpec extends Specification {
     "Sparse Matrix" in {
       val sparse = SparseMatrix.text(Paths.getTestData("matrix/mesh2em5.txt"))
       val canvas = spy(sparse)
-      canvas.setTitle("mesh2em5")
+      canvas.figure().setTitle("mesh2em5")
       show(canvas)
       1 mustEqual 1
     }
     "Contour" in {
       val canvas = heatmap(Z, Palette.jet(256))
-      canvas.add(Contour.of(Z))
+      canvas.figure().add(Contour.of(Z))
       show(canvas)
       1 mustEqual 1
     }
@@ -147,7 +147,7 @@ class PlotSpec extends Specification {
       }.toArray
 
       val canvas = plot(controls, '*')
-      canvas.add(LinePlot.of(linearData, Line.Style.SOLID, BLUE, "Linear"))
+      canvas.figure().add(LinePlot.of(linearData, Line.Style.SOLID, BLUE, "Linear"))
 
       val cubic = new CubicSplineInterpolation1D(x, y)
       val cubicData = (0 to 60).map { i =>
@@ -156,7 +156,7 @@ class PlotSpec extends Specification {
         Array(x, y)
       }.toArray
 
-      canvas.add(LinePlot.of(cubicData, Line.Style.DASH, RED, "Cubic"))
+      canvas.figure().add(LinePlot.of(cubicData, Line.Style.DASH, RED, "Cubic"))
 
       show(canvas)
       1 mustEqual 1

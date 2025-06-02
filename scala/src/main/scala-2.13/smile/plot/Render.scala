@@ -17,16 +17,22 @@
 package smile.plot
 
 import scala.language.experimental.macros
-import smile.plot.swing.Canvas
+import smile.plot.swing.{Canvas, MultiFigurePane}
 import smile.plot.vega.VegaLite
 
 /** Implicit renderers. */
 object Render {
   implicit def renderVega: VegaLite => Unit = macro RenderMacro.renderVega
   implicit def renderCanvas: Canvas => Unit = macro RenderMacro.renderCanvas
+  implicit def renderMultiFigure: MultiFigurePane => Unit = macro RenderMacro.renderMultiFigurePane
 
   /** Desktop renderer of plot canvas. */
   def desktop(canvas: Canvas): Unit = {
+    smile.plot.swing.JWindow(canvas)
+  }
+
+  /** Desktop renderer of multi-figure pane. */
+  def desktop(canvas: MultiFigurePane): Unit = {
     smile.plot.swing.JWindow(canvas)
   }
 
