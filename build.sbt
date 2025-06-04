@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "4.3.0",
+  version := "4.4.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -43,11 +43,9 @@ lazy val commonSettings = Seq(
 
   versionScheme := Some("early-semver"),
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+    if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+    else localStaging.value
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
