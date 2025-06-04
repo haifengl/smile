@@ -53,24 +53,24 @@ lazy val commonSettings = Seq(
   pomIncludeRepository := { _ => false },
   pomExtra := (
     <url>https://github.com/haifengl/smile</url>
-      <licenses>
-        <license>
-          <name>GNU General Public License, Version 3</name>
-          <url>https://opensource.org/licenses/GPL-3.0</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-      <scm>
-        <url>git@github.com:haifengl/smile.git</url>
-        <connection>scm:git:git@github.com:haifengl/smile.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>haifengl</id>
-          <name>Haifeng Li</name>
-          <url>https://haifengl.github.io/</url>
-        </developer>
-      </developers>
+    <licenses>
+      <license>
+        <name>GNU General Public License, Version 3</name>
+        <url>https://opensource.org/licenses/GPL-3.0</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <scm>
+      <url>git@github.com:haifengl/smile.git</url>
+      <connection>scm:git:git@github.com:haifengl/smile.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>haifengl</id>
+        <name>Haifeng Li</name>
+        <url>https://haifengl.github.io/</url>
+      </developer>
+    </developers>
   )
 )
 
