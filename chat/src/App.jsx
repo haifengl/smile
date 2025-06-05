@@ -91,7 +91,7 @@ function App() {
     setShowTypingIndicator(true);
 
     const data = {
-      "model": "deepseek-r1:70b",
+      "model": "meta/llama3",
       "threadId": threadId,
       "stream": true,
       "messages": [
