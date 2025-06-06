@@ -80,8 +80,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked",
-    "-source", "21",
-    "-target", "21"
+    "-source", "24",
+    "-target", "24"
   ),
   Compile / doc / javacOptions ++= Seq(
     //"-Xdoclint:none",
@@ -110,7 +110,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-feature",
     "-encoding", "utf8",
     "-Xsource:3",
-    "-release:21"
+    "-release:24"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
