@@ -16,9 +16,9 @@
  */
 package smile.math.blas;
 
+import java.lang.foreign.MemorySegment;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-import org.bytedeco.javacpp.DoublePointer;
 
 /**
  * Basic Linear Algebra Subprograms. BLAS is a specification that prescribes
@@ -614,7 +614,7 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    void gemv(Layout layout, Transpose trans, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy);
+    void gemv(Layout layout, Transpose trans, int m, int n, double alpha, MemorySegment A, int lda, MemorySegment x, int incx, double beta, MemorySegment y, int incy);
 
     /**
      * Performs the matrix-vector operation.
@@ -772,7 +772,7 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    void symv(Layout layout, UPLO uplo, int n, double alpha, DoublePointer A, int lda, DoublePointer x, int incx, double beta, DoublePointer y, int incy);
+    void symv(Layout layout, UPLO uplo, int n, double alpha, MemorySegment A, int lda, MemorySegment x, int incx, double beta, MemorySegment y, int incy);
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
@@ -1014,7 +1014,7 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoublePointer A, int lda, DoublePointer x, int incx);
+    void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, MemorySegment A, int lda, MemorySegment x, int incx);
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
@@ -1483,7 +1483,7 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    void ger(Layout layout, int m, int n, double alpha, DoublePointer x, int incx, DoublePointer y, int incy, DoublePointer A, int lda);
+    void ger(Layout layout, int m, int n, double alpha, MemorySegment x, int incx, MemorySegment y, int incy, MemorySegment A, int lda);
 
     /**
      * Performs the rank-1 update operation.
@@ -1595,7 +1595,7 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    void syr(Layout layout, UPLO uplo, int n, double alpha, DoublePointer x, int incx, DoublePointer A, int lda);
+    void syr(Layout layout, UPLO uplo, int n, double alpha, MemorySegment x, int incx, MemorySegment A, int lda);
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
@@ -1787,7 +1787,7 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc);
+    void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, double alpha, MemorySegment A, int lda, MemorySegment B, int ldb, double beta, MemorySegment C, int ldc);
 
     /**
      * Performs the matrix-matrix operation.
@@ -1926,7 +1926,7 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoublePointer A, int lda, DoublePointer B, int ldb, double beta, DoublePointer C, int ldc);
+    void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, MemorySegment A, int lda, MemorySegment B, int ldb, double beta, MemorySegment C, int ldc);
 
     /**
      * Performs the matrix-matrix operation where one input matrix is symmetric.

@@ -16,11 +16,10 @@
  */
 package smile.math.blas;
 
+import java.lang.foreign.MemorySegment;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import org.bytedeco.javacpp.DoublePointer;
-import org.bytedeco.javacpp.IntPointer;
 
 /**
  * Linear Algebra Package. LAPACK is a standard software library for numerical
@@ -179,7 +178,7 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb);
+    int gesv(Layout layout, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
 
     /**
      * Solves a real system of linear equations.
@@ -430,7 +429,7 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb);
+    int sysv(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
 
     /**
      * Solves a real system of linear equations.
@@ -2813,7 +2812,7 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, DoublePointer A, int lda, DoublePointer wr, DoublePointer wi, DoublePointer Vl, int ldvl, DoublePointer Vr, int ldvr);
+    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, MemorySegment A, int lda, MemorySegment wr, MemorySegment wi, MemorySegment Vl, int ldvl, MemorySegment Vr, int ldvr);
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3120,7 +3119,7 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, DoublePointer A, int lda, DoublePointer w);
+    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, MemorySegment A, int lda, MemorySegment w);
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3831,7 +3830,7 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, DoublePointer A, int lda, DoublePointer s, DoublePointer U, int ldu, DoublePointer VT, int ldvt);
+    int gesdd(Layout layout, SVDJob jobz, int m, int n, MemorySegment A, int lda, MemorySegment s, MemorySegment U, int ldu, MemorySegment VT, int ldvt);
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -4004,7 +4003,7 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, DoublePointer A, int lda, IntPointer ipiv);
+    int getrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment ipiv);
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4531,7 +4530,7 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, DoublePointer A, int lda, IntPointer ipiv, DoublePointer B, int ldb);
+    int getrs(Layout layout, Transpose trans, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
 
     /**
      * Solves a system of linear equations
@@ -5011,7 +5010,7 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, DoublePointer A, int lda);
+    int potrf(Layout layout, UPLO uplo, int n, MemorySegment A, int lda);
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5481,7 +5480,7 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, DoublePointer A, int lda, DoublePointer B, int ldb);
+    int potrs(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment B, int ldb);
 
     /**
      * Solves a system of linear equations
@@ -5909,7 +5908,7 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, DoublePointer A, int lda, DoublePointer tau);
+    int geqrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment tau);
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -6117,7 +6116,7 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, DoublePointer A, int lda, DoublePointer tau, DoublePointer C, int ldc);
+    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, MemorySegment A, int lda, MemorySegment tau, MemorySegment C, int ldc);
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6305,7 +6304,7 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, DoublePointer A, int lda, DoublePointer tau);
+    int orgqr(Layout layout, int m, int n, int k, MemorySegment A, int lda, MemorySegment tau);
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6490,7 +6489,7 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, DoublePointer A, int lda, DoublePointer B, int ldb);
+    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, MemorySegment A, int lda, MemorySegment B, int ldb);
 
     /**
      * Solves a triangular system of the form
