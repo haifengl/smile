@@ -17,9 +17,10 @@
 package smile.math.matrix;
 
 import java.io.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 
-import org.bytedeco.javacpp.DoublePointer;
-import org.bytedeco.javacpp.IntPointer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
@@ -52,7 +53,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
          * @param ld the leading dimension.
          * @param A the matrix storage.
          */
-        RowMajor(int m, int n, int ld, DoublePointer A) {
+        RowMajor(int m, int n, int ld, MemorySegment A) {
             super(m, n, ld, A);
         }
 
@@ -68,9 +69,13 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     }
 
     /**
+     * An arena controls the lifecycle of native memory segments.
+     */
+    final Arena arena = Arena.ofShared();
+    /**
      * The matrix storage.
      */
-    transient DoublePointer A;
+    transient MemorySegment A;
     /**
      * The leading dimension.
      */
@@ -92,6 +97,15 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * triangular matrix has unit diagonal elements.
      */
     Diag diag;
+
+    /**
+     * Returns an off-heap double array.
+     * @param size the size of array.
+     * @return the off-heap memory segment.
+     */
+    private MemorySegment allocate(long size) {
+        return arena.allocate(ValueLayout.JAVA_DOUBLE, size);
+    }
 
     /**
      * Constructor of zero matrix.
@@ -117,7 +131,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         this.n = n;
         this.ld = ld(m);
 
-        A = new DoublePointer((long) ld * n);
+        A = allocate((long) ld * n);
         fill(a);
     }
 
@@ -128,7 +142,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param ld the leading dimension.
      * @param A the matrix storage.
      */
-    public BigMatrix(int m, int n, int ld, DoublePointer A) {
+    public BigMatrix(int m, int n, int ld, MemorySegment A) {
         if (layout() == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
@@ -145,7 +159,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
     @Override
     public void close() {
-        A.close();
+        arena.close();
     }
 
     /**
@@ -186,7 +200,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @return the column vector/matrix.
      */
     public static BigMatrix column(double[] A, int offset, int length) {
-        DoublePointer pointer = new DoublePointer(length);
+        MemorySegment pointer = new MemorySegment(length);
         pointer.put(A, offset, length);
         return new BigMatrix(length, 1, length, pointer);
     }
@@ -210,7 +224,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @return the row vector/matrix.
      */
     public static BigMatrix row(double[] A, int offset, int length) {
-        DoublePointer pointer = new DoublePointer(length);
+        MemorySegment pointer = new MemorySegment(length);
         pointer.put(A, offset, length);
         return new BigMatrix(1, length, 1, pointer);
     }
@@ -353,7 +367,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param diag the diagonal elements.
      * @return the matrix.
      */
-    public static BigMatrix diag(DoublePointer diag) {
+    public static BigMatrix diag(MemorySegment diag) {
         int n = (int) length(diag);
         BigMatrix D = new BigMatrix(n, n);
         for (int i = 0; i < n; i++) {
@@ -456,7 +470,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         // read buffer data
         if (layout() == COL_MAJOR) {
             this.ld = ld(m);
-            this.A = new DoublePointer((long) ld * n);
+            this.A = new MemorySegment((long) ld * n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, in.readDouble());
@@ -464,7 +478,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             }
         } else {
             this.ld = ld(n);
-            this.A = new DoublePointer((long) m * ld);
+            this.A = new MemorySegment((long) m * ld);
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     set(i, j, in.readDouble());
@@ -489,12 +503,12 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     }
 
     /** Returns the length of double array pointer. */
-    private static long length(DoublePointer A) {
+    private static long length(MemorySegment A) {
         return A.limit() - A.position();
     }
 
     /** Returns the byte length of double array pointer. */
-    private static long bytes(DoublePointer A) {
+    private static long bytes(MemorySegment A) {
         return A.sizeof() * (A.limit() - A.position());
     }
 
@@ -571,7 +585,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     public BigMatrix copy() {
         BigMatrix matrix;
         if (layout() == COL_MAJOR) {
-            DoublePointer pointer = new DoublePointer(length(A));
+            MemorySegment pointer = new MemorySegment(length(A));
             DoublePointer.memcpy(pointer, A, bytes(A));
             matrix = new BigMatrix(m, n, ld, pointer);
         } else {
@@ -623,7 +637,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         } else {
             if (layout() == COL_MAJOR) {
                 this.ld = ld(m);
-                this.A = new DoublePointer((long) ld * n);
+                this.A = new MemorySegment((long) ld * n);
 
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
@@ -632,7 +646,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                 }
             } else {
                 this.ld = ld(n);
-                this.A = new DoublePointer((long) ld * m);
+                this.A = new MemorySegment((long) ld * m);
 
                 for (int i = 0; i < m; i++) {
                     for (int j = 0; j < n; j++) {
@@ -773,7 +787,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
         long offset = index(i, j);
         long length = index(k, l) - offset + 1;
-        DoublePointer B = A.getPointer(offset).limit(length);
+        MemorySegment B = A.MemorySegment(offset).limit(length);
 
         if (layout() == COL_MAJOR) {
             return new BigMatrix(k - i + 1, l - j + 1, ld, B);
@@ -788,7 +802,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      */
     public void fill(double x) {
         if (x == 0.0) {
-            DoublePointer.memset(A, 0, bytes(A));
+            MemorySegment.memset(A, 0, bytes(A));
         } else {
             long length = length(A);
             for (long i = 0; i < length; i++) {
