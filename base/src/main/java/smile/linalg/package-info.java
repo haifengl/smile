@@ -16,8 +16,10 @@
  */
 
 /**
- * BLAS and LAPACK interfaces.
+ * The linear algebra algorithms. It relies on BLAS, LAPACK, and ARPACK to
+ * provide efficient low level implementations of standard linear algebra
+ * algorithms.
  *
  * @author Haifeng Li
  */
-package smile.math.blas;
+package smile.linalg;

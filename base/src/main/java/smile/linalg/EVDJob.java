@@ -14,29 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.blas;
+package smile.linalg;
 
-/** THe option of eigenvalue range. */
-public enum EigenRange {
-    /**
-     * All eigenvalues will be found.
-     */
-    ALL((byte) 'A'),
-    /**
-     * All eigenvalues in the half-open interval (VL,VU]
-     * will be found.
-     */
-    VALUE((byte) 'V'),
-    /**
-     * The IL-th through IU-th eigenvalues will be found.
-     */
-    INDEX((byte) 'I');
+/** The option if computing eigen vectors. */
+public enum EVDJob {
+    /** Eigenvalues only are computed. */
+    NO_VECTORS((byte) 'N'),
+    /** Both eigen values and vectors are computed. */
+    VECTORS((byte) 'V');
 
     /** Byte value passed to LAPACK. */
     private final byte lapack;
 
     /** Constructor. */
-    EigenRange(byte lapack) {
+    EVDJob(byte lapack) {
         this.lapack = lapack;
     }
 
