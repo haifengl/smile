@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.blas;
+package smile.linalg;
 
 /**
  * The flag if a triangular matrix has unit diagonal elements.

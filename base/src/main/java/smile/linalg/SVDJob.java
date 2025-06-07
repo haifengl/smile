@@ -14,20 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.blas;
+package smile.linalg;
 
-/** The option if computing eigen vectors. */
-public enum EVDJob {
-    /** Eigenvalues only are computed. */
-    NO_VECTORS((byte) 'N'),
-    /** Both eigen values and vectors are computed. */
-    VECTORS((byte) 'V');
+/** The option if computing singular vectors. */
+public enum SVDJob {
+    /** All left (or right) singular vectors are returned in supplied  matrix U (or Vt). */
+    ALL((byte) 'A'),
+    /** The first min(m, n) singular vectors are returned in supplied matrix U (or Vt). */
+    COMPACT((byte) 'S'),
+    /** The first min(m, n) singular vectors are overwritten on the matrix A. */
+    OVERWRITE((byte) 'O'),
+    /** No singular vectors are computed. */
+    NO_VECTORS((byte) 'N');
 
     /** Byte value passed to LAPACK. */
     private final byte lapack;
 
     /** Constructor. */
-    EVDJob(byte lapack) {
+    SVDJob(byte lapack) {
         this.lapack = lapack;
     }
 

@@ -14,34 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.blas;
+package smile.linalg;
 
-/**
- * The flag if the symmetric  matrix A appears on the left or right
- * in the matrix-matrix operation.
- */
-public enum Side {
-    /** A * B */
-    LEFT (141, (byte) 'L'),
-    /** B * A */
-    RIGHT(142, (byte) 'R');
+/** THe option of eigenvalue range. */
+public enum EigenRange {
+    /**
+     * All eigenvalues will be found.
+     */
+    ALL((byte) 'A'),
+    /**
+     * All eigenvalues in the half-open interval (VL,VU]
+     * will be found.
+     */
+    VALUE((byte) 'V'),
+    /**
+     * The IL-th through IU-th eigenvalues will be found.
+     */
+    INDEX((byte) 'I');
 
-    /** Byte value passed to BLAS. */
-    private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
 
     /** Constructor. */
-    Side(int blas, byte lapack) {
-        this.blas = blas;
+    EigenRange(byte lapack) {
         this.lapack = lapack;
     }
-
-    /**
-     * Returns the int value for BLAS.
-     * @return the int value for BLAS.
-     */
-    public int blas() { return blas; }
 
     /**
      * Returns the byte value for LAPACK.

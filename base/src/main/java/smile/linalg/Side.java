@@ -14,24 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.blas;
+package smile.linalg;
 
-/** Matrix layout. */
-public enum Layout {
-    /** Row major layout. */
-    ROW_MAJOR(101),
-    /** Column major layout. */
-    COL_MAJOR(102);
+/**
+ * The flag if the symmetric  matrix A appears on the left or right
+ * in the matrix-matrix operation.
+ */
+public enum Side {
+    /** A * B */
+    LEFT (141, (byte) 'L'),
+    /** B * A */
+    RIGHT(142, (byte) 'R');
 
     /** Byte value passed to BLAS. */
     private final int blas;
     /** Byte value passed to LAPACK. */
-    private final int lapack;
+    private final byte lapack;
 
     /** Constructor. */
-    Layout(int value) {
-        this.blas = value;
-        this.lapack = value;
+    Side(int blas, byte lapack) {
+        this.blas = blas;
+        this.lapack = lapack;
     }
 
     /**
@@ -44,5 +47,5 @@ public enum Layout {
      * Returns the byte value for LAPACK.
      * @return the byte value for LAPACK.
      */
-    public int lapack() { return lapack; }
+    public byte lapack() { return lapack; }
 }
