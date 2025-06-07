@@ -99,7 +99,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.0</version>
     </dependency>
 ```
 
@@ -107,7 +107,7 @@ For deep learning and NLP, use the artifactId smile-deep and smile-nlp, respecti
 
 For Scala API, please add the below into your sbt script.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.3.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.4.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
@@ -207,7 +207,7 @@ To use smile-plot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.0</version>
     </dependency>
 ```
 
