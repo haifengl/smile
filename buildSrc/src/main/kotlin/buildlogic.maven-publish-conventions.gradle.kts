@@ -1,4 +1,5 @@
 plugins {
+    `java-library`
     `maven-publish`
     signing
 }
@@ -38,6 +39,11 @@ publishing {
                         name = "Haifeng Li"
                         url = "https://haifengl.github.io/"
                     }
+                    developer {
+                        id = "kklioss"
+                        name = "Karl Li"
+                        url = "https://github.com/kklioss"
+                    }
                 }
                 scm {
                     connection = "git@github.com:haifengl/smile.git"
@@ -50,7 +56,7 @@ publishing {
     repositories {
         maven {
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
+            val snapshotsRepoUrl = uri("https://central.sonatype.com/repositories/maven-snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
             authentication {
                 create<BasicAuthentication>("basic")
