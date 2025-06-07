@@ -50672,7 +50672,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dbdsdc");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -50743,7 +50743,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sbdsqr");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -50814,7 +50814,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dbdsqr");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -50885,7 +50885,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cbdsqr");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -50956,7 +50956,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zbdsqr");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51029,7 +51029,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sbdsvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51102,7 +51102,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dbdsvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51164,7 +51164,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sdisna");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51226,7 +51226,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_ddisna");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51300,7 +51300,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbbrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51374,7 +51374,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbbrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51448,7 +51448,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbbrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51522,7 +51522,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbbrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51589,7 +51589,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbcon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51656,7 +51656,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbcon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51723,7 +51723,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbcon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51790,7 +51790,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbcon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51859,7 +51859,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51928,7 +51928,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -51997,7 +51997,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52066,7 +52066,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52135,7 +52135,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52204,7 +52204,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52273,7 +52273,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52342,7 +52342,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52416,7 +52416,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbrfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52490,7 +52490,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbrfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52564,7 +52564,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbrfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52638,7 +52638,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbrfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52720,7 +52720,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbrfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52802,7 +52802,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbrfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52884,7 +52884,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbrfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -52966,7 +52966,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbrfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53033,7 +53033,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53100,7 +53100,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53167,7 +53167,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53234,7 +53234,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53314,7 +53314,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbsvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53394,7 +53394,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbsvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53474,7 +53474,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbsvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53554,7 +53554,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbsvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53638,7 +53638,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbsvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53722,7 +53722,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbsvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53806,7 +53806,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbsvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53890,7 +53890,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbsvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -53955,7 +53955,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbtrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54020,7 +54020,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbtrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54085,7 +54085,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbtrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54150,7 +54150,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbtrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54218,7 +54218,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgbtrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54286,7 +54286,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgbtrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54354,7 +54354,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgbtrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54422,7 +54422,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgbtrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54489,7 +54489,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgebak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54556,7 +54556,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgebak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54623,7 +54623,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgebak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54690,7 +54690,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgebak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54755,7 +54755,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgebal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54820,7 +54820,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgebal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54885,7 +54885,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgebal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -54950,7 +54950,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgebal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55016,7 +55016,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgebrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55082,7 +55082,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgebrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55148,7 +55148,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgebrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55214,7 +55214,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgebrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55278,7 +55278,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgecon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55342,7 +55342,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgecon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55406,7 +55406,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgecon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55470,7 +55470,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgecon");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55537,7 +55537,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55604,7 +55604,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55671,7 +55671,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55738,7 +55738,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeequ");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55805,7 +55805,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55872,7 +55872,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -55939,7 +55939,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56006,7 +56006,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeequb");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56075,7 +56075,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgees");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56144,7 +56144,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgees");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56212,7 +56212,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgees");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56280,7 +56280,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgees");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56352,7 +56352,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56424,7 +56424,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56495,7 +56495,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56566,7 +56566,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56635,7 +56635,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56704,7 +56704,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56772,7 +56772,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56840,7 +56840,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56917,7 +56917,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -56994,7 +56994,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57070,7 +57070,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57146,7 +57146,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57210,7 +57210,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgehrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57274,7 +57274,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgehrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57338,7 +57338,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgehrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57402,7 +57402,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgehrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57477,7 +57477,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgejsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57552,7 +57552,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgejsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57627,7 +57627,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgejsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57702,7 +57702,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgejsv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57765,7 +57765,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgelq2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57828,7 +57828,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgelq2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57891,7 +57891,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgelq2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -57954,7 +57954,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgelq2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58017,7 +58017,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgelqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58080,7 +58080,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgelqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58143,7 +58143,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgelqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58206,7 +58206,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgelqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58272,7 +58272,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgels");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58338,7 +58338,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgels");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58404,7 +58404,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgels");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58470,7 +58470,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgels");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58538,7 +58538,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgelsd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58606,7 +58606,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgelsd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58674,7 +58674,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgelsd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58742,7 +58742,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgelsd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58810,7 +58810,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgelss");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58878,7 +58878,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgelss");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -58946,7 +58946,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgelss");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59014,7 +59014,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgelss");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59082,7 +59082,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgelsy");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59150,7 +59150,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgelsy");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59218,7 +59218,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgelsy");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59286,7 +59286,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgelsy");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59349,7 +59349,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqlf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59412,7 +59412,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqlf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59475,7 +59475,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqlf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59538,7 +59538,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqlf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59602,7 +59602,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqp3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59666,7 +59666,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqp3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59730,7 +59730,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqp3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59794,7 +59794,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqp3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59858,7 +59858,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqpf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59922,7 +59922,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqpf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -59986,7 +59986,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqpf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60050,7 +60050,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqpf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60113,7 +60113,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqr2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60176,7 +60176,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqr2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60239,7 +60239,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqr2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60302,7 +60302,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqr2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60365,7 +60365,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60428,7 +60428,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60491,7 +60491,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60554,7 +60554,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60617,7 +60617,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgeqrfp");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60680,7 +60680,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgeqrfp");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60743,7 +60743,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgeqrfp");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60806,7 +60806,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgeqrfp");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60878,7 +60878,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgerfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -60950,7 +60950,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgerfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61022,7 +61022,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgerfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61094,7 +61094,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgerfs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61174,7 +61174,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgerfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61254,7 +61254,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgerfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61334,7 +61334,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgerfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61414,7 +61414,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgerfsx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61477,7 +61477,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgerqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61540,7 +61540,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgerqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61603,7 +61603,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgerqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61666,7 +61666,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgerqf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61734,7 +61734,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesdd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61802,7 +61802,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesdd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61870,7 +61870,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesdd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -61938,7 +61938,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesdd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62003,7 +62003,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62068,7 +62068,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62133,7 +62133,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62198,7 +62198,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62266,7 +62266,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dsgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62334,7 +62334,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zcgesv");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62404,7 +62404,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62474,7 +62474,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62544,7 +62544,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62614,7 +62614,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62690,7 +62690,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62766,7 +62766,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62842,7 +62842,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62918,7 +62918,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvdx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -62991,7 +62991,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvdq");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63064,7 +63064,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvdq");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63137,7 +63137,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvdq");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63210,7 +63210,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvdq");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63280,7 +63280,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvj");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63350,7 +63350,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvj");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63420,7 +63420,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvj");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63490,7 +63490,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvj");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63568,7 +63568,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63646,7 +63646,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63724,7 +63724,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63802,7 +63802,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63884,7 +63884,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgesvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -63966,7 +63966,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgesvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64048,7 +64048,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgesvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64130,7 +64130,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgesvxx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64193,7 +64193,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgetf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64256,7 +64256,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgetf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64319,7 +64319,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgetf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64382,7 +64382,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgetf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64445,7 +64445,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgetrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64508,7 +64508,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgetrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64571,7 +64571,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgetrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64634,7 +64634,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgetrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64697,7 +64697,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgetrf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64760,7 +64760,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgetrf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64823,7 +64823,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgetrf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64886,7 +64886,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgetrf2");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -64948,7 +64948,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgetri");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65010,7 +65010,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgetri");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65072,7 +65072,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgetri");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65134,7 +65134,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgetri");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65200,7 +65200,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgetrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65266,7 +65266,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgetrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65332,7 +65332,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgetrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65398,7 +65398,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgetrs");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65466,7 +65466,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggbak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65534,7 +65534,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggbak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65602,7 +65602,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggbak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65670,7 +65670,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggbak");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65738,7 +65738,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggbal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65806,7 +65806,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggbal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65874,7 +65874,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggbal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -65942,7 +65942,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggbal");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66017,7 +66017,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgges");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66092,7 +66092,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgges");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66166,7 +66166,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgges");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66240,7 +66240,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgges");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66315,7 +66315,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgges3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66390,7 +66390,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgges3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66464,7 +66464,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgges3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66538,7 +66538,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgges3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66616,7 +66616,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66694,7 +66694,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66771,7 +66771,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66848,7 +66848,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggesx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66920,7 +66920,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -66992,7 +66992,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67063,7 +67063,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67134,7 +67134,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggev");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67206,7 +67206,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggev3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67278,7 +67278,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggev3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67349,7 +67349,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggev3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67420,7 +67420,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggev3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67502,7 +67502,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67584,7 +67584,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67665,7 +67665,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67746,7 +67746,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggevx");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67814,7 +67814,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggglm");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67882,7 +67882,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dggglm");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -67950,7 +67950,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cggglm");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68018,7 +68018,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zggglm");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68089,7 +68089,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgghrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68160,7 +68160,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgghrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68231,7 +68231,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgghrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68302,7 +68302,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgghrd");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68373,7 +68373,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgghd3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68444,7 +68444,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgghd3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68515,7 +68515,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgghd3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68586,7 +68586,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgghd3");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68654,7 +68654,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sgglse");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68722,7 +68722,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_dgglse");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68790,7 +68790,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_cgglse");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68858,7 +68858,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_zgglse");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**
@@ -68925,7 +68925,7 @@ public class lapacke_h_3 extends lapacke_h_4 {
 
         public static final MemorySegment ADDR = lapacke_h.findOrThrow("LAPACKE_sggqrf");
 
-        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
 
     /**

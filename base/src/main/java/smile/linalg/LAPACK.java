@@ -20,6 +20,7 @@ import java.lang.foreign.MemorySegment;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import static smile.linalg.lapack.lapacke_h.*;
 
 /**
  * Linear Algebra Package. LAPACK is a standard software library for numerical
@@ -31,17 +32,6 @@ import java.nio.IntBuffer;
  * @author Haifeng Li
  */
 public interface LAPACK {
-    /** The default LAPACK engine. */
-    LAPACK engine = getInstance();
-
-    /**
-     * Creates an instance.
-     * @return a LAPACK instance.
-     */
-    static LAPACK getInstance() {
-        return new smile.math.blas.openblas.OpenBLAS();
-    }
-
     /**
      * Solves a real system of linear equations.
      * <pre>{@code
@@ -86,7 +76,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
+    static int gesv(Layout layout, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgesv(layout.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -132,7 +127,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int gesv(Layout layout, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgesv(layout.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -178,7 +178,9 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
+    static int gesv(Layout layout, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb) {
+        return LAPACKE_dgesv(layout.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -224,7 +226,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
+    static int gesv(Layout layout, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgesv(layout.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -270,7 +277,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gesv(Layout layout, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int gesv(Layout layout, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgesv(layout.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -323,7 +335,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
+    static int sysv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dsysv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -376,7 +393,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int sysv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dsysv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -429,7 +451,9 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
+    static int sysv(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb) {
+        return LAPACKE_dsysv(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -482,7 +506,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
+    static int sysv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_ssysv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -535,7 +564,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int sysv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int sysv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_ssysv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -586,7 +620,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int spsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int[] ipiv, double[] B, int ldb);
+    static int spsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dspsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -637,7 +676,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int spsv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int spsv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dspsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -688,7 +732,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int spsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int[] ipiv, float[] B, int ldb);
+    static int spsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sspsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -739,7 +788,12 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int spsv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int spsv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sspsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -788,7 +842,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int posv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+    static int posv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dposv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -837,7 +895,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int posv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb);
+    static int posv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dposv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -886,7 +948,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int posv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
+    static int posv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_sposv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -935,7 +1001,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int posv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
+    static int posv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_sposv(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -982,7 +1052,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int ppsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, double[] B, int ldb);
+    static int ppsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dppsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1029,7 +1103,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int ppsv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, DoubleBuffer B, int ldb);
+    static int ppsv(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dppsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1076,7 +1154,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int ppsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, float[] B, int ldb);
+    static int ppsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_sppsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1123,7 +1205,11 @@ public interface LAPACK {
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
-    int ppsv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, FloatBuffer B, int ldb);
+    static int ppsv(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_sppsv(layout.lapack(), uplo.lapack(), n, nrhs, A_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1181,7 +1267,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gbsv(Layout layout, int n, int kl, int ku, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
+    static int gbsv(Layout layout, int n, int kl, int ku, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgbsv(layout.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1239,7 +1330,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gbsv(Layout layout, int n, int kl, int ku, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int gbsv(Layout layout, int n, int kl, int ku, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgbsv(layout.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1297,7 +1393,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gbsv(Layout layout, int n, int kl, int ku, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
+    static int gbsv(Layout layout, int n, int kl, int ku, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgbsv(layout.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a real system of linear equations.
@@ -1355,7 +1456,12 @@ public interface LAPACK {
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
-    int gbsv(Layout layout, int n, int kl, int ku, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int gbsv(Layout layout, int n, int kl, int ku, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgbsv(layout.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a QR or LQ
@@ -1391,7 +1497,11 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gels(Layout layout, Transpose trans, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+    static int gels(Layout layout, Transpose trans, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dgels(layout.lapack(), trans.lapack(), m, n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a QR or LQ
@@ -1427,7 +1537,11 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gels(Layout layout, Transpose trans, int m, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb);
+    static int gels(Layout layout, Transpose trans, int m, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dgels(layout.lapack(), trans.lapack(), m, n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a QR or LQ
@@ -1463,7 +1577,11 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gels(Layout layout, Transpose trans, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
+    static int gels(Layout layout, Transpose trans, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_sgels(layout.lapack(), trans.lapack(), m, n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a QR or LQ
@@ -1499,7 +1617,11 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gels(Layout layout, Transpose trans, int m, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
+    static int gels(Layout layout, Transpose trans, int m, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_sgels(layout.lapack(), trans.lapack(), m, n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a complete
@@ -1547,7 +1669,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsy(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, int[] jpvt, double rcond, int[] rank);
+    static int gelsy(Layout layout, int m, int n, int nrhs, double[] A, int lda,
+                     double[] B, int ldb, int[] jpvt, double rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var jpvt_ = MemorySegment.ofArray(jpvt);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_dgelsy(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, jpvt_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a complete
@@ -1595,7 +1724,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsy(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, IntBuffer jpvt, double rcond, IntBuffer rank);
+    static int gelsy(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda,
+                     DoubleBuffer B, int ldb, IntBuffer jpvt, double rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var jpvt_ = MemorySegment.ofBuffer(jpvt);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_dgelsy(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, jpvt_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a complete
@@ -1643,7 +1779,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsy(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, int[] jpvt, float rcond, int[] rank);
+    static int gelsy(Layout layout, int m, int n, int nrhs, float[] A, int lda,
+                     float[] B, int ldb, int[] jpvt, float rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var jpvt_ = MemorySegment.ofArray(jpvt);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_sgelsy(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, jpvt_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a complete
@@ -1691,7 +1834,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsy(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb, IntBuffer jpvt, float rcond, IntBuffer rank);
+    static int gelsy(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda,
+                     FloatBuffer B, int ldb, IntBuffer jpvt, float rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var jpvt_ = MemorySegment.ofBuffer(jpvt);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_sgelsy(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, jpvt_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using the singular
@@ -1739,7 +1889,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelss(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, double[] s, double rcond, int[] rank);
+    static int gelss(Layout layout, int m, int n, int nrhs, double[] A, int lda,
+                     double[] B, int ldb, double[] s, double rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var s_ = MemorySegment.ofArray(s);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_dgelss(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using the singular
@@ -1787,7 +1944,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelss(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer s, double rcond, IntBuffer rank);
+    static int gelss(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda,
+                     DoubleBuffer B, int ldb, DoubleBuffer s, double rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var s_ = MemorySegment.ofBuffer(s);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_dgelss(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using the singular
@@ -1835,7 +1999,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelss(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, float[] s, float rcond, int[] rank);
+    static int gelss(Layout layout, int m, int n, int nrhs, float[] A, int lda,
+                     float[] B, int ldb, float[] s, float rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var s_ = MemorySegment.ofArray(s);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_sgelss(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using the singular
@@ -1883,7 +2054,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelss(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer s, float rcond, IntBuffer rank);
+    static int gelss(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda,
+                     FloatBuffer B, int ldb, FloatBuffer s, float rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var s_ = MemorySegment.ofBuffer(s);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_sgelss(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a divide
@@ -1932,7 +2110,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsd(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, double[] s, double rcond, int[] rank);
+    static int gelsd(Layout layout, int m, int n, int nrhs, double[] A, int lda,
+                     double[] B, int ldb, double[] s, double rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var s_ = MemorySegment.ofArray(s);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_dgelsd(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a divide
@@ -1981,7 +2166,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsd(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer s, double rcond, IntBuffer rank);
+    static int gelsd(Layout layout, int m, int n, int nrhs, DoubleBuffer A, int lda,
+                     DoubleBuffer B, int ldb, DoubleBuffer s, double rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var s_ = MemorySegment.ofBuffer(s);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_dgelsd(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a divide
@@ -2030,7 +2222,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsd(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, float[] s, float rcond, int[] rank);
+    static int gelsd(Layout layout, int m, int n, int nrhs, float[] A, int lda,
+                     float[] B, int ldb, float[] s, float rcond, int[] rank) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var s_ = MemorySegment.ofArray(s);
+        var rank_ = MemorySegment.ofArray(rank);
+        return LAPACKE_sgelsd(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves an overdetermined or underdetermined system, using a divide
@@ -2079,7 +2278,14 @@ public interface LAPACK {
      *               full rank; the least squares solution could not be
      *               computed.
      */
-    int gelsd(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer s, float rcond, IntBuffer rank);
+    static int gelsd(Layout layout, int m, int n, int nrhs, FloatBuffer A, int lda,
+                     FloatBuffer B, int ldb, FloatBuffer s, float rcond, IntBuffer rank) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var s_ = MemorySegment.ofBuffer(s);
+        var rank_ = MemorySegment.ofBuffer(rank);
+        return LAPACKE_sgelsd(layout.lapack(), m, n, nrhs, A_, lda, B_, ldb, s_, rcond, rank_);
+    }
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
@@ -2149,7 +2355,15 @@ public interface LAPACK {
      *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int gglse(Layout layout, int m, int n, int p, double[] A, int lda, double[] B, int ldb, double[] c, double[] d, double[] x);
+    static int gglse(Layout layout, int m, int n, int p, double[] A, int lda,
+                     double[] B, int ldb, double[] c, double[] d, double[] x) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var c_ = MemorySegment.ofArray(c);
+        var d_ = MemorySegment.ofArray(d);
+        var x_ = MemorySegment.ofArray(x);
+        return LAPACKE_dgglse(layout.lapack(), m, n, p, A_, lda, B_, ldb, c_, d_, x_);
+    }
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
@@ -2219,7 +2433,15 @@ public interface LAPACK {
      *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int gglse(Layout layout, int m, int n, int p, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer c, DoubleBuffer d, DoubleBuffer x);
+    static int gglse(Layout layout, int m, int n, int p, DoubleBuffer A, int lda,
+                     DoubleBuffer B, int ldb, DoubleBuffer c, DoubleBuffer d, DoubleBuffer x) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var c_ = MemorySegment.ofBuffer(c);
+        var d_ = MemorySegment.ofBuffer(d);
+        var x_ = MemorySegment.ofBuffer(x);
+        return LAPACKE_dgglse(layout.lapack(), m, n, p, A_, lda, B_, ldb, c_, d_, x_);
+    }
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
@@ -2289,7 +2511,15 @@ public interface LAPACK {
      *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int gglse(Layout layout, int m, int n, int p, float[] A, int lda, float[] B, int ldb, float[] c, float[] d, float[] x);
+    static int gglse(Layout layout, int m, int n, int p, float[] A, int lda,
+                     float[] B, int ldb, float[] c, float[] d, float[] x) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var c_ = MemorySegment.ofArray(c);
+        var d_ = MemorySegment.ofArray(d);
+        var x_ = MemorySegment.ofArray(x);
+        return LAPACKE_sgglse(layout.lapack(), m, n, p, A_, lda, B_, ldb, c_, d_, x_);
+    }
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
@@ -2359,7 +2589,15 @@ public interface LAPACK {
      *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int gglse(Layout layout, int m, int n, int p, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer c, FloatBuffer d, FloatBuffer x);
+    static int gglse(Layout layout, int m, int n, int p, FloatBuffer A, int lda,
+                     FloatBuffer B, int ldb, FloatBuffer c, FloatBuffer d, FloatBuffer x) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var c_ = MemorySegment.ofBuffer(c);
+        var d_ = MemorySegment.ofBuffer(d);
+        var x_ = MemorySegment.ofBuffer(x);
+        return LAPACKE_sgglse(layout.lapack(), m, n, p, A_, lda, B_, ldb, c_, d_, x_);
+    }
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
@@ -2437,7 +2675,15 @@ public interface LAPACK {
      *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int ggglm(Layout layout, int n, int m, int p, double[] A, int lda, double[] B, int ldb, double[] d, double[] x, double[] y);
+    static int ggglm(Layout layout, int n, int m, int p, double[] A, int lda,
+                     double[] B, int ldb, double[] d, double[] x, double[] y) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var d_ = MemorySegment.ofArray(d);
+        var x_ = MemorySegment.ofArray(x);
+        var y_ = MemorySegment.ofArray(y);
+        return LAPACKE_dggglm(layout.lapack(), n, m, p, A_, lda, B_, ldb, d_, x_, y_);
+    }
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
@@ -2515,7 +2761,15 @@ public interface LAPACK {
      *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int ggglm(Layout layout, int n, int m, int p, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer d, DoubleBuffer x, DoubleBuffer y);
+    static int ggglm(Layout layout, int n, int m, int p, DoubleBuffer A, int lda,
+                     DoubleBuffer B, int ldb, DoubleBuffer d, DoubleBuffer x, DoubleBuffer y) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var d_ = MemorySegment.ofBuffer(d);
+        var x_ = MemorySegment.ofBuffer(x);
+        var y_ = MemorySegment.ofBuffer(y);
+        return LAPACKE_dggglm(layout.lapack(), n, m, p, A_, lda, B_, ldb, d_, x_, y_);
+    }
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
@@ -2593,7 +2847,15 @@ public interface LAPACK {
      *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int ggglm(Layout layout, int n, int m, int p, float[] A, int lda, float[] B, int ldb, float[] d, float[] x, float[] y);
+    static int ggglm(Layout layout, int n, int m, int p, float[] A, int lda,
+                     float[] B, int ldb, float[] d, float[] x, float[] y) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var d_ = MemorySegment.ofArray(d);
+        var x_ = MemorySegment.ofArray(x);
+        var y_ = MemorySegment.ofArray(y);
+        return LAPACKE_sggglm(layout.lapack(), n, m, p, A_, lda, B_, ldb, d_, x_, y_);
+    }
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
@@ -2671,7 +2933,15 @@ public interface LAPACK {
      *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
-    int ggglm(Layout layout, int n, int m, int p, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer d, FloatBuffer x, FloatBuffer y);
+    static int ggglm(Layout layout, int n, int m, int p, FloatBuffer A, int lda,
+                     FloatBuffer B, int ldb, FloatBuffer d, FloatBuffer x, FloatBuffer y) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var d_ = MemorySegment.ofBuffer(d);
+        var x_ = MemorySegment.ofBuffer(x);
+        var y_ = MemorySegment.ofBuffer(y);
+        return LAPACKE_sggglm(layout.lapack(), n, m, p, A_, lda, B_, ldb, d_, x_, y_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2718,7 +2988,15 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, double[] A, int lda, double[] wr, double[] wi, double[] Vl, int ldvl, double[] Vr, int ldvr);
+    static int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, double[] A, int lda,
+                    double[] wr, double[] wi, double[] Vl, int ldvl, double[] Vr, int ldvr) {
+        var A_ = MemorySegment.ofArray(A);
+        var wr_ = MemorySegment.ofArray(wr);
+        var wi_ = MemorySegment.ofArray(wi);
+        var Vl_ = MemorySegment.ofArray(Vl);
+        var Vr_ = MemorySegment.ofArray(Vr);
+        return LAPACKE_dgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A_, lda, wr_, wi_, Vl_, ldvl, Vr_, ldvr);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2765,7 +3043,15 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, DoubleBuffer A, int lda, DoubleBuffer wr, DoubleBuffer wi, DoubleBuffer Vl, int ldvl, DoubleBuffer Vr, int ldvr);
+    static int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, DoubleBuffer A, int lda,
+                    DoubleBuffer wr, DoubleBuffer wi, DoubleBuffer Vl, int ldvl, DoubleBuffer Vr, int ldvr) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var wr_ = MemorySegment.ofBuffer(wr);
+        var wi_ = MemorySegment.ofBuffer(wi);
+        var Vl_ = MemorySegment.ofBuffer(Vl);
+        var Vr_ = MemorySegment.ofBuffer(Vr);
+        return LAPACKE_dgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A_, lda, wr_, wi_, Vl_, ldvl, Vr_, ldvr);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2812,7 +3098,10 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, MemorySegment A, int lda, MemorySegment wr, MemorySegment wi, MemorySegment Vl, int ldvl, MemorySegment Vr, int ldvr);
+    static int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, MemorySegment A, int lda,
+                    MemorySegment wr, MemorySegment wi, MemorySegment Vl, int ldvl, MemorySegment Vr, int ldvr) {
+        return LAPACKE_dgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A, lda, wr, wi, Vl, ldvl, Vr, ldvr);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2859,7 +3148,15 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, float[] A, int lda, float[] wr, float[] wi, float[] Vl, int ldvl, float[] Vr, int ldvr);
+    static int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, float[] A, int lda,
+                    float[] wr, float[] wi, float[] Vl, int ldvl, float[] Vr, int ldvr) {
+        var A_ = MemorySegment.ofArray(A);
+        var wr_ = MemorySegment.ofArray(wr);
+        var wi_ = MemorySegment.ofArray(wi);
+        var Vl_ = MemorySegment.ofArray(Vl);
+        var Vr_ = MemorySegment.ofArray(Vr);
+        return LAPACKE_sgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A_, lda, wr_, wi_, Vl_, ldvl, Vr_, ldvr);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2906,7 +3203,15 @@ public interface LAPACK {
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
      */
-    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, FloatBuffer A, int lda, FloatBuffer wr, FloatBuffer wi, FloatBuffer Vl, int ldvl, FloatBuffer Vr, int ldvr);
+    static int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, FloatBuffer A, int lda,
+                    FloatBuffer wr, FloatBuffer wi, FloatBuffer Vl, int ldvl, FloatBuffer Vr, int ldvr) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var wr_ = MemorySegment.ofBuffer(wr);
+        var wi_ = MemorySegment.ofBuffer(wi);
+        var Vl_ = MemorySegment.ofBuffer(Vl);
+        var Vr_ = MemorySegment.ofBuffer(Vr);
+        return LAPACKE_sgeev(layout.lapack(), jobvl.lapack(), jobvr.lapack(), n, A_, lda, wr_, wi_, Vl_, ldvl, Vr_, ldvr);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2936,7 +3241,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w);
+    static int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w) {
+        var A_ = MemorySegment.ofArray(A);
+        var w_ = MemorySegment.ofArray(w);
+        return LAPACKE_dsyev(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2966,7 +3275,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, DoubleBuffer A, int lda, DoubleBuffer w);
+    static int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, DoubleBuffer A, int lda, DoubleBuffer w) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var w_ = MemorySegment.ofBuffer(w);
+        return LAPACKE_dsyev(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -2996,7 +3309,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w);
+    static int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w) {
+        var A_ = MemorySegment.ofArray(A);
+        var w_ = MemorySegment.ofArray(w);
+        return LAPACKE_ssyev(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3026,7 +3343,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, FloatBuffer A, int lda, FloatBuffer w);
+    static int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, FloatBuffer A, int lda, FloatBuffer w) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var w_ = MemorySegment.ofBuffer(w);
+        return LAPACKE_ssyev(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3057,7 +3378,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w);
+    static int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w) {
+        var A_ = MemorySegment.ofArray(A);
+        var w_ = MemorySegment.ofArray(w);
+        return LAPACKE_dsyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3088,7 +3413,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, DoubleBuffer A, int lda, DoubleBuffer w);
+    static int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, DoubleBuffer A, int lda, DoubleBuffer w) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var w_ = MemorySegment.ofBuffer(w);
+        return LAPACKE_dsyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3119,7 +3448,9 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, MemorySegment A, int lda, MemorySegment w);
+    static int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, MemorySegment A, int lda, MemorySegment w) {
+        return LAPACKE_dsyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A, lda, w);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3150,7 +3481,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w);
+    static int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w) {
+        var A_ = MemorySegment.ofArray(A);
+        var w_ = MemorySegment.ofArray(w);
+        return LAPACKE_ssyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3181,7 +3516,11 @@ public interface LAPACK {
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
-    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, FloatBuffer A, int lda, FloatBuffer w);
+    static int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, FloatBuffer A, int lda, FloatBuffer w) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var w_ = MemorySegment.ofBuffer(w);
+        return LAPACKE_ssyevd(layout.lapack(), jobz.lapack(), uplo.lapack(), n, A_, lda, w_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3260,7 +3599,16 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  Internal error
      */
-    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl, double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz);
+    static int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl,
+                     double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz) {
+        var A_ = MemorySegment.ofArray(A);
+        var m_ = MemorySegment.ofArray(m);
+        var w_ = MemorySegment.ofArray(w);
+        var Z_ = MemorySegment.ofArray(Z);
+        var isuppz_ = MemorySegment.ofArray(isuppz);
+        return LAPACKE_dsyevr(layout.lapack(), jobz.lapack(), range.lapack(), uplo.lapack(), n,
+                A_, lda, vl, vu, il, iu, abstol, m_, w_, Z_, ldz, isuppz_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3339,7 +3687,16 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  Internal error
      */
-    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, DoubleBuffer A, int lda, double vl, double vu, int il, int iu, double abstol, IntBuffer m, DoubleBuffer w, DoubleBuffer Z, int ldz, IntBuffer isuppz);
+    static int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, DoubleBuffer A, int lda, double vl,
+                     double vu, int il, int iu, double abstol, IntBuffer m, DoubleBuffer w, DoubleBuffer Z, int ldz, IntBuffer isuppz) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var m_ = MemorySegment.ofBuffer(m);
+        var w_ = MemorySegment.ofBuffer(w);
+        var Z_ = MemorySegment.ofBuffer(Z);
+        var isuppz_ = MemorySegment.ofBuffer(isuppz);
+        return LAPACKE_dsyevr(layout.lapack(), jobz.lapack(), range.lapack(), uplo.lapack(), n,
+                A_, lda, vl, vu, il, iu, abstol, m_, w_, Z_, ldz, isuppz_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3418,7 +3775,16 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  Internal error
      */
-    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl, float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz);
+    static int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl,
+                     float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz) {
+        var A_ = MemorySegment.ofArray(A);
+        var m_ = MemorySegment.ofArray(m);
+        var w_ = MemorySegment.ofArray(w);
+        var Z_ = MemorySegment.ofArray(Z);
+        var isuppz_ = MemorySegment.ofArray(isuppz);
+        return LAPACKE_ssyevr(layout.lapack(), jobz.lapack(), range.lapack(), uplo.lapack(), n,
+                A_, lda, vl, vu, il, iu, abstol, m_, w_, Z_, ldz, isuppz_);
+    }
 
     /**
      * Computes the eigenvalues and, optionally, the left and/or right
@@ -3497,7 +3863,16 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  Internal error
      */
-    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, FloatBuffer A, int lda, float vl, float vu, int il, int iu, float abstol, IntBuffer m, FloatBuffer w, FloatBuffer Z, int ldz, IntBuffer isuppz);
+    static int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, FloatBuffer A, int lda, float vl,
+                     float vu, int il, int iu, float abstol, IntBuffer m, FloatBuffer w, FloatBuffer Z, int ldz, IntBuffer isuppz) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var m_ = MemorySegment.ofBuffer(m);
+        var w_ = MemorySegment.ofBuffer(w);
+        var Z_ = MemorySegment.ofBuffer(Z);
+        var isuppz_ = MemorySegment.ofBuffer(isuppz);
+        return LAPACKE_ssyevr(layout.lapack(), jobz.lapack(), range.lapack(), uplo.lapack(), n,
+                A_, lda, vl, vu, il, iu, abstol, m_, w_, Z_, ldz, isuppz_);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3548,7 +3923,16 @@ public interface LAPACK {
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
-    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt, double[] superb);
+    static int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, double[] A, int lda, double[] s,
+                     double[] U, int ldu, double[] VT, int ldvt, double[] superb) {
+        var A_ = MemorySegment.ofArray(A);
+        var s_ = MemorySegment.ofArray(s);
+        var U_ = MemorySegment.ofArray(U);
+        var VT_ = MemorySegment.ofArray(VT);
+        var superb_ = MemorySegment.ofArray(superb);
+        return LAPACKE_dgesvd(layout.lapack(), jobu.lapack(), jobvt.lapack(), m, n,
+                A_, lda, s_, U_, ldu, VT_, ldvt, superb_);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3599,7 +3983,16 @@ public interface LAPACK {
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
-    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s, DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt, DoubleBuffer superb);
+    static int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s,
+                     DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt, DoubleBuffer superb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var s_ = MemorySegment.ofBuffer(s);
+        var U_ = MemorySegment.ofBuffer(U);
+        var VT_ = MemorySegment.ofBuffer(VT);
+        var superb_ = MemorySegment.ofBuffer(superb);
+        return LAPACKE_dgesvd(layout.lapack(), jobu.lapack(), jobvt.lapack(), m, n,
+                A_, lda, s_, U_, ldu, VT_, ldvt, superb_);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3650,7 +4043,16 @@ public interface LAPACK {
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
-    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt, float[] superb);
+    static int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, float[] A, int lda, float[] s,
+                     float[] U, int ldu, float[] VT, int ldvt, float[] superb) {
+        var A_ = MemorySegment.ofArray(A);
+        var s_ = MemorySegment.ofArray(s);
+        var U_ = MemorySegment.ofArray(U);
+        var VT_ = MemorySegment.ofArray(VT);
+        var superb_ = MemorySegment.ofArray(superb);
+        return LAPACKE_sgesvd(layout.lapack(), jobu.lapack(), jobvt.lapack(), m, n,
+                A_, lda, s_, U_, ldu, VT_, ldvt, superb_);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3701,7 +4103,16 @@ public interface LAPACK {
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
-    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, FloatBuffer A, int lda, FloatBuffer s, FloatBuffer U, int ldu, FloatBuffer VT, int ldvt, FloatBuffer superb);
+    static int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, FloatBuffer A, int lda, FloatBuffer s,
+                     FloatBuffer U, int ldu, FloatBuffer VT, int ldvt, FloatBuffer superb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var s_ = MemorySegment.ofBuffer(s);
+        var U_ = MemorySegment.ofBuffer(U);
+        var VT_ = MemorySegment.ofBuffer(VT);
+        var superb_ = MemorySegment.ofBuffer(superb);
+        return LAPACKE_sgesvd(layout.lapack(), jobu.lapack(), jobvt.lapack(), m, n,
+                A_, lda, s_, U_, ldu, VT_, ldvt, superb_);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3744,7 +4155,14 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt);
+    static int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s,
+                     double[] U, int ldu, double[] VT, int ldvt) {
+        var A_ = MemorySegment.ofArray(A);
+        var s_ = MemorySegment.ofArray(s);
+        var U_ = MemorySegment.ofArray(U);
+        var VT_ = MemorySegment.ofArray(VT);
+        return LAPACKE_dgesdd(layout.lapack(), jobz.lapack(), m, n, A_, lda, s_, U_, ldu, VT_, ldvt);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3787,7 +4205,14 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s, DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt);
+    static int gesdd(Layout layout, SVDJob jobz, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s,
+                     DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var s_ = MemorySegment.ofBuffer(s);
+        var U_ = MemorySegment.ofBuffer(U);
+        var VT_ = MemorySegment.ofBuffer(VT);
+        return LAPACKE_dgesdd(layout.lapack(), jobz.lapack(), m, n, A_, lda, s_, U_, ldu, VT_, ldvt);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3830,7 +4255,10 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, MemorySegment A, int lda, MemorySegment s, MemorySegment U, int ldu, MemorySegment VT, int ldvt);
+    static int gesdd(Layout layout, SVDJob jobz, int m, int n, MemorySegment A, int lda, MemorySegment s,
+                     MemorySegment U, int ldu, MemorySegment VT, int ldvt) {
+        return LAPACKE_dgesdd(layout.lapack(), jobz.lapack(), m, n, A, lda, s, U, ldu, VT, ldvt);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3873,7 +4301,14 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt);
+    static int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s,
+                     float[] U, int ldu, float[] VT, int ldvt) {
+        var A_ = MemorySegment.ofArray(A);
+        var s_ = MemorySegment.ofArray(s);
+        var U_ = MemorySegment.ofArray(U);
+        var VT_ = MemorySegment.ofArray(VT);
+        return LAPACKE_sgesdd(layout.lapack(), jobz.lapack(), m, n, A_, lda, s_, U_, ldu, VT_, ldvt);
+    }
 
     /**
      * Computes the singular value decomposition (SVD) of a real
@@ -3916,7 +4351,14 @@ public interface LAPACK {
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
-    int gesdd(Layout layout, SVDJob jobz, int m, int n, FloatBuffer A, int lda, FloatBuffer s, FloatBuffer U, int ldu, FloatBuffer VT, int ldvt);
+    static int gesdd(Layout layout, SVDJob jobz, int m, int n, FloatBuffer A, int lda, FloatBuffer s,
+                     FloatBuffer U, int ldu, FloatBuffer VT, int ldvt) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var s_ = MemorySegment.ofBuffer(s);
+        var U_ = MemorySegment.ofBuffer(U);
+        var VT_ = MemorySegment.ofBuffer(VT);
+        return LAPACKE_sgesdd(layout.lapack(), jobz.lapack(), m, n, A_, lda, s_, U_, ldu, VT_, ldvt);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -3945,7 +4387,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv);
+    static int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+        var A_ = MemorySegment.ofArray(A);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgetrf(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -3974,7 +4420,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, DoubleBuffer A, int lda, IntBuffer ipiv);
+    static int getrf(Layout layout, int m, int n, DoubleBuffer A, int lda, IntBuffer ipiv) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgetrf(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4003,7 +4453,9 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment ipiv);
+    static int getrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment ipiv) {
+        return LAPACKE_dgetrf(layout.lapack(), m, n, A, lda, ipiv);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4032,7 +4484,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, float[] A, int lda, int[] ipiv);
+    static int getrf(Layout layout, int m, int n, float[] A, int lda, int[] ipiv) {
+        var A_ = MemorySegment.ofArray(A);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgetrf(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4061,7 +4517,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf(Layout layout, int m, int n, FloatBuffer A, int lda, IntBuffer ipiv);
+    static int getrf(Layout layout, int m, int n, FloatBuffer A, int lda, IntBuffer ipiv) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgetrf(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4091,7 +4551,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf2(Layout layout, int m, int n, double[] A, int lda, int[] ipiv);
+    static int getrf2(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+        var A_ = MemorySegment.ofArray(A);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgetrf2(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4121,7 +4585,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf2(Layout layout, int m, int n, DoubleBuffer A, int lda, IntBuffer ipiv);
+    static int getrf2(Layout layout, int m, int n, DoubleBuffer A, int lda, IntBuffer ipiv) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgetrf2(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4151,7 +4619,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf2(Layout layout, int m, int n, float[] A, int lda, int[] ipiv);
+    static int getrf2(Layout layout, int m, int n, float[] A, int lda, int[] ipiv) {
+        var A_ = MemorySegment.ofArray(A);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgetrf2(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a general M-by-N matrix A
@@ -4181,7 +4653,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int getrf2(Layout layout, int m, int n, FloatBuffer A, int lda, IntBuffer ipiv);
+    static int getrf2(Layout layout, int m, int n, FloatBuffer A, int lda, IntBuffer ipiv) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgetrf2(layout.lapack(), m, n, A_, lda, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a band matrix A
@@ -4214,7 +4690,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int gbtrf(Layout layout, int m, int n, int kl, int ku, double[] AB, int ldab, int[] ipiv);
+    static int gbtrf(Layout layout, int m, int n, int kl, int ku, double[] AB, int ldab, int[] ipiv) {
+        var AB_ = MemorySegment.ofArray(AB);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgbtrf(layout.lapack(), m, n, kl, ku, AB_, ldab, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a band matrix A
@@ -4247,7 +4727,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int gbtrf(Layout layout, int m, int n, int kl, int ku, DoubleBuffer AB, int ldab, IntBuffer ipiv);
+    static int gbtrf(Layout layout, int m, int n, int kl, int ku, DoubleBuffer AB, int ldab, IntBuffer ipiv) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgbtrf(layout.lapack(), m, n, kl, ku, AB_, ldab, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a band matrix A
@@ -4280,7 +4764,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int gbtrf(Layout layout, int m, int n, int kl, int ku, float[] AB, int ldab, int[] ipiv);
+    static int gbtrf(Layout layout, int m, int n, int kl, int ku, float[] AB, int ldab, int[] ipiv) {
+        var AB_ = MemorySegment.ofArray(AB);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgbtrf(layout.lapack(), m, n, kl, ku, AB_, ldab, ipiv_);
+    }
 
     /**
      * Computes an LU factorization of a band matrix A
@@ -4313,7 +4801,11 @@ public interface LAPACK {
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
      */
-    int gbtrf(Layout layout, int m, int n, int kl, int ku, FloatBuffer AB, int ldab, IntBuffer ipiv);
+    static int gbtrf(Layout layout, int m, int n, int kl, int ku, FloatBuffer AB, int ldab, IntBuffer ipiv) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgbtrf(layout.lapack(), m, n, kl, ku, AB_, ldab, ipiv_);
+    }
 
     /**
      * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
@@ -4338,7 +4830,11 @@ public interface LAPACK {
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
      */
-    int sptrf(Layout layout, UPLO uplo, int n, double[] AP, int[] ipiv);
+    static int sptrf(Layout layout, UPLO uplo, int n, double[] AP, int[] ipiv) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dsptrf(layout.lapack(), uplo.lapack(), n, AP_, ipiv_);
+    }
 
     /**
      * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
@@ -4363,7 +4859,11 @@ public interface LAPACK {
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
      */
-    int sptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP, IntBuffer ipiv);
+    static int sptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP, IntBuffer ipiv) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dsptrf(layout.lapack(), uplo.lapack(), n, AP_, ipiv_);
+    }
 
     /**
      * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
@@ -4388,7 +4888,11 @@ public interface LAPACK {
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
      */
-    int sptrf(Layout layout, UPLO uplo, int n, float[] AP, int[] ipiv);
+    static int sptrf(Layout layout, UPLO uplo, int n, float[] AP, int[] ipiv) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_ssptrf(layout.lapack(), uplo.lapack(), n, AP_, ipiv_);
+    }
 
     /**
      * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
@@ -4413,7 +4917,11 @@ public interface LAPACK {
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
      */
-    int sptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP, IntBuffer ipiv);
+    static int sptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP, IntBuffer ipiv) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_ssptrf(layout.lapack(), uplo.lapack(), n, AP_, ipiv_);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4452,7 +4960,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
+    static int getrs(Layout layout, Transpose trans, int n, int nrhs,
+                     double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgetrs(layout.lapack(), trans.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4491,7 +5005,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int getrs(Layout layout, Transpose trans, int n, int nrhs,
+                     DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgetrs(layout.lapack(), trans.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4530,7 +5050,10 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb);
+    static int getrs(Layout layout, Transpose trans, int n, int nrhs,
+                     MemorySegment A, int lda, MemorySegment ipiv, MemorySegment B, int ldb) {
+        return LAPACKE_dgetrs(layout.lapack(), trans.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4569,7 +5092,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
+    static int getrs(Layout layout, Transpose trans, int n, int nrhs,
+                     float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgetrs(layout.lapack(), trans.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4608,7 +5137,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int getrs(Layout layout, Transpose trans, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int getrs(Layout layout, Transpose trans, int n, int nrhs,
+                     FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgetrs(layout.lapack(), trans.lapack(), n, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4635,9 +5170,9 @@ public interface LAPACK {
      * @param nrhs The number of right hand sides, i.e., the number of columns
      *             of the matrix B.
      *
-     * @param AB The LU factorization computed by GBTRF.
+     * @param A The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4651,7 +5186,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, double[] AB, int ldab, int[] ipiv, double[] B, int ldb);
+    static int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs,
+                     double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4678,9 +5219,9 @@ public interface LAPACK {
      * @param nrhs The number of right hand sides, i.e., the number of columns
      *             of the matrix B.
      *
-     * @param AB The LU factorization computed by GBTRF.
+     * @param A The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4694,7 +5235,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, DoubleBuffer AB, int ldab, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs,
+                     DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4721,9 +5268,9 @@ public interface LAPACK {
      * @param nrhs The number of right hand sides, i.e., the number of columns
      *             of the matrix B.
      *
-     * @param AB The LU factorization computed by GBTRF.
+     * @param A The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4737,7 +5284,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, float[] AB, int ldab, int[] ipiv, float[] B, int ldb);
+    static int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs,
+                     float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_sgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4764,9 +5317,9 @@ public interface LAPACK {
      * @param nrhs The number of right hand sides, i.e., the number of columns
      *             of the matrix B.
      *
-     * @param AB The LU factorization computed by GBTRF.
+     * @param A The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4780,7 +5333,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, FloatBuffer AB, int ldab, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs,
+                     FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_sgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A_, lda, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4818,7 +5377,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, int[] ipiv, double[] B, int ldb);
+    static int sptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, int[] ipiv, double[] B, int ldb) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_dsptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4856,7 +5420,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, IntBuffer ipiv, DoubleBuffer B, int ldb);
+    static int sptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_dsptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4894,7 +5463,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, IntBuffer ipiv, FloatBuffer B, int ldb);
+    static int sptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, int[] ipiv, float[] B, int ldb) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var B_ = MemorySegment.ofArray(B);
+        var ipiv_ = MemorySegment.ofArray(ipiv);
+        return LAPACKE_ssptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, ipiv_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -4932,7 +5506,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, int[] ipiv, float[] B, int ldb);
+    static int sptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var B_ = MemorySegment.ofBuffer(B);
+        var ipiv_ = MemorySegment.ofBuffer(ipiv);
+        return LAPACKE_ssptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, ipiv_, B_, ldb);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -4958,7 +5537,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, double[] A, int lda);
+    static int potrf(Layout layout, UPLO uplo, int n, double[] A, int lda) {
+        var A_ = MemorySegment.ofArray(A);
+        return LAPACKE_dpotrf(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -4984,7 +5566,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, DoubleBuffer A, int lda);
+    static int potrf(Layout layout, UPLO uplo, int n, DoubleBuffer A, int lda) {
+        var A_ = MemorySegment.ofBuffer(A);
+        return LAPACKE_dpotrf(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5010,7 +5595,9 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, MemorySegment A, int lda);
+    static int potrf(Layout layout, UPLO uplo, int n, MemorySegment A, int lda) {
+        return LAPACKE_dpotrf(layout.lapack(), uplo.lapack(), n, A, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5036,7 +5623,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, float[] A, int lda);
+    static int potrf(Layout layout, UPLO uplo, int n, float[] A, int lda) {
+        var A_ = MemorySegment.ofArray(A);
+        return LAPACKE_spotrf(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5062,7 +5652,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf(Layout layout, UPLO uplo, int n, FloatBuffer A, int lda);
+    static int potrf(Layout layout, UPLO uplo, int n, FloatBuffer A, int lda) {
+        var A_ = MemorySegment.ofBuffer(A);
+        return LAPACKE_spotrf(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5088,7 +5681,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf2(Layout layout, UPLO uplo, int n, double[] A, int lda);
+    static int potrf2(Layout layout, UPLO uplo, int n, double[] A, int lda) {
+        var A_ = MemorySegment.ofArray(A);
+        return LAPACKE_dpotrf2(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5114,7 +5710,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf2(Layout layout, UPLO uplo, int n, DoubleBuffer A, int lda);
+    static int potrf2(Layout layout, UPLO uplo, int n, DoubleBuffer A, int lda) {
+        var A_ = MemorySegment.ofBuffer(A);
+        return LAPACKE_dpotrf2(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5140,7 +5739,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf2(Layout layout, UPLO uplo, int n, float[] A, int lda);
+    static int potrf2(Layout layout, UPLO uplo, int n, float[] A, int lda) {
+        var A_ = MemorySegment.ofArray(A);
+        return LAPACKE_spotrf2(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5166,7 +5768,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int potrf2(Layout layout, UPLO uplo, int n, FloatBuffer A, int lda);
+    static int potrf2(Layout layout, UPLO uplo, int n, FloatBuffer A, int lda) {
+        var A_ = MemorySegment.ofBuffer(A);
+        return LAPACKE_spotrf2(layout.lapack(), uplo.lapack(), n, A_, lda);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5194,7 +5799,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pbtrf(Layout layout, UPLO uplo, int n, int kd, double[] AB, int ldab);
+    static int pbtrf(Layout layout, UPLO uplo, int n, int kd, double[] AB, int ldab) {
+        var AB_ = MemorySegment.ofArray(AB);
+        return LAPACKE_dpbtrf(layout.lapack(), uplo.lapack(), n, kd, AB_, ldab);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5222,7 +5830,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pbtrf(Layout layout, UPLO uplo, int n, int kd, DoubleBuffer AB, int ldab);
+    static int pbtrf(Layout layout, UPLO uplo, int n, int kd, DoubleBuffer AB, int ldab) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        return LAPACKE_dpbtrf(layout.lapack(), uplo.lapack(), n, kd, AB_, ldab);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5250,7 +5861,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pbtrf(Layout layout, UPLO uplo, int n, int kd, float[] AB, int ldab);
+    static int pbtrf(Layout layout, UPLO uplo, int n, int kd, float[] AB, int ldab) {
+        var AB_ = MemorySegment.ofArray(AB);
+        return LAPACKE_spbtrf(layout.lapack(), uplo.lapack(), n, kd, AB_, ldab);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5278,7 +5892,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pbtrf(Layout layout, UPLO uplo, int n, int kd, FloatBuffer AB, int ldab);
+    static int pbtrf(Layout layout, UPLO uplo, int n, int kd, FloatBuffer AB, int ldab) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        return LAPACKE_spbtrf(layout.lapack(), uplo.lapack(), n, kd, AB_, ldab);
+    }
 
 
     /**
@@ -5303,7 +5920,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pptrf(Layout layout, UPLO uplo, int n, double[] AP);
+    static int pptrf(Layout layout, UPLO uplo, int n, double[] AP) {
+        var AP_ = MemorySegment.ofArray(AP);
+        return LAPACKE_dpptrf(layout.lapack(), uplo.lapack(), n, AP_);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5327,7 +5947,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP);
+    static int pptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        return LAPACKE_dpptrf(layout.lapack(), uplo.lapack(), n, AP_);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5351,7 +5974,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pptrf(Layout layout, UPLO uplo, int n, float[] AP);
+    static int pptrf(Layout layout, UPLO uplo, int n, float[] AP) {
+        var AP_ = MemorySegment.ofArray(AP);
+        return LAPACKE_spptrf(layout.lapack(), uplo.lapack(), n, AP_);
+    }
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -5375,7 +6001,10 @@ public interface LAPACK {
      *               positive definite, and the factorization could not be
      *               completed.
      */
-    int pptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP);
+    static int pptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        return LAPACKE_spptrf(layout.lapack(), uplo.lapack(), n, AP_);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5410,7 +6039,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+    static int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dpotrs(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5445,7 +6078,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb);
+    static int potrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dpotrs(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5480,7 +6117,9 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment B, int ldb);
+    static int potrs(Layout layout, UPLO uplo, int n, int nrhs, MemorySegment A, int lda, MemorySegment B, int ldb) {
+        return LAPACKE_dpotrs(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, B, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5515,7 +6154,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
+    static int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_spotrs(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5550,7 +6193,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int potrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
+    static int potrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_spotrs(layout.lapack(), uplo.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5587,7 +6234,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, double[] AB, int ldab, double[] B, int ldb);
+    static int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs,
+                     double[] AB, int ldab, double[] B, int ldb) {
+        var AB_ = MemorySegment.ofArray(AB);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dpbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB_, ldab, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5624,7 +6276,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, DoubleBuffer AB, int ldab, DoubleBuffer B, int ldb);
+    static int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs,
+                     DoubleBuffer AB, int ldab, DoubleBuffer B, int ldb) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dpbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB_, ldab, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5661,7 +6318,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, float[] AB, int ldab, float[] B, int ldb);
+    static int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs,
+                     float[] AB, int ldab, float[] B, int ldb) {
+        var AB_ = MemorySegment.ofArray(AB);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_spbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB_, ldab, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5698,7 +6360,12 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, FloatBuffer AB, int ldab, FloatBuffer B, int ldb);
+    static int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs,
+                     FloatBuffer AB, int ldab, FloatBuffer B, int ldb) {
+        var AB_ = MemorySegment.ofBuffer(AB);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_spbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB_, ldab, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5731,7 +6398,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, double[] B, int ldb);
+    static int pptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, double[] B, int ldb) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dpptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5764,7 +6435,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, DoubleBuffer B, int ldb);
+    static int pptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, DoubleBuffer B, int ldb) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dpptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5797,7 +6472,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, float[] B, int ldb);
+    static int pptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, float[] B, int ldb) {
+        var AP_ = MemorySegment.ofArray(AP);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_spptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, B_, ldb);
+    }
 
     /**
      * Solves a system of linear equations
@@ -5830,7 +6509,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, FloatBuffer B, int ldb);
+    static int pptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, FloatBuffer B, int ldb) {
+        var AP_ = MemorySegment.ofBuffer(AP);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_spptrs(layout.lapack(), uplo.lapack(), n, nrhs, AP_, B_, ldb);
+    }
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -5856,7 +6539,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, double[] A, int lda, double[] tau);
+    static int geqrf(Layout layout, int m, int n, double[] A, int lda, double[] tau) {
+        var A_ = MemorySegment.ofArray(A);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_dgeqrf(layout.lapack(), m, n, A_, lda, tau_);
+    }
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -5882,7 +6569,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, DoubleBuffer A, int lda, DoubleBuffer tau);
+    static int geqrf(Layout layout, int m, int n, DoubleBuffer A, int lda, DoubleBuffer tau) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_dgeqrf(layout.lapack(), m, n, A_, lda, tau_);
+    }
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -5908,7 +6599,9 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment tau);
+    static int geqrf(Layout layout, int m, int n, MemorySegment A, int lda, MemorySegment tau) {
+        return LAPACKE_dgeqrf(layout.lapack(), m, n, A, lda, tau);
+    }
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -5934,7 +6627,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau);
+    static int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau) {
+        var A_ = MemorySegment.ofArray(A);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_sgeqrf(layout.lapack(), m, n, A_, lda, tau_);
+    }
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
@@ -5960,7 +6657,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int geqrf(Layout layout, int m, int n, FloatBuffer A, int lda, FloatBuffer tau);
+    static int geqrf(Layout layout, int m, int n, FloatBuffer A, int lda, FloatBuffer tau) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_sgeqrf(layout.lapack(), m, n, A_, lda, tau_);
+    }
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6012,7 +6713,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc);
+    static int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k,
+                     double[] A, int lda, double[] tau, double[] C, int ldc) {
+        var A_ = MemorySegment.ofArray(A);
+        var C_ = MemorySegment.ofArray(C);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A_, lda, tau_, C_, ldc);
+    }
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6064,7 +6771,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau, DoubleBuffer C, int ldc);
+    static int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k,
+                     DoubleBuffer A, int lda, DoubleBuffer tau, DoubleBuffer C, int ldc) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var C_ = MemorySegment.ofBuffer(C);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A_, lda, tau_, C_, ldc);
+    }
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6116,7 +6829,10 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, MemorySegment A, int lda, MemorySegment tau, MemorySegment C, int ldc);
+    static int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k,
+                     MemorySegment A, int lda, MemorySegment tau, MemorySegment C, int ldc) {
+        return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A, lda, tau, C, ldc);
+    }
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6168,7 +6884,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, float[] A, int lda, float[] tau, float[] C, int ldc);
+    static int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k,
+                     float[] A, int lda, float[] tau, float[] C, int ldc) {
+        var A_ = MemorySegment.ofArray(A);
+        var C_ = MemorySegment.ofArray(C);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_sormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A_, lda, tau_, C_, ldc);
+    }
 
     /**
      * Overwrites the general real M-by-N matrix C with
@@ -6220,7 +6942,13 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau, FloatBuffer C, int ldc);
+    static int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k,
+                     FloatBuffer A, int lda, FloatBuffer tau, FloatBuffer C, int ldc) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var C_ = MemorySegment.ofBuffer(C);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_sormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A_, lda, tau_, C_, ldc);
+    }
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6248,7 +6976,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, double[] A, int lda, double[] tau);
+    static int orgqr(Layout layout, int m, int n, int k, double[] A, int lda, double[] tau) {
+        var A_ = MemorySegment.ofArray(A);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A_, lda, tau_);
+    }
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6276,7 +7008,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau);
+    static int orgqr(Layout layout, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A_, lda, tau_);
+    }
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6304,7 +7040,9 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, MemorySegment A, int lda, MemorySegment tau);
+    static int orgqr(Layout layout, int m, int n, int k, MemorySegment A, int lda, MemorySegment tau) {
+        return LAPACKE_dorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6332,7 +7070,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, float[] A, int lda, float[] tau);
+    static int orgqr(Layout layout, int m, int n, int k, float[] A, int lda, float[] tau) {
+        var A_ = MemorySegment.ofArray(A);
+        var tau_ = MemorySegment.ofArray(tau);
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A_, lda, tau_);
+    }
 
     /**
      * Generates the real orthogonal matrix Q of the QR factorization formed by geqrf.
@@ -6360,7 +7102,11 @@ public interface LAPACK {
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
-    int orgqr(Layout layout, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau);
+    static int orgqr(Layout layout, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var tau_ = MemorySegment.ofBuffer(tau);
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A_, lda, tau_);
+    }
 
     /**
      * Solves a triangular system of the form
@@ -6403,7 +7149,12 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+    static int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs,
+                     double[] A, int lda, double[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_dtrtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a triangular system of the form
@@ -6446,7 +7197,12 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb);
+    static int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs,
+                     DoubleBuffer A, int lda, DoubleBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_dtrtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a triangular system of the form
@@ -6489,7 +7245,10 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, MemorySegment A, int lda, MemorySegment B, int ldb);
+    static int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs,
+                     MemorySegment A, int lda, MemorySegment B, int ldb) {
+        return LAPACKE_dtrtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A, lda, B, ldb);
+    }
 
     /**
      * Solves a triangular system of the form
@@ -6532,7 +7291,12 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
+    static int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs,
+                     float[] A, int lda, float[] B, int ldb) {
+        var A_ = MemorySegment.ofArray(A);
+        var B_ = MemorySegment.ofArray(B);
+        return LAPACKE_strtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 
     /**
      * Solves a triangular system of the form
@@ -6575,5 +7339,10 @@ public interface LAPACK {
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
-    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
+    static int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs,
+                     FloatBuffer A, int lda, FloatBuffer B, int ldb) {
+        var A_ = MemorySegment.ofBuffer(A);
+        var B_ = MemorySegment.ofBuffer(B);
+        return LAPACKE_strtrs(layout.lapack(), uplo.lapack(), trans.lapack(), diag.lapack(), n, nrhs, A_, lda, B_, ldb);
+    }
 }
