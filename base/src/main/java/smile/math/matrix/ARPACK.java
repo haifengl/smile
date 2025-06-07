@@ -41,11 +41,9 @@ import static org.bytedeco.arpackng.global.arpack.*;
  *
  * @author Haifeng Li
  */
-public class ARPACK {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ARPACK.class);
-
+public interface ARPACK {
     /** Which eigenvalues of symmetric matrix to compute. */
-    public enum SymmOption {
+    enum SymmOption {
         /**
          * The largest algebraic eigenvalues.
          */
@@ -71,7 +69,7 @@ public class ARPACK {
     }
 
     /** Which eigenvalues of asymmetric matrix to compute. */
-    public enum AsymmOption {
+    enum AsymmOption {
         /**
          * The eigenvalues largest in magnitude.
          */
@@ -98,11 +96,6 @@ public class ARPACK {
         SI
     }
 
-    /** Private constructor to prevent instance creation. */
-    private ARPACK() {
-
-    }
-
     /**
      * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
@@ -111,7 +104,7 @@ public class ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD syev(IMatrix A, SymmOption which, int nev) {
+    static Matrix.EVD syev(IMatrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -125,7 +118,7 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD syev(IMatrix A, SymmOption which, int nev, int ncv, double tol) {
+    static Matrix.EVD syev(IMatrix A, SymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -170,7 +163,7 @@ public class ARPACK {
         } while (ido[0] == -1 || ido[0] == 1);
 
         if (info[0] < 0) {
-            throw new IllegalStateException("ARPACK DSAUPD error code: " + info[0]);
+            throw new ArithmeticException("ARPACK DSAUPD error code: " + info[0]);
         }
 
         info[0] = 0;
@@ -185,17 +178,18 @@ public class ARPACK {
                  workd, workl, workl.length, info);
 
         if (info[0] != 0) {
-            String error = "ARPACK DSEUPD error code: " + info[0];
-            if (info[0] == 1) {
-                error = "ARPACK DSEUPD error: Maximum number of iterations reached.";
-            } else if (info[0] == 3) {
-                error = "ARPACK DSEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
-            }
-            throw new IllegalStateException(error);
+            String error = switch(info[0]) {
+                case 1 -> "ARPACK DSEUPD error: Maximum number of iterations reached.";
+                case 3 -> "ARPACK DSEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
+                default -> "ARPACK DSEUPD error code: " + info[0];
+            };
+            throw new ArithmeticException(error);
         }
 
-        nev = iparam[4]; // number of found eigenvalues
-        logger.info("ARPACK dseupd computed {} eigenvalues", nev);
+        if (iparam[4] < nev) { // number of found eigenvalues
+            String error = String.format("ARPACK dseupd computed %d eigenvalues, expect %d", iparam[4], nev);
+            throw new ArithmeticException(error);
+        }
 
         d = Arrays.copyOfRange(d, 0, nev);
         V = Arrays.copyOfRange(V, 0, n * nev);
@@ -211,7 +205,7 @@ public class ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev) {
+    static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev) {
         return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -225,7 +219,7 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    public static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev, int ncv, double tol) {
+    static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -271,7 +265,7 @@ public class ARPACK {
         } while (ido[0] == -1 || ido[0] == 1);
 
         if (info[0] < 0) {
-            throw new IllegalStateException("ARPACK DNAUPD error code: " + info[0]);
+            throw new ArithmeticException("ARPACK DNAUPD error code: " + info[0]);
         }
 
         info[0] = 0;
@@ -288,17 +282,18 @@ public class ARPACK {
                 workd, workl, workl.length, info);
 
         if (info[0] != 0) {
-            String error = "ARPACK DNEUPD error code: " + info[0];
-            if (info[0] == 1) {
-                error = "ARPACK DNEUPD error: Maximum number of iterations reached.";
-            } else if (info[0] == 3) {
-                error = "ARPACK DNEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
-            }
-            throw new IllegalStateException(error);
+            String error = switch(info[0]) {
+                case 1 -> "ARPACK DNEUPD error: Maximum number of iterations reached.";
+                case 3 -> "ARPACK DNEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
+                default -> "ARPACK DNEUPD error code: " + info[0];
+            };
+            throw new ArithmeticException(error);
         }
 
-        nev = iparam[4]; // number of found eigenvalues
-        logger.info("ARPACK dnaupd computed {} eigenvalues", nev);
+        if (iparam[4] < nev) { // number of found eigenvalues
+            String error = String.format("ARPACK dnaupd computed %d eigenvalues, expect %d", iparam[4], nev);
+            throw new ArithmeticException(error);
+        }
 
         wr = Arrays.copyOfRange(wr, 0, nev);
         wi = Arrays.copyOfRange(wi, 0, nev);
@@ -314,7 +309,7 @@ public class ARPACK {
      * @param k the number of singular triples to compute.
      * @return the singular value decomposition.
      */
-    public static Matrix.SVD svd(IMatrix A, int k) {
+    static Matrix.SVD svd(IMatrix A, int k) {
         return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6);
     }
 
@@ -327,7 +322,7 @@ public class ARPACK {
      * @param tol the stopping criterion.
      * @return the singular value decomposition.
      */
-    public static Matrix.SVD svd(IMatrix A, int k, int ncv, double tol) {
+    static Matrix.SVD svd(IMatrix A, int k, int ncv, double tol) {
         int m = A.nrow();
         int n = A.ncol();
 
