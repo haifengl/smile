@@ -22,16 +22,16 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 import smile.math.MathEx;
-import smile.math.blas.*;
+import smile.linalg.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianDistribution;
 
-import static smile.math.blas.Diag.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.Side.*;
-import static smile.math.blas.Transpose.*;
-import static smile.math.blas.UPLO.*;
+import static smile.linalg.Diag.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.Side.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * Big dense matrix of double precision values for more than

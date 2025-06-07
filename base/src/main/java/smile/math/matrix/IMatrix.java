@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Scanner;
 
 import smile.math.MathEx;
-import smile.math.blas.Transpose;
+import smile.linalg.Transpose;
 import smile.util.SparseArray;
 
-import static smile.math.blas.Transpose.NO_TRANSPOSE;
-import static smile.math.blas.Transpose.TRANSPOSE;
-import static smile.math.blas.UPLO.LOWER;
+import static smile.linalg.Transpose.NO_TRANSPOSE;
+import static smile.linalg.Transpose.TRANSPOSE;
+import static smile.linalg.UPLO.LOWER;
 
 /**
  * Matrix base class. The most important method is the matrix vector

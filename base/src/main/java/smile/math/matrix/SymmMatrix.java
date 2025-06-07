@@ -20,9 +20,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import smile.math.MathEx;
-import smile.math.blas.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.UPLO.*;
+import smile.linalg.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * The symmetric matrix in packed storage.
@@ -195,14 +195,14 @@ public class SymmMatrix extends IMatrix {
 
     @Override
     public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
-        BLAS.engine.spmv(layout(), uplo, n, alpha, AP, x, 1, beta, y, 1);
+        BLAS.spmv(layout(), uplo, n, alpha, AP, x, 1, beta, y, 1);
     }
 
     @Override
     public void mv(double[] work, int inputOffset, int outputOffset) {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
-        BLAS.engine.spmv(layout(), uplo, n, 1.0, DoubleBuffer.wrap(AP), xb, 1, 0.0, yb, 1);
+        BLAS.spmv(layout(), uplo, n, 1.0, DoubleBuffer.wrap(AP), xb, 1, 0.0, yb, 1);
     }
 
     @Override
@@ -217,7 +217,7 @@ public class SymmMatrix extends IMatrix {
     public BunchKaufman bk() {
         SymmMatrix lu = copy();
         int[] ipiv = new int[n];
-        int info = LAPACK.engine.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
+        int info = LAPACK.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
         if (info < 0) {
             logger.error("LAPACK SPTRF error code: {}", info);
             throw new ArithmeticException("LAPACK SPTRF error code: " + info);
@@ -238,7 +238,7 @@ public class SymmMatrix extends IMatrix {
         }
 
         SymmMatrix lu = copy();
-        int info = LAPACK.engine.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
+        int info = LAPACK.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
         if (info != 0) {
             logger.error("LAPACK PPTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PPTRF error code: " + info);

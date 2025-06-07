@@ -20,10 +20,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import smile.math.MathEx;
-import smile.math.blas.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.Transpose.*;
-import static smile.math.blas.UPLO.*;
+import smile.linalg.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -297,9 +297,9 @@ public class BandMatrix extends IMatrix {
     @Override
     public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
         } else {
-            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, alpha, AB, ld, x, 1, beta, y, 1);
+            BLAS.gbmv(layout(), trans, m, n, kl, ku, alpha, AB, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -308,9 +308,9 @@ public class BandMatrix extends IMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         }
     }
 
@@ -319,9 +319,9 @@ public class BandMatrix extends IMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         }
     }
 
@@ -337,7 +337,7 @@ public class BandMatrix extends IMatrix {
             }
         }
         int[] ipiv = new int[n];
-        int info = LAPACK.engine.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
+        int info = LAPACK.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GBTRF error code: " + info);
@@ -373,7 +373,7 @@ public class BandMatrix extends IMatrix {
             }
         }
 
-        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
+        int info = LAPACK.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
         if (info != 0) {
             logger.error("LAPACK PBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PBTRF error code: " + info);
