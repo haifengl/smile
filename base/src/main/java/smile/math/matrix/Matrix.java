@@ -25,16 +25,16 @@ import java.util.List;
 import java.util.stream.Collector;
 
 import smile.math.MathEx;
-import smile.math.blas.*;
+import smile.linalg.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianDistribution;
 
-import static smile.math.blas.Diag.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.Side.*;
-import static smile.math.blas.Transpose.*;
-import static smile.math.blas.UPLO.*;
+import static smile.linalg.Diag.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.Side.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * Dense matrix of double precision values.
@@ -1170,9 +1170,9 @@ public class Matrix extends IMatrix {
         }
 
         if (isSymmetric() && x == y) {
-            BLAS.engine.syr(layout(), uplo, m, alpha, x, 1, A, ld);
+            BLAS.syr(layout(), uplo, m, alpha, x, 1, A, ld);
         } else {
-            BLAS.engine.ger(layout(), m, n, alpha, x, 1, y, 1, A, ld);
+            BLAS.ger(layout(), m, n, alpha, x, 1, y, 1, A, ld);
         }
 
         return this;
@@ -1460,12 +1460,12 @@ public class Matrix extends IMatrix {
         Matrix inv = eye(n);
         int[] ipiv = new int[n];
         if (isSymmetric()) {
-            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+            int info = LAPACK.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("SYSV fails: " + info);
             }
         } else {
-            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+            int info = LAPACK.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("GESV fails: " + info);
             }
@@ -1491,15 +1491,15 @@ public class Matrix extends IMatrix {
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
-                    BLAS.engine.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
+                    BLAS.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
                 } else {
-                    BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+                    BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
                 }
             } else {
-                BLAS.engine.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
+                BLAS.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
             }
         } else {
-            BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+            BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -1508,15 +1508,15 @@ public class Matrix extends IMatrix {
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
-                    BLAS.engine.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
+                    BLAS.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
                 } else {
-                    BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+                    BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
                 }
             } else {
-                BLAS.engine.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
+                BLAS.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
             }
         } else {
-            BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+            BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -1568,9 +1568,9 @@ public class Matrix extends IMatrix {
      */
     public Matrix mm(Transpose transA, Matrix A, Transpose transB, Matrix B, double alpha, double beta) {
         if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == layout()) {
-            BLAS.engine.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+            BLAS.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
-            BLAS.engine.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
+            BLAS.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
         } else {
             if (layout() != A.layout()) {
                 transA = flip(transA);
@@ -1582,7 +1582,7 @@ public class Matrix extends IMatrix {
             }
             int k = transA == NO_TRANSPOSE ? A.n : A.m;
 
-            BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+            BLAS.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         }
         return this;
     }
@@ -1721,7 +1721,7 @@ public class Matrix extends IMatrix {
     public LU lu(boolean overwrite) {
         Matrix lu = overwrite ? this : copy();
         int[] ipiv = new int[Math.min(m, n)];
-        int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
+        int info = LAPACK.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GETRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
@@ -1754,7 +1754,7 @@ public class Matrix extends IMatrix {
         }
 
         Matrix lu = overwrite ? this : copy();
-        int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
+        int info = LAPACK.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK POTRF error code: {}", info);
             throw new ArithmeticException("LAPACK POTRF error code: " + info);
@@ -1780,7 +1780,7 @@ public class Matrix extends IMatrix {
     public QR qr(boolean overwrite) {
         Matrix qr = overwrite ? this : copy();
         double[] tau = new double[Math.min(m, n)];
-        int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
+        int info = LAPACK.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
             logger.error("LAPACK GEQRF error code: {}", info);
             throw new ArithmeticException("LAPACK GEQRF error code: " + info);
@@ -1836,7 +1836,7 @@ public class Matrix extends IMatrix {
             Matrix U = new Matrix(m, k);
             Matrix VT = new Matrix(k, n);
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
                 logger.error("LAPACK GESDD with Serror code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
@@ -1847,7 +1847,7 @@ public class Matrix extends IMatrix {
             Matrix U = new Matrix(1, 1);
             Matrix VT = new Matrix(1, 1);
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
                 logger.error("LAPACK GESDD error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
@@ -1893,7 +1893,7 @@ public class Matrix extends IMatrix {
         Matrix eig = overwrite ? this : copy();
         if (isSymmetric()) {
             double[] w = new double[n];
-            int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
+            int info = LAPACK.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
             if (info != 0) {
                 logger.error("LAPACK SYEV error code: {}", info);
                 throw new ArithmeticException("LAPACK SYEV error code: " + info);
@@ -1906,7 +1906,7 @@ public class Matrix extends IMatrix {
             double[] wi = new double[n];
             Matrix Vl = vl ? new Matrix(n, n) : new Matrix(1, 1);
             Matrix Vr = vr ? new Matrix(n, n) : new Matrix(1, 1);
-            int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
+            int info = LAPACK.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
             if (info != 0) {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
@@ -2626,7 +2626,7 @@ public class Matrix extends IMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.A, lu.ld, B.A, B.ld);
+            int info = LAPACK.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.A, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
