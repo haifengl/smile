@@ -39,6 +39,11 @@ publishing {
                         name = "Haifeng Li"
                         url = "https://haifengl.github.io/"
                     }
+                    developer {
+                        id = "kklioss"
+                        name = "Karl Li"
+                        url = "https://github.com/kklioss"
+                    }
                 }
                 scm {
                     connection = "git@github.com:haifengl/smile.git"

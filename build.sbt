@@ -68,6 +68,11 @@ lazy val commonSettings = Seq(
         <name>Haifeng Li</name>
         <url>https://haifengl.github.io/</url>
       </developer>
+      <developer>
+        <id>kklioss</id>
+        <name>Karl Li</name>
+        <url>https://github.com/kklioss</url>
+      </developer>
     </developers>
   )
 )
