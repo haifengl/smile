@@ -18,7 +18,7 @@ package smile.math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
 import smile.util.function.DifferentiableMultivariateFunction;

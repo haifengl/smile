@@ -19,7 +19,7 @@ package smile.stat.distribution;
 import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 
 /**

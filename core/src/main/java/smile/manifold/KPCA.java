@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;

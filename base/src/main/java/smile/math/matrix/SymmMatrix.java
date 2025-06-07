@@ -363,7 +363,7 @@ public class SymmMatrix extends IMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.sptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, ipiv, B.A, B.ld);
+            int ret = LAPACK.sptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -472,7 +472,7 @@ public class SymmMatrix extends IMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.n, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, B.A, B.ld);
+            int info = LAPACK.pptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

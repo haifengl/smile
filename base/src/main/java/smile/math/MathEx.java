@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.distance.Distance;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSelect;

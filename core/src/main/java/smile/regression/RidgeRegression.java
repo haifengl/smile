@@ -22,7 +22,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.Strings;
 

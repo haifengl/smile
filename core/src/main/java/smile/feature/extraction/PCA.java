@@ -18,7 +18,7 @@ package smile.feature.extraction;
 
 import smile.data.DataFrame;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 
 import java.io.Serial;

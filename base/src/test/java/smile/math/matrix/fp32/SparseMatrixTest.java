@@ -21,8 +21,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static smile.math.blas.Transpose.NO_TRANSPOSE;
-import static smile.math.blas.Transpose.TRANSPOSE;
+import static smile.linalg.Transpose.NO_TRANSPOSE;
+import static smile.linalg.Transpose.TRANSPOSE;
 
 /**
  *
