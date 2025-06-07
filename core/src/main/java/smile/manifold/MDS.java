@@ -18,7 +18,7 @@ package smile.manifold;
 
 import java.util.Properties;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 

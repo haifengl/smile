@@ -16,7 +16,7 @@
  */
 package smile.interpolation;
 
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;

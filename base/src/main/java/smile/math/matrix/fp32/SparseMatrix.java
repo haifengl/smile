@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import smile.math.MathEx;
-import smile.math.blas.Transpose;
+import smile.linalg.Transpose;
 import smile.util.Strings;
 
 import static java.util.Spliterator.*;

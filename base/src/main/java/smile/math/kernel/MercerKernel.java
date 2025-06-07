@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.stream.IntStream;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.SparseArray;
 

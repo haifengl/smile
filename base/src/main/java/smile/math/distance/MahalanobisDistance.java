@@ -16,7 +16,7 @@
  */
 package smile.math.distance;
 
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 
 import java.io.Serial;

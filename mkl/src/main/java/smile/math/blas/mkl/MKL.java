@@ -19,7 +19,7 @@ package smile.math.blas.mkl;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import smile.math.blas.*;
+import smile.linalg.*;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.IntPointer;
 import static org.bytedeco.mkl.global.mkl_rt.*;

@@ -20,9 +20,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import smile.math.MathEx;
-import smile.math.blas.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.UPLO.*;
+import smile.linalg.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * The symmetric matrix in packed storage.
@@ -195,14 +195,14 @@ public class SymmMatrix extends IMatrix {
 
     @Override
     public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
-        BLAS.engine.spmv(layout(), uplo, n, alpha, AP, x, 1, beta, y, 1);
+        BLAS.spmv(layout(), uplo, n, alpha, AP, x, 1, beta, y, 1);
     }
 
     @Override
     public void mv(float[] work, int inputOffset, int outputOffset) {
         FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, n);
         FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, n);
-        BLAS.engine.spmv(layout(), uplo, n, 1.0f, FloatBuffer.wrap(AP), xb, 1, 0.0f, yb, 1);
+        BLAS.spmv(layout(), uplo, n, 1.0f, FloatBuffer.wrap(AP), xb, 1, 0.0f, yb, 1);
     }
 
     @Override
@@ -217,7 +217,7 @@ public class SymmMatrix extends IMatrix {
     public BunchKaufman bk() {
         SymmMatrix lu = copy();
         int[] ipiv = new int[n];
-        int info = LAPACK.engine.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
+        int info = LAPACK.sptrf(lu.layout(), lu.uplo, lu.n, lu.AP, ipiv);
         if (info < 0) {
             logger.error("LAPACK SPTRF error code: {}", info);
             throw new ArithmeticException("LAPACK SPTRF error code: " + info);
@@ -238,7 +238,7 @@ public class SymmMatrix extends IMatrix {
         }
 
         SymmMatrix lu = copy();
-        int info = LAPACK.engine.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
+        int info = LAPACK.pptrf(lu.layout(), lu.uplo, lu.n, lu.AP);
         if (info != 0) {
             logger.error("LAPACK PPTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PPTRF error code: " + info);
@@ -363,7 +363,7 @@ public class SymmMatrix extends IMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.sptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, ipiv, B.A, B.ld);
+            int ret = LAPACK.sptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -472,7 +472,7 @@ public class SymmMatrix extends IMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.n, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, B.A, B.ld);
+            int info = LAPACK.pptrs(lu.layout(), lu.uplo, lu.n, B.n, lu.AP, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

@@ -508,7 +508,7 @@ public class BandMatrix extends IMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, ipiv, B.A, B.ld);
+            int ret = LAPACK.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -617,7 +617,7 @@ public class BandMatrix extends IMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

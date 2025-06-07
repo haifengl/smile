@@ -19,7 +19,7 @@ package smile.math.distance;
 import java.io.Serializable;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 
 /**

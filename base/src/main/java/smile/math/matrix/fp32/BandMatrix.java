@@ -20,10 +20,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import smile.math.MathEx;
-import smile.math.blas.*;
-import static smile.math.blas.Layout.*;
-import static smile.math.blas.Transpose.*;
-import static smile.math.blas.UPLO.*;
+import smile.linalg.*;
+import static smile.linalg.Layout.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -297,9 +297,9 @@ public class BandMatrix extends IMatrix {
     @Override
     public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
         } else {
-            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, alpha, AB, ld, x, 1, beta, y, 1);
+            BLAS.gbmv(layout(), trans, m, n, kl, ku, alpha, AB, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -308,9 +308,9 @@ public class BandMatrix extends IMatrix {
         FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, n);
         FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -319,9 +319,9 @@ public class BandMatrix extends IMatrix {
         FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, m);
         FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, n);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -337,7 +337,7 @@ public class BandMatrix extends IMatrix {
             }
         }
         int[] ipiv = new int[n];
-        int info = LAPACK.engine.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
+        int info = LAPACK.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GBTRF error code: " + info);
@@ -373,7 +373,7 @@ public class BandMatrix extends IMatrix {
             }
         }
 
-        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
+        int info = LAPACK.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
         if (info != 0) {
             logger.error("LAPACK PBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PBTRF error code: " + info);
@@ -508,7 +508,7 @@ public class BandMatrix extends IMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, ipiv, B.A, B.ld);
+            int ret = LAPACK.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -617,7 +617,7 @@ public class BandMatrix extends IMatrix {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

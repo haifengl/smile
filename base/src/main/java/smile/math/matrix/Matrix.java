@@ -2516,7 +2516,7 @@ public class Matrix extends IMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, ipiv, B.A, B.ld);
+            int ret = LAPACK.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -2709,7 +2709,7 @@ public class Matrix extends IMatrix {
             int n = qr.n;
             int k = Math.min(m, n);
             Matrix Q = qr.copy();
-            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
+            int info = LAPACK.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);
                 throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
@@ -2748,13 +2748,13 @@ public class Matrix extends IMatrix {
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, tau, B.A, B.ld);
+            int info = LAPACK.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, tau, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
             }
 
-            info = LAPACK.engine.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
+            info = LAPACK.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
 
             if (info != 0) {
                 logger.error("LAPACK TRTRS error code: {}", info);

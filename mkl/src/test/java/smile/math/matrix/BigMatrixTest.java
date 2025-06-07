@@ -19,8 +19,8 @@ package smile.math.matrix;
 import java.util.Arrays;
 import org.junit.jupiter.api.*;
 import smile.math.MathEx;
-import smile.math.blas.Layout;
-import smile.math.blas.UPLO;
+import smile.linalg.Layout;
+import smile.linalg.UPLO;
 import static smile.math.blas.Transpose.*;
 import static org.junit.jupiter.api.Assertions.*;
 

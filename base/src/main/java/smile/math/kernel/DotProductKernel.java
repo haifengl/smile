@@ -16,7 +16,7 @@
  */
 package smile.math.kernel;
 
-import smile.math.blas.UPLO;
+import smile.linalg.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.function.Function;
 

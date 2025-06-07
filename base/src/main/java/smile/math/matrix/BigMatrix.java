@@ -1239,9 +1239,9 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         }
 
         if (isSymmetric() && x == y) {
-            BLAS.engine.syr(layout(), uplo, m, alpha, new DoublePointer(x), 1, A, ld);
+            BLAS.syr(layout(), uplo, m, alpha, new DoublePointer(x), 1, A, ld);
         } else {
-            BLAS.engine.ger(layout(), m, n, alpha, new DoublePointer(x), 1, new DoublePointer(x), 1, A, ld);
+            BLAS.ger(layout(), m, n, alpha, new DoublePointer(x), 1, new DoublePointer(x), 1, A, ld);
         }
 
         return this;
@@ -1533,12 +1533,12 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             BigMatrix inv = eye(n);
             IntPointer ipiv = new IntPointer(n);
             if (isSymmetric()) {
-                int info = LAPACK.engine.sysv(lu.layout(), uplo, n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+                int info = LAPACK.sysv(lu.layout(), uplo, n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
                 if (info != 0) {
                     throw new ArithmeticException("SYSV fails: " + info);
                 }
             } else {
-                int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
+                int info = LAPACK.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
                 if (info != 0) {
                     throw new ArithmeticException("GESV fails: " + info);
                 }
@@ -1564,15 +1564,15 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
-                    BLAS.engine.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
+                    BLAS.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
                 } else {
-                    BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+                    BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
                 }
             } else {
-                BLAS.engine.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
+                BLAS.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
             }
         } else {
-            BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
+            BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -1638,9 +1638,9 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      */
     public BigMatrix mm(Transpose transA, BigMatrix A, Transpose transB, BigMatrix B, double alpha, double beta) {
         if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == layout()) {
-            BLAS.engine.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+            BLAS.symm(layout(), LEFT, A.uplo, m, n, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == layout()) {
-            BLAS.engine.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
+            BLAS.symm(layout(), RIGHT, B.uplo, m, n, alpha, B.A, B.ld, A.A, A.ld, beta, this.A, ld);
         } else {
             if (layout() != A.layout()) {
                 transA = flip(transA);
@@ -1652,7 +1652,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             }
             int k = transA == NO_TRANSPOSE ? A.n : A.m;
 
-            BLAS.engine.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
+            BLAS.gemm(layout(), transA, transB, m, n, k, alpha, A.A, A.ld, B.A, B.ld, beta, this.A, ld);
         }
         return this;
     }
@@ -1793,7 +1793,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     public LU lu(boolean overwrite) {
         BigMatrix lu = overwrite ? this : copy();
         IntPointer ipiv = new IntPointer(Math.min(m, n));
-        int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
+        int info = LAPACK.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GETRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
@@ -1826,7 +1826,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         }
 
         BigMatrix lu = overwrite ? this : copy();
-        int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
+        int info = LAPACK.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK POTRF error code: {}", info);
             throw new ArithmeticException("LAPACK POTRF error code: " + info);
@@ -1852,7 +1852,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     public QR qr(boolean overwrite) {
         BigMatrix qr = overwrite ? this : copy();
         DoublePointer tau = new DoublePointer(Math.min(m, n));
-        int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
+        int info = LAPACK.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
             logger.error("LAPACK GEQRF error code: {}", info);
             throw new ArithmeticException("LAPACK GEQRF error code: " + info);
@@ -1908,7 +1908,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             BigMatrix U = new BigMatrix(m, k);
             BigMatrix VT = new BigMatrix(k, n);
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (W != this) W.close();
             if (info != 0) {
                 logger.error("LAPACK GESDD with COMPACT error code: {}", info);
@@ -1920,7 +1920,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             try (BigMatrix U = new BigMatrix(1, 1);
                  BigMatrix VT = new BigMatrix(1, 1)) {
 
-                int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
+                int info = LAPACK.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
                 if (W != this) W.close();
                 if (info != 0) {
                     logger.error("LAPACK GESDD with NO_VECTORS error code: {}", info);
@@ -1968,7 +1968,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         BigMatrix eig = overwrite ? this : copy();
         if (isSymmetric()) {
             DoublePointer w = new DoublePointer(n);
-            int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
+            int info = LAPACK.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
             if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK SYEV error code: {}", info);
@@ -1982,7 +1982,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             DoublePointer wi = new DoublePointer(n);
             BigMatrix Vl = vl ? new BigMatrix(n, n) : new BigMatrix(1, 1);
             BigMatrix Vr = vr ? new BigMatrix(n, n) : new BigMatrix(1, 1);
-            int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
+            int info = LAPACK.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
             if (eig != this && !vr) eig.close();
             if (info != 0) {
                 logger.error("LAPACK GEEV error code: {}", info);
@@ -2592,7 +2592,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, ipiv, B.A, B.ld);
+            int ret = LAPACK.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -2705,7 +2705,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.A, lu.ld, B.A, B.ld);
+            int info = LAPACK.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.A, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
@@ -2788,7 +2788,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             int n = qr.n;
             int k = Math.min(m, n);
             BigMatrix Q = qr.copy();
-            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
+            int info = LAPACK.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);
                 throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
@@ -2830,13 +2830,13 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, tau, B.A, B.ld);
+            int info = LAPACK.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, tau, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
             }
 
-            info = LAPACK.engine.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
+            info = LAPACK.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
 
             if (info != 0) {
                 logger.error("LAPACK TRTRS error code: {}", info);
