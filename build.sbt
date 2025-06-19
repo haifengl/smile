@@ -13,6 +13,7 @@ lazy val commonSettings = Seq(
   // always set scala version including Java only modules
   scalaVersion := scala213,
 
+  description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
@@ -49,31 +50,29 @@ lazy val commonSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  pomExtra := (
-    <url>https://github.com/haifengl/smile</url>
-    <licenses>
-      <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>https://opensource.org/licenses/GPL-3.0</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:haifengl/smile.git</url>
-      <connection>scm:git:git@github.com:haifengl/smile.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>haifengl</id>
-        <name>Haifeng Li</name>
-        <url>https://haifengl.github.io/</url>
-      </developer>
-      <developer>
-        <id>kklioss</id>
-        <name>Karl Li</name>
-        <url>https://github.com/kklioss</url>
-      </developer>
-    </developers>
+  homepage := Some(url("https://haifengl.github.io/")),
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/haifengl/smile"),
+      "scm:git:git@github.com:haifengl/smile.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      id = "haifengl",
+      name = "Haifeng Li",
+      email = "",
+      url = url("https://github.com/haifengl")
+    ),
+    Developer(
+      id = "kklioss",
+      name = "Karl Li",
+      email = "",
+      url = url("https://github.com/kklioss")
+    )
+  ),
+  licenses := List(
+    "GNU 3" -> url("https://opensource.org/licenses/GPL-3.0")
   )
 )
 
