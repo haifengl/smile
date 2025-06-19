@@ -1,7 +1,7 @@
 resolvers += Resolver.typesafeRepo("releases")
 
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.1")
-addSbtPlugin("com.github.sbt.junit" % "sbt-jupiter-interface" % "0.14.0")
+addSbtPlugin("com.github.sbt.junit" % "sbt-jupiter-interface" % "0.15.0")
 addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.3.1")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 addSbtPlugin("com.github.sbt" % "sbt-eclipse" % "6.2.0")

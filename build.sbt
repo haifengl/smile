@@ -100,7 +100,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "5.12.2" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "5.13.1" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
