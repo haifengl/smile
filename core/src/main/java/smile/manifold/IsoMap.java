@@ -20,9 +20,9 @@ import java.util.Properties;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
+import smile.linalg.ARPACK;
 import smile.linalg.UPLO;
 import smile.math.distance.Distance;
-import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
 
 /**
