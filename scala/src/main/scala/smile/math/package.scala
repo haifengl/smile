@@ -17,6 +17,7 @@
 package smile
 
 import scala.language.implicitConversions
+import smile.linalg.ARPACK
 import smile.math.matrix.*
 import smile.math.special.{Beta, Erf, Gamma}
 import smile.stat.distribution.{Distribution, GaussianDistribution}
