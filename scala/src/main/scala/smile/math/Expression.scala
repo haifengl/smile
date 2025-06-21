@@ -18,7 +18,7 @@ package smile.math
 
 import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.blas.Transpose.{NO_TRANSPOSE, TRANSPOSE}
+import smile.linalg.Transpose.{NO_TRANSPOSE, TRANSPOSE}
 import smile.math.matrix.Matrix
 
 /**

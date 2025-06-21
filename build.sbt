@@ -179,7 +179,6 @@ lazy val root = project.in(file("."))
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
-  .settings(javaCppSettings: _*)
 
 lazy val core = project.in(file("core"))
   .settings(javaSettings: _*)
