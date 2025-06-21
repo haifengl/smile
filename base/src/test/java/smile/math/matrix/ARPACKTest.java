@@ -16,6 +16,7 @@
  */
 package smile.math.matrix;
 
+import smile.linalg.ARPACK;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
