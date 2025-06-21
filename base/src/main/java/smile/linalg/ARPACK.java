@@ -14,10 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.matrix;
+package smile.linalg;
 
+import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
-import static org.bytedeco.arpackng.global.arpack.*;
+import smile.math.matrix.IMatrix;
+import smile.math.matrix.Matrix;
+import static smile.linalg.arpack.arpack_h.*;
 
 /**
  * ARPACK is a collection of Fortran77 subroutines designed to
@@ -124,7 +127,6 @@ public interface ARPACK {
         }
 
         int n = A.nrow();
-
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV parameter k: " + nev);
         }
@@ -153,9 +155,19 @@ public interface ARPACK {
         double[] V = new double[n * ncv];
         int ldv = n;
 
+        var ido_ = MemorySegment.ofArray(ido);
+        var bmat_ = MemorySegment.ofArray(bmat);
+        var bwhich_ = MemorySegment.ofArray(bwhich);
+        var resid_ = MemorySegment.ofArray(resid);
+        var V_ = MemorySegment.ofArray(V);
+        var iparam_ = MemorySegment.ofArray(iparam);
+        var ipntr_ = MemorySegment.ofArray(ipntr);
+        var workd_ = MemorySegment.ofArray(workd);
+        var workl_ = MemorySegment.ofArray(workl);
+        var info_ = MemorySegment.ofArray(info);
         do {
-            dsaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                     workd, workl, workl.length, info);
+            dsaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv,
+                     iparam_, ipntr_, workd_, workl_, workl.length, info_);
 
             if (ido[0] == -1 || ido[0] == 1) {
                 A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
@@ -173,9 +185,12 @@ public interface ARPACK {
         double sigma = 0.0;
         int rvec = 1;
 
-        dseupd_c(rvec, howmny, select, d, V, ldv, sigma,
-                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                 workd, workl, workl.length, info);
+        var howmny_ = MemorySegment.ofArray(howmny);
+        var select_ = MemorySegment.ofArray(select);
+        var d_ = MemorySegment.ofArray(d);
+        dseupd_c(rvec, howmny_, select_, d_, V_, ldv, sigma,
+                 bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv,
+                 iparam_, ipntr_, workd_, workl_, workl.length, info_);
 
         if (info[0] != 0) {
             String error = switch(info[0]) {
@@ -225,7 +240,6 @@ public interface ARPACK {
         }
 
         int n = A.nrow();
-
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV: " + nev);
         }
@@ -255,9 +269,19 @@ public interface ARPACK {
         double[] V = new double[n * ncv];
         int ldv = n;
 
+        var ido_ = MemorySegment.ofArray(ido);
+        var bmat_ = MemorySegment.ofArray(bmat);
+        var bwhich_ = MemorySegment.ofArray(bwhich);
+        var resid_ = MemorySegment.ofArray(resid);
+        var V_ = MemorySegment.ofArray(V);
+        var iparam_ = MemorySegment.ofArray(iparam);
+        var ipntr_ = MemorySegment.ofArray(ipntr);
+        var workd_ = MemorySegment.ofArray(workd);
+        var workl_ = MemorySegment.ofArray(workl);
+        var info_ = MemorySegment.ofArray(info);
         do {
-            dnaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                    workd, workl, workl.length, info);
+            dnaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv, iparam_, ipntr_,
+                     workd_, workl_, workl.length, info_);
 
             if (ido[0] == -1 || ido[0] == 1) {
                 A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
@@ -277,9 +301,14 @@ public interface ARPACK {
         double sigmai = 0.0;
         int rvec = 1;
 
-        dneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
-                bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
-                workd, workl, workl.length, info);
+        var howmny_ = MemorySegment.ofArray(howmny);
+        var select_ = MemorySegment.ofArray(select);
+        var wr_ = MemorySegment.ofArray(wr);
+        var wi_ = MemorySegment.ofArray(wi);
+        var workev_ = MemorySegment.ofArray(workev);
+        dneupd_c(rvec, howmny_, select_, wr_, wi_, V_, ldv, sigmar, sigmai, workev_,
+                bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv, iparam_, ipntr_,
+                workd_, workl_, workl.length, info_);
 
         if (info[0] != 0) {
             String error = switch(info[0]) {
