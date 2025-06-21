@@ -60,10 +60,24 @@ batScriptExtraDefines ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
-  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "8.0.0",
   "org.scala-lang" % "scala-compiler"  % "2.13.16",
   "ch.qos.logback" % "logback-classic" % "1.5.18",
   "com.formdev"    % "flatlaf"         % "3.6",
   "com.fifesoft"   % "rsyntaxtextarea" % "3.6.0",
   "com.fifesoft"   % "autocomplete"    % "3.3.2"
 )
+
+libraryDependencies ++= {
+  val akkaVersion     = "2.9.3"
+  val akkaHttpVersion = "10.6.3"
+  Seq(
+    "com.typesafe.akka"  %% "akka-actor-typed"         % akkaVersion,
+    "com.typesafe.akka"  %% "akka-stream"              % akkaVersion,
+    "com.typesafe.akka"  %% "akka-http"                % akkaHttpVersion,
+    "com.typesafe.akka"  %% "akka-http-spray-json"     % akkaHttpVersion,
+    "com.lightbend.akka" %% "akka-stream-alpakka-csv"  % "8.0.0",
+    "com.typesafe.akka"  %% "akka-actor-testkit-typed" % akkaVersion     % Test,
+    "com.typesafe.akka"  %% "akka-http-testkit"        % akkaHttpVersion % Test
+  )
+}
+

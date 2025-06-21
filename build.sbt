@@ -5,7 +5,7 @@ lazy val scala3 = "3.3.6"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
-  resolvers += "Akka library repository".at("https://repo.akka.io/maven"),
+  resolvers += "Akka library repository" at "https://repo.akka.io/maven",
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
@@ -113,8 +113,11 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-Xsource:3",
     "-release:21"
+  ),
+  scalacOptions ++= Seq(
+    if (scalaVersion.value.startsWith("2.13")) "-Xsource:3"
+    else "-source:3.0"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
@@ -208,12 +211,11 @@ lazy val spark = project.in(file("spark"))
 lazy val shell = project.in(file("shell"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
 
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
+  .settings(scalaVersion := scala3)
   .settings(publish / skip := true)
   .dependsOn(deep)
