@@ -68,14 +68,15 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val akkaVersion     = "2.9.3"
+  val akkaVersion     = "2.9.5"
   val akkaHttpVersion = "10.6.3"
   Seq(
     "com.typesafe.akka"  %% "akka-actor-typed"         % akkaVersion,
     "com.typesafe.akka"  %% "akka-stream"              % akkaVersion,
+    "com.typesafe.akka"  %% "akka-pki"                 % akkaVersion,
     "com.typesafe.akka"  %% "akka-http"                % akkaHttpVersion,
     "com.typesafe.akka"  %% "akka-http-spray-json"     % akkaHttpVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-csv"  % "8.0.0",
+    "com.lightbend.akka" %% "akka-stream-alpakka-csv"  % "8.0.0" exclude("com.typesafe.akka", "akka-stream_3"),
     "com.typesafe.akka"  %% "akka-actor-testkit-typed" % akkaVersion     % Test,
     "com.typesafe.akka"  %% "akka-http-testkit"        % akkaHttpVersion % Test
   )
