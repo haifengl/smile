@@ -5,7 +5,7 @@ lazy val scala3 = "3.3.6"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
-  resolvers += "Akka library repository".at("https://repo.akka.io/maven"),
+  resolvers += "Akka library repository" at "https://repo.akka.io/maven",
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
@@ -13,6 +13,7 @@ lazy val commonSettings = Seq(
   // always set scala version including Java only modules
   scalaVersion := scala213,
 
+  description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
@@ -49,31 +50,29 @@ lazy val commonSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  pomExtra := (
-    <url>https://github.com/haifengl/smile</url>
-    <licenses>
-      <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>https://opensource.org/licenses/GPL-3.0</url>
-        <distribution>repo</distribution>
-      </license>
-    </licenses>
-    <scm>
-      <url>git@github.com:haifengl/smile.git</url>
-      <connection>scm:git:git@github.com:haifengl/smile.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>haifengl</id>
-        <name>Haifeng Li</name>
-        <url>https://haifengl.github.io/</url>
-      </developer>
-      <developer>
-        <id>kklioss</id>
-        <name>Karl Li</name>
-        <url>https://github.com/kklioss</url>
-      </developer>
-    </developers>
+  homepage := Some(url("https://haifengl.github.io/")),
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/haifengl/smile"),
+      "scm:git:git@github.com:haifengl/smile.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      id = "haifengl",
+      name = "Haifeng Li",
+      email = "",
+      url = url("https://github.com/haifengl")
+    ),
+    Developer(
+      id = "kklioss",
+      name = "Karl Li",
+      email = "",
+      url = url("https://github.com/kklioss")
+    )
+  ),
+  licenses := List(
+    "GNU 3" -> url("https://opensource.org/licenses/GPL-3.0")
   )
 )
 
@@ -100,7 +99,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "5.12.2" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "5.13.1" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -114,8 +113,11 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-Xsource:3",
     "-release:24"
+  ),
+  scalacOptions ++= Seq(
+    if (scalaVersion.value.startsWith("2.13")) "-Xsource:3"
+    else "-source:3.0"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
@@ -209,12 +211,11 @@ lazy val spark = project.in(file("spark"))
 lazy val shell = project.in(file("shell"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
 
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
+  .settings(scalaVersion := scala3)
   .settings(publish / skip := true)
   .dependsOn(deep)
