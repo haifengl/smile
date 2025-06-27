@@ -2246,6 +2246,18 @@ public class MathEx {
     }
 
     /**
+     * Returns the product of all elements in an integer array.
+     * @return the product of all elements in an integer array.
+     */
+    public static long product(int... x) {
+        long prod = 1;
+        for (var xi : x) {
+            prod *= xi;
+        }
+        return prod;
+    }
+
+    /**
      * Find the median of an array of type int.
      * The input array will be rearranged.
      * @param x the array.
