@@ -16,10 +16,6 @@
  */
 package smile.tensor;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
@@ -32,7 +28,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class AbstractTensor implements Tensor, Externalizable {
+public class AbstractTensor implements Tensor {
     /**
      * A memory segment that stores tensor values.
      */
@@ -52,16 +48,6 @@ public class AbstractTensor implements Tensor, Externalizable {
     private final long[] stride;
 
     /**
-     * Private default constructor for readExternal.
-     */
-    private AbstractTensor() {
-        segment = null;
-        valueLayout = null;
-        shape = null;
-        stride = null;
-    }
-
-    /**
      * Constructor.
      * @param segment the memory segment of data.
      * @param valueLayout the layout that models values of basic data types.
@@ -77,23 +63,6 @@ public class AbstractTensor implements Tensor, Externalizable {
         for (int i = dim - 2; i >= 0; i--) {
             stride[i] = shape[i+1] * stride[i+1];
         }
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(shape);
-        out.writeObject(stride);
-        out.writeObject(valueLayout);
-        out.writeObject(segment.asByteBuffer());
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        shape = (int[]) in.readObject();
-        stride = (long[]) in.readObject();
-        valueLayout = (ValueLayout) in.readObject();
-        ByteBuffer buffer = (ByteBuffer) in.readObject();
-        segment = MemorySegment.ofBuffer(buffer);
     }
 
     @Override
