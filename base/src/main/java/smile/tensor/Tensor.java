@@ -18,16 +18,59 @@ package smile.tensor;
 
 import smile.math.MathEx;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 
 /**
  * A Tensor is a multidimensional array containing elements of a single data type.
  *
  * @author Haifeng Li
  */
-public interface Tensor {
+public interface Tensor extends AutoCloseable {
+    /**
+     * Creates a tensor.
+     * @param valueLayout the data type of tensor elements.
+     * @param shape the shape of tensor.
+     * @return the tensor.
+     */
+    static Tensor of(ValueLayout valueLayout, int... shape) {
+        long length = MathEx.product(shape);
+        var arena = Arena.ofShared();
+        var memory = arena.allocate(valueLayout, length);
+        return new TensorImpl(arena, memory, valueLayout, shape);
+    }
+
+    /**
+     * Wraps an array in a tensor.
+     * @param data the data array.
+     * @param shape the shape of tensor.
+     * @return the tensor.
+     */
+    static Tensor of(byte[] data, int... shape) {
+        long length = MathEx.product(shape);
+        if (length != data.length) {
+            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
+        }
+        var memory = MemorySegment.ofArray(data);
+        return new TensorImpl(memory, ValueLayout.JAVA_BYTE, shape);
+    }
+
+    /**
+     * Wraps an array in a tensor.
+     * @param data the data array.
+     * @param shape the shape of tensor.
+     * @return the tensor.
+     */
+    static Tensor of(int[] data, int... shape) {
+        long length = MathEx.product(shape);
+        if (length != data.length) {
+            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
+        }
+        var memory = MemorySegment.ofArray(data);
+        return new TensorImpl(memory, ValueLayout.JAVA_INT, shape);
+    }
+
     /**
      * Wraps an array in a tensor.
      * @param data the data array.
@@ -39,8 +82,8 @@ public interface Tensor {
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
-        var segment = MemorySegment.ofArray(data);
-        return new AbstractTensor(segment, ValueLayout.JAVA_FLOAT, shape);
+        var memory = MemorySegment.ofArray(data);
+        return new TensorImpl(memory, ValueLayout.JAVA_FLOAT, shape);
     }
 
     /**
@@ -54,8 +97,8 @@ public interface Tensor {
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
-        var segment = MemorySegment.ofArray(data);
-        return new AbstractTensor(segment, ValueLayout.JAVA_DOUBLE, shape);
+        var memory = MemorySegment.ofArray(data);
+        return new TensorImpl(memory, ValueLayout.JAVA_DOUBLE, shape);
     }
 
     /**
@@ -65,10 +108,10 @@ public interface Tensor {
     ValueLayout valueLayout();
 
     /**
-     * Wraps this tensor in a ByteBuffer.
-     * @return a ByteBuffer view of this tensor.
+     * Returns the memory segment of underlying data.
+     * @return the memory segment.
      */
-    ByteBuffer asByteBuffer();
+    MemorySegment memory();
 
     /**
      * Returns the number of dimensions of tensor.
