@@ -32,7 +32,7 @@ public class DoubleHeapSelect {
      */
     private final int k;
     /**
-     * The heap array.
+     * The heap array. The root is at position 1.
      */
     private final double[] heap;
     /**
@@ -49,16 +49,8 @@ public class DoubleHeapSelect {
      * @param k the heap size.
      */
     public DoubleHeapSelect(int k) {
-        this(new double[k]);
-    }
-
-    /**
-     * Constructor.
-     * @param heap the array to store smallest values to track.
-     */
-    public DoubleHeapSelect(double[] heap) {
-        this.heap = heap;
-        k = heap.length;
+        this.heap = new double[k+1];
+        this.k = k;
         n = 0;
         sorted = false;
     }
@@ -70,15 +62,13 @@ public class DoubleHeapSelect {
     public void add(double datum) {
         sorted = false;
         if (n < k) {
-            heap[n++] = datum;
-            if (n == k) {
-                sort(heap, k);
-            }
+            heap[++n] = datum;
+            Sort.siftUp(heap, n);
         } else {
             n++;
-            if (datum < heap[0]) {
-                heap[0] = datum;
-                Sort.siftDown(heap, 0, k-1);
+            if (datum < heap[1]) {
+                heap[1] = datum;
+                Sort.siftDown(heap, 1, k);
             }
         }
     }
@@ -88,8 +78,7 @@ public class DoubleHeapSelect {
      * @return the k-<i>th</i> smallest value.
      */
     public double peek() {
-        if (n < k) sort(heap, n);
-        return heap[0];
+        return heap[1];
     }
 
     /**
@@ -101,20 +90,17 @@ public class DoubleHeapSelect {
      * @return the i-<i>th</i> smallest value.
      */
     public double get(int i) {
-        if (i > Math.min(k, n) - 1) {
+        int len = Math.min(k, n);
+        if (i > len - 1) {
             throw new IllegalArgumentException("HeapSelect i is greater than the number of data received so far.");
         }
 
-        if (i == k-1) {
-            return heap[0];
-        }
-        
-        if (!sorted) {
-            sort(heap, Math.min(k,n));
-            sorted = true;
+        if (i == len-1) {
+            return heap[1];
         }
 
-        return heap[k-1-i];
+        sort();
+        return heap[len-i];
     }
 
     /**
@@ -122,7 +108,7 @@ public class DoubleHeapSelect {
      */
     public void sort() {
         if (!sorted) {
-            sort(heap, Math.min(k,n));
+            sort(heap, 1, Math.min(k,n));
             sorted = true;
         }
     }
@@ -131,9 +117,10 @@ public class DoubleHeapSelect {
      * Place the array in max-heap order. Note that the array is not fully sorted.
      */
     private static void heapify(double[] arr) {
-        int n = arr.length;
-        for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+        int n = arr.length - 1;
+        for (int i = n / 2; i >= 1; i--) {
+            Sort.siftDown(arr, i, n);
+        }
     }
 
     /**
@@ -141,27 +128,19 @@ public class DoubleHeapSelect {
      * sort, which is very efficient because the array is almost sorted by
      * heapifying.
      */
-    private static void sort(double[] a, int n) {
-        int inc = 1;
-        do {
-            inc *= 3;
-            inc++;
-        } while (inc <= n);
-
-        do {
-            inc /= 3;
-            for (int i = inc; i < n; i++) {
-                double v = a[i];
+    private static void sort(double[] a, int l, int r) {
+        int h;
+        for (h = 1; h <= (r-l)/9; h = 3*h+1);
+        for (; h > 0; h /= 3) {
+            for (int i = l + h; i <= r; i++) {
                 int j = i;
-                while (a[j - inc] < v) {
-                    a[j] = a[j - inc];
-                    j -= inc;
-                    if (j < inc) {
-                        break;
-                    }
+                double v = a[i];
+                while (j >= l+h && a[j-h] < v) {
+                    a[j] = a[j-h];
+                    j -= h;
+                    a[j] = v;
                 }
-                a[j] = v;
             }
-        } while (inc > 1);
+        }
     }
 }
