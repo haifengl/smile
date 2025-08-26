@@ -62,7 +62,7 @@ libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "org.scala-lang" % "scala-compiler"  % "2.13.16",
   "ch.qos.logback" % "logback-classic" % "1.5.18",
-  "com.formdev"    % "flatlaf"         % "3.6",
+  "com.formdev"    % "flatlaf"         % "3.6.1",
   "com.fifesoft"   % "rsyntaxtextarea" % "3.6.0",
   "com.fifesoft"   % "autocomplete"    % "3.3.2"
 )

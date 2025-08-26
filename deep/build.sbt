@@ -10,16 +10,16 @@ Test / javaOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.19.1",
-  "ai.djl.sentencepiece" % "sentencepiece" % "0.33.0",
-  "org.bytedeco" % "pytorch-platform" % "2.5.1-1.5.11",
-  "org.bytedeco" % "cuda-platform"    % "12.6-9.5-1.5.11"
+  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.19.2",
+  "ai.djl.sentencepiece" % "sentencepiece" % "0.34.0",
+  "org.bytedeco" % "pytorch-platform" % "2.7.1-1.5.12",
+  "org.bytedeco" % "cuda-platform"    % "12.9-9.10-1.5.12"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 val gpu = Seq(
-  "org.bytedeco" % "pytorch" % "2.5.1-1.5.11" % Provided classifier s"$os-x86_64-gpu",
-  "org.bytedeco" % "cuda" % "12.6-9.5-1.5.11" % Provided classifier s"$os-x86_64-redist"
+  "org.bytedeco" % "pytorch" % "2.7.1-1.5.12" % Provided classifier s"$os-x86_64-gpu",
+  "org.bytedeco" % "cuda" % "12.9-9.10-1.5.12" % Provided classifier s"$os-x86_64-redist"
 )
 
 libraryDependencies ++= (
