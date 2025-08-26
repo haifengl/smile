@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-public class HeapSelectTest {
+public class FloatHeapSelectTest {
 
-    public HeapSelectTest() {
+    public FloatHeapSelectTest() {
     }
 
     @BeforeAll
@@ -47,8 +47,8 @@ public class HeapSelectTest {
 
     @Test
     public void test() {
-        System.out.println("HeapSelect");
-        HeapSelect<Integer> heap = new HeapSelect<>(new Integer[9]);
+        System.out.println("FloatHeapSelect");
+        FloatHeapSelect heap = new FloatHeapSelect(9);
         heap.add(63);
         heap.add(107);
 
@@ -90,23 +90,23 @@ public class HeapSelectTest {
 
     @Test
     public void test1000() {
-        System.out.println("HeapSelect 1000");
-        HeapSelect<Integer> instance = new HeapSelect<>(new Integer[10]);
+        System.out.println("FloatHeapSelect 1000");
+        FloatHeapSelect instance = new FloatHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
-            instance.add(i);
+            instance.add(0.1f * i);
             if (i > 10) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(j));
+                    assertEquals(instance.get(j), 0.1f*j, 1E-10);
                 }
             }
         }
 
-        instance = new HeapSelect<>(new Integer[10]);
+        instance = new FloatHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
-            instance.add(1000-i);
+            instance.add((1000-i)*0.1f);
             if (i >= 9) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(1000-i+j));
+                    assertEquals(instance.get(j), (1000-i+j)*0.1f, 1E-10);
                 }
             }
         }
@@ -114,10 +114,10 @@ public class HeapSelectTest {
 
     @Test
     public void test100000000() {
-        System.out.println("HeapSelect 100000000");
-        HeapSelect<Double> instance = new HeapSelect<>(new Double[10]);
+        System.out.println("FloatHeapSelect 100000000");
+        FloatHeapSelect instance = new FloatHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
-            instance.add(MathEx.random());
+            instance.add((float) MathEx.random());
         }
 
         for (int j = 0; j < 10; j++) {
