@@ -48,7 +48,7 @@ public class HeapSelectTest {
     @Test
     public void test() {
         System.out.println("HeapSelect");
-        HeapSelect<Integer> heap = new HeapSelect<>(new Integer[9]);
+        HeapSelect<Integer> heap = new HeapSelect<>(Integer.class, 9);
         heap.add(63);
         heap.add(107);
 
@@ -91,7 +91,7 @@ public class HeapSelectTest {
     @Test
     public void test1000() {
         System.out.println("HeapSelect 1000");
-        HeapSelect<Integer> instance = new HeapSelect<>(new Integer[10]);
+        HeapSelect<Integer> instance = new HeapSelect<>(Integer.class, 10);
         for (int i = 0; i < 1000; i++) {
             instance.add(i);
             if (i > 10) {
@@ -101,7 +101,7 @@ public class HeapSelectTest {
             }
         }
 
-        instance = new HeapSelect<>(new Integer[10]);
+        instance = new HeapSelect<>(Integer.class, 10);
         for (int i = 0; i < 1000; i++) {
             instance.add(1000-i);
             if (i >= 9) {
@@ -115,7 +115,7 @@ public class HeapSelectTest {
     @Test
     public void test100000000() {
         System.out.println("HeapSelect 100000000");
-        HeapSelect<Double> instance = new HeapSelect<>(new Double[10]);
+        HeapSelect<Double> instance = new HeapSelect<>(Double.class, 10);
         for (int i = 0; i < 100000000; i++) {
             instance.add(MathEx.random());
         }

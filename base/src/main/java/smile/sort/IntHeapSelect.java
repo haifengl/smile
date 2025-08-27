@@ -19,9 +19,9 @@ package smile.sort;
 /**
  * This class tracks the smallest values seen thus far in a stream of values.
  * This implements a single-pass selection for large data sets. That is,
- * we have a stream of input values, each of which we get to see only once. We
- * want to be able to report at any time, say after n values, the i-<i>th</i> smallest
- * value see so far.
+ * we have a stream of input values, each of which we get to see only once.
+ * We want to be able to report at any time, say after n values, the
+ * i-<i>th</i> smallest value see so far.
  * 
  * @author Haifeng Li
  */
@@ -116,8 +116,7 @@ public class IntHeapSelect {
     /**
      * Place the array in max-heap order. Note that the array is not fully sorted.
      */
-    private static void heapify(int[] arr) {
-        int n = arr.length - 1;
+    private static void heapify(int[] arr, int n) {
         for (int i = n / 2; i >= 1; i--) {
             Sort.siftDown(arr, i, n);
         }
