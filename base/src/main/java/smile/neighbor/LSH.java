@@ -240,7 +240,7 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
         Set<Integer> candidates = getCandidates(q);
         k = Math.min(k, candidates.size());
 
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<Neighbor<double[], E>>(new Neighbor[k]);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(Neighbor.class, k);
 
         for (int index : candidates) {
             double[] key = keys.get(index);

@@ -67,7 +67,7 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
                     top.index = index;
                     top.key = x;
                     top.value = x;
-                    heap.heapify();
+                    heap.siftDown();
                 }
             }
         }
@@ -139,7 +139,7 @@ public class RandomProjectionForest implements KNNSearch<double[], double[]> {
                     top.index = index;
                     top.key = x;
                     top.value = x;
-                    pq.heapify();
+                    pq.siftDown();
                 }
             }
         }

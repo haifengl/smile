@@ -16,6 +16,8 @@
  */
 package smile.sort;
 
+import java.util.Arrays;
+
 /**
  * This class tracks the smallest values seen thus far in a stream of values.
  * This implements a single-pass selection for large data sets. That is,
@@ -34,7 +36,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
      */
     private final int k;
     /**
-     * The heap array.
+     * The heap array. The root is at position 1.
      */
     private final T[] heap;
     /**
@@ -53,16 +55,8 @@ public class HeapSelect<T extends Comparable<? super T>> {
      */
     @SuppressWarnings("unchecked")
     public HeapSelect(Class<?> clazz, int k) {
-        this((T[]) java.lang.reflect.Array.newInstance(clazz, k));
-    }
-
-    /**
-     * Constructor.
-     * @param heap the array to store smallest values to track.
-     */
-    public HeapSelect(T[] heap) {
-        this.heap = heap;
-        k = heap.length;
+        this.heap = (T[]) java.lang.reflect.Array.newInstance(clazz, k+1);
+        this.k = k;
         n = 0;
         sorted = false;
     }
@@ -80,7 +74,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * @return the array back the heap.
      */
     public T[] toArray() {
-        return heap;
+        return Arrays.copyOfRange(heap, 1, Math.min(k, n)+1);
     }
 
     /**
@@ -89,7 +83,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * @return the array back the heap.
      */
     public T[] toArray(T[] a) {
-        System.arraycopy(heap, 0, a, 0, k);
+        System.arraycopy(heap, 1, a, 0, Math.min(k, n));
         return a;
     }
 
@@ -100,15 +94,13 @@ public class HeapSelect<T extends Comparable<? super T>> {
     public void add(T datum) {
         sorted = false;
         if (n < k) {
-            heap[n++] = datum;
-            if (n == k) {
-                heapify(heap);
-            }
+            heap[++n] = datum;
+            Sort.siftUp(heap, n);
         } else {
             n++;
-            if (datum.compareTo(heap[0]) < 0) {
-                heap[0] = datum;
-                Sort.siftDown(heap, 0, k-1);
+            if (datum.compareTo(heap[1]) < 0) {
+                heap[1] = datum;
+                Sort.siftDown(heap, 1, k);
             }
         }
     }
@@ -118,20 +110,16 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * update the peek object directly and call this method to sort the internal
      * array in heap order.
      */
-    public void heapify() {
-        if (n < k) {
-            throw new IllegalStateException();
-        }
-
-        Sort.siftDown(heap, 0, k-1);
+    public void siftDown() {
+        Sort.siftDown(heap, 1, Math.min(k, n));
     }
 
     /**
      * Returns the k-<i>th</i> smallest value seen so far.
-     * @return the k-<i>th</i> smallest value.
+     * @return the k-<i>th</i> smallest value seen so far.
      */
     public T peek() {
-        return heap[0];
+        return heap[1];
     }
 
     /**
@@ -143,20 +131,17 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * @return the i-<i>th</i> smallest value.
      */
     public T get(int i) {
-        if (i > Math.min(k, n) - 1) {
+        int len = Math.min(k, n);
+        if (i > len - 1) {
             throw new IllegalArgumentException("HeapSelect i is greater than the number of data received so far.");
         }
 
-        if (i == k-1) {
-            return heap[0];
-        }
-        
-        if (!sorted) {
-            sort(heap, Math.min(k,n));
-            sorted = true;
+        if (i == len-1) {
+            return heap[1];
         }
 
-        return heap[k-1-i];
+        sort();
+        return heap[len-i];
     }
 
     /**
@@ -164,7 +149,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
      */
     public void sort() {
         if (!sorted) {
-            sort(heap, Math.min(k,n));
+            sort(heap, 1, Math.min(k,n));
             sorted = true;
         }
     }
@@ -172,10 +157,10 @@ public class HeapSelect<T extends Comparable<? super T>> {
     /**
      * Place the array in max-heap order. Note that the array is not fully sorted.
      */
-    private static <T extends Comparable<? super T>> void heapify(T[] arr) {
-        int n = arr.length;
-        for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+    private static <T extends Comparable<? super T>> void heapify(T[] arr, int n) {
+        for (int i = n / 2; i >= 1; i--) {
+            Sort.siftDown(arr, i, n);
+        }
     }
 
     /**
@@ -183,27 +168,19 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * sort, which is very efficient because the array is almost sorted by
      * heapifying.
      */
-    private static <T extends Comparable<? super T>> void sort(T[] a, int n) {
-        int inc = 1;
-        do {
-            inc *= 3;
-            inc++;
-        } while (inc <= n);
-
-        do {
-            inc /= 3;
-            for (int i = inc; i < n; i++) {
-                T v = a[i];
+    private static <T extends Comparable<? super T>> void sort(T[] a, int l, int r) {
+        int h;
+        for (h = 1; h <= (r-l)/9; h = 3*h+1);
+        for (; h > 0; h /= 3) {
+            for (int i = l + h; i <= r; i++) {
                 int j = i;
-                while (a[j - inc].compareTo(v) < 0) {
-                    a[j] = a[j - inc];
-                    j -= inc;
-                    if (j < inc) {
-                        break;
-                    }
+                T v = a[i];
+                while (j >= l+h && a[j-h].compareTo(v) < 0) {
+                    a[j] = a[j-h];
+                    j -= h;
+                    a[j] = v;
                 }
-                a[j] = v;
             }
-        } while (inc > 1);
+        }
     }
 }

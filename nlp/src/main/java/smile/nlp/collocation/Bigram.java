@@ -79,8 +79,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
      * of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
-        Bigram[] bigrams = new Bigram[k];
-        HeapSelect<Bigram> heap = new HeapSelect<>(bigrams);
+        HeapSelect<Bigram> heap = new HeapSelect<>(Bigram.class, k);
 
         Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
         while (iterator.hasNext()) {
@@ -98,17 +97,12 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 
         heap.sort();
 
-        Bigram[] collocations = new Bigram[k];
-        int n = 0;
-        for (int i = 0; i < k; i++) {
-            Bigram bigram = bigrams[k-i-1];
-            if (bigram != null) {
-                collocations[n++] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
-            }
-        }
-
-        if (n < k) {
-            collocations = Arrays.copyOf(collocations, n);
+        Bigram[] bigrams = heap.toArray();
+        int n = bigrams.length;
+        Bigram[] collocations = new Bigram[n];
+        for (int i = 0; i < n; i++) {
+            Bigram bigram = bigrams[n-i-1];
+            collocations[i] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
         }
 
         return collocations;
