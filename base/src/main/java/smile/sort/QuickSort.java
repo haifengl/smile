@@ -52,21 +52,18 @@ import java.util.Comparator;
  * 
  * @author Haifeng Li
  */
-public class QuickSort {
-    /** Private constructor to prevent instance creation. */
-    private QuickSort() {
-
-    }
-
-    private static final int M = 7;
-    private static final int NSTACK = 64;
+public interface QuickSort {
+    /** The threshold of subarray size to be sorted by straight insertion. */
+    int M = 7;
+    /** The size of auxiliary push down stack. */
+    int NSTACK = 64;
 
     /**
      * Sorts the specified array into ascending numerical order.
      * @param array the array.
      * @return the original index of elements after sorting in range [0, n).
      */
-    public static int[] sort(int[] array) {
+    static int[] sort(int[] array) {
         int[] order = new int[array.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
@@ -81,7 +78,7 @@ public class QuickSort {
      * @param array the array to sort.
      * @param b the associate array.
      */
-    public static void sort(int[] array, int[] b) {
+    static void sort(int[] array, int[] b) {
         sort(array, b, array.length);
     }
 
@@ -93,7 +90,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(int[] x, int[] y, int n) {
+    static void sort(int[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -182,7 +179,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(int[] x, double[] y) {
+    static void sort(int[] x, double[] y) {
         sort(x, y, x.length);
     }
 
@@ -194,7 +191,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(int[] x, double[] y, int n) {
+    static void sort(int[] x, double[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -284,7 +281,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(int[] x, Object[] y) {
+    static void sort(int[] x, Object[] y) {
         sort(x, y, x.length);
     }
 
@@ -296,7 +293,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(int[] x, Object[] y, int n) {
+    static void sort(int[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -385,7 +382,7 @@ public class QuickSort {
      * @param x the array.
      * @return the original index of elements after sorting in range [0, n).
      */
-    public static int[] sort(float[] x) {
+    static int[] sort(float[] x) {
         int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
@@ -400,7 +397,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(float[] x, int[] y) {
+    static void sort(float[] x, int[] y) {
         sort(x, y, x.length);
     }
 
@@ -412,7 +409,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(float[] x, int[] y, int n) {
+    static void sort(float[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -503,7 +500,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(float[] x, float[] y) {
+    static void sort(float[] x, float[] y) {
         sort(x, y, x.length);
     }
 
@@ -515,7 +512,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(float[] x, float[] y, int n) {
+    static void sort(float[] x, float[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -605,7 +602,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(float[] x, Object[] y) {
+    static void sort(float[] x, Object[] y) {
         sort(x, y, x.length);
     }
 
@@ -617,7 +614,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(float[] x, Object[] y, int n) {
+    static void sort(float[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -707,7 +704,7 @@ public class QuickSort {
      * @return the original index of elements after sorting in range [0, n).
      * @param x the array to sort.
      */
-    public static int[] sort(double[] x) {
+    static int[] sort(double[] x) {
         int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
@@ -722,7 +719,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(double[] x, int[] y) {
+    static void sort(double[] x, int[] y) {
         sort(x, y, x.length);
     }
 
@@ -734,7 +731,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(double[] x, int[] y, int n) {
+    static void sort(double[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -826,7 +823,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(double[] x, double[] y) {
+    static void sort(double[] x, double[] y) {
         sort(x, y, x.length);
     }
 
@@ -838,7 +835,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(double[] x, double[] y, int n) {
+    static void sort(double[] x, double[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -928,7 +925,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param y the associate array.
      */
-    public static void sort(double[] x, Object[] y) {
+    static void sort(double[] x, Object[] y) {
         sort(x, y, x.length);
     }
 
@@ -940,7 +937,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param n the first n elements to sort.
      */
-    public static void sort(double[] x, Object[] y, int n) {
+    static void sort(double[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1031,7 +1028,7 @@ public class QuickSort {
      * @param x the array to sort.
      * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  int[] sort(T[] x) {
+    static <T extends Comparable<? super T>>  int[] sort(T[] x) {
         int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
@@ -1047,7 +1044,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] x, int[] y) {
+    static <T extends Comparable<? super T>>  void sort(T[] x, int[] y) {
         sort(x, y, x.length);
     }
 
@@ -1060,7 +1057,7 @@ public class QuickSort {
      * @param n the first n elements to sort.
      * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] x, int[] y, int n) {
+    static <T extends Comparable<? super T>>  void sort(T[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1155,7 +1152,7 @@ public class QuickSort {
      * @param comparator the comparator.
      * @param <T> the data type of array elements.
      */
-    public static <T>  void sort(T[] x, int[] y, int n, Comparator<T> comparator) {
+    static <T>  void sort(T[] x, int[] y, int n, Comparator<T> comparator) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1247,7 +1244,7 @@ public class QuickSort {
      * @param y the associate array.
      * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y) {
+    static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y) {
         sort(x, y, x.length);
     }
 
@@ -1260,7 +1257,7 @@ public class QuickSort {
      * @param n the first n elements to sort.
      * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y, int n) {
+    static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
