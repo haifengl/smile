@@ -63,7 +63,7 @@ class TensorImpl extends AbstractTensor {
     public TensorImpl(MemorySegment memory, ValueLayout valueLayout, int[] shape) {
         this(null, memory, valueLayout, shape);
         if (memory.isNative()) {
-            throw new UnsupportedOperationException("No arena iTensor with native memory segment");
+            throw new UnsupportedOperationException("No arena Tensor with native memory segment");
         }
     }
 

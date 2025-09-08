@@ -36,6 +36,7 @@ public interface Tensor extends AutoCloseable {
      */
     static Tensor of(ValueLayout valueLayout, int... shape) {
         long length = MathEx.product(shape);
+        // Memory segments allocated by the returned arena are zero-initialized.
         var arena = Arena.ofShared();
         var memory = arena.allocate(valueLayout, length);
         return new TensorImpl(arena, memory, valueLayout, shape);
