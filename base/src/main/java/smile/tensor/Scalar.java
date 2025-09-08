@@ -78,11 +78,6 @@ public record Scalar(Number value) implements Tensor {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void close() {
-        // NOP
-    }
-
     /**
      * Returns the boolean value of scalar.
      *
