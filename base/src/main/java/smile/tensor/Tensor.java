@@ -18,101 +18,17 @@ package smile.tensor;
 
 import smile.math.MathEx;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
-
 /**
  * A Tensor is a multidimensional array containing elements of a single data type.
  *
  * @author Haifeng Li
  */
-public interface Tensor extends AutoCloseable {
+public interface Tensor {
     /**
-     * Creates a tensor.
-     * @param valueLayout the data type of tensor elements.
-     * @param shape the shape of tensor.
-     * @return the tensor.
+     * Returns the element data type.
+     * @return the element data type.
      */
-    static Tensor of(ValueLayout valueLayout, int... shape) {
-        long length = MathEx.product(shape);
-        // Memory segments allocated by the returned arena are zero-initialized.
-        var arena = Arena.ofShared();
-        var memory = arena.allocate(valueLayout, length);
-        return new TensorImpl(arena, memory, valueLayout, shape);
-    }
-
-    /**
-     * Wraps an array in a tensor.
-     * @param data the data array.
-     * @param shape the shape of tensor.
-     * @return the tensor.
-     */
-    static Tensor of(byte[] data, int... shape) {
-        long length = MathEx.product(shape);
-        if (length != data.length) {
-            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
-        }
-        var memory = MemorySegment.ofArray(data);
-        return new TensorImpl(memory, ValueLayout.JAVA_BYTE, shape);
-    }
-
-    /**
-     * Wraps an array in a tensor.
-     * @param data the data array.
-     * @param shape the shape of tensor.
-     * @return the tensor.
-     */
-    static Tensor of(int[] data, int... shape) {
-        long length = MathEx.product(shape);
-        if (length != data.length) {
-            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
-        }
-        var memory = MemorySegment.ofArray(data);
-        return new TensorImpl(memory, ValueLayout.JAVA_INT, shape);
-    }
-
-    /**
-     * Wraps an array in a tensor.
-     * @param data the data array.
-     * @param shape the shape of tensor.
-     * @return the tensor.
-     */
-    static Tensor of(float[] data, int... shape) {
-        long length = MathEx.product(shape);
-        if (length != data.length) {
-            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
-        }
-        var memory = MemorySegment.ofArray(data);
-        return new TensorImpl(memory, ValueLayout.JAVA_FLOAT, shape);
-    }
-
-    /**
-     * Wraps an array in a tensor.
-     * @param data the data array.
-     * @param shape the shape of tensor.
-     * @return the tensor.
-     */
-    static Tensor of(double[] data, int... shape) {
-        long length = MathEx.product(shape);
-        if (length != data.length) {
-            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
-        }
-        var memory = MemorySegment.ofArray(data);
-        return new TensorImpl(memory, ValueLayout.JAVA_DOUBLE, shape);
-    }
-
-    /**
-     * Returns the layout that models values of basic data types.
-     * @return the layout that models values of basic data types.
-     */
-    ValueLayout valueLayout();
-
-    /**
-     * Returns the memory segment of underlying data.
-     * @return the memory segment.
-     */
-    MemorySegment memory();
+    ScalarType scalarType();
 
     /**
      * Returns the number of dimensions of tensor.
@@ -161,128 +77,9 @@ public interface Tensor extends AutoCloseable {
     Tensor set(Tensor value, int... index);
 
     /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(boolean value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(byte value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(short value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(int value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(long value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(float value, int... index);
-
-    /**
-     * Updates an element in place.
-     *
-     * @param value the new element value.
-     * @param index the element index.
-     * @return this tensor.
-     */
-    Tensor set(double value, int... index);
-
-    /**
      * Returns a portion of tensor given the index.
      * @param index the index along the dimensions.
      * @return the sub-tensor.
      */
     Tensor get(int... index);
-
-    /**
-     * Returns the boolean value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    boolean getBoolean(int... index);
-
-    /**
-     * Returns the byte value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    byte getByte(int... index);
-
-    /**
-     * Returns the short value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    short getShort(int... index);
-
-    /**
-     * Returns the int value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    int getInt(int... index);
-
-    /**
-     * Returns the long value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    long getLong(int... index);
-
-    /**
-     * Returns the float value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    float getFloat(int... index);
-
-    /**
-     * Returns the double value of element at given index.
-     *
-     * @param index the index along the dimensions.
-     * @return the element value.
-     */
-    double getDouble(int... index);
 }
