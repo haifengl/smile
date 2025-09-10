@@ -36,6 +36,11 @@ public enum Transpose {
         this.lapack = lapack;
     }
 
+    /** Flips the transpose operation. */
+    public Transpose flip() {
+        return this == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
+    }
+
     /**
      * Returns the int value for BLAS.
      * @return the int value for BLAS.
