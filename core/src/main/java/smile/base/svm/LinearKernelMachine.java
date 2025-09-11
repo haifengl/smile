@@ -54,6 +54,22 @@ public class LinearKernelMachine implements Serializable {
     }
 
     /**
+     * Returns the linear weights.
+     * @return the linear weights.
+     */
+    public double[] weights() {
+        return w;
+    }
+
+    /**
+     * Returns the intercept.
+     * @return the intercept.
+     */
+    public double intercept() {
+        return b;
+    }
+
+    /**
      * Creates a linear kernel machine.
      * @param kernelMachine a generic kernel machine.
      * @return a linear kernel machine

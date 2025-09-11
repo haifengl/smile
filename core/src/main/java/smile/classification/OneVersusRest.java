@@ -191,6 +191,10 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
 
     @Override
     public int predict(T x) {
+        if (platt == null) {
+            throw new UnsupportedOperationException("Platt scaling is not available. Please try OneVersusOne.");
+        }
+
         int y = 0;
         double maxf = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {

@@ -19,10 +19,8 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import smile.base.svm.KernelMachine;
-import smile.base.svm.LinearKernelMachine;
 import smile.base.svm.LASVM;
 import smile.math.MathEx;
-import smile.util.IntSet;
 import smile.util.SparseArray;
 import smile.math.kernel.*;
 
@@ -98,7 +96,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param kernel Kernel function.
      * @param vectors The support vectors.
      * @param weight The weights of instances.
-     * @param b The intercept;
+     * @param b The intercept.
      */
     public SVM(MercerKernel<T> kernel, T[] vectors, double[] weight, double b) {
         super(kernel, vectors, weight, b);
@@ -180,19 +178,10 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static Classifier<double[]> fit(double[][] x, int[] y, Options options) {
+    public static LinearSVM fit(double[][] x, int[] y, Options options) {
         LASVM<double[]> lasvm = new LASVM<>(new LinearKernel(), options.C, options.tol);
         KernelMachine<double[]> svm = lasvm.fit(x, y, options.epochs);
-
-        IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<>(labels) {
-            final LinearKernelMachine model = LinearKernelMachine.of(svm);
-
-            @Override
-            public int predict(double[] x) {
-                return model.f(x) > 0 ? +1 : -1;
-            }
-        };
+        return new LinearSVM(svm);
     }
 
     /**
@@ -203,19 +192,10 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static Classifier<int[]> fit(int[][] x, int[] y, int p, Options options) {
+    public static BinarySparseLinearSVM fit(int[][] x, int[] y, int p, Options options) {
         LASVM<int[]> lasvm = new LASVM<>(new BinarySparseLinearKernel(), options.C, options.tol);
         KernelMachine<int[]> svm = lasvm.fit(x, y, options.epochs);
-
-        IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<>(labels) {
-            final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
-
-            @Override
-            public int predict(int[] x) {
-                return model.f(x) > 0 ? +1 : -1;
-            }
-        };
+        return new BinarySparseLinearSVM(p, svm);
     }
 
     /**
@@ -226,19 +206,10 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static Classifier<SparseArray> fit(SparseArray[] x, int[] y, int p, Options options) {
+    public static SparseLinearSVM fit(SparseArray[] x, int[] y, int p, Options options) {
         LASVM<SparseArray> lasvm = new LASVM<>(new SparseLinearKernel(), options.C, options.tol);
         KernelMachine<SparseArray> svm = lasvm.fit(x, y, options.epochs);
-
-        IntSet labels = new IntSet(new int[]{-1, +1});
-        return new AbstractClassifier<>(labels) {
-            final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
-
-            @Override
-            public int predict(SparseArray x) {
-                return model.f(x) > 0 ? +1 : -1;
-            }
-        };
+        return new SparseLinearSVM(p, svm);
     }
 
     /**
