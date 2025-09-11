@@ -22,7 +22,7 @@ import smile.util.IntSet;
 import smile.util.SparseArray;
 
 /**
- * Sparse linear support vector machines.
+ * Sparse linear support vector machines for classification.
  *
  * @author Haifeng Li
  */
@@ -37,7 +37,7 @@ public class SparseLinearSVM extends AbstractClassifier<SparseArray> {
      */
     public SparseLinearSVM(int p, KernelMachine<SparseArray> svm) {
         super(new IntSet(new int[]{-1, +1}));
-        this.model = LinearKernelMachine.sparse(p, svm);;
+        this.model = LinearKernelMachine.sparse(p, svm);
     }
 
     /**

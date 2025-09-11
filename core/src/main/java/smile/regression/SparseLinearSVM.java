@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.classification;
+package smile.regression;
 
 import smile.base.svm.KernelMachine;
 import smile.base.svm.LinearKernelMachine;
-import smile.util.IntSet;
+import smile.util.SparseArray;
 
 /**
- * Binary sparse linear support vector machines for classification.
+ * Sparse linear support vector machines for regression.
  *
  * @author Haifeng Li
  */
-public class BinarySparseLinearSVM extends AbstractClassifier<int[]> {
+public class SparseLinearSVM implements Regression<SparseArray> {
     /** The linear model. */
     private final LinearKernelMachine model;
 
@@ -34,9 +34,8 @@ public class BinarySparseLinearSVM extends AbstractClassifier<int[]> {
      * @param p the dimension of input vector.
      * @param svm The kernel machine.
      */
-    public BinarySparseLinearSVM(int p, KernelMachine<int[]> svm) {
-        super(new IntSet(new int[]{-1, +1}));
-        this.model = LinearKernelMachine.binary(p, svm);
+    public SparseLinearSVM(int p, KernelMachine<SparseArray> svm) {
+        this.model = LinearKernelMachine.sparse(p, svm);
     }
 
     /**
@@ -56,12 +55,7 @@ public class BinarySparseLinearSVM extends AbstractClassifier<int[]> {
     }
 
     @Override
-    public int predict(int[] x) {
-        return model.f(x) > 0 ? +1 : -1;
-    }
-
-    @Override
-    public double score(int[] x) {
+    public double predict(SparseArray x) {
         return model.f(x);
     }
 }
