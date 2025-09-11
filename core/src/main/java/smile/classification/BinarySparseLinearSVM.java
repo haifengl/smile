@@ -21,7 +21,7 @@ import smile.base.svm.LinearKernelMachine;
 import smile.util.IntSet;
 
 /**
- * Binary sparse linear support vector machines.
+ * Binary sparse linear support vector machines for classification.
  *
  * @author Haifeng Li
  */
@@ -36,7 +36,7 @@ public class BinarySparseLinearSVM extends AbstractClassifier<int[]> {
      */
     public BinarySparseLinearSVM(int p, KernelMachine<int[]> svm) {
         super(new IntSet(new int[]{-1, +1}));
-        this.model = LinearKernelMachine.binary(p, svm);;
+        this.model = LinearKernelMachine.binary(p, svm);
     }
 
     /**

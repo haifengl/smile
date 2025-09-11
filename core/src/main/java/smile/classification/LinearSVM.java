@@ -21,7 +21,7 @@ import smile.base.svm.LinearKernelMachine;
 import smile.util.IntSet;
 
 /**
- * Linear support vector machines.
+ * Linear support vector machines for classification.
  *
  * @author Haifeng Li
  */
@@ -35,7 +35,7 @@ public class LinearSVM extends AbstractClassifier<double[]> {
      */
     public LinearSVM(KernelMachine<double[]> svm) {
         super(new IntSet(new int[]{-1, +1}));
-        this.model = LinearKernelMachine.of(svm);;
+        this.model = LinearKernelMachine.of(svm);
     }
 
     /**
