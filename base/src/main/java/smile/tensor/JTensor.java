@@ -26,7 +26,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class SimpleTensor extends AbstractTensor {
+public class JTensor extends AbstractTensor {
     /**
      * An on-heap memory segment that stores tensor elements.
      */
@@ -42,7 +42,7 @@ public class SimpleTensor extends AbstractTensor {
      * @param valueLayout the data type of tensor elements.
      * @param shape the shape of tensor.
      */
-    private SimpleTensor(MemorySegment memory, ValueLayout valueLayout, int[] shape) {
+    private JTensor(MemorySegment memory, ValueLayout valueLayout, int[] shape) {
         super(shape);
         this.memory = memory;
         this.valueLayout = valueLayout;
@@ -62,6 +62,11 @@ public class SimpleTensor extends AbstractTensor {
      */
     public MemorySegment memory() {
         return memory;
+    }
+
+    @Override
+    public String toString() {
+        return "Tensor" + Arrays.toString(shape());
     }
 
     @Override
@@ -86,12 +91,12 @@ public class SimpleTensor extends AbstractTensor {
         if (p1 != p2) {
             throw new IllegalArgumentException(String.format("The length of new shape %d != %d", p1, p2));
         }
-        return new SimpleTensor(memory, valueLayout, shape);
+        return new JTensor(memory, valueLayout, shape);
     }
 
     @Override
     public Tensor set(Tensor value, int... index) {
-        if (value instanceof SimpleTensor B) {
+        if (value instanceof JTensor B) {
             if (!valueLayout.equals(B.valueLayout)) {
                 throw new UnsupportedOperationException("set with tensor of different ValueLayout: " + B.valueLayout);
             }
@@ -103,9 +108,9 @@ public class SimpleTensor extends AbstractTensor {
     }
 
     @Override
-    public SimpleTensor get(int... index) {
+    public JTensor get(int... index) {
         long offset = offset(index) * valueLayout.byteSize();
-        return new SimpleTensor(memory.asSlice(offset), valueLayout, Arrays.copyOfRange(shape, index.length, shape.length));
+        return new JTensor(memory.asSlice(offset), valueLayout, Arrays.copyOfRange(shape, index.length, shape.length));
     }
 
     /**
@@ -282,13 +287,13 @@ public class SimpleTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static SimpleTensor of(byte[] data, int... shape) {
+    static JTensor of(byte[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
         var memory = MemorySegment.ofArray(data);
-        return new SimpleTensor(memory, ValueLayout.JAVA_BYTE, shape);
+        return new JTensor(memory, ValueLayout.JAVA_BYTE, shape);
     }
 
     /**
@@ -297,13 +302,13 @@ public class SimpleTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static SimpleTensor of(int[] data, int... shape) {
+    static JTensor of(int[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
         var memory = MemorySegment.ofArray(data);
-        return new SimpleTensor(memory, ValueLayout.JAVA_INT, shape);
+        return new JTensor(memory, ValueLayout.JAVA_INT, shape);
     }
 
     /**
@@ -312,13 +317,13 @@ public class SimpleTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static SimpleTensor of(float[] data, int... shape) {
+    static JTensor of(float[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
         var memory = MemorySegment.ofArray(data);
-        return new SimpleTensor(memory, ValueLayout.JAVA_FLOAT, shape);
+        return new JTensor(memory, ValueLayout.JAVA_FLOAT, shape);
     }
 
     /**
@@ -327,12 +332,12 @@ public class SimpleTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static SimpleTensor of(double[] data, int... shape) {
+    static JTensor of(double[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
         }
         var memory = MemorySegment.ofArray(data);
-        return new SimpleTensor(memory, ValueLayout.JAVA_DOUBLE, shape);
+        return new JTensor(memory, ValueLayout.JAVA_DOUBLE, shape);
     }
 }
