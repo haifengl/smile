@@ -63,4 +63,13 @@ public enum UPLO {
      * @return the byte value for LAPACK.
      */
     public byte lapack() { return lapack; }
+
+    /** Flips the value, null safe. */
+    public static UPLO flip(UPLO value) {
+        return switch (value) {
+            case null -> null;
+            case UPPER -> LOWER;
+            case LOWER -> UPPER;
+        };
+    }
 }
