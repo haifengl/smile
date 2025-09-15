@@ -52,18 +52,6 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
         this.array = array;
     }
 
-    /**
-     * Returns a zero matrix.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @return a zero matrix.
-     */
-    public static DenseMatrix64 zeros(int m, int n) {
-        int ld = ld(m);
-        double[] array = new double[ld * n];
-        return new DenseMatrix64(array, m, n, ld, null, null);
-    }
-
     @Override
     public ScalarType scalarType() {
         return ScalarType.Float64;
