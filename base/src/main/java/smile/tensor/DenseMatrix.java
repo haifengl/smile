@@ -39,7 +39,7 @@ public abstract class DenseMatrix implements Matrix {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DenseMatrix.class);
 
     /**
-     * A memory segment that stores matrix values.
+     * The memory segment that stores matrix values.
      */
     transient MemorySegment memory;
     /**
@@ -461,16 +461,34 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
-     * Returns a zero matrix of same scalar type.
+     * Returns a zero matrix.
+     * @param scalarType the scalar type.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return a zero matrix.
+     */
+    public static DenseMatrix zeros(ScalarType scalarType, int m, int n) {
+        int ld = ld(m);
+        return switch (scalarType) {
+            case Float64 -> {
+                double[] array = new double[ld * n];
+                yield new DenseMatrix64(array, m, n, ld, null, null);
+            }
+            case Float32 -> {
+                float[] array = new float[ld * n];
+                yield new DenseMatrix32(array, m, n, ld, null, null);
+            }
+            default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType);
+        };
+    }
+
+    /**
+     * Returns a zero matrix of the same scalar type as this matrix.
      * @param m the number of rows.
      * @param n the number of columns.
      * @return a zero matrix.
      */
     public DenseMatrix zeros(int m, int n) {
-        return switch (scalarType()) {
-            case Float64 -> DenseMatrix64.zeros(m, n);
-            case Float32 -> DenseMatrix32.zeros(m, n);
-            default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType());
-        };
+        return zeros(scalarType(), m, n);
     }
 }
