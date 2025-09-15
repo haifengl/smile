@@ -45,31 +45,44 @@ class Vector64 extends Vector implements Serializable {
     final int length;
 
     /**
-     * Constructor.
+     * Private constructor with MemorySegment.
+     * @param memory the memory segment of data.
      * @param array the primitive array backing the vector.
      * @param offset the base offset.
      * @param length the length.
-     * @param nrow the number of rows.
-     * @param ncol the number of columns.
+     * @param m the number of rows.
+     * @param n the number of columns.
      */
-    public Vector64(double[] array, int offset, int length, int nrow, int ncol) {
+    private Vector64(MemorySegment memory, double[] array, int offset, int length, int m, int n) {
         if (offset < 0 || offset >= array.length) {
             throw new IllegalArgumentException("Invalid offset: " + offset);
         }
         if (offset + length >= array.length) {
             throw new IllegalArgumentException("Invalid length: " + length);
         }
-        if (nrow != 1 && ncol != 1) {
-            throw new IllegalArgumentException("Invalid vector dimension: " + nrow + " x " + ncol);
+        if (m != 1 && n != 1) {
+            throw new IllegalArgumentException("Invalid vector dimension: " + m + " x " + n);
         }
-        if (nrow != length && ncol != length) {
-            throw new IllegalArgumentException("Invalid vector dimension: " + nrow + " x " + ncol);
+        if (m != length && n != length) {
+            throw new IllegalArgumentException("Invalid vector dimension: " + m + " x " + n);
         }
 
-        super(memory(array, offset, length), nrow, ncol);
+        super(memory, m, n);
         this.array = array;
         this.offset = offset;
         this.length = length;
+    }
+
+    /**
+     * Constructor.
+     * @param array the primitive array backing the vector.
+     * @param offset the base offset.
+     * @param length the length.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     */
+    public Vector64(double[] array, int offset, int length, int m, int n) {
+        this(memory(array, offset, length), array, offset, length, m, n);
     }
 
     /**
@@ -82,52 +95,15 @@ class Vector64 extends Vector implements Serializable {
         this(array, offset, length, length, 1);
     }
 
-    /**
-     * Returns a slice of the memory segment, at the given offset.
-     * The returned segment's address is the address of the array
-     * plus the given offset; its size is specified by the given
-     * argument.
-     * @param array the primitive array backing the heap segment.
-     * @param offset the base offset.
-     * @param length the length.
-     * @return the memory segment.
-     */
-    static MemorySegment memory(double[] array, int offset, int length) {
-        var memory = MemorySegment.ofArray(array);
-        if (offset != 0 || length != array.length) {
-            long byteSize = memory.byteSize();
-            memory = memory.asSlice(offset * byteSize, length * byteSize);
-        }
-        return memory;
-    }
-
-    /**
-     * Returns a vector.
-     * @param array the primitive array backing the vector.
-     * @return a vector.
-     */
-    public static Vector64 of(double[] array) {
-        return new Vector64(array, 0, array.length);
-    }
-
-    /**
-     * Returns a zero vector.
-     * @param length the length of vector.
-     * @return a zero vector.
-     */
-    public static Vector64 zeros(int length) {
-        return new Vector64(new double[length], 0, length);
-    }
-
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float32;
+        return ScalarType.Float64;
     }
 
     @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        memory = MemorySegment.ofArray(array);
+        memory = memory(array, offset, length);
     }
 
     @Override
@@ -163,13 +139,27 @@ class Vector64 extends Vector implements Serializable {
     }
 
     @Override
-    public Vector64 copy(int from, int to) {
-        return Vector64.of(Arrays.copyOfRange(array, offset + from, offset + to));
+    public Vector slice(int from, int to) {
+        int length = to - from;
+        long byteSize = memory.byteSize();
+        var slice = memory.asSlice(from * byteSize, length * byteSize);
+        int m = nrow() > 1 ? length : 1;
+        int n = nrow() > 1 ? 1 : length;
+        return new Vector64(slice, array, offset + from, length, m, n);
+    }
+
+    @Override
+    public Vector copy(int from, int to) {
+        var data = Arrays.copyOfRange(array, offset + from, offset + to);
+        int length = data.length;
+        int m = nrow() > 1 ? length : 1;
+        int n = nrow() > 1 ? 1 : length;
+        return new Vector64(data, 0, length, m, n);
     }
 
     @Override
     public Vector64 transpose() {
-        return new Vector64(array, offset, length, n, m);
+        return new Vector64(memory, array, offset, length, n, m);
     }
 
     @Override
