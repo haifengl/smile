@@ -18,6 +18,7 @@ package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
+import static smile.linalg.blas.cblas_openblas_h.*;
 
 /**
  * Mathematical vector interface. Vectors are a specialized case of matrices.
@@ -218,5 +219,126 @@ public abstract class Vector extends DenseMatrix {
      */
     public Vector ones(int length) {
         return ones(scalarType(), length);
+    }
+
+    /**
+     * Sums the absolute values of the elements of a vector.
+     * @return Sum of the absolute values of the elements of the vector x.
+     */
+    public double asum() {
+        return switch(scalarType()) {
+            case Float64 -> cblas_dasum(size(), memory, 1);
+            case Float32 -> cblas_sasum(size(), memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+    }
+
+    /**
+     * Computes a constant alpha times a vector x plus a vector y.
+     * The result overwrites the initial values of vector y.
+     *
+     * @param alpha If {@code alpha = 0} this routine returns without any computation.
+     *
+     * @param y Input and output vector.
+     *          Before calling the routine, y contains the vector to be summed.
+     *          After the routine ends, y contains the result of the summation.
+     */
+    public void axpy(double alpha, Vector y) {
+        if (scalarType() != y.scalarType()) {
+            throw new UnsupportedOperationException("Different scala type: " + scalarType() + " != " + y.scalarType());
+        }
+        if (size() != y.size()) {
+            throw new UnsupportedOperationException("Different vector size: " + size() + " != "  + y.size());
+        }
+
+        switch(scalarType()) {
+            case Float64 -> cblas_daxpy(size(), alpha, memory, 1, y.memory, 1);
+            case Float32 -> cblas_saxpy(size(), (float) alpha, memory, 1, y.memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+    }
+
+    /**
+     * Computes the dot product of two vectors.
+     *
+     * @param y Input vector contains the second vector operand.
+     *
+     * @return dot product.
+     */
+    public double dot(Vector y) {
+        if (scalarType() != y.scalarType()) {
+            throw new UnsupportedOperationException("Different scala type: " + scalarType() + " != " + y.scalarType());
+        }
+        if (size() != y.size()) {
+            throw new UnsupportedOperationException("Different vector size: " + size() + " != "  + y.size());
+        }
+
+        return switch(scalarType()) {
+            case Float64 -> cblas_ddot(size(), memory, 1, y.memory, 1);
+            case Float32 -> cblas_sdot(size(), memory, 1, y.memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+    }
+
+    /**
+     * Computes the Euclidean (L2) norm of a vector.
+     *
+     * @return Euclidean norm.
+     */
+    public double norm2() {
+        return switch(scalarType()) {
+            case Float64 -> cblas_dnrm2(size(), memory, 1);
+            case Float32 -> cblas_snrm2(size(), memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+    }
+
+    /**
+     * Computes the L1 norm of a vector.
+     *
+     * @return L1 norm.
+     */
+    public double norm1() {
+        return get((int) iamax());
+    }
+
+    /**
+     * Scales a vector with a scalar.
+     *
+     * @param alpha The scaling factor.
+     */
+    public void scale(double alpha) {
+        switch(scalarType()) {
+            case Float64 -> cblas_dscal(size(), alpha, memory, 1);
+            case Float32 -> cblas_sscal(size(), (float) alpha, memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+    }
+
+    /**
+     * Swaps two vectors.
+     *
+     * @param y Vector to be swapped.
+     */
+    public void swap(Vector y) {
+        switch(scalarType()) {
+            case Float64 -> cblas_dswap(size(), memory, 1, y.memory, 1);
+            case Float32 -> cblas_sswap(size(), memory, 1, y.memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+    }
+
+    /**
+     * Searches a vector for the first occurrence of the maximum absolute
+     * value.
+     *
+     * @return The first index of the maximum absolute value of vector x.
+     */
+    public long iamax() {
+        return switch(scalarType()) {
+            case Float64 -> cblas_idamax(size(), memory, 1);
+            case Float32 -> cblas_isamax(size(), memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
     }
 }
