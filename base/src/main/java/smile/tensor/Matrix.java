@@ -155,14 +155,14 @@ public interface Matrix extends Tensor {
     }
 
     /**
-     * Creates a vector of same ValueLayout.
+     * Creates a column vector of same scalar type.
      * @param size the vector size.
      * @return the vector.
      */
     default Vector vector(int size) {
         return switch (scalarType()) {
-            case Float32 -> Vector.of(new float[size]);
-            case Float64 -> Vector.of(new double[size]);
+            case Float32 -> Vector.column(new float[size]);
+            case Float64 -> Vector.column(new double[size]);
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
@@ -217,7 +217,7 @@ public interface Matrix extends Tensor {
                     diag[i] = get(i, i);
                 }
 
-                yield Vector.of(diag);
+                yield Vector.column(diag);
             }
 
             case Float32 -> {
@@ -226,7 +226,7 @@ public interface Matrix extends Tensor {
                     diag[i] = (float) get(i, i);
                 }
 
-                yield Vector.of(diag);
+                yield Vector.column(diag);
             }
 
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
@@ -278,6 +278,19 @@ public interface Matrix extends Tensor {
         var y = vector(nrow());
         mv(1.0, x, 0.0, y);
         return y;
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre>{@code
+     *     y = A * x
+     * }</pre>
+     *
+     * @param x the input vector.
+     * @param y  the input and output vector.
+     */
+    default void mv(Vector x, Vector y) {
+        mv(1.0, x, 0.0, y);
     }
 
     /**
