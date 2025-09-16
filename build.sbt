@@ -84,8 +84,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked",
-    "-source", "24",
-    "-target", "24"
+    "-source", "25",
+    "-target", "25"
   ),
   Compile / doc / javacOptions ++= Seq(
     //"-Xdoclint:none",
@@ -113,7 +113,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-release:24"
+    "-release:25"
   ),
   scalacOptions ++= Seq(
     if (scalaVersion.value.startsWith("2.13")) "-Xsource:3"
