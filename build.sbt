@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "4.4.1",
+  version := "4.4.2",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -128,7 +128,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
                          |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
     "org.specs2" %% "specs2-core" % "4.21.0" % Test
   ),
