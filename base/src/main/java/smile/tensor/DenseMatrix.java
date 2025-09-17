@@ -506,4 +506,50 @@ public abstract class DenseMatrix implements Matrix {
     public DenseMatrix zeros(int m, int n) {
         return zeros(scalarType(), m, n);
     }
+
+    /**
+     * Returns an identity matrix.
+     * @param scalarType the scalar type.
+     * @param n the number of columns.
+     * @return an identity matrix.
+     */
+    public static DenseMatrix eye(ScalarType scalarType, int n) {
+        return eye(scalarType, n, n);
+    }
+
+    /**
+     * Returns an identity matrix.
+     * @param scalarType the scalar type.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return an identity matrix.
+     */
+    public static DenseMatrix eye(ScalarType scalarType, int m, int n) {
+        int ld = ld(m);
+        DenseMatrix matrix = zeros(scalarType, m, n);
+        int k = Math.min(m, n);
+        for (int i = 0; i < k; i++) {
+            matrix.set(i, i, 1.0);
+        }
+        return matrix;
+    }
+
+    /**
+     * Returns an identity matrix of the same scalar type as this matrix.
+     * @param n the number of columns.
+     * @return an identity matrix.
+     */
+    public DenseMatrix eye(int n) {
+        return eye(n, n);
+    }
+
+    /**
+     * Returns an identity matrix of the same scalar type as this matrix.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return an identity matrix.
+     */
+    public DenseMatrix eye(int m, int n) {
+        return eye(scalarType(), m, n);
+    }
 }
