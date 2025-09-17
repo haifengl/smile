@@ -60,6 +60,15 @@ public abstract class Vector extends DenseMatrix {
     public abstract Vector copy(int from, int to);
 
     /**
+     * Copies the specified range of the vector into another vector.
+     * @param pos starting position in this vector.
+     * @param dest the destination vector.
+     * @param destPos starting position in the destination vector.
+     * @param length the number of vector elements to be copied.
+     */
+    public abstract void copy(int pos, Vector dest, int destPos, int length);
+
+    /**
      * Returns the number of elements.
      * @return the number of elements.
      */
