@@ -335,8 +335,8 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     @Override
-    public void mv(double alpha, Vector x, double beta, Vector y) {
-        mv(NO_TRANSPOSE, this, alpha, x, beta, y);
+    public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+        mv(trans, this, alpha, x, beta, y);
     }
 
     @Override
@@ -434,6 +434,21 @@ public abstract class DenseMatrix implements Matrix {
         if (other instanceof DenseMatrix B) {
             DenseMatrix C = zeros(nrow(), B.ncol());
             mm(1.0, NO_TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
+            return C;
+        }
+
+        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+    }
+
+    @Override
+    public DenseMatrix tm(Matrix other) {
+        if (nrow() != other.nrow()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", m, n, other.nrow(), other.ncol()));
+        }
+
+        if (other instanceof DenseMatrix B) {
+            DenseMatrix C = zeros(nrow(), B.ncol());
+            mm(1.0, TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
             return C;
         }
 
