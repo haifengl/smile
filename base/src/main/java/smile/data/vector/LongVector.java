@@ -46,10 +46,10 @@ public class LongVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public LongVector(StructField field, long[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.LongType) {
             throw new IllegalArgumentException("Invalid data type: ");
         }
+        super(field);
         this.vector = vector;
     }
 

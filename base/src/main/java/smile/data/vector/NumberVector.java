@@ -39,10 +39,10 @@ public class NumberVector<T extends Number> extends ObjectVector<T> {
      * @param vector the elements of vector.
      */
     public NumberVector(StructField field, T[] vector) {
-        super(field, vector);
         if (!field.dtype().isNumeric()) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field, vector);
     }
 
     /**

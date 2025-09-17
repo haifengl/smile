@@ -45,10 +45,10 @@ public class ByteVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public ByteVector(StructField field, byte[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.ByteType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field);
         this.vector = vector;
     }
 
