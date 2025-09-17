@@ -16,6 +16,9 @@
  */
 package smile.tensor;
 
+import smile.linalg.Transpose;
+import static smile.linalg.Transpose.*;
+
 /**
  * Mathematical matrix interface. The most important methods are matrix-matrix
  * multiplication, and matrix-vector multiplication. Matrix-matrix
@@ -261,36 +264,34 @@ public interface Matrix extends Tensor {
      *     y = alpha * A * x + beta * y
      * }</pre>
      *
+     * @param trans normal, transpose, or conjugate transpose operation on the matrix.
      * @param alpha the scalar alpha.
      * @param x the input vector.
      * @param beta the scalar beta. When beta is supplied as zero,
      *             y need not be set on input.
      * @param y  the input and output vector.
      */
-    void mv(double alpha, Vector x, double beta, Vector y);
+    void mv(Transpose trans, double alpha, Vector x, double beta, Vector y);
 
     /**
-     * Returns the matrix-vector multiplication {@code A * x}.
+     * Matrix-vector multiplication {@code A * x}.
      * @param x the vector.
      * @return the matrix-vector multiplication {@code A * x}.
      */
     default Vector mv(Vector x) {
         var y = vector(nrow());
-        mv(1.0, x, 0.0, y);
+        mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
 
     /**
-     * Matrix-vector multiplication.
-     * <pre>{@code
-     *     y = A * x
-     * }</pre>
+     * Matrix-vector multiplication {@code A * x}.
      *
      * @param x the input vector.
      * @param y  the input and output vector.
      */
     default void mv(Vector x, Vector y) {
-        mv(1.0, x, 0.0, y);
+        mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
     }
 
     /**
@@ -302,13 +303,53 @@ public interface Matrix extends Tensor {
     default void mv(Vector work, int inputOffset, int outputOffset) {
         Vector xb = work.slice(inputOffset, ncol());
         Vector yb = work.slice(outputOffset, nrow());
-        mv(1.0, xb, 0.0, yb);
+        mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
     }
 
     /**
-     * Returns matrix multiplication {@code A * B}.
+     * Matrix-vector multiplication {@code A' * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A' * x}.
+     */
+    default Vector tv(Vector x) {
+        var y = vector(nrow());
+        mv(TRANSPOSE, 1.0, x, 0.0, y);
+        return y;
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A' * x}.
+     *
+     * @param x the input vector.
+     * @param y  the input and output vector.
+     */
+    default void tv(Vector x, Vector y) {
+        mv(TRANSPOSE, 1.0, x, 0.0, y);
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A' * x}.
+     * @param work the workspace for both input and output vector.
+     * @param inputOffset the offset of input vector in workspace.
+     * @param outputOffset the offset of output vector in workspace.
+     */
+    default void tv(Vector work, int inputOffset, int outputOffset) {
+        Vector xb = work.slice(inputOffset, ncol());
+        Vector yb = work.slice(outputOffset, nrow());
+        mv(TRANSPOSE, 1.0, xb, 0.0, yb);
+    }
+
+    /**
+     * Matrix multiplication {@code A * B}.
      * @param B the operand.
      * @return the multiplication.
      */
     Matrix mm(Matrix B);
+
+    /**
+     * Matrix multiplication {@code A' * B}.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    Matrix tm(Matrix B);
 }
