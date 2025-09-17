@@ -16,15 +16,14 @@
  */
 package smile.tensor;
 
-import smile.linalg.Diag;
-import smile.linalg.Layout;
-import smile.linalg.UPLO;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import smile.linalg.Diag;
+import smile.linalg.Layout;
+import smile.linalg.UPLO;
 
 /**
  * A dense matrix of single precision floating numbers.
