@@ -95,15 +95,20 @@ class Vector64 extends Vector implements Serializable {
         this(array, offset, length, length, 1);
     }
 
+    @Serial
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        memory = memory(array, offset, length);
+    }
+
     @Override
     public ScalarType scalarType() {
         return ScalarType.Float64;
     }
 
-    @Serial
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        memory = memory(array, offset, length);
+    @Override
+    public Vector64 transpose() {
+        return new Vector64(memory, array, offset, length, n, m);
     }
 
     @Override
@@ -167,8 +172,24 @@ class Vector64 extends Vector implements Serializable {
     }
 
     @Override
-    public Vector64 transpose() {
-        return new Vector64(memory, array, offset, length, n, m);
+    public double[] toArray(double[] a) {
+        if (a.length < length) {
+            a = Arrays.copyOfRange(array, offset, offset + length);
+        } else {
+            System.arraycopy(array, offset, a, 0, length);
+        }
+        return a;
+    }
+
+    @Override
+    public float[] toArray(float[] a) {
+        if (a.length < length) {
+            a = new float[length];
+        }
+        for (int i = 0; i < length; i++) {
+            a[i] = (float) array[offset + i];
+        }
+        return a;
     }
 
     @Override

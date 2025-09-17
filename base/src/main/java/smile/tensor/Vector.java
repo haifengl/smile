@@ -41,42 +41,6 @@ public abstract class Vector extends DenseMatrix {
     }
 
     /**
-     * Returns a slice of vector, which shares the data storage.
-     * @param from the initial index of the range to be copied, inclusive.
-     * @param to the final index of the range to be copied, exclusive.
-     * @return a slice of this vector.
-     */
-    public abstract Vector slice(int from, int to);
-
-    /**
-     * Returns a copy of the vector.
-     * @return a copy of this vector.
-     */
-    public Vector copy() {
-        return copy(0, size());
-    }
-
-    /**
-     * Copies the specified range of the vector into a new vector.
-     * The final index of the range may be greater than vector length,
-     * in which case 0 is placed in all extra elements.
-     * @param from the initial index of the range to be copied, inclusive.
-     * @param to the final index of the range to be copied, exclusive.
-     *           This index may lie outside the array.
-     * @return a copy of this vector.
-     */
-    public abstract Vector copy(int from, int to);
-
-    /**
-     * Copies the specified range of the vector into another vector.
-     * @param pos starting position in this vector.
-     * @param dest the destination vector.
-     * @param destPos starting position in the destination vector.
-     * @param length the number of vector elements to be copied.
-     */
-    public abstract void copy(int pos, Vector dest, int destPos, int length);
-
-    /**
      * Returns the number of elements.
      * @return the number of elements.
      */
@@ -113,6 +77,58 @@ public abstract class Vector extends DenseMatrix {
     public double apply(int i) {
         return get(i);
     }
+
+    /**
+     * Returns a slice of vector, which shares the data storage.
+     * @param from the initial index of the range to be copied, inclusive.
+     * @param to the final index of the range to be copied, exclusive.
+     * @return a slice of this vector.
+     */
+    public abstract Vector slice(int from, int to);
+
+    /**
+     * Returns a copy of the vector.
+     * @return a copy of this vector.
+     */
+    public Vector copy() {
+        return copy(0, size());
+    }
+
+    /**
+     * Copies the specified range of the vector into a new vector.
+     * The final index of the range may be greater than vector length,
+     * in which case 0 is placed in all extra elements.
+     * @param from the initial index of the range to be copied, inclusive.
+     * @param to the final index of the range to be copied, exclusive.
+     *           This index may lie outside the array.
+     * @return a copy of this vector.
+     */
+    public abstract Vector copy(int from, int to);
+
+    /**
+     * Copies the specified range of the vector into another vector.
+     * @param pos starting position in this vector.
+     * @param dest the destination vector.
+     * @param destPos starting position in the destination vector.
+     * @param length the number of vector elements to be copied.
+     */
+    public abstract void copy(int pos, Vector dest, int destPos, int length);
+
+    /**
+     * Returns an array containing all the elements in this vector.
+     * @param a the array into which the elements of the vector are to be stored
+     *          if it is big enough; otherwise, a new array is allocated.
+     * @return an array containing the elements of the vector.
+     */
+    public abstract double[] toArray(double[] a);
+
+    /**
+     * Returns an array containing all the elements in this vector.
+     * @param a the array into which the elements of the vector are to be stored,
+     *          if it is big enough; otherwise, a new array is allocated.
+     * @return an array containing the elements of the vector.
+     */
+    public abstract float[] toArray(float[] a);
 
     /**
      * Returns the matrix with the elements of this vector as the diagonal.
