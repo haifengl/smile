@@ -49,6 +49,14 @@ public abstract class Vector extends DenseMatrix {
     public abstract Vector slice(int from, int to);
 
     /**
+     * Returns a copy of the vector.
+     * @return a copy of this vector.
+     */
+    public Vector copy() {
+        return copy(0, size());
+    }
+
+    /**
      * Copies the specified range of the vector into a new vector.
      * The final index of the range may be greater than vector length,
      * in which case 0 is placed in all extra elements.
@@ -104,6 +112,19 @@ public abstract class Vector extends DenseMatrix {
      */
     public double apply(int i) {
         return get(i);
+    }
+
+    /**
+     * Returns the matrix with the elements of this vector as the diagonal.
+     * @return the diagonal matrix.
+     */
+    public DenseMatrix diagflat() {
+        int n = size();
+        DenseMatrix matrix = DenseMatrix.zeros(scalarType(), n, n);
+        for (int i = 0; i < n; i++) {
+            matrix.set(i, i, get(i));
+        }
+        return matrix;
     }
 
     /**
