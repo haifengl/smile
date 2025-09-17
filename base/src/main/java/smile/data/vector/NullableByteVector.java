@@ -48,10 +48,10 @@ public class NullableByteVector extends NullablePrimitiveVector {
      * @param nullMask The null bitmap. The bit is 1 if the value is null.
      */
     public NullableByteVector(StructField field, byte[] vector, BitSet nullMask) {
-        super(field, nullMask);
         if (field.dtype() != DataTypes.NullableByteType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field, nullMask);
         this.vector = vector;
     }
 

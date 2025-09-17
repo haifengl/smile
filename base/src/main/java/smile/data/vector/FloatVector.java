@@ -47,13 +47,13 @@ public class FloatVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public FloatVector(StructField field, float[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.FloatType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
         if (field.measure() instanceof CategoricalMeasure) {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
+        super(field);
         this.vector = vector;
     }
 

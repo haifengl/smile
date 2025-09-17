@@ -69,7 +69,6 @@ public class BooleanVector extends PrimitiveVector {
      * @param bits the bit map of vector.
      */
     public BooleanVector(StructField field, int size, BitSet bits) {
-        super(field);
         if (field.dtype() != DataTypes.BooleanType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
@@ -77,6 +76,7 @@ public class BooleanVector extends PrimitiveVector {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
 
+        super(field);
         this.size = size;
         this.vector = bits;
     }
