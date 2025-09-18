@@ -229,48 +229,6 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
-     * Returns a two-dimensional array containing all the elements in this matrix.
-     * @param a the array into which the elements of the matrix are to be stored
-     *          if it is big enough; otherwise, a new array is allocated.
-     * @return an array containing the elements of the vector.
-     */
-    public double[][] toArray(double[][] a) {
-        int m = nrow();
-        int n = ncol();
-        if (a.length < m || a[0].length < n) {
-            a = new double[m][n];
-        }
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                a[i][j] = get(i, j);
-            }
-        }
-        return a;
-    }
-
-    /**
-     * Returns a two-dimensional array containing all the elements in this matrix.
-     * @param a the array into which the elements of the matrix are to be stored
-     *          if it is big enough; otherwise, a new array is allocated.
-     * @return an array containing the elements of the vector.
-     */
-    public float[][] toArray(float[][] a) {
-        int m = nrow();
-        int n = ncol();
-        if (a.length < m || a[0].length < n) {
-            a = new float[m][n];
-        }
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                a[i][j] = (float) get(i, j);
-            }
-        }
-        return a;
-    }
-
-    /**
      * Matrix-vector multiplication.
      * <pre>{@code
      *     y = alpha * op(A) * x + beta * y
