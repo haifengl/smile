@@ -137,6 +137,12 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     @Override
+    public abstract DenseMatrix copy();
+
+    @Override
+    public abstract DenseMatrix transpose();
+
+    @Override
     public String toString() {
         return toString(false);
     }
@@ -306,9 +312,6 @@ public abstract class DenseMatrix implements Matrix {
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
         mv(trans, this, alpha, x, beta, y);
     }
-
-    @Override
-    public abstract DenseMatrix transpose();
 
     /**
      * Matrix-matrix multiplication.

@@ -51,15 +51,15 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
         this.array = array;
     }
 
-    @Override
-    public ScalarType scalarType() {
-        return ScalarType.Float32;
-    }
-
     @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         memory = MemorySegment.ofArray(array);
+    }
+
+    @Override
+    public ScalarType scalarType() {
+        return ScalarType.Float32;
     }
 
     @Override
@@ -77,6 +77,25 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
         return switch (layout()) {
             case ROW_MAJOR -> new DenseMatrix32(array, n, m, ld, UPLO.flip(uplo), diag);
             case COL_MAJOR -> new DenseMatrix32(array, n, m, ld, UPLO.flip(uplo), diag) {
+                @Override
+                public Layout layout() {
+                    return Layout.ROW_MAJOR;
+                }
+
+                @Override
+                int offset(int i, int j) {
+                    return i * ld + j;
+                }
+            };
+        };
+    }
+
+    @Override
+    public DenseMatrix copy() {
+        float[] data = array.clone();
+        return switch (layout()) {
+            case COL_MAJOR -> new DenseMatrix32(array, m, n, ld, uplo, diag);
+            case ROW_MAJOR -> new DenseMatrix32(array, m, n, ld, uplo, diag) {
                 @Override
                 public Layout layout() {
                     return Layout.ROW_MAJOR;
