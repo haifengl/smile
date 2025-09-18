@@ -229,35 +229,45 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
-     * Return the two-dimensional double array of matrix.
-     * @return the two-dimensional double array of matrix.
+     * Returns a two-dimensional array containing all the elements in this matrix.
+     * @param a the array into which the elements of the matrix are to be stored
+     *          if it is big enough; otherwise, a new array is allocated.
+     * @return an array containing the elements of the vector.
      */
-    public double[][] toArray() {
+    public double[][] toArray(double[][] a) {
         int m = nrow();
         int n = ncol();
-        double[][] array = new double[m][n];
+        if (a.length < m || a[0].length < n) {
+            a = new double[m][n];
+        }
+
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                array[i][j] = get(i, j);
+                a[i][j] = get(i, j);
             }
         }
-        return array;
+        return a;
     }
 
     /**
-     * Return the two-dimensional float array of matrix.
-     * @return the two-dimensional float array of matrix.
+     * Returns a two-dimensional array containing all the elements in this matrix.
+     * @param a the array into which the elements of the matrix are to be stored
+     *          if it is big enough; otherwise, a new array is allocated.
+     * @return an array containing the elements of the vector.
      */
-    public float[][] toFloatArray() {
+    public float[][] toArray(float[][] a) {
         int m = nrow();
         int n = ncol();
-        float[][] array = new float[m][n];
+        if (a.length < m || a[0].length < n) {
+            a = new float[m][n];
+        }
+
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
-                array[i][j] = (float) get(i, j);
+                a[i][j] = (float) get(i, j);
             }
         }
-        return array;
+        return a;
     }
 
     /**
