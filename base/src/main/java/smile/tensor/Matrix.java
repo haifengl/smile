@@ -294,6 +294,12 @@ public interface Matrix extends Tensor {
     }
 
     /**
+     * Returns a deep copy of matrix.
+     * @return a deep copy of matrix.
+     */
+    Matrix copy();
+
+    /**
      * Returns the transpose of matrix. The transpose may share the storage
      * with this matrix.
      * @return the transpose of matrix.
