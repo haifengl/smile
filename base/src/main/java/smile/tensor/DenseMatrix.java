@@ -447,6 +447,24 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Performs the rank-1 update operation.
+     * <pre>{@code
+     *     A := A + alpha*x*y'
+     * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param x the left vector.
+     * @param y the right vector.
+     */
+    public void ger(double alpha, Vector x, Vector y) {
+        switch(scalarType()) {
+            case Float64 -> cblas_dger(layout().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
+            case Float32 -> cblas_sger(layout().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+    }
+
+    /**
      * Returns a zero matrix.
      * @param scalarType the scalar type.
      * @param m the number of rows.
