@@ -86,10 +86,7 @@ public abstract class Vector extends DenseMatrix {
      */
     public abstract Vector slice(int from, int to);
 
-    /**
-     * Returns a copy of the vector.
-     * @return a copy of this vector.
-     */
+    @Override
     public Vector copy() {
         return copy(0, size());
     }
