@@ -39,6 +39,7 @@ import smile.linalg.LAPACK;
  * the mean x to form a set of 2n vectors called sigma points. These sigma
  * points completely capture the mean and covariance of the system state.
  *
+ * @param lu the Cholesky factorization.
  * @author Haifeng Li
  */
 public record Cholesky(DenseMatrix lu) {
@@ -108,10 +109,10 @@ public record Cholesky(DenseMatrix lu) {
      *          be overwritten with the solution matrix.
      */
     public void solve(DenseMatrix B) {
-        if (B.scalarType() != lu.scalarType()) {
+        if (lu.scalarType() != B.scalarType()) {
             throw new IllegalArgumentException("Incompatible ScalarType: " + B.scalarType() + " != " + lu.scalarType());
         }
-        if (B.m != lu.m) {
+        if (lu.m != B.m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
         }
 
