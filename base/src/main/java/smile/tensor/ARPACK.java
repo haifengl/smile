@@ -14,12 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.linalg;
+package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
-import java.util.Arrays;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.Matrix;
 import static smile.linalg.arpack.arpack_h.*;
 
 /**
@@ -107,7 +104,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    static Matrix.EVD syev(IMatrix A, SymmOption which, int nev) {
+    static EVD syev(Matrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -121,7 +118,7 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    static Matrix.EVD syev(IMatrix A, SymmOption which, int nev, int ncv, double tol) {
+    static EVD syev(Matrix A, SymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -144,30 +141,31 @@ public interface ARPACK {
 
         int[] ipntr = new int[11];
         // Arnoldi reverse communication
-        double[] workd = new double[3 * n];
+        Vector workd = A.vector(3 * n);
         // private work array
-        double[] workl = new double[ncv * (ncv + 8)];
+        Vector workl = A.vector(ncv * (ncv + 8));
 
         // used for initial residual (if info != 0)
         // and eventually the output residual
-        double[] resid = new double[n];
+        Vector resid = A.vector(n);
         // Lanczos basis vectors
-        double[] V = new double[n * ncv];
-        int ldv = n;
+        DenseMatrix V = DenseMatrix.zeros(A.scalarType(), n, ncv);
+        int ldv = V.ld;
 
         var ido_ = MemorySegment.ofArray(ido);
         var bmat_ = MemorySegment.ofArray(bmat);
         var bwhich_ = MemorySegment.ofArray(bwhich);
-        var resid_ = MemorySegment.ofArray(resid);
-        var V_ = MemorySegment.ofArray(V);
         var iparam_ = MemorySegment.ofArray(iparam);
         var ipntr_ = MemorySegment.ofArray(ipntr);
-        var workd_ = MemorySegment.ofArray(workd);
-        var workl_ = MemorySegment.ofArray(workl);
         var info_ = MemorySegment.ofArray(info);
         do {
-            dsaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv,
-                     iparam_, ipntr_, workd_, workl_, workl.length, info_);
+            switch (A.scalarType()) {
+                case Float64 -> dsaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid.memory, ncv, V.memory, ldv,
+                        iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
+                case Float32 -> ssaupd_c(ido_, bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv,
+                        iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+            }
 
             if (ido[0] == -1 || ido[0] == 1) {
                 A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
@@ -180,17 +178,23 @@ public interface ARPACK {
 
         info[0] = 0;
         byte[] howmny = {'A'};
-        double[] d = new double[ncv * 2];
+        Vector d = A.vector(ncv * 2);
         int[] select = new int[ncv];
         double sigma = 0.0;
         int rvec = 1;
 
         var howmny_ = MemorySegment.ofArray(howmny);
         var select_ = MemorySegment.ofArray(select);
-        var d_ = MemorySegment.ofArray(d);
-        dseupd_c(rvec, howmny_, select_, d_, V_, ldv, sigma,
-                 bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv,
-                 iparam_, ipntr_, workd_, workl_, workl.length, info_);
+        switch (A.scalarType()) {
+            case Float64 -> dseupd_c(rvec, howmny_, select_, d.memory, V.memory, ldv, sigma,
+                    bmat_, n, bwhich_, nev, tol, resid.memory, ncv, V.memory, ldv,
+                    iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
+            case Float32 -> sseupd_c(rvec, howmny_, select_, d.memory, V.memory, ldv, (float) sigma,
+                    bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv,
+                    iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+        }
+
 
         if (info[0] != 0) {
             String error = switch(info[0]) {
@@ -206,9 +210,9 @@ public interface ARPACK {
             throw new ArithmeticException(error);
         }
 
-        d = Arrays.copyOfRange(d, 0, nev);
-        V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(d, new Matrix(n, nev, ldv, V));
+        d = d.copy(0, nev);
+        V = V.columns(0, nev);
+        EVD eig = new EVD(d, V);
         return eig.sort();
     }
 
@@ -220,7 +224,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev) {
+    static EVD eigen(Matrix A, AsymmOption which, int nev) {
         return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -234,7 +238,7 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    static Matrix.EVD eigen(IMatrix A, AsymmOption which, int nev, int ncv, double tol) {
+    static EVD eigen(Matrix A, AsymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -257,31 +261,34 @@ public interface ARPACK {
 
         int[] ipntr = new int[14];
         // Arnoldi reverse communication
-        double[] workd = new double[3 * n];
-        double[] workev = new double[3 * ncv];
+        Vector workd = A.vector(3 * n);
+        Vector workev = A.vector(3 * ncv);
         // private work array
-        double[] workl = new double[3*ncv*ncv + 6*ncv];
+        Vector workl = A.vector(3*ncv*ncv + 6*ncv);
 
         // used for initial residual (if info != 0)
         // and eventually the output residual
-        double[] resid = new double[n];
+        Vector resid = A.vector(n);
         // Lanczos basis vectors
-        double[] V = new double[n * ncv];
-        int ldv = n;
+        DenseMatrix V = DenseMatrix.zeros(A.scalarType(), n, ncv);
+        int ldv = V.ld;
 
         var ido_ = MemorySegment.ofArray(ido);
         var bmat_ = MemorySegment.ofArray(bmat);
         var bwhich_ = MemorySegment.ofArray(bwhich);
-        var resid_ = MemorySegment.ofArray(resid);
-        var V_ = MemorySegment.ofArray(V);
         var iparam_ = MemorySegment.ofArray(iparam);
         var ipntr_ = MemorySegment.ofArray(ipntr);
-        var workd_ = MemorySegment.ofArray(workd);
-        var workl_ = MemorySegment.ofArray(workl);
         var info_ = MemorySegment.ofArray(info);
         do {
-            dnaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv, iparam_, ipntr_,
-                     workd_, workl_, workl.length, info_);
+            switch (A.scalarType()) {
+                case Float64 -> dnaupd_c(ido_, bmat_, n, bwhich_, nev, tol, resid.memory, ncv, V.memory, ldv, iparam_, ipntr_,
+                        workd.memory, workl.memory, workl.size(), info_);
+
+                case Float32 -> snaupd_c(ido_, bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv, iparam_, ipntr_,
+                        workd.memory, workl.memory, workl.size(), info_);
+
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+            }
 
             if (ido[0] == -1 || ido[0] == 1) {
                 A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
@@ -294,8 +301,8 @@ public interface ARPACK {
 
         info[0] = 0;
         byte[] howmny = {'A'};
-        double[] wr = new double[ncv * 2];
-        double[] wi = new double[ncv * 2];
+        Vector wr = A.vector(ncv * 2);
+        Vector wi = A.vector(ncv * 2);
         int[] select = new int[ncv];
         double sigmar = 0.0;
         double sigmai = 0.0;
@@ -303,12 +310,19 @@ public interface ARPACK {
 
         var howmny_ = MemorySegment.ofArray(howmny);
         var select_ = MemorySegment.ofArray(select);
-        var wr_ = MemorySegment.ofArray(wr);
-        var wi_ = MemorySegment.ofArray(wi);
-        var workev_ = MemorySegment.ofArray(workev);
-        dneupd_c(rvec, howmny_, select_, wr_, wi_, V_, ldv, sigmar, sigmai, workev_,
-                bmat_, n, bwhich_, nev, tol, resid_, ncv, V_, ldv, iparam_, ipntr_,
-                workd_, workl_, workl.length, info_);
+        switch (A.scalarType()) {
+            case Float64 -> dneupd_c(rvec, howmny_, select_, wr.memory, wi.memory, V.memory, ldv, sigmar, sigmai, workev.memory,
+                    bmat_, n, bwhich_, nev, tol, resid.memory, ncv, V.memory, ldv, iparam_, ipntr_,
+                    workd.memory, workl.memory, workl.size(), info_);
+
+
+            case Float32 -> sneupd_c(rvec, howmny_, select_, wr.memory, wi.memory, V.memory, ldv, (float) sigmar, (float) sigmai, workev.memory,
+                    bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv, iparam_, ipntr_,
+                    workd.memory, workl.memory, workl.size(), info_);
+
+
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+        }
 
         if (info[0] != 0) {
             String error = switch(info[0]) {
@@ -324,10 +338,10 @@ public interface ARPACK {
             throw new ArithmeticException(error);
         }
 
-        wr = Arrays.copyOfRange(wr, 0, nev);
-        wi = Arrays.copyOfRange(wi, 0, nev);
-        V = Arrays.copyOfRange(V, 0, n * nev);
-        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, new Matrix(n, nev, ldv, V));
+        wr = wr.copy(0, nev);
+        wi = wi.copy(0, nev);
+        V = V.columns(0, nev);
+        EVD eig = new EVD(wr, wi, null, V);
         return eig.sort();
     }
 
@@ -338,7 +352,7 @@ public interface ARPACK {
      * @param k the number of singular triples to compute.
      * @return the singular value decomposition.
      */
-    static Matrix.SVD svd(IMatrix A, int k) {
+    static SVD svd(Matrix A, int k) {
         return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6);
     }
 
@@ -351,56 +365,49 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the singular value decomposition.
      */
-    static Matrix.SVD svd(IMatrix A, int k, int ncv, double tol) {
+    static SVD svd(Matrix A, int k, int ncv, double tol) {
         int m = A.nrow();
         int n = A.ncol();
 
-        IMatrix ata = A.square();
-        Matrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
+        Matrix ata = new AtA(A);
+        EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
 
-        double[] s = eigen.wr;
-        for (int i = 0; i < s.length; i++) {
-            s[i] = Math.sqrt(s[i]);
+        Vector s = eigen.wr();
+        int len = s.size();
+        for (int i = 0; i < len; i++) {
+            s.set(i, Math.sqrt(s.get(i)));
         }
 
         if (m >= n) {
-            Matrix V = eigen.Vr;
-
-            double[] Av = new double[m];
-            double[] v = new double[n];
-            Matrix U = new Matrix(m, s.length);
-            for (int j = 0; j < s.length; j++) {
-                for (int i = 0; i < n; i++) {
-                    v[i] = V.get(i, j);
-                }
-
+            DenseMatrix V = eigen.Vr();
+            Vector Av = A.vector(m);
+            Vector v = A.vector(n);
+            DenseMatrix U = V.zeros(m, len);
+            for (int j = 0; j < len; j++) {
+                v = V.column(j);
                 A.mv(v, Av);
 
                 for (int i = 0; i < m; i++) {
-                    U.set(i, j, Av[i] / s[j]);
+                    U.set(i, j, Av.get(i) / s.get(j));
                 }
             }
 
-            return new Matrix.SVD(s, U, V);
+            return new SVD(s, U, V);
         } else {
-            Matrix U = eigen.Vr;
-
-            double[] Atu = new double[n];
-            double[] u = new double[m];
-            Matrix V = new Matrix(n, s.length);
-            for (int j = 0; j < s.length; j++) {
-                for (int i = 0; i < m; i++) {
-                    u[i] = U.get(i, j);
-                }
-
+            DenseMatrix U = eigen.Vr();
+            Vector Atu = A.vector(n);
+            Vector u = A.vector(m);
+            DenseMatrix V = U.zeros(n, len);
+            for (int j = 0; j < len; j++) {
+                u = V.column(j);
                 A.tv(u, Atu);
 
                 for (int i = 0; i < n; i++) {
-                    V.set(i, j, Atu[i] / s[j]);
+                    V.set(i, j, Atu.get(i) / s.get(j));
                 }
             }
 
-            return new Matrix.SVD(s, U, V);
+            return new SVD(s, U, V);
         }
     }
 }
