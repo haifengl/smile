@@ -235,6 +235,107 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns the i-th row. Negative index -i means the i-th row from the end.
+     * @param i the row index.
+     * @return the row.
+     */
+    public Vector row(int i) {
+        Vector x = vector(n);
+        if (i < 0) i = m + i;
+
+        for (int j = 0; j < n; j++) {
+            x.set(j, get(i, j));
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the j-th column. Negative index -j means the j-th row from the end.
+     * @param j the column index.
+     * @return the column.
+     */
+    public Vector column(int j) {
+        Vector x = vector(m);
+
+        for (int i = 0; i < m; i++) {
+            x.set(i, get(i, j));
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the submatrix of selected rows.
+     * @param from the beginning row, inclusive.
+     * @param to the ending row, exclusive.
+     * @return the submatrix.
+     */
+    public DenseMatrix rows(int from, int to) {
+        if (to <= from) {
+            throw new IllegalArgumentException("Invalid row range [" + from + ", " + to + ")");
+        }
+
+        int k = to - from;
+        DenseMatrix x = zeros(k, n);
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < n; j++) {
+                x.set(i, j, get(from+i, j));
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the submatrix of selected columns.
+     * @param from the beginning column, inclusive.
+     * @param to the ending column, exclusive.
+     * @return the submatrix.
+     */
+    public DenseMatrix columns(int from, int to) {
+        if (to <= from) {
+            throw new IllegalArgumentException("Invalid row range [" + from + ", " + to + ")");
+        }
+
+        int k = to - from;
+        DenseMatrix x = zeros(m, k);
+        for (int j = 0; j < k; j++) {
+            for (int i = 0; i < m; i++) {
+                x.set(i, j, get(i, from+j));
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
+     *
+     * @param i the beginning row, inclusive.
+     * @param j the beginning column, inclusive,
+     * @param k the ending row, exclusive.
+     * @param l the ending column, exclusive.
+     * @return the submatrix.
+     */
+    public DenseMatrix get(int i, int j, int k, int l) {
+        if (i < 0 || i >= m || k <= i || k >= m || j < 0 || j >= n || l <= j || l >= n) {
+            throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
+        }
+
+        int nrow = k - i;
+        int ncol = l - j;
+        DenseMatrix x = zeros(nrow, ncol);
+        for (int q = 0; q < ncol; q++) {
+            for (int p = 0; p < nrow; p++) {
+                x.set(p, q, get(p+i, q+j));
+            }
+        }
+
+        return x;
+    }
+
+    /**
      * Matrix-vector multiplication.
      * <pre>{@code
      *     y = alpha * op(A) * x + beta * y
