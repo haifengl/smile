@@ -47,6 +47,22 @@ public abstract class Vector extends DenseMatrix {
     public abstract int size();
 
     /**
+     * Returns {@code A[i]}.
+     * @param i the row index.
+     * @return the cell value.
+     */
+    public abstract double get(int i);
+
+    /**
+     * Returns {@code A[i]} for Scala users.
+     * @param i the index.
+     * @return the cell value.
+     */
+    public double apply(int i) {
+        return get(i);
+    }
+
+    /**
      * Sets {@code A[i] = x}.
      * @param i the index.
      * @param x the cell value.
@@ -63,20 +79,11 @@ public abstract class Vector extends DenseMatrix {
     }
 
     /**
-     * Returns {@code A[i]}.
-     * @param i the row index.
-     * @return the cell value.
-     */
-    public abstract double get(int i);
-
-    /**
-     * Returns {@code A[i]} for Scala users.
+     * Sets {@code A[i] += x}.
      * @param i the index.
-     * @return the cell value.
+     * @param x the cell value.
      */
-    public double apply(int i) {
-        return get(i);
-    }
+    public abstract void add(int i, double x);
 
     /**
      * Returns a slice of vector, which shares the data storage.
@@ -126,6 +133,23 @@ public abstract class Vector extends DenseMatrix {
      * @return an array containing the elements of the vector.
      */
     public abstract float[] toArray(float[] a);
+
+    /**
+     * Assigns the specified value to each element of the specified vector.
+     * @param value the value to be stored in all elements of the vector.
+     */
+    public abstract void fill(double value);
+
+    /**
+     * Assigns the specified value to each element of the specified range of
+     * the specified vector.
+     * @param from the index of the first element (inclusive) to be filled
+     *             with the specified value.
+     * @param to the index of the last element (exclusive) to be filled
+     *           with the specified value.
+     * @param value the value to be stored in specified range of the vector.
+     */
+    public abstract void fill(int from, int to, double value);
 
     /**
      * Returns the matrix with the elements of this vector as the diagonal.

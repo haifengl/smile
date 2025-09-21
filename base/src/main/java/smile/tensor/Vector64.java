@@ -122,13 +122,9 @@ class Vector64 extends Vector implements Serializable {
     }
 
     @Override
-    public void set(int i, double x) {
-        array[offset + i] = (float) x;
-    }
-
-    @Override
-    public double get(int i) {
-        return array[offset + i];
+    public double get(int i, int j) {
+        assert(i == 0 || j == 0);
+        return array[offset + i + j];
     }
 
     @Override
@@ -138,9 +134,18 @@ class Vector64 extends Vector implements Serializable {
     }
 
     @Override
-    public double get(int i, int j) {
-        assert(i == 0 || j == 0);
-        return array[offset + i + j];
+    public double get(int i) {
+        return array[offset + i];
+    }
+
+    @Override
+    public void set(int i, double x) {
+        array[offset + i] = (float) x;
+    }
+
+    @Override
+    public void add(int i, double x) {
+        array[offset + i] += (float) x;
     }
 
     @Override
@@ -190,6 +195,16 @@ class Vector64 extends Vector implements Serializable {
             a[i] = (float) array[offset + i];
         }
         return a;
+    }
+
+    @Override
+    public void fill(double value) {
+        Arrays.fill(array, offset, offset+length, value);
+    }
+
+    @Override
+    public void fill(int from, int to, double value) {
+        Arrays.fill(array, offset+from, offset+to, value);
     }
 
     @Override
