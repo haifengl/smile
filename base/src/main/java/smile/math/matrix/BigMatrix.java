@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.matrix;
+package smile.tensor;
 
 import java.io.*;
 import java.lang.foreign.Arena;
@@ -24,9 +24,6 @@ import java.lang.foreign.ValueLayout;
 import smile.math.MathEx;
 import smile.linalg.*;
 import smile.sort.QuickSort;
-import smile.stat.distribution.Distribution;
-import smile.stat.distribution.GaussianDistribution;
-
 import static smile.linalg.Diag.*;
 import static smile.linalg.Layout.*;
 import static smile.linalg.Side.*;
@@ -34,27 +31,30 @@ import static smile.linalg.Transpose.*;
 import static smile.linalg.UPLO.*;
 
 /**
- * Big dense matrix of double precision values for more than
- * 2 billion elements.
+ * Big dense matrix with more than 2 billion elements.
  *
  * @author Haifeng Li
  */
-public class BigMatrix extends IMatrix implements AutoCloseable {
+class BigMatrix extends DenseMatrix implements AutoCloseable {
     @Serial
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
     /** Row major matrix. */
     private static class RowMajor extends BigMatrix {
         /**
          * Constructor.
+         * @param memory the memory segment of data.
+         * @param valueLayout the data type of matrix elements.
          * @param m the number of rows.
          * @param n the number of columns.
          * @param ld the leading dimension.
-         * @param A the matrix storage.
+         * @param uplo if not null, the matrix is symmetric or triangular.
+         * @param diag if not null, this flag specifies if a triangular
+         *             matrix has unit diagonal elements.
          */
-        RowMajor(int m, int n, int ld, MemorySegment A) {
-            super(m, n, ld, A);
+        public RowMajor(MemorySegment memory, ValueLayout valueLayout, int m, int n, int ld, UPLO uplo, Diag diag) {
+            super(memory, valueLayout, m, n, ld, uplo, diag);
         }
 
         @Override
@@ -63,8 +63,8 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         }
 
         @Override
-        protected long index(int i, int j) {
-            return (long) i * ld + j;
+        int offset(int i, int j) {
+            return i * ld + j;
         }
     }
 
@@ -73,88 +73,56 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      */
     final Arena arena = Arena.ofShared();
     /**
-     * The matrix storage.
+     * The data type of matrix elements.
      */
-    transient MemorySegment A;
-    /**
-     * The leading dimension.
-     */
-    transient int ld;
-    /**
-     * The number of rows.
-     */
-    int m;
-    /**
-     * The number of columns.
-     */
-    int n;
-    /**
-     * If not null, the matrix is symmetric or triangular.
-     */
-    UPLO uplo;
-    /**
-     * If not null, the matrix is triangular. The flag specifies if a
-     * triangular matrix has unit diagonal elements.
-     */
-    Diag diag;
+    final ValueLayout valueLayout;
 
     /**
-     * Returns an off-heap double array.
-     * @param size the size of array.
-     * @return the off-heap memory segment.
+     * Constructor.
+     * @param memory the memory segment of data.
+     * @param valueLayout the data type of matrix elements.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param ld the leading dimension.
+     * @param uplo if not null, the matrix is symmetric or triangular.
+     * @param diag if not null, this flag specifies if a triangular
+     *             matrix has unit diagonal elements.
      */
-    private MemorySegment allocate(long size) {
-        return arena.allocate(ValueLayout.JAVA_DOUBLE, size);
+    public BigMatrix(MemorySegment memory, ValueLayout valueLayout, int m, int n, int ld, UPLO uplo, Diag diag) {
+        super(memory, m, n, ld, uplo, diag);
+        this.valueLayout = valueLayout;
     }
 
     /**
      * Constructor of zero matrix.
+     * @param valueLayout the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      */
-    public BigMatrix(int m, int n) {
-        this(m, n, 0.0);
+    public BigMatrix(ValueLayout valueLayout, int m, int n) {
+        super(null, m, n, ld(m), null, null);
+        this.memory = arena.allocate(valueLayout, (long) ld * n);
+        this.valueLayout = valueLayout;
     }
 
     /**
-     * Constructor. Fills the matrix with given value.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param a the initial value.
+     * Copy constructor.
+     * @param B the source matrix.
      */
-    public BigMatrix(int m, int n, double a) {
-        if (m <= 0 || n <= 0) {
-            throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
+    public BigMatrix(BigMatrix B) {
+        super(null, B.m, B.n, B.ld, B.uplo, B.diag);
+        this.valueLayout = B.valueLayout;
+        this.memory = arena.allocate(valueLayout, (long) ld * n);
+
+        if (B.layout() == COL_MAJOR) {
+            MemorySegment.copy(B.memory, 0, memory, 0, memory.byteSize());
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, B.get(i, j));
+                }
+            }
         }
-
-        this.m = m;
-        this.n = n;
-        this.ld = ld(m);
-
-        A = allocate((long) ld * n);
-        fill(a);
-    }
-
-    /**
-     * Constructor.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param ld the leading dimension.
-     * @param A the matrix storage.
-     */
-    public BigMatrix(int m, int n, int ld, MemorySegment A) {
-        if (layout() == COL_MAJOR && ld < m) {
-            throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
-        }
-
-        if (layout() == ROW_MAJOR && ld < n) {
-            throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
-        }
-
-        this.m = m;
-        this.n = n;
-        this.ld = ld;
-        this.A = A;
     }
 
     @Override
@@ -162,447 +130,9 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
         arena.close();
     }
 
-    /**
-     * Returns a matrix from a two-dimensional array.
-     * @param A the two-dimensional array.
-     * @return the matrix.
-     */
-    public static BigMatrix of(double[][] A) {
-        int m = A.length;
-        int n = A[0].length;
-        BigMatrix matrix = new BigMatrix(m, n);
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                matrix.set(i, j, A[i][j]);
-            }
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns a column vector/matrix.
-     * @param A the column vector.
-     * @return the column vector/matrix.
-     */
-    public static BigMatrix column(double[] A) {
-        return column(A, 0, A.length);
-    }
-
-    /**
-     * Returns a column vector/matrix.
-     * @param A the column vector.
-     * @param offset the offset of the subarray to be used; must be non-negative and
-     *               no larger than array.length.
-     * @param length the length of the subarray to be used; must be non-negative and
-     *               no larger than array.length - offset.
-     * @return the column vector/matrix.
-     */
-    public static BigMatrix column(double[] A, int offset, int length) {
-        MemorySegment pointer = new MemorySegment(length);
-        pointer.put(A, offset, length);
-        return new BigMatrix(length, 1, length, pointer);
-    }
-
-    /**
-     * Returns a row vector/matrix.
-     * @param A the row vector.
-     * @return the row vector/matrix.
-     */
-    public static BigMatrix row(double[] A) {
-        return row(A, 0, A.length);
-    }
-
-    /**
-     * Returns a row vector/matrix.
-     * @param A the row vector.
-     * @param offset the offset of the subarray to be used; must be non-negative and
-     *               no larger than array.length.
-     * @param length the length of the subarray to be used; must be non-negative and
-     *               no larger than array.length - offset.
-     * @return the row vector/matrix.
-     */
-    public static BigMatrix row(double[] A, int offset, int length) {
-        MemorySegment pointer = new MemorySegment(length);
-        pointer.put(A, offset, length);
-        return new BigMatrix(1, length, 1, pointer);
-    }
-
-    /**
-     * Returns a random matrix.
-     *
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param distribution the distribution of random number.
-     * @return the matrix.
-     */
-    public static BigMatrix rand(int m, int n, Distribution distribution) {
-        BigMatrix matrix = new BigMatrix(m, n);
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                matrix.set(i, j, distribution.rand());
-            }
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns a random matrix of standard normal distribution.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @return the matrix.
-     */
-    public static BigMatrix randn(int m, int n) {
-        return rand(m, n, GaussianDistribution.getInstance());
-    }
-
-    /**
-     * Returns a uniformly distributed random matrix in [0, 1).
-     *
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @return the random matrix.
-     */
-    public static BigMatrix rand(int m, int n) {
-        BigMatrix matrix = new BigMatrix(m, n);
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                matrix.set(i, j, MathEx.random());
-            }
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns a random matrix of uniform distribution.
-     *
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param lo the lower bound of uniform distribution.
-     * @param hi the upper bound of uniform distribution.
-     * @return the matrix.
-     */
-    public static BigMatrix rand(int m, int n, double lo, double hi) {
-        BigMatrix matrix = new BigMatrix(m, n);
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                matrix.set(i, j, MathEx.random(lo, hi));
-            }
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns an identity matrix.
-     * @param n the number of rows/columns.
-     * @return the matrix.
-     */
-    public static BigMatrix eye(int n) {
-        return diag(n, 1.0);
-    }
-
-    /**
-     * Returns an m-by-n identity matrix.
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @return the matrix.
-     */
-    public static BigMatrix eye(int m, int n) {
-        return diag(m, n, 1.0);
-    }
-
-    /**
-     * Returns a square diagonal matrix.
-     *
-     * @param n the number of rows/columns.
-     * @param diag the diagonal value.
-     * @return the matrix.
-     */
-    public static BigMatrix diag(int n, double diag) {
-        return diag(n, n, diag);
-    }
-
-    /**
-     * Returns an m-by-n diagonal matrix.
-     *
-     * @param m the number of rows.
-     * @param n the number of columns.
-     * @param diag the diagonal value.
-     * @return the matrix.
-     */
-    public static BigMatrix diag(int m, int n, double diag) {
-        BigMatrix D = new BigMatrix(m, n);
-        int k = Math.min(m, n);
-        for (int i = 0; i < k; i++) {
-            D.set(i, i, diag);
-        }
-        return D;
-    }
-
-    /**
-     * Returns a square diagonal matrix.
-     *
-     * @param diag the diagonal elements.
-     * @return the matrix.
-     */
-    public static BigMatrix diag(double[] diag) {
-        int n = diag.length;
-        BigMatrix D = new BigMatrix(n, n);
-        for (int i = 0; i < n; i++) {
-            D.set(i, i, diag[i]);
-        }
-        return D;
-    }
-
-    /**
-     * Returns a square diagonal matrix.
-     *
-     * @param diag the diagonal elements.
-     * @return the matrix.
-     */
-    public static BigMatrix diag(MemorySegment diag) {
-        int n = (int) length(diag);
-        BigMatrix D = new BigMatrix(n, n);
-        for (int i = 0; i < n; i++) {
-            D.set(i, i, diag.get(i));
-        }
-        return D;
-    }
-
-    /**
-     * Returns a symmetric Toeplitz matrix in which each descending diagonal
-     * from left to right is constant.
-     *
-     * @param a A[i, j] = a[i - j] for {@code i >= j} (or a[j - i] when {@code j > i})
-     * @return the matrix.
-     */
-    public static BigMatrix toeplitz(double[] a) {
-        int n = a.length;
-        BigMatrix toeplitz = new BigMatrix(n, n);
-        toeplitz.uplo(LOWER);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                toeplitz.set(i, j, a[i - j]);
-            }
-
-            for (int j = i; j < n; j++) {
-                toeplitz.set(i, j, a[j - i]);
-            }
-        }
-
-        return toeplitz;
-    }
-
-    /**
-     * Returns a Toeplitz matrix in which each descending diagonal
-     * from left to right is constant.
-     *
-     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
-     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
-     * @return the matrix.
-     */
-    public static BigMatrix toeplitz(double[] kl, double[] ku) {
-        if (kl.length != ku.length - 1) {
-            throw new IllegalArgumentException(String.format("Invalid subdiagonals and superdiagonals size: %d != %d - 1", kl.length, ku.length));
-        }
-
-        int n = kl.length;
-        BigMatrix toeplitz = new BigMatrix(n, n);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                toeplitz.set(i, j, kl[i - j]);
-            }
-
-            for (int j = i; j < n; j++) {
-                toeplitz.set(i, j, ku[j - i]);
-            }
-        }
-
-        return toeplitz;
-    }
-
-    /**
-     * Customized object serialization.
-     * @param out the output stream.
-     * @throws IOException when fails to write to the stream.
-     */
-    @Serial
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // write default properties
-        out.defaultWriteObject();
-
-        // write buffer
-        if (layout() == COL_MAJOR) {
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    out.writeDouble(get(i, j));
-                }
-            }
-        } else {
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    out.writeDouble(get(i, j));
-                }
-            }
-        }
-    }
-
-    /**
-     * Customized object serialization.
-     * @param in the input stream.
-     * @throws IOException when fails to read the stream.
-     * @throws ClassNotFoundException when fails to load the class.
-     */
-    @Serial
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        // read default properties
-        in.defaultReadObject();
-
-        // read buffer data
-        if (layout() == COL_MAJOR) {
-            this.ld = ld(m);
-            this.A = new MemorySegment((long) ld * n);
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    set(i, j, in.readDouble());
-                }
-            }
-        } else {
-            this.ld = ld(n);
-            this.A = new MemorySegment((long) m * ld);
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    set(i, j, in.readDouble());
-                }
-            }
-        }
-    }
-
     @Override
-    public int nrow() {
-        return m;
-    }
-
-    @Override
-    public int ncol() {
-        return n;
-    }
-
-    @Override
-    public long size() {
-        return (long) m * n;
-    }
-
-    /** Returns the length of double array pointer. */
-    private static long length(MemorySegment A) {
-        return A.limit() - A.position();
-    }
-
-    /** Returns the byte length of double array pointer. */
-    private static long bytes(MemorySegment A) {
-        return A.sizeof() * (A.limit() - A.position());
-    }
-
-    /**
-     * Returns the matrix layout.
-     * @return the matrix layout.
-     */
-    public Layout layout() {
-        return COL_MAJOR;
-    }
-
-    /**
-     * Returns the leading dimension.
-     * @return the leading dimension.
-     */
-    public int ld() {
-        return ld;
-    }
-
-    /**
-     * Return true if the matrix is symmetric ({@code uplo != null && diag == null}).
-     * @return true if the matrix is symmetric.
-     */
-    public boolean isSymmetric() {
-        return uplo != null && diag == null;
-    }
-
-    /**
-     * Sets the format of packed matrix.
-     * @param uplo the format of packed matrix.
-     * @return this matrix.
-     */
-    public BigMatrix uplo(UPLO uplo) {
-        if (m != n) {
-            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
-        }
-
-        this.uplo = uplo;
-        return this;
-    }
-
-    /**
-     * Gets the format of packed matrix.
-     * @return the format of packed matrix.
-     */
-    public UPLO uplo() {
-        return uplo;
-    }
-
-    /**
-     * Sets/unsets if the matrix is triangular.
-     * @param diag if not null, it specifies if the triangular matrix has unit diagonal elements.
-     * @return this matrix.
-     */
-    public BigMatrix triangular(Diag diag) {
-        if (m != n) {
-            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
-        }
-
-        this.diag = diag;
-        return this;
-    }
-
-    /**
-     * Gets the flag if a triangular matrix has unit diagonal elements.
-     * Returns null if the matrix is not triangular.
-     * @return the flag if a triangular matrix has unit diagonal elements.
-     */
-    public Diag triangular() {
-        return diag;
-    }
-
-    @Override
-    public BigMatrix copy() {
-        BigMatrix matrix;
-        if (layout() == COL_MAJOR) {
-            MemorySegment pointer = new MemorySegment(length(A));
-            DoublePointer.memcpy(pointer, A, bytes(A));
-            matrix = new BigMatrix(m, n, ld, pointer);
-        } else {
-            matrix = new BigMatrix(m, n);
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    matrix.set(i, j, get(i, j));
-                }
-            }
-        }
-
-        if (m == n) {
-            matrix.uplo(uplo);
-            matrix.triangular(diag);
-        }
-
-        return matrix;
+    public ValueLayout valueLayout() {
+        return valueLayout;
     }
 
     /**
@@ -620,46 +150,6 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
     }
 
     /**
-     * Sets the matrix value. If the matrices have the same layout,
-     * this matrix will share the underlying storage with b.
-     * @param b the right hand side of assignment.
-     * @return this matrix.
-     */
-    public BigMatrix set(BigMatrix b) {
-        this.m = b.m;
-        this.n = b.n;
-        this.diag = b.diag;
-        this.uplo = b.uplo;
-
-        if (layout() == b.layout()) {
-            this.A = b.A;
-            this.ld = b.ld;
-        } else {
-            if (layout() == COL_MAJOR) {
-                this.ld = ld(m);
-                this.A = new MemorySegment((long) ld * n);
-
-                for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < m; i++) {
-                        set(i, j, get(i, j));
-                    }
-                }
-            } else {
-                this.ld = ld(n);
-                this.A = new MemorySegment((long) ld * m);
-
-                for (int i = 0; i < m; i++) {
-                    for (int j = 0; j < n; j++) {
-                        set(i, j, get(i, j));
-                    }
-                }
-            }
-        }
-
-        return this;
-    }
-
-    /**
      * Returns the linearized index of matrix element.
      * @param i the row index.
      * @param j the column index.
@@ -671,12 +161,12 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
     @Override
     public double get(int i, int j) {
-        return A.get(index(i, j));
+        return memory.getAtIndex(valueLayout, offset(i, j));
     }
 
     @Override
     public void set(int i, int j, double x) {
-        A.put(index(i, j), x);
+        memory.setAtIndex(valueLayout, offset(i, j), x);
     }
 
     /**
@@ -787,7 +277,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
 
         long offset = index(i, j);
         long length = index(k, l) - offset + 1;
-        MemorySegment B = A.MemorySegment(offset).limit(length);
+        MemorySegment B = memory.asSlice(offset, length);
 
         if (layout() == COL_MAJOR) {
             return new BigMatrix(k - i + 1, l - j + 1, ld, B);
@@ -891,7 +381,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param i the row index.
      * @param j the column index.
      * @param b the operand.
-     * @return the updated cell value.
+     * @return the updated element value.
      */
     public double add(int i, int j, double b) {
         long k = index(i, j);
@@ -905,7 +395,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param i the row index.
      * @param j the column index.
      * @param b the operand.
-     * @return the updated cell value.
+     * @return the updated element value.
      */
     public double sub(int i, int j, double b) {
         long k = index(i, j);
@@ -919,7 +409,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param i the row index.
      * @param j the column index.
      * @param b the operand.
-     * @return the updated cell value.
+     * @return the updated element value.
      */
     public double mul(int i, int j, double b) {
         long k = index(i, j);
@@ -933,7 +423,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param i the row index.
      * @param j the column index.
      * @param b the operand.
-     * @return the updated cell value.
+     * @return the updated element value.
      */
     public double div(int i, int j, double b) {
         long k = index(i, j);
@@ -947,7 +437,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix addDiag(double b) {
+    public DenseMatrix addDiag(double b) {
         int l = Math.min(m, n);
         for (int i = 0; i < l; i++) {
             long k = index(i, i);
@@ -962,7 +452,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix addDiag(double[] b) {
+    public DenseMatrix addDiag(double[] b) {
         int l = Math.min(m, n);
         if (b.length != l) {
             throw new IllegalArgumentException("Invalid diagonal array size: " + b.length);
@@ -981,7 +471,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix add(double b) {
+    public DenseMatrix add(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 add(i, j, b);
@@ -996,7 +486,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix sub(double b) {
+    public DenseMatrix sub(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 sub(i, j, b);
@@ -1011,7 +501,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix mul(double b) {
+    public DenseMatrix mul(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 mul(i, j, b);
@@ -1026,7 +516,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param b the operand.
      * @return this matrix.
      */
-    public BigMatrix div(double b) {
+    public DenseMatrix div(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 div(i, j, b);
@@ -1041,7 +531,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix add(BigMatrix B) {
+    public DenseMatrix add(DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1060,7 +550,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix sub(BigMatrix B) {
+    public DenseMatrix sub(DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1079,7 +569,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix mul(BigMatrix B) {
+    public DenseMatrix mul(DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1098,7 +588,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix div(BigMatrix B) {
+    public DenseMatrix div(DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1118,7 +608,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix add(double beta, BigMatrix B) {
+    public DenseMatrix add(double beta, DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1139,7 +629,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix add(double alpha, BigMatrix A, double beta, BigMatrix B) {
+    public DenseMatrix add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
         if (m != A.m || n != A.n) {
             throw new IllegalArgumentException("Matrix A is not of same size.");
         }
@@ -1173,7 +663,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix add(double alpha, double beta, BigMatrix B) {
+    public DenseMatrix add(double alpha, double beta, DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
@@ -1203,7 +693,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param B the operand.
      * @return this matrix.
      */
-    public BigMatrix add2(double alpha, double beta, BigMatrix B) {
+    public DenseMatrix add2(double alpha, double beta, DenseMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
@@ -1233,7 +723,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param y the row vector.
      * @return this matrix.
      */
-    public BigMatrix add(double alpha, double[] x, double[] y) {
+    public DenseMatrix add(double alpha, double[] x, double[] y) {
         if (m != x.length || n != y.length) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1252,7 +742,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param x a real number.
      * @return this matrix.
      */
-    public BigMatrix replaceNaN(double x) {
+    public DenseMatrix replaceNaN(double x) {
         long length = length(A);
         for (int i = 0; i < length; i++) {
             if (Double.isNaN(A.get(i))) {
@@ -1478,7 +968,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * Standardizes the columns of matrix.
      * @return a new matrix with zero mean and unit variance for each column.
      */
-    public BigMatrix standardize() {
+    public DenseMatrix standardize() {
         double[] center = colMeans();
         double[] scale = colSds();
         return scale(center, scale);
@@ -1490,7 +980,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * @param scale column scale. If null, no scaling.
      * @return a new matrix with zero mean and unit variance for each column.
      */
-    public BigMatrix scale(double[] center, double[] scale) {
+    public DenseMatrix scale(double[] center, double[] scale) {
         if (center == null && scale == null) {
             throw new IllegalArgumentException("Both center and scale are null");
         }
@@ -1524,7 +1014,7 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
      * Returns the inverse of matrix.
      * @return the inverse of matrix.
      */
-    public BigMatrix inverse() {
+    public DenseMatrix inverse() {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -1545,62 +1035,6 @@ public class BigMatrix extends IMatrix implements AutoCloseable {
             }
 
             return inv;
-        }
-    }
-
-    /**
-     * Matrix-vector multiplication.
-     * <pre>{@code
-     *     y = alpha * A * x + beta * y
-     * }</pre>
-     * @param trans normal, transpose, or conjugate transpose
-     *               operation on the matrix A.
-     * @param alpha the scalar alpha.
-     * @param x the operand.
-     * @param beta the scalar beta.
-     * @param y the operand.
-     */
-    private void mv(Transpose trans, double alpha, DoublePointer x, double beta, DoublePointer y) {
-        if (uplo != null) {
-            if (diag != null) {
-                if (alpha == 1.0 && beta == 0.0 && x == y) {
-                    BLAS.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
-                } else {
-                    BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
-                }
-            } else {
-                BLAS.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
-            }
-        } else {
-            BLAS.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
-        }
-    }
-
-    @Override
-    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
-        DoublePointer xp = new DoublePointer(x);
-        DoublePointer yp = new DoublePointer(y);
-        mv(trans, alpha, xp, beta, yp);
-        yp.get(y);
-    }
-
-    @Override
-    public void mv(double[] work, int inputOffset, int outputOffset) {
-        try (var pointer = new DoublePointer(work)) {
-            DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
-            DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
-            mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
-            pointer.get(work);
-        }
-    }
-
-    @Override
-    public void tv(double[] work, int inputOffset, int outputOffset) {
-        try (var pointer = new DoublePointer(work)) {
-            DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
-            DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
-            mv(TRANSPOSE, 1.0, xb, 0.0, yb);
-            pointer.get(work);
         }
     }
 

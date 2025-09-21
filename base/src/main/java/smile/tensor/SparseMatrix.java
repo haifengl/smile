@@ -14,11 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.matrix;
+package smile.tensor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serial;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -61,7 +62,7 @@ import static java.util.Spliterator.*;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry> {
+public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
@@ -213,6 +214,11 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
+    public ScalarType scalarType() {
+        return ScalarType.Float64;
+    }
+
+    @Override
     public int nrow() {
         return m;
     }
@@ -223,7 +229,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
-    public long size() {
+    public long length() {
         return colIndex[n];
     }
 
@@ -232,7 +238,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
      * @return the stream of the non-zero elements
      */
     public Stream<Entry> nonzeros() {
-        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), size(), ORDERED | SIZED | IMMUTABLE);
+        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), length(), ORDERED | SIZED | IMMUTABLE);
         return StreamSupport.stream(spliterator, false);
     }
 
@@ -372,54 +378,54 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
-    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+    public void set(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
         int k = trans == Transpose.NO_TRANSPOSE ? m : n;
-        double[] ax = y;
-        if (beta == 0.0) {
-            Arrays.fill(y, 0.0);
-        } else {
-            ax = new double[k];
-        }
+        double[] ax = new double[y.size()];
 
         if (trans == Transpose.NO_TRANSPOSE) {
             for (int j = 0; j < n; j++) {
                 for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                    ax[rowIndex[i]] += nonzeros[i] * x[j];
+                    ax[rowIndex[i]] += nonzeros[i] * x.get(j);
                 }
             }
         } else {
             for (int i = 0; i < n; i++) {
                 for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                    ax[i] += nonzeros[j] * x[rowIndex[j]];
+                    ax[i] += nonzeros[j] * x.get(rowIndex[j]);
                 }
             }
         }
 
         if (beta != 0.0 || alpha != 1.0) {
             for (int i = 0; i < k; i++) {
-                y[i] = alpha * ax[i] + beta * y[i];
+                y.set(i, alpha * ax[i] + beta * y.get(i));
             }
         }
     }
 
     @Override
-    public void mv(double[] work, int inputOffset, int outputOffset) {
-        Arrays.fill(work, outputOffset, outputOffset + m, 0.0);
+    public void mv(Vector work, int inputOffset, int outputOffset) {
+        work.fill(outputOffset, outputOffset + m, 0.0);
 
         for (int j = 0; j < n; j++) {
             for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                work[outputOffset + rowIndex[i]] += nonzeros[i] * work[inputOffset + j];
+                work.add(outputOffset + rowIndex[i], nonzeros[i] * work.get(inputOffset + j));
             }
         }
     }
 
     @Override
-    public void tv(double[] work, int inputOffset, int outputOffset) {
-        Arrays.fill(work, outputOffset, outputOffset + n, 0.0);
+    public void tv(Vector work, int inputOffset, int outputOffset) {
+        work.fill(outputOffset, outputOffset + n, 0.0);
 
         for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                work[outputOffset + i] += nonzeros[j] * work[inputOffset + rowIndex[j]];
+                work.add(outputOffset + i, nonzeros[j] * work.get(inputOffset + rowIndex[j]));
             }
         }
     }
@@ -459,60 +465,69 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
 
     /**
      * Returns the matrix multiplication C = A * B.
-     * @param B the operand.
+     * @param other the operand.
      * @return the multiplication.
      */
-    public SparseMatrix mm(SparseMatrix B) {
-        if (n != B.m) {
-            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrow(), ncol(), B.nrow(), B.ncol()));
+    public SparseMatrix mm(Matrix other) {
+        if (other instanceof SparseMatrix B) {
+            if (n != B.m) {
+                throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrow(), ncol(), B.nrow(), B.ncol()));
+            }
+
+            int n = B.n;
+            int anz = colIndex[n];
+            int[] Bp = B.colIndex;
+            int[] Bi = B.rowIndex;
+            double[] Bx = B.nonzeros;
+            int bnz = Bp[n];
+
+            int[] w = new int[m];
+            double[] abj = new double[m];
+
+            int nzmax = Math.max(anz + bnz, m);
+
+            SparseMatrix C = new SparseMatrix(m, n, nzmax);
+            int[] Cp = C.colIndex;
+            int[] Ci = C.rowIndex;
+            double[] Cx = C.nonzeros;
+
+            int nz = 0;
+            for (int j = 0; j < n; j++) {
+                if (nz + m > nzmax) {
+                    nzmax = 2 * nzmax + m;
+                    double[] Cx2 = new double[nzmax];
+                    int[] Ci2 = new int[nzmax];
+                    System.arraycopy(Ci, 0, Ci2, 0, nz);
+                    System.arraycopy(Cx, 0, Cx2, 0, nz);
+                    Ci = Ci2;
+                    Cx = Cx2;
+                    C = new SparseMatrix(m, n, Cx2, Ci2, Cp);
+                }
+
+                // column j of C starts here
+                Cp[j] = nz;
+
+                for (int p = Bp[j]; p < Bp[j + 1]; p++) {
+                    nz = scatter(this, Bi[p], Bx[p], w, abj, j + 1, C, nz);
+                }
+
+                for (int p = Cp[j]; p < nz; p++) {
+                    Cx[p] = abj[Ci[p]];
+                }
+            }
+
+            // finalize the last column of C
+            Cp[n] = nz;
+
+            return C;
         }
 
-        int n = B.n;
-        int anz = colIndex[n];
-        int[] Bp = B.colIndex;
-        int[] Bi = B.rowIndex;
-        double[] Bx = B.nonzeros;
-        int bnz = Bp[n];
+        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+    }
 
-        int[] w = new int[m];
-        double[] abj = new double[m];
-
-        int nzmax = Math.max(anz + bnz, m);
-
-        SparseMatrix C = new SparseMatrix(m, n, nzmax);
-        int[] Cp = C.colIndex;
-        int[] Ci = C.rowIndex;
-        double[] Cx = C.nonzeros;
-
-        int nz = 0;
-        for (int j = 0; j < n; j++) {
-            if (nz + m > nzmax) {
-                nzmax = 2 * nzmax + m;
-                double[] Cx2 = new double[nzmax];
-                int[] Ci2 = new int[nzmax];
-                System.arraycopy(Ci, 0, Ci2, 0, nz);
-                System.arraycopy(Cx, 0, Cx2, 0, nz);
-                Ci = Ci2;
-                Cx = Cx2;
-                C = new SparseMatrix(m, n, Cx2, Ci2, Cp);
-            }
-
-            // column j of C starts here
-            Cp[j] = nz;
-
-            for (int p = Bp[j]; p < Bp[j + 1]; p++) {
-                nz = scatter(this, Bi[p], Bx[p], w, abj, j + 1, C, nz);
-            }
-
-            for (int p = Cp[j]; p < nz; p++) {
-                Cx[p] = abj[Ci[p]];
-            }
-        }
-
-        // finalize the last column of C
-        Cp[n] = nz;
-
-        return C;
+    @Override
+    public Matrix tm(Matrix other) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -635,7 +650,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
     }
 
     @Override
-    public double[] diag() {
+    public Vector diagonal() {
         int n = Math.min(nrow(), ncol());
         double[] d = new double[n];
 
@@ -648,7 +663,7 @@ public class SparseMatrix extends IMatrix implements Iterable<SparseMatrix.Entry
             }
         }
 
-        return d;
+        return Vector.column(d);
     }
 
     /**
