@@ -63,13 +63,18 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     }
 
     @Override
+    public double get(int i, int j) {
+        return array[offset(i, j)];
+    }
+
+    @Override
     public void set(int i, int j, double x) {
         array[offset(i, j)] = (float) x;
     }
 
     @Override
-    public double get(int i, int j) {
-        return array[offset(i, j)];
+    public void add(int i, int j, double x) {
+        array[offset(i, j)] += (float) x;
     }
 
     @Override

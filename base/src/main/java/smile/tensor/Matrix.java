@@ -171,6 +171,24 @@ public interface Matrix extends Tensor {
     }
 
     /**
+     * Returns {@code A[i,j]}.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the matrix element value.
+     */
+    double get(int i, int j);
+
+    /**
+     * Returns {@code A[i,j]} for Scala users.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the matrix element value.
+     */
+    default double apply(int i, int j) {
+        return get(i, j);
+    }
+
+    /**
      * Sets {@code A[i,j] = x}.
      * @param i the row index.
      * @param j the column index.
@@ -189,22 +207,12 @@ public interface Matrix extends Tensor {
     }
 
     /**
-     * Returns {@code A[i,j]}.
+     * Sets {@code A[i,j] += x}.
      * @param i the row index.
      * @param j the column index.
-     * @return the matrix element value.
+     * @param x the matrix element value.
      */
-    double get(int i, int j);
-
-    /**
-     * Returns {@code A[i,j]} for Scala users.
-     * @param i the row index.
-     * @param j the column index.
-     * @return the matrix element value.
-     */
-    default double apply(int i, int j) {
-        return get(i, j);
-    }
+    void add(int i, int j, double x);
 
     /**
      * Returns the diagonal elements.
