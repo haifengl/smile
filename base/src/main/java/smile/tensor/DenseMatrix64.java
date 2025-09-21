@@ -78,6 +78,11 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
     }
 
     @Override
+    public void mul(int i, int j, double x) {
+        array[offset(i, j)] *= x;
+    }
+
+    @Override
     public DenseMatrix transpose() {
         return switch (layout()) {
             case ROW_MAJOR -> new DenseMatrix64(array, n, m, ld, UPLO.flip(uplo), diag);

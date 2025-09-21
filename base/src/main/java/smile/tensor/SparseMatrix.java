@@ -383,6 +383,16 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
     }
 
     @Override
+    public void add(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void mul(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
         int k = trans == Transpose.NO_TRANSPOSE ? m : n;
         double[] ax = new double[y.size()];

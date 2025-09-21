@@ -86,6 +86,13 @@ public abstract class Vector extends DenseMatrix {
     public abstract void add(int i, double x);
 
     /**
+     * Sets {@code A[i] *= x}.
+     * @param i the index.
+     * @param x the cell value.
+     */
+    public abstract void mul(int i, double x);
+
+    /**
      * Returns a slice of vector, which shares the data storage.
      * @param from the initial index of the range to be copied, inclusive.
      * @param to the final index of the range to be copied, exclusive.

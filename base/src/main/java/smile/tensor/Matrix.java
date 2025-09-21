@@ -215,6 +215,14 @@ public interface Matrix extends Tensor {
     void add(int i, int j, double x);
 
     /**
+     * Sets {@code A[i,j] *= x}.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the matrix element value.
+     */
+    void mul(int i, int j, double x);
+
+    /**
      * Returns the diagonal elements.
      * @return the diagonal elements.
      */
