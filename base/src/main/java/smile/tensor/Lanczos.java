@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.matrix;
+package smile.tensor;
 
 import smile.math.MathEx;
 
@@ -48,7 +48,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @return eigen value decomposition.
      */
-    public static Matrix.EVD eigen(IMatrix A, int k) {
+    public static EVD eigen(Matrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrow());
     }
 
@@ -63,7 +63,7 @@ public class Lanczos {
      * @param maxIter Maximum number of iterations.
      * @return eigen value decomposition.
      */
-    public static Matrix.EVD eigen(IMatrix A, int k, double kappa, int maxIter) {
+    public static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -123,7 +123,9 @@ public class Lanczos {
         // First step of the Lanczos algorithm. It also does a step of extended
         // local re-orthogonalization.
         // get initial vector; default is random
-        double rnm = startv(A, q, wptr, 0);
+        Vector wptr3 = Vector.column(wptr[3]);
+        Vector wptr0 = Vector.column(wptr[0]);
+        double rnm = startv(0, A, q, wptr, wptr3, wptr0);
 
         // normalize starting vector
         double t = 1.0 / rnm;
@@ -131,7 +133,7 @@ public class Lanczos {
         MathEx.scale(t, wptr[3]);
 
         // take the first step
-        A.mv(wptr[3], wptr[0]);
+        A.mv(wptr3, wptr0);
         alf[0] = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-alf[0], wptr[1], wptr[0]);
         t = MathEx.dot(wptr[0], wptr[3]);
@@ -185,7 +187,7 @@ public class Lanczos {
 
                 // restart if invariant subspace is found
                 if (0 == bet[j]) {
-                    rnm = startv(A, q, wptr, j);
+                    rnm = startv(j, A, q, wptr, wptr3, wptr0);
                     if (rnm < 0.0) {
                         rnm = 0.0;
                         break;
@@ -206,7 +208,7 @@ public class Lanczos {
                 t = 1.0 / rnm;
                 MathEx.scale(t, wptr[0], wptr[1]);
                 MathEx.scale(t, wptr[3]);
-                A.mv(wptr[3], wptr[0]);
+                A.mv(wptr3, wptr0);
                 MathEx.axpy(-rnm, wptr[2], wptr[0]);
                 alf[j] = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-alf[j], wptr[1], wptr[0]);
@@ -260,7 +262,7 @@ public class Lanczos {
             System.arraycopy(alf, 0, ritz, 0, j + 1);
             System.arraycopy(bet, 0, wptr[5], 0, j + 1);
 
-            z = new Matrix(j + 1, j + 1);
+            z = DenseMatrix.zeros(A.scalarType(), j + 1, j + 1);
             for (int i = 0; i <= j; i++) {
                 z.set(i, i, 1.0);
             }
@@ -299,8 +301,8 @@ public class Lanczos {
 
         k = Math.min(k, neig);
 
-        double[] eigenvalues = new double[k];
-        Matrix eigenvectors = new Matrix(n, k);
+        Vector eigenvalues = A.vector(k);
+        DenseMatrix eigenvectors = DenseMatrix.zeros(A.scalarType(), n, k);
         for (int i = 0, index = 0; i <= j && index < k; i++) {
             if (bnd[i] <= kappa * Math.abs(ritz[i])) {
                 for (int row = 0; row < n; row++) {
@@ -308,11 +310,11 @@ public class Lanczos {
                         eigenvectors.add(row, index, q[l][row] * z.get(l, i));
                     }
                 }
-                eigenvalues[index++] = ritz[i];
+                eigenvalues.set(index++, ritz[i]);
             }
         }
 
-        return new Matrix.EVD(eigenvalues, eigenvectors);
+        return new EVD(eigenvalues, eigenvectors);
     }
 
     /**
@@ -321,7 +323,7 @@ public class Lanczos {
      * of operator can be found.
      * @param step starting index for a Lanczos run
      */
-    private static double startv(IMatrix A, double[][] q, double[][] wptr, int step) {
+    private static double startv(int step, Matrix A, double[][] q, double[][] wptr, Vector wptr3, Vector wptr0) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
@@ -335,7 +337,7 @@ public class Lanczos {
             System.arraycopy(wptr[0], 0, wptr[3], 0, n);
 
             // apply operator to put r in range (essential if m singular)
-            A.mv(wptr[3], wptr[0]);
+            A.mv(wptr3, wptr0);
             System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
