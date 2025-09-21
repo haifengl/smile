@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.math.matrix;
+package smile.math;
 
-import java.util.Arrays;
-import smile.math.MathEx;
+import smile.tensor.Matrix;
+import smile.tensor.Vector;
 
 /**
  * PageRank is a link analysis algorithm, and it assigns a numerical weighting
@@ -31,23 +31,18 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class PageRank {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
-
-    /** Private constructor to prevent instance creation. */
-    private PageRank() {
-
-    }
+public interface PageRank {
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
 
     /**
      * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @return the page rank vector.
      */
-    public static double[] of(IMatrix A) {
+    static Vector of(Matrix A) {
         int n = A.nrow();
-        double[] v = new double[n];
-        Arrays.fill(v, 1.0 / n);
+        Vector v = A.vector(n);
+        v.fill(1.0 / n);
         return of(A, v);
     }
 
@@ -57,7 +52,7 @@ public class PageRank {
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    public static double[] of(IMatrix A, double[] v) {
+    static Vector of(Matrix A, Vector v) {
         return of(A, v, 0.85, 1E-7, 57);
     }
 
@@ -71,7 +66,7 @@ public class PageRank {
      *                algorithm does not converge.
      * @return the page rank vector.
      */
-    public static double[] of(IMatrix A, double[] v, double damping, double tol, int maxIter) {
+    static Vector of(Matrix A, Vector v, double damping, double tol, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -87,18 +82,18 @@ public class PageRank {
         int n = A.nrow();
         tol = Math.max(tol, MathEx.EPSILON * n);
 
-        double[] z = new double[n];
-        double[] p = Arrays.copyOf(v, n);
+        Vector z = A.vector(n);
+        Vector p = v.copy(0, n);
 
         for (int iter = 1; iter <= maxIter; iter++) {
             A.mv(p, z);
-            double beta = 1.0 - damping * MathEx.norm1(z);
+            double beta = 1.0 - damping * z.norm1();
 
             double delta = 0.0;
             for (int i = 0; i < n; i++) {
-                double q = damping * z[i] + beta * v[i];
-                delta += Math.abs(q - p[i]);
-                p[i] = q;
+                double q = damping * z.get(i) + beta * v.get(i);
+                delta += Math.abs(q - p.get(i));
+                p.set(i, q);
             }
 
             if (iter % 10 == 0 || delta < tol) {
