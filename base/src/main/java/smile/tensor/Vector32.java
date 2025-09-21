@@ -140,6 +140,12 @@ class Vector32 extends Vector implements Serializable {
     }
 
     @Override
+    public void mul(int i, int j, double x) {
+        assert(i == 0 || j == 0);
+        array[offset + i + j] *= (float) x;
+    }
+
+    @Override
     public double get(int i) {
         return array[offset + i];
     }
@@ -152,6 +158,11 @@ class Vector32 extends Vector implements Serializable {
     @Override
     public void add(int i, double x) {
         array[offset + i] += (float) x;
+    }
+
+    @Override
+    public void mul(int i, double x) {
+        array[offset + i] *= (float) x;
     }
 
     @Override
