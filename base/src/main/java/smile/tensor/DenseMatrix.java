@@ -566,6 +566,40 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns a matrix from a two-dimensional array.
+     * @param A the two-dimensional array.
+     * @return the matrix.
+     */
+    public static DenseMatrix of(double[][] A) {
+        int m = A.length;
+        int n = A[0].length;
+        DenseMatrix matrix = zeros(ScalarType.Float64, m, n);
+        for (int i =  0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix.set(i, j, A[i][j]);
+            }
+        }
+        return matrix;
+    }
+
+    /**
+     * Returns a matrix from a two-dimensional array.
+     * @param A the two-dimensional array.
+     * @return the matrix.
+     */
+    public static DenseMatrix of(float[][] A) {
+        int m = A.length;
+        int n = A[0].length;
+        DenseMatrix matrix = zeros(ScalarType.Float32, m, n);
+        for (int i =  0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix.set(i, j, A[i][j]);
+            }
+        }
+        return matrix;
+    }
+
+    /**
      * Returns a zero matrix.
      * @param scalarType the scalar type.
      * @param m the number of rows.
