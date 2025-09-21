@@ -81,7 +81,7 @@ public abstract class SymmMatrix implements Matrix {
     }
 
     /**
-     * Returns a symmetric matrix.
+     * Returns a symmetric matrix from a two-dimensional array.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param AP the symmetric matrix.
      */
@@ -108,7 +108,7 @@ public abstract class SymmMatrix implements Matrix {
     }
 
     /**
-     * Returns a symmetric matrix.
+     * Returns a symmetric matrix from a two-dimensional array.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param AP the symmetric matrix.
      */
