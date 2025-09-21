@@ -134,6 +134,12 @@ class Vector64 extends Vector implements Serializable {
     }
 
     @Override
+    public void add(int i, int j, double x) {
+        assert(i == 0 || j == 0);
+        array[offset + i + j] += (float) x;
+    }
+
+    @Override
     public double get(int i) {
         return array[offset + i];
     }
