@@ -39,14 +39,14 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.6.1",
-  "org.xerial"         %  "sqlite-jdbc" % "3.50.1.0",
+  "org.xerial"         %  "sqlite-jdbc" % "3.50.3.0",
   "ch.qos.logback"     %  "logback-classic" % "1.5.18"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 val gpu = Seq(
-  "org.bytedeco" % "pytorch" % "2.5.1-1.5.11" classifier s"$os-x86_64-gpu",
-  "org.bytedeco" % "cuda" % "12.6-9.5-1.5.11" classifier s"$os-x86_64-redist"
+  "org.bytedeco" % "pytorch" % "2.7.1-1.5.12" classifier s"$os-x86_64-gpu",
+  "org.bytedeco" % "cuda" % "12.9-9.10-1.5.12" classifier s"$os-x86_64-redist"
 )
 
 libraryDependencies ++= (
@@ -57,8 +57,8 @@ libraryDependencies ++= (
 )
 
 libraryDependencies ++= {
-  val akkaVersion     = "2.10.6"
-  val akkaHttpVersion = "10.7.1"
+  val akkaVersion     = "2.10.9"
+  val akkaHttpVersion = "10.7.2"
   Seq(
     "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
     "com.typesafe.akka" %% "akka-stream"              % akkaVersion,

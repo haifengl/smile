@@ -133,7 +133,7 @@ public class MultiFigurePane extends JPanel implements Scene {
     public static MultiFigurePane splom(DataFrame data, char mark, String category) {
         int clazz = data.schema().indexOf(category);
         String[] columns = data.names();
-        int p = columns.length;
+        int p = columns.length - 1; // removing category column
         MultiFigurePane grid = new MultiFigurePane(p, p);
         for (int i = p; i-- > 0;) {
             if (i == clazz) continue;

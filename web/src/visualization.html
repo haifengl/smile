@@ -92,7 +92,7 @@ title: Smile - Data Visualization
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
     val canvas = plot(iris, "sepallength", "sepalwidth", "class", '*')
-    canvas.setAxisLabels("sepallength", "sepalwidth")
+    canvas.figure.setAxisLabels("sepallength", "sepalwidth")
     show(canvas)
     </code></pre>
             </div>
@@ -103,13 +103,17 @@ title: Smile - Data Visualization
     import java.awt.Color;
     import smile.io.*;
     import smile.plot.swing.*;
+    import smile.plot.swing.Histogram;
     import smile.stat.distribution.*;
     import smile.math.matrix.*;
+    import smile.util.function.*;
+    import smile.interpolation.BicubicInterpolation;
 
     var iris = Read.arff("data/weka/iris.arff");
-    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
-    canvas.setAxisLabels("sepallength", "sepalwidth");
-    canvas.window();
+    var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+    figure.setAxisLabels("sepallength", "sepalwidth");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -134,7 +138,7 @@ title: Smile - Data Visualization
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val canvas = plot(iris, "sepallength", "sepalwidth", "petallength", "class", '*')
-    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength")
+    canvas.figure.setAxisLabels("sepallength", "sepalwidth", "petallength")
     show(canvas)
     </code></pre>
             </div>
@@ -142,9 +146,10 @@ title: Smile - Data Visualization
         <div class="tab-pane active" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
-    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
-    canvas.window();
+    var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').figure();
+    figure.setAxisLabels("sepallength", "sepalwidth", "petallength");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -166,15 +171,15 @@ title: Smile - Data Visualization
         <div class="tab-pane" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(iris, "class", '*'))
+    show(splom(iris, '*', "class"))
     </code></pre>
             </div>
         </div>
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = PlotGrid.splom(iris, '*', "class");
-    canvas.window();
+    var pane = MultiFigurePane.splom(iris, '*', "class");
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -243,8 +248,9 @@ title: Smile - Data Visualization
         heart[i][0] = 16 * pow(sin(t), 3);
         heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
     }
-    var canvas = LinePlot.of(heart, Color.RED).canvas();
-    canvas.window();
+    var figure = LinePlot.of(heart, Color.RED).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -308,7 +314,7 @@ title: Smile - Data Visualization
     val labels = groups.keys.toArray
     val data = groups.values.map { a => a.map(_._1) }.toArray
     val canvas = boxplot(data, labels)
-    canvas.setAxisLabels("", "sepallength")
+    canvas.figure.setAxisLabels("", "sepallength")
     show(canvas)
     </code></pre>
             </div>
@@ -316,7 +322,7 @@ title: Smile - Data Visualization
         <div class="tab-pane active" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure).levels();
+    String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure()).levels();
     double[][] data = new double[labels.length][];
     for (int i = 0; i < data.length; i++) {
         var label = labels[i];
@@ -325,9 +331,10 @@ title: Smile - Data Visualization
               mapToDouble(row -> row.getFloat("sepallength")).
               toArray();
     }
-    var canvas = new BoxPlot(data, labels).canvas();
-    canvas.setAxisLabels("", "sepallength");
-    canvas.window();
+    var figure = new BoxPlot(data, labels).figure();
+    figure.setAxisLabels("", "sepallength");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -394,7 +401,7 @@ title: Smile - Data Visualization
     <pre class="prettyprint lang-scala"><code>
     val cow = read.csv("data/stat/cow.txt", header=false)("V1").toDoubleArray
     val canvas = hist(cow, 50)
-    canvas.setAxisLabels("Weight", "Probability")
+    canvas.figure.setAxisLabels("Weight", "Probability")
     show(canvas)
     </code></pre>
             </div>
@@ -403,9 +410,10 @@ title: Smile - Data Visualization
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var cow = Read.csv("data/stat/cow.txt").column("V1").toDoubleArray();
-    var canvas = Histogram.of(cow, 50, true).canvas();
-    canvas.setAxisLabels("Weight", "Probability");
-    canvas.window();
+    var figure = Histogram.of(cow, 50, true).figure();
+    figure.setAxisLabels("Weight", "Probability");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -427,7 +435,7 @@ title: Smile - Data Visualization
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val canvas = hist(cow.filter(_ <= 3500), 50)
-    canvas.setAxisLabels("Weight", "Probability")
+    canvas.figure.setAxisLabels("Weight", "Probability")
     show(canvas)
     </code></pre>
             </div>
@@ -435,9 +443,10 @@ title: Smile - Data Visualization
         <div class="tab-pane active" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = Histogram.of(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50, true).canvas();
-    canvas.setAxisLabels("Weight", "Probability");
-    canvas.window();
+    var figure = Histogram.of(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50, true).figure();
+    figure.setAxisLabels("Weight", "Probability");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -498,7 +507,9 @@ title: Smile - Data Visualization
     double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
     var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
     var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
-    Histogram3D.of(data, 50, false).canvas().window();
+    var figure = Histogram3D.of(data, 50, false).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -574,7 +585,9 @@ title: Smile - Data Visualization
           <pre class="prettyprint lang-java"><code>
     var gauss = new GaussianDistribution(0.0, 1.0);
     var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
-    QQPlot.of(data).canvas().window();
+    var figure = QQPlot.of(data).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -683,7 +696,9 @@ title: Smile - Data Visualization
         Z[i][j] = bicubic.interpolate(i * 0.03, j * 0.03);
     }
 
-    Heatmap.of(Z, Palette.jet(256)).canvas().window();
+    var figure = Heatmap.of(Z, Palette.jet(256)).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -732,7 +747,7 @@ title: Smile - Data Visualization
     <pre class="prettyprint lang-scala"><code>
     val sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"))
     val canvas = spy(sparse)
-    canvas.setTitle("mesh2em5")
+    canvas.figure.setTitle("mesh2em5")
     show(canvas)
     </code></pre>
             </div>
@@ -741,9 +756,10 @@ title: Smile - Data Visualization
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"));
-    var canvas = SparseMatrixPlot.of(sparse).canvas();
-    canvas.setTitle("mesh2em5");
-    canvas.window();
+    var figure = SparseMatrixPlot.of(sparse).figure();
+    figure.setTitle("mesh2em5");
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -799,8 +815,9 @@ title: Smile - Data Visualization
         <div class="tab-pane" id="scala_21">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
-    val x = zip.drop(0).toArray
+    import smile.util.function._
+    val zip = read.csv("data/usps/zip.train", delimiter = " ", header = false)
+    val x = zip.drop(0).toArray()
     val lattice = SOM.lattice(30, 30, x)
     val som = new SOM(lattice,
                 TimeFunction.constant(0.1),
@@ -832,7 +849,9 @@ title: Smile - Data Visualization
         }
     }
 
-    Hexmap.of(som.umatrix(), Palette.heat(256)).canvas().window()
+    var figure = Hexmap.of(som.umatrix(), Palette.heat(256)).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -898,7 +917,7 @@ title: Smile - Data Visualization
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val canvas = heatmap(Z, Palette.jet(256))
-    canvas.add(Contour.of(Z))
+    canvas.figure.add(Contour.of(Z))
     show(canvas)
     </code></pre>
             </div>
@@ -906,9 +925,10 @@ title: Smile - Data Visualization
         <div class="tab-pane active" id="java_23">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = Heatmap.of(Z, 256).canvas();
-    canvas.add(Contour.of(Z));
-    canvas.window();
+    var figure = Heatmap.of(Z, 256).figure();
+    figure.add(Contour.of(Z));
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>
@@ -970,7 +990,9 @@ title: Smile - Data Visualization
         <div class="tab-pane active" id="java_25">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    Surface.of(Z, Palette.jet(256, 1.0f)).canvas().window();
+    var figure = Surface.of(Z, Palette.jet(256, 1.0f)).figure();
+    var pane = new FigurePane(figure);
+    pane.window();
           </code></pre>
             </div>
         </div>

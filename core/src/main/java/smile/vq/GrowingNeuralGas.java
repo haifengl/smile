@@ -91,10 +91,6 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * Neurons in the neural network.
      */
     private final ArrayList<Neuron> neurons = new ArrayList<>();
-    /**
-     * The workspace to find nearest neighbors.
-     */
-    private final Neuron[] top2 = new Neuron[2];
 
     /**
      * Constructor.
@@ -138,14 +134,13 @@ public class GrowingNeuralGas implements VectorQuantizer {
         // Find the nearest (s1) and second nearest (s2) neuron to x.
         neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
 
-        Arrays.fill(top2, null);
-        HeapSelect<Neuron> heap = new HeapSelect<>(top2);
+        HeapSelect<Neuron> heap = new HeapSelect<>(Neuron.class, 2);
         for (Neuron neuron : neurons) {
             heap.add(neuron);
         }
 
-        Neuron s1 = top2[1];
-        Neuron s2 = top2[0];
+        Neuron s1 = heap.get(0);
+        Neuron s2 = heap.get(1);
 
         // update s1
         s1.update(x, epsBest);

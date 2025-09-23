@@ -100,7 +100,7 @@ public class SimpleImputer implements Transform {
                             vector[i] = x;
                         }
                     }
-                    vectors[j] = new DoubleVector(field, vector);
+                    vectors[j] = new DoubleVector(new StructField(field.name(), DataTypes.DoubleType, field.measure()), vector);
                 } else if (field.dtype().id() == DataType.ID.Float) {
                     float x = ((Number) value).floatValue();
                     ValueVector column = data.column(j);
@@ -109,80 +109,79 @@ public class SimpleImputer implements Transform {
                         float ci = column.getFloat(i);
                         vector[i] = Float.isNaN(ci) ? x : ci;
                     }
-                    vectors[j] = new FloatVector(field, vector);
-                } else if (field.dtype().isObject()) {
-                    if (field.dtype() == DataTypes.NullableBooleanType) {
-                        boolean x = (Boolean) value;
-                        boolean[] vector = new boolean[n];
-                        for (int i = 0; i < n; i++) {
-                            Boolean cell = (Boolean) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new BooleanVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableByteType) {
-                        byte x = ((Number) value).byteValue();
-                        byte[] vector = new byte[n];
-                        for (int i = 0; i < n; i++) {
-                            Byte cell = (Byte) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new ByteVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableCharType) {
-                        char x = (Character) value;
-                        char[] vector = new char[n];
-                        for (int i = 0; i < n; i++) {
-                            Character cell = (Character) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new CharVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableDoubleType) {
-                        double x = ((Number) value).doubleValue();
-                        double[] vector = new double[n];
-                        for (int i = 0; i < n; i++) {
-                            Double cell = (Double) data.get(i, j);
-                            vector[i] = cell == null || cell.isNaN() ? x : cell;
-                        }
-                        vectors[j] = new DoubleVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableFloatType) {
-                        float x = ((Number) value).floatValue();
-                        float[] vector = new float[n];
-                        for (int i = 0; i < n; i++) {
-                            Float cell = (Float) data.get(i, j);
-                            vector[i] = cell == null || cell.isNaN() ? x : cell;
-                        }
-                        vectors[j] = new FloatVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableIntType) {
-                        int x = ((Number) value).intValue();
-                        int[] vector = new int[n];
-                        for (int i = 0; i < n; i++) {
-                            Integer cell = (Integer) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new IntVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableLongType) {
-                        long x = ((Number) value).longValue();
-                        long[] vector = new long[n];
-                        for (int i = 0; i < n; i++) {
-                            Long cell = (Long) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new LongVector(field, vector);
-                    } else if (field.dtype() == DataTypes.NullableShortType) {
-                        short x = ((Number) value).shortValue();
-                        short[] vector = new short[n];
-                        for (int i = 0; i < n; i++) {
-                            Short cell = (Short) data.get(i, j);
-                            vector[i] = cell == null ? x : cell;
-                        }
-                        vectors[j] = new ShortVector(field, vector);
-                    } else {
-                        Object[] vector = (Object[]) java.lang.reflect.Array.newInstance(value.getClass(), n);
-                        for (int i = 0; i < n; i++) {
-                            Object cell = data.get(i, j);
-                            vector[i] = cell == null ? value : cell;
-                        }
-                        vectors[j] = new ObjectVector<>(field, vector);
+                    vectors[j] = new FloatVector(new StructField(field.name(), DataTypes.FloatType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableBooleanType) {
+                    boolean x = (Boolean) value;
+                    boolean[] vector = new boolean[n];
+                    for (int i = 0; i < n; i++) {
+                        Boolean cell = (Boolean) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
                     }
+                    vectors[j] = new BooleanVector(new StructField(field.name(), DataTypes.BooleanType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableByteType) {
+                    byte x = ((Number) value).byteValue();
+                    byte[] vector = new byte[n];
+                    for (int i = 0; i < n; i++) {
+                        Byte cell = (Byte) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
+                    }
+                    vectors[j] = new ByteVector(new StructField(field.name(), DataTypes.ByteType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableCharType) {
+                    char x = (Character) value;
+                    char[] vector = new char[n];
+                    for (int i = 0; i < n; i++) {
+                        Character cell = (Character) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
+                    }
+                    vectors[j] = new CharVector(new StructField(field.name(), DataTypes.CharType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableDoubleType) {
+                    double x = ((Number) value).doubleValue();
+                    double[] vector = new double[n];
+                    for (int i = 0; i < n; i++) {
+                        Double cell = (Double) data.get(i, j);
+                        vector[i] = cell == null || cell.isNaN() ? x : cell;
+                    }
+                    vectors[j] = new DoubleVector(new StructField(field.name(), DataTypes.DoubleType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableFloatType) {
+                    float x = ((Number) value).floatValue();
+                    float[] vector = new float[n];
+                    for (int i = 0; i < n; i++) {
+                        Float cell = (Float) data.get(i, j);
+                        vector[i] = cell == null || cell.isNaN() ? x : cell;
+                    }
+                    vectors[j] = new FloatVector(new StructField(field.name(), DataTypes.FloatType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableIntType) {
+                    int x = ((Number) value).intValue();
+                    int[] vector = new int[n];
+                    for (int i = 0; i < n; i++) {
+                        Integer cell = (Integer) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
+                    }
+                    System.out.println("int = " + x);
+                    vectors[j] = new IntVector(new StructField(field.name(), DataTypes.IntType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableLongType) {
+                    long x = ((Number) value).longValue();
+                    long[] vector = new long[n];
+                    for (int i = 0; i < n; i++) {
+                        Long cell = (Long) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
+                    }
+                    vectors[j] = new LongVector(new StructField(field.name(), DataTypes.LongType, field.measure()), vector);
+                } else if (field.dtype() == DataTypes.NullableShortType) {
+                    short x = ((Number) value).shortValue();
+                    short[] vector = new short[n];
+                    for (int i = 0; i < n; i++) {
+                        Short cell = (Short) data.get(i, j);
+                        vector[i] = cell == null ? x : cell;
+                    }
+                    vectors[j] = new ShortVector(new StructField(field.name(), DataTypes.ShortType, field.measure()), vector);
+                } else if (field.dtype().isObject()){
+                    Object[] vector = (Object[]) java.lang.reflect.Array.newInstance(value.getClass(), n);
+                    for (int i = 0; i < n; i++) {
+                        Object cell = data.get(i, j);
+                        vector[i] = cell == null ? value : cell;
+                    }
+                    vectors[j] = new ObjectVector<>(field, vector);
                 }
             }
 
