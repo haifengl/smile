@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-public class HeapSelectTest {
+public class DoubleHeapSelectTest {
 
-    public HeapSelectTest() {
+    public DoubleHeapSelectTest() {
     }
 
     @BeforeAll
@@ -47,8 +47,8 @@ public class HeapSelectTest {
 
     @Test
     public void test() {
-        System.out.println("HeapSelect");
-        HeapSelect<Integer> heap = new HeapSelect<>(Integer.class, 9);
+        System.out.println("DoubleHeapSelect");
+        DoubleHeapSelect heap = new DoubleHeapSelect(9);
         heap.add(63);
         heap.add(107);
 
@@ -90,23 +90,23 @@ public class HeapSelectTest {
 
     @Test
     public void test1000() {
-        System.out.println("HeapSelect 1000");
-        HeapSelect<Integer> instance = new HeapSelect<>(Integer.class, 10);
+        System.out.println("DoubleHeapSelect 1000");
+        DoubleHeapSelect instance = new DoubleHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
-            instance.add(i);
+            instance.add(0.1*i);
             if (i > 10) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(j));
+                    assertEquals(instance.get(j), 0.1*j, 1E-10);
                 }
             }
         }
 
-        instance = new HeapSelect<>(Integer.class, 10);
+        instance = new DoubleHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
-            instance.add(1000-i);
+            instance.add(0.1*(1000-i));
             if (i >= 9) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(1000-i+j));
+                    assertEquals(instance.get(j), 0.1*(1000-i+j), 1E-10);
                 }
             }
         }
@@ -114,8 +114,8 @@ public class HeapSelectTest {
 
     @Test
     public void test100000000() {
-        System.out.println("HeapSelect 100000000");
-        HeapSelect<Double> instance = new HeapSelect<>(Double.class, 10);
+        System.out.println("DoubleHeapSelect 100000000");
+        DoubleHeapSelect instance = new DoubleHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
             instance.add(MathEx.random());
         }

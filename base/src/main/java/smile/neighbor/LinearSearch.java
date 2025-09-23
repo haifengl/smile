@@ -188,7 +188,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
                 datum.index = i;
                 datum.key = keys.get(i);
                 datum.value = data.get(i);
-                heap.heapify();
+                heap.siftDown();
             }
         }
 

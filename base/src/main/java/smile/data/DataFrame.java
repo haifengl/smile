@@ -488,7 +488,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public DataFrame select(int... indices) {
         return new DataFrame(index, Arrays.stream(indices)
-                .mapToObj(j -> columns.get(j))
+                .mapToObj(columns::get)
                 .toArray(ValueVector[]::new));
     }
 

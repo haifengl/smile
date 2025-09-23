@@ -17,7 +17,6 @@
 package smile.regression;
 
 import java.util.Properties;
-import smile.base.svm.LinearKernelMachine;
 import smile.math.kernel.*;
 import smile.util.SparseArray;
 
@@ -119,16 +118,7 @@ public class SVM {
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Options options) {
         smile.base.svm.SVR<double[]> svr = new smile.base.svm.SVR<>(new LinearKernel(), options.eps, options.C, options.tol);
-        KernelMachine<double[]> svm = svr.fit(x, y);
-
-        return new Regression<>() {
-            final LinearKernelMachine model = LinearKernelMachine.of(svm);
-
-            @Override
-            public double predict(double[] x) {
-                return model.f(x);
-            }
-        };
+        return new LinearSVM(svr.fit(x, y));
     }
 
     /**
@@ -139,18 +129,9 @@ public class SVM {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static Regression<int[]> fit(int[][] x, double[] y, int p, Options options) {
+    public static BinarySparseLinearSVM fit(int[][] x, double[] y, int p, Options options) {
         smile.base.svm.SVR<int[]> svr = new smile.base.svm.SVR<>(new BinarySparseLinearKernel(), options.eps, options.C, options.tol);
-        KernelMachine<int[]> svm = svr.fit(x, y);
-
-        return new Regression<>() {
-            final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
-
-            @Override
-            public double predict(int[] x) {
-                return model.f(x);
-            }
-        };
+        return new BinarySparseLinearSVM(p, svr.fit(x, y));
     }
 
     /**
@@ -161,18 +142,9 @@ public class SVM {
      * @param options the hyperparameters.
      * @return the model.
      */
-    public static Regression<SparseArray> fit(SparseArray[] x, double[] y, int p, Options options) {
+    public static SparseLinearSVM fit(SparseArray[] x, double[] y, int p, Options options) {
         smile.base.svm.SVR<SparseArray> svr = new smile.base.svm.SVR<>(new SparseLinearKernel(), options.eps, options.C, options.tol);
-        KernelMachine<SparseArray> svm = svr.fit(x, y);
-
-        return new Regression<>() {
-            final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
-
-            @Override
-            public double predict(SparseArray x) {
-                return model.f(x);
-            }
-        };
+        return new SparseLinearSVM(p, svr.fit(x, y));
     }
 
     /**

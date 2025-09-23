@@ -117,6 +117,24 @@ public class SVMTest {
     }
 
     @Test
+    public void testLinearSegment() throws Exception {
+        System.out.println("Linear Segment");
+        MathEx.setSeed(19650218); // to get repeatable results.
+        var segment = new ImageSegmentation();
+        InvertibleColumnTransform scaler = Standardizer.fit(segment.train());
+        System.out.println(scaler);
+        double[][] x = scaler.apply(segment.formula().x(segment.train())).toArray();
+        double[][] testx = scaler.apply(segment.formula().x(segment.test())).toArray();
+
+        var options = new SVM.Options(100);
+        OneVersusRest<double[]> model = OneVersusRest.fit(x, segment.y(), (xi, y) -> SVM.fit(xi, y, options));
+
+        int[] prediction = model.predict(testx);
+        int error = Error.of(segment.testy(), prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / segment.testx().length);
+    }
+
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.

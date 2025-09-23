@@ -36,7 +36,7 @@ public interface QuickSelect {
      * in x[k+1, n-1] (also in arbitrary order).
      * @param x the array.
      * @param k the ordinal index.
-     * @return the k-th smalles value.
+     * @return the k-th smallest value.
      */
     static int select(int[] x, int k) {
         int n = x.length;
@@ -98,7 +98,7 @@ public interface QuickSelect {
      * in x[k+1, n-1] (also in arbitrary order).
      * @param x the array.
      * @param k the ordinal index.
-     * @return the k-th smalles value.
+     * @return the k-th smallest value.
      */
     static float select(float[] x, int k) {
         int n = x.length;
@@ -160,7 +160,7 @@ public interface QuickSelect {
      * in x[k+1, n-1] (also in arbitrary order).
      * @param x the array.
      * @param k the ordinal index.
-     * @return the k-th smalles value.
+     * @return the k-th smallest value.
      */
     static double select(double[] x, int k) {
         int n = x.length;
@@ -223,7 +223,7 @@ public interface QuickSelect {
      * @param x the array.
      * @param k the ordinal index.
      * @param <T> the data type of array elements.
-     * @return the k-th smalles value.
+     * @return the k-th smallest value.
      */
     static <T extends Comparable<? super T>> T select(T[] x, int k) {
         int n = x.length;

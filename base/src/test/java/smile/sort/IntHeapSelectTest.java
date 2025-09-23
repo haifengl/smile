@@ -16,17 +16,17 @@
  */
 package smile.sort;
 
-import smile.math.MathEx;
 import org.junit.jupiter.api.*;
+import smile.math.MathEx;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Haifeng Li
  */
-public class HeapSelectTest {
+public class IntHeapSelectTest {
 
-    public HeapSelectTest() {
+    public IntHeapSelectTest() {
     }
 
     @BeforeAll
@@ -47,8 +47,8 @@ public class HeapSelectTest {
 
     @Test
     public void test() {
-        System.out.println("HeapSelect");
-        HeapSelect<Integer> heap = new HeapSelect<>(Integer.class, 9);
+        System.out.println("IntHeapSelect");
+        IntHeapSelect heap = new IntHeapSelect(9);
         heap.add(63);
         heap.add(107);
 
@@ -89,35 +89,35 @@ public class HeapSelectTest {
     }
 
     @Test
-    public void test1000() {
-        System.out.println("HeapSelect 1000");
-        HeapSelect<Integer> instance = new HeapSelect<>(Integer.class, 10);
+    public void testSelectInt() {
+        System.out.println("IntHeapSelect");
+        IntHeapSelect instance = new IntHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
             instance.add(i);
             if (i > 10) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(j));
+                    assertEquals(instance.get(j), j);
                 }
             }
         }
 
-        instance = new HeapSelect<>(Integer.class, 10);
+        instance = new IntHeapSelect(10);
         for (int i = 0; i < 1000; i++) {
             instance.add(1000-i);
             if (i >= 9) {
                 for (int j = 0; j < 10; j++) {
-                    assertEquals(instance.get(j), Integer.valueOf(1000-i+j));
+                    assertEquals(instance.get(j), 1000-i+j);
                 }
             }
         }
     }
 
     @Test
-    public void test100000000() {
-        System.out.println("HeapSelect 100000000");
-        HeapSelect<Double> instance = new HeapSelect<>(Double.class, 10);
+    public void testIntSelectBig() {
+        System.out.println("IntHeapSelect Big");
+        IntHeapSelect instance = new IntHeapSelect(10);
         for (int i = 0; i < 100000000; i++) {
-            instance.add(MathEx.random());
+            instance.add(MathEx.randomInt(1000000));
         }
 
         for (int j = 0; j < 10; j++) {
