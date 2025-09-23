@@ -17,7 +17,10 @@
 package smile.math;
 
 import java.util.Arrays;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.SVD;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 import smile.util.function.DifferentiableMultivariateFunction;
 
 /**
@@ -34,33 +37,14 @@ import smile.util.function.DifferentiableMultivariateFunction;
  * parameters, the LMA tends to be a bit slower than the GNA. LMA can
  * also be viewed as Gauss–Newton using a trust region approach.
  *
+ * @param parameters The fitted parameters.
+ * @param fittedValues The fitted values.
+ * @param residuals The residuals.
+ * @param sse The sum of squares due to error.
  * @author Haifeng Li
  */
-public class LevenbergMarquardt {
+public record LevenbergMarquardt(double[] parameters, double[] fittedValues, double[] residuals, double sse) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
-
-    /** The fitted parameters. */
-    public final double[] parameters;
-    /** The fitted values. */
-    public final double[] fittedValues;
-    /** The residuals. */
-    public final double[] residuals;
-    /** The sum of squares due to error. */
-    public final double sse;
-
-    /**
-     * Constructor.
-     * @param parameters The fitted parameters.
-     * @param fittedValues The fitted values.
-     * @param residuals The residuals.
-     * @param sse The sum of squares due to error.
-     */
-    LevenbergMarquardt(double[] parameters, double[] fittedValues, double[] residuals, double sse) {
-        this.parameters = parameters;
-        this.fittedValues = fittedValues;
-        this.residuals = residuals;
-        this.sse = sse;
-    }
 
     /**
      * Fits the nonlinear least squares.
@@ -118,7 +102,7 @@ public class LevenbergMarquardt {
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
-        Matrix J = new Matrix(n, d);
+        DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
@@ -160,11 +144,11 @@ public class LevenbergMarquardt {
                 }
             }
 
-            Matrix.SVD svd = J.svd(true, true);
-            double[] s = svd.s;
-            double s2 = MathEx.dot(s, s);
-            Matrix U = svd.U;
-            Matrix V = svd.V;
+            SVD svd = J.svd(true, true);
+            Vector s = svd.s();
+            double s2 = s.dot(s);
+            DenseMatrix U = svd.U();
+            DenseMatrix V = svd.V();
             U.tv(r, g);
 
             for (double eps : epstab) {
@@ -280,7 +264,7 @@ public class LevenbergMarquardt {
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
-        Matrix J = new Matrix(n, d);
+        DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
@@ -322,11 +306,11 @@ public class LevenbergMarquardt {
                 }
             }
 
-            Matrix.SVD svd = J.svd(true, true);
-            double[] s = svd.s;
-            double s2 = MathEx.dot(s, s);
-            Matrix U = svd.U;
-            Matrix V = svd.V;
+            SVD svd = J.svd(true, true);
+            Vector s = svd.s();
+            double s2 = s.dot(s);
+            DenseMatrix U = svd.U();
+            DenseMatrix V = svd.V();
             U.tv(r, g);
 
             for (double eps : epstab) {
