@@ -16,8 +16,8 @@
  */
 package smile.tensor;
 
+import smile.linalg.Transpose;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import static smile.linalg.Transpose.NO_TRANSPOSE;
 import static smile.linalg.Transpose.TRANSPOSE;
 
@@ -230,16 +230,16 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
      * Returns the pseudo inverse.
      * @return the pseudo inverse.
      */
-    public Matrix pinv() {
+    public DenseMatrix pinv() {
         if (U == null || V == null) {
             throw new IllegalStateException("The singular vectors are not available.");
         }
 
         int k = s.size();
-        double[] sigma = new double[k];
+        Vector sigma = s.zeros(k);
         int r = rank();
         for (int i = 0; i < r; i++) {
-            sigma[i] = 1.0 / s.get(i);
+            sigma.set(i, 1.0 / s.get(i));
         }
 
         return adb(NO_TRANSPOSE, V, sigma, TRANSPOSE, U);
@@ -271,5 +271,40 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
         }
         Vector beta = V.mv(Utb);
         return beta.toArray(new double[0]);
+    }
+
+    /**
+     * Returns {@code A * D * B}, where D is a diagonal matrix.
+     * @param transA normal, transpose, or conjugate transpose
+     *               operation on the matrix A.
+     * @param A the operand.
+     * @param D the diagonal matrix.
+     * @param transB normal, transpose, or conjugate transpose
+     *               operation on the matrix B.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    private static DenseMatrix adb(Transpose transA, DenseMatrix A, Vector D, Transpose transB, DenseMatrix B) {
+        DenseMatrix AD;
+        int m = A.m, n = A.n;
+        if (transA == NO_TRANSPOSE) {
+            AD = A.zeros(m, n);
+            for (int j = 0; j < n; j++) {
+                double dj = D.get(j);
+                for (int i = 0; i < m; i++) {
+                    AD.set(i, j, dj * A.get(i, j));
+                }
+            }
+        } else {
+            AD = A.zeros(n, m);
+            for (int j = 0; j < m; j++) {
+                double dj = D.get(j);
+                for (int i = 0; i < n; i++) {
+                    AD.set(i, j, dj * A.get(j, i));
+                }
+            }
+        }
+
+        return transB == NO_TRANSPOSE ? AD.mm(B) : AD.mt(B);
     }
 }

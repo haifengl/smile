@@ -210,9 +210,4 @@ public abstract class SymmMatrix implements Matrix {
     public Matrix mm(Matrix B) {
         throw new UnsupportedOperationException();
     }
-
-    @Override
-    public Matrix tm(Matrix B) {
-        throw new UnsupportedOperationException();
-    }
 }

@@ -535,11 +535,6 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
         throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
     }
 
-    @Override
-    public Matrix tm(Matrix other) {
-        throw new UnsupportedOperationException();
-    }
-
     /**
      * x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse.
      */

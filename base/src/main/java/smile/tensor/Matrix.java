@@ -415,5 +415,16 @@ public interface Matrix extends Tensor {
      * @param B the operand.
      * @return the multiplication.
      */
-    Matrix tm(Matrix B);
+    default Matrix tm(Matrix B) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Matrix multiplication {@code A * B'}.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    default Matrix mt(Matrix B) {
+        throw new UnsupportedOperationException();
+    }
 }

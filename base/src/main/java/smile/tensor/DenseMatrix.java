@@ -527,6 +527,21 @@ public abstract class DenseMatrix implements Matrix {
         throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
     }
 
+    @Override
+    public DenseMatrix mt(Matrix other) {
+        if (ncol() != other.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", m, n, other.nrow(), other.ncol()));
+        }
+
+        if (other instanceof DenseMatrix B) {
+            DenseMatrix C = zeros(nrow(), B.nrow());
+            mm(1.0, NO_TRANSPOSE, this, TRANSPOSE, B, 0.0, C);
+            return C;
+        }
+
+        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+    }
+
     /**
      * Returns {@code A' * A}.
      * @return {@code A' * A}.
