@@ -581,6 +581,42 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns the inverse of matrix.
+     * @return the inverse of matrix.
+     */
+    public DenseMatrix inverse() {
+        if (m != n) {
+            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        DenseMatrix lu = copy();
+        DenseMatrix inv = eye(n);
+        int[] ipiv = new int[n];
+        MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
+        if (isSymmetric()) {
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dsysv(lu.layout().lapack(), uplo.lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+                case Float32 -> LAPACKE_ssysv(lu.layout().lapack(), uplo.lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+            if (info != 0) {
+                throw new ArithmeticException("SYSV fails: " + info);
+            }
+        } else {
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dgesv(lu.layout().lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+                case Float32 -> LAPACKE_sgesv(lu.layout().lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+            if (info != 0) {
+                throw new ArithmeticException("GESV fails: " + info);
+            }
+        }
+
+        return inv;
+    }
+
+    /**
      * LU decomposition. The decomposition will overwrite this matrix.
      * Makes a copy first if you want to keep the matrix.
      * @return LU decomposition.
@@ -588,9 +624,10 @@ public abstract class DenseMatrix implements Matrix {
     public LU lu() {
         DenseMatrix lu = this;
         int[] ipiv = new int[Math.min(m, n)];
+        MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
         int info = switch(scalarType()) {
-            case Float64 -> LAPACKE_dgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv);
-            case Float32 -> LAPACKE_sgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv);
+            case Float64 -> LAPACKE_dgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv_);
+            case Float32 -> LAPACKE_sgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         };
 
@@ -683,8 +720,10 @@ public abstract class DenseMatrix implements Matrix {
             DenseMatrix VT = zeros(k, n);
 
             int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.COMPACT, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
-                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.COMPACT, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.COMPACT.lapack(), W.m, W.n,
+                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
+                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.COMPACT.lapack(), W.m, W.n,
+                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
@@ -699,8 +738,10 @@ public abstract class DenseMatrix implements Matrix {
             DenseMatrix VT = zeros(1, 1);
 
             int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.NO_VECTORS, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
-                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.NO_VECTORS, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.NO_VECTORS.lapack(), W.m, W.n,
+                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
+                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.NO_VECTORS.lapack(), W.m, W.n,
+                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
@@ -753,8 +794,8 @@ public abstract class DenseMatrix implements Matrix {
         if (isSymmetric()) {
             Vector w = vector(n);
             int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dsyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.memory, eig.ld, w.memory);
-                case Float32 -> LAPACKE_ssyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.memory, eig.ld, w.memory);
+                case Float64 -> LAPACKE_dsyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), eig.uplo.lapack(), n, eig.memory, eig.ld, w.memory);
+                case Float32 -> LAPACKE_ssyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), eig.uplo.lapack(), n, eig.memory, eig.ld, w.memory);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
@@ -771,8 +812,12 @@ public abstract class DenseMatrix implements Matrix {
             DenseMatrix Vl = vl ? zeros(n, n) : zeros(1, 1);
             DenseMatrix Vr = vr ? zeros(n, n) : zeros(1, 1);
             int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.memory, eig.ld, wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
-                case Float32 -> LAPACKE_sgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.memory, eig.ld, wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
+                case Float64 -> LAPACKE_dgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(),
+                        vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), n, eig.memory, eig.ld,
+                        wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
+                case Float32 -> LAPACKE_sgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(),
+                        vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), n, eig.memory, eig.ld,
+                        wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
