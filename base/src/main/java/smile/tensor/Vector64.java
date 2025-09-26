@@ -130,19 +130,31 @@ class Vector64 extends Vector implements Serializable {
     @Override
     public void set(int i, int j, double x) {
         assert(i == 0 || j == 0);
-        array[offset + i + j] = (float) x;
+        array[offset + i + j] = x;
     }
 
     @Override
     public void add(int i, int j, double x) {
         assert(i == 0 || j == 0);
-        array[offset + i + j] += (float) x;
+        array[offset + i + j] += x;
+    }
+
+    @Override
+    public void sub(int i, int j, double x) {
+        assert(i == 0 || j == 0);
+        array[offset + i + j] -= x;
     }
 
     @Override
     public void mul(int i, int j, double x) {
         assert(i == 0 || j == 0);
-        array[offset + i + j] *= (float) x;
+        array[offset + i + j] *= x;
+    }
+
+    @Override
+    public void div(int i, int j, double x) {
+        assert(i == 0 || j == 0);
+        array[offset + i + j] /= x;
     }
 
     @Override
@@ -152,17 +164,27 @@ class Vector64 extends Vector implements Serializable {
 
     @Override
     public void set(int i, double x) {
-        array[offset + i] = (float) x;
+        array[offset + i] = x;
     }
 
     @Override
     public void add(int i, double x) {
-        array[offset + i] += (float) x;
+        array[offset + i] += x;
+    }
+
+    @Override
+    public void sub(int i, double x) {
+        array[offset + i] -= x;
     }
 
     @Override
     public void mul(int i, double x) {
-        array[offset + i] *= (float) x;
+        array[offset + i] *= x;
+    }
+
+    @Override
+    public void div(int i, double x) {
+        array[offset + i] /= x;
     }
 
     @Override

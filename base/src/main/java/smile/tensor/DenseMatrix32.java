@@ -78,8 +78,18 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     }
 
     @Override
+    public void sub(int i, int j, double x) {
+        array[offset(i, j)] -= (float) x;
+    }
+
+    @Override
     public void mul(int i, int j, double x) {
         array[offset(i, j)] *= (float) x;
+    }
+
+    @Override
+    public void div(int i, int j, double x) {
+        array[offset(i, j)] /= (float) x;
     }
 
     @Override

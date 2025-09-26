@@ -81,16 +81,30 @@ public abstract class Vector extends DenseMatrix {
     /**
      * Sets {@code A[i] += x}.
      * @param i the index.
-     * @param x the cell value.
+     * @param x the operand.
      */
     public abstract void add(int i, double x);
 
     /**
+     * Sets {@code A[i] -= x}.
+     * @param i the index.
+     * @param x the operand.
+     */
+    public abstract void sub(int i, double x);
+
+    /**
      * Sets {@code A[i] *= x}.
      * @param i the index.
-     * @param x the cell value.
+     * @param x the operand.
      */
     public abstract void mul(int i, double x);
+
+    /**
+     * Sets {@code A[i] /= x}.
+     * @param i the index.
+     * @param x the operand.
+     */
+    public abstract void div(int i, double x);
 
     /**
      * Returns a slice of vector, which shares the data storage.
