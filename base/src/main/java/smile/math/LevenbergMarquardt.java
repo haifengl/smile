@@ -102,6 +102,10 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
+        Vector r_ = Vector.column(r);
+        Vector g_ = Vector.column(g);
+        Vector gse_ = Vector.column(gse);
+        Vector chg_ = Vector.column(chg);
         DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
 
         double epsLlast = 1;
@@ -144,12 +148,12 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                 }
             }
 
-            SVD svd = J.svd(true, true);
+            SVD svd = J.svd(true);
             Vector s = svd.s();
             double s2 = s.dot(s);
             DenseMatrix U = svd.U();
             DenseMatrix V = svd.V();
-            U.tv(r, g);
+            U.tv(r_, g_);
 
             for (double eps : epstab) {
                 double epsL = Math.max(epsLlast * eps, 1e-7);
@@ -158,7 +162,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                     gse[j] = g[j] / se;
                 }
 
-                V.mv(gse, chg);
+                V.mv(gse_, chg_);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];
@@ -264,6 +268,10 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
+        Vector r_ = Vector.column(r);
+        Vector g_ = Vector.column(g);
+        Vector gse_ = Vector.column(gse);
+        Vector chg_ = Vector.column(chg);
         DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
 
         double epsLlast = 1;
@@ -306,12 +314,12 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                 }
             }
 
-            SVD svd = J.svd(true, true);
+            SVD svd = J.svd(true);
             Vector s = svd.s();
             double s2 = s.dot(s);
             DenseMatrix U = svd.U();
             DenseMatrix V = svd.V();
-            U.tv(r, g);
+            U.tv(r_, g_);
 
             for (double eps : epstab) {
                 double epsL = Math.max(epsLlast * eps, 1e-7);
@@ -320,7 +328,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                     gse[j] = g[j] / se;
                 }
 
-                V.mv(gse, chg);
+                V.mv(gse_, chg_);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];

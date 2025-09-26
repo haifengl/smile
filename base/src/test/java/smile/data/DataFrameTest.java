@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.StringVector;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.Matrix;
 import org.junit.jupiter.api.*;
 import smile.util.Dates;
 

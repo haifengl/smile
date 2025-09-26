@@ -17,7 +17,9 @@
 package smile.math.kernel;
 
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Matrix;
+import smile.tensor.ScalarType;
 import smile.util.function.Function;
 
 /**
@@ -68,7 +70,7 @@ public interface DotProductKernel extends Function {
         }
 
         int n = pdot.nrow();
-        Matrix K = new Matrix(n, n);
+        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
 
         for (int j = 0; j < n; j++) {
             K.set(j, j, k(pdot.get(j, j)));
@@ -79,7 +81,7 @@ public interface DotProductKernel extends Function {
             }
         }
 
-        K.uplo(UPLO.LOWER);
+        K.withUplo(UPLO.LOWER);
         return K;
     }
 }

@@ -22,7 +22,9 @@ import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.stream.IntStream;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Matrix;
+import smile.tensor.ScalarType;
 import smile.util.SparseArray;
 
 /**
@@ -99,10 +101,10 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     default Matrix[] KG(T[] x) {
         int n = x.length;
         int m = lo().length;
-        Matrix[] K = new Matrix[m + 1];
+        DenseMatrix[] K = new DenseMatrix[m + 1];
         for (int i = 0; i <= m; i++) {
-            K[i] = new Matrix(n, n);
-            K[i].uplo(UPLO.LOWER);
+            K[i] = DenseMatrix.zeros(ScalarType.Float64, n, n);
+            K[i].withUplo(UPLO.LOWER);
         }
 
         IntStream.range(0, n).parallel().forEach(j -> {
@@ -126,7 +128,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      */
     default Matrix K(T[] x) {
         int n = x.length;
-        Matrix K = new Matrix(n, n);
+        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -134,7 +136,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             }
         });
 
-        K.uplo(UPLO.LOWER);
+        K.withUplo(UPLO.LOWER);
         return K;
     }
 
@@ -148,7 +150,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     default Matrix K(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
-        Matrix K = new Matrix(m, n);
+        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, m, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T yj = y[j];
             for (int i = 0; i < m; i++) {

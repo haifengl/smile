@@ -24,11 +24,12 @@ import java.util.stream.LongStream;
 
 import smile.linalg.UPLO;
 import smile.math.distance.Distance;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
 import smile.stat.distribution.GaussianDistribution;
+import smile.tensor.ScalarType;
 import smile.util.IntPair;
 import smile.util.SparseArray;
 
@@ -2870,7 +2871,7 @@ public class MathEx {
      *          nonzero elements in ascending order.
      * @return the full pairwise distance matrix.
      */
-    public static Matrix pdist(int[][] x) {
+    public static DenseMatrix pdist(int[][] x) {
         return pdist(x, false);
     }
 
@@ -2881,12 +2882,12 @@ public class MathEx {
      * @param squared If true, compute the squared Euclidean distance.
      * @return the pairwise distance matrix.
      */
-    public static Matrix pdist(int[][] x, boolean squared) {
+    public static DenseMatrix pdist(int[][] x, boolean squared) {
         int n = x.length;
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return Matrix.of(dist);
+        return DenseMatrix.of(dist);
     }
 
     /**
@@ -2894,7 +2895,7 @@ public class MathEx {
      * @param x the vectors.
      * @return the full pairwise distance matrix.
      */
-    public static Matrix pdist(float[][] x) {
+    public static DenseMatrix pdist(float[][] x) {
         return pdist(x, false);
     }
 
@@ -2904,12 +2905,12 @@ public class MathEx {
      * @param squared If true, compute the squared Euclidean distance.
      * @return the pairwise distance matrix.
      */
-    public static Matrix pdist(float[][] x, boolean squared) {
+    public static DenseMatrix pdist(float[][] x, boolean squared) {
         int n = x.length;
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return Matrix.of(dist);
+        return DenseMatrix.of(dist);
     }
 
     /**
@@ -2917,7 +2918,7 @@ public class MathEx {
      * @param x the vectors.
      * @return the full pairwise distance matrix.
      */
-    public static Matrix pdist(double[][] x) {
+    public static DenseMatrix pdist(double[][] x) {
         return pdist(x, false);
     }
 
@@ -2927,12 +2928,12 @@ public class MathEx {
      * @param squared If true, compute the squared Euclidean distance.
      * @return the pairwise distance matrix.
      */
-    public static Matrix pdist(double[][] x, boolean squared) {
+    public static DenseMatrix pdist(double[][] x, boolean squared) {
         int n = x.length;
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return Matrix.of(dist);
+        return DenseMatrix.of(dist);
     }
 
     /**
@@ -2940,7 +2941,7 @@ public class MathEx {
      * @param x the vectors.
      * @return the full pairwise distance matrix.
      */
-    public static Matrix pdist(SparseArray[] x) {
+    public static DenseMatrix pdist(SparseArray[] x) {
         return pdist(x, false);
     }
 
@@ -2950,12 +2951,12 @@ public class MathEx {
      * @param squared If true, compute the squared Euclidean distance.
      * @return the pairwise distance matrix.
      */
-    public static Matrix pdist(SparseArray[] x, boolean squared) {
+    public static DenseMatrix pdist(SparseArray[] x, boolean squared) {
         int n = x.length;
         double[][] dist = new double[n][n];
 
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
-        return Matrix.of(dist);
+        return DenseMatrix.of(dist);
     }
 
     /**
@@ -3387,11 +3388,10 @@ public class MathEx {
      *          nonzero elements in ascending order.
      * @return the dot product matrix.
      */
-    public static Matrix pdot(int[][] x) {
+    public static DenseMatrix pdot(int[][] x) {
         int n = x.length;
-
-        Matrix matrix = new Matrix(n, n);
-        matrix.uplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        matrix.withUplo(UPLO.LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             int[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3407,11 +3407,10 @@ public class MathEx {
      * @param x the vectors.
      * @return the dot product matrix.
      */
-    public static Matrix pdot(float[][] x) {
+    public static DenseMatrix pdot(float[][] x) {
         int n = x.length;
-
-        Matrix matrix = new Matrix(n, n);
-        matrix.uplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        matrix.withUplo(UPLO.LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             float[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3427,11 +3426,10 @@ public class MathEx {
      * @param x the vectors.
      * @return the dot product matrix.
      */
-    public static Matrix pdot(double[][] x) {
+    public static DenseMatrix pdot(double[][] x) {
         int n = x.length;
-
-        Matrix matrix = new Matrix(n, n);
-        matrix.uplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        matrix.withUplo(UPLO.LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             double[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3447,11 +3445,10 @@ public class MathEx {
      * @param x the sparse vectors.
      * @return the dot product matrix.
      */
-    public static Matrix pdot(SparseArray[] x) {
+    public static DenseMatrix pdot(SparseArray[] x) {
         int n = x.length;
-
-        Matrix matrix = new Matrix(n, n);
-        matrix.uplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        matrix.withUplo(UPLO.LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             SparseArray xj = x[j];
             for (int i = 0; i < n; i++) {

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Stream;
 import smile.math.MathEx;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 
 /**
  * Binary sparse dataset. Each item is stored as an integer array, which

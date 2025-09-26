@@ -21,7 +21,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Matrix;
+import smile.tensor.ScalarType;
 
 /**
  * The finite mixture of multivariate distributions.
@@ -113,13 +115,13 @@ public class MultivariateMixture implements MultivariateDistribution {
     }
 
     @Override
-    public Matrix cov() {
+    public DenseMatrix cov() {
         double w = components[0].priori;
-        Matrix v = components[0].distribution.cov();
+        DenseMatrix v = components[0].distribution.cov();
 
         int m = v.nrow();
         int n = v.ncol();
-        Matrix cov = new Matrix(m, n);
+        DenseMatrix cov = DenseMatrix.zeros(ScalarType.Float64, m, n);
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {

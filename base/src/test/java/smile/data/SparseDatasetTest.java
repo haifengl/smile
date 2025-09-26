@@ -16,10 +16,8 @@
  */
 package smile.data;
 
-import java.util.ArrayList;
-import java.util.List;
 import smile.util.SparseArray;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -83,7 +81,7 @@ public class SparseDatasetTest {
     @Test
     public void testLength() {
         System.out.println("length");
-        assertEquals(7, sm.size());
+        assertEquals(7, sm.length());
     }
 
     @Test
@@ -112,7 +110,7 @@ public class SparseDatasetTest {
         SparseMatrix sm = data.toMatrix();
         assertEquals(3430, sm.nrow());
         assertEquals(6906, sm.ncol());
-        assertEquals(353160, sm.size());
+        assertEquals(353160, sm.length());
         assertEquals(2.0, sm.get(0, 60), 1E-7);
         assertEquals(1.0, sm.get(1, 1062), 1E-7);
         assertEquals(0.0, sm.get(1, 1063), 1E-7);

@@ -16,7 +16,7 @@
  */
 package smile.data;
 
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -63,7 +63,7 @@ public class BinarySparseDatasetTest {
             SparseMatrix sm = data.toMatrix();
             assertEquals(990002, sm.nrow());
             assertEquals(41271, sm.ncol());
-            assertEquals(8018988, sm.size());
+            assertEquals(8018988, sm.length());
             assertEquals(1, sm.get(0, 1), 1E-16);
             assertEquals(1, sm.get(0, 2), 1E-16);
             assertEquals(1, sm.get(0, 3), 1E-16);

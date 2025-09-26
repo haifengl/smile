@@ -17,7 +17,7 @@
 package smile.math.kernel;
 
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.util.function.Function;
 
 /**
@@ -64,13 +64,13 @@ public interface IsotropicKernel extends Function {
      * @param pdist The pairwise distance matrix.
      * @return The kernel matrix.
      */
-    default Matrix K(Matrix pdist) {
+    default DenseMatrix K(DenseMatrix pdist) {
         if (pdist.nrow() != pdist.ncol()) {
             throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrow(), pdist.ncol()));
         }
 
         int n = pdist.nrow();
-        Matrix K = new Matrix(n, n);
+        DenseMatrix K = pdist.zeros(n, n);
 
         for (int j = 0; j < n; j++) {
             K.set(j, j, k(pdist.get(j, j)));
@@ -81,7 +81,7 @@ public interface IsotropicKernel extends Function {
             }
         }
 
-        K.uplo(UPLO.LOWER);
+        K.withUplo(UPLO.LOWER);
         return K;
     }
 
@@ -91,17 +91,17 @@ public interface IsotropicKernel extends Function {
      * @param pdist The pairwise distance matrix.
      * @return the kernel and gradient matrices.
      */
-    default Matrix[] KG(Matrix pdist) {
+    default DenseMatrix[] KG(DenseMatrix pdist) {
         if (pdist.nrow() != pdist.ncol()) {
             throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrow(), pdist.ncol()));
         }
 
         int n = pdist.nrow();
         int m = kg(pdist.get(0, 0)).length;
-        Matrix[] K = new Matrix[m];
+        DenseMatrix[] K = new DenseMatrix[m];
         for (int i = 0; i < m; i++) {
-            K[i] = new Matrix(n, n);
-            K[i].uplo(UPLO.LOWER);
+            K[i] = pdist.zeros(n, n);
+            K[i].withUplo(UPLO.LOWER);
         }
 
         for (int j = 0; j < n; j++) {
