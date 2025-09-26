@@ -58,7 +58,7 @@ public class cblas_openblas_h {
     static final String OS = System.getProperty("os.name", "linux").toLowerCase().split(" ")[0];
     static final String LIBRARY_NAME = System.getProperty("smile.lib.blas", switch (OS) {
         case "mac" -> "blas"; // macOS's builtin Accelerate framework
-        case "windows" -> "mkl_rt"; // Intel's MKL
+        case "windows" -> "mkl_rt.2"; // Intel's MKL
         default -> "openblas"; // OpenBLAS
     });
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName(LIBRARY_NAME), LIBRARY_ARENA)

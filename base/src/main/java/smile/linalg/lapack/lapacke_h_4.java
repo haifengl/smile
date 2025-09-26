@@ -58,7 +58,7 @@ public class lapacke_h_4 {
     static final String OS = System.getProperty("os.name", "linux").toLowerCase().split(" ")[0];
     static final String LIBRARY_NAME = System.getProperty("smile.lib.lapack", switch (OS) {
         case "mac" -> "lapack"; // macOS's builtin Accelerate framework
-        case "windows" -> "mkl_rt"; // Intel's MKL
+        case "windows" -> "mkl_rt.2"; // Intel's MKL
         default -> "lapacke"; // LAPACKE
     });
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName(LIBRARY_NAME), LIBRARY_ARENA)
