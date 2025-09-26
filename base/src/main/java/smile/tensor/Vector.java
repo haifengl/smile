@@ -36,7 +36,7 @@ public abstract class Vector extends DenseMatrix {
      * @param n the number of columns.
      */
     Vector(MemorySegment memory, int m, int n) {
-        super(memory, m, n, 1, null, null);
+        super(memory, m, n, m, null, null);
         assert(m == 1 || n == 1);
     }
 
