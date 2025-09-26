@@ -26,7 +26,7 @@ import static smile.linalg.Transpose.NO_TRANSPOSE;
 import static smile.linalg.Transpose.TRANSPOSE;
 import static smile.linalg.UPLO.LOWER;
 import static smile.linalg.blas.cblas_openblas_h.*;
-import static smile.linalg.blas.cblas_openblas_h.cblas_dgemm;
+import static smile.linalg.lapack.lapacke_h.*;
 
 /**
  * A dense matrix is a matrix where a large proportion of its elements
@@ -581,6 +581,211 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * LU decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     * @return LU decomposition.
+     */
+    public LU lu() {
+        DenseMatrix lu = this;
+        int[] ipiv = new int[Math.min(m, n)];
+        int info = switch(scalarType()) {
+            case Float64 -> LAPACKE_dgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv);
+            case Float32 -> LAPACKE_sgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+
+        if (info < 0) {
+            logger.error("LAPACK GETRF error code: {}", info);
+            throw new ArithmeticException("LAPACK GETRF error code: " + info);
+        }
+
+        lu.uplo = null; // LU is not symmetric
+        return new LU(lu, ipiv, info);
+    }
+
+    /**
+     * Cholesky decomposition for symmetric and positive definite matrix.
+     * The decomposition will overwrite this matrix. Makes a copy first
+     * if you want to keep the matrix.
+     *
+     * @throws ArithmeticException if the matrix is not positive definite.
+     * @return Cholesky decomposition.
+     */
+    public Cholesky cholesky(boolean overwrite) {
+        if (uplo == null) {
+            throw new IllegalArgumentException("The matrix is not symmetric");
+        }
+
+        DenseMatrix lu = this;
+        int info = switch(scalarType()) {
+            case Float64 -> LAPACKE_dpotrf(lu.layout().lapack(), lu.uplo.lapack(), lu.n, lu.memory, lu.ld);
+            case Float32 -> LAPACKE_spotrf(lu.layout().lapack(), lu.uplo.lapack(), lu.n, lu.memory, lu.ld);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+
+        if (info != 0) {
+            logger.error("LAPACK POTRF error code: {}", info);
+            throw new ArithmeticException("LAPACK POTRF error code: " + info);
+        }
+
+        return new Cholesky(lu);
+    }
+
+    /**
+     * QR Decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     *
+     * @return QR decomposition.
+     */
+    public QR qr() {
+        DenseMatrix qr = this;
+        Vector tau = qr.vector(Math.min(m, n));
+        int info = switch(scalarType()) {
+            case Float64 -> LAPACKE_dgeqrf(qr.layout().lapack(), qr.m, qr.n, qr.memory, qr.ld, tau.memory);
+            case Float32 -> LAPACKE_sgeqrf(qr.layout().lapack(), qr.m, qr.n, qr.memory, qr.ld, tau.memory);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+
+        if (info != 0) {
+            logger.error("LAPACK GEQRF error code: {}", info);
+            throw new ArithmeticException("LAPACK GEQRF error code: " + info);
+        }
+
+        qr.uplo = null; // QR is not symmetric
+        return new QR(qr, tau);
+    }
+
+    /**
+     * Singular Value Decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     * Returns a compact SVD of m-by-n matrix A:
+     * <ul>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * </ul>
+     * The compact decomposition removes extra rows or columns of zeros from
+     * the diagonal matrix of singular values, S, along with the columns in either
+     * U or V that multiply those zeros in the expression A = U*S*V'. Removing these
+     * zeros and columns can improve execution time and reduce storage requirements
+     * without compromising the accuracy of the decomposition.
+     *
+     * @param vectors The flag if computing only the singular vectors.
+     * @return singular value decomposition.
+     */
+    public SVD svd(boolean vectors) {
+        int k = Math.min(m, n);
+        Vector s = vector(k);
+
+        DenseMatrix W = this;
+        if (vectors) {
+            DenseMatrix U = zeros(m, k);
+            DenseMatrix VT = zeros(k, n);
+
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.COMPACT, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.COMPACT, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+
+            if (info != 0) {
+                logger.error("LAPACK GESDD with error code: {}", info);
+                throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
+            }
+
+            return new SVD(s, U, VT.transpose());
+        } else {
+            DenseMatrix U = zeros(1, 1);
+            DenseMatrix VT = zeros(1, 1);
+
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.NO_VECTORS, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.NO_VECTORS, W.m, W.n, W.memory, W.ld, s, U.memory, U.ld, VT.memory, VT.ld);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+
+            if (info != 0) {
+                logger.error("LAPACK GESDD error code: {}", info);
+                throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
+            }
+
+            return new SVD(m, n, s);
+        }
+    }
+
+    /**
+     * Right Eigenvalue Decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     * For a symmetric matrix, all eigenvalues are
+     * real values. Otherwise, the eigenvalues may be complex numbers.
+     * <p>
+     * By default <code>eigen</code> does not always return the eigenvalues
+     * and eigenvectors in sorted order. Use the <code>EVD.sort</code> function
+     * to put the eigenvalues in descending order and reorder the corresponding
+     * eigenvectors.
+     * @return eign value decomposition.
+     */
+    public EVD eigen() {
+        return eigen(false, true);
+    }
+
+    /**
+     * Eigenvalue Decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     * For a symmetric matrix, all eigenvalues are
+     * real values. Otherwise, the eigenvalues may be complex numbers.
+     * <p>
+     * By default <code>eigen</code> does not always return the eigenvalues
+     * and eigenvectors in sorted order. Use the <code>sort</code> function
+     * to put the eigenvalues in descending order and reorder the corresponding
+     * eigenvectors.
+     *
+     * @param vl The flag if computing the left eigenvectors.
+     * @param vr The flag if computing the right eigenvectors.
+     * @return eigen value decomposition.
+     */
+    public EVD eigen(boolean vl, boolean vr) {
+        if (m != n) {
+            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        DenseMatrix eig = this;
+        if (isSymmetric()) {
+            Vector w = vector(n);
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dsyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.memory, eig.ld, w.memory);
+                case Float32 -> LAPACKE_ssyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.memory, eig.ld, w.memory);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+
+            if (info != 0) {
+                logger.error("LAPACK SYEV error code: {}", info);
+                throw new ArithmeticException("LAPACK SYEV error code: " + info);
+            }
+
+            eig.uplo = null; // Vr is not symmetric
+            return new EVD(w, vr ? eig : null);
+        } else {
+            Vector wr = vector(n);
+            Vector wi = vector(n);
+            DenseMatrix Vl = vl ? zeros(n, n) : zeros(1, 1);
+            DenseMatrix Vr = vr ? zeros(n, n) : zeros(1, 1);
+            int info = switch(scalarType()) {
+                case Float64 -> LAPACKE_dgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.memory, eig.ld, wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
+                case Float32 -> LAPACKE_sgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.memory, eig.ld, wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            };
+
+            if (info != 0) {
+                logger.error("LAPACK GEEV error code: {}", info);
+                throw new ArithmeticException("LAPACK GEEV error code: " + info);
+            }
+
+            return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
+        }
+    }
+
+    /**
      * Returns a matrix from a two-dimensional array.
      * @param A the two-dimensional array.
      * @return the matrix.
@@ -690,5 +895,33 @@ public abstract class DenseMatrix implements Matrix {
      */
     public DenseMatrix eye(int m, int n) {
         return eye(scalarType(), m, n);
+    }
+
+    /**
+     * Returns the diagonal matrix with the elements of given array.
+     * @param diag the diagonal elements.
+     * @return the diagonal matrix.
+     */
+    public static DenseMatrix diagflat(double[] diag) {
+        int n = diag.length;
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        for (int i = 0; i < n; i++) {
+            matrix.set(i, i, diag[i]);
+        }
+        return matrix;
+    }
+
+    /**
+     * Returns the diagonal matrix with the elements of given array.
+     * @param diag the diagonal elements.
+     * @return the diagonal matrix.
+     */
+    public static DenseMatrix diagflat(float[] diag) {
+        int n = diag.length;
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        for (int i = 0; i < n; i++) {
+            matrix.set(i, i, diag[i]);
+        }
+        return matrix;
     }
 }

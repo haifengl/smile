@@ -74,12 +74,27 @@ public class AtA implements Matrix {
     }
 
     @Override
+    public double get(int i, int j) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void set(int i, int j, double x) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public double get(int i, int j) {
+    public void add(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void mul(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Matrix copy() {
         throw new UnsupportedOperationException();
     }
 
