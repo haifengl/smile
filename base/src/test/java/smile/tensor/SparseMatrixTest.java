@@ -77,9 +77,9 @@ public class SparseMatrixTest {
     }
 
     @Test
-    public void testSize() {
-        System.out.println("size");
-        assertEquals(7, sparse.size());
+    public void testLength() {
+        System.out.println("length");
+        assertEquals(7, sparse.length());
     }
 
     @Test

@@ -55,8 +55,8 @@ public class BandMatrixTest {
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        Matrix a = Matrix.of(A);
-        Matrix.LU lu = a.lu();
+        DenseMatrix a = DenseMatrix.of(A);
+        LU lu = a.lu();
         double[] x = lu.solve(b);
 
         BandMatrix band = new BandMatrix(3, 3, 1, 1);
@@ -92,7 +92,7 @@ public class BandMatrixTest {
         }
 
         // Upper band matrix
-        band.uplo(UPLO.UPPER);
+        band.withUplo(UPLO.UPPER);
         BandMatrix.Cholesky cholesky = band.cholesky();
         double[] choleskyx = cholesky.solve(b);
 
