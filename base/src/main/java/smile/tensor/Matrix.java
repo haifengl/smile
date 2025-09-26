@@ -427,4 +427,24 @@ public interface Matrix extends Tensor {
     default Matrix mt(Matrix B) {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Returns the quadratic form {@code x' * A * x}.
+     * The left upper submatrix of A is used in the computation based
+     * on the size of x.
+     * @param x the vector.
+     * @return the quadratic form.
+     */
+    default double xAx(Vector x) {
+        if (nrow() != ncol()) {
+            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", nrow(), ncol()));
+        }
+
+        if (ncol() != x.size()) {
+            throw new IllegalArgumentException(String.format("Matrix: %d x %d, Vector: %d", nrow(), ncol(), x.size()));
+        }
+
+        Vector Ax = mv(x);
+        return x.dot(Ax);
+    }
 }
