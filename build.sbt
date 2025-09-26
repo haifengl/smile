@@ -39,7 +39,8 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
-    "--add-opens=java.base/sun.security.action=ALL-UNNAMED"
+    "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+    "--enable-native-access=ALL-UNNAMED"
   ),
 
   versionScheme := Some("early-semver"),
