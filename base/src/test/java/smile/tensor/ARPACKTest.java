@@ -55,23 +55,23 @@ public class ARPACKTest {
         
         SparseMatrix a = new SparseMatrix(A, 1E-7);
         EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 6);
-        assertEquals(2.0, eig.wr[0], 1E-4);
-        assertEquals(2.0, eig.wr[1], 1E-4);
-        assertEquals(2.0, eig.wr[2], 1E-4);
-        assertEquals(2.0, eig.wr[3], 1E-4);
-        assertEquals(0.992, eig.wr[4], 1E-4);
-        assertEquals(0.990, eig.wr[5], 1E-4);
+        assertEquals(2.0, eig.wr().get(0), 1E-4);
+        assertEquals(2.0, eig.wr().get(1), 1E-4);
+        assertEquals(2.0, eig.wr().get(2), 1E-4);
+        assertEquals(2.0, eig.wr().get(3), 1E-4);
+        assertEquals(0.992, eig.wr().get(4), 1E-4);
+        assertEquals(0.990, eig.wr().get(5), 1E-4);
 
         // non-symmetric
         eig = ARPACK.eigen(a, ARPACK.AsymmOption.LM, 6);
-        assertEquals(2.0, eig.wr[0], 1E-4);
-        assertEquals(2.0, eig.wr[1], 1E-4);
-        assertEquals(2.0, eig.wr[2], 1E-4);
-        assertEquals(2.0, eig.wr[3], 1E-4);
-        assertEquals(0.992, eig.wr[4], 1E-4);
-        assertEquals(0.990, eig.wr[5], 1E-4);
-        for (int i = 0; i < eig.wi.length; i++) {
-            assertEquals(0.0, eig.wi[i], 1E-4);
+        assertEquals(2.0, eig.wr().get(0), 1E-4);
+        assertEquals(2.0, eig.wr().get(1), 1E-4);
+        assertEquals(2.0, eig.wr().get(2), 1E-4);
+        assertEquals(2.0, eig.wr().get(3), 1E-4);
+        assertEquals(0.992, eig.wr().get(4), 1E-4);
+        assertEquals(0.990, eig.wr().get(5), 1E-4);
+        for (int i = 0; i < eig.wi().size(); i++) {
+            assertEquals(0.0, eig.wi().get(i), 1E-4);
         }
     }
 
@@ -127,46 +127,46 @@ public class ARPACKTest {
         SparseMatrix a = new SparseMatrix(A, 1E-8);
         SVD svd = ARPACK.svd(a, k);
         for (int i = 0; i < k; i++) {
-            assertEquals(s[i], svd.s[i], 1E-5);
+            assertEquals(s[i], svd.s().get(i), 1E-5);
         }
 
-        assertEquals(m, svd.U.nrow());
-        assertEquals(k, svd.U.ncol());
+        assertEquals(m, svd.U().nrow());
+        assertEquals(k, svd.U().ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
-                assertEquals(Math.abs(Ut[j][i]), Math.abs(svd.U.get(i, j)), 1E-6);
+                assertEquals(Math.abs(Ut[j][i]), Math.abs(svd.U().get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(n, svd.V.nrow());
-        assertEquals(k, svd.V.ncol());
+        assertEquals(n, svd.V().nrow());
+        assertEquals(k, svd.V().ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
-                assertEquals(Math.abs(Vt[j][i]), Math.abs(svd.V.get(i, j)), 1E-6);
+                assertEquals(Math.abs(Vt[j][i]), Math.abs(svd.V().get(i, j)), 1E-6);
             }
         }
 
         // m < n
         svd = ARPACK.svd(a.transpose(), k);
         for (int i = 0; i < k; i++) {
-            assertEquals(s[i], svd.s[i], 1E-5);
+            assertEquals(s[i], svd.s().get(i), 1E-5);
         }
 
-        assertEquals(n, svd.U.nrow());
-        assertEquals(k, svd.U.ncol());
-        System.out.println(svd.U);
-        System.out.println(svd.V);
+        assertEquals(n, svd.U().nrow());
+        assertEquals(k, svd.U().ncol());
+        System.out.println(svd.U());
+        System.out.println(svd.V());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
-                assertEquals(Math.abs(Vt[j][i]), Math.abs(svd.U.get(i, j)), 1E-6);
+                assertEquals(Math.abs(Vt[j][i]), Math.abs(svd.U().get(i, j)), 1E-6);
             }
         }
 
-        assertEquals(m, svd.V.nrow());
-        assertEquals(k, svd.V.ncol());
+        assertEquals(m, svd.V().nrow());
+        assertEquals(k, svd.V().ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
-                assertEquals(Math.abs(Ut[j][i]), Math.abs(svd.V.get(i, j)), 1E-6);
+                assertEquals(Math.abs(Ut[j][i]), Math.abs(svd.V().get(i, j)), 1E-6);
             }
         }
     }

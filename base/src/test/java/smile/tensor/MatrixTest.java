@@ -43,7 +43,7 @@ public class MatrixTest {
             {0.12, 0.39, 0.73f}
     };
 
-    Matrix matrix = Matrix.of(A);
+    DenseMatrix matrix = DenseMatrix.of(A);
 
     @BeforeAll
     public static void setUpClass() throws Exception {
@@ -94,7 +94,7 @@ public class MatrixTest {
         };
         double[] r = {-0.06067647, -0.12325383, 0.56076753f};
 
-        double[] result = Matrix.of(A).colMeans();
+        double[] result = DenseMatrix.of(A).colMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -110,7 +110,7 @@ public class MatrixTest {
         };
         double[] r = {0.4938100, -0.2617642, 0.1447914f};
 
-        double[] result = Matrix.of(A).rowMeans();
+        double[] result = DenseMatrix.of(A).rowMeans();
         for (int i = 0; i < r.length; i++) {
             assertEquals(result[i], r[i], 1E-7);
         }
@@ -118,7 +118,7 @@ public class MatrixTest {
 
     @Test
     public void testTranspose() {
-        Matrix t = matrix.transpose();
+        DenseMatrix t = matrix.transpose();
         assertEquals(Layout.COL_MAJOR, matrix.layout());
         assertEquals(Layout.ROW_MAJOR, t.layout());
         assertEquals(3, t.nrow());
@@ -134,7 +134,7 @@ public class MatrixTest {
 
     @Test
     public void testSubmatrix() {
-        Matrix sub = matrix.submatrix(0, 1, 2, 2);
+        DenseMatrix sub = matrix.submatrix(0, 1, 2, 2);
         assertEquals(3, sub.nrow());
         assertEquals(2, sub.ncol());
         assertEquals(0.4, sub.get(0,0), 1E-7);
@@ -161,7 +161,7 @@ public class MatrixTest {
     @Test
     public void testSubAx() {
         System.out.println("submatrix ax");
-        Matrix sub = matrix.submatrix(1, 0, 2, 2);
+        DenseMatrix sub = matrix.submatrix(1, 0, 2, 2);
         double[] d = sub.mv(b);
         assertEquals(0.60, d[0], 1E-7);
         assertEquals(0.55, d[1], 1E-7);
@@ -234,7 +234,7 @@ public class MatrixTest {
     @Test
     public void testAAT() {
         System.out.println("AAT");
-        Matrix c = matrix.aat();
+        DenseMatrix c = matrix.aat();
         assertEquals(c.nrow(), 3);
         assertEquals(c.ncol(), 3);
         for (int i = 0; i < C.length; i++) {
@@ -262,8 +262,8 @@ public class MatrixTest {
                 { 0.1051570, 0,  0.1051570f},
                 {-0.0151015, 0, -0.0151015f}
         };
-        Matrix a = Matrix.of(A);
-        Matrix b = Matrix.of(B);
+        DenseMatrix a = DenseMatrix.of(A);
+        DenseMatrix b = DenseMatrix.of(B);
         a.add(1.0, b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-7));
     }
@@ -286,8 +286,8 @@ public class MatrixTest {
                 {-0.6349342, -1.7808990,  0.6349342f},
                 {-1.2632161,  0.8989516,  1.2632161f}
         };
-        Matrix a = Matrix.of(A);
-        Matrix b = Matrix.of(B);
+        DenseMatrix a = DenseMatrix.of(A);
+        DenseMatrix b = DenseMatrix.of(B);
         a.sub(b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-7));
     }
@@ -321,8 +321,8 @@ public class MatrixTest {
                 {1.0000,  0.0000, 0.0000f}
         };
 
-        Matrix a = Matrix.of(A);
-        Matrix b = Matrix.of(B);
+        DenseMatrix a = DenseMatrix.of(A);
+        DenseMatrix b = DenseMatrix.of(B);
         double[][] F = b.mm(a).transpose().toArray();
 
         assertTrue(MathEx.equals(a.mm(b).toArray(),   C, 1E-7));
@@ -342,8 +342,8 @@ public class MatrixTest {
         double[] B = {-4.0, 1.0, -3.0};
         double[] C = {-1.0505, 0.2719, -0.1554};
 
-        Matrix a = Matrix.of(A).inverse();
-        Matrix b = Matrix.column(B);
+        DenseMatrix a = DenseMatrix.of(A).inverse();
+        DenseMatrix b = DenseMatrix.column(B);
 
         assertTrue(MathEx.equals((b.tm(a)).toArray()[0], C, 1E-4));
         assertTrue(MathEx.equals((b.transpose().mm(a)).toArray()[0], C, 1E-4));
@@ -362,8 +362,8 @@ public class MatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        Matrix a = Matrix.of(A);
-        Matrix.LU lu = a.lu();
+        DenseMatrix a = DenseMatrix.of(A);
+        LU lu = a.lu();
         double[] x2 = lu.solve(b);
         assertEquals(x.length, x2.length);
         for (int i = 0; i < x.length; i++) {
@@ -381,7 +381,7 @@ public class MatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        Matrix X2 = Matrix.of(B);
+        DenseMatrix X2 = DenseMatrix.of(B);
         lu.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -398,7 +398,7 @@ public class MatrixTest {
 
         for (int size = 90; size <= 110; size++) {
             long start = System.nanoTime();
-            Matrix a = Matrix.rand(size, size);
+            DenseMatrix a = DenseMatrix.rand(size, size);
             double[] b = MathEx.random(size);
             Matrix.LU lu = a.lu();
             lu.solve(b);
@@ -419,8 +419,8 @@ public class MatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        Matrix a = Matrix.of(A);
-        Matrix.QR qr = a.qr();
+        DenseMatrix a = DenseMatrix.of(A);
+        QR qr = a.qr();
         double[] x2 = qr.solve(b);
         assertEquals(x.length, x2.length);
         for (int i = 0; i < x.length; i++) {
@@ -438,7 +438,7 @@ public class MatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        Matrix X2 = Matrix.of(B);
+        DenseMatrix X2 = DenseMatrix.of(B);
         qr.solve(X2);
         for (int i = 0; i < X.length; i++) {
             for (int j = 0; j < X[i].length; j++) {
@@ -460,12 +460,12 @@ public class MatrixTest {
                 {0.7378648, -0.01957401, 0.5051459f}
         };
 
-        Matrix a = Matrix.of(A);
-        a.uplo(UPLO.LOWER);
-        Matrix.Cholesky cholesky = a.cholesky();
+        DenseMatrix a = DenseMatrix.of(A);
+        a.withUplo(UPLO.LOWER);
+        Cholesky cholesky = a.cholesky();
         for (int i = 0; i < a.nrow(); i++) {
             for (int j = 0; j <= i; j++) {
-                assertEquals(Math.abs(L[i][j]), Math.abs(cholesky.lu.get(i, j)), 1E-7);
+                assertEquals(Math.abs(L[i][j]), Math.abs(cholesky.lu().get(i, j)), 1E-7);
             }
         }
 
@@ -489,7 +489,7 @@ public class MatrixTest {
                 { 0.4729730,  0.6621622f}
         };
 
-        Matrix X2 = Matrix.of(B);
+        DenseMatrix X2 = DenseMatrix.of(B);
         cholesky.solve(X2);
         assertEquals(X.length, X2.nrow());
         assertEquals(X[0].length, X2.ncol());
@@ -515,9 +515,9 @@ public class MatrixTest {
         };
         double[] eigenValues = {1.7498382, 0.3165784, 0.1335834f};
 
-        Matrix a = Matrix.of(A);
-        a.uplo(UPLO.LOWER);
-        Matrix.EVD eig = a.eigen().sort();
+        DenseMatrix a = DenseMatrix.of(A);
+        a.withUplo(UPLO.LOWER);
+        EVD eig = a.eigen().sort();
         assertArrayEquals(eigenValues, eig.wr, 1E-7);
 
         assertEquals(eigenVectors.length, eig.Vr.nrow());
@@ -528,13 +528,13 @@ public class MatrixTest {
             }
         }
 
-        eig = a.eigen(false, false, true).sort();
+        eig = a.eigen(false, false).sort();
         for (int i = 0; i < eigenValues.length; i++) {
-            assertEquals(eigenValues[i], eig.wr[i], 1E-7);
+            assertEquals(eigenValues[i], eig.wr().get(i), 1E-7);
         }
-        assertNull(eig.wi);
-        assertNull(eig.Vl);
-        assertNull(eig.Vr);
+        assertNull(eig.wi());
+        assertNull(eig.Vl());
+        assertNull(eig.Vr());
     }
 
     @Test
@@ -552,29 +552,28 @@ public class MatrixTest {
         };
         double[] eigenValues = {1.79171122, 0.31908143, 0.08920735f};
 
+        DenseMatrix a = DenseMatrix.of(A);
+        EVD eig = a.eigen().sort();
+        assertArrayEquals(eigenValues, eig.wr(), 1E-7);
 
-        Matrix a = Matrix.of(A);
-        Matrix.EVD eig = a.eigen().sort();
-        assertArrayEquals(eigenValues, eig.wr, 1E-7);
-
-        assertEquals(eigenVectors.length,    eig.Vr.nrow());
-        assertEquals(eigenVectors[0].length, eig.Vr.ncol());
+        assertEquals(eigenVectors.length,    eig.Vr().nrow());
+        assertEquals(eigenVectors[0].length, eig.Vr().ncol());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(eig.Vr.get(i, j)), 1E-7);
+                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(eig.Vr().get(i, j)), 1E-7);
             }
         }
 
-        eig = a.eigen(false, false, true).sort();
+        eig = a.eigen(false, false).sort();
         for (int i = 0; i < eigenValues.length; i++) {
-            assertEquals(eigenValues[i], eig.wr[i], 1E-7);
+            assertEquals(eigenValues[i], eig.wr()[i], 1E-7);
         }
         for (int i = 0; i < eigenValues.length; i++) {
-            assertEquals(0.0, eig.wi[i], 1E-7);
+            assertEquals(0.0, eig.wi()[i], 1E-7);
         }
 
-        assertNull(eig.Vl);
-        assertNull(eig.Vr);
+        assertNull(eig.Vl());
+        assertNull(eig.Vr());
     }
 
     @Test
@@ -600,9 +599,9 @@ public class MatrixTest {
                 {0.6240573, -0.44947578, -0.6391588f}
         };
 
-        Matrix matrix = Matrix.of(A);
-        matrix.uplo(UPLO.LOWER);
-        Matrix.SVD svd = matrix.svd();
+        DenseMatrix matrix = DenseMatrix.of(A);
+        matrix.withUplo(UPLO.LOWER);
+        SVD svd = matrix.svd();
         assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
@@ -657,7 +656,7 @@ public class MatrixTest {
                 {-0.5156083, -0.36573746, -0.47613340,  0.41342817, -0.2659765,  0.1654796, -0.32346758f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
@@ -711,7 +710,7 @@ public class MatrixTest {
                 { 0.06127719,  0.230326187,  0.04693098, -0.3300697,  0.825499232, -0.3880689f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
@@ -764,7 +763,7 @@ public class MatrixTest {
                 { 0.82502638, -0.400562630,  0.30810911, -0.1797507,  0.1778750f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
@@ -816,7 +815,7 @@ public class MatrixTest {
                 { 0.1873664, -0.7026270, -0.07117046,  0.6827473f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
@@ -869,7 +868,7 @@ public class MatrixTest {
                 {-0.5443460,  0.37590198,  0.55072289, -0.2115256, -0.2675392, -0.003003781f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
@@ -918,7 +917,7 @@ public class MatrixTest {
                 {-0.4720051, -0.2247534,  0.42477493, -0.36219292, -0.4534882f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
@@ -965,7 +964,7 @@ public class MatrixTest {
                 { 0.32967585,  0.18412070, -0.02567023,  0.2254902f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
@@ -1027,7 +1026,7 @@ public class MatrixTest {
                 {-0.406678,  -0.10893,    0.492444,  0.0123293,   0.270696, -0.0538747, -0.0538747, -0.165339, -0.579426, -0.225424,  0.231961,     0.182535f}
         };
 
-        Matrix.SVD svd = Matrix.of(A).svd();
+        SVD svd = DenseMatrix.of(A).svd(false);
         assertArrayEquals(s, svd.s, 1E-5);
 
         assertEquals(Ut[0].length, svd.U.nrow());
@@ -1065,7 +1064,7 @@ public class MatrixTest {
                 {0, 0, 0, 0, 0, 0, 0, 1, 1}
         };
 
-        Matrix a = Matrix.of(A);
+        DenseMatrix a = DenseMatrix.of(A);
         Matrix pinv = a.svd().pinv();
 
         Matrix x = pinv.mm(a).mm(pinv);
