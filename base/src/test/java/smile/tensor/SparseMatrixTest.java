@@ -97,7 +97,7 @@ public class SparseMatrixTest {
     public void testAx() {
         System.out.println("ax");
         double[] d = new double[sparse.nrow()];
-        sparse.mv(b, d);
+        sparse.mv(Vector.column(b), Vector.column(d));
         assertEquals(0.65, d[0], 1E-7f);
         assertEquals(0.60, d[1], 1E-7f);
         assertEquals(0.55, d[2], 1E-7f);
@@ -108,7 +108,7 @@ public class SparseMatrixTest {
         System.out.println("axpy");
         double[] d = new double[sparse.nrow()];
         Arrays.fill(d, 1.0f);
-        sparse.mv(NO_TRANSPOSE, 1.0, b, 1.0, d);
+        sparse.mv(NO_TRANSPOSE, 1.0, Vector.column(b), 1.0, Vector.column(d));
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
         assertEquals(1.55, d[2], 1E-7f);
@@ -119,7 +119,7 @@ public class SparseMatrixTest {
         System.out.println("axpy b = 2");
         double[] d = new double[sparse.nrow()];
         Arrays.fill(d, 1.0f);
-        sparse.mv(NO_TRANSPOSE, 1.0, b, 2.0, d);
+        sparse.mv(NO_TRANSPOSE, 1.0, Vector.column(b), 2.0, Vector.column(d));
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
         assertEquals(2.55, d[2], 1E-7f);
@@ -129,7 +129,7 @@ public class SparseMatrixTest {
     public void testAtx() {
         System.out.println("atx");
         double[] d = new double[sparse.nrow()];
-        sparse.tv(b, d);
+        sparse.tv(Vector.column(b), Vector.column(d));
         assertEquals(0.65, d[0], 1E-7f);
         assertEquals(0.60, d[1], 1E-7f);
         assertEquals(0.55, d[2], 1E-7f);
@@ -140,7 +140,7 @@ public class SparseMatrixTest {
         System.out.println("atxpy");
         double[] d = new double[sparse.nrow()];
         Arrays.fill(d, 1.0f);
-        sparse.mv(TRANSPOSE, 1.0, b, 1.0, d);
+        sparse.mv(TRANSPOSE, 1.0, Vector.column(b), 1.0, Vector.column(d));
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
         assertEquals(1.55, d[2], 1E-7f);
@@ -151,7 +151,7 @@ public class SparseMatrixTest {
         System.out.println("atxpy b = 2");
         double[] d = new double[sparse.nrow()];
         Arrays.fill(d, 1.0f);
-        sparse.mv(TRANSPOSE, 1.0, b, 2.0, d);
+        sparse.mv(TRANSPOSE, 1.0, Vector.column(b), 2.0, Vector.column(d));
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
         assertEquals(2.55, d[2], 1E-7f);
@@ -163,7 +163,7 @@ public class SparseMatrixTest {
         SparseMatrix c = sparse.mm(sparse);
         assertEquals(3, c.nrow());
         assertEquals(3, c.ncol());
-        assertEquals(9, c.size());
+        assertEquals(9, c.length());
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
                 assertEquals(C[i][j], c.get(i, j), 1E-7);
@@ -177,7 +177,7 @@ public class SparseMatrixTest {
         SparseMatrix c = sparse.aat();
         assertEquals(3, c.nrow());
         assertEquals(3, c.ncol());
-        assertEquals(9, c.size());
+        assertEquals(9, c.length());
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
                 assertEquals(C[i][j], c.get(i, j), 1E-7);
@@ -310,7 +310,7 @@ public class SparseMatrixTest {
     public void testText() throws Exception {
         System.out.println("text");
         SparseMatrix data = SparseMatrix.text(smile.io.Paths.getTestData("matrix/08blocks.txt"));
-        assertEquals(592, data.size());
+        assertEquals(592, data.length());
         assertEquals(300, data.nrow());
         assertEquals(300, data.ncol());
         assertEquals(94.0, data.get(36, 0), 1E-7);
@@ -323,7 +323,7 @@ public class SparseMatrixTest {
     public void testHarwell() throws Exception {
         System.out.println("HB exchange format");
         SparseMatrix data = SparseMatrix.harwell(smile.io.Paths.getTestData("matrix/5by5_rua.hb"));
-        assertEquals(13, data.size());
+        assertEquals(13, data.length());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
         assertEquals(11.0, data.get(0, 0), 1E-7);
@@ -336,7 +336,7 @@ public class SparseMatrixTest {
     public void testMatrixMarket08blocks() throws Exception {
         System.out.println("market 08blocks");
         SparseMatrix data = (SparseMatrix) Matrix.market(smile.io.Paths.getTestData("matrix/08blocks.mtx"));
-        assertEquals(592, data.size());
+        assertEquals(592, data.length());
         assertEquals(300, data.nrow());
         assertEquals(300, data.ncol());
         assertEquals(94.0, data.get(36, 0), 1E-7);
@@ -350,7 +350,7 @@ public class SparseMatrixTest {
         System.out.println("market gr900");
         SparseMatrix data = (SparseMatrix) Matrix.market(smile.io.Paths.getTestData("matrix/gr_900_900_crg.mm"));
         //assertEquals(true, data.isSymmetric());
-        assertEquals(8644, data.size());
+        assertEquals(8644, data.length());
         assertEquals(900, data.nrow());
         assertEquals(900, data.ncol());
         assertEquals( 8.0, data.get(0, 0), 1E-7);
@@ -368,7 +368,7 @@ public class SparseMatrixTest {
     public void testMatrixMarketCrk() throws Exception {
         System.out.println("market crk");
         SparseMatrix data = (SparseMatrix) Matrix.market(smile.io.Paths.getTestData("matrix/m_05_05_crk.mm"));
-        assertEquals(8, data.size());
+        assertEquals(8, data.length());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
         assertEquals( 15.0, data.get(0, 4), 1E-7);
@@ -390,7 +390,7 @@ public class SparseMatrixTest {
     public void testMatrixMarketCrs() throws Exception {
         System.out.println("market crs");
         SparseMatrix data = (SparseMatrix) Matrix.market(smile.io.Paths.getTestData("matrix/m_05_05_crs.mm"));
-        assertEquals(18, data.size());
+        assertEquals(18, data.length());
         assertEquals(5, data.nrow());
         assertEquals(5, data.ncol());
         assertEquals(11.0, data.get(0, 0), 1E-7);
@@ -408,7 +408,7 @@ public class SparseMatrixTest {
     @Test
     public void testMatrixMarketDense() throws Exception {
         System.out.println("market dense");
-        Matrix data = (Matrix) Matrix.market(smile.io.Paths.getTestData("matrix/m_10_01.mm"));
+        DenseMatrix data = (DenseMatrix) Matrix.market(smile.io.Paths.getTestData("matrix/m_10_01.mm"));
         assertFalse(data.isSymmetric());
         assertEquals(10, data.nrow());
         assertEquals(1, data.ncol());

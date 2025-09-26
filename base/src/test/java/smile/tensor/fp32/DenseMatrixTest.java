@@ -26,11 +26,11 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test Matrix with OpenBLAS.
+ * Test DenseMatrix.
  *
  * @author Haifeng Li
  */
-public class MatrixTest {
+public class DenseMatrixTest {
 
     float[][] A = {
             {0.9000f, 0.4000f, 0.0000f},
