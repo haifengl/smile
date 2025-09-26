@@ -239,6 +239,13 @@ public interface Matrix extends Tensor {
     void div(int i, int j, double x);
 
     /**
+     * A *= alpha
+     * @param alpha the scaling factor.
+     * @return this matrix.
+     */
+    Matrix scale(double alpha);
+
+    /**
      * Returns the diagonal elements.
      * @return the diagonal elements.
      */

@@ -262,7 +262,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
 
         int r = rank();
         // The submatrix U[:, 1:r], where r is the rank of matrix.
-        DenseMatrix Ur = r == U.ncol() ? U : U.get(0, 0, m, r);
+        DenseMatrix Ur = r == U.ncol() ? U : U.submatrix(0, 0, m, r);
 
         Vector Utb = s.zeros(s.size());
         Ur.tv(Vector.column(b), Utb);
