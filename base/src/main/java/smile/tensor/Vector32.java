@@ -24,6 +24,7 @@ import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.math.MathEx;
 
 /**
  * A vector of single precision floating numbers.
@@ -99,6 +100,22 @@ class Vector32 extends Vector implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         memory = memory(array, offset, length);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Vector32 b) {
+            if (b.size() == size()) {
+                for (int i = 0; i < array.length; i++) {
+                    if (Math.abs(array[i] - b.array[i]) > MathEx.FLOAT_EPSILON) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
