@@ -225,7 +225,7 @@ public abstract class Vector extends DenseMatrix {
      * @return a column vector.
      */
     public static Vector column(double[] array) {
-        return new Vector64(array, 0, array.length);
+        return Vector64.column(array, 0, array.length);
     }
 
     /**
@@ -234,7 +234,7 @@ public abstract class Vector extends DenseMatrix {
      * @return a column vector.
      */
     public static Vector column(float[] array) {
-        return new Vector32(array, 0, array.length);
+        return Vector32.column(array, 0, array.length);
     }
 
     /**
@@ -243,7 +243,7 @@ public abstract class Vector extends DenseMatrix {
      * @return a row vector.
      */
     public static Vector row(double[] array) {
-        return new Vector64(array, 0, array.length);
+        return Vector64.row(array, 0, array.length);
     }
 
     /**
@@ -252,7 +252,7 @@ public abstract class Vector extends DenseMatrix {
      * @return a row vector.
      */
     public static Vector row(float[] array) {
-        return new Vector32(array, 0, array.length);
+        return Vector32.row(array, 0, array.length);
     }
 
     /**
@@ -263,8 +263,8 @@ public abstract class Vector extends DenseMatrix {
      */
     public static Vector zeros(ScalarType scalarType, int length) {
         return switch (scalarType) {
-            case Float64 -> new Vector64(new double[length], 0, length);
-            case Float32 -> new Vector32(new float[length], 0, length);
+            case Float64 -> column(new double[length]);
+            case Float32 -> column(new float[length]);
             default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType);
         };
     }
@@ -289,12 +289,12 @@ public abstract class Vector extends DenseMatrix {
             case Float64 -> {
                 double[] array = new double[length];
                 Arrays.fill(array, 1.0);
-                yield new Vector64(array, 0, length);
+                yield column(array);
             }
             case Float32 -> {
                 float[] array = new float[length];
                 Arrays.fill(array, 1.0f);
-                yield new Vector32(array, 0, length);
+                yield column(array);
             }
             default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType);
         };
