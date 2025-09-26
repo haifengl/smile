@@ -17,9 +17,11 @@
 package smile.interpolation;
 
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.interpolation.variogram.PowerVariogram;
 import smile.interpolation.variogram.Variogram;
+import smile.tensor.SVD;
+import smile.tensor.ScalarType;
 
 /**
  * Kriging interpolation for the data points irregularly distributed in space.
@@ -110,8 +112,8 @@ public class KrigingInterpolation {
         int n = x.length;
         double[] yv = new double[n + 1];
 
-        Matrix v = new Matrix(n + 1, n + 1);
-        v.uplo(UPLO.LOWER);
+        DenseMatrix v = DenseMatrix.zeros(ScalarType.Float64, n + 1, n + 1);
+        v.withUplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
             yv[i] = y[i];
 
@@ -133,7 +135,7 @@ public class KrigingInterpolation {
             }
         }
 
-        Matrix.SVD svd = v.svd(true, true);
+        SVD svd = v.svd(true);
         yvi = svd.solve(yv);
     }
 

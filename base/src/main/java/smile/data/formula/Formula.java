@@ -27,7 +27,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.Matrix;
+import smile.tensor.Matrix;
 
 /**
  * The model fitting formula in a compact symbolic form.

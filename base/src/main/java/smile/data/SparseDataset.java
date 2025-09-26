@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 import smile.util.SparseArray;
 
 /**

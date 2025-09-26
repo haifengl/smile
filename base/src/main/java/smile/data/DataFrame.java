@@ -32,7 +32,9 @@ import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Matrix;
+import smile.tensor.ScalarType;
 import smile.util.Index;
 import smile.util.Strings;
 
@@ -874,15 +876,13 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
             }
         }
 
-        Matrix matrix = new Matrix(nrow, colNames.size());
-        matrix.colNames(colNames.toArray(new String[0]));
+        Matrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, colNames.size());
         if (rowNames != null) {
             int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
                 rows[i] = getString(i, j);
             }
-            matrix.rowNames(rows);
         }
 
         int j = 0;

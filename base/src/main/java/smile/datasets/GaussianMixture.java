@@ -17,7 +17,7 @@
 package smile.datasets;
 
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**
@@ -47,25 +47,25 @@ public record GaussianMixture(double[][] x, int[] y) {
         double[] mu4 = {3.0, 5.0, 1.0};
         double[][] sigma4 = {{1.0, 0.5, 0.5}, {0.5, 1.0, 0.5}, {0.5, 0.5, 1.0}};
 
-        MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, Matrix.of(sigma1));
+        MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, DenseMatrix.of(sigma1));
         for (int i = 0; i < 2000; i++) {
             x[i] = g1.rand();
             y[i] = 0;
         }
 
-        MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, Matrix.of(sigma2));
+        MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, DenseMatrix.of(sigma2));
         for (int i = 0; i < 3000; i++) {
             x[2000 + i] = g2.rand();
             y[i] = 1;
         }
 
-        MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, Matrix.of(sigma3));
+        MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, DenseMatrix.of(sigma3));
         for (int i = 0; i < 3000; i++) {
             x[5000 + i] = g3.rand();
             y[i] = 2;
         }
 
-        MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, Matrix.of(sigma4));
+        MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, DenseMatrix.of(sigma4));
         for (int i = 0; i < 2000; i++) {
             x[8000 + i] = g4.rand();
             y[i] = 3;

@@ -16,9 +16,8 @@
  */
 package smile.stat.distribution;
 
-import smile.math.MathEx;
-
 import java.io.Serial;
+import smile.math.MathEx;
 
 /**
  * The finite mixture of distributions from multivariate exponential family.

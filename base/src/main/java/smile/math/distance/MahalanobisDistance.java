@@ -16,10 +16,10 @@
  */
 package smile.math.distance;
 
-import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
-
 import java.io.Serial;
+import smile.linalg.UPLO;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 
 /**
  * In statistics, Mahalanobis distance is based on correlations between
@@ -36,17 +36,17 @@ public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
     /** The covariance matrix. */
-    private final Matrix sigma;
+    private final DenseMatrix sigma;
     /** The inverse of covariance matrix. */
-    private final Matrix sigmaInv;
+    private final DenseMatrix sigmaInv;
 
     /**
      * Constructor.
      * @param cov the covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
-        sigma = Matrix.of(cov);
-        sigma.uplo(UPLO.LOWER);
+        sigma = DenseMatrix.of(cov);
+        sigma.withUplo(UPLO.LOWER);
         sigmaInv = sigma.inverse();
     }
 
@@ -67,10 +67,11 @@ public class MahalanobisDistance implements Metric<double[]> {
 
         int n = x.length;
         double[] z = new double[n];
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++) {
             z[i] = x[i] - y[i];
+        }
 
-        double dist = sigmaInv.xAx(z);
+        double dist = sigmaInv.xAx(Vector.column(z));
         return Math.sqrt(dist);
     }
 }

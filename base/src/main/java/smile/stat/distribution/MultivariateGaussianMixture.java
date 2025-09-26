@@ -16,11 +16,10 @@
  */
 package smile.stat.distribution;
 
-import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-
 import java.io.Serial;
 import java.util.Arrays;
+import smile.math.MathEx;
+import smile.tensor.DenseMatrix;
 
 /**
  * Finite multivariate Gaussian mixture. The EM algorithm is provided to learn
@@ -86,7 +85,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
 
         double[] centroid = data[MathEx.randomInt(n)];
         double[] variance = null;
-        Matrix cov = null;
+        DenseMatrix cov = null;
         MultivariateGaussianDistribution gaussian;
         if (diagonal) {
             variance = new double[d];
@@ -102,7 +101,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
             gaussian = new MultivariateGaussianDistribution(centroid, variance);
         } else {
-            cov = Matrix.of(MathEx.cov(data, mu));
+            cov = DenseMatrix.of(MathEx.cov(data, mu));
             gaussian = new MultivariateGaussianDistribution(centroid, cov);
         }
 
@@ -202,7 +201,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         // Splits the component
         Component component = components[index];
         double priori = component.priori() / 2;
-        Matrix delta = component.distribution().cov();
+        DenseMatrix delta = component.distribution().cov();
         double[] mu = component.distribution().mean();
 
         Component[] mixture = new Component[k+1];

@@ -17,7 +17,7 @@
 package smile.interpolation;
 
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
 
@@ -121,8 +121,7 @@ public class RBFInterpolation2D implements Interpolation2D {
         this.normalized = normalized;
 
         int n = y.length;
-
-        Matrix G = new Matrix(n, n);
+        DenseMatrix G = DenseMatrix.zeros(ScalarType.Float64, n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -144,13 +143,14 @@ public class RBFInterpolation2D implements Interpolation2D {
         }
 
         if (rbf instanceof GaussianRadialBasis) {
-            G.uplo(UPLO.LOWER);
-            Matrix.Cholesky cholesky = G.cholesky(true);
-            w = cholesky.solve(rhs);
+            G.withUplo(UPLO.LOWER);
+            Cholesky cholesky = G.cholesky();
+            cholesky.solve(rhs);
         } else {
-            Matrix.LU lu = G.lu(true);
-            w = lu.solve(rhs);
+            LU lu = G.lu();
+            lu.solve(rhs);
         }
+        w = rhs;
     }
 
     @Override

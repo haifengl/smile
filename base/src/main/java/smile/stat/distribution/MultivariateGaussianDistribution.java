@@ -20,7 +20,7 @@ import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 
 /**
  * Multivariate Gaussian distribution.
@@ -38,7 +38,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     /** The mean vector. */
     public final double[] mu;
     /** The covariance matrix. */
-    public final Matrix sigma;
+    public final DenseMatrix sigma;
     /** True if the covariance matrix is diagonal. */
     public final boolean diagonal;
 
@@ -47,7 +47,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     /** The inverse of covariance matrix. */
     private Matrix sigmaInv;
     /** The Cholesky decomposition of covariance matrix. */
-    private Matrix sigmaL;
+    private DenseMatrix sigmaL;
     /** The determinant of covariance matrix. */
     private double sigmaDet;
     /** The constant factor in PDF. */
@@ -68,8 +68,9 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
         }
 
         mu = mean;
-        sigma = Matrix.diag(mu.length, variance);
-
+        double[] v = new double[mean.length];
+        Arrays.fill(v, variance);
+        sigma = DenseMatrix.diagflat(v);
         diagonal = true;
         length = mu.length + 1;
 
@@ -95,7 +96,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
         }
 
         mu = mean;
-        sigma = Matrix.diag(variance);
+        sigma = DenseMatrix.diagflat(variance);
         diagonal = true;
         length = 2 * mu.length;
 
@@ -108,7 +109,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * @param mean mean vector.
      * @param cov covariance matrix.
      */
-    public MultivariateGaussianDistribution(double[] mean, Matrix cov) {
+    public MultivariateGaussianDistribution(double[] mean, DenseMatrix cov) {
         if (mean.length != cov.nrow()) {
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
@@ -157,7 +158,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
             return new MultivariateGaussianDistribution(mu, variance);
         } else {
-            return new MultivariateGaussianDistribution(mu, Matrix.of(MathEx.cov(data, mu)));
+            return new MultivariateGaussianDistribution(mu, DenseMatrix.of(MathEx.cov(data, mu)));
         }
     }
 
@@ -166,11 +167,11 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      */
     private void init() {
         dim = mu.length;
-        sigma.uplo(UPLO.LOWER);
-        Matrix.Cholesky cholesky = sigma.cholesky();
+        sigma.withUplo(UPLO.LOWER);
+        Cholesky cholesky = sigma.copy().cholesky();
         sigmaInv = cholesky.inverse();
         sigmaDet = cholesky.det();
-        sigmaL = cholesky.lu;
+        sigmaL = cholesky.lu();
         pdfConstant = (dim * Math.log(2 * Math.PI) + Math.log(sigmaDet)) / 2.0;
     }
 
@@ -190,7 +191,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     }
 
     @Override
-    public Matrix cov() {
+    public DenseMatrix cov() {
         return sigma;
     }
 
@@ -210,7 +211,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
         double[] v = x.clone();
         MathEx.sub(v, mu);
-        double result = sigmaInv.xAx(v) / -2.0;
+        double result = sigmaInv.xAx(Vector.column(v)) / -2.0;
         return result - pdfConstant;
     }
 
@@ -359,7 +360,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
             gaussian = new MultivariateGaussianDistribution(mean, variance);
         } else {
-            Matrix cov = new Matrix(d, d);
+            DenseMatrix cov = DenseMatrix.zeros(ScalarType.Float64, d, d);
             for (int k = 0; k < n; k++) {
                 double[] x = data[k];
                 for (int i = 0; i < d; i++) {
