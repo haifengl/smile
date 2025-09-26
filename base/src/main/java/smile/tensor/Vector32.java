@@ -58,7 +58,7 @@ class Vector32 extends Vector implements Serializable {
         if (offset < 0 || offset >= array.length) {
             throw new IllegalArgumentException("Invalid offset: " + offset);
         }
-        if (offset + length >= array.length) {
+        if (offset + length > array.length) {
             throw new IllegalArgumentException("Invalid length: " + length);
         }
         if (m != 1 && n != 1) {
