@@ -210,17 +210,33 @@ public interface Matrix extends Tensor {
      * Sets {@code A[i,j] += x}.
      * @param i the row index.
      * @param j the column index.
-     * @param x the matrix element value.
+     * @param x the operand.
      */
     void add(int i, int j, double x);
+
+    /**
+     * Sets {@code A[i,j] -= x}.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     */
+    void sub(int i, int j, double x);
 
     /**
      * Sets {@code A[i,j] *= x}.
      * @param i the row index.
      * @param j the column index.
-     * @param x the matrix element value.
+     * @param x the operand.
      */
     void mul(int i, int j, double x);
+
+    /**
+     * Sets {@code A[i,j] /= x}.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     */
+    void div(int i, int j, double x);
 
     /**
      * Returns the diagonal elements.

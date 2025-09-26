@@ -89,7 +89,17 @@ public class AtA implements Matrix {
     }
 
     @Override
+    public void sub(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void mul(int i, int j, double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void div(int i, int j, double x) {
         throw new UnsupportedOperationException();
     }
 

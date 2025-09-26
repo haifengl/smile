@@ -128,6 +128,28 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
     }
 
     @Override
+    public void sub(int i, int j, double x) {
+        switch (uplo) {
+            case LOWER -> {
+                if (j > i) {
+                    int tmp = i;
+                    i = j;
+                    j = tmp;
+                }
+                AP[i + ((2 * n - j - 1) * j / 2)] -= (float) x;
+            }
+            case UPPER -> {
+                if (i > j) {
+                    int tmp = i;
+                    i = j;
+                    j = tmp;
+                }
+                AP[i + (j * (j + 1) / 2)] -= (float) x;
+            }
+        }
+    }
+
+    @Override
     public void mul(int i, int j, double x) {
         switch (uplo) {
             case LOWER -> {
@@ -145,6 +167,28 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     j = tmp;
                 }
                 AP[i + (j * (j + 1) / 2)] *= (float) x;
+            }
+        }
+    }
+
+    @Override
+    public void div(int i, int j, double x) {
+        switch (uplo) {
+            case LOWER -> {
+                if (j > i) {
+                    int tmp = i;
+                    i = j;
+                    j = tmp;
+                }
+                AP[i + ((2 * n - j - 1) * j / 2)] /= (float) x;
+            }
+            case UPPER -> {
+                if (i > j) {
+                    int tmp = i;
+                    i = j;
+                    j = tmp;
+                }
+                AP[i + (j * (j + 1) / 2)] /= (float) x;
             }
         }
     }

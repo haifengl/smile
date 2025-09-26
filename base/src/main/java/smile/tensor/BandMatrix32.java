@@ -90,11 +90,29 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     }
 
     @Override
+    public void sub(int i, int j, double x) {
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            AB[j * ld + ku + i - j] -= (float) x;
+        } else {
+            throw new UnsupportedOperationException(String.format("Sub element at (%d, %d)", i, j));
+        }
+    }
+
+    @Override
     public void mul(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             AB[j * ld + ku + i - j] *= (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Mul element at (%d, %d)", i, j));
+        }
+    }
+
+    @Override
+    public void div(int i, int j, double x) {
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            AB[j * ld + ku + i - j] /= (float) x;
+        } else {
+            throw new UnsupportedOperationException(String.format("Div element at (%d, %d)", i, j));
         }
     }
 

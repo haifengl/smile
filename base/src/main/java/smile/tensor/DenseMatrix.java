@@ -648,7 +648,7 @@ public abstract class DenseMatrix implements Matrix {
      * @throws ArithmeticException if the matrix is not positive definite.
      * @return Cholesky decomposition.
      */
-    public Cholesky cholesky(boolean overwrite) {
+    public Cholesky cholesky() {
         if (uplo == null) {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
