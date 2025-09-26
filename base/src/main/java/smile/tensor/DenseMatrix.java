@@ -18,6 +18,10 @@ package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
 import smile.linalg.*;
+import smile.math.MathEx;
+import smile.stat.distribution.Distribution;
+import smile.stat.distribution.GaussianDistribution;
+
 import static smile.linalg.Layout.COL_MAJOR;
 import static smile.linalg.Layout.ROW_MAJOR;
 import static smile.linalg.Side.LEFT;
@@ -143,6 +147,16 @@ public abstract class DenseMatrix implements Matrix {
     public abstract DenseMatrix transpose();
 
     @Override
+    public DenseMatrix scale(double alpha) {
+        switch(scalarType()) {
+            case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
+            case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+        return this;
+    }
+
+    @Override
     public String toString() {
         return toString(false);
     }
@@ -266,6 +280,44 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns the matrix of selected rows. Negative index -i means the i-th row from the end.
+     * @param rows the row indices.
+     * @return the submatrix.
+     */
+    public DenseMatrix rows(int... rows) {
+        DenseMatrix x = zeros(rows.length, n);
+
+        for (int i = 0; i < rows.length; i++) {
+            int row = rows[i];
+            if (row < 0) row = m + row;
+            for (int j = 0; j < n; j++) {
+                x.set(i, j, get(row, j));
+            }
+        }
+
+        return x;
+    }
+
+    /**
+     * Returns the matrix of selected columns.
+     * @param cols the column indices.
+     * @return the submatrix.
+     */
+    public DenseMatrix columns(int... cols) {
+        DenseMatrix x = zeros(m, cols.length);
+
+        for (int j = 0; j < cols.length; j++) {
+            int col = cols[j];
+            if (col < 0) col = n + col;
+            for (int i = 0; i < m; i++) {
+                x.set(i, j, get(i, col));
+            }
+        }
+
+        return x;
+    }
+
+    /**
      * Returns the submatrix of selected rows.
      * @param from the beginning row, inclusive.
      * @param to the ending row, exclusive.
@@ -318,7 +370,7 @@ public abstract class DenseMatrix implements Matrix {
      * @param l the ending column, exclusive.
      * @return the submatrix.
      */
-    public DenseMatrix get(int i, int j, int k, int l) {
+    public DenseMatrix submatrix(int i, int j, int k, int l) {
         if (i < 0 || i >= m || k <= i || k >= m || j < 0 || j >= n || l <= j || l >= n) {
             throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
         }
@@ -707,6 +759,27 @@ public abstract class DenseMatrix implements Matrix {
      * zeros and columns can improve execution time and reduce storage requirements
      * without compromising the accuracy of the decomposition.
      *
+     * @return singular value decomposition.
+     */
+    public SVD svd() {
+        return svd(false);
+    }
+
+    /**
+     * Singular Value Decomposition. The decomposition will overwrite this matrix.
+     * Makes a copy first if you want to keep the matrix.
+     * Returns a compact SVD of m-by-n matrix A:
+     * <ul>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * </ul>
+     * The compact decomposition removes extra rows or columns of zeros from
+     * the diagonal matrix of singular values, S, along with the columns in either
+     * U or V that multiply those zeros in the expression A = U*S*V'. Removing these
+     * zeros and columns can improve execution time and reduce storage requirements
+     * without compromising the accuracy of the decomposition.
+     *
      * @param vectors The flag if computing only the singular vectors.
      * @return singular value decomposition.
      */
@@ -967,6 +1040,54 @@ public abstract class DenseMatrix implements Matrix {
         for (int i = 0; i < n; i++) {
             matrix.set(i, i, diag[i]);
         }
+        return matrix;
+    }
+
+    /**
+     * Returns a random matrix of standard normal distribution.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return the random matrix.
+     */
+    public static DenseMatrix randn(ScalarType scalarType, int m, int n) {
+        return rand(scalarType, m, n, GaussianDistribution.getInstance());
+    }
+
+    /**
+     * Returns a random matrix with given distribution.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param distribution the distribution of random numbers.
+     * @return the random matrix.
+     */
+    public static DenseMatrix rand(ScalarType scalarType, int m, int n, Distribution distribution) {
+        DenseMatrix matrix = zeros(scalarType, m, n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, distribution.rand());
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Returns a uniformly distributed random matrix in [0, 1).
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @return the random matrix.
+     */
+    public static DenseMatrix rand(ScalarType scalarType, int m, int n) {
+        DenseMatrix matrix = zeros(scalarType, m, n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, MathEx.random());
+            }
+        }
+
         return matrix;
     }
 }
