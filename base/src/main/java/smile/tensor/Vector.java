@@ -387,6 +387,19 @@ public abstract class Vector extends DenseMatrix {
      * @return L1 norm.
      */
     public double norm1() {
+        return switch(scalarType()) {
+            case Float64 -> cblas_dasum(size(), memory, 1);
+            case Float32 -> cblas_sasum(size(), memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
+    }
+
+    /**
+     * Computes the L-Infinity norm of a vector.
+     *
+     * @return L-Infinity norm.
+     */
+    public double normInf() {
         return get((int) iamax());
     }
 
