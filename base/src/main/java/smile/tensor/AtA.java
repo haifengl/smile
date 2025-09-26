@@ -104,6 +104,11 @@ public class AtA implements Matrix {
     }
 
     @Override
+    public Matrix scale(double alpha) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Matrix copy() {
         throw new UnsupportedOperationException();
     }

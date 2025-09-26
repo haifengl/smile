@@ -390,17 +390,14 @@ public abstract class Vector extends DenseMatrix {
         return get((int) iamax());
     }
 
-    /**
-     * Scales a vector with a scalar.
-     *
-     * @param alpha The scaling factor.
-     */
-    public void scale(double alpha) {
+    @Override
+    public Vector scale(double alpha) {
         switch(scalarType()) {
             case Float64 -> cblas_dscal(size(), alpha, memory, 1);
             case Float32 -> cblas_sscal(size(), (float) alpha, memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
+        return this;
     }
 
     /**

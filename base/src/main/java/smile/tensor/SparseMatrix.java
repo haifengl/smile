@@ -233,6 +233,14 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
         return colIndex[n];
     }
 
+    @Override
+    public SparseMatrix scale(double alpha) {
+        for (int i = 0; i < nonzeros.length; i++) {
+            nonzeros[i] *= alpha;
+        }
+        return this;
+    }
+
     /**
      * Returns the stream of the non-zero elements.
      * @return the stream of the non-zero elements

@@ -242,6 +242,16 @@ public abstract class BandMatrix implements Matrix {
     }
 
     @Override
+    public BandMatrix scale(double alpha) {
+        switch(scalarType()) {
+            case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
+            case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+        return this;
+    }
+
+    @Override
     public SymmMatrix transpose() {
         throw new UnsupportedOperationException();
     }
