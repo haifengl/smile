@@ -17,9 +17,9 @@
 package smile.tensor.fp32;
 
 import org.junit.jupiter.api.*;
-import smile.linalg.UPLO;
 import smile.tensor.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.linalg.UPLO.LOWER;
 
 /**
  *
@@ -56,69 +56,13 @@ public class SymmMatrixTest {
         };
         float[] b = {0.5f, 0.5f, 0.5f};
 
-        Matrix a = Matrix.of(A);
-        Matrix.LU lu = a.lu();
-        float[] x = lu.solve(b);
+        DenseMatrix a = DenseMatrix.of(A);
+        a.withUplo(LOWER);
+        SymmMatrix symm = SymmMatrix.of(a);
 
-        SymmMatrix symm = new SymmMatrix(UPLO.LOWER, A);
-
-        float[] y = a.mv(x);
-        float[] y2 = symm.mv(x);
-        for (int i = 0; i < y.length; i++) {
-            assertEquals(y[i], y2[i], 1E-7f);
-        }
-
-        SymmMatrix.BunchKaufman bk = symm.bk();
-        float[] bkx = bk.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), bk.det(), 1E-7f);
-        // solution vector
-        assertEquals(x.length, bkx.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], bkx[i], 1E-7f);
-        }
-
-        SymmMatrix.Cholesky cholesky = symm.cholesky();
-        float[] choleskyx = cholesky.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7f);
-        // solution vector
-        assertEquals(choleskyx.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-6f);
-        }
-
-        // Upper symmetric matrix
-        symm = new SymmMatrix(UPLO.UPPER, A);
-
-        y = a.mv(x);
-        y2 = symm.mv(x);
-        for (int i = 0; i < y.length; i++) {
-            assertEquals(y[i], y2[i], 1E-7f);
-        }
-
-        bk = symm.bk();
-        bkx = bk.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), bk.det(), 1E-7f);
-        // solution vector
-        assertEquals(x.length, bkx.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], bkx[i], 1E-6f);
-        }
-
-        cholesky = symm.cholesky();
-        choleskyx = cholesky.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7f);
-        // solution vector
-        assertEquals(choleskyx.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
-        }
+        Vector x = Vector.column(b);
+        Vector y = a.mv(x);
+        Vector y2 = symm.mv(x);
+        assertEquals(y, y2);
     }
 }

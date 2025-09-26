@@ -25,11 +25,11 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test Matrix with OpenBLAS.
+ * Test DenseMatrix.
  *
  * @author Haifeng Li
  */
-public class MatrixTest {
+public class DenseMatrixTest {
 
     double[][] A = {
             {0.9000, 0.4000, 0.0000f},
@@ -152,7 +152,7 @@ public class MatrixTest {
         System.out.println("mv offfset ");
         double[] d = new double[matrix.ncol() + matrix.nrow()];
         System.arraycopy(b, 0, d, 0, b.length);
-        matrix.mv(d, 0, b.length);
+        matrix.mv(Vector.column(d), 0, b.length);
         assertEquals(0.65, d[3], 1E-7);
         assertEquals(0.60, d[4], 1E-7);
         assertEquals(0.55, d[5], 1E-7);

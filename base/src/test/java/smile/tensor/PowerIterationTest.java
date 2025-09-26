@@ -62,8 +62,8 @@ public class PowerIterationTest {
         double[] v = new double[3];
         Arrays.fill(v, 1.0);
 
-        Matrix matrix = Matrix.of(A);
-        double eigenvalue = matrix.eigen(v);
+        DenseMatrix matrix = DenseMatrix.of(A);
+        double eigenvalue = Eigen.power(matrix, Vector.column(v));
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -77,8 +77,8 @@ public class PowerIterationTest {
         }
 
         Arrays.fill(v, 1.0);
-        matrix = Matrix.of(A);
-        eigenvalue = matrix.eigen(v, 0.22, 1E-4, 4);
+        matrix = DenseMatrix.of(A);
+        eigenvalue = Eigen.power(matrix, Vector.column(v), 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);

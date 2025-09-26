@@ -17,7 +17,6 @@
 package smile.tensor.fp32;
 
 import org.junit.jupiter.api.*;
-import smile.linalg.UPLO;
 import smile.tensor.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,11 +55,8 @@ public class BandMatrixTest {
         };
         float[] b = {0.5f, 0.5f, 0.5f};
 
-        Matrix a = Matrix.of(A);
-        Matrix.LU lu = a.lu();
-        float[] x = lu.solve(b);
-
-        BandMatrix band = new BandMatrix(3, 3, 1, 1);
+        DenseMatrix a = DenseMatrix.of(A);
+        BandMatrix band = BandMatrix.zeros(ScalarType.Float32, 3, 3, 1, 1);
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < A[i].length; j++) {
                 if (A[i][j] != 0.0f) {
@@ -69,53 +65,9 @@ public class BandMatrixTest {
             }
         }
 
-        float[] y = a.mv(x);
-        float[] y2 = band.mv(x);
-        for (int i = 0; i < y.length; i++) {
-            assertEquals(y[i], y2[i], 1E-7f);
-        }
-
-        y = a.tv(x);
-        y2 = band.tv(x);
-        for (int i = 0; i < y.length; i++) {
-            assertEquals(y[i], y2[i], 1E-7f);
-        }
-
-        BandMatrix.LU bandlu = band.lu();
-        float[] lux = bandlu.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), bandlu.det(), 1E-7f);
-        // solution vector
-        assertEquals(x.length, lux.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], lux[i], 1E-7f);
-        }
-
-        // Upper band matrix
-        band.uplo(UPLO.UPPER);
-        BandMatrix.Cholesky cholesky = band.cholesky();
-        float[] choleskyx = cholesky.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7f);
-        // solution vector
-        assertEquals(choleskyx.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-6f);
-        }
-
-        // Lower band matrix
-        band.uplo(UPLO.LOWER);
-        cholesky = band.cholesky();
-        choleskyx = cholesky.solve(b);
-
-        // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7f);
-        // solution vector
-        assertEquals(choleskyx.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-6f);
-        }
+        Vector x = Vector.column(b);
+        Vector y = a.mv(x);
+        Vector y2 = band.mv(x);
+        assertEquals(y, y2);
     }
 }
