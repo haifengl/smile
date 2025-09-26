@@ -61,6 +61,7 @@ public abstract class SymmMatrix implements Matrix {
      * Returns a zero matrix.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param n the dimension of matrix.
+     * @return the packed symmetric matrix.
      */
     public static SymmMatrix zeros(ScalarType scalarType, UPLO uplo, int n) {
         if (uplo == null) {
@@ -81,9 +82,42 @@ public abstract class SymmMatrix implements Matrix {
     }
 
     /**
+     * Returns a symmetric matrix from a dense matrix.
+     * @param A the dense symmetric matrix.
+     * @return the packed symmetric matrix.
+     */
+    public static SymmMatrix of(DenseMatrix A) {
+        if (!A.isSymmetric()) {
+            throw new IllegalArgumentException("The input matrix is not symmetric");
+        }
+
+        int n = A.ncol();
+        UPLO uplo = A.uplo();
+        SymmMatrix matrix = zeros(A.scalarType(), uplo, n);
+        switch (uplo) {
+            case LOWER -> {
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j <= i; j++) {
+                        matrix.set(i, j, A.get(i, j));
+                    }
+                }
+            }
+            case UPPER -> {
+                for (int i =  0; i < n; i++) {
+                    for (int j = i; j < n; j++) {
+                        matrix.set(i, j, A.get(i, j));
+                    }
+                }
+            }
+        }
+        return matrix;
+    }
+
+    /**
      * Returns a symmetric matrix from a two-dimensional array.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param AP the symmetric matrix.
+     * @return the packed symmetric matrix.
      */
     public static SymmMatrix of(UPLO uplo, double[][] AP) {
         int n = AP.length;
@@ -111,6 +145,7 @@ public abstract class SymmMatrix implements Matrix {
      * Returns a symmetric matrix from a two-dimensional array.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param AP the symmetric matrix.
+     * @return the packed symmetric matrix.
      */
     public static SymmMatrix of(UPLO uplo, float[][] AP) {
         int n = AP.length;
