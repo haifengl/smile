@@ -31,7 +31,7 @@ public interface Eigen {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    default double power(Matrix A, Vector v) {
+    static double power(Matrix A, Vector v) {
         return power(A, v, 0.0, Math.max(1.0E-6, A.nrow() * MathEx.EPSILON), Math.max(20, 2 * A.nrow()));
     }
 
@@ -58,7 +58,7 @@ public interface Eigen {
      * does not converge.
      * @return the largest eigen value.
      */
-    default double power(Matrix A, Vector v, double p, double tol, int maxIter) {
+    static double power(Matrix A, Vector v, double p, double tol, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -101,7 +101,7 @@ public interface Eigen {
      * Computes y = (A - pI) x and then normalize x = y / norm1(y).
      * Returns the largest element of y in magnitude.
      */
-    private double power(Matrix A, Vector x, Vector y, double p) {
+    private static double power(Matrix A, Vector x, Vector y, double p) {
         A.mv(x, y);
         if (p != 0.0) {
             x.axpy(-p, y);
