@@ -75,25 +75,25 @@ class Vector32 extends Vector implements Serializable {
     }
 
     /**
-     * Constructor.
+     * Returns a column vector.
      * @param array the primitive array backing the vector.
      * @param offset the base offset.
      * @param length the length.
-     * @param m the number of rows.
-     * @param n the number of columns.
+     * @return a column vector.
      */
-    public Vector32(float[] array, int offset, int length, int m, int n) {
-        this(memory(array, offset, length), array, offset, length, m, n);
+    public static Vector32 column(float[] array, int offset, int length) {
+        return new Vector32(memory(array, offset, length), array, offset, length, length, 1);
     }
 
     /**
-     * Constructor of column vector.
+     * Returns of row vector.
      * @param array the primitive array backing the vector.
      * @param offset the base offset.
      * @param length the length.
+     * @return a row vector.
      */
-    public Vector32(float[] array, int offset, int length) {
-        this(array, offset, length, length, 1);
+    public static Vector32 row(float[] array, int offset, int length) {
+        return new Vector32(memory(array, offset, length), array, offset, length, 1, length);
     }
 
     @Serial
@@ -218,9 +218,7 @@ class Vector32 extends Vector implements Serializable {
     public Vector copy(int from, int to) {
         var data = Arrays.copyOfRange(array, offset + from, offset + to);
         int length = data.length;
-        int m = nrow() > 1 ? length : 1;
-        int n = nrow() > 1 ? 1 : length;
-        return new Vector32(data, 0, length, m, n);
+        return nrow() > 1 ? column(data, 0, length) : row(data, 0, length);
     }
 
     @Override
