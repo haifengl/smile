@@ -136,7 +136,7 @@ public class KrigingInterpolation {
         }
 
         SVD svd = v.svd(true);
-        yvi = svd.solve(yv);
+        yvi = svd.solve(yv).toArray(new double[0]);
     }
 
     /**

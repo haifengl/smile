@@ -107,7 +107,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
         v.set(n, n, 0.0);
 
         SVD svd = v.svd(true);
-        yvi = svd.solve(yv);
+        yvi = svd.solve(yv).toArray(new double[0]);
     }
 
     @Override
