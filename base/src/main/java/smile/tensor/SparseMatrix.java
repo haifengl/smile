@@ -429,10 +429,8 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
             }
         }
 
-        if (beta != 0.0 || alpha != 1.0) {
-            for (int i = 0; i < k; i++) {
-                y.set(i, alpha * ax[i] + beta * y.get(i));
-            }
+        for (int i = 0; i < k; i++) {
+            y.set(i, alpha * ax[i] + beta * y.get(i));
         }
     }
 
