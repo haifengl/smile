@@ -749,7 +749,7 @@ public abstract class DenseMatrix implements Matrix {
      * @return singular value decomposition.
      */
     public SVD svd() {
-        return svd(false);
+        return svd(true);
     }
 
     /**
@@ -767,7 +767,7 @@ public abstract class DenseMatrix implements Matrix {
      * zeros and columns can improve execution time and reduce storage requirements
      * without compromising the accuracy of the decomposition.
      *
-     * @param vectors The flag if computing only the singular vectors.
+     * @param vectors The flag whether computing the singular vectors.
      * @return singular value decomposition.
      */
     public SVD svd(boolean vectors) {
