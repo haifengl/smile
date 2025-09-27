@@ -96,7 +96,7 @@ public class KrigingInterpolation1D implements Interpolation {
         v.set(n, n, 0.0);
 
         SVD svd = v.svd(true);
-        yvi = svd.solve(yv);
+        yvi = svd.solve(yv).toArray(new double[0]);
     }
 
     @Override

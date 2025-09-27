@@ -422,7 +422,7 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         QR qr = a.qr();
-        double[] x2 = qr.solve(b);
+        double[] x2 = qr.solve(b).toArray(new double[0]);
         assertEquals(x.length, x2.length);
         for (int i = 0; i < x.length; i++) {
             assertEquals(x[i], x2[i], 1E-7);
@@ -1088,7 +1088,7 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         SVD svd = a.svd();
-        double[] x2 = svd.solve(b);
+        double[] x2 = svd.solve(b).toArray(new double[0]);
         assertEquals(x.length, x2.length);
         for (int i = 0; i < x.length; i++) {
             assertEquals(x[i], x2[i], 1E-7);
