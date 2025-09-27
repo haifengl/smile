@@ -120,6 +120,7 @@ public abstract class BandMatrix implements Matrix {
             throw new IllegalArgumentException(String.format("Invalid superdiagonals %d >= %d", ku, n));
         }
 
+        this.memory = memory;
         this.m = m;
         this.n = n;
         this.kl = kl;
