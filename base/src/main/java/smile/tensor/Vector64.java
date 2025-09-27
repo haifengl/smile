@@ -105,9 +105,9 @@ class Vector64 extends Vector implements Serializable {
     @Override
     public boolean equals(Object other) {
         if (other instanceof Vector64 b) {
-            if (b.size() == size()) {
-                for (int i = 0; i < array.length; i++) {
-                    if (Math.abs(array[i] - b.array[i]) > MathEx.EPSILON) {
+            if (length == b.length) {
+                for (int i = 0; i < length; i++) {
+                    if (Math.abs(array[offset+i] - b.array[b.offset+i]) > MathEx.FLOAT_EPSILON) {
                         return false;
                     }
                 }
