@@ -95,12 +95,33 @@ public record Cholesky(DenseMatrix lu) {
     }
 
     /**
-     * Solves the linear system A * x = b.
-     * @param b the right hand side of linear systems. On output, b will
-     *          be overwritten with the solution vector.
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
      */
-    public void solve(double[] b) {
-        solve(Vector.column(b));
+    public Vector solve(double[] b) {
+        Vector x = lu.vector(b.length);
+        for (int i = 0; i < b.length; i++) {
+            x.set(i, b[i]);
+        }
+        solve(x);
+        return x;
+    }
+
+    /**
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
+     */
+    public Vector solve(float[] b) {
+        Vector x = lu.vector(b.length);
+        for (int i = 0; i < b.length; i++) {
+            x.set(i, b[i]);
+        }
+        solve(x);
+        return x;
     }
 
     /**

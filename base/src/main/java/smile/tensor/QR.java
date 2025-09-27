@@ -97,16 +97,30 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
      * Solves the least squares min || B - A*X ||.
      * @param b the right hand side of overdetermined linear system.
      * @throws RuntimeException when the matrix is rank deficient.
-     * @return the solution vector beta that minimizes ||Y - X*beta||.
+     * @return the solution vector.
      */
-    public double[] solve(double[] b) {
-        if (b.length != qr.m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.m, qr.n, b.length));
+    public Vector solve(double[] b) {
+        Vector x = qr.vector(b.length);
+        for (int i = 0; i < b.length; i++) {
+            x.set(i, b[i]);
         }
-
-        Vector x = Vector.column(b);
         solve(x);
-        return Arrays.copyOfRange(b, 0, qr.n);
+        return x.slice(0, qr.n);
+    }
+
+    /**
+     * Solves the least squares min || B - A*X ||.
+     * @param b the right hand side of overdetermined linear system.
+     * @throws RuntimeException when the matrix is rank deficient.
+     * @return the solution vector.
+     */
+    public Vector solve(float[] b) {
+        Vector x = qr.vector(b.length);
+        for (int i = 0; i < b.length; i++) {
+            x.set(i, b[i]);
+        }
+        solve(x);
+        return x.slice(0, qr.n);
     }
 
     /**
