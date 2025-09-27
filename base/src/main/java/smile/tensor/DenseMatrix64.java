@@ -24,6 +24,7 @@ import java.lang.foreign.MemorySegment;
 import smile.linalg.Diag;
 import smile.linalg.Layout;
 import smile.linalg.UPLO;
+import smile.math.MathEx;
 
 /**
  * A dense matrix of double precision floating numbers.
@@ -55,6 +56,22 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         memory = MemorySegment.ofArray(array);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof DenseMatrix64 b) {
+            if (array.length == b.array.length) {
+                for (int i = 0; i < array.length; i++) {
+                    if (Math.abs(array[i] - b.array[i]) > MathEx.FLOAT_EPSILON) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
