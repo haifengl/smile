@@ -148,7 +148,7 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
 
     @Override
     public DenseMatrix submatrix(int i, int j, int k, int l) {
-        if (i < 0 || i >= m || k <= i || k >= m || j < 0 || j >= n || l <= j || l >= n) {
+        if (i < 0 || i > m || k <= i || k > m || j < 0 || j > n || l <= j || l > n) {
             throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
         }
 
