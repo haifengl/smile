@@ -21,6 +21,8 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import java.util.Arrays;
+
 import smile.linalg.Diag;
 import smile.linalg.Layout;
 import smile.linalg.UPLO;
@@ -144,5 +146,26 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
                 }
             };
         };
+    }
+
+    @Override
+    public DenseMatrix submatrix(int i, int j, int k, int l) {
+        if (i < 0 || i >= m || k <= i || k >= m || j < 0 || j >= n || l <= j || l >= n) {
+            throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
+        }
+
+        if (i == 0 && j == 0) {
+            return new DenseMatrix32(array, k, l, ld, uplo, diag);
+        } else {
+            int nrow = k - i;
+            int ncol = l - j;
+            DenseMatrix sub = zeros(nrow, ncol);
+            for (int q = 0; q < ncol; q++) {
+                for (int p = 0; p < nrow; p++) {
+                    sub.set(p, q, get(p + i, q + j));
+                }
+            }
+            return sub;
+        }
     }
 }
