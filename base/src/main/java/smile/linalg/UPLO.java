@@ -56,7 +56,7 @@ public enum UPLO {
      * Returns the int value for BLAS.
      * @return the int value for BLAS.
      */
-    public int blas() { return blas; }
+    public int blas() { return lapack; }
 
     /**
      * Returns the byte value for LAPACK.
