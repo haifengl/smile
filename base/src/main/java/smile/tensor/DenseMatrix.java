@@ -371,20 +371,7 @@ public abstract class DenseMatrix implements Matrix {
      * @return the submatrix.
      */
     public DenseMatrix submatrix(int i, int j, int k, int l) {
-        if (i < 0 || i >= m || k <= i || k >= m || j < 0 || j >= n || l <= j || l >= n) {
-            throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
-        }
-
-        int nrow = k - i;
-        int ncol = l - j;
-        DenseMatrix x = zeros(nrow, ncol);
-        for (int q = 0; q < ncol; q++) {
-            for (int p = 0; p < nrow; p++) {
-                x.set(p, q, get(p+i, q+j));
-            }
-        }
-
-        return x;
+        throw new UnsupportedOperationException();
     }
 
     /**
