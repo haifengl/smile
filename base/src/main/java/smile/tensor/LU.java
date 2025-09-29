@@ -17,7 +17,9 @@
 package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
-import smile.linalg.LAPACK;
+
+import static smile.linalg.Transpose.TRANSPOSE;
+import static smile.linalg.lapack.clapack_h.*;
 import static smile.linalg.Transpose.NO_TRANSPOSE;
 
 /**
@@ -141,10 +143,28 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
         }
 
-        int ret = LAPACK.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.memory, lu.ld, MemorySegment.ofArray(ipiv), B.memory, B.ld);
-        if (ret != 0) {
-            logger.error("LAPACK GETRS error code: {}", ret);
-            throw new ArithmeticException("LAPACK GETRS error code: " + ret);
+        byte[] trans = { NO_TRANSPOSE.lapack() };
+        int[] n = { lu.n };
+        int[] nrhs = { B.n };
+        int[] lda = { lu.ld };
+        int[] ldb = { B.ld };
+        int[] info = { 0 };
+        MemorySegment trans_ = MemorySegment.ofArray(trans);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
+        MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(lu.scalarType()) {
+            case Float64 -> dgetrs_(trans_, n_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
+            case Float32 -> sgetrs_(trans_, n_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + lu.scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK GETRS error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GETRS error code: " + info[0]);
         }
     }
 }
