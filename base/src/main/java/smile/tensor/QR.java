@@ -17,8 +17,8 @@
 package smile.tensor;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import smile.linalg.LAPACK;
+import java.lang.foreign.MemorySegment;
+import static smile.linalg.lapack.clapack_h.*;
 import static smile.linalg.Diag.NON_UNIT;
 import static smile.linalg.Side.LEFT;
 import static smile.linalg.Transpose.NO_TRANSPOSE;
@@ -81,14 +81,29 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
      * @return the orthogonal factor.
      */
     public DenseMatrix Q() {
-        int m = qr.m;
-        int n = qr.n;
-        int k = Math.min(m, n);
         DenseMatrix Q = qr.copy();
-        int info = LAPACK.orgqr(qr.layout(), m, n, k, Q.memory, qr.ld, tau.memory);
-        if (info != 0) {
-            logger.error("LAPACK ORGRQ error code: {}", info);
-            throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
+        Vector work = Q.vector(qr.n);
+        int[] m = { qr.m };
+        int[] n = { qr.n };
+        int[] k = { Math.min(qr.m, qr.n) };
+        int[] lda = { Q.ld };
+        int[] lwork = { work.size() };
+        int[] info = { 0 };
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment k_ = MemorySegment.ofArray(k);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(Q.scalarType()) {
+            case Float64 -> dorgqr_(m_, n_, k_, Q.memory, lda_, tau.memory, work.memory, lwork_, info_);
+            case Float32 -> sorgqr_(m_, n_, k_, Q.memory, lda_, tau.memory, work.memory, lwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + Q.scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK ORGRQ error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK ORGRQ error code: " + info[0]);
         }
         return Q;
     }
@@ -137,21 +152,51 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
         }
 
-        int m = qr.m;
-        int n = qr.n;
-        int k = Math.min(m, n);
-
-        int info = LAPACK.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.memory, qr.ld, tau.memory, B.memory, B.ld);
-        if (info != 0) {
-            logger.error("LAPACK ORMQR error code: {}", info);
-            throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
+        Vector work = qr.vector(qr.n);
+        byte[] left = { LEFT.lapack() };
+        byte[] upper = { UPPER.lapack() };
+        byte[] trans = { NO_TRANSPOSE.lapack() };
+        byte[] unit = { NON_UNIT.lapack() };
+        int[] m = { qr.m };
+        int[] n = { qr.n };
+        int[] k = { Math.min(qr.m, qr.n) };
+        int[] nrhs = { B.n };
+        int[] lda = { qr.ld };
+        int[] ldb = { B.ld };
+        int[] lwork = { work.size() };
+        int[] info = { 0 };
+        MemorySegment left_ = MemorySegment.ofArray(left);
+        MemorySegment upper_ = MemorySegment.ofArray(upper);
+        MemorySegment trans_ = MemorySegment.ofArray(trans);
+        MemorySegment unit_ = MemorySegment.ofArray(unit);
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment k_ = MemorySegment.ofArray(k);
+        MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
+        MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(qr.scalarType()) {
+            case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
         }
 
-        info = LAPACK.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.memory, qr.ld, B.memory, B.ld);
+        if (info[0] != 0) {
+            logger.error("LAPACK ORMQR error code: {}", info[0]);
+            throw new IllegalArgumentException("LAPACK ORMQR error code: " + info[0]);
+        }
 
-        if (info != 0) {
-            logger.error("LAPACK TRTRS error code: {}", info);
-            throw new IllegalArgumentException("LAPACK TRTRS error code: " + info);
+        switch(qr.scalarType()) {
+            case Float64 -> dtrtrs_(upper_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
+            case Float32 -> strtrs_(upper_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK TRTRS error code: {}", info[0]);
+            throw new IllegalArgumentException("LAPACK TRTRS error code: " + info[0]);
         }
     }
 }

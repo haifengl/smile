@@ -16,7 +16,9 @@
  */
 package smile.tensor;
 
-import smile.linalg.LAPACK;
+import java.lang.foreign.MemorySegment;
+
+import static smile.linalg.lapack.clapack_h.*;
 
 /**
  * The Cholesky decomposition of a symmetric, positive-definite matrix.
@@ -137,10 +139,27 @@ public record Cholesky(DenseMatrix lu) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
         }
 
-        int info = LAPACK.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.memory, lu.ld, B.memory, B.ld);
-        if (info != 0) {
-            logger.error("LAPACK POTRS error code: {}", info);
-            throw new ArithmeticException("LAPACK POTRS error code: " + info);
+        byte[] uplo = { lu.uplo.lapack() };
+        int[] n = { lu.n };
+        int[] nrhs = { B.n };
+        int[] lda = { lu.ld };
+        int[] ldb = { B.ld };
+        int[] info = { 0 };
+        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(lu.scalarType()) {
+            case Float64 -> dpotrs_(uplo_, n_, nrhs_, lu.memory, lda_, B.memory, ldb_, info_);
+            case Float32 -> spotrs_(uplo_, n_, nrhs_, lu.memory, lda_, B.memory, ldb_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + lu.scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK POTRS error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK POTRS error code: " + info[0]);
         }
     }
 }
