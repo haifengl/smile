@@ -645,11 +645,24 @@ public abstract class DenseMatrix implements Matrix {
         MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
         MemorySegment info_ = MemorySegment.ofArray(info);
         if (isSymmetric()) {
-            Vector work = vector(lu.n * 64);
-            int[] lwork = new int[work.size()];
+            Vector work = lu.vector(1);
+            int[] lwork = { -1 };
             byte[] uplo = { lu.uplo.lapack() };
             MemorySegment lwork_ = MemorySegment.ofArray(lwork);
             MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+
+            // query workspace size
+            switch(scalarType()) {
+                case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
+                case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            }
+            if (info[0] != 0) {
+                throw new ArithmeticException("SYSV fails: " + info[0]);
+            }
+
+            work = lu.vector((int) work.get(0));
+            lwork[0] = work.size();
             switch(scalarType()) {
                 case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
                 case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
@@ -836,13 +849,13 @@ public abstract class DenseMatrix implements Matrix {
         DenseMatrix A = this;
         DenseMatrix U = vectors ? zeros(A.m, k) : zeros(1, 1);
         DenseMatrix Vt = vectors ? zeros(k, A.n) : zeros(1, 1);
-        Vector work = vector(2*A.n*A.n + 6*A.n + 1);
+        Vector work = vector(1);
         byte[] jobz = { vectors ? SVDJob.COMPACT.lapack() : SVDJob.NO_VECTORS.lapack() };
         int[] m = { A.m };
         int[] n = { A.n };
         int[] lda = { A.ld };
-        int[] lwork = { work.size() };
-        int[] iwork = new int[5*A.n  + 3];
+        int[] lwork = { -1 };
+        int[] iwork = new int[8 * Math.min(A.m, A.n)];
         int[] ldu = { U.ld };
         int[] ldvt = { Vt.ld };
         int[] info = { 0 };
@@ -856,6 +869,19 @@ public abstract class DenseMatrix implements Matrix {
         MemorySegment lwork_ = MemorySegment.ofArray(lwork);
         MemorySegment iwork_ = MemorySegment.ofArray(iwork);
 
+        switch(scalarType()) {
+            case Float64 -> dgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
+            case Float32 -> sgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK GESDD with error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info[0]);
+        }
+
+        work = vector((int) work.get(0));
+        lwork[0] = work.size();
         switch(scalarType()) {
             case Float64 -> dgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
             case Float32 -> sgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
@@ -919,15 +945,31 @@ public abstract class DenseMatrix implements Matrix {
         MemorySegment info_ = MemorySegment.ofArray(info);
         if (isSymmetric()) {
             Vector w = vector(eig.n);
-            Vector work = vector(2*eig.n*eig.n + 6*eig.n + 1);
-            int[] lwork = { work.size() };
-            int[] iwork = new int[5*eig.n  + 3];
-            int[] liwork = { iwork.length };
+            Vector work = vector(1);
+            int[] lwork = { -1 };
+            int[] iwork = new int[1];
+            int[] liwork = { -1 };
             byte[] uplo = { eig.uplo.lapack() };
             MemorySegment iwork_ = MemorySegment.ofArray(iwork);
             MemorySegment lwork_ = MemorySegment.ofArray(lwork);
             MemorySegment liwork_ = MemorySegment.ofArray(liwork);
             MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+            // query workspace size
+            switch(scalarType()) {
+                case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
+                case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            }
+
+            if (info[0] != 0) {
+                logger.error("LAPACK SYEV error code: {}", info[0]);
+                throw new ArithmeticException("LAPACK SYEV error code: " + info[0]);
+            }
+
+            work = vector((int) work.get(0));
+            iwork = new int[iwork[0]];
+            lwork[0] = work.size();
+            liwork[0] = iwork.length;
             switch(scalarType()) {
                 case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
@@ -946,13 +988,32 @@ public abstract class DenseMatrix implements Matrix {
             Vector wi = vector(eig.n);
             DenseMatrix Vl = vl ? zeros(eig.n, eig.n) : zeros(1, 1);
             DenseMatrix Vr = vr ? zeros(eig.n, eig.n) : zeros(1, 1);
-            Vector work = vector(4*eig.n);
+            Vector work = vector(1);
             int[] ldvl = { Vl.ld };
             int[] ldvr = { Vr.ld };
-            int[] lwork = { work.size() };
+            int[] lwork = { -1 };
             MemorySegment ldvl_ = MemorySegment.ofArray(ldvl);
             MemorySegment ldvr_ = MemorySegment.ofArray(ldvr);
             MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+
+            // query workspace size
+            switch(scalarType()) {
+                case Float64 -> dgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
+                        n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
+                        work.memory, lwork_, info_);
+                case Float32 -> sgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
+                        n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
+                        work.memory, lwork_, info_);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            }
+
+            if (info[0] != 0) {
+                logger.error("LAPACK GEEV error code: {}", info[0]);
+                throw new ArithmeticException("LAPACK GEEV error code: " + info[0]);
+            }
+
+            work = vector((int) work.get(0));
+            lwork[0] = work.size();
             switch(scalarType()) {
                 case Float64 -> dgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
                         n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
