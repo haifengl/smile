@@ -21,8 +21,6 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
-import java.util.Arrays;
-
 import smile.linalg.Diag;
 import smile.linalg.Layout;
 import smile.linalg.UPLO;
@@ -132,20 +130,7 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     @Override
     public DenseMatrix copy() {
         float[] data = array.clone();
-        return switch (layout()) {
-            case COL_MAJOR -> new DenseMatrix32(array, m, n, ld, uplo, diag);
-            case ROW_MAJOR -> new DenseMatrix32(array, m, n, ld, uplo, diag) {
-                @Override
-                public Layout layout() {
-                    return Layout.ROW_MAJOR;
-                }
-
-                @Override
-                int offset(int i, int j) {
-                    return i * ld + j;
-                }
-            };
-        };
+        return new DenseMatrix32(array, m, n, ld, uplo, diag);
     }
 
     @Override

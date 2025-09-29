@@ -144,7 +144,15 @@ public abstract class DenseMatrix implements Matrix {
     public abstract DenseMatrix copy();
 
     @Override
-    public abstract DenseMatrix transpose();
+    public DenseMatrix transpose() {
+        DenseMatrix trans = zeros(n, m);
+        for (int i = 0;  i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                trans.set(i, j, get(j, i));
+            }
+        }
+        return trans;
+    }
 
     @Override
     public DenseMatrix scale(double alpha) {
